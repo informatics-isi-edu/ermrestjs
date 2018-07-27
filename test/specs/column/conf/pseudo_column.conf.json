@@ -1,7 +1,7 @@
 {
     "catalog": {},
     "schema": {
-        "name": "pseudo_col_schema",
+        "name": "pseudo_column_schema",
         "createNew": true,
         "path": "test/specs/column/conf/pseudo_column_schema/schema.json"
     },

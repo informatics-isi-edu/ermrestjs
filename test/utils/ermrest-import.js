@@ -3,53 +3,75 @@ var requireReload = require('./require-reload.js').reload;
 var includes = require(__dirname + '/../utils/ermrest-init.js').init();
 var ermrestUtils = require(process.env.PWD + "/../ErmrestDataUtils/import.js");
 
-var importSchemas = function(configFilePaths, defer, catalogId, entities) {
+/**
+ * This function will import all the given schemas.
+ * It's using the bulk ermrest API. We didn't want to change all the config files,
+ * so this function is taking care of changing the config files to the new
+ * config file that the ErmrestDataUtils expects for bulk creation api.
+ * @param  {string[]} configFilePaths list of configuration file locations.
+ * @param  {string} catalogId         the catalog id (might be undefined)
+ */
+exports.importSchemas = function (configFilePaths, catalogId) {
+  var defer = q.defer(), entities = {}, schemas = {};
+  var config, schema, schemaName;
 
-	if (!configFilePaths.length) {
-		defer.resolve({catalogId: catalogId, entities: entities});
-		return;
-	}
+  if (!configFilePaths || configFilePaths.length === 0) {
+    return defer.resolve({catalogId: catalogId, entities: {}}), defer.promise;
+  }
 
-	var configFilePath = configFilePaths.shift();
+  // for the structure of settings, please refer to ErmrestDataUtils
+  var settings = {
+    url: includes.url,
+    authCookie: includes.authCookie
+  };
 
-	var config = requireReload(process.env.PWD + "/test/specs" + configFilePath);
+  configFilePaths.forEach(function (filePath) {
+    config = requireReload(process.env.PWD + "/test/specs" + filePath);
+    schemas[config.schema.name] = {
+      path: config.schema.path
+    };
 
-	if (catalogId) config.catalog.id = catalogId;
-	else delete config.catalog.id;
+    if (config.entities) {
+      schemas[config.schema.name].entities = config.entities.path;
+    }
+  });
 
-	ermrestUtils.importData({
-        setup: config,
-        url: includes.url,
-        authCookie: includes.authCookie
-    }).then(function (data) {
-    	process.env.catalogId = data.catalogId;
-		if (data.schema) {
-			entities[data.schema.name] = {};
-			for (var t in data.schema.tables) {
-                if (!data.schema.tables.hasOwnProperty(t)) continue;
-                entities[data.schema.name][t] = data.schema.tables[t].entities;
-            }
-			console.log("Attached entities of " + data.schema.name + " schema");
-		}
-    	importSchemas(configFilePaths, defer, data.catalogId, entities);
-    }, function (err) {
-        defer.reject(err);
-    }).catch(function(err) {
-    	console.log(err);
-    	defer.reject(err);
-    });
+  //NOTE we're not honoring the catalog object that is passed in each config
+  //     so if you add any acls there, it will be ignored.
+  //     if we want to add a default acl, it should be added here.
+  settings.setup = {catalog: {}, schemas: schemas};
+  if (catalogId) {
+    settings.setup.catalog.id =  catalogId;
+  }
+
+  ermrestUtils.createSchemasAndEntities(settings).then(function (data) {
+    process.env.catalogId = data.catalogId;
+
+    // create the entities object
+    if (data.schemas) {
+      for(schemaName in data.schemas) {
+        if (!data.schemas.hasOwnProperty(schemaName)) continue;
+
+        schema = data.schemas[schemaName];
+        entities[schema.name] = {};
+
+        for (var t in schema.tables) {
+          if (!schema.tables.hasOwnProperty(t)) continue;
+
+          entities[schema.name][t] = schema.tables[t].entities;
+        }
+      }
+      console.log("Attached entities for the schemas");
+    }
+    defer.resolve({entities: entities, catalogId: data.catalogId});
+  }).catch(function (err) {
+    console.log("error while importing the schemas.");
+    defer.reject(err);
+  });
+
+  return defer.promise;
 };
 
-exports.importSchemas = function(configFilePaths, catalogId) {
-	var defer = q.defer(), entities = {};
-	if (!configFilePaths || !configFilePaths.length) {
-		defer.resolve({catalogId: catalogId, entities: entities});
-		return defer.promise;
-	}
-
-	importSchemas(configFilePaths.slice(0), defer, catalogId, entities);
-	return defer.promise;
-};
 
 exports.importAcls = function(params) {
 	var defer = q.defer();

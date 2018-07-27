@@ -1,7 +1,7 @@
 {
     "catalog": {},
     "schema": {
-        "name": "comment",
+        "name": "schema_with_comment",
         "createNew": true,
         "path": "test/specs/comment/conf/comment/schema.json"
     },
