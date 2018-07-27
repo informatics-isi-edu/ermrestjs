@@ -251,6 +251,90 @@
               "markdown_name": "_Column name_"
             }
           }
+        },
+        {
+          "comment": null,
+          "name": "RID",
+          "nullok": false,
+          "default": null,
+          "type": {
+            "typename": "ermrest_rid",
+            "is_domain": true,
+            "base_type": {
+              "typename": "text"
+            }
+          },
+          "annotations": {
+            "tag:misd.isi.edu,2015:display": {
+              "markdown_name": "_RID_"
+            }
+          }
+        },
+        {
+          "comment": null,
+          "name": "RCT",
+          "nullok": false,
+          "default": null,
+          "type": {
+            "typename": "ermrest_rct",
+            "is_domain": true,
+            "base_type": {
+              "typename": "timestamptz"
+            }
+          },
+          "annotations": {
+            "tag:misd.isi.edu,2015:display": {
+              "name": "Created Time"
+            }
+          }
+        },
+        {
+          "comment": null,
+          "name": "RMT",
+          "nullok": false,
+          "default": null,
+          "type": {
+            "typename": "ermrest_rmt",
+            "is_domain": true,
+            "base_type": {
+              "typename": "timestamptz"
+            }
+          },
+          "annotations": {
+            "tag:misd.isi.edu,2015:display": {
+              "name_style": {
+                "title_case": true
+              }
+            }
+          }
+        },
+        {
+          "comment": null,
+          "name": "RCB",
+          "nullok": true,
+          "default": null,
+          "type": {
+            "typename": "ermrest_rcb",
+            "is_domain": true,
+            "base_type": {
+              "typename": "text"
+            }
+          },
+          "annotations": {}
+        },
+        {
+          "comment": null,
+          "name": "RMB",
+          "nullok": true,
+          "default": null,
+          "type": {
+            "typename": "ermrest_rmb",
+            "is_domain": true,
+            "base_type": {
+              "typename": "text"
+            }
+          },
+          "annotations": {}
         }
       ],
       "annotations": {
