@@ -125,7 +125,6 @@
     }
 
     if (typeof Object.assign != 'function') {
-
         // Must be writable: true, enumerable: false, configurable: true
         Object.defineProperty(Object, "assign", {
             value: function assign(target, varArgs) { // .length of function is 2
@@ -149,7 +148,8 @@
                         }
                     }
                 }
-            return to;
+
+                return to;
             },
             writable: true,
             configurable: true
@@ -934,7 +934,7 @@
             );
             if (unformattedAnnotation && typeof unformattedAnnotation.row_markdown_pattern) {
                 // get templated patten after replacing the values using Mustache
-                unformatted = module._renderTemplate(unformattedAnnotation.row_markdown_pattern, formattedValues, table, context, {formatted: true});
+                unformatted = module._renderTemplate(unformattedAnnotation.row_markdown_pattern, formattedValues, table, context, {formatted: true, templateEngine: unformattedAnnotation.template_engine});
             }
         }
 
@@ -942,7 +942,7 @@
         if (annotation && typeof annotation.row_markdown_pattern === 'string') {
             template = annotation.row_markdown_pattern;
 
-            pattern = module._renderTemplate(template, formattedValues, table, context, {formatted: true});
+            pattern = module._renderTemplate(template, formattedValues, table, context, {formatted: true, templateEngine: annotation.template_engine});
 
         }
 
@@ -2268,66 +2268,13 @@
 
     /**
      * @function
-     * @param {String} text The text in which replacement needs to happen.
-     * @desc
-     * This private utility function replaces strings with this format {{NAME}} to this one {{&NAME}}.
-     * This function is used with Mustache to change escaped variables to non-escaped one in a template
-     * @returns {String} String after replacement
-     */
-    module._addIgnoreEscapingForTemplating = function(text) {
-        var escapedVariables = [], escapedVarRegexp = /\{\{\{([\w\d-]+)\}\}\}/ig;
-        var replaceVariables = {}, replaceVarRegexp = /\{\{([\w\d-]+)\}\}/ig;
-
-        // Look for strings with this format {{{NAME}}} to avoid adding them to be non-escaped as they're already
-        // in the Mustache format of non-escaping
-        var placeholders = text.match(escapedVarRegexp);
-        if (placeholders) {
-            placeholders.forEach(function(p) {
-                escapedVariables.push("{{"  + escapedVarRegexp.exec(p)[1] + "}}");
-            });
-        }
-
-        // Look for strings with this format {{NAME}} to non-escaped them
-        // in the Mustache format {{&NAME}}
-        placeholders = text.match(replaceVarRegexp);
-        if (placeholders) {
-            placeholders.forEach(function(p) {
-                // If it is part of escaped variable then simply ignore it
-                if (escapedVariables.indexOf(p) == -1) {
-
-                    // Grab the actual variable NAME from the string {{NAME}}
-                    var variable = replaceVarRegexp.exec(p)[1];
-
-                    // If the variable starts with "#", "^" or ends with "/", we ignore them as they're block tags.
-                    // If the variable starts with "&" then we ignore it as it is already in the Mustache format of non-escaping
-                    if (!variable.startsWith("&") && !variable.startsWith("#") && !variable.startsWith("^") && !variable.endsWith("/")) {
-                        replaceVariables["{{" +variable + "}}"] = variable;
-                    }
-                }
-            });
-        }
-
-        // Replace all the variables {{NAME}} in the text with their non-escaping Mustache format of {{&NAME}}
-        for(var variable in replaceVariables) {
-            text = text.replaceAll(variable,"{{&" + replaceVariables[variable] + "}}");
-        }
-
-        return text;
-    };
-
-    /**
-     * @function
      * @desc
      * A function used by Mustache to encode strings in a template
      * @return {Function} A function that is called by Mustache when it stumbles across
      * {{#encode}} string while parsing the template.
      */
-    module._encodeForTemplate = function() {
+    module._encodeForMustacheTemplate = function() {
         return function(text, render) {
-
-            // Replace inner variables of form {{NAME}} to {{&NAME}} to disable Mustache HTML escaping them.
-            //text = module._addIgnoreEscapingForTemplating(text);
-
             return module._fixedEncodeURIComponent(render(text));
         };
     };
@@ -2339,15 +2286,37 @@
      * @return {Function} A function that is called by Mustache when it stumbles across
      * {{#escape}} string while parsing the template.
      */
-    module._escapeForTemplate = function() {
+    module._escapeForMustacheTemplate = function() {
         return function(text, render) {
-
-            // Replace inner variables of form {{NAME}} to {{&NAME}} to disable Mustache HTML escaping them.
-            // text = module._addIgnoreEscapingForTemplating(text);
-
-
             return module._escapeMarkdownCharacters(render(text));
         };
+    };
+
+    module._injectHandlebarHelpers = function() {
+
+        // Register a handlebars helper to encode strings in a template
+        module._handlebars.registerHelper('encode', function() {
+            var args = Array.prototype.slice.call(arguments);
+            var text = args.splice(0, args.length - 1).join('');
+            return module._fixedEncodeURIComponent(text);
+        });
+
+        // Register a handlebars helper to escape Markdown characters in a string
+        module._handlebars.registerHelper('escape', function() {
+            var args = Array.prototype.slice.call(arguments);
+            var text = args.splice(0, args.length - 1).join('');
+            return module._escapeMarkdownCharacters(text);
+        });
+
+        module._injectExternalHandlerbarHelper(module._handlebars);
+
+        // loop through handlebars defined list of helpers and check against the enum in ermrestJs
+        // if not in enum, set helper to false
+        // should help defend against new helpers being exposed without us being aware of it
+        module._handlebarsHelpersHash = {};
+        Object.keys(module._handlebars.helpers).forEach(function (key) {
+            module._handlebarsHelpersHash[key] = module._handlebarsHelpersList.includes(key);
+        });
     };
 
     /**
@@ -2398,19 +2367,16 @@
         obj.$moment = module._currDate;
     };
 
-    /*
+    /**
      * @function
-     * @private
-     * @param {String} template The template string to transform
-     * @param {Object} keyValues The key-value pair of object to be used for template tags replacement.
-     * @param {Object} [options] Configuration options.
-     * @return {string} A string produced after templating
-     * @desc Returns a string produced as a result of templating using `Mustache`.
+     * @desc
+     * Replace variables having  dot with underscore so that they can be accessed in the template
+     * @param {Object} keyValues The key-value pair of object.
+     * @param {Object} options An object of options which might contain additional functions to be injected
+     *
+     * @return {Object} obj
      */
-    module._renderMustacheTemplate = function(template, keyValues, options) {
-        if (typeof template !== 'string') return null;
-
-        options = options || {};
+    module._addTemplateVars = function(keyValues, options) {
 
         var obj = {};
         if (keyValues && isObject(keyValues)) {
@@ -2420,20 +2386,13 @@
             } catch (err) {
                 // This should not happen since we're guarding against custom type objects.
                 obj = keyValues;
-                console.log("Could not process the given keyValues in _renderMustacheTemplate. Ignoring the _replaceDotWithUnderscore logic.");
+                console.log("Could not process the given keyValues in _renderTemplate. Ignoring the _replaceDotWithUnderscore logic.");
                 console.log(err);
             }
         }
 
-
         // Inject ermrest internal utility objects such as date
         module._addErmrestVarsToTemplate(obj);
-
-        // Inject the encode function in the keyValues object
-        obj.encode = module._encodeForTemplate;
-
-        // Inject the escape function in the keyValues object
-        obj.escape = module._escapeForTemplate;
 
         // Inject other functions provided in the options.functions array if needed
         if (options.functions && options.functions.length) {
@@ -2444,12 +2403,34 @@
             });
         }
 
+        return obj;
+    };
+
+    /*
+     * @function
+     * @private
+     * @param {String} template The template string to transform
+     * @param {Object} obj The key-value pair of object to be used for template tags replacement.
+     * @param {Object} [options] Configuration options.
+     * @return {string} A string produced after templating
+     * @desc Returns a string produced as a result of templating using `Mustache`.
+     */
+    module._renderMustacheTemplate = function(template, keyValues, options) {
+
+        options = options || {};
+
+        var obj = module._addTemplateVars(keyValues, options), content;
+
+        // Inject the encode function in the obj object
+        obj.encode = module._encodeForMustacheTemplate;
+
+        // Inject the escape function in the obj object
+        obj.escape = module._escapeForMustacheTemplate;
+
         // If we should validate, validate the template and if returns false, return null.
         if (!options.avoidValidation && !module._validateMustacheTemplate(template, obj)) {
             return null;
         }
-
-        var content;
 
         try {
             content = module._mustache.render(template, obj);
@@ -2478,7 +2459,7 @@
         // Inject ermrest internal utility objects such as date
         module._addErmrestVarsToTemplate(keyValues);
 
-        var conditionalRegex = /\{\{(#|\^)([^\{\}]+)\}\}/;
+        var conditionalRegex = /\{\{(#|\^)([^\{\}]+)\}\}/, i, key, value;
 
         // If no conditional Mustache statements of the form {{#var}}{{/var}} or {{^var}}{{/var}} not found then do direct null check
         if (!conditionalRegex.exec(template)) {
@@ -2496,15 +2477,151 @@
                  * Iterate over all placeholders to set pattern as null if any of the
                  * values turn out to be null or undefined
                  */
-                for (var i=0; i<placeholders.length;i++) {
+                for (i=0; i<placeholders.length;i++) {
 
                     // Grab actual key from the placeholder {{name}} = name, remove "{{" and "}}" from the string for key
-                    var key = placeholders[i].substring(2, placeholders[i].length - 2);
+                    key = placeholders[i].substring(2, placeholders[i].length - 2);
 
                     if (key[0] == "{") key = key.substring(1, key.length -1);
 
                     // find the value.
-                    var value = module._getPath(keyValues, key.trim());
+                    value = module._getPath(keyValues, key.trim());
+
+                    // TODO since we're not going inside the object this logic of ignoredColumns is not needed anymore,
+                    // it was a hack that was added for asset columns.
+                    // If key is not in ingored columns value for the key is null or undefined then return null
+                    if ((!Array.isArray(ignoredColumns) || ignoredColumns.indexOf(key) == -1) && (value === null || value === undefined)) {
+                       return false;
+                    }
+                }
+            }
+        }
+        return true;
+    };
+
+    /*
+     * @function
+     * @private
+     * @param {String} template The template string to transform
+     * @param {Object} keyValues The key-value pair of object to be used for template tags replacement.
+     * @param {Object} [options] Configuration options.
+     * @return {string} A string produced after templating
+     * @desc Returns a string produced as a result of templating using `Handlebars`.
+     */
+    module._renderHandlebarsTemplate = function(template, keyValues, options) {
+
+        options = options || {};
+
+        var obj = module._addTemplateVars(keyValues, options), content, _compiledTemplate;
+
+        // If we should validate, validate the template and if returns false, return null.
+        if (!options.avoidValidation && !module._validateHandlebarsTemplate(template, obj)) {
+            return null;
+        }
+
+        try {
+            // Read template from cache
+            _compiledTemplate = module._handlebarsCompiledTemplates[template];
+
+            // If template not found then add it to cache
+            if (!_compiledTemplate) {
+                var compileOptions = {
+                    knownHelpersOnly: true,
+                    knownHelpers: module._handlebarsHelpersHash
+                };
+
+                module._handlebarsCompiledTemplates[template] = _compiledTemplate = module._handlebars.compile(template, compileOptions);
+            }
+
+            // Generate content from the template
+            content = _compiledTemplate(obj);
+        } catch(e) {
+            console.log(e);
+            content = null;
+        }
+
+        return content;
+    };
+
+    // Cache to store all the handlebar templates to reduce compute time
+    module._handlebarsCompiledTemplates = {};
+
+    /**
+     * Returns true if all the used keys have values.
+     *
+     * NOTE:
+     * This implementation is very limited and if conditional Handlebar statements
+     * of the form {{#if }}{{/if}} or {{^if VARNAME}}{{/if}} or {{#unless VARNAME}}{{/unless}} or {{^unless }}{{/unless}} found then it won't check
+     * for null values and will return true.s
+     *
+     * @param  {string}   template       mustache template
+     * @param  {object}   keyValues      key-value pairs
+     * @param  {Array.<string>=} ignoredColumns the columns that should be ignored (optional)
+     * @return {boolean} true if all the used keys have values
+     */
+    module._validateHandlebarsTemplate = function (template, keyValues, ignoredColumns) {
+        var conditionalRegex = /\{\{(((#|\^)([^\{\}]+))|(if|unless|else))([^\{\}]+)\}\}/, i, key, value;
+
+        // If no conditional handlebars statements of the form {{#if VARNAME}}{{/if}} or {{^if VARNAME}}{{/if}} or {{#unless VARNAME}}{{/unless}} or {{^unless VARNAME}}{{/unless}} not found then do direct null check
+        if (!conditionalRegex.exec(template)) {
+
+            // Grab all placeholders ({{PROP_NAME}}) in the template
+            var placeholders = template.match(/\{\{([^\{\}\(\)\s]+)\}\}/ig);
+
+            // These will match the placeholders that are encapsulated in square brackets {{[string with space]}} or {{{[string with space]}}}
+            var specialPlaceholders = template.match(/\{\{((\[[^\{\}]+\])|(\{\[[^\{\}]+\]\}))\}\}/gi);
+
+            // If there are any placeholders
+            if (placeholders && placeholders.length) {
+
+                // Get unique placeholders
+                placeholders = placeholders.filter(function(item, i, ar) { return ar.indexOf(item) === i && item !== 'else'; });
+
+                /*
+                 * Iterate over all placeholders to set pattern as null if any of the
+                 * values turn out to be null or undefined
+                 */
+                for (i=0; i<placeholders.length;i++) {
+
+                    // Grab actual key from the placeholder {{name}} = name, remove "{{" and "}}" from the string for key
+                    key = placeholders[i].substring(2, placeholders[i].length - 2);
+
+                    if (key[0] == "{") key = key.substring(1, key.length -1);
+
+                    // find the value.
+                    value = module._getPath(keyValues, key.trim());
+
+                    // TODO since we're not going inside the object this logic of ignoredColumns is not needed anymore,
+                    // it was a hack that was added for asset columns.
+                    // If key is not in ingored columns value for the key is null or undefined then return null
+                    if ((!Array.isArray(ignoredColumns) || ignoredColumns.indexOf(key) == -1) && (value === null || value === undefined)) {
+                       return false;
+                    }
+                }
+            }
+
+            // If there are any placeholders
+            if (specialPlaceholders && specialPlaceholders.length) {
+
+                // Get unique placeholders
+                specialPlaceholders = specialPlaceholders.filter(function(item, i, ar) { return ar.indexOf(item) === i && item !== 'else'; });
+
+                /*
+                 * Iterate over all specialPlaceholders to set pattern as null if any of the
+                 * values turn out to be null or undefined
+                 */
+                for (i=0; i<specialPlaceholders.length;i++) {
+
+                    // Grab actual key from the placeholder {{name}} = name, remove "{{" and "}}" from the string for key
+                    key = specialPlaceholders[i].substring(2, specialPlaceholders[i].length - 2);
+
+                    if (key[0] == "{") key = key.substring(1, key.length -1);
+
+                    // Remove [] from the key {{[name]}} = name, remove "[" and "]" from the string for key
+                    key = key.substring(1, key.length - 1);
+
+                    // find the value.
+                    value = module._getPath(keyValues, key.trim());
 
                     // TODO since we're not going inside the object this logic of ignoredColumns is not needed anymore,
                     // it was a hack that was added for asset columns.
@@ -2525,21 +2642,32 @@
      * options.formatted = true
      *
      * @param  {ERMrest.Table} table
-     * @param  {object} data
+     * @param  {object} keyValues
      * @param  {string} template
      * @param  {string} context
      * @param  {Array.<Object>=} options optioanl parameters
      * @return {string} Returns a string produced as a result of templating using `Mustache`.
      */
-    module._renderTemplate = function (template, data, table, context, options) {
+    module._renderTemplate = function (template, keyValues, table, context, options) {
 
-        // to avoid computing data mutliple times, or if we don't want the formatted values
+        var obj = {};
+
+        if (typeof template !== 'string') return null;
+
+        // to avoid computing keyValues mutliple times, or if we don't want the formatted values
         if (table && (options === undefined || !options.formatted)) {
-            data = module._getFormattedKeyValues(table, context, data);
+            keyValues = module._getFormattedKeyValues(table, context, keyValues);
+        }
+
+        options = options || {};
+
+        if (options.templateEngine === module.HANDLEBARS) {
+            // render the template using Handlebars
+            return module._renderHandlebarsTemplate(template, keyValues, options);
         }
 
         // render the template using Mustache
-        return module._renderMustacheTemplate(template, data, options);
+        return module._renderMustacheTemplate(template, keyValues, options);
     };
 
     /**
@@ -2572,6 +2700,11 @@
             }
 
             data = module._getFormattedKeyValues(table, context, data);
+        }
+
+        if (options.templateEngine === module.HANDLEBARS) {
+            // call the actual Handlebar validator
+            return module._validateHandlebarsTemplate(template, data, ignoredColumns);
         }
 
         // call the actual mustache validator
@@ -2939,6 +3072,15 @@
     module._ignoreDefaultsNames = module._systemColumns;
 
     module._contextHeaderName = 'Deriva-Client-Context';
+
+    module.HANDLEBARS = "handlebars";
+
+    module._handlebarsHelpersList = [
+        // default helpers - NOTE: 'log' and 'lookup' not included
+        "blockHelperMissing", "each", "if", "helperMissing", "unless", "with",
+        // ermrestJS helpers
+        "eq", "ne", "lt", "gt", "lte", "gte", "and", "or", "ifCond", "escape", "encode"
+    ];
 
     module._operationsFlag = Object.freeze({
         DELETE: "DEL",      //delete

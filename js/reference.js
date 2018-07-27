@@ -1971,6 +1971,8 @@
 
                         this._display.type = module._displayTypes.MARKDOWN;
 
+                        this._display.templateEngine = annotation.template_engine;
+
                         // Render the row by composing a markdown representation
                         this._display._markdownPattern = annotation.row_markdown_pattern;
 
@@ -3750,13 +3752,13 @@
                 if (this._content === undefined) {
                     if (!this._data || !this._data.length) {
                     this._content = null;
-                }else {
+                } else {
                     var i, value, pattern, values = [];
                     if (typeof this._ref.display._markdownPattern === 'string') {
                        // Iterate over all data rows to compute the row values depending on the row_markdown_pattern.
                        for (i = 0; i < this._data.length; i++) {
                            // render template
-                           value = module._renderTemplate(this._ref.display._markdownPattern, this._data[i], this._ref._table, this._ref._context);
+                           value = module._renderTemplate(this._ref.display._markdownPattern, this._data[i], this._ref._table, this._ref._context, { templateEngine: this._ref.display.templateEngine });
 
                            // If value is null or empty, return value on basis of `show_nulls`
                            if (value === null || value.trim() === '') {
