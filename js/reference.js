@@ -1035,6 +1035,13 @@
                     if (notSet) defaults.push(columnName);
                 });
 
+                // add columns that the user does not have the right to 'insert'
+                self._table.columns._columns.forEach(function(col) {
+                    if (col.rights.insert == false && defaults.indexOf(col.name) < 0) {
+                        defaults.push(col.name)
+                    }
+                })
+
                 // Remove system columns from defaults list and return
                 return defaults.filter(function(c) {
                     return module._systemColumns.indexOf(c) === -1;
