@@ -41,6 +41,7 @@ SOURCE=$(HEADER) \
 	   $(JS)/format.js \
 	   $(JS)/node.js \
 	   $(JS)/ng.js \
+	   $(JS)/export.js \
 
 # Vendor libs
 VENDOR=vendor
