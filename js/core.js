@@ -735,6 +735,8 @@
          */
         this._isImmutable = (this.annotations.contains(module._annotations.IMMUTABLE) || this.schema._isImmutable);
 
+        this.exportTemplates = (this.annotations.contains("tag:isrd.isi.edu,2016:export")) ? this.annotations.get("tag:isrd.isi.edu,2016:export").content.templates : {};
+
         this._nameStyle = {}; // Used in the displayname to store the name styles.
         this._rowDisplayKeys = {}; // Used for display key
 

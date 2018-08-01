@@ -486,6 +486,10 @@ to use for ERMrest JavaScript agents.
     * [.AttributeGroupReferenceAggregateFn](#ERMrest.AttributeGroupReferenceAggregateFn)
         * [new AttributeGroupReferenceAggregateFn(reference)](#new_ERMrest.AttributeGroupReferenceAggregateFn_new)
         * [.countAgg](#ERMrest.AttributeGroupReferenceAggregateFn+countAgg) : <code>Object</code>
+    * [.exporter](#ERMrest.exporter)
+        * [new exporter()](#new_ERMrest.exporter_new)
+        * [.exportParameters](#ERMrest.exporter+exportParameters)
+        * [.invokeExternalExport()](#ERMrest.exporter+invokeExternalExport)
     * [.Checksum](#ERMrest.Checksum)
         * [new Checksum({file}, {options})](#new_ERMrest.Checksum_new)
         * [.calculate(chunkSize, fn, fn, fn)](#ERMrest.Checksum+calculate) ⇒ <code>Promise</code>
@@ -501,10 +505,6 @@ to use for ERMrest JavaScript agents.
         * [.resume()](#ERMrest.upload+resume)
         * [.cancel()](#ERMrest.upload+cancel) ⇒ <code>Promise</code>
         * [.deleteFile()](#ERMrest.upload+deleteFile) ⇒ <code>Promise</code>
-    * [.exporter](#ERMrest.exporter)
-        * [new exporter()](#new_ERMrest.exporter_new)
-        * [.exportParameters](#ERMrest.exporter+exportParameters)
-        * [.invokeExternalExport()](#ERMrest.exporter+invokeExternalExport)
     * [.Datapath](#ERMrest.Datapath) : <code>object</code>
         * [.DataPath](#ERMrest.Datapath.DataPath)
             * [new DataPath(table)](#new_ERMrest.Datapath.DataPath_new)
@@ -4893,6 +4893,38 @@ This does not count null values for the key since we're using `count distinct`.
 Therefore the returned count might not be exactly the same as number of returned values.
 
 **Kind**: instance property of [<code>AttributeGroupReferenceAggregateFn</code>](#ERMrest.AttributeGroupReferenceAggregateFn)  
+<a name="ERMrest.exporter"></a>
+
+### ERMrest.exporter
+**Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
+
+* [.exporter](#ERMrest.exporter)
+    * [new exporter()](#new_ERMrest.exporter_new)
+    * [.exportParameters](#ERMrest.exporter+exportParameters)
+    * [.invokeExternalExport()](#ERMrest.exporter+invokeExternalExport)
+
+<a name="new_ERMrest.exporter_new"></a>
+
+#### new exporter()
+Export Object
+
+
+| Type |
+| --- |
+| [<code>Reference</code>](#ERMrest.Reference) | 
+
+<a name="ERMrest.exporter+exportParameters"></a>
+
+#### exporter.exportParameters
+TODO: add description
+
+**Kind**: instance property of [<code>exporter</code>](#ERMrest.exporter)  
+<a name="ERMrest.exporter+invokeExternalExport"></a>
+
+#### exporter.invokeExternalExport()
+TODO: add description
+
+**Kind**: instance method of [<code>exporter</code>](#ERMrest.exporter)  
 <a name="ERMrest.Checksum"></a>
 
 ### ERMrest.Checksum
@@ -5052,38 +5084,6 @@ Aborts/cancels the upload
 deletes the file metadata from the hatrac database and removes it from the namespace
 
 **Kind**: instance method of [<code>upload</code>](#ERMrest.upload)  
-<a name="ERMrest.exporter"></a>
-
-### ERMrest.exporter
-**Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
-
-* [.exporter](#ERMrest.exporter)
-    * [new exporter()](#new_ERMrest.exporter_new)
-    * [.exportParameters](#ERMrest.exporter+exportParameters)
-    * [.invokeExternalExport()](#ERMrest.exporter+invokeExternalExport)
-
-<a name="new_ERMrest.exporter_new"></a>
-
-#### new exporter()
-Export Object
-
-
-| Type |
-| --- |
-| [<code>Reference</code>](#ERMrest.Reference) | 
-
-<a name="ERMrest.exporter+exportParameters"></a>
-
-#### exporter.exportParameters
-TODO: add description
-
-**Kind**: instance property of [<code>exporter</code>](#ERMrest.exporter)  
-<a name="ERMrest.exporter+invokeExternalExport"></a>
-
-#### exporter.invokeExternalExport()
-TODO: add description
-
-**Kind**: instance method of [<code>exporter</code>](#ERMrest.exporter)  
 <a name="ERMrest.Datapath"></a>
 
 ### ERMrest.Datapath : <code>object</code>

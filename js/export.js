@@ -23,17 +23,6 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
 var ERMrest = (function(module) {
 
     /**
-     * TODO: add description
-     */
-    module.readTemplatesAnnotation = function (reference) {
-        var exportAnnotations = null;
-        if (reference.table.annotations.contains("tag:isrd.isi.edu,2016:export")) {
-            exportAnnotations = reference.table.annotations.get("tag:isrd.isi.edu,2016:export");
-        }
-        return (exportAnnotations != null) ? exportAnnotations.content.templates : {};
-    };
-
-    /**
      * @desc Export Object
      *
      * @memberof ERMrest
@@ -43,10 +32,18 @@ var ERMrest = (function(module) {
      * @returns {Export}
      * @constructor
      */
-    var exporter = function (reference, format, formatOptions) {
+    var exporter = function (reference, template) {
         this.reference = reference;
-        this.format = format;
-        this.formatOptions = formatOptions;
+        this.template = template;
+        this.formatOptions = {
+            "BAG": {
+                name: reference.location.tableName,
+                algs: ["md5"],
+                archiver: "zip",
+                metadata: {},
+                table_format: "csv"
+            }
+        };
     };
 
     exporter.prototype = {
@@ -56,10 +53,10 @@ var ERMrest = (function(module) {
          * TODO: add description
          */
         get exportParameters () {
-            if (!this._exportParameters) {
+            if (this._exportParameters === undefined) {
                 var exportParameters = {};
                 var bagOptions = this.formatOptions.BAG;
-                var template = this.format.template;
+                var template = this.template;
 
                 var bagParameters = {
                     bag_name: bagOptions.name,
@@ -136,13 +133,11 @@ var ERMrest = (function(module) {
          */
         invokeExternalExport: function () {
             try {
-                module._verify(this._exportParameters, "'exportParameters' must be specified");
-                module._verify(this._exportParameters.catalog, "'exportParameters.catalog' must be specified");
                 var defer = module._q.defer();
 
-                var serviceUrl = this._exportParameters.catalog.host + "/iobox/export/" + (this.format.type == "BAG" ? "bdbag" : "file");
+                var serviceUrl = this.exportParameters.catalog.host + "/iobox/export/" + (this.template.format_type == "BAG" ? "bdbag" : "file");
 
-                this.reference._server._http.post(serviceUrl, this._exportParameters).then(function success(response) {
+                this.reference._server._http.post(serviceUrl, this.exportParameters).then(function success(response) {
                     return defer.resolve(response.data.split("\n"));
                 }, function error(response) {
                     var error = module._responseToError(response);

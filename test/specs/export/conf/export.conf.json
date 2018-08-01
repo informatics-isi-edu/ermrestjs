@@ -1,0 +1,15 @@
+{
+    "catalog": {},
+    "schema": {
+        "name": "export",
+        "createNew": true,
+        "path": "test/specs/export/conf/export/schema.json"
+    },
+    "tables": {
+        "createNew": true
+    },
+    "entities": {
+        "createNew": true,
+        "path": "test/specs/export/conf/export/data"
+    }
+}
