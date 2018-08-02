@@ -123,7 +123,6 @@ exports.execute = function (options) {
 
                 it("exporter.invokeExternalExport should return the proper response from iobox", function (done) {
                     exportObj.invokeExternalExport().then(function (response) {
-                        console.log(response);
                         expect(response.length).toBe(1);
                         expect(response[0].startsWith("https://dev.isrd.isi.edu/iobox/export/file/")).toBeTruthy();
 
