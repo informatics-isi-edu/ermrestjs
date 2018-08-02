@@ -40,6 +40,52 @@
                 }
             ],
             "annotations": {}
+        },
+        "table_w_disabled_columns": {
+            "kind": "table",
+            "table_name": "table_w_disabled_columns",
+            "schema_name": "permission_schema",
+            "keys": [
+                {"unique_columns": ["col_id"]}
+            ],
+            "column_definitions": [
+                {
+                    "name": "col_id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "col_serial",
+                    "type": {
+                        "typename": "serial4"
+                    }
+                },
+                {
+                    "name": "col_generated",
+                    "default": "default generated",
+                    "type": {
+                        "typename": "text"
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:generated": {}
+                    }
+                },
+                {
+                    "name": "col_no_insert",
+                    "default": "default no insert",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "col",
+                    "type": {
+                        "typename": "text"
+                    }
+                }
+            ]
         }
     },
     "table_names": [

@@ -2129,7 +2129,13 @@
             var isSerial = (this.type.name.indexOf('serial') === 0);
 
             if (context == module._contexts.CREATE) {
-                if (this.isSystemColumn || this.isGenerated || isGenerated || isSerial) {
+                if (this.isGenerated || this.isSystemColumn) {
+                    return {
+                        message: "Not Allowed"
+                    };
+                }
+
+                if (isGenerated || isSerial) {
                     return {
                         message: "Automatically generated"
                     };

@@ -1011,7 +1011,7 @@
             function getDefaults() {
                 // any row in data is sufficient. data should include the full set of visible columns
                 var visibleColumnsNames = Object.keys(data[0]);
-                var tableColumnsNames = self._table.columns._columns.map(function (col) {
+                var tableColumnsNames = self.table.columns.all().map(function (col) {
                     return col.name;
                 });
                 // This is gets the difference between the table's set of columns and the reference's set of columns
@@ -1035,12 +1035,13 @@
                     if (notSet) defaults.push(columnName);
                 });
 
-                // add columns that the user does not have the right to 'insert'
-                self._table.columns._columns.forEach(function(col) {
-                    if (col.rights.insert == false && defaults.indexOf(col.name) < 0) {
-                        defaults.push(col.name)
+                // columns that their input is disabled should use the default value of database
+                // this can be because of annotation or acls 
+                self.table.columns.all().forEach(function(col) {
+                    if (col.getInputDisabled(module._contexts.CREATE) && defaults.indexOf(col.name) === -1) {
+                        defaults.push(col.name);
                     }
-                })
+                });
 
                 // Remove system columns from defaults list and return
                 return defaults.filter(function(c) {

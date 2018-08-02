@@ -1,37 +1,14 @@
 var ermrestImport = require(process.env.PWD + '/test/utils/ermrest-import.js');
+var utils = require("../../../utils/utilities.js");
 
 exports.execute = (options) => {
 
-    var setCatalogAcls = (done, uri, catalogId, acls, cb, userCookie) => {
-        ermrestImport.importAcls(acls).then(() => {
-            removeCachedCatalog(catalogId);
-            if (userCookie) {
-                options.ermRest.setUserCookie(userCookie);
-            } else {
-                options.ermRest.resetUserCookie();
-            }
-            return options.ermRest.resolve(uri, { cid: "test" });
-        }).then((response) => {
-            cb(response);
-            done();
-        }, (err) => {
-            console.log(err);
-            done.fail();
-        });
+    var setCatalogAcls = function (done, uri, catalogId, acls, cb, userCookie) {
+        utils.setCatalogAcls(options.ermRest, done, uri, catalogId, acls, cb, userCookie);
     };
 
-    var resetCatalogAcls = (done, acls) => {
-        ermrestImport.importAcls(acls).then(() => {
-            done();
-        }, (err) => {
-            console.log(err);
-            done.fail();
-        });
-    };
-
-    var removeCachedCatalog = (catalogId) => {
-        var server = options.ermRest.ermrestFactory.getServer(process.env.ERMREST_URL);
-        delete server.catalogs._catalogs[catalogId];
+    var removeCachedCatalog = function (catalogId) {
+        utils.removeCachedCatalog(options.ermRest, catalogId)
     };
 
     describe("For determining reference object permissions,", () => {
@@ -63,7 +40,7 @@ exports.execute = (options) => {
 
         describe("for a user with permission to write to ERMrest,", () => {
             var reference;
-            
+
             beforeAll((done) => {
                 setCatalogAcls(done, singleEnitityUri, catalogId, {
                     "catalog": {
@@ -95,7 +72,7 @@ exports.execute = (options) => {
             });
 
             afterAll((done) => {
-                resetCatalogAcls(done, {
+                utils.resetCatalogAcls(done, {
                     "catalog": {
                         "id": catalogId,
                         "acls": {
@@ -140,7 +117,7 @@ exports.execute = (options) => {
             });
 
             afterAll((done) => {
-                resetCatalogAcls(done, {
+                utils.resetCatalogAcls(done, {
                     "catalog": {
                         "id": catalogId,
                         "acls": {
@@ -232,7 +209,7 @@ exports.execute = (options) => {
             });
 
             afterAll((done) => {
-                resetCatalogAcls(done, {
+                utils.resetCatalogAcls(done, {
                     "catalog": {
                         "id": catalogId,
                         "schemas" : {
@@ -335,7 +312,7 @@ exports.execute = (options) => {
             });
 
             afterAll((done) => {
-                resetCatalogAcls(done, {
+                utils.resetCatalogAcls(done, {
                     "catalog": {
                         "id": catalogId,
                         "schemas" : {
@@ -441,7 +418,7 @@ exports.execute = (options) => {
             });
 
             afterAll((done) => {
-                resetCatalogAcls(done, {
+                utils.resetCatalogAcls(done, {
                     "catalog": {
                         "id": catalogId,
                         "acls": {
@@ -480,7 +457,7 @@ exports.execute = (options) => {
                 });
             });
         });
-        
+
         describe("check permissions when column is accessed anonymously, ", () => {
             var reference, termColumn;
 
@@ -556,8 +533,8 @@ exports.execute = (options) => {
             afterAll((done) => {
                 options.ermRest.setUserCookie(process.env.AUTH_COOKIE);
                 removeCachedCatalog(catalogId);
-    
-                resetCatalogAcls(done, {
+
+                utils.resetCatalogAcls(done, {
                     "catalog": {
                         "id": catalogId,
                         "acls": {
