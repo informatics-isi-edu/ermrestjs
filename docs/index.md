@@ -1,4 +1,4 @@
-# ermrestjs [![Build Status](https://travis-ci.org/informatics-isi-edu/ermrestjs.svg?branch=master)](https://travis-ci.org/informatics-isi-edu/ermrestjs) -- ERMrest client library in JavaScript
+# ermrestjs -- ERMrest client library in JavaScript
 
 The ermrestjs library is a client API for the
 [ERMrest](http://github.com/informatics-isi-edu/ermrest) service. It provides a higher-level, simplified interface for working with the entity-relationship concepts that are native to ERMrest.
@@ -10,8 +10,8 @@ We intend for ermrestjs to be usable in browser and node environments.
     Safari, Edge, and Internet Explorer (10+).
 - Node: while not the main target of ermrestjs, it includes bindings for
     node.
-- Angular: while ermrestjs is intended to be framework-neutral, it includes
-    bindings for angular 1.x.
+- AngularJS: while ermrestjs is intended to be framework-neutral, it includes
+    bindings for AngularJS 1.x. Please refer to the [ermestjs AngularJS document](dev-docs/angular.md) for more information.
 
 ## Library
 
@@ -24,11 +24,6 @@ The library consists of the following scripts:
 1. [make](https://en.wikipedia.org/wiki/Makefile): Make is required for any build or development. With `make` only the non-minified package can be built and installed.
 2. [nodejs](https://www.nodejs.org) (v 6.x): Node is required for most development operations including linting, minifying, and testing.
 3. [ErmrestDataUtils](#ermrestdatautils): see discussion below.
-
-### Limitations
-
-- Developers using Mac OS X should see this limitation [issue 207](https://github.com/informatics-isi-edu/ermrestjs/issues/207).
-- Also on Mac, we have found problems with the nodejs installed by Homebrew, so we recommend downloading directly from the nodejs site.
 
 ### ErmrestDataUtils
 
@@ -48,13 +43,6 @@ $ npm install
 $ cd ..
 ```
 
-## How to get ermrestjs
-
-Clone the repo from GitHub.
-```
-$ git clone https://github.com/informatics-isi-edu/ermrestjs.git
-$ cd ermrestjs
-```
 
 ## How to build the packages
 
@@ -113,8 +101,8 @@ $ make doc
 
 Before running the test cases you need to set the environment variables.
 - `ERMREST_URL`: the URL to the ermrest service on a (possibly, remote) host.
-- `AUTH_COOKIE`: a primary user cookie valid to the (possibly, remote) host running the ermrest service. See [How To Get Your AUTH_COOKIE](https://github.com/informatics-isi-edu/chaise/wiki/E2E-tests-guide#how-to-get-your-auth_cookie).
-- `RESTRICTED_AUTH_COOKIE`: a secondary user cookie valid to the (possibly, remote) host running the ermrest service.  See [How To Get Your AUTH_COOKIE](https://github.com/informatics-isi-edu/).
+- `AUTH_COOKIE`: a primary user cookie valid to the (possibly, remote) host running the ermrest service. See [How To Get Your AUTH_COOKIE](dev-docs/unit-test.md#how-to-get-your-auth_cookie).
+- `RESTRICTED_AUTH_COOKIE`: a secondary user cookie valid to the (possibly, remote) host running the ermrest service.  See [How To Get Your AUTH_COOKIE](dev-docs/unit-test.md#how-to-get-your-auth_cookie).
 
 ```
 export ERMREST_URL=https://hostname/ermrest
@@ -129,6 +117,7 @@ $ make test
 ```
 
 This command internally invokes the `node test/jasmine-runner.js` script.
+For more information you can refer to the [Unit Testing In ermrestjs document](dev-docs/unit-test.md).
 
 
 ## How to check your code quality
