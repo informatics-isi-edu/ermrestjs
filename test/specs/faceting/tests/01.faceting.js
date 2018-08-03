@@ -705,7 +705,7 @@ exports.execute = function (options) {
             describe("preferredMode, ", function () {
                 it ('if ux_mode is defined and is valid, should return it.', function () {
                     expect(mainFacets[0].preferredMode).toBe("choices", "missmatch for facet index=0");
-                    expect(mainFacets[13].preferredMode).toBe("choices", "missmatch for facet index=13");
+                    expect(mainFacets[13].preferredMode).toBe("check_presence", "missmatch for facet index=13");
                 });
 
                 describe("otherwise, ", function () {
