@@ -1,4 +1,6 @@
-# Setup
+# Unit Testing
+
+## Setup
 
 - The test framework uses [Jasmine](http://jasmine.github.io/2.4/introduction.html) to write and run the test-cases.
 - It also depends on [ermrest-data-utils](https://www.npmjs.com/package/ermrest-data-utils) package to import and delete data for test-cases.
@@ -11,7 +13,7 @@ $ npm install
 $ npm update
 ```
 
-# Terminology
+## Terminology
 - Test Spec: Another name for [Test Suite](https://en.wikipedia.org/wiki/Test_suite). In jasmine terminology, test spec is a `describe` that can contains hierarchy of `describe` and multiple `it`.
 - [Test Case](https://en.wikipedia.org/wiki/Test_case): The small unit tests. In definition each test spec contains several test cases. In jasmine terminology, test case can be several`it`, or a `describe` that contains several `it`.
 - Schema: The exact schema that we have in ermrest. It contains the definition of all tables. You can find some example of schema documents [here].
@@ -41,11 +43,11 @@ test/
 `-- jasmine-runner.js                   # run this file with node, to run all test specs
 ```
 
-# How to write Tests
+## How to write Tests
 
 To write a new test case, use following instructions.
 
-## 1. Configuration
+### 1. Configuration
 
 You need to create a schema and data that will be used in your test cases. Use [this](https://github.com/informatics-isi-edu/ermrestjs/blob/master/test/specs/sample/conf/product.conf.json) sample to setup your schema and data. Use the [File Structure](#file-structure) to create the appropriate conf folder. [Here](https://github.com/informatics-isi-edu/ermrestjs/tree/master/test/specs/sample/conf) is a sample conf folder and here is list of available options in `SCHEMA_NAME.conf.js`:
 ```javascript
@@ -79,7 +81,7 @@ Things to consider while creating schema:
 **NOTE** : If your test spec is data-independent, i.e. it doesn't depends on any data to be imported, you can simply ignore above configuration rules and don't create the `conf` folder.
 
 
-## 2. Test Spec
+### 2. Test Spec
 Now that you have your sample data, you can go ahead and create your unit tests. Create a `spec.js` file in the spec folder that you created using the following template. Take a look at [this](https://github.com/informatics-isi-edu/ermrestjs/blob/master/test/specs/sample/spec.js) example.
 ```javascript
 require('./../../utils/starter.spec.js').runTests({
@@ -186,7 +188,7 @@ expect([schema, catalog, 213]).toHaveSameItems([schema, 213, catalog], true);
 - You can find more info about how to write unit tests with jasmine in [its documentation page](http://jasmine.github.io/edge/introduction.html).
 
 
-# How To Run Tests
+## How To Run Tests
 
 Before running the test cases you need to set `ERMREST_URL`, `AUTH_COOKIE`, and `RESTRICTED_AUTH_COOKIE`  environment variables.
 
@@ -207,7 +209,7 @@ or
 $ node test/jasmine-runner.js
 ```
 
-## How To Get Your AUTH_COOKIE
+### How To Get Your AUTH_COOKIE
 
 1. Open up [https://dev.isrd.isi.edu/chaise/search/](https://dev.isrd.isi.edu/chaise/search/) website.
 2. Login. The account that you are using must have delete and create access. We use this cookie to create and delete catalogs.
@@ -215,18 +217,18 @@ $ node test/jasmine-runner.js
 4. Go to the console section and write `$.cookie("webauthn")`.
 6. voilà! :satisfied:
 
-## Sample Enviroment Variables
+### Sample Enviroment Variables
 ```sh
 export ERMREST_URL="https://dev.isrd.isi.edu/ermrest" # No trailing `/`
 export AUTH_COOKIE="webauthn=PutYourCookieHere;"; # You have to put `webauthn=` at the beginging and `;` at the end.
 export RESTRICTED_AUTH_COOKIE="webauthn=AnotherCookie;"
 ```
 
-# Debugging
+## Debugging
 
 You can debug your specs using [node inspector](https://github.com/node-inspector/node-inspector), [node built-in inspector](https://nodejs.org/docs/latest-v7.x/api/debugger.html#debugger_v8_inspector_integration_for_node_js), or simply logging.
 
-## Test Single Spec File
+### Test Single Spec File
 
 Whenever you run the `node jasmine-runner.js` , it picks up all the specs defined in **support/jasmine.json** and runs them. To avoid running all specs while development, you can run
 ```sh
@@ -236,7 +238,7 @@ node test/single-test-runner.js
 The `single-test-runner.js` picks and runs the **support/single.spec.js** file. This file is similar to any spec file, which contains the `testCases` to be run and the `schemaConfigurations` to be used. Change these parameters to execute specific test cases.
 
 
-# Other Useful Information
+## Other Useful Information
 
 1. You might come across some test cases that are specific to travis environment or local. To enforce some test cases to just run in a specific environment, you can do the following:
 ```javascript

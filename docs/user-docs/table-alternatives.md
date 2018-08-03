@@ -1,3 +1,5 @@
+# Table Alternatives
+
 ## Definition and assumptions
 
 By using [`table-alternatives` annotation](https://github.com/informatics-isi-edu/ermrest/blob/master/docs/user-doc/annotation.md#2016-table-alternatives), data modelers can define alternative table (or view) for different contexts. By definition, the table that you are adding this annotation to will be the base table and all the listed tables are alternative tables for this base table ([Link to the initial issue](https://github.com/informatics-isi-edu/ermrestjs/issues/170)).

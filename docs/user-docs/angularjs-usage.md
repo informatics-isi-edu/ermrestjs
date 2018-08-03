@@ -1,4 +1,4 @@
-# Angular Binding
+# AngularJS Binding
 
 To use ermrestjs and the `ERMrest` object in Angular applications, first your
 modules will need to inject the `ermrestjs` module.

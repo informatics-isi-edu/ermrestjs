@@ -1,3 +1,5 @@
+# Handlebars
+
 [Handlebars](http://handlebarsjs.com/) is almost similar to Mustache with some additional benefits. There are some things that you can't do in Mustache that Handlebars allows us to do easily using `helpers`.
 
 The syntax of blocks in Mustache changes a lot in Handlebars. For instance, something in Mustache that allows to do a null check would be
@@ -18,7 +20,7 @@ With handlebars you need to pass the variables to an `if` helper to do the check
 All the other `encode`, `decode` helpers also change accordingly.
 
 
-# Notable differences between Mustache and Handlebars
+## Notable differences between Mustache and Handlebars
 
 * [Handlebar Paths](#handlebars-paths)
 * [Block Helpers](#block-helpers)

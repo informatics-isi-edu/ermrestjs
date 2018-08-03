@@ -1,3 +1,5 @@
+# Pseudo-Columns Logic And Heuristics
+
 ERMrestJS **pseudo columns** refer to virtual columns created from key and foreign key constraints in the model, as well as aggregation function of those entities/columns. ERMrestJS supports the following categories of pseudo columns:
 * Key
 * Outbound ForeignKey (single- and multi-hops)

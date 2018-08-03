@@ -1,3 +1,5 @@
+# Test Idioms
+
 In this document we try to summarize what are the best practices while writing test cases in ERMrestJS and Chaise.
 
 - Try to keep your schema definitions as simple as possible. It only needs to cover the cases that you want to test. Avoid duplicating other existing schemas/tables.
