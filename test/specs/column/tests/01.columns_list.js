@@ -606,8 +606,8 @@ exports.execute = function (options) {
                 })
 
                 it('should not include duplicate Columns or PseudoColumns.', function() {
-                    expect(compactColumns.length).toBe(21);
-                    expect(entryRef.columns.length).toBe(16);
+                    expect(compactColumns.length).toBe(22);
+                    expect(entryRef.columns.length).toBe(17);
                 });
 
                 it('should include columns that are not part of any FKRs.', function () {
@@ -664,20 +664,20 @@ exports.execute = function (options) {
                     });
 
                     it('should create just one PseudoColumn for the FKR.', function () {
-                        expect(compactColumns[16].isPseudo).toBe(true);
-                        expect(compactColumns[16]._constraintName).toBe(["columns_schema", "outbound_fk_5"].join("_"));
-
                         expect(compactColumns[17].isPseudo).toBe(true);
-                        expect(compactColumns[17]._constraintName).toBe(["columns_schema", "outbound_fk_6"].join("_"));
+                        expect(compactColumns[17]._constraintName).toBe(["columns_schema", "outbound_fk_5"].join("_"));
 
                         expect(compactColumns[18].isPseudo).toBe(true);
-                        expect(compactColumns[18]._constraintName).toBe(["columns_schema", "outbound_fk_8"].join("_"));
+                        expect(compactColumns[18]._constraintName).toBe(["columns_schema", "outbound_fk_6"].join("_"));
 
                         expect(compactColumns[19].isPseudo).toBe(true);
-                        expect(compactColumns[19]._constraintName).toBe(["columns_schema", "outbound_fk_7"].join("_"));
+                        expect(compactColumns[19]._constraintName).toBe(["columns_schema", "outbound_fk_8"].join("_"));
 
                         expect(compactColumns[20].isPseudo).toBe(true);
-                        expect(compactColumns[20]._constraintName).toBe(["columns_schema", "outbound_fk_9"].join("_"));
+                        expect(compactColumns[20]._constraintName).toBe(["columns_schema", "outbound_fk_7"].join("_"));
+
+                        expect(compactColumns[21].isPseudo).toBe(true);
+                        expect(compactColumns[21]._constraintName).toBe(["columns_schema", "outbound_fk_9"].join("_"));
                     });
                 });
 

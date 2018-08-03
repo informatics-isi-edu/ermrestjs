@@ -39,6 +39,12 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
     ERMrest._mustache = require('mustache');
 
     /*
+     * Inject _handlebars module in ERMrest as well as its helpers
+     */
+    ERMrest._handlebars = require('handlebars');
+    ERMrest._injectHandlebarHelpers();
+
+    /*
      * Inject _markdownIt module in ERMrest
      * Make markdownit use Sub, Sup and Attrs plugin
      */
@@ -47,6 +53,7 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
                             .use(require('markdown-it-sup')) // add superscript support;
                             .use(require('../vendor/markdown-it-span')) // add span support
                             .use(require('../vendor/markdown-it-attrs.js')); // add attrs support
+
 
     // set custom markdown tags using markdown-it-container plugin
     ERMrest._bindCustomMarkdownTags(ERMrest._markdownIt, require("markdown-it-container"));
@@ -121,7 +128,8 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
         ermrestJsPath + "vendor/moment.min.js",
         // Mustache script
         ermrestJsPath + "vendor/mustache.min.js",
-
+        // Handlebars script
+        ermrestJsPath + "vendor/handlebars.min.js",
         // Markdown-it and dependent plugin scripts
         ermrestJsPath + "vendor/markdown-it.min.js",
 
@@ -140,6 +148,12 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
              * Inject _mustache module in Ermrest
              */
             ERMrest._mustache = window.Mustache;
+
+            /*
+             * Inject _handlebars module in Ermrest as well as its helpers
+             */
+            ERMrest._handlebars = window.Handlebars;
+            ERMrest._injectHandlebarHelpers();
 
             /*
              * Inject _markdownIt module in ERMrest

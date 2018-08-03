@@ -1904,6 +1904,7 @@
                 }
 
                 options.formatted = true; // to avoid creating formattedValues again
+                options.templateEngine = display.templateEngine;
                 unformatted = module._renderTemplate(template, options.formattedValues, this.table, context, options);
             }
 
@@ -2173,6 +2174,7 @@
                     "isMarkdownType" : this.type.name === 'markdown',
                     "isHTML": (typeof annotation.markdown_pattern === 'string') || this.type.name === 'markdown',
                     "markdownPattern": annotation.markdown_pattern,
+                    "templateEngine": annotation.template_engine,
                     "columnOrder": columnOrder
                 };
             }
@@ -2565,6 +2567,7 @@
                 this._display[context] = {
                     "columnOrder": columnOrder,
                     "isMarkdownPattern": (typeof annotation.markdown_pattern === 'string'),
+                    "templateEngine": annotation.template_engine,
                     "markdownPattern": annotation.markdown_pattern
                 };
             }

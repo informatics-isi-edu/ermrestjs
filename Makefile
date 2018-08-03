@@ -29,6 +29,7 @@ SOURCE=$(HEADER) \
 	   $(JS)/datapath.js \
 	   $(JS)/filters.js \
 	   $(JS)/utilities.js \
+	   $(JS)/handlebar_helpers.js \
 	   $(JS)/errors.js \
 	   $(JS)/parser.js \
 	   $(JS)/http.js \
@@ -53,7 +54,7 @@ MIN=$(PROJ).min.js
 VER=$(PROJ).ver.txt
 
 # Documentation target
-DOC=doc
+DOC=docs/dev-docs
 API=$(DOC)/api.md
 JSDOC=jsdoc
 
@@ -143,6 +144,11 @@ distclean: clean
 .PHONY: test
 test: $(BUILD) ../ErmrestDataUtils
 	node test/jasmine-runner.js
+
+# Rule to run the unit tests
+.PHONY: testsingle
+testsingle: $(BUILD) ../ErmrestDataUtils
+	node test/single-test-runner.js
 
 # Rule to install the package
 .PHONY: install installm dont_install_in_root

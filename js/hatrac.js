@@ -297,7 +297,7 @@ var ERMrest = (function(module) {
             ignoredColumns.push(this.column.name + ".size");
             ignoredColumns.push(this.column.name + ".mimetype");
 
-            return module._validateTemplate(template, row, this.reference.table, this.reference._context, {ignoredColumns: ignoredColumns});
+            return module._validateTemplate(template, row, this.reference.table, this.reference._context, { ignoredColumns: ignoredColumns, templateEngine: this.column.templateEngine });
         }
 
         return true;
@@ -736,7 +736,7 @@ var ERMrest = (function(module) {
         row[this.column.name].sha256 = this.hash.sha256;
 
         // Generate url
-        var url = module._renderTemplate(template, row, this.reference.table, this.reference._context, { avoidValidation: true });
+        var url = module._renderTemplate(template, row, this.reference.table, this.reference._context, { avoidValidation: true, templateEngine: this.column.templateEngine });
 
         // check for having hatrac
         if ((module._parseUrl(url).pathname.indexOf('/hatrac/') !== 0)) {
