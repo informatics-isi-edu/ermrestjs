@@ -43,7 +43,7 @@ Note: If the `[<schema name>, <constraint name>]` is an inbound foreign key from
 ```
 
 #### source
-To define a pseudo column, you need an object with at least the `source` attribute. Please refer to [facet `data source` syntax](facet-json.md#data-source) for more information on how to define `<data source>`.
+To define a pseudo column, you need an object with at least the `source` attribute. Please refer to [facet `data source` syntax](facet-json-structure.md#data-source) for more information on how to define `<data source>`.
 
 #### entity (v.s. scalar)
  If the pseudo column can be treated as entity (the column that is defined in data source is key of the table), setting `entity` attribute to `false` will force the scalar mode. This will affect different logic and heuristics. In a nutshell, entity-mode means we try to provide a UX around a set of entities (table rows).  Scalar mode means we try to provide a UX around a set of values like strings, integers, etc.

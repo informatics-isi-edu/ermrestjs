@@ -7,7 +7,7 @@ The ermrestjs library is a client API for the
 
 Documents are categorized based on their audience.
 
-- [Developer Docs](docs/dev-docs): If you want to contribute to this project, you can find more information about API and writing unit tests in there.
+- [Developer Docs](docs/dev-docs): If you want to contribute to this project, you can find more information about [API](docs/dev-docs/api.md) and writing unit tests in there.
 
 - [User Docs](docs/user-docs): How you can configure and use ermrestjs.
 
@@ -19,7 +19,7 @@ We intend for ermrestjs to be usable in browser and node environments.
 - Node: while not the main target of ermrestjs, it includes bindings for
     node.
 - AngularJS: while ermrestjs is intended to be framework-neutral, it includes
-    bindings for AngularJS 1.x. You can for information in [here](docs/user-docs/angular.md)
+    bindings for AngularJS 1.x. You can for information in [here](docs/user-docs/angularjs-usage.md)
 
 ## Library
 
