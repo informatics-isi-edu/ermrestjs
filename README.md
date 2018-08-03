@@ -19,7 +19,7 @@ We intend for ermrestjs to be usable in browser and node environments.
 - Node: while not the main target of ermrestjs, it includes bindings for
     node.
 - AngularJS: while ermrestjs is intended to be framework-neutral, it includes
-    bindings for AngularJS 1.x. You can for information in [here](docs/user-docs/angularjs-usage.md)
+    bindings for AngularJS 1.x. You can find more information in [here](docs/user-docs/angularjs-usage.md).
 
 ## Library
 

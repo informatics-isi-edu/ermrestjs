@@ -1,7 +1,9 @@
-site_name: ERMrestJS
+site_name: ermrestjs
 site_description: The ermrestjs library is a client API for the ERMrest service. It provides a higher-level, simplified interface for working with the entity-relationship concepts that are native to ERMrest.
 theme: readthedocs
 site_url: https://informatics-isi-edu.github.io/ermrestjs/
+extra_css:
+  - /css/extra.css
 
 copyright: Copyright &copy; 2018 <a href="<https://github.com/informatics-isi-edu/ermrestjs>">ermerstjs</a>.
 
