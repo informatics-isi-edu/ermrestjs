@@ -54,7 +54,7 @@ MIN=$(PROJ).min.js
 VER=$(PROJ).ver.txt
 
 # Documentation target
-DOC=doc
+DOC=docs/dev-docs
 API=$(DOC)/api.md
 JSDOC=jsdoc
 

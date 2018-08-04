@@ -1947,7 +1947,7 @@ FacetColumn.prototype = {
     /**
      * The Preferred ux mode.
      * Any of:
-     * `choices`, `ranges`, or `search`
+     * `choices`, `ranges`, or `check_presence`
      * This should be used if we're not in entity mode.
      *
      * 1. use ux_mode if available
@@ -1970,8 +1970,8 @@ FacetColumn.prototype = {
         }
 
         if (this._preferredMode === undefined) {
-            var modes = module._facetFilterTypes;
-            if (module._facetFilterTypeNames.indexOf(this._facetObject.ux_mode) !== -1) {
+            var modes = module._facetUXModes;
+            if (module._facetUXModeNames.indexOf(this._facetObject.ux_mode) !== -1) {
                 this._preferredMode = this._facetObject.ux_mode;
             } else {
                 this._preferredMode = (this.isEntityMode ? modes.CHOICE : (isRangeMode(this._column) ? modes.RANGE : modes.CHOICE) );
