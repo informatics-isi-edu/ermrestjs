@@ -12,7 +12,7 @@ exports.execute = function (options) {
 
         // Test Cases:
         describe("are disabled ", function () {
-            var reference, createReference, output = { message: 'Automatically generated' };
+            var reference, createReference, output = { message: 'Not Allowed' };
 
             beforeAll(function (done) {
                 options.ermRest.resolve(baseUri, {cid: "test"}).then(function (response) {

@@ -1,11 +1,15 @@
+var utils = require("../../../utils/utilities.js");
+
 exports.execute = function (options) {
 
     describe("For determining reference objects and its child objects, ", function () {
         var catalog_id = process.env.DEFAULT_CATALOG,
             schemaName = "reference_schema",
+            schemaNamePermission = "permission_schema",
             tableName = "reference_table",
             tableNameWithSlash = "table_w_slash",
             tableNameWithCompKey = "table_w_only_composite_key",
+            tableWithDisabledColumns = "table_w_disabled_columns",
             entityId = 9000,
             lowerLimit = 8999,
             upperLimit = 9010,
@@ -16,6 +20,9 @@ exports.execute = function (options) {
 
         var entityWithCompositeKey = options.url + "/catalog/" + catalog_id + "/entity/"
             + schemaName + ":" + tableNameWithCompKey;
+
+        var entityWithDisabledColumns = options.url + "/catalog/" + catalog_id + "/entity/"
+            + schemaNamePermission + ":" + tableWithDisabledColumns;
 
         var baseUri = options.url + "/catalog/" + catalog_id + "/entity/"
             + schemaName + ":" + tableName;
@@ -501,5 +508,74 @@ exports.execute = function (options) {
                 });
             });
         }
+
+        describe("passing values for disabled columns (acl, annotation, or system columns), ", function () {
+            var ref,
+                expectedData = ["1", 1, "default generated", "default no insert"],
+                passedData = [{col_id: 1, col:"123", col_serial: 1234, col_generated: "1234", RID: "1234", col_no_insert: "1234"}];
+
+            var returnedData = function (data) {
+                var res = [];
+                res.push(data.col_id, data.col_serial, data.col_generated, data.col_no_insert);
+                return res;
+            };
+
+            beforeAll(function (done) {
+                // make sure the restricted user
+                // - have insert access to the table
+                // - doesn't have insert access to the table.
+                utils.setCatalogAcls(options.ermRest, done, entityWithDisabledColumns, catalog_id, {
+                    "catalog": {
+                        "id": catalog_id,
+                        "acls": {
+                            "enumerate": ["*"]
+                        },
+                        "schemas": {
+                            "permission_schema": {
+                                "tables": {
+                                    "table_w_disabled_columns": {
+                                        "acls": {
+                                            "select" : ["*"],
+                                            "insert": [process.env.RESTRICTED_AUTH_COOKIE_ID]
+                                        },
+                                        "columns": {
+                                            "col_no_insert": {
+                                                "acls": {
+                                                    "select": ["*"],
+                                                    "insert": []
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }, function (response) {
+                    ref = response.contextualize.entryCreate;
+                }, process.env.RESTRICTED_AUTH_COOKIE);
+            });
+
+            it ("the passed value should be ignored and we should use the default value.", function (done) {
+
+                ref.create(passedData).then(function (response) {
+                    var page = response.successful;
+                    expect(page._data.length).toBe(1, "success page length missmatch.");
+                    expect(returnedData(page._data[0])).toEqual(expectedData, "success data missmatch");
+                    return ref.read(1);
+                }).then(function (newPage) {
+                    expect(returnedData(newPage._data[0])).toEqual(expectedData, "read data missmatch.");
+
+                    // make sure the next test cases are using the correct user
+                    options.ermRest.setUserCookie(process.env.AUTH_COOKIE);
+                    utils.removeCachedCatalog(options.ermRest, catalog_id);
+                    done();
+                }).catch(function (error) {
+                    done.fail(error);
+                });
+            });
+        });
+
+
     });
 };
