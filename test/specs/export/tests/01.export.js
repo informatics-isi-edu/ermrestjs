@@ -70,8 +70,8 @@ exports.execute = function (options) {
                     expect(exportParams.catalog.queries[0].output_format).toBe(output.destination.type);
                 });
 
-                it("exporter.invokeExternalExport should return the proper response from iobox", function (done) {
-                    exportObj.invokeExternalExport().then(function (response) {
+                it("exporter.run should return the proper response from iobox", function (done) {
+                    exportObj.run().then(function (response) {
                         expect(response.length).toBe(1);
                         expect(response[0].startsWith("https://dev.isrd.isi.edu/iobox/export/bdbag/")).toBeTruthy();
 
@@ -121,8 +121,8 @@ exports.execute = function (options) {
                     expect(exportParams.catalog.queries[0].output_format).toBe(output.destination.type);
                 });
 
-                it("exporter.invokeExternalExport should return the proper response from iobox", function (done) {
-                    exportObj.invokeExternalExport().then(function (response) {
+                it("exporter.run should return the proper response from iobox", function (done) {
+                    exportObj.run().then(function (response) {
                         expect(response.length).toBe(1);
                         expect(response[0].startsWith("https://dev.isrd.isi.edu/iobox/export/file/")).toBeTruthy();
 
@@ -172,8 +172,8 @@ exports.execute = function (options) {
                     expect(exportParams.catalog.queries[0].output_format).toBe(output.destination.type);
                 });
 
-                it("exporter.invokeExternalExport should return the proper response from iobox", function (done) {
-                    exportObj.invokeExternalExport().then(function (response) {
+                it("exporter.run should return the proper response from iobox", function (done) {
+                    exportObj.run().then(function (response) {
                         expect(response.length).toBe(1);
                         expect(response[0].startsWith("https://dev.isrd.isi.edu/iobox/export/file/")).toBeTruthy();
 

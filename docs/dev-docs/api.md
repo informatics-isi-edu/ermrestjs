@@ -106,6 +106,7 @@ to use for ERMrest JavaScript agents.
             * [.shortestKey](#ERMrest.Table+shortestKey)
             * [.displayKey](#ERMrest.Table+displayKey) : [<code>Array.&lt;Column&gt;</code>](#ERMrest.Column)
             * [.uri](#ERMrest.Table+uri) : <code>string</code>
+            * [.exportTemplates](#ERMrest.Table+exportTemplates) : <code>Array</code>
             * [._getRowDisplayKey(context)](#ERMrest.Table+_getRowDisplayKey)
         * _static_
             * [.Entity](#ERMrest.Table.Entity)
@@ -489,7 +490,7 @@ to use for ERMrest JavaScript agents.
     * [.exporter](#ERMrest.exporter)
         * [new exporter()](#new_ERMrest.exporter_new)
         * [.exportParameters](#ERMrest.exporter+exportParameters)
-        * [.invokeExternalExport()](#ERMrest.exporter+invokeExternalExport)
+        * [.run()](#ERMrest.exporter+run) ⇒ <code>Promise</code>
     * [.Checksum](#ERMrest.Checksum)
         * [new Checksum({file}, {options})](#new_ERMrest.Checksum_new)
         * [.calculate(chunkSize, fn, fn, fn)](#ERMrest.Checksum+calculate) ⇒ <code>Promise</code>
@@ -965,6 +966,7 @@ get table by table name
         * [.shortestKey](#ERMrest.Table+shortestKey)
         * [.displayKey](#ERMrest.Table+displayKey) : [<code>Array.&lt;Column&gt;</code>](#ERMrest.Column)
         * [.uri](#ERMrest.Table+uri) : <code>string</code>
+        * [.exportTemplates](#ERMrest.Table+exportTemplates) : <code>Array</code>
         * [._getRowDisplayKey(context)](#ERMrest.Table+_getRowDisplayKey)
     * _static_
         * [.Entity](#ERMrest.Table.Entity)
@@ -1074,6 +1076,12 @@ The columns that create the shortest key that can be used for display purposes.
 
 #### table.uri : <code>string</code>
 uri to the table in ermrest with entity api
+
+**Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
+<a name="ERMrest.Table+exportTemplates"></a>
+
+#### table.exportTemplates : <code>Array</code>
+Returns the export templates that are defined on this table.
 
 **Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
 <a name="ERMrest.Table+_getRowDisplayKey"></a>
@@ -4901,7 +4909,7 @@ Therefore the returned count might not be exactly the same as number of returned
 * [.exporter](#ERMrest.exporter)
     * [new exporter()](#new_ERMrest.exporter_new)
     * [.exportParameters](#ERMrest.exporter+exportParameters)
-    * [.invokeExternalExport()](#ERMrest.exporter+invokeExternalExport)
+    * [.run()](#ERMrest.exporter+run) ⇒ <code>Promise</code>
 
 <a name="new_ERMrest.exporter_new"></a>
 
@@ -4919,10 +4927,10 @@ Export Object
 TODO: add description
 
 **Kind**: instance property of [<code>exporter</code>](#ERMrest.exporter)  
-<a name="ERMrest.exporter+invokeExternalExport"></a>
+<a name="ERMrest.exporter+run"></a>
 
-#### exporter.invokeExternalExport()
-TODO: add description
+#### exporter.run() ⇒ <code>Promise</code>
+sends the export request to hatrac
 
 **Kind**: instance method of [<code>exporter</code>](#ERMrest.exporter)  
 <a name="ERMrest.Checksum"></a>

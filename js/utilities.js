@@ -255,6 +255,12 @@
         return (typeof x === 'number') && (x % 1 === 0);
     };
 
+    var ObjectHasAllKeys = function (obj, arr) {
+        return arr.every(function (item) {
+            return obj.hasOwnProperty(item);
+        });
+    };
+
     /**
      * @private
      * @param {Object} child child class
@@ -2975,7 +2981,8 @@
         IMMUTABLE: "tag:isrd.isi.edu,2016:immutable",
         NON_DELETABLE: "tag:isrd.isi.edu,2016:non-deletable",
         KEY_DISPLAY: "tag:isrd.isi.edu,2017:key-display",
-        ASSET: "tag:isrd.isi.edu,2017:asset"
+        ASSET: "tag:isrd.isi.edu,2017:asset",
+        EXPORT: "tag:isrd.isi.edu,2016:export"
     });
 
     /**

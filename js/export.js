@@ -129,9 +129,10 @@ var ERMrest = (function(module) {
         },
 
         /**
-         * TODO: add description
+         * sends the export request to hatrac
+         * @returns {Promise}
          */
-        invokeExternalExport: function () {
+        run: function () {
             try {
                 var defer = module._q.defer();
 
@@ -139,10 +140,8 @@ var ERMrest = (function(module) {
 
                 this.reference._server._http.post(serviceUrl, this.exportParameters).then(function success(response) {
                     return defer.resolve(response.data.split("\n"));
-                }, function error(response) {
-                    var error = module._responseToError(response);
-                    return defer.reject(error);
                 }).catch(function (err) {
+                    var error = module._responseToError(err);
                     return defer.reject(error);
                 });
 
@@ -150,6 +149,10 @@ var ERMrest = (function(module) {
             } catch (e) {
                 return module._q.reject(e);
             }
+        },
+
+        cancel: function () {
+            //TODO
         }
     };
 

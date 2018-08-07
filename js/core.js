@@ -735,8 +735,6 @@
          */
         this._isImmutable = (this.annotations.contains(module._annotations.IMMUTABLE) || this.schema._isImmutable);
 
-        this.exportTemplates = (this.annotations.contains("tag:isrd.isi.edu,2016:export")) ? this.annotations.get("tag:isrd.isi.edu,2016:export").content.templates : {};
-
         this._nameStyle = {}; // Used in the displayname to store the name styles.
         this._rowDisplayKeys = {}; // Used for display key
 
@@ -997,6 +995,7 @@
             return this._uri;
         },
 
+        //TODO should be removed but chaise is using this
         get reference() {
             if (!this._reference) {
                 this._reference = module._createReference(module.parse(this._uri), this.schema.catalog);
@@ -1004,6 +1003,58 @@
 
             return this._reference;
         },
+
+        /**
+         * Returns the export templates that are defined on this table.
+         * @type {Array}
+         */
+        get exportTemplates() {
+            if (this._exportTemplates === undefined) {
+                var self = this, exp = module._annotations.EXPORT;
+
+                self._exportTemplates = [];
+                if (self.annotations.contains(exp) && self._validateExportTemplate(self.annotations.get(exp).content.templates)) {
+                    self._exportTemplates = self.annotations.get(exp).content.templates;
+                }
+            }
+
+            return this._exportTemplates;
+         },
+
+         _validateExportTemplate: function (templates) {
+             var i, temp;
+
+             // it's not an array
+             if (!Array.isArray(templates) || templates.length === 0) {
+                 return false;
+             }
+
+             for (i = 0; i < templates.length; i++) {
+                 temp = templates[i];
+
+                 // is not an object
+                 if (!isObject(temp) || !temp) {
+                     return false;
+                 }
+
+                 // doesn't have the expected attributes
+                 if (!ObjectHasAllKeys(temp, ['name', 'format_name', 'format_type', 'outputs'])) {
+                     return false;
+                 }
+
+                 if (["FILE", "BAG"].indexOf(temp.format_type) === -1) {
+                     return false;
+                 }
+
+                 if (!Array.isArray(temp.outputs) || temp.outputs.length === 0) {
+                     return false;
+                 }
+
+                 // TODO make sure outputs is correct
+             }
+
+             return true;
+         },
 
         // build foreignKeys of this table and referredBy of corresponding tables.
         _buildForeignKeys: function () {
