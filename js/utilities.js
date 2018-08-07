@@ -3046,6 +3046,16 @@
         "json"
     ];
 
+    module._facetUXModes = Object.freeze({
+      CHOICE: "choices",
+      RANGE: "ranges",
+      PRESENCE: "check_presence"
+    });
+
+    module._facetUXModeNames = Object.keys(module._facetUXModes).map(function (k) {
+        return module._facetUXModes[k];
+    });
+
     module._facetFilterTypes = Object.freeze({
         CHOICE: "choices",
         RANGE: "ranges",

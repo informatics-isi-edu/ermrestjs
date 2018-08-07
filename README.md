@@ -3,6 +3,14 @@
 The ermrestjs library is a client API for the
 [ERMrest](http://github.com/informatics-isi-edu/ermrest) service. It provides a higher-level, simplified interface for working with the entity-relationship concepts that are native to ERMrest.
 
+## Documention
+
+Documents are categorized based on their audience.
+
+- [Developer Docs](docs/dev-docs): If you want to contribute to this project, you can find more information about [API](docs/dev-docs/api.md) and writing unit tests in there.
+
+- [User Docs](docs/user-docs): How you can configure and use ermrestjs.
+
 ## Runtime environments
 
 We intend for ermrestjs to be usable in browser and node environments.
@@ -10,8 +18,8 @@ We intend for ermrestjs to be usable in browser and node environments.
     Safari, Edge, and Internet Explorer (10+).
 - Node: while not the main target of ermrestjs, it includes bindings for
     node.
-- Angular: while ermrestjs is intended to be framework-neutral, it includes
-    bindings for angular 1.x.
+- AngularJS: while ermrestjs is intended to be framework-neutral, it includes
+    bindings for AngularJS 1.x. You can find more information in [here](docs/user-docs/angularjs-usage.md).
 
 ## Library
 
@@ -19,21 +27,12 @@ The library consists of the following scripts:
 - `ermrest.js`: a complete, non-minified script.
 - `ermrest.min.js`: a complete, minified script.
 
-## Documention
-
-- [API reference](doc/api.md)
-- [Angular Bindings](doc/angular.md)
-
 ## Development dependencies
 
 1. [make](https://en.wikipedia.org/wiki/Makefile): Make is required for any build or development. With `make` only the non-minified package can be built and installed.
 2. [nodejs](https://www.nodejs.org) (v 6.x): Node is required for most development operations including linting, minifying, and testing.
 3. [ErmrestDataUtils](#ermrestdatautils): see discussion below.
 
-### Limitations
-
-- Developers using Mac OS X should see this limitation [issue 207](https://github.com/informatics-isi-edu/ermrestjs/issues/207).
-- Also on Mac, we have found problems with the nodejs installed by Homebrew, so we recommend downloading directly from the nodejs site.
 
 ### ErmrestDataUtils
 
@@ -118,8 +117,8 @@ $ make doc
 
 Before running the test cases you need to set the environment variables.
 - `ERMREST_URL`: the URL to the ermrest service on a (possibly, remote) host.
-- `AUTH_COOKIE`: a primary user cookie valid to the (possibly, remote) host running the ermrest service. See [How To Get Your AUTH_COOKIE](https://github.com/informatics-isi-edu/chaise/wiki/E2E-tests-guide#how-to-get-your-auth_cookie).
-- `RESTRICTED_AUTH_COOKIE`: a secondary user cookie valid to the (possibly, remote) host running the ermrest service.  See [How To Get Your AUTH_COOKIE](https://github.com/informatics-isi-edu/).
+- `AUTH_COOKIE`: a primary user cookie valid to the (possibly, remote) host running the ermrest service.
+- `RESTRICTED_AUTH_COOKIE`: a secondary user cookie valid to the (possibly, remote) host running the ermrest service.
 
 ```
 export ERMREST_URL=https://hostname/ermrest

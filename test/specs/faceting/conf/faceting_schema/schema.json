@@ -163,7 +163,7 @@
                             {"source": [{"outbound": ["faceting_schema", "main_fk1"]}, "id"], "markdown_name": "**F1**"},
                             {"source": [{"outbound": ["faceting_schema", "main_fk2"]}, "id"], "open": true},
                             {"source": [{"inbound": ["faceting_schema", "main_f3_assoc_fk1"]}, {"outbound": ["faceting_schema", "main_f3_assoc_fk2"]}, "term"]},
-                            {"source": [{"inbound": ["faceting_schema", "f4_fk1"]}, "id"], "entity": false, "ux_mode": "choices"},
+                            {"source": [{"inbound": ["faceting_schema", "f4_fk1"]}, "id"], "entity": false, "ux_mode": "check_presence"},
                             {"source": [
                                 {"inbound": ["faceting_schema", "longpath_1_fk1"]},
                                 {"inbound": ["faceting_schema", "longpath_2_fk1"]},

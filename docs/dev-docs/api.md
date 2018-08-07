@@ -4094,7 +4094,7 @@ otherwise returns facetObject['open']
 #### facetColumn.preferredMode : <code>string</code>
 The Preferred ux mode.
 Any of:
-`choices`, `ranges`, or `search`
+`choices`, `ranges`, or `check_presence`
 This should be used if we're not in entity mode.
 
 1. use ux_mode if available

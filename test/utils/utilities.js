@@ -1,3 +1,5 @@
+var ermrestImport = require(process.env.PWD + '/test/utils/ermrest-import.js');
+
 /**
  * @param {Array} pageData - data returned from update request
  * @param {Array} tuples - tuples sent to the database for update
@@ -22,4 +24,35 @@ exports.checkPageValues = function(pageData, tuples, sortBy) {
             expect(responseData[columnName]).toBe(tupleData[columnName], "Value " + responseData[columnName] + " for column " + columnName + " does not match tuple data value");
         }
     }
-}
+};
+
+
+exports.setCatalogAcls = function (ERMrest, done, uri, catalogId, acls, cb, userCookie) {
+    ermrestImport.importAcls(acls).then(function () {
+        exports.removeCachedCatalog(ERMrest, catalogId);
+        if (userCookie) {
+            ERMrest.setUserCookie(userCookie);
+        } else {
+            ERMrest.resetUserCookie();
+        }
+        return ERMrest.resolve(uri, { cid: "test" });
+    }).then(function (response) {
+        cb(response);
+        done();
+    }).catch(function (err) {
+        done.fail(err);
+    });
+};
+
+exports.removeCachedCatalog = function (ERMrest, catalogId) {
+    var server = ERMrest.ermrestFactory.getServer(process.env.ERMREST_URL);
+    delete server.catalogs._catalogs[catalogId];
+};
+
+exports.resetCatalogAcls = function (done, acls) {
+    ermrestImport.importAcls(acls).then(function (){
+        done();
+    }, function (err) {
+        done.fail(err);
+    });
+};
