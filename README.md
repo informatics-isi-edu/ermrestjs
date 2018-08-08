@@ -1,156 +1,42 @@
-# ermrestjs [![Build Status](https://travis-ci.org/informatics-isi-edu/ermrestjs.svg?branch=master)](https://travis-ci.org/informatics-isi-edu/ermrestjs) -- ERMrest client library in JavaScript
+# ERMrestJS [![Build Status](https://travis-ci.org/informatics-isi-edu/ermrestjs.svg?branch=master)](https://travis-ci.org/informatics-isi-edu/ermrestjs) -- ERMrest client library in JavaScript
 
-The ermrestjs library is a client API for the
-[ERMrest](http://github.com/informatics-isi-edu/ermrest) service. It provides a higher-level, simplified interface for working with the entity-relationship concepts that are native to ERMrest.
+The ERMrestJS is a javascript client library for interacting with the [ERMrest](http://github.com/informatics-isi-edu/ermrest) service. It provides higher-level, simplified application programming interfaces (APIs) for working with the Entity-Relationship (ER) concepts that are native to ERMrest. The library has been extended to also support [Hatrac](http://github.com/informatics-isi-edu/hatrac)---an object store service, and [ioboxd](http://github.com/informatics-isi-edu/ioboxd)---an export service. ERMrestJS is a part of [Deriva Platform](http://isrd.isi.edu/deriva). 
 
 ## Documention
 
 Documents are categorized based on their audience.
 
-- [Developer Docs](docs/dev-docs): If you want to contribute to this project, you can find more information about [API](docs/dev-docs/api.md) and writing unit tests in there.
+- [Developer Docs](docs/dev-docs): contains [API docs](docs/dev-docs/api.md) and development guides such as how to write unit tests. 
 
-- [User Docs](docs/user-docs): How you can configure and use ermrestjs.
+- [User Docs](docs/user-docs): contains documents and examples on how you can configure and use ERMrestJS.
 
-## Runtime environments
 
-We intend for ermrestjs to be usable in browser and node environments.
-- Browsers: ermrestjs should work in current versions of Firefox, Chrome,
+## Prerequisites
+- ERMrest
+- Hatrac
+- Export Services
+
+
+## Installation
+
+See [ERMrestJS installation](docs/dev-docs/installation.md).
+
+## Usage
+
+ERMrestJS can be used in browser, nodeJS, or AngularJS environments. See [ERMrestJS usage]() for more detail.
+--- to be removed
+- Browsers: ERMrestJS should work in current versions of Firefox, Chrome,
     Safari, Edge, and Internet Explorer (10+).
-- Node: while not the main target of ermrestjs, it includes bindings for
+- Node: while not the main target of ERMrestJS, it includes bindings for
     node.
-- AngularJS: while ermrestjs is intended to be framework-neutral, it includes
+- AngularJS: while ERMrestJS is intended to be framework-neutral, it includes
     bindings for AngularJS 1.x. You can find more information in [here](docs/user-docs/angularjs-usage.md).
-
-## Library
-
-The library consists of the following scripts:
-- `ermrest.js`: a complete, non-minified script.
-- `ermrest.min.js`: a complete, minified script.
-
-## Development dependencies
-
-1. [make](https://en.wikipedia.org/wiki/Makefile): Make is required for any build or development. With `make` only the non-minified package can be built and installed.
-2. [nodejs](https://www.nodejs.org) (v 6.x): Node is required for most development operations including linting, minifying, and testing.
-3. [ErmrestDataUtils](#ermrestdatautils): see discussion below.
+---
 
 
-### ErmrestDataUtils
+## Code Contribute
 
-In addition ermrestjs is also dependent on another gituhub repo [ErmrestDataUtils](https://github.com/informatics-isi-edu/ErmrestDataUtils). You will need to pull that repo first in the same directory where you plan to pull ermrestjs
-
-```sh
-# Clone the ErmrestDatautils repo
-$ git clone https://github.com/informatics-isi-edu/ErmrestDataUtils.git
-
-# Change directory to ErmrestDataUtils
-$ cd ErmrestDataUtils
-
-# Install npm dependencies
-$ npm install
-
-# Change directory to parent
-$ cd ..
-```
-
-## How to get ermrestjs
-
-Clone the repo from GitHub.
-```
-$ git clone https://github.com/informatics-isi-edu/ermrestjs.git
-$ cd ermrestjs
-```
-
-## How to build the packages
-
-To build the non-minified and angular binding packages run:
-```
-$ make package
-```
-
-If you want to build the minified package, you will need to have `nodejs` and
-`npm` installed and on your path. The build script will pull in all of the
-dependencies into a local directory.
-
-```
-$ make all
-```
-
-## How to deploy ermrestjs
-
-### Set the deployment directory (optional)
-
-Set `ERMRESTJSDIR` to specify a target deployment location. By default, the
-install target is `/var/www/html/ermrestjs`. If this directory does not exist,
-it will first create it. You may need to run `make install` with _super user_
-privileges depending on the installation directory you choose.
-
-**Important Note**: A very silly thing to do would be to set your deployment directory to root `/` and run `make install` with `sudo`. This would be very silly indeed, and would probably result in some corruption of your operating system. Surely, no one would ever do this. But, in the off chance that one might attempt such silliness, the `make install` rule specifies a `dont_install_in_root` prerequisite that attempts to put a stop to any such silliness before it goes to far.
-
-### Production deployment installs
-
-This example is for **production** deployments or other deployments to the document root of a Web server. As noted above, this will install to `/var/www/html/ermrestjs`.
-
-```
-# make install
-```
-
-### Test and other personal deployment installs
-
-This example is how you would install the software on a remote server, for example a test server. Replacing `username` and `hostname` with real values.
-
-```
-$ export ERMRESTJSDIR=username@hostname:public_html/ermrestjs
-$ make install
-```
-
-## How to update the documentation
-
-The API documentation is automatically generated. Source code is documented with
-[jsdoc](http://usejsdoc.org/) comments. We use `jsdoc2md` to generate the
-markdown API documentation.
-
-```
-$ make doc
-```
-
-## How to test the package
-
-Before running the test cases you need to set the environment variables.
-- `ERMREST_URL`: the URL to the ermrest service on a (possibly, remote) host.
-- `AUTH_COOKIE`: a primary user cookie valid to the (possibly, remote) host running the ermrest service.
-- `RESTRICTED_AUTH_COOKIE`: a secondary user cookie valid to the (possibly, remote) host running the ermrest service.
-
-```
-export ERMREST_URL=https://hostname/ermrest
-export AUTH_COOKIE=YOUR_ERMREST_COOKIE
-export RESTRICTED_AUTH_COOKIE=YOUR_SECOND_USER_ERMREST_COOKIE
-```
-
-To execute the tests, run the following command:
-
-```
-$ make test
-```
-
-This command internally invokes the `node test/jasmine-runner.js` script.
-
-
-## How to check your code quality
-
-We use [static analysis programs](https://en.wikipedia.org/wiki/Static_program_analysis),
-including jshint, and Google Closure Compiler (as part of the minification
-step).
-
-To run jshint:
-```
-$ make lint
-```
-
-To check with Closure compiler run `make all`.
-
-## How to contribute
-
-When developing new code for ermrestjs, please remember to run the build tools
+When developing new code for ERMrestJS, please remember to run the build tools
 _before_ submitting Pull Requests (PR).
 
 Steps to make a contribution:
@@ -165,22 +51,17 @@ Steps to make a contribution:
   (`make test` should be free of errors);
 7. make your pull request, and prepare for comments.
 
-## More help
 
-See `make help` for more supported build tools:
-```
-$ make help
-Available 'make' targets:
-    all       - build and docs
-    deps      - local install of node and bower dependencies
-    updeps    - update local dependencies
-    install   - installs the package (ERMRESTJSDIR=/var/www/html/ermrestjs)
-    lint      - lint the source
-    build     - lint, package and minify
-    package   - concatenate into package
-    test      - run tests
-    doc       - make autogenerated markdown docs
-    jsdoc     - make autogenerated html docs
-    clean     - cleans the build environment
-    distclean - cleans and removes dependencies
-```
+## Help and Contact
+
+Please direct questions and comments to the [project issue tracker](https://github.com/informatics-isi-edu/ermrestjs/issues) at GitHub.
+
+## License
+
+ERMrestJS is made available as open source under the Apache License, Version 2.0. Please see the [LICENSE file](LICENSE) for more information.
+
+## About Us
+
+ERMrestJS is developed in the
+[Informatics group](http://www.isi.edu/research_groups/informatics/home)
+at the [USC Information Sciences Institute](http://www.isi.edu).
