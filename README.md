@@ -1,38 +1,27 @@
 # ERMrestJS [![Build Status](https://travis-ci.org/informatics-isi-edu/ermrestjs.svg?branch=master)](https://travis-ci.org/informatics-isi-edu/ermrestjs) -- ERMrest client library in JavaScript
 
-The ERMrestJS is a javascript client library for interacting with the [ERMrest](http://github.com/informatics-isi-edu/ermrest) service. It provides higher-level, simplified application programming interfaces (APIs) for working with the Entity-Relationship (ER) concepts that are native to ERMrest. The library has been extended to also support [Hatrac](http://github.com/informatics-isi-edu/hatrac)---an object store service, and [ioboxd](http://github.com/informatics-isi-edu/ioboxd)---an export service. ERMrestJS is a part of [Deriva Platform](http://isrd.isi.edu/deriva). 
+The ERMrestJS is a javascript client library for interacting with the [ERMrest](http://github.com/informatics-isi-edu/ermrest) service. It provides higher-level, simplified application programming interfaces (APIs) for working with the Entity-Relationship (ER) concepts that are native to ERMrest. The library has been extended to also support [Hatrac](http://github.com/informatics-isi-edu/hatrac)---an object store service, and [ioboxd](http://github.com/informatics-isi-edu/ioboxd)---an export service. ERMrestJS is a part of [Deriva Platform](http://isrd.isi.edu/deriva).
 
 ## Documention
 
 Documents are categorized based on their audience.
 
-- [Developer Docs](docs/dev-docs): contains [API docs](docs/dev-docs/api.md) and development guides such as how to write unit tests. 
+- [Developer Docs](docs/dev-docs): contains [API docs](docs/dev-docs/api.md) and development guides such as how to write unit tests.
 
 - [User Docs](docs/user-docs): contains documents and examples on how you can configure and use ERMrestJS.
 
 
 ## Prerequisites
-- ERMrest
-- Hatrac
-- Export Services
+As described, ERMrestJS is providing a Javascript API to ERMrest, Hatract, and iboxod. Therefore, to use this API you need those services to be available in your server.
 
 
 ## Installation
 
-See [ERMrestJS installation](docs/dev-docs/installation.md).
+See [ERMrestJS installation](docs/user-docs/installation.md).
 
 ## Usage
 
-ERMrestJS can be used in browser, nodeJS, or AngularJS environments. See [ERMrestJS usage]() for more detail.
---- to be removed
-- Browsers: ERMrestJS should work in current versions of Firefox, Chrome,
-    Safari, Edge, and Internet Explorer (10+).
-- Node: while not the main target of ERMrestJS, it includes bindings for
-    node.
-- AngularJS: while ERMrestJS is intended to be framework-neutral, it includes
-    bindings for AngularJS 1.x. You can find more information in [here](docs/user-docs/angularjs-usage.md).
----
-
+ERMrestJS can be used in browser, nodeJS, or AngularJS environments. See [ERMrestJS usage](docs/user-docs/usage.md) for more detail.
 
 ## Code Contribute
 
@@ -43,7 +32,7 @@ Steps to make a contribution:
 
 1. make your updates to the code;
 2. do your own quality assurance;
-3. update the documentation (if applicable);
+3. update the API documentation (if applicable);
 4. update the unit tests (if applicable);
 5. make sure there are no warnings or errors from static analysis programs
   (`make all` should be free of warnings and errors);

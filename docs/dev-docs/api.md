@@ -4964,7 +4964,7 @@ Cancel with cancel()
 <a name="ERMrest.upload+validateURL"></a>
 
 #### upload.validateURL(row) ⇒ <code>boolean</code>
-Call this function with the ermrestjs column object and the json object row To determine it is able to generate a url
+Call this function with the ERMrestJS column object and the json object row To determine it is able to generate a url
 If any properties in the template are found null without null handling then return false
 
 **Kind**: instance method of [<code>upload</code>](#ERMrest.upload)  

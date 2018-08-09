@@ -2957,7 +2957,7 @@
     };
 
     /**
-     * @desc List of annotations that ermrestjs supports.
+     * @desc List of annotations that ERMrestJS supports.
      * @private
      */
     module._annotations = Object.freeze({
@@ -2979,7 +2979,7 @@
     });
 
     /**
-     * @desc List of contexts that ermrestjs supports.
+     * @desc List of contexts that ERMrestJS supports.
      * @private
      */
     module._contexts = Object.freeze({

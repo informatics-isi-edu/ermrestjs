@@ -10,7 +10,8 @@ copyright: Copyright &copy; 2018 <a href="<https://github.com/informatics-isi-ed
 pages:
     - Welcome to the documentation: index.md
     - User Documents:
-        - AngularJS Usage: user-docs/angularjs-usage.md
+        - Installation: user-docs/installation.md
+        - Usage: user-docs/usage.md
         - Facet Examples: user-docs/facet-examples.md
         - Facet JSON Structure: user-docs/facet-json-structure.md
         - Handlebars Usage: user-docs/handlebars.md

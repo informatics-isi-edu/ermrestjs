@@ -266,7 +266,7 @@ var ERMrest = (function(module) {
     };
 
     /**
-     * @desc Call this function with the ermrestjs column object and the json object row To determine it is able to generate a url
+     * @desc Call this function with the ERMrestJS column object and the json object row To determine it is able to generate a url
      * If any properties in the template are found null without null handling then return false
      * @param {object} row - row object containing keyvalues of entity
      *

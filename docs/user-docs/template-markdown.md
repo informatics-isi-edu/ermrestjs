@@ -1,7 +1,7 @@
 # Template And Markdown Guide
 
 > **Disclaimer**:
-> We are only supporting mustache features that are explained in this document. We are not responsible for other features that Mustache is supporting. Those features might or might not work in context of ermrestjs.
+> We are only supporting mustache features that are explained in this document. We are not responsible for other features that Mustache is supporting. Those features might or might not work in context of ERMrestJS.
 
 For information on the annotation **tag:isrd.isi.edu,2016:column-display** specifics you can refer this [document](https://github.com/informatics-isi-edu/ermrest/blob/master/docs/user-doc/annotation.md#2016-column-display)
 
