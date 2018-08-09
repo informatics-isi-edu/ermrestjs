@@ -12,6 +12,7 @@
       "print_utils/spec.js",
       "errors/spec.js",
       "upload/spec.js",
+      "export/spec.js",
       "sample/spec.js"
   ],
   "helpers": ["../../node_modules/jasmine-expect/index.js"],
