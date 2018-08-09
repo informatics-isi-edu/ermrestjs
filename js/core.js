@@ -1012,48 +1012,25 @@
             if (this._exportTemplates === undefined) {
                 var self = this, exp = module._annotations.EXPORT;
 
+                var getValidTemplates = function (templates) {
+                    // make sure it's an array
+                    if (!Array.isArray(templates) || templates.length === 0) {
+                        return [];
+                    }
+
+                    // filter only templates that are valid
+                    return templates.filter(function (temp) {
+                        return module.validateExportTemplate(temp);
+                    });
+                };
+
                 self._exportTemplates = [];
-                if (self.annotations.contains(exp) && self._validateExportTemplate(self.annotations.get(exp).content.templates)) {
-                    self._exportTemplates = self.annotations.get(exp).content.templates;
+                if (self.annotations.contains(exp)) {
+                    self._exportTemplates = getValidTemplates(self.annotations.get(exp).content.templates);
                 }
             }
 
             return this._exportTemplates;
-         },
-
-         _validateExportTemplate: function (templates) {
-             var i, temp;
-
-             // it's not an array
-             if (!Array.isArray(templates) || templates.length === 0) {
-                 return false;
-             }
-
-             for (i = 0; i < templates.length; i++) {
-                 temp = templates[i];
-
-                 // is not an object
-                 if (!isObject(temp) || !temp) {
-                     return false;
-                 }
-
-                 // doesn't have the expected attributes
-                 if (!ObjectHasAllKeys(temp, ['name', 'format_name', 'format_type', 'outputs'])) {
-                     return false;
-                 }
-
-                 if (["FILE", "BAG"].indexOf(temp.format_type) === -1) {
-                     return false;
-                 }
-
-                 if (!Array.isArray(temp.outputs) || temp.outputs.length === 0) {
-                     return false;
-                 }
-
-                 // TODO make sure outputs is correct
-             }
-
-             return true;
          },
 
         // build foreignKeys of this table and referredBy of corresponding tables.

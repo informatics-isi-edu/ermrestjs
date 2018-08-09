@@ -488,9 +488,10 @@ to use for ERMrest JavaScript agents.
         * [new AttributeGroupReferenceAggregateFn(reference)](#new_ERMrest.AttributeGroupReferenceAggregateFn_new)
         * [.countAgg](#ERMrest.AttributeGroupReferenceAggregateFn+countAgg) : <code>Object</code>
     * [.exporter](#ERMrest.exporter)
-        * [new exporter()](#new_ERMrest.exporter_new)
+        * [new exporter(reference, template)](#new_ERMrest.exporter_new)
         * [.exportParameters](#ERMrest.exporter+exportParameters)
         * [.run()](#ERMrest.exporter+run) ⇒ <code>Promise</code>
+        * [.cancel()](#ERMrest.exporter+cancel) ⇒ <code>boolean</code>
     * [.Checksum](#ERMrest.Checksum)
         * [new Checksum({file}, {options})](#new_ERMrest.Checksum_new)
         * [.calculate(chunkSize, fn, fn, fn)](#ERMrest.Checksum+calculate) ⇒ <code>Promise</code>
@@ -4907,19 +4908,21 @@ Therefore the returned count might not be exactly the same as number of returned
 **Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
 
 * [.exporter](#ERMrest.exporter)
-    * [new exporter()](#new_ERMrest.exporter_new)
+    * [new exporter(reference, template)](#new_ERMrest.exporter_new)
     * [.exportParameters](#ERMrest.exporter+exportParameters)
     * [.run()](#ERMrest.exporter+run) ⇒ <code>Promise</code>
+    * [.cancel()](#ERMrest.exporter+cancel) ⇒ <code>boolean</code>
 
 <a name="new_ERMrest.exporter_new"></a>
 
-#### new exporter()
+#### new exporter(reference, template)
 Export Object
 
 
-| Type |
-| --- |
-| [<code>Reference</code>](#ERMrest.Reference) | 
+| Param | Type | Description |
+| --- | --- | --- |
+| reference | [<code>Reference</code>](#ERMrest.Reference) |  |
+| template | <code>Object</code> | the tempalte must be in the valid format. |
 
 <a name="ERMrest.exporter+exportParameters"></a>
 
@@ -4933,6 +4936,14 @@ TODO: add description
 sends the export request to hatrac
 
 **Kind**: instance method of [<code>exporter</code>](#ERMrest.exporter)  
+<a name="ERMrest.exporter+cancel"></a>
+
+#### exporter.cancel() ⇒ <code>boolean</code>
+Will set the canceled flag so when the datat comes back, we can tell the client
+to ignore the value. If it is already canceled it won't do anything.
+
+**Kind**: instance method of [<code>exporter</code>](#ERMrest.exporter)  
+**Returns**: <code>boolean</code> - returns false if the export is already canceled  
 <a name="ERMrest.Checksum"></a>
 
 ### ERMrest.Checksum

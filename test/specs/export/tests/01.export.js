@@ -1,8 +1,22 @@
 exports.execute = function (options) {
 
-    describe('For Checking upload object creation and checksum calculation works, ', function () {
+    // don't run these test cases on travis since iobox is missing.
+    // TODO need to add iobox to travis
+    if (process.env.TRAVIS) {
+        describe ("iobox test cases, ", function () {
+            it ("should be skipped on travis.", function () {
+
+            });
+        });
+        return;
+    }
+
+    describe('IOBOX Export features, ', function () {
         var schemaName = "export",
             tableName = "main",
+            tableNameInvalidTemplate = "invalid_temp",
+            tableNameInvalidTemplate2 = "invalid_temp2",
+            tableNameNoExport = "no_export_annot",
             table, ermRest, reference, exportObj;
 
 
@@ -24,12 +38,28 @@ exports.execute = function (options) {
 
         describe("For exporter ," , function() {
 
-            it("table.exportTemplates should have 3 templates.", function () {
-                table = options.catalog.schemas.get(schemaName).tables.get(tableName);
+            describe("table.exportTemplates, ", function () {
+                it ("should return empty array if annotation missing or invalid.", function () {
+                    var t = options.catalog.schemas.get(schemaName).tables.get(tableNameInvalidTemplate);
+                    expect(t.exportTemplates.length).toBe(0, "length missmatch for invalid templates");
 
-                expect(table.exportTemplates.length).toBe(3);
-                expect(reference.table.exportTemplates.length).toBe(3);
-                expect(reference.table.exportTemplates).toEqual(table.exportTemplates);
+                    t = options.catalog.schemas.get(schemaName).tables.get(tableNameNoExport);
+                    expect(t.exportTemplates.length).toBe(0, "length missmatch for no annoation");
+                });
+
+                it ("should ignore invalid templates.", function () {
+                    var t = options.catalog.schemas.get(schemaName).tables.get(tableNameInvalidTemplate2);
+                    expect(t.exportTemplates.length).toBe(1, "length missmatch");
+                    expect(t.exportTemplates[0].format_name).toEqual("valid_temp", "format_name missmatch.");
+                });
+
+                it ("should return all the templates if they are valid.", function () {
+                    table = options.catalog.schemas.get(schemaName).tables.get(tableName);
+
+                    expect(table.exportTemplates.length).toBe(3);
+                    expect(reference.table.exportTemplates.length).toBe(3);
+                    expect(reference.table.exportTemplates).toEqual(table.exportTemplates);
+                });
             });
 
             describe("for BDBag template", function () {
@@ -72,8 +102,8 @@ exports.execute = function (options) {
 
                 it("exporter.run should return the proper response from iobox", function (done) {
                     exportObj.run().then(function (response) {
-                        expect(response.length).toBe(1);
-                        expect(response[0].startsWith("https://dev.isrd.isi.edu/iobox/export/bdbag/")).toBeTruthy();
+                        expect(response.data.length).toBe(1);
+                        expect(response.data[0].startsWith("https://dev.isrd.isi.edu/iobox/export/bdbag/")).toBeTruthy();
 
                         done();
                     }, function(error) {
@@ -123,8 +153,8 @@ exports.execute = function (options) {
 
                 it("exporter.run should return the proper response from iobox", function (done) {
                     exportObj.run().then(function (response) {
-                        expect(response.length).toBe(1);
-                        expect(response[0].startsWith("https://dev.isrd.isi.edu/iobox/export/file/")).toBeTruthy();
+                        expect(response.data.length).toBe(1);
+                        expect(response.data[0].startsWith("https://dev.isrd.isi.edu/iobox/export/file/")).toBeTruthy();
 
                         done();
                     }, function(error) {
@@ -174,8 +204,8 @@ exports.execute = function (options) {
 
                 it("exporter.run should return the proper response from iobox", function (done) {
                     exportObj.run().then(function (response) {
-                        expect(response.length).toBe(1);
-                        expect(response[0].startsWith("https://dev.isrd.isi.edu/iobox/export/file/")).toBeTruthy();
+                        expect(response.data.length).toBe(1);
+                        expect(response.data[0].startsWith("https://dev.isrd.isi.edu/iobox/export/file/")).toBeTruthy();
 
                         done();
                     }, function(error) {

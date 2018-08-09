@@ -13,26 +13,86 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-var isNode =  false;
-
-if (typeof module === 'object' && module.exports && typeof require === 'function') {
-    isNode = true;
-}
-
 var ERMrest = (function(module) {
+
+    /**
+     * Given an object, returns a boolean that indicates whether it is a valid template or not
+     * NOTE This will only validate the structure and not the values
+     * @param  {Object} template
+     * @return {boolean}
+     */
+    module.validateExportTemplate = function (template) {
+        var errMessage = function (reason) {
+            console.log("export template ignored with name=`" + template.name + "`. Reason: " + reason);
+        };
+
+        // template is not an object
+        if (template !== Object(template) || Array.isArray(template) || !template) {
+            console.log("export template ignored. Reason: it's not an object.");
+            return false;
+        }
+
+        // doesn't have the expected attributes
+        if (!module.ObjectHasAllKeys(template, ['name', 'format_name', 'format_type', 'outputs'])) {
+            console.log("export template ignored. Reason: first level required attributes are missing.");
+            return false;
+        }
+
+        // outputs is not an array
+        if (!Array.isArray(template.outputs) || template.outputs.length === 0) {
+            errMessage("outputs must be an array.");
+            return false;
+        }
+
+        var output;
+        for (var i = 0; i < template.outputs.length; i++) {
+            output = template.outputs[i];
+
+            //output must be an object
+            if (output !== Object(output) || Array.isArray(output) || !output) {
+                errMessage("output index=" + i + " is not an object.");
+                return false;
+            }
+
+            // output must have source and destination
+            if (!module.ObjectHasAllKeys(output, ['source', 'destination'])) {
+                errMessage("output index=" + i + " has missing required attributes.");
+                return false;
+            }
+
+            // output.source must have api and table
+            if (!module.ObjectHasAllKeys(output.source, ['api', 'table'])) {
+                errMessage("output.source index=" + i + " has missing required attributes.");
+                return false;
+            }
+
+            // output.destination must have name and type
+            if (!module.ObjectHasAllKeys(output.destination, ['name', 'type'])) {
+                errMessage("output.destination index=" + i + " has missing required attributes.");
+                return false;
+            }
+        }
+
+        return true;
+    };
 
     /**
      * @desc Export Object
      *
      * @memberof ERMrest
      * @class
-     * @param {ERMrest.Reference}
+     * @param {ERMrest.Reference} reference
+     * @param {Object} template the tempalte must be in the valid format.
+     *
      *
      * @returns {Export}
      * @constructor
      */
     var exporter = function (reference, template) {
+        if (!module.validateExportTemplate(template)) {
+            throw new module.InvalidInputError("Given Template is not valid.");
+        }
+
         this.reference = reference;
         this.template = template;
         this.formatOptions = {
@@ -88,11 +148,6 @@ var ERMrest = (function(module) {
                     queries.push(query);
                 } else {
                     var outputs = template.outputs;
-                    if ((outputs === undefined) || (outputs && outputs.length === 0)) {
-                        var error = "No outputs configured in template: " + template.name;
-                        throw new Error(error);
-                    }
-
                     var tableAliasToken = "X";
                     var predicate = this.reference.location.ermrestCompactPath;
                     outputs.forEach(function (output) {
@@ -132,14 +187,30 @@ var ERMrest = (function(module) {
          * sends the export request to hatrac
          * @returns {Promise}
          */
-        run: function () {
+        run: function (contextHeaderParams) {
             try {
-                var defer = module._q.defer();
+                var defer = module._q.defer(), self = this;
 
-                var serviceUrl = this.exportParameters.catalog.host + "/iobox/export/" + (this.template.format_type == "BAG" ? "bdbag" : "file");
+                var serviceUrl = self.exportParameters.catalog.host + "/iobox/export/" + (self.template.format_type == "BAG" ? "bdbag" : "file");
 
-                this.reference._server._http.post(serviceUrl, this.exportParameters).then(function success(response) {
-                    return defer.resolve(response.data.split("\n"));
+
+                // log parameters
+                var headers = {};
+                if (!contextHeaderParams || typeof contextHeaderParams !== "object") {
+                    contextHeaderParams = {"action": "export"};
+                }
+                // add the reference information
+                for (var key in self.reference.defaultLogInfo) {
+                    if (key in contextHeaderParams) continue;
+                    contextHeaderParams[key] = self.reference.defaultLogInfo[key];
+                }
+                // add the template
+                contextHeaderParams.template = self.template;
+                headers[module._contextHeaderName] = contextHeaderParams;
+
+                self.canceled = false;
+                self.reference._server._http.post(serviceUrl, self.exportParameters, {headers: headers}).then(function success(response) {
+                    return defer.resolve({data: response.data.split("\n"), canceled: self.canceled});
                 }).catch(function (err) {
                     var error = module._responseToError(err);
                     return defer.reject(error);
@@ -151,8 +222,15 @@ var ERMrest = (function(module) {
             }
         },
 
+        /**
+         * Will set the canceled flag so when the datat comes back, we can tell the client
+         * to ignore the value. If it is already canceled it won't do anything.
+         * @return {boolean} returns false if the export is already canceled
+         */
         cancel: function () {
-            //TODO
+            if (this.canceled) return false;
+            this.canceled = true;
+            return true;
         }
     };
 

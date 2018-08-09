@@ -120,6 +120,164 @@
                     ]
                 }
             }
+        },
+        "no_export_annot": {
+            "schema_name": "export",
+            "table_name": "no_export_annot",
+            "kind": "table",
+            "keys": [
+                {"unique_columns": ["id"]}
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                }
+            ]
+        },
+        "invalid_temp": {
+            "schema_name": "export",
+            "table_name": "invalid_temp",
+            "kind": "table",
+            "keys": [
+                {"unique_columns": ["id"]}
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2016:export": {
+                    "templates": {"invalid": "value"}
+                }
+            }
+        },
+        "invalid_temp2": {
+            "schema_name": "export",
+            "table_name": "invalid_temp2",
+            "kind": "table",
+            "keys": [
+                {"unique_columns": ["id"]}
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2016:export": {
+                    "templates": [
+                        {
+                            "outputs": [
+                                {
+                                    "source": {
+                                        "table": "export:main",
+                                        "api": "entity"
+                                    },
+                                    "destination": {
+                                        "type": "csv",
+                                        "name": "export_test_bag"
+                                    }
+                                }
+                            ],
+                            "format_name": "invalid_temp",
+                            "format_type": "BAG"
+                        },
+                        {
+                            "outputs": [
+                                {
+                                    "source": {
+                                        "table": "export:main",
+                                        "api": "entity"
+                                    },
+                                    "destination": {
+                                        "type": "csv",
+                                        "name": "export_test_bag"
+                                    }
+                                }
+                            ],
+                            "name": "export_data_bag",
+                            "format_type": "BAG"
+                        },
+                        {
+                            "outputs": [
+                                {
+                                    "source": {
+                                        "table": "export:main",
+                                        "api": "entity"
+                                    },
+                                    "destination": {
+                                        "type": "csv",
+                                        "name": "export_test_bag"
+                                    }
+                                }
+                            ],
+                            "name": "export_data_bag",
+                            "format_name": "invalid_temp"
+                        },
+                        {
+                            "outputs": [
+                                {
+                                    "source": {
+                                        "table": "export:main",
+                                        "api": "entity"
+                                    },
+                                    "destination": {
+                                        "type": "csv",
+                                        "name": "export_test_bag"
+                                    }
+                                }
+                            ],
+                            "name": "export_data_bag",
+                            "format_name": "valid_temp",
+                            "format_type": "BAG"
+                        },
+                        {
+                            "name": "export_data_bag",
+                            "format_name": "BDBag",
+                            "format_type": "BAG"
+                        },
+                        {
+                            "outputs": [
+                                {
+                                    "source": {
+                                        "table": "export:main",
+                                        "api": "entity"
+                                    }
+                                }
+                            ],
+                            "name": "export_data_bag",
+                            "format_name": "invalid_temp",
+                            "format_type": "BAG"
+                        },
+                        {
+                            "outputs": [
+                                {
+                                    "destination": {
+                                        "type": "csv",
+                                        "name": "export_test_bag"
+                                    }
+                                }
+                            ],
+                            "name": "export_data_bag",
+                            "format_name": "invalid_temp",
+                            "format_type": "BAG"
+                        }
+                    ]
+                }
+            }
         }
     },
     "table_names": [

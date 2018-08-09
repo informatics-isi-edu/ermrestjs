@@ -255,7 +255,13 @@
         return (typeof x === 'number') && (x % 1 === 0);
     };
 
-    var ObjectHasAllKeys = function (obj, arr) {
+    /**
+     * Check if object has all the keys in the given array
+     * @param  {Object} obj the object
+     * @param  {String[]} arr array of key strings
+     * @return {boolean}
+     */
+    module.ObjectHasAllKeys = function (obj, arr) {
         return arr.every(function (item) {
             return obj.hasOwnProperty(item);
         });
