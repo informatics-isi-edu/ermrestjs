@@ -66,6 +66,24 @@ exports.execute = function (options) {
         });
 
         describe("regarding aggregate APIs, ", function () {
+            it ("if adding even one aggregate column would make the url to go over limit, should return error", function (done) {
+                var filter = [], col_name = "column_that_has_a_very_long_name_and_long_values_to_test_limit";
+                for (var i = 0; i < 45; i++) {
+                    filter.push(col_name + "=00000000000000000000000000000000000000000000000000" + i);
+                }
+                var baseUriLengthy = options.url + "/catalog/" + catalog_id + "/entity/" +
+                    schemaName + ":" + tableName + "/" + filter.join(";");
+
+                options.ermRest.resolve(baseUriLengthy, {cid: "test"}).then(function (ref) {
+                    ref.getAggregates([ref.aggregate.countAgg]).then(function (response) {
+                        done.fail("expected function to fail.");
+                    }).catch(function (err) {
+                        expect(err.message).toBe("Cannot send the request because of URL length limit.");
+                        done();
+                    });
+                });
+            });
+
             it("should get the aggregate count for the aggregate_table table.", function(done) {
                 var aggregateList = [
                     reference.aggregate.countAgg

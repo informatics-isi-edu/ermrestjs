@@ -1036,7 +1036,7 @@
                 });
 
                 // columns that their input is disabled should use the default value of database
-                // this can be because of annotation or acls 
+                // this can be because of annotation or acls
                 self.table.columns.all().forEach(function(col) {
                     if (col.getInputDisabled(module._contexts.CREATE) && defaults.indexOf(col.name) === -1) {
                         defaults.push(col.name);
@@ -2228,7 +2228,8 @@
 
             var urlSet = [];
             var baseUri = this.location.service + "/catalog/" + this.location.catalog + "/aggregate/" + this.location.ermrestCompactPath + "/";
-
+            // create a url: ../aggregate/../0:=fn(),1:=fn()..
+            // TODO could be re-written
             for (var i = 0; i < aggregateList.length; i++) {
                 var agg = aggregateList[i];
 
@@ -2241,6 +2242,12 @@
 
                 // if adding the next aggregate to the url will push it past url length limit, push url onto the urlSet and reset the working url
                 if ((url + i + ":=" + agg).length > URL_LENGTH_LIMIT) {
+                    // if cannot even add the first one
+                    if (i === 0) {
+                        defer.reject(new module.InvalidInputError("Cannot send the request because of URL length limit."));
+                        return defer.promise;
+                    }
+
                     // strip off an extra ','
                     if (url.charAt(url.length-1) === ',') {
                         url = url.substring(0, url.length-1);
