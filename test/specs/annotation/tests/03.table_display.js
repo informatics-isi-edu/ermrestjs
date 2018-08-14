@@ -524,8 +524,8 @@ exports.execute = function (options) {
         describe('markdown display in case of no annotation is defined', function() {
             it('when no annotation is defiend; content should appear in unordered list format.', function(done){
                 var content_without_annotation_w_para = '<ul>\n<li>\n<p><a href="https://dev.isrd.isi.edu/chaise/record/schema_table_display:table_wo_title_wo_annotation/RID=' +
-                                                        findRID(tableName1, "20001") + '">20,001</a></p>\n</li>\n<li>\n<p><a href="https://dev.isrd.isi.edu/chaise/record/schema_table_display:table_wo_title_wo_annotation/RID=' +
-                                                        findRID(tableName1, "20002") + '">20,002</a></p>\n</li>\n</ul>\n';
+                                                        findRID(tableName1, "20001") + '">20001</a></p>\n</li>\n<li>\n<p><a href="https://dev.isrd.isi.edu/chaise/record/schema_table_display:table_wo_title_wo_annotation/RID=' +
+                                                        findRID(tableName1, "20002") + '">20002</a></p>\n</li>\n</ul>\n';
                 options.ermRest.resolve(table1EntityUri, {cid: "test"}).then(function (response) {
                     return response;
                 }).then(function (reference){
@@ -577,11 +577,11 @@ exports.execute = function (options) {
                     return ref.read(5);
                 }).then(function (page) {
                     var expected = [
-                        "10,001: 10001",
-                        "10,002: 10002",
-                        "10,003: 10003",
-                        "10,004: 10004",
-                        "10,005: 10005",
+                        "10001: 10001",
+                        "10002: 10002",
+                        "10003: 10003",
+                        "10004: 10004",
+                        "10005: 10005",
                         ""
                     ];
                     page.tuples.forEach(function (t, index) {
@@ -599,11 +599,11 @@ exports.execute = function (options) {
                     return ref.read(5);
                 }).then(function (page) {
                     var expected = [
-                        "20,001: 20001",
-                        "20,002: 20002",
-                        "20,003: 20003",
-                        "20,004: 20004",
-                        "20,005: 20005",
+                        "20001: 20001",
+                        "20002: 20002",
+                        "20003: 20003",
+                        "20004: 20004",
+                        "20005: 20005",
                         ""
                     ];
                     page.tuples.forEach(function (t, index) {
