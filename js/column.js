@@ -2323,18 +2323,45 @@ FacetColumn.prototype = {
                 res[f.facetFilterKey] = [];
             }
 
-            /*
-             * We cannot distinguish between json `null` in sql and actual `null`,
-             * therefore in other parts of code we're treating them the same.
-             * But to generate the filters, we have to add these two cases,
-             * that's why we're adding two values for null.
-             */
             if ((this._column.type.name === "json" || this._column.type.name === "jsonb") &&
-                (f.term === null || f.term === "null") && f.facetFilterKey === module._facetFilterTypes.CHOICE) {
-                if (!hasJSONNull[f.facetFilterKey]) {
-                    res[f.facetFilterKey].push(null, "null");
+                f.facetFilterKey === "choices") {
+
+                /*
+                 * We cannot distinguish between json `null` in sql and actual `null`,
+                 * therefore in other parts of code we're treating them the same.
+                 * But to generate the filters, we have to add these two cases,
+                 * that's why we're adding two values for null.
+                 */
+                if ((f.term === null || f.term === "null")) {
+                    if (!hasJSONNull[f.facetFilterKey]) {
+                        res[f.facetFilterKey].push(null, "null");
+                    }
+                    hasJSONNull[f.facetFilterKey] = true;
+                } else {
+
+                    /*
+                     * We should make sure the JSON value that we are passing
+                     * is valid, if we cannot parse it therefore it should be
+                     * treated as string literal. For example if the term is
+                     * just "test" then the JSON.parse will throw an error and
+                     * stringifying it will turn it into "\"test\"" which is
+                     * the valid JSON value.
+                     */
+                     if (typeof f.term === "string") {
+                         value = JSON.stringify(f.term);
+                     } else {
+                         try {
+                             var json = JSON.parse(f.term);
+                             value = f.term;
+                         } catch(exp) {
+                             // if throws an error, then it should be treated as
+                             // string and not JSON object.
+                             value = JSON.stringify(f.term);
+                         }
+                     }
+
+                    res[f.facetFilterKey].push(value);
                 }
-                hasJSONNull[f.facetFilterKey] = true;
             } else {
                 res[f.facetFilterKey].push(f.toJSON());
             }

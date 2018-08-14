@@ -1153,23 +1153,48 @@ exports.execute = function (options) {
                     });
 
                     describe ("regarding json/jsonb,", function () {
-                        var newRef, jsonbFitler = {"key": "one"};
-
-                        it ("filter manipulation functions should be able to add any json values and parse should serialize it correctly.", function () {
-                            newRef = refMain.facetColumns[9].addChoiceFilters([jsonbFitler]);
+                        var newRef;
+                        var testJSONFilter = function (object, urlEncodedObject) {
+                            newRef = refMain.facetColumns[9].addChoiceFilters([object]);
                             expect(newRef).not.toBe(refMain, "reference didn't change.");
                             expect(newRef.location.ermrestCompactPath).toBe(
-                                "M:=faceting_schema:main/id=1/$M/int_col::geq::-2/$M/jsonb_col=%7B%22key%22%3A%22one%22%7D/$M",
+                                "M:=faceting_schema:main/id=1/$M/int_col::geq::-2/$M/jsonb_col=" + urlEncodedObject + "/$M",
                                 "path missmatch."
                             );
                             expect(newRef.facetColumns[9].filters.length).toBe(1, "filters length missmatch.");
 
-                            expect(JSON.stringify(newRef.facetColumns[9].filters[0].term)).toEqual(JSON.stringify(jsonbFitler), "filter term missmatch for true.");
-                            expect(JSON.stringify(newRef.facetColumns[9].filters[0].uniqueId)).toBe(JSON.stringify(jsonbFitler), "filter uniqueId missmatch for true.");
-                            expect(newRef.facetColumns[9].filters[0].toString()).toBe(JSON.stringify(jsonbFitler,null,2), "filter toString missmatch for true.");
+                            expect(JSON.stringify(newRef.facetColumns[9].filters[0].term)).toEqual(JSON.stringify(object), "filter term missmatch for true.");
+                            expect(JSON.stringify(newRef.facetColumns[9].filters[0].uniqueId)).toBe(JSON.stringify(object), "filter uniqueId missmatch for true.");
+                            expect(newRef.facetColumns[9].filters[0].toString()).toBe(JSON.stringify(object,null,2), "filter toString missmatch for true.");
 
-                            newRef = newRef.facetColumns[9].removeChoiceFilters([jsonbFitler]);
+                            newRef = newRef.facetColumns[9].removeChoiceFilters([object]);
                             expect(newRef.facetColumns[9].filters.length).toBe(0, "filters didn't change.");
+                        };
+
+                        describe ("filter manipulation functions should be able to add any json values and parse should serialize it correctly.", function () {
+                            it ("Having object as the value.", function () {
+                                testJSONFilter({"key": "one"}, "%7B%22key%22%3A%22one%22%7D");
+                            });
+
+                            it ("Having array as the value.", function () {
+                                testJSONFilter(["key", "one"], "%5B%22key%22%2C%22one%22%5D");
+                            });
+
+                            it ("Having number as the value.", function () {
+                                testJSONFilter(1234, "1234");
+                            });
+
+                            it ("having string literal of integer as value.", function () {
+                                testJSONFilter("1234", "%221234%22");
+                            });
+
+                            it ("Having string literal as the value.", function () {
+                                testJSONFilter("value", "%22value%22");
+                            });
+
+                            it ("Having boolean as the value.", function () {
+                                testJSONFilter(true, "true");
+                            });
                         });
 
                         describe ("filter manipulation functions should be able to handle null value.", function () {
