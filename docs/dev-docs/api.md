@@ -106,6 +106,7 @@ to use for ERMrest JavaScript agents.
             * [.shortestKey](#ERMrest.Table+shortestKey)
             * [.displayKey](#ERMrest.Table+displayKey) : [<code>Array.&lt;Column&gt;</code>](#ERMrest.Column)
             * [.uri](#ERMrest.Table+uri) : <code>string</code>
+            * [.exportTemplates](#ERMrest.Table+exportTemplates) : <code>Array</code>
             * [._getRowDisplayKey(context)](#ERMrest.Table+_getRowDisplayKey)
         * _static_
             * [.Entity](#ERMrest.Table.Entity)
@@ -486,6 +487,11 @@ to use for ERMrest JavaScript agents.
     * [.AttributeGroupReferenceAggregateFn](#ERMrest.AttributeGroupReferenceAggregateFn)
         * [new AttributeGroupReferenceAggregateFn(reference)](#new_ERMrest.AttributeGroupReferenceAggregateFn_new)
         * [.countAgg](#ERMrest.AttributeGroupReferenceAggregateFn+countAgg) : <code>Object</code>
+    * [.exporter](#ERMrest.exporter)
+        * [new exporter(reference, template)](#new_ERMrest.exporter_new)
+        * [.exportParameters](#ERMrest.exporter+exportParameters)
+        * [.run()](#ERMrest.exporter+run) ⇒ <code>Promise</code>
+        * [.cancel()](#ERMrest.exporter+cancel) ⇒ <code>boolean</code>
     * [.Checksum](#ERMrest.Checksum)
         * [new Checksum({file}, {options})](#new_ERMrest.Checksum_new)
         * [.calculate(chunkSize, fn, fn, fn)](#ERMrest.Checksum+calculate) ⇒ <code>Promise</code>
@@ -961,6 +967,7 @@ get table by table name
         * [.shortestKey](#ERMrest.Table+shortestKey)
         * [.displayKey](#ERMrest.Table+displayKey) : [<code>Array.&lt;Column&gt;</code>](#ERMrest.Column)
         * [.uri](#ERMrest.Table+uri) : <code>string</code>
+        * [.exportTemplates](#ERMrest.Table+exportTemplates) : <code>Array</code>
         * [._getRowDisplayKey(context)](#ERMrest.Table+_getRowDisplayKey)
     * _static_
         * [.Entity](#ERMrest.Table.Entity)
@@ -1070,6 +1077,12 @@ The columns that create the shortest key that can be used for display purposes.
 
 #### table.uri : <code>string</code>
 uri to the table in ermrest with entity api
+
+**Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
+<a name="ERMrest.Table+exportTemplates"></a>
+
+#### table.exportTemplates : <code>Array</code>
+Returns the export templates that are defined on this table.
 
 **Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
 <a name="ERMrest.Table+_getRowDisplayKey"></a>
@@ -4889,6 +4902,48 @@ This does not count null values for the key since we're using `count distinct`.
 Therefore the returned count might not be exactly the same as number of returned values.
 
 **Kind**: instance property of [<code>AttributeGroupReferenceAggregateFn</code>](#ERMrest.AttributeGroupReferenceAggregateFn)  
+<a name="ERMrest.exporter"></a>
+
+### ERMrest.exporter
+**Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
+
+* [.exporter](#ERMrest.exporter)
+    * [new exporter(reference, template)](#new_ERMrest.exporter_new)
+    * [.exportParameters](#ERMrest.exporter+exportParameters)
+    * [.run()](#ERMrest.exporter+run) ⇒ <code>Promise</code>
+    * [.cancel()](#ERMrest.exporter+cancel) ⇒ <code>boolean</code>
+
+<a name="new_ERMrest.exporter_new"></a>
+
+#### new exporter(reference, template)
+Export Object
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| reference | [<code>Reference</code>](#ERMrest.Reference) |  |
+| template | <code>Object</code> | the tempalte must be in the valid format. |
+
+<a name="ERMrest.exporter+exportParameters"></a>
+
+#### exporter.exportParameters
+TODO: add description
+
+**Kind**: instance property of [<code>exporter</code>](#ERMrest.exporter)  
+<a name="ERMrest.exporter+run"></a>
+
+#### exporter.run() ⇒ <code>Promise</code>
+sends the export request to hatrac
+
+**Kind**: instance method of [<code>exporter</code>](#ERMrest.exporter)  
+<a name="ERMrest.exporter+cancel"></a>
+
+#### exporter.cancel() ⇒ <code>boolean</code>
+Will set the canceled flag so when the datat comes back, we can tell the client
+to ignore the value. If it is already canceled it won't do anything.
+
+**Kind**: instance method of [<code>exporter</code>](#ERMrest.exporter)  
+**Returns**: <code>boolean</code> - returns false if the export is already canceled  
 <a name="ERMrest.Checksum"></a>
 
 ### ERMrest.Checksum
@@ -4964,7 +5019,7 @@ Cancel with cancel()
 <a name="ERMrest.upload+validateURL"></a>
 
 #### upload.validateURL(row) ⇒ <code>boolean</code>
-Call this function with the ermrestjs column object and the json object row To determine it is able to generate a url
+Call this function with the ERMrestJS column object and the json object row To determine it is able to generate a url
 If any properties in the template are found null without null handling then return false
 
 **Kind**: instance method of [<code>upload</code>](#ERMrest.upload)  

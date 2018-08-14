@@ -130,11 +130,11 @@
      * @param {string} message The message
      * @throws {ERMrest.InvalidInputError} If test is not true.
      */
-    function verify(test, message) {
+    verify = function(test, message) {
         if (! test) {
             throw new module.InvalidInputError(message);
         }
-    }
+    };
 
     /**
      * Returns true if given value is defined and not null.

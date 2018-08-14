@@ -16,7 +16,7 @@
 if (typeof angular === 'object' && angular.module) {
 
     /* This is the current way to use ERMrest in an Angular application.
-     * First, your application or module should depend on 'ermrestjs' then
+     * First, your application or module should depend on 'ERMrestJS' then
      * when you need ERMrest services, use a dependency on 'ERMrest'.
      */
     angular.module('ermrestjs', [])

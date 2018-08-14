@@ -995,6 +995,7 @@
             return this._uri;
         },
 
+        //TODO should be removed but chaise is using this
         get reference() {
             if (!this._reference) {
                 this._reference = module._createReference(module.parse(this._uri), this.schema.catalog);
@@ -1002,6 +1003,35 @@
 
             return this._reference;
         },
+
+        /**
+         * Returns the export templates that are defined on this table.
+         * @type {Array}
+         */
+        get exportTemplates() {
+            if (this._exportTemplates === undefined) {
+                var self = this, exp = module._annotations.EXPORT;
+
+                var getValidTemplates = function (templates) {
+                    // make sure it's an array
+                    if (!Array.isArray(templates) || templates.length === 0) {
+                        return [];
+                    }
+
+                    // filter only templates that are valid
+                    return templates.filter(function (temp) {
+                        return module.validateExportTemplate(temp);
+                    });
+                };
+
+                self._exportTemplates = [];
+                if (self.annotations.contains(exp)) {
+                    self._exportTemplates = getValidTemplates(self.annotations.get(exp).content.templates);
+                }
+            }
+
+            return this._exportTemplates;
+         },
 
         // build foreignKeys of this table and referredBy of corresponding tables.
         _buildForeignKeys: function () {

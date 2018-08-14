@@ -33,7 +33,7 @@
      * @param  {string} schemaName Name of schema, can be null
      * @param  {string} tableName  Name of table
      * @param  {object} facets     an object
-     * @return {string}            a path that ermrestjs understands and can parse, can be undefined
+     * @return {string}            a path that ERMrestJS understands and can parse, can be undefined
      */
     module.createPath = function (catalogId, schemaName, tableName, facets) {
         verify(typeof catalogId === "string" && catalogId.length > 0, "catalogId must be an string.");

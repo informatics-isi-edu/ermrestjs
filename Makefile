@@ -37,6 +37,7 @@ SOURCE=$(HEADER) \
 	   $(JS)/column.js \
 	   $(JS)/ag_reference.js \
 	   $(FOOTER) \
+	   $(JS)/export.js \
 	   $(JS)/hatrac.js \
 	   $(JS)/format.js \
 	   $(JS)/node.js \

@@ -256,6 +256,18 @@
     };
 
     /**
+     * Check if object has all the keys in the given array
+     * @param  {Object} obj the object
+     * @param  {String[]} arr array of key strings
+     * @return {boolean}
+     */
+    module.ObjectHasAllKeys = function (obj, arr) {
+        return arr.every(function (item) {
+            return obj.hasOwnProperty(item);
+        });
+    };
+
+    /**
      * @private
      * @param {Object} child child class
      * @param {Object} parent parent class
@@ -2957,7 +2969,7 @@
     };
 
     /**
-     * @desc List of annotations that ermrestjs supports.
+     * @desc List of annotations that ERMrestJS supports.
      * @private
      */
     module._annotations = Object.freeze({
@@ -2975,11 +2987,12 @@
         IMMUTABLE: "tag:isrd.isi.edu,2016:immutable",
         NON_DELETABLE: "tag:isrd.isi.edu,2016:non-deletable",
         KEY_DISPLAY: "tag:isrd.isi.edu,2017:key-display",
-        ASSET: "tag:isrd.isi.edu,2017:asset"
+        ASSET: "tag:isrd.isi.edu,2017:asset",
+        EXPORT: "tag:isrd.isi.edu,2016:export"
     });
 
     /**
-     * @desc List of contexts that ermrestjs supports.
+     * @desc List of contexts that ERMrestJS supports.
      * @private
      */
     module._contexts = Object.freeze({
