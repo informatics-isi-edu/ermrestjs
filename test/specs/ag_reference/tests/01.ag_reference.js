@@ -15,6 +15,7 @@ exports.execute = function (options) {
             encodedID = "p%E1%B4%89";
             decodedID = "pᴉ";
 
+        var schema;
         var mainTableBasePath = schemaName + ":" + mainTable;
 
         var mainTableBaseUri = [
@@ -29,7 +30,7 @@ exports.execute = function (options) {
 
         var ref, refWithModifiers, unicodeRef;
         var loc, locWithModifiers, unicodeLoc;
-        var keyColVisible, keyColInvisible, aggColVisible, aggColInvisible, unicodeID, unicodeCol;
+        var keyColVisible, keyColVisible2, keyColInvisible, aggColVisible, aggColInvisible, unicodeID, unicodeCol;
 
         var checkLocation = function (objName, obj, path) {
             expect(obj).toBeDefined(objName + " was not defined.");
@@ -51,6 +52,10 @@ exports.execute = function (options) {
             expect(obj).toBeDefined(objName + " is not defined.");
             expect(obj.location).toBe(location, objName + " location missmatch.");
         };
+
+        beforeAll(function () {
+            schema = options.catalog.schemas.get(schemaName);
+        });
 
         describe("AttributeGroupLocation, ", function () {
             beforeAll(function () {
@@ -139,24 +144,31 @@ exports.execute = function (options) {
 
             beforeAll(function () {
                 keyColVisible = new options.ermRest.AttributeGroupColumn(
-                    null, "col", "column", "markdown", "comment", true, true
+                    null, "col", null, "column", "markdown", "comment", true, true
+                );
+
+                var col = schema.tables.get(mainTable).columns.get("col_w_pre_format");
+                keyColVisible2 = new options.ermRest.AttributeGroupColumn(
+                    null, "col_w_pre_format", col, null, null, null, true, true
                 );
 
                 keyColInvisible = new options.ermRest.AttributeGroupColumn(
-                    "alias", "invis_col", "invisible column", "text", "", false, false
+                    "alias", "invis_col", null, "invisible column", "text", "", false, false
                 );
 
                 aggColVisible = new options.ermRest.AttributeGroupColumn(
-                    "c2", "cnt(*)", "count", "int4", "", true, true
+                    "c2", "cnt(*)", null, "count", "int4", "", true, true
                 );
 
                 aggColInvisible = new options.ermRest.AttributeGroupColumn(
-                    "c3", "cnt_d(col)", "count col", "int4", "", true, false
+                    "c3", "cnt_d(col)", null, "count col", "int4", "", true, false
                 );
             });
 
             it ("can create column objects.", function () {
                 checkColumn("keyColVisible", keyColVisible, "col", "column", "markdown", "comment", true);
+
+                checkColumn("keyColVisible with base column", keyColVisible2, "col_w_pre_format", "col_w_pre_format", "boolean", null, true);
 
                 checkColumn("keyColInvisible", keyColInvisible, "invis_col", "invisible column", "text", "", false);
 
@@ -196,6 +208,11 @@ exports.execute = function (options) {
                     expect(keyColVisible.formatvalue(null)).toBe(null, "null missmatch.");
                 });
 
+                it ("if baseColumn is defined, should honor the annotation defined on it.", function () {
+                    expect(keyColVisible2.formatvalue(true, "compact")).toBe("YES", "missmatch for compact");
+                    expect(keyColVisible2.formatvalue(true, "detailed")).toBe("true", "missmatch for detailed");
+                });
+
                 it ("otherwise should format the value.", function () {
                     expect(keyColVisible.formatvalue("*markdown*")).toBe("*markdown*", "keyColVisible missmatch.");
                     expect(keyColInvisible.formatvalue("some text")).toBe("some text", "keyColInvisible missmatch.");
@@ -208,7 +225,8 @@ exports.execute = function (options) {
                     expect(keyColVisible.formatPresentation({"col": "*markdown*"}).value).toBe("<em>markdown</em>", "keyColVisible missmatch.");
                 });
 
-                it ("otherwise jsut return the given data.", function () {
+                it ("otherwise return the formatted data.", function () {
+                    expect(keyColVisible2.formatPresentation({"col_w_pre_format": false}, "compact/select").value).toBe("NO", "keyColVisible2 missmatch.");
                     expect(keyColInvisible.formatPresentation({"alias": "some text"}).value).toBe("some text", "keyColInvisible missmatch.");
                 });
             });
@@ -218,17 +236,18 @@ exports.execute = function (options) {
 
             beforeAll(function () {
                 ref = new options.ermRest.AttributeGroupReference(
-                    [keyColVisible, keyColInvisible],
+                    [keyColVisible, keyColInvisible, keyColVisible2],
                     [aggColVisible, aggColInvisible],
                     loc,
                     options.catalog
                 );
 
                 refWithModifiers = new options.ermRest.AttributeGroupReference(
-                    [keyColVisible, keyColInvisible],
+                    [keyColVisible, keyColInvisible, keyColVisible2],
                     [aggColVisible, aggColInvisible],
                     locWithModifiers,
-                    options.catalog
+                    options.catalog,
+                    "compact/select"
                 );
             });
 
@@ -240,35 +259,35 @@ exports.execute = function (options) {
             it ("columns should return visible columns.", function () {
                 expect(ref.columns.map(function (col) {
                     return col.name;
-                })).toEqual(["col", "c2"]);
+                })).toEqual(["col", "col_w_pre_format", "c2"]);
             });
 
             it ("shortestKey should return an array of key columns.", function () {
                 expect(ref.shortestKey.map(function (col) {
                     return col.name;
-                })).toEqual(["col", "alias"]);
+                })).toEqual(["col", "alias", "col_w_pre_format"]);
             });
 
             it ("uri should return a complete uri to the data.", function () {
                 expect(ref.uri).toBe(
-                    mainTableBaseUri + "/col,alias:=invis_col;c2:=cnt(*),c3:=cnt_d(col)",
+                    mainTableBaseUri + "/col,alias:=invis_col,col_w_pre_format;c2:=cnt(*),c3:=cnt_d(col)",
                     "ref uri missmatch."
                 );
 
                 expect(refWithModifiers.uri).toBe(
-                    mainTableBaseUri + "/col::ciregexp::test/col,alias:=invis_col;c2:=cnt(*),c3:=cnt_d(col)@sort(alias)@before(20)",
+                    mainTableBaseUri + "/col::ciregexp::test/col,alias:=invis_col,col_w_pre_format;c2:=cnt(*),c3:=cnt_d(col)@sort(alias)@before(20)",
                     "refWithModifiers uri missmatch."
                 );
             });
 
             it("ermrestPath should return the path.", function () {
                 expect(ref.ermrestPath).toBe(
-                    mainTableBasePath + "/col,alias:=invis_col;c2:=cnt(*),c3:=cnt_d(col)",
+                    mainTableBasePath + "/col,alias:=invis_col,col_w_pre_format;c2:=cnt(*),c3:=cnt_d(col)",
                     "ref uri missmatch."
                 );
 
                 expect(refWithModifiers.ermrestPath).toBe(
-                    mainTableBasePath + "/col::ciregexp::test/col,alias:=invis_col;c2:=cnt(*),c3:=cnt_d(col)@sort(alias)@before(20)",
+                    mainTableBasePath + "/col::ciregexp::test/col,alias:=invis_col,col_w_pre_format;c2:=cnt(*),c3:=cnt_d(col)@sort(alias)@before(20)",
                     "refWithModifiers uri missmatch."
                 );
             });
@@ -371,14 +390,14 @@ exports.execute = function (options) {
                         it ("values should return an array of valeus.", function () {
                             var values = tuples[0].values;
                             expect(values).toEqual([
-                                '<strong>test2</strong>', '2'
+                                '<strong>test2</strong>', 'YES', '2'
                             ]);
                         });
 
                         it ("isHTML should return an array of valeus.", function () {
                             var isHTML = tuples[0].isHTML;
                             expect(isHTML).toEqual([
-                                true, false
+                                true, false, false
                             ]);
                         });
 
@@ -386,20 +405,21 @@ exports.execute = function (options) {
                             var data = tuples[0].data;
                             expect(data.col).toEqual("**test2**", "col data missmatch.");
                             expect(data.alias).toEqual("18", "alias data missmatch.");
+                            expect(data.col_w_pre_format).toEqual(true, "col_w_pre_format data missmatch.");
                             expect(data.c2).toEqual(2, "c2 data missmatch.");
                             expect(data.c3).toEqual(1, "c3 data missmatch.");
                         });
 
                         it ("displayname should return rowname based on key columns.", function () {
                             var disp = tuples[0].displayname;
-                            expect(disp.value).toBe("<strong>test2</strong>:18", "value missmatch.");
-                            expect(disp.unformatted).toBe("**test2**:18", "unformatted missmatch.");
+                            expect(disp.value).toBe("<strong>test2</strong>:18:YES", "value missmatch.");
+                            expect(disp.unformatted).toBe("**test2**:18:YES", "unformatted missmatch.");
                             expect(disp.isHTML).toBe(true, "isHTML missmatch.");
                         });
 
                         describe("uniqueId, ", function () {
                             it ("should return an string based on shortest key values.", function () {
-                                expect(tuples[0].uniqueId).toBe("**test2**_18");
+                                expect(tuples[0].uniqueId).toBe("**test2**_18_YES");
                             });
 
                             it ("should return null if any of the key columns are null.", function (done) {
@@ -435,11 +455,11 @@ exports.execute = function (options) {
 
             it ("Column should handle it.", function () {
                 unicodeID = new options.ermRest.AttributeGroupColumn(
-                    null, encodedID, decodedID, "serial4", "comment", true, true
+                    null, encodedID, null, decodedID, "serial4", "comment", true, true
                 );
 
                 unicodeCol = new options.ermRest.AttributeGroupColumn(
-                    null, encodedCol, decodedCol, "text", "comment", true, true
+                    null, encodedCol, null, decodedCol, "text", "comment", true, true
                 );
 
 

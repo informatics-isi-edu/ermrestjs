@@ -2411,7 +2411,7 @@ FacetColumn.prototype = {
                     return; // don't add duplicate
                 }
 
-                self.filters.push(new ChoiceFacetFilter(ch, self._column.type));
+                self.filters.push(new ChoiceFacetFilter(ch, self._column));
             });
         }
 
@@ -2426,7 +2426,7 @@ FacetColumn.prototype = {
                     return; // don't add duplicate
                 }
 
-                self.filters.push(new RangeFacetFilter(ch.min, ch.min_exclusive, ch.max, ch.max_exclusive, self._column.type));
+                self.filters.push(new RangeFacetFilter(ch.min, ch.min_exclusive, ch.max, ch.max_exclusive, self._column));
             });
         }
 
@@ -2441,7 +2441,7 @@ FacetColumn.prototype = {
                     return; // don't add duplicate
                 }
 
-                self.filters.push(new SearchFacetFilter(ch, self._column.type));
+                self.filters.push(new SearchFacetFilter(ch, self._column));
             });
         }
     },
@@ -2510,7 +2510,7 @@ FacetColumn.prototype = {
         verify (isDefinedAndNotNull(term), "`term` is required.");
 
         var filters = this.filters.slice();
-        filters.push(new SearchFacetFilter(term, this._column.type));
+        filters.push(new SearchFacetFilter(term, this._column));
 
         return this._applyFilters(filters);
     },
@@ -2524,7 +2524,7 @@ FacetColumn.prototype = {
 
         var filters = this.filters.slice(), self = this;
         values.forEach(function (v) {
-            filters.push(new ChoiceFacetFilter(v, self._column.type));
+            filters.push(new ChoiceFacetFilter(v, self._column));
         });
 
         return this._applyFilters(filters);
@@ -2542,7 +2542,7 @@ FacetColumn.prototype = {
             return !(f instanceof ChoiceFacetFilter) && !(f instanceof NotNullFacetFilter);
         });
         values.forEach(function (v) {
-            filters.push(new ChoiceFacetFilter(v, self._column.type));
+            filters.push(new ChoiceFacetFilter(v, self._column));
         });
 
         return this._applyFilters(filters);
@@ -2581,7 +2581,7 @@ FacetColumn.prototype = {
         }
 
         var filters = this.filters.slice();
-        var newFilter = new RangeFacetFilter(min, minExclusive, max, maxExclusive, this._column.type);
+        var newFilter = new RangeFacetFilter(min, minExclusive, max, maxExclusive, this._column);
         filters.push(newFilter);
 
         return {
@@ -2715,8 +2715,8 @@ FacetColumn.prototype = {
  * @constructor
  * @memberof ERMrest
  */
-function FacetFilter(term, columnType) {
-    this._columnType = columnType;
+function FacetFilter(term, column) {
+    this._column = column;
     this.term = term;
     this.uniqueId = term;
 }
@@ -2731,7 +2731,7 @@ FacetFilter.prototype = {
         if (this.term == null) {
             return null;
         }
-        return _formatValueByType(this._columnType, this.term);
+        return this._column.formatvalue(this.term, module._contexts.COMPACT_SELECT);
     },
 
     /**
@@ -2752,8 +2752,8 @@ FacetFilter.prototype = {
  * @constructor
  * @memberof ERMrest
  */
-function SearchFacetFilter(term, columnType) {
-    SearchFacetFilter.superClass.call(this, term, columnType);
+function SearchFacetFilter(term, column) {
+    SearchFacetFilter.superClass.call(this, term, column);
     this.facetFilterKey = module._facetFilterTypes.SEARCH;
 }
 module._extends(SearchFacetFilter, FacetFilter);
@@ -2768,8 +2768,8 @@ module._extends(SearchFacetFilter, FacetFilter);
  * @constructor
  * @memberof ERMrest
  */
-function ChoiceFacetFilter(value, columnType) {
-    ChoiceFacetFilter.superClass.call(this, value, columnType);
+function ChoiceFacetFilter(value, column) {
+    ChoiceFacetFilter.superClass.call(this, value, column);
     this.facetFilterKey = module._facetFilterTypes.CHOICE;
 }
 module._extends(ChoiceFacetFilter, FacetFilter);
@@ -2788,8 +2788,8 @@ module._extends(ChoiceFacetFilter, FacetFilter);
  * @constructor
  * @memberof ERMrest
  */
-function RangeFacetFilter(min, minExclusive, max, maxExclusive, columnType) {
-    this._columnType = columnType;
+function RangeFacetFilter(min, minExclusive, max, maxExclusive, column) {
+    this._column = column;
     this.min = !isDefinedAndNotNull(min) ? null : min;
     this.minExclusive = (minExclusive === true) ? true: false;
     this.max = !isDefinedAndNotNull(max) ? null : max;
@@ -2809,15 +2809,19 @@ module._extends(RangeFacetFilter, FacetFilter);
  * @return {string}
  */
 RangeFacetFilter.prototype.toString = function () {
-    var opt;
+    var opt, self = this;
+    var getValue = function (isMin) {
+        return self._column.formatvalue((isMin ? self.min : self.max), module._contexts.COMPACT_SELECT);
+    };
+
     // assumption: at least one of them is defined
     if (!isDefinedAndNotNull(this.max)) {
-        return (this.minExclusive ? "> " : "≥ ") + _formatValueByType(this._columnType, this.min);
+        return (this.minExclusive ? "> " : "≥ ") + getValue(true);
     }
     if (!isDefinedAndNotNull(this.min)) {
-        return (this.maxExclusive ? "< " : "≤ ") + _formatValueByType(this._columnType, this.max);
+        return (this.maxExclusive ? "< " : "≤ ") + getValue();
     }
-    return _formatValueByType(this._columnType, this.min) + " to " + _formatValueByType(this._columnType, this.max);
+    return getValue(true) + " to " + getValue();
 };
 
 /**
@@ -2945,11 +2949,14 @@ ColumnGroupAggregateFn.prototype = {
 
         // key columns
         var keyColumns = [
-            new AttributeGroupColumn(module._groupAggregateColumnNames.VALUE, module._fixedEncodeURIComponent(this.column.name), this.column.displayname, this.column.type, this.column.comment, true, true)
+            new AttributeGroupColumn(
+                module._groupAggregateColumnNames.VALUE,
+                module._fixedEncodeURIComponent(this.column.name),
+                this.column, null, null, this.column.comment, true, true)
         ];
 
         // the reference
-        return new AttributeGroupReference(keyColumns, [], loc, this._ref.table.schema.catalog);
+        return new AttributeGroupReference(keyColumns, [], loc, this._ref.table.schema.catalog, module_context.COMPACT_SELECT);
     },
 
     /**
@@ -2978,7 +2985,10 @@ ColumnGroupAggregateFn.prototype = {
 
         // key columns
         var keyColumns = [
-            new AttributeGroupColumn(module._groupAggregateColumnNames.VALUE, module._fixedEncodeURIComponent(this.column.name), this.column.displayname, this.column.type, this.column.comment, true, true)
+            new AttributeGroupColumn(
+                module._groupAggregateColumnNames.VALUE,
+                module._fixedEncodeURIComponent(this.column.name),
+                this.column, null, null, this.column.comment, true, true)
         ];
 
         var countName = "cnt(*)";
@@ -2987,10 +2997,10 @@ ColumnGroupAggregateFn.prototype = {
         }
 
         var aggregateColumns = [
-            new AttributeGroupColumn(module._groupAggregateColumnNames.COUNT, countName, "Number of Occurences", new Type({typename: "int"}), "", true, true)
+            new AttributeGroupColumn(module._groupAggregateColumnNames.COUNT, countName, null, "Number of Occurences", new Type({typename: "int"}), "", true, true)
         ];
 
-        return new AttributeGroupReference(keyColumns, aggregateColumns, loc, this._ref.table.schema.catalog);
+        return new AttributeGroupReference(keyColumns, aggregateColumns, loc, this._ref.table.schema.catalog, module._contexts.COMPACT_SELECT);
     },
 
     /**
