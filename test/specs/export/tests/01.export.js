@@ -2,14 +2,14 @@ exports.execute = function (options) {
 
     // don't run these test cases on travis since iobox is missing.
     // TODO need to add iobox to travis
-    if (process.env.TRAVIS) {
-        describe ("iobox test cases, ", function () {
-            it ("should be skipped on travis.", function () {
-
-            });
-        });
-        return;
-    }
+    // if (process.env.TRAVIS) {
+    //     describe ("iobox test cases, ", function () {
+    //         it ("should be skipped on travis.", function () {
+    //
+    //         });
+    //     });
+    //     return;
+    // }
 
     describe('IOBOX Export features, ', function () {
         var schemaName = "export",
