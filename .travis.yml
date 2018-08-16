@@ -101,7 +101,7 @@ after_failure:
   - sudo cat ${HTTPD_ACCESS_LOG}
   - sudo cat ${HTTPD_ERROR_LOG}
   - sudo cd /var/www/iobox/data/
-  - sudp ls -a
+  - sudo ls 
   - sudo -H -u webauthn psql -c 'select * from webauthn2_db.session' webauthn
 
 env:
