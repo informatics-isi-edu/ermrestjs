@@ -1,17 +1,6 @@
 {
   "spec_dir": "test/specs",
   "spec_files": [
-      "common/spec.js",
-      "parser/spec.js",
-      "annotation/spec.js",
-      "reference/spec.js",
-      "column/spec.js",
-      "ag_reference/spec.js",
-      "faceting/spec.js",
-      "comment/spec.js",
-      "print_utils/spec.js",
-      "errors/spec.js",
-      "upload/spec.js",
       "export/spec.js",
       "sample/spec.js"
   ],
