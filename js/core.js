@@ -1840,6 +1840,12 @@
             }
 
             var display = this.getDisplay(context);
+            var isPartOfSimpleKey = !self.nullok && self.memberOfKeys.filter(function (key) {
+                return key.simple;
+            }).length > 0;
+            var isPartOfSimpleFk = self.memberOfForeignKeys.filter(function (fk) {
+                return fk.simple;
+            }).length > 0;
 
             var getFormattedValue = function (v) {
                 // in case of array, null and empty strings are valid values and we
@@ -1855,6 +1861,13 @@
                         console.log(e);
                     }
                 }
+
+                // if int/serial and part of simple key or simple fk we don't want to format the value
+                if ((self.type.name.indexOf("int") === 0 || self.type.name.indexOf("serial") === 0) &&
+                    (isPartOfSimpleKey || isPartOfSimpleFk)) {
+                    return v.toString();
+                }
+
                 return _formatValueByType(self.type, v, options);
             };
 

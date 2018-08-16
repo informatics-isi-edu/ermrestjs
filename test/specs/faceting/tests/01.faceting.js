@@ -1134,11 +1134,11 @@ exports.execute = function (options) {
                             expect(newRef.facetColumns[8].filters.length).toBe(3, "filters length missmatch.");
                             expect(newRef.facetColumns[8].filters[0].term).toBe(true, "filter term missmatch for true.");
                             expect(newRef.facetColumns[8].filters[0].uniqueId).toBe(true, "filter uniqueId missmatch for true.");
-                            expect(newRef.facetColumns[8].filters[0].toString()).toBe("true", "filter toString missmatch for true.");
+                            expect(newRef.facetColumns[8].filters[0].toString()).toBe("YES", "filter toString missmatch for true.");
 
                             expect(newRef.facetColumns[8].filters[1].term).toBe(false, "filter term missmatch for false.");
                             expect(newRef.facetColumns[8].filters[1].uniqueId).toBe(false, "filter uniqueId missmatch for false.");
-                            expect(newRef.facetColumns[8].filters[1].toString()).toBe("false", "filter toString missmatch for false.");
+                            expect(newRef.facetColumns[8].filters[1].toString()).toBe("NO", "filter toString missmatch for false.");
 
                             expect(newRef.facetColumns[8].filters[2].term).toBe(null, "filter term missmatch for null.");
                             expect(newRef.facetColumns[8].filters[2].uniqueId).toBe(null, "filter uniqueId missmatch for null.");

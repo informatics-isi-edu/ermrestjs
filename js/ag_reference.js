@@ -23,10 +23,11 @@ module.AttributeGroupColumn = AttributeGroupColumn;
  * @param       {?ERMRest.AttributeGroupColumn[]} aggregateColumns List of columns that will create the aggreagte columns list in the request.
  * @param       {ERMRest.AttributeGroupLocation} location  The location object.
  * @param       {ERMRest.Catalog} catalog  The catalog object.
+ * @param       {String} context The context that this reference is used in
  * @constructor
  * @memberof ERMrest
  */
-function AttributeGroupReference(keyColumns, aggregateColumns, location, catalog) {
+function AttributeGroupReference(keyColumns, aggregateColumns, location, catalog, context) {
 
     this.isAttributeGroup = true;
 
@@ -52,6 +53,8 @@ function AttributeGroupReference(keyColumns, aggregateColumns, location, catalog
      * @type {ERMrest.ReferenceAggregateFn}
      */
     this.aggregate = new AttributeGroupReferenceAggregateFn(this);
+
+    this._context = context;
 }
 AttributeGroupReference.prototype = {
 
@@ -111,7 +114,7 @@ AttributeGroupReference.prototype = {
 
         // TODO doesn't support sort based on other columns.
         var newLocation = this.location.changeSort(sort);
-        return new AttributeGroupReference(this._keyColumns, this._aggregateColumns, newLocation, this._catalog);
+        return new AttributeGroupReference(this._keyColumns, this._aggregateColumns, newLocation, this._catalog, this._context);
     },
 
     search: function (term) {
@@ -123,7 +126,7 @@ AttributeGroupReference.prototype = {
         verify(typeof this.location.searchColumn === "string" && this.location.searchColumn.length > 0, "Location object doesnt have search column.");
 
         var newLocation = this.location.changeSearchTerm(term);
-        return new AttributeGroupReference(this._keyColumns, this._aggregateColumns, newLocation, this._catalog);
+        return new AttributeGroupReference(this._keyColumns, this._aggregateColumns, newLocation, this._catalog, this._context);
     },
 
     /**
@@ -268,7 +271,7 @@ AttributeGroupReference.prototype = {
                 if ( currRef.location.beforeObject && (response.data.length < limit || !hasPrevious) ) {
                     // a new location without paging
                     var newLocation = currRef.location.changePage();
-                    var referenceWithoutPaging = new AttributeGroupReference(currRef._keyColumns, currRef._aggregateColumns, newLocation, currRef._catalog);
+                    var referenceWithoutPaging = new AttributeGroupReference(currRef._keyColumns, currRef._aggregateColumns, newLocation, currRef._catalog, currRef._context);
                     referenceWithoutPaging.read(limit).then(function rereadReference(rereadPage) {
                         defer.resolve(rereadPage);
                     }, function error(err) {
@@ -473,7 +476,7 @@ AttributeGroupPage.prototype = {
         });
 
         var newLocation = currRef.location.changePage(rows, null);
-        return new AttributeGroupReference(currRef._keyColumns, currRef._aggregateColumns, newLocation, self.reference._catalog);
+        return new AttributeGroupReference(currRef._keyColumns, currRef._aggregateColumns, newLocation, self.reference._catalog, self.reference._context);
     },
 
     /**
@@ -505,7 +508,7 @@ AttributeGroupPage.prototype = {
         });
 
         var newLocation = currRef.location.changePage(null, rows);
-        return new AttributeGroupReference(currRef._keyColumns, currRef._aggregateColumns, newLocation, self.reference._catalog);
+        return new AttributeGroupReference(currRef._keyColumns, currRef._aggregateColumns, newLocation, self.reference._catalog, self.reference._context);
     }
 };
 
@@ -555,12 +558,14 @@ AttributeGroupTuple.prototype = {
             this._values = [];
             this._isHTML = [];
 
-            var columns = this._page.reference.columns, self = this;
-            var formattedValues = module._getFormattedKeyValues(columns, undefined, this._data);
+            var self = this;
+            var columns = self._page.reference.columns,
+                context = self._page.reference._context;
+            var formattedValues = module._getFormattedKeyValues(columns, context, self._data);
             var presentation;
 
             columns.forEach(function (col) {
-                presentation = col.formatPresentation(self._data, {formattedValues: formattedValues});
+                presentation = col.formatPresentation(self._data, context, {formattedValues: formattedValues});
                 self._values.push(presentation.value);
                 self._isHTML.push(presentation.isHTML);
             });
@@ -581,10 +586,10 @@ AttributeGroupTuple.prototype = {
      */
     get uniqueId() {
         if (this._uniqueId === undefined) {
-            var data = this._data, hasNull;
-            this._uniqueId = this._page.reference.shortestKey.reduce(function (res, c, index) {
+            var data = this._data, hasNull, self = this;
+            this._uniqueId = self._page.reference.shortestKey.reduce(function (res, c, index) {
                 hasNull = hasNull || data[c.name] == null;
-                return res + (index > 0 ? "_" : "") + c.formatvalue(data[c.name]);
+                return res + (index > 0 ? "_" : "") + c.formatvalue(data[c.name], self._page.reference._context);
             }, "");
 
             //TODO should be evaluated for composite keys
@@ -611,6 +616,7 @@ AttributeGroupTuple.prototype = {
         if (this._displayname === undefined) {
             var keyColumns = this._page.reference.shortestKey,
                 data = this._data,
+                self = this,
                 hasNull = false,
                 hasMarkdown = false,
                 values = [],
@@ -621,7 +627,7 @@ AttributeGroupTuple.prototype = {
                 if (hasNull) return;
 
                 hasMarkdown = hasMarkdown || c.type.name === "markdown";
-                values.push(c.formatvalue(data[c.name]));
+                values.push(c.formatvalue(data[c.name], self._page.reference._context));
             });
 
             value = hasNull ? null: values.join(":");
@@ -641,6 +647,7 @@ AttributeGroupTuple.prototype = {
  *
  * @param       {string} alias the alias that we want to use. If alias exist we will use the alias=term for creating url.
  * @param       {string} term  the term string, e.g., cnt(*) or col1.
+ * @param       {ERMrest.Column} baseColumn the database column that this is based on
  * @param       {Object|string} displayname displayname of column, if it's an object it will have `value`, `unformatted`, and `isHTML`
  * @param       {ERMrset.Type} colType    type of column
  * @param       {string} comment     The string for comment (tooltip)
@@ -648,7 +655,7 @@ AttributeGroupTuple.prototype = {
  * @param       {Boolean} visible    Whether we want this column be returned in the tuples
  * @constructor
  */
-function AttributeGroupColumn(alias, term, displayname, colType, comment, sortable, visible) {
+function AttributeGroupColumn(alias, term, baseColumn, displayname, colType, comment, sortable, visible) {
     /**
      * The alias for the column.
      * The alias might be undefined. If it's aggregate column and it has an aggregate function
@@ -673,20 +680,32 @@ function AttributeGroupColumn(alias, term, displayname, colType, comment, sortab
      */
     this.term = term;
 
+    /**
+     * The database column that this is based on. It might not be defined.
+     * @type {ERMrest.Column}
+     */
+    this.baseColumn = baseColumn;
+
+
     if (typeof displayname === 'string') {
         this._displayname = {"value": displayname, "unformatted": displayname, "isHTML": false};
     } else if (isObjectAndNotNull(displayname)){
         this._displayname = displayname;
+    } else if (baseColumn) {
+        this._displayname = baseColumn.displayname;
     }
+
 
     if (typeof colType === 'string') {
         this.type = new Type({typename: colType});
+    } else if (baseColumn){
+        this.type = baseColumn.type;
     } else {
 
         /**
-         * Type object
-         * @type {ERMrest.Type}
-         */
+        * Type object
+        * @type {ERMrest.Type}
+        */
         this.type = colType;
     }
 
@@ -736,18 +755,21 @@ AttributeGroupColumn.prototype = {
         return this._displayname;
     },
 
-    formatvalue: function (data, options) {
-        //TODO should be the same as Column.formatvalue, we should extract the logic of formatvalue and here will just call that
+    formatvalue: function (data, context, options) {
         if (data === null || data === undefined) {
             return null;
+        }
+
+        if (this.baseColumn) {
+            return this.baseColumn.formatvalue(data, context, options);
         }
         return _formatValueByType(this.type, data, options);
     },
 
-    formatPresentation: function (data, options) {
+    formatPresentation: function (data, context, options) {
         data = data || {};
 
-        var formattedValue = this.formatvalue(data[this.name], options);
+        var formattedValue = this.formatvalue(data[this.name], context, options);
 
         /*
          * NOTE: currently will only return the given data. This function exist
@@ -978,7 +1000,7 @@ function BucketAttributeGroupReference(baseColumn, baseRef, min, max, numberOfBu
     var binTerm = "bin(" + module._fixedEncodeURIComponent(baseColumn.name) + ";" + numberOfBuckets + ";" + module._fixedEncodeURIComponent(min) + ";" + module._fixedEncodeURIComponent(max) + ")";
 
     var keyColumns = [
-        new AttributeGroupColumn("c1", binTerm, baseColumn.displayname, baseColumn.type, baseColumn.comment, true, true)
+        new AttributeGroupColumn("c1", binTerm, baseColumn, baseColumn.displayname, baseColumn.type, baseColumn.comment, true, true)
     ];
 
     var countName = "cnt(*)";
@@ -987,7 +1009,7 @@ function BucketAttributeGroupReference(baseColumn, baseRef, min, max, numberOfBu
     }
 
     var aggregateColumns = [
-        new AttributeGroupColumn("c2", countName, "Number of Occurences", new Type({typename: "int"}), "", true, true)
+        new AttributeGroupColumn("c2", countName, null, "Number of Occurences", new Type({typename: "int"}), "", true, true)
     ];
 
     // call the parent constructor
