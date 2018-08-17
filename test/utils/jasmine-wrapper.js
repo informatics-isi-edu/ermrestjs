@@ -69,13 +69,13 @@ exports.run = function(config) {
 
 	    	var done = 0;
 	    	var success = function() {
-	    		// if (++done == 2) setRestrictedUserId(config);
+	    		if (++done == 2) setRestrictedUserId(config);
 	    	}
 	    	setCookie('test1', 'dummypassword', 'AUTH_COOKIE', success);
-	    	// setCookie('test2', 'dummypassword', 'RESTRICTED_AUTH_COOKIE', success);
+	    	setCookie('test2', 'dummypassword', 'RESTRICTED_AUTH_COOKIE', success);
 	    });
 	} else {
-	    // setRestrictedUserId(config);
+	    setRestrictedUserId(config);
 	}
 };
 
