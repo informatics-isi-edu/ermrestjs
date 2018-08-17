@@ -69,7 +69,7 @@ exports.run = function(config) {
 
 	    	var done = 0;
 	    	var success = function() {
-	    		if (++done == 2) runSpecs(config);
+	    		if (++done == 1) setRestrictedUserId(config);
 	    	}
 	    	setCookie('test1', 'dummypassword', 'AUTH_COOKIE', success);
 	    	// setCookie('test2', 'dummypassword', 'RESTRICTED_AUTH_COOKIE', success);
