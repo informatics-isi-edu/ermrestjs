@@ -35,9 +35,9 @@ exports.run = function(config) {
 
 		var exec = require('child_process').exec;
 		exec('hostname', function (error, stdout, stderr) {
-	    	
+
 	    	process.env.ERMREST_URL = 'http://' + stdout.trim() + '/ermrest';
-	    	
+
 	    	console.log(process.env.ERMREST_URL);
 
 	    	var setCookie = function(username, password, authCookieEnvName, cb) {
@@ -69,13 +69,13 @@ exports.run = function(config) {
 
 	    	var done = 0;
 	    	var success = function() {
-	    		if (++done == 2) setRestrictedUserId(config);
+	    		// if (++done == 2) setRestrictedUserId(config);
 	    	}
 	    	setCookie('test1', 'dummypassword', 'AUTH_COOKIE', success);
-	    	setCookie('test2', 'dummypassword', 'RESTRICTED_AUTH_COOKIE', success);
+	    	// setCookie('test2', 'dummypassword', 'RESTRICTED_AUTH_COOKIE', success);
 	    });
 	} else {
-	    setRestrictedUserId(config);
+	    // setRestrictedUserId(config);
 	}
 };
 
