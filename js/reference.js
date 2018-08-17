@@ -2498,15 +2498,15 @@
 
             // should hide the origFKR in case of inbound foreignKey (only in compact/brief)
             var hideFKR = function (fkr) {
-                return context == module._contexts.COMPACT_BRIEF && hasOrigFKR && fkr == hiddenFKR;
+                return typeof context === "string" && context.startsWith(module._contexts.COMPACT_BRIEF) && hasOrigFKR && fkr == hiddenFKR;
             };
             var hideFKRByName = function (hash) {
-                return context == module._contexts.COMPACT_BRIEF && hasOrigFKR && hash.name == hiddenFKR.name;
+                return typeof context === "string" && context.startsWith(module._contexts.COMPACT_BRIEF) && hasOrigFKR && hash.name == hiddenFKR.name;
             };
 
             // should hide the columns that are part of origFKR. (only in compact/brief)
             var hideColumn = function (col) {
-                return context == module._contexts.COMPACT_BRIEF && hasOrigFKR && hiddenFKR.colset.columns.indexOf(col) != -1;
+                return typeof context === "string" && context.startsWith(module._contexts.COMPACT_BRIEF) && hasOrigFKR && hiddenFKR.colset.columns.indexOf(col) != -1;
             };
 
             // this function will take care of adding column and asset column
@@ -3768,12 +3768,16 @@
                     if (!this._data || !this._data.length) {
                     this._content = null;
                 } else {
-                    var i, value, pattern, values = [];
+                    var i, value, pattern, values = [], keyValues;
                     if (typeof this._ref.display._markdownPattern === 'string') {
                        // Iterate over all data rows to compute the row values depending on the row_markdown_pattern.
                        for (i = 0; i < this._data.length; i++) {
+
+                           // make sure we have the formatted key values
+                           keyValues = module._getFormattedKeyValues(this._ref.table, this._ref._context, this._data[i], this._linkedData[i]);
+
                            // render template
-                           value = module._renderTemplate(this._ref.display._markdownPattern, this._data[i], this._ref._table, this._ref._context, { templateEngine: this._ref.display.templateEngine });
+                           value = module._renderTemplate(this._ref.display._markdownPattern, keyValues, this._ref._table, this._ref._context, { templateEngine: this._ref.display.templateEngine, formatted: true });
 
                            // If value is null or empty, return value on basis of `show_nulls`
                            if (value === null || value.trim() === '') {

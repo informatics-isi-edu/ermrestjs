@@ -1966,7 +1966,7 @@ FacetColumn.prototype = {
                 return typename.indexOf(type) > -1;
             }
 
-            return (includesType("serial") || includesType("int") || includesType("float") || includesType("date") || includesType("timestamp"));
+            return (includesType("serial") || includesType("int") || includesType("float") || includesType("date") || includesType("timestamp")) || (includesType("numeric"));
         }
 
         if (this._preferredMode === undefined) {

@@ -384,7 +384,19 @@
         }
       ],
       "entityCount": 0,
-      "foreign_keys": [],
+      "foreign_keys": [{
+          "names": [["schema_table_display", "table_w_t_disp_annot_w_mp_fkey"]],
+          "foreign_key_columns": [{
+              "table_name": "table_w_table_display_annotation_w_markdown_pattern",
+              "schema_name": "schema_table_display",
+              "column_name": "fk_col"
+          }],
+          "referenced_columns": [{
+              "table_name": "table_w_table_display_annotation",
+              "schema_name": "schema_table_display",
+              "column_name": "id"
+          }]
+      }],
       "table_name": "table_w_table_display_annotation_w_markdown_pattern",
       "schema_name": "schema_table_display",
       "column_definitions": [
@@ -407,12 +419,18 @@
               }
             }
           }
+        },
+        {
+          "name": "fk_col",
+          "type": {
+            "typename": "integer"
+          }
         }
       ],
       "annotations" : {
         "tag:isrd.isi.edu,2016:table-display": {
           "*" : {
-            "row_markdown_pattern": ":::iframe [{{title}}](https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id={{_id}}) \n:::",
+            "row_markdown_pattern": ":::iframe [{{title}}{{#$fkeys.schema_table_display.table_w_t_disp_annot_w_mp_fkey}}(with {{{rowName}}}){{/$fkeys.schema_table_display.table_w_t_disp_annot_w_mp_fkey}}](https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id={{_id}}) \n:::",
             "prefix_markdown": "## Movie titles \n\n",
             "page_size": 10
           }
