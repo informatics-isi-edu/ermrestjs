@@ -72,7 +72,7 @@ exports.run = function(config) {
 	    		if (++done == 2) setRestrictedUserId(config);
 	    	}
 	    	setCookie('test1', 'dummypassword', 'AUTH_COOKIE', success);
-	    	setCookie('test2', 'dummypassword', 'RESTRICTED_AUTH_COOKIE', success);
+	    	// setCookie('test2', 'dummypassword', 'RESTRICTED_AUTH_COOKIE', success);
 	    });
 	} else {
 	    setRestrictedUserId(config);
