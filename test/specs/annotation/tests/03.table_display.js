@@ -631,13 +631,13 @@ exports.execute = function (options) {
         });
 
         describe("table entities with $catalog in their row_markdown_pattern.", function () {
-            it ('should be able to access row-name and detailed uri of outbound foreign keys in annotation.', function (done) {
+            it ('should be able to access row-name in annotation.', function (done) {
                 options.ermRest.resolve(tableCatalogAnnotEntityUri, {cid: "test"}).then(function (ref) {
                     return ref.read(1);
                 }).then(function (page) {
                     var expected = "catalog_snapshot:" + catalog_id + ", catalog_id:" + catalog_id;
 
-                    expect(page.tuples[0].displayname.value).toEqual(expected, "catalog snapshot displayname missmatch.");
+                    expect(page.tuples[0].displayname.value).toEqual(expected, "catalog snapshot displayname mismatch.");
                     done();
                 }).catch(function (err) {
                     console.log(err);
