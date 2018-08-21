@@ -16,7 +16,8 @@ exports.execute = function (options) {
             tableName9 = "table_w_rowname_fkeys2",
             tableName10 = "table_w_rowname_fkeys3",
             tableName11 = "table_w_table_display_annotation_w_title",
-            tableNameWoAnnot = "table_wo_annotation";
+            tableNameWoAnnot = "table_wo_annotation",
+            tableNameCatalogAnnot = "table_w_rowname_catalog_snapshot";
 
         var table1EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" +
             schemaName + ":" + tableName1 + "/@sort(id)";
@@ -57,6 +58,9 @@ exports.execute = function (options) {
 
         var tableWoAnnotEntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" +
             tableNameWoAnnot;
+
+        var tableCatalogAnnotEntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" +
+            tableNameCatalogAnnot;
 
         var findRID = function (tableName, id) {
             return options.entities[schemaName][tableName].filter(function (e) {
@@ -247,8 +251,7 @@ exports.execute = function (options) {
             });
         });
 
-
-         describe('table entities without name/title nor table-display:row_name context annotation with composite key, ', function() {
+        describe('table entities without name/title nor table-display:row_name context annotation with composite key, ', function() {
             var reference, page, tuple;
             var limit = 10;
 
@@ -619,6 +622,22 @@ exports.execute = function (options) {
                     page.tuples.forEach(function (t, index) {
                         expect(t.displayname.value).toEqual(expected[index], "index= " + index + ". displayname missmatch.");
                     });
+                    done();
+                }).catch(function (err) {
+                    console.log(err);
+                    done.fail();
+                });
+            });
+        });
+
+        describe("table entities with $catalog in their row_markdown_pattern.", function () {
+            it ('should be able to access row-name and detailed uri of outbound foreign keys in annotation.', function (done) {
+                options.ermRest.resolve(tableCatalogAnnotEntityUri, {cid: "test"}).then(function (ref) {
+                    return ref.read(1);
+                }).then(function (page) {
+                    var expected = "catalog_snapshot:" + catalog_id + ", catalog_id:" + catalog_id;
+
+                    expect(page.tuples[0].displayname.value).toEqual(expected, "catalog snapshot displayname missmatch.");
                     done();
                 }).catch(function (err) {
                     console.log(err);
