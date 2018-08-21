@@ -2375,12 +2375,12 @@
      * Add utility objects such as date (Computed value) to mustache data obj
      * so that they can be accessed in the template
      */
-    module._addErmrestVarsToTemplate = function(obj, table) {
+    module._addErmrestVarsToTemplate = function(obj, catalog) {
         obj.$moment = module._currDate;
 
-        var catalogSnapshot = table.schema.catalog.id.split('@');
+        var catalogSnapshot = catalog.id.split('@');
         obj.$catalog = {
-            snapshot: table.schema.catalog.id,
+            snapshot: catalog.id,
             id: catalogSnapshot[0]
         };
 
@@ -2396,7 +2396,7 @@
      *
      * @return {Object} obj
      */
-    module._addTemplateVars = function(keyValues, table, options) {
+    module._addTemplateVars = function(keyValues, catalog, options) {
 
         var obj = {};
         if (keyValues && isObject(keyValues)) {
@@ -2412,7 +2412,7 @@
         }
 
         // Inject ermrest internal utility objects such as date
-        module._addErmrestVarsToTemplate(obj, table);
+        module._addErmrestVarsToTemplate(obj, catalog);
 
         // Inject other functions provided in the options.functions array if needed
         if (options.functions && options.functions.length) {
@@ -2435,11 +2435,11 @@
      * @return {string} A string produced after templating
      * @desc Returns a string produced as a result of templating using `Mustache`.
      */
-    module._renderMustacheTemplate = function(template, keyValues, table, options) {
+    module._renderMustacheTemplate = function(template, keyValues, catalog, options) {
 
         options = options || {};
 
-        var obj = module._addTemplateVars(keyValues, table, options), content;
+        var obj = module._addTemplateVars(keyValues, catalog, options), content;
 
         // Inject the encode function in the obj object
         obj.encode = module._encodeForMustacheTemplate;
@@ -2448,7 +2448,7 @@
         obj.escape = module._escapeForMustacheTemplate;
 
         // If we should validate, validate the template and if returns false, return null.
-        if (!options.avoidValidation && !module._validateMustacheTemplate(template, obj, table)) {
+        if (!options.avoidValidation && !module._validateMustacheTemplate(template, obj, catalog)) {
             return null;
         }
 
@@ -2474,11 +2474,11 @@
      * @param  {Array.<string>=} ignoredColumns the columns that should be ignored (optional)
      * @return {boolean} true if all the used keys have values
      */
-    module._validateMustacheTemplate = function (template, keyValues, table, ignoredColumns) {
+    module._validateMustacheTemplate = function (template, keyValues, catalog, ignoredColumns) {
 
         // Inject ermrest internal utility objects such as date
         // needs to be done in the case _validateTemplate is called without first calling _renderTemplate
-        module._addErmrestVarsToTemplate(keyValues, table);
+        module._addErmrestVarsToTemplate(keyValues, catalog);
 
         var conditionalRegex = /\{\{(#|\^)([^\{\}]+)\}\}/, i, key, value;
 
@@ -2529,14 +2529,14 @@
      * @return {string} A string produced after templating
      * @desc Returns a string produced as a result of templating using `Handlebars`.
      */
-    module._renderHandlebarsTemplate = function(template, keyValues, table, options) {
+    module._renderHandlebarsTemplate = function(template, keyValues, catalog, options) {
 
         options = options || {};
 
-        var obj = module._addTemplateVars(keyValues, table, options), content, _compiledTemplate;
+        var obj = module._addTemplateVars(keyValues, catalog, options), content, _compiledTemplate;
 
         // If we should validate, validate the template and if returns false, return null.
-        if (!options.avoidValidation && !module._validateHandlebarsTemplate(template, obj, table)) {
+        if (!options.avoidValidation && !module._validateHandlebarsTemplate(template, obj, catalog)) {
             return null;
         }
 
@@ -2580,12 +2580,12 @@
      * @param  {Array.<string>=} ignoredColumns the columns that should be ignored (optional)
      * @return {boolean} true if all the used keys have values
      */
-    module._validateHandlebarsTemplate = function (template, keyValues, table, ignoredColumns) {
+    module._validateHandlebarsTemplate = function (template, keyValues, catalog, ignoredColumns) {
         var conditionalRegex = /\{\{(((#|\^)([^\{\}]+))|(if|unless|else))([^\{\}]+)\}\}/, i, key, value;
 
         // Inject ermrest internal utility objects such as date
         // needs to be done in the case _validateTemplate is called without first calling _renderTemplate
-        module._addErmrestVarsToTemplate(keyValues, table);
+        module._addErmrestVarsToTemplate(keyValues, catalog);
 
         // If no conditional handlebars statements of the form {{#if VARNAME}}{{/if}} or {{^if VARNAME}}{{/if}} or {{#unless VARNAME}}{{/unless}} or {{^unless VARNAME}}{{/unless}} not found then do direct null check
         if (!conditionalRegex.exec(template)) {
@@ -2688,11 +2688,11 @@
 
         if (options.templateEngine === module.HANDLEBARS) {
             // render the template using Handlebars
-            return module._renderHandlebarsTemplate(template, keyValues, table, options);
+            return module._renderHandlebarsTemplate(template, keyValues, table.schema.catalog, options);
         }
 
         // render the template using Mustache
-        return module._renderMustacheTemplate(template, keyValues, table, options);
+        return module._renderMustacheTemplate(template, keyValues, table.schema.catalog, options);
     };
 
     /**
@@ -2729,11 +2729,11 @@
 
         if (options.templateEngine === module.HANDLEBARS) {
             // call the actual Handlebar validator
-            return module._validateHandlebarsTemplate(template, data, table, ignoredColumns);
+            return module._validateHandlebarsTemplate(template, data, table.schema.catalog, ignoredColumns);
         }
 
         // call the actual mustache validator
-        return module._validateMustacheTemplate(template, data, table, ignoredColumns);
+        return module._validateMustacheTemplate(template, data, table.schema.catalog, ignoredColumns);
     };
 
     // module._constraintNames[catalogId][schemaName][constraintName] will return an object.
