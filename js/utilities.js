@@ -2378,13 +2378,15 @@
     module._addErmrestVarsToTemplate = function(obj, catalog) {
         obj.$moment = module._currDate;
 
-        var catalogSnapshot = catalog.id.split('@');
-        obj.$catalog = {
-            snapshot: catalog.id,
-            id: catalogSnapshot[0]
-        };
+        if (catalog) {
+            var catalogSnapshot = catalog.id.split('@');
+            obj.$catalog = {
+                snapshot: catalog.id,
+                id: catalogSnapshot[0]
+            };
 
-        if (catalogSnapshot.length === 2) obj.$catalog.version = catalogSnapshot[1];
+            if (catalogSnapshot.length === 2) obj.$catalog.version = catalogSnapshot[1];
+        }
     };
 
     /**

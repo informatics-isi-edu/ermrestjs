@@ -483,7 +483,7 @@ exports.execute = function (options) {
                 expect(display.type).toEqual('markdown');
             });
 
-            var markdownPattern = ":::iframe [{{title}}{{#$fkeys.schema_table_display.table_w_t_disp_annot_w_mp_fkey}}(with {{{rowName}}}){{/$fkeys.schema_table_display.table_w_t_disp_annot_w_mp_fkey}}](https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id={{_id}}) \n:::";
+            var markdownPattern = ":::iframe [{{title}}{{#$fkeys.schema_table_display.table_w_t_disp_annot_w_mp_fkey}}(with {{{rowName}}} from catalog {{{$catalog.snapshot}}}){{/$fkeys.schema_table_display.table_w_t_disp_annot_w_mp_fkey}}](https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id={{_id}}) \n:::";
             it("reference.display._markdownPattern should be '" + markdownPattern + "' ", function() {
                 expect(reference.display._markdownPattern).toEqual(markdownPattern);
             });
@@ -518,10 +518,10 @@ exports.execute = function (options) {
             });
 
             var content = '<h2>Movie titles</h2>\n' +
-            '<figure class="embed-block" style=""><figcaption class="embed-caption" style="">Hamlet(with <strong>William Shakespeare</strong>)</figcaption><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20001" ></iframe></figure>' +
-            '<figure class="embed-block" style=""><figcaption class="embed-caption" style="">The Adventures of Huckleberry Finn(with <strong>Mark Twain</strong>)</figcaption><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20002" ></iframe></figure>' +
-            '<figure class="embed-block" style=""><figcaption class="embed-caption" style="">Alice in Wonderland(with <strong>Lewis Carroll</strong>)</figcaption><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20003" ></iframe></figure>' +
-            '<figure class="embed-block" style=""><figcaption class="embed-caption" style="">Pride and Prejudice(with <strong>Jane Austen</strong>)</figcaption><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20004" ></iframe></figure>' +
+            '<figure class="embed-block" style=""><figcaption class="embed-caption" style="">Hamlet(with <strong>William Shakespeare</strong> from catalog '+catalog_id+')</figcaption><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20001" ></iframe></figure>' +
+            '<figure class="embed-block" style=""><figcaption class="embed-caption" style="">The Adventures of Huckleberry Finn(with <strong>Mark Twain</strong> from catalog '+catalog_id+')</figcaption><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20002" ></iframe></figure>' +
+            '<figure class="embed-block" style=""><figcaption class="embed-caption" style="">Alice in Wonderland(with <strong>Lewis Carroll</strong> from catalog '+catalog_id+')</figcaption><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20003" ></iframe></figure>' +
+            '<figure class="embed-block" style=""><figcaption class="embed-caption" style="">Pride and Prejudice(with <strong>Jane Austen</strong> from catalog '+catalog_id+')</figcaption><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20004" ></iframe></figure>' +
             '<figure class="embed-block" style=""><figcaption class="embed-caption" style="">Great Expectations</figcaption><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20005" ></iframe></figure>' +
             '<figure class="embed-block" style=""><figcaption class="embed-caption" style="">David Copperfield</figcaption><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20006" ></iframe></figure>' +
             '<figure class="embed-block" style=""><figcaption class="embed-caption" style="">Emma</figcaption><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20007" ></iframe></figure>' +

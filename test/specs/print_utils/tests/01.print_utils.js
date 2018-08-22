@@ -2,7 +2,6 @@ exports.execute = function (options) {
     var module = options.includes.ermRest;
     var formatUtils = module._formatUtils;
     describe("Print utils, For pretty printing values based on a value's type, ", function () {
-        var catalog = {id: process.env.DEFAULT_CATALOG};
         // Test Cases:
         it('printFloat() should format floats correctly.', function () {
             var printFloat = formatUtils.printFloat;
@@ -246,46 +245,50 @@ exports.execute = function (options) {
         });
 
         it('module._renderMustacheTemplate() should function correctly for Null and Non-null values', function() {
-            expect(module._renderMustacheTemplate("My name is {{name}}", {name: 'John'}, catalog)).toBe("My name is John");
-            expect(module._renderMustacheTemplate("My name is {{name}}", { name: null }, catalog)).toBe(null);
-            expect(module._renderMustacheTemplate("My name is {{name}}", {}, catalog)).toBe(null);
-            expect(module._renderMustacheTemplate("My name is {{#name}}{{name}}{{/name}}", {}, catalog)).toBe("My name is ");
-            expect(module._renderMustacheTemplate("My name is {{^name}}{{name}}{{/name}}", {}, catalog)).toBe("My name is ");
-            expect(module._renderMustacheTemplate("My name is {{^name}}John{{/name}}", {}, catalog)).toBe("My name is John");
+            expect(module._renderMustacheTemplate("My name is {{name}}", {name: 'John'})).toBe("My name is John");
+            expect(module._renderMustacheTemplate("My name is {{name}}", { name: null })).toBe(null);
+            expect(module._renderMustacheTemplate("My name is {{name}}", {})).toBe(null);
+            expect(module._renderMustacheTemplate("My name is {{#name}}{{name}}{{/name}}", {})).toBe("My name is ");
+            expect(module._renderMustacheTemplate("My name is {{^name}}{{name}}{{/name}}", {})).toBe("My name is ");
+            expect(module._renderMustacheTemplate("My name is {{^name}}John{{/name}}", {})).toBe("My name is John");
         });
 
         it('module._renderMustacheTemplate() should inject $moment obj', function() {
             var moment = module._currDate;
             expect(moment).toBeDefined();
-            expect(module._renderMustacheTemplate("{{name}} was born on {{$moment.day}} {{$moment.date}}/{{$moment.month}}/{{$moment.year}}", { name: 'John' }, catalog)).toBe("John was born on " + moment.day + " " + moment.date + "/" + moment.month + "/" + moment.year);
-            expect(module._renderMustacheTemplate("Todays date is {{$moment.dateString}}", {}, catalog)).toBe("Todays date is " + moment.dateString);
+            expect(module._renderMustacheTemplate("{{name}} was born on {{$moment.day}} {{$moment.date}}/{{$moment.month}}/{{$moment.year}}", { name: 'John' })).toBe("John was born on " + moment.day + " " + moment.date + "/" + moment.month + "/" + moment.year);
+            expect(module._renderMustacheTemplate("Todays date is {{$moment.dateString}}", {})).toBe("Todays date is " + moment.dateString);
 
-            expect(module._renderMustacheTemplate("Current time is {{$moment.hours}}:{{$moment.minutes}}:{{$moment.seconds}}:{{$moment.milliseconds}} with timestamp {{$moment.timestamp}}", {}, catalog)).toBe("Current time is " + moment.hours + ":" + moment.minutes + ":" + moment.seconds + ":" + moment.milliseconds + " with timestamp " + moment.timestamp);
-            expect(module._renderMustacheTemplate("Current time is {{$moment.timeString}}", {}, catalog)).toBe("Current time is " + moment.timeString);
+            expect(module._renderMustacheTemplate("Current time is {{$moment.hours}}:{{$moment.minutes}}:{{$moment.seconds}}:{{$moment.milliseconds}} with timestamp {{$moment.timestamp}}", {})).toBe("Current time is " + moment.hours + ":" + moment.minutes + ":" + moment.seconds + ":" + moment.milliseconds + " with timestamp " + moment.timestamp);
+            expect(module._renderMustacheTemplate("Current time is {{$moment.timeString}}", {})).toBe("Current time is " + moment.timeString);
 
-            expect(module._renderMustacheTemplate("ISO string is {{$moment.ISOString}}", {}, catalog)).toBe("ISO string is " + moment.ISOString);
-            expect(module._renderMustacheTemplate("GMT string is {{$moment.GMTString}}", {}, catalog)).toBe("GMT string is " + moment.GMTString);
-            expect(module._renderMustacheTemplate("UTC string is {{$moment.UTCString}}", {}, catalog)).toBe("UTC string is " + moment.UTCString);
+            expect(module._renderMustacheTemplate("ISO string is {{$moment.ISOString}}", {})).toBe("ISO string is " + moment.ISOString);
+            expect(module._renderMustacheTemplate("GMT string is {{$moment.GMTString}}", {})).toBe("GMT string is " + moment.GMTString);
+            expect(module._renderMustacheTemplate("UTC string is {{$moment.UTCString}}", {})).toBe("UTC string is " + moment.UTCString);
 
-            expect(module._renderMustacheTemplate("Local time string is {{$moment.localeTimeString}}", {}, catalog)).toBe("Local time string is " + moment.localeTimeString);
+            expect(module._renderMustacheTemplate("Local time string is {{$moment.localeTimeString}}", {})).toBe("Local time string is " + moment.localeTimeString);
         });
 
         it('module._valdiateMustacheTemplate() should accept templates that have $moment in them.', function () {
-            expect(module._validateMustacheTemplate("{{name}} was born on {{$moment.day}} {{$moment.date}}/{{$moment.month}}/{{$moment.year}}", { name: 'John' }, catalog)).toBe(true);
-            expect(module._validateMustacheTemplate("Todays date is {{$moment.dateString}}", {}, catalog)).toBe(true);
+            expect(module._validateMustacheTemplate("{{name}} was born on {{$moment.day}} {{$moment.date}}/{{$moment.month}}/{{$moment.year}}", { name: 'John' })).toBe(true);
+            expect(module._validateMustacheTemplate("Todays date is {{$moment.dateString}}", {})).toBe(true);
 
-            expect(module._validateMustacheTemplate("Current time is {{$moment.hours}}:{{$moment.minutes}}:{{$moment.seconds}}:{{$moment.milliseconds}} with timestamp {{$moment.timestamp}}", {}, catalog)).toBe(true);
-            expect(module._validateMustacheTemplate("Current time is {{$moment.timeString}}", {}, catalog)).toBe(true);
+            expect(module._validateMustacheTemplate("Current time is {{$moment.hours}}:{{$moment.minutes}}:{{$moment.seconds}}:{{$moment.milliseconds}} with timestamp {{$moment.timestamp}}", {})).toBe(true);
+            expect(module._validateMustacheTemplate("Current time is {{$moment.timeString}}", {})).toBe(true);
 
-            expect(module._validateMustacheTemplate("ISO string is {{$moment.ISOString}}", {}, catalog)).toBe(true);
-            expect(module._validateMustacheTemplate("GMT string is {{$moment.GMTString}}", {}, catalog)).toBe(true);
-            expect(module._validateMustacheTemplate("UTC string is {{$moment.UTCString}}", {}, catalog)).toBe(true);
+            expect(module._validateMustacheTemplate("ISO string is {{$moment.ISOString}}", {})).toBe(true);
+            expect(module._validateMustacheTemplate("GMT string is {{$moment.GMTString}}", {})).toBe(true);
+            expect(module._validateMustacheTemplate("UTC string is {{$moment.UTCString}}", {})).toBe(true);
 
-            expect(module._validateMustacheTemplate("Local time string is {{$moment.localeTimeString}}", {}, catalog)).toBe(true);
+            expect(module._validateMustacheTemplate("Local time string is {{$moment.localeTimeString}}", {})).toBe(true);
         });
 
         it('module._renderMustacheTemplate() should inject $catalog obj', function() {
-            expect(module._renderMustacheTemplate("catalog snapshot: {{$catalog.snapshot}}, catalog id: {{$catalog.id}}", {}, catalog)).toBe("catalog snapshot: " + process.env.DEFAULT_CATALOG + ", catalog id: " + process.env.DEFAULT_CATALOG);
+            expect(module._renderMustacheTemplate("catalog snapshot: {{$catalog.snapshot}}, catalog id: {{$catalog.id}}", {}, options.catalog)).toBe("catalog snapshot: " + process.env.DEFAULT_CATALOG + ", catalog id: " + process.env.DEFAULT_CATALOG);
+        });
+
+        it("module._renderMustacheTemplate() should NOT inject $catalog obj if 'catalog' is not passed to the function", function() {
+            expect(module._renderMustacheTemplate("catalog snapshot:{{# $catalog.snapshot}} {{$catalog.snapshot}}{{/$catalog.snapshot}}", {})).toBe("catalog snapshot:");
         });
 
         var obj = {
@@ -362,7 +365,7 @@ exports.execute = function (options) {
             var printMarkdown = formatUtils.printMarkdown;
 
             templateCases.forEach(function(ex) {
-                var template = module._renderMustacheTemplate(ex.template, obj, catalog);
+                var template = module._renderMustacheTemplate(ex.template, obj);
                 expect(template).toBe(ex.after_mustache);
                 var html = printMarkdown(template);
                 expect(html).toBe(ex.after_render + '\n');
@@ -371,69 +374,69 @@ exports.execute = function (options) {
 
         describe('module._renderHandlebarsTemplate() should function correctly for', function () {
             it('Null and Non-null values', function() {
-                expect(module._renderHandlebarsTemplate("My name is {{name}}", { name: 'Chloe' }, catalog)).toBe("My name is Chloe");
-                expect(module._renderHandlebarsTemplate("My name is {{name}}", { name: null }, catalog)).toBe(null);
-                expect(module._renderHandlebarsTemplate("My name is {{name}}", {}, catalog)).toBe(null);
-                expect(module._renderHandlebarsTemplate("My name is {{#if name}}{{name}}{{/if}}", {}, catalog)).toBe("My name is ");
-                expect(module._renderHandlebarsTemplate("My name is {{^if name}}{{name}}{{/if}}", {}, catalog)).toBe("My name is ", "For inverted if with variable");
-                expect(module._renderHandlebarsTemplate("My name is {{^if name}}John{{/if}}", {}, catalog)).toBe("My name is John", "For inverted if with string");
-                expect(module._renderHandlebarsTemplate("My name is {{#unless name}}Jona{{/unless}}", {}, catalog)).toBe("My name is Jona", "For unless");
+                expect(module._renderHandlebarsTemplate("My name is {{name}}", { name: 'Chloe' })).toBe("My name is Chloe");
+                expect(module._renderHandlebarsTemplate("My name is {{name}}", { name: null })).toBe(null);
+                expect(module._renderHandlebarsTemplate("My name is {{name}}", {})).toBe(null);
+                expect(module._renderHandlebarsTemplate("My name is {{#if name}}{{name}}{{/if}}", {})).toBe("My name is ");
+                expect(module._renderHandlebarsTemplate("My name is {{^if name}}{{name}}{{/if}}", {})).toBe("My name is ", "For inverted if with variable");
+                expect(module._renderHandlebarsTemplate("My name is {{^if name}}John{{/if}}", {})).toBe("My name is John", "For inverted if with string");
+                expect(module._renderHandlebarsTemplate("My name is {{#unless name}}Jona{{/unless}}", {})).toBe("My name is Jona", "For unless");
             });
 
             it('ifCond helper', function() {
-                expect(module._renderHandlebarsTemplate("Name {{#ifCond name \"===\" 'Chloe'}}{{name}} is equal to Chloe{{else}}{{name}} is not equal to Chloe{{/ifCond}}", { name: 'Chloe' }, catalog)).toBe("Name Chloe is equal to Chloe");
-                expect(module._renderHandlebarsTemplate("Name {{#ifCond name \"===\" 'Chloe'}}{{name}} is equal to Chloe{{else}}{{name}} is not equal to Chloe{{/ifCond}}", { name: 'John' }, catalog)).toBe("Name John is not equal to Chloe");
+                expect(module._renderHandlebarsTemplate("Name {{#ifCond name \"===\" 'Chloe'}}{{name}} is equal to Chloe{{else}}{{name}} is not equal to Chloe{{/ifCond}}", { name: 'Chloe' })).toBe("Name Chloe is equal to Chloe");
+                expect(module._renderHandlebarsTemplate("Name {{#ifCond name \"===\" 'Chloe'}}{{name}} is equal to Chloe{{else}}{{name}} is not equal to Chloe{{/ifCond}}", { name: 'John' })).toBe("Name John is not equal to Chloe");
             });
 
             it('each helper', function () {
-                expect(module._renderHandlebarsTemplate("{{#each values}}{{this}}\n{{/each}}", { values: [2, 3, 7, 9] }, catalog)).toBe("2\n3\n7\n9\n");
+                expect(module._renderHandlebarsTemplate("{{#each values}}{{this}}\n{{/each}}", { values: [2, 3, 7, 9] })).toBe("2\n3\n7\n9\n");
             });
 
             it('if eq (equals) helper', function () {
-                expect(module._renderHandlebarsTemplate("Name {{#if (eq name 'Chloe')}}{{name}} is equal to Chloe{{else}}{{name}} is not equal to Chloe{{/if}}", { name: 'Chloe' }, catalog)).toBe("Name Chloe is equal to Chloe");
-                expect(module._renderHandlebarsTemplate("Name {{#if (eq name 'Chloe')}}{{name}} is equal to Chloe{{else}}{{name}} is not equal to Chloe{{/if}}", { name: 'John' }, catalog)).toBe("Name John is not equal to Chloe");
+                expect(module._renderHandlebarsTemplate("Name {{#if (eq name 'Chloe')}}{{name}} is equal to Chloe{{else}}{{name}} is not equal to Chloe{{/if}}", { name: 'Chloe' })).toBe("Name Chloe is equal to Chloe");
+                expect(module._renderHandlebarsTemplate("Name {{#if (eq name 'Chloe')}}{{name}} is equal to Chloe{{else}}{{name}} is not equal to Chloe{{/if}}", { name: 'John' })).toBe("Name John is not equal to Chloe");
             });
 
             it('if ne (not equals) helper', function () {
-                expect(module._renderHandlebarsTemplate("Name {{#if (ne name 'Chloe')}}{{name}} is not equal to Chloe{{else}}{{name}} is equal to Chloe{{/if}}", { name: 'John' }, catalog)).toBe("Name John is not equal to Chloe");
-                expect(module._renderHandlebarsTemplate("Name {{#if (ne name 'Chloe')}}{{name}} is not equal to Chloe{{else}}{{name}} is equal to Chloe{{/if}}", { name: 'Chloe' }, catalog)).toBe("Name Chloe is equal to Chloe");
+                expect(module._renderHandlebarsTemplate("Name {{#if (ne name 'Chloe')}}{{name}} is not equal to Chloe{{else}}{{name}} is equal to Chloe{{/if}}", { name: 'John' })).toBe("Name John is not equal to Chloe");
+                expect(module._renderHandlebarsTemplate("Name {{#if (ne name 'Chloe')}}{{name}} is not equal to Chloe{{else}}{{name}} is equal to Chloe{{/if}}", { name: 'Chloe' })).toBe("Name Chloe is equal to Chloe");
             });
 
             it('if lt (less than) helper', function () {
-                expect(module._renderHandlebarsTemplate("{{#if (lt value '10')}}{{value}} is less than 10{{else}}{{value}} is not less than 10{{/if}}", { value: 3 }, catalog)).toBe("3 is less than 10");
-                expect(module._renderHandlebarsTemplate("{{#if (lt value '10')}}{{value}} is less than 10{{else}}{{value}} is not less than 10{{/if}}", { value: 17 }, catalog)).toBe("17 is not less than 10");
+                expect(module._renderHandlebarsTemplate("{{#if (lt value '10')}}{{value}} is less than 10{{else}}{{value}} is not less than 10{{/if}}", { value: 3 })).toBe("3 is less than 10");
+                expect(module._renderHandlebarsTemplate("{{#if (lt value '10')}}{{value}} is less than 10{{else}}{{value}} is not less than 10{{/if}}", { value: 17 })).toBe("17 is not less than 10");
             });
 
             it('if gt (greater than) helper', function () {
-                expect(module._renderHandlebarsTemplate("{{#if (gt value '10')}}{{value}} is greater than 10{{else}}{{value}} is not greater than 10{{/if}}", { value: 17 }, catalog)).toBe("17 is greater than 10");
-                expect(module._renderHandlebarsTemplate("{{#if (gt value '10')}}{{value}} is greater than 10{{else}}{{value}} is not greater than 10{{/if}}", { value: 3 }, catalog)).toBe("3 is not greater than 10");
+                expect(module._renderHandlebarsTemplate("{{#if (gt value '10')}}{{value}} is greater than 10{{else}}{{value}} is not greater than 10{{/if}}", { value: 17 })).toBe("17 is greater than 10");
+                expect(module._renderHandlebarsTemplate("{{#if (gt value '10')}}{{value}} is greater than 10{{else}}{{value}} is not greater than 10{{/if}}", { value: 3 })).toBe("3 is not greater than 10");
             });
 
             it('if lte (less than or equal to) helper', function () {
-                expect(module._renderHandlebarsTemplate("{{#if (lte value '10')}}{{value}} is less than or equal to 10{{else}}{{value}} is not less than or equal to 10{{/if}}", { value: 3 }, catalog)).toBe("3 is less than or equal to 10");
-                expect(module._renderHandlebarsTemplate("{{#if (lte value '10')}}{{value}} is less than or equal to 10{{else}}{{value}} is not less than or equal to 10{{/if}}", { value: 10 }, catalog)).toBe("10 is less than or equal to 10");
-                expect(module._renderHandlebarsTemplate("{{#if (lte value '10')}}{{value}} is less than or equal to 10{{else}}{{value}} is not less than or equal to 10{{/if}}", { value: 17 }, catalog)).toBe("17 is not less than or equal to 10");
+                expect(module._renderHandlebarsTemplate("{{#if (lte value '10')}}{{value}} is less than or equal to 10{{else}}{{value}} is not less than or equal to 10{{/if}}", { value: 3 })).toBe("3 is less than or equal to 10");
+                expect(module._renderHandlebarsTemplate("{{#if (lte value '10')}}{{value}} is less than or equal to 10{{else}}{{value}} is not less than or equal to 10{{/if}}", { value: 10 })).toBe("10 is less than or equal to 10");
+                expect(module._renderHandlebarsTemplate("{{#if (lte value '10')}}{{value}} is less than or equal to 10{{else}}{{value}} is not less than or equal to 10{{/if}}", { value: 17 })).toBe("17 is not less than or equal to 10");
             });
 
             it('if gte (greater than or equal to) helper', function () {
-                expect(module._renderHandlebarsTemplate("{{#if (gte value '10')}}{{value}} is greater than or equal to 10{{else}}{{value}} is not greater than or equal to 10{{/if}}", { value: 17 }, catalog)).toBe("17 is greater than or equal to 10");
-                expect(module._renderHandlebarsTemplate("{{#if (gte value '10')}}{{value}} is greater than or equal to 10{{else}}{{value}} is not greater than or equal to 10{{/if}}", { value: 10 }, catalog)).toBe("10 is greater than or equal to 10");
-                expect(module._renderHandlebarsTemplate("{{#if (gte value '10')}}{{value}} is greater than or equal to 10{{else}}{{value}} is not greater than or equal to 10{{/if}}", { value: 3 }, catalog)).toBe("3 is not greater than or equal to 10");
+                expect(module._renderHandlebarsTemplate("{{#if (gte value '10')}}{{value}} is greater than or equal to 10{{else}}{{value}} is not greater than or equal to 10{{/if}}", { value: 17 })).toBe("17 is greater than or equal to 10");
+                expect(module._renderHandlebarsTemplate("{{#if (gte value '10')}}{{value}} is greater than or equal to 10{{else}}{{value}} is not greater than or equal to 10{{/if}}", { value: 10 })).toBe("10 is greater than or equal to 10");
+                expect(module._renderHandlebarsTemplate("{{#if (gte value '10')}}{{value}} is greater than or equal to 10{{else}}{{value}} is not greater than or equal to 10{{/if}}", { value: 3 })).toBe("3 is not greater than or equal to 10");
             });
 
             it('if and (conjunction) helper', function () {
-                expect(module._renderHandlebarsTemplate("{{#if (and bool1 bool2)}}both booleans are true{{else}}one or more booleans are false{{/if}}", { bool1: true, bool2: true }, catalog)).toBe("both booleans are true");
-                expect(module._renderHandlebarsTemplate("{{#if (and bool1 bool2)}}both booleans are true{{else}}one or more booleans are false{{/if}}", { bool1: true, bool2: false }, catalog)).toBe("one or more booleans are false");
+                expect(module._renderHandlebarsTemplate("{{#if (and bool1 bool2)}}both booleans are true{{else}}one or more booleans are false{{/if}}", { bool1: true, bool2: true })).toBe("both booleans are true");
+                expect(module._renderHandlebarsTemplate("{{#if (and bool1 bool2)}}both booleans are true{{else}}one or more booleans are false{{/if}}", { bool1: true, bool2: false })).toBe("one or more booleans are false");
             });
 
             it('if or (disjunction) helper', function () {
-                expect(module._renderHandlebarsTemplate("{{#if (or bool1 bool2)}}one or more booleans are true{{else}}both booleans are false{{/if}}", { bool1: false, bool2: true }, catalog)).toBe("one or more booleans are true");
-                expect(module._renderHandlebarsTemplate("{{#if (or bool1 bool2)}}one or more booleans are true{{else}}both booleans are false{{/if}}", { bool1: false, bool2: false }, catalog)).toBe("both booleans are false");
+                expect(module._renderHandlebarsTemplate("{{#if (or bool1 bool2)}}one or more booleans are true{{else}}both booleans are false{{/if}}", { bool1: false, bool2: true })).toBe("one or more booleans are true");
+                expect(module._renderHandlebarsTemplate("{{#if (or bool1 bool2)}}one or more booleans are true{{else}}both booleans are false{{/if}}", { bool1: false, bool2: false })).toBe("both booleans are false");
             });
 
             it('suppressed default helper log', function () {
                 try {
-                    module._renderHandlebarsTemplate("{{log 'Hello World'}}", {}, catalog);
+                    module._renderHandlebarsTemplate("{{log 'Hello World'}}", {});
                 } catch (err) {
                     expect(err.message).toBe("You specified knownHelpersOnly, but used the unknown helper log - 1:0");
                 }
@@ -442,21 +445,25 @@ exports.execute = function (options) {
             it('injecting $moment obj', function() {
                 var moment = module._currDate;
                 expect(moment).toBeDefined();
-                expect(module._renderHandlebarsTemplate("{{name}} was born on {{$moment.day}} {{$moment.date}}/{{$moment.month}}/{{$moment.year}}", { name: 'John' }, catalog)).toBe("John was born on " + moment.day + " " + moment.date + "/" + moment.month + "/" + moment.year);
-                expect(module._renderHandlebarsTemplate("Todays date is {{$moment.dateString}}", {}, catalog)).toBe("Todays date is " + moment.dateString);
+                expect(module._renderHandlebarsTemplate("{{name}} was born on {{$moment.day}} {{$moment.date}}/{{$moment.month}}/{{$moment.year}}", { name: 'John' })).toBe("John was born on " + moment.day + " " + moment.date + "/" + moment.month + "/" + moment.year);
+                expect(module._renderHandlebarsTemplate("Todays date is {{$moment.dateString}}", {})).toBe("Todays date is " + moment.dateString);
 
-                expect(module._renderHandlebarsTemplate("Current time is {{$moment.hours}}:{{$moment.minutes}}:{{$moment.seconds}}:{{$moment.milliseconds}} with timestamp {{$moment.timestamp}}", {}, catalog)).toBe("Current time is " + moment.hours + ":" + moment.minutes + ":" + moment.seconds + ":" + moment.milliseconds + " with timestamp " + moment.timestamp);
-                expect(module._renderHandlebarsTemplate("Current time is {{$moment.timeString}}", {}, catalog)).toBe("Current time is " + moment.timeString);
+                expect(module._renderHandlebarsTemplate("Current time is {{$moment.hours}}:{{$moment.minutes}}:{{$moment.seconds}}:{{$moment.milliseconds}} with timestamp {{$moment.timestamp}}", {})).toBe("Current time is " + moment.hours + ":" + moment.minutes + ":" + moment.seconds + ":" + moment.milliseconds + " with timestamp " + moment.timestamp);
+                expect(module._renderHandlebarsTemplate("Current time is {{$moment.timeString}}", {})).toBe("Current time is " + moment.timeString);
 
-                expect(module._renderHandlebarsTemplate("ISO string is {{$moment.ISOString}}", {}, catalog)).toBe("ISO string is " + moment.ISOString);
-                expect(module._renderHandlebarsTemplate("GMT string is {{$moment.GMTString}}", {}, catalog)).toBe("GMT string is " + moment.GMTString);
-                expect(module._renderHandlebarsTemplate("UTC string is {{$moment.UTCString}}", {}, catalog)).toBe("UTC string is " + moment.UTCString);
+                expect(module._renderHandlebarsTemplate("ISO string is {{$moment.ISOString}}", {})).toBe("ISO string is " + moment.ISOString);
+                expect(module._renderHandlebarsTemplate("GMT string is {{$moment.GMTString}}", {})).toBe("GMT string is " + moment.GMTString);
+                expect(module._renderHandlebarsTemplate("UTC string is {{$moment.UTCString}}", {})).toBe("UTC string is " + moment.UTCString);
 
-                expect(module._renderHandlebarsTemplate("Local time string is {{$moment.localeTimeString}}", {}, catalog)).toBe("Local time string is " + moment.localeTimeString);
+                expect(module._renderHandlebarsTemplate("Local time string is {{$moment.localeTimeString}}", {})).toBe("Local time string is " + moment.localeTimeString);
             });
 
             it('injecting $catalog obj', function() {
-                expect(module._renderHandlebarsTemplate("catalog snapshot: {{$catalog.snapshot}}, catalog id: {{$catalog.id}}", {}, catalog)).toBe("catalog snapshot: " + process.env.DEFAULT_CATALOG + ", catalog id: " + process.env.DEFAULT_CATALOG);
+                expect(module._renderHandlebarsTemplate("catalog snapshot: {{$catalog.snapshot}}, catalog id: {{$catalog.id}}", {}, options.catalog)).toBe("catalog snapshot: " + process.env.DEFAULT_CATALOG + ", catalog id: " + process.env.DEFAULT_CATALOG);
+            });
+
+            it("NOT injecting $catalog obj", function() {
+                expect(module._renderHandlebarsTemplate("catalog snapshot:{{#if $catalog.snapshot}} {{$catalog.snapshot}}{{/if}}", {})).toBe("catalog snapshot:");
             });
 
             var handlebarTemplateCases = [{
@@ -547,7 +554,7 @@ exports.execute = function (options) {
                 var printMarkdown = formatUtils.printMarkdown;
 
                 handlebarTemplateCases.forEach(function(ex) {
-                    var template = module._renderHandlebarsTemplate(ex.template, obj, catalog);
+                    var template = module._renderHandlebarsTemplate(ex.template, obj);
                     expect(template).toBe(ex.after_mustache, "For template => " + ex.template);
                     var html = printMarkdown(template);
                     expect(html).toBe(ex.after_render + '\n', "For template => " + ex.template);
