@@ -241,7 +241,7 @@ exports.execute = function (options) {
                         expectAttrGroupRef(
                             reference.columns[0].groupAggregate.entityCounts(),
                             tableWithJoinAttrGroupUri + "/0:=col;count:=cnt_d(T:RID)@sort(count::desc::,0)",
-                            ["col", "Number of Occurences"]
+                            ["col", "Number of Occurrences"]
                         );
                         done();
                     }).catch(function (error) {
@@ -255,7 +255,7 @@ exports.execute = function (options) {
                         expectAttrGroupRef(
                             reference.columns[1].groupAggregate.entityCounts(),
                             tableWithUnicodeAttrGroupUri + "/0:=" + encodedCol + ";count:=cnt_d(T:RID)@sort(count::desc::,0)",
-                            [decodedCol, "Number of Occurences"]
+                            [decodedCol, "Number of Occurrences"]
                         );
                         done();
                     }).catch(function (error) {
@@ -268,7 +268,7 @@ exports.execute = function (options) {
                     expectAttrGroupRef(
                         reference.columns[1].groupAggregate.entityCounts(),
                         attrGroupUri + "/0:=int_agg;count:=cnt(*)@sort(count::desc::,0)",
-                        ["int_agg", "Number of Occurences"]
+                        ["int_agg", "Number of Occurrences"]
                     );
                 });
 
@@ -276,7 +276,7 @@ exports.execute = function (options) {
                     expectAttrGroupRef(
                         reference.columns[2].groupAggregate.entityCounts(),
                         attrGroupUri + "/0:=float_agg;count:=cnt(*)@sort(count::desc::,0)",
-                        ["float_agg", "Number of Occurences"]
+                        ["float_agg", "Number of Occurrences"]
                     );
                 });
 
@@ -284,7 +284,7 @@ exports.execute = function (options) {
                     expectAttrGroupRef(
                         reference.columns[3].groupAggregate.entityCounts(),
                         attrGroupUri + "/0:=text_agg;count:=cnt(*)@sort(count::desc::,0)",
-                        ["text_agg", "Number of Occurences"]
+                        ["text_agg", "Number of Occurrences"]
                     );
                 });
 
@@ -292,7 +292,7 @@ exports.execute = function (options) {
                     expectAttrGroupRef(
                         reference.columns[4].groupAggregate.entityCounts(),
                         attrGroupUri + "/0:=date_agg;count:=cnt(*)@sort(count::desc::,0)",
-                        ["date_agg", "Number of Occurences"]
+                        ["date_agg", "Number of Occurrences"]
                     );
                 });
 
@@ -300,7 +300,7 @@ exports.execute = function (options) {
                     expectAttrGroupRef(
                         reference.columns[5].groupAggregate.entityCounts(),
                         attrGroupUri + "/0:=timestamp_agg;count:=cnt(*)@sort(count::desc::,0)",
-                        ["timestamp_agg", "Number of Occurences"]
+                        ["timestamp_agg", "Number of Occurrences"]
                     );
                 });
 

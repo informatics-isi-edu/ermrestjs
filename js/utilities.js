@@ -800,7 +800,7 @@
      * @param  {string} columnOrder The object that defines the column/row order
      * @param  {ERMrest.Table} table
      * @param  {Object} the extra options:
-     *                  - allowNumOccurences: to allow the specific frequency column_order
+     *                  - allowNumOccurrences: to allow the specific frequency column_order
      * @return {Array=} If it's undefined, the column_order that is defined is not valid
      */
     _processColumnOrderList = function (columnOrder, table, options) {
@@ -819,7 +819,7 @@
                         colName = columnOrder[i];
                     } else if (columnOrder[i] && columnOrder[i].column) {
                         colName = columnOrder[i].column;
-                    } else if (options.allowNumOccurences && !numOccurr && columnOrder[i] && columnOrder[i].num_occurrences) {
+                    } else if (options.allowNumOccurrences && !numOccurr && columnOrder[i] && columnOrder[i].num_occurrences) {
                         numOccurr = true;
                         // add the frequency sort
                         res.push({num_occurrences: true, descending:  (columnOrder[i] && columnOrder[i].descending === true)});

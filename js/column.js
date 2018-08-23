@@ -2212,11 +2212,11 @@ FacetColumn.prototype = {
         return this._comment;
     },
 
-    get hideNumOccurences() {
-        if (this._hideNumOccurences === undefined) {
-            this._hideNumOccurences = (this._facetObject.hide_num_occurrences === true);
+    get hideNumOccurrences() {
+        if (this._hideNumOccurrences === undefined) {
+            this._hideNumOccurrences = (this._facetObject.hide_num_occurrences === true);
         }
-        return this._hideNumOccurences;
+        return this._hideNumOccurrences;
     },
 
     /**
@@ -2240,7 +2240,7 @@ FacetColumn.prototype = {
         var rowOrder = _processColumnOrderList(
             self._facetObject.order,
             self._column.table,
-            {allowNumOccurences: true}
+            {allowNumOccurrences: true}
         );
 
         // default sorting:
@@ -2255,6 +2255,21 @@ FacetColumn.prototype = {
 
         self._sortColumns = rowOrder;
         return;
+    },
+
+    /**
+     * An {@link ERMrest.AttributeGroupReference} object that can be used to get
+     * the available scalar values of this facet. This will use the sortColumns, and hideNumOccurrences APIs.
+     * It will throw an error if it's used in entity-mode.
+     * @type {ERMrest.AttributeGroupReference}
+     */
+    get scalarValuesReference() {
+        verify(!this.isEntityMode, "this API cannot be used in entity-mode");
+
+        if (this._scalarValuesRef === undefined) {
+            this._scalarValuesRef = this.column.groupAggregate.entityCounts(this.sortColumns, this.hideNumOccurrences);
+        }
+        return this._scalarValuesRef;
     },
 
     /**
@@ -3009,7 +3024,7 @@ ColumnGroupAggregateFn.prototype = {
      * @type {Object=} sortColumns the sort column object that you want to pass
      * @returns {ERMrest.AttributeGroupReference}
      */
-    entityCounts: function(sortColumns, hideNumOccurences) {
+    entityCounts: function(sortColumns, hideNumOccurrences) {
         if (this.column.isPseudo) {
             throw new Error("Cannot use this API on pseudo-column.");
         }
@@ -3076,14 +3091,14 @@ ColumnGroupAggregateFn.prototype = {
         var aggregateColumns = [];
 
         // if it's hidden and also not in the sort, then we don't need it.
-        if (!hideNumOccurences || sortCounts) {
+        if (!hideNumOccurrences || sortCounts) {
             var countName = "cnt(*)";
             if (self._ref.location.hasJoin) {
                 countName = "cnt_d(" + self._ref.location.projectionTableAlias + ":" + module._fixedEncodeURIComponent(self._ref.projectionTable.shortestKey[0].name) + ")";
             }
 
             aggregateColumns.push(
-                new AttributeGroupColumn(countColName, countName, null, "Number of Occurences", new Type({typename: "int"}), "", true, !hideNumOccurences)
+                new AttributeGroupColumn(countColName, countName, null, "Number of Occurrences", new Type({typename: "int"}), "", true, !hideNumOccurrences)
             );
         }
 

@@ -1391,15 +1391,15 @@ exports.execute = function (options) {
                 });
             });
 
-            describe("hideNumOccurences, ", function () {
+            describe("hideNumOccurrences, ", function () {
                 it ('should return false if hide_num_occurrences is not `true`.', function () {
-                    expect(mainFacets[0].hideNumOccurences).toBe(false, "missmatch for index=0");
-                    expect(mainFacets[2].hideNumOccurences).toBe(false, "missmatch for index=2");
+                    expect(mainFacets[0].hideNumOccurrences).toBe(false, "missmatch for index=0");
+                    expect(mainFacets[2].hideNumOccurrences).toBe(false, "missmatch for index=2");
                 });
 
                 it ("otherwise should return true.", function () {
-                    expect(mainFacets[1].hideNumOccurences).toBe(true, "missmatch for index=1");
-                    expect(mainFacets[7].hideNumOccurences).toBe(true, "missmatch for index=7");
+                    expect(mainFacets[1].hideNumOccurrences).toBe(true, "missmatch for index=1");
+                    expect(mainFacets[7].hideNumOccurrences).toBe(true, "missmatch for index=7");
                 });
             });
 
@@ -1463,6 +1463,74 @@ exports.execute = function (options) {
                         {num_occurrences: true, descending: true},
                         {column: "markdown_col", descending: false}
                     ], "markdown");
+                });
+            });
+
+            describe("scalarValuesReference", function () {
+                var testEntityCounts = function (entityCountRef, path, length, values, valuesLength, done) {
+                    expect(entityCountRef.ermrestPath).toEqual(path, "path missmatch.");
+                    entityCountRef.read(length).then(function (page) {
+                        expect(page.tuples.length).toBe(length, "length missmatch.");
+                        // all tuples are the same, just looking at the first one is enough
+                        // This is just to test that whether the sortColumns is messing with the values or not
+                        expect(page.tuples[0].values.length).toBe(valuesLength, "values length missmatch");
+                        expect(page.tuples.map(function (t) {
+                            return t.values[0];
+                        })).toEqual(values, "values missmatch.");
+                        done();
+                    }).catch(function (err) {
+                        done.fail(err);
+                    });
+                };
+
+                it ('should throw an error in entity mode.', function () {
+                    expect(function () {
+                        var sc = mainFacets[10].sortColumns;
+                    }).toThrow("sortColumns cannot be used in entity mode.");
+                });
+
+                it ("should return the list of avaialble facets sorted by frequency and tie break by column.", function (done) {
+                    testEntityCounts(
+                        mainFacets[0].scalarValuesReference,
+                        "M:=faceting_schema:main/int_col::geq::-2/$M/0:=id;count:=cnt(*)@sort(count::desc::,0)",
+                        10,
+                        ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'],
+                        2,
+                        done
+                    );
+                });
+
+                it ("should be able to pass the FacetColumn.sortColumns to it.", function (done) {
+                    testEntityCounts(
+                        mainFacets[2].scalarValuesReference,
+                        "M:=faceting_schema:main/id=1/$M/int_col::geq::-2/$M/0:=float_col,1:=id;count:=cnt(*)@sort(1,0::desc::)",
+                        1, // the reference has applied filters
+                        ["11.1100"],
+                        2,
+                        done
+                    );
+                });
+
+                it ("should be able to pass the FacetColumn.hideNumOccurrences to it (should still add the count and just hide it).", function (done) {
+                    testEntityCounts(
+                        mainFacets[7].scalarValuesReference,
+                        "M:=faceting_schema:main/id=1/$M/int_col::geq::-2/$M/0:=markdown_col;count:=cnt(*)@sort(count::desc::,0)",
+                        1,
+                        ["<strong>one</strong>"],
+                        1,
+                        done
+                    );
+                });
+
+                it ("should not add count column if it's hidden and not part of sortColumns.", function (done) {
+                    testEntityCounts(
+                        mainFacets[1].scalarValuesReference,
+                        "M:=faceting_schema:main/id=1/$M/0:=int_col,1:=id@sort(1::desc::)",
+                        1,
+                        ["11"],
+                        1,
+                        done
+                    );
                 });
             });
         });
@@ -1589,75 +1657,6 @@ exports.execute = function (options) {
                     console.log(err);
                     done.fail();
                 });
-            });
-        });
-
-        describe("Integration with other APIs, ", function () {
-            describe("Aggregate function Column.entityCounts, ", function () {
-                var testEntityCounts = function (entityCountRef, path, length, values, valuesLength, done) {
-                    expect(entityCountRef.ermrestPath).toEqual(path, "path missmatch.");
-                    entityCountRef.read(length).then(function (page) {
-                        expect(page.tuples.length).toBe(length, "length missmatch.");
-                        // all tuples are the same, just looking at the first one is enough
-                        // This is just to test that whether the sortColumns is messing with the values or not
-                        expect(page.tuples[0].values.length).toBe(valuesLength, "values length missmatch");
-                        expect(page.tuples.map(function (t) {
-                            return t.values[0];
-                        })).toEqual(values, "values missmatch.");
-                        done();
-                    }).catch(function (err) {
-                        done.fail(err);
-                    });
-                };
-
-                describe("sortColumns paramter, ", function () {
-                    it ("should return the list of avaialble facets sorted by frequency and tie break by column.", function (done) {
-                        testEntityCounts(
-                            mainFacets[0].column.groupAggregate.entityCounts(),
-                            "M:=faceting_schema:main/int_col::geq::-2/$M/0:=id;count:=cnt(*)@sort(count::desc::,0)",
-                            10,
-                            ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'],
-                            2,
-                            done
-                        );
-                    });
-
-                    it ("should be able to pass the FacetColumn.sortColumns to it.", function (done) {
-                        testEntityCounts(
-                            mainFacets[2].column.groupAggregate.entityCounts(mainFacets[2].sortColumns),
-                            "M:=faceting_schema:main/id=1/$M/int_col::geq::-2/$M/0:=float_col,1:=id;count:=cnt(*)@sort(1,0::desc::)",
-                            1, // the reference has applied filters
-                            ["11.1100"],
-                            2,
-                            done
-                        );
-                    });
-                });
-
-                describe("hideNumOccurences parameter, ", function () {
-                    it ("should be able to pass the FacetColumn.hideNumOccurences to it (should still add the count and just hide it).", function (done) {
-                        testEntityCounts(
-                            mainFacets[7].column.groupAggregate.entityCounts(mainFacets[7].sortColumns, mainFacets[7].hideNumOccurences),
-                            "M:=faceting_schema:main/id=1/$M/int_col::geq::-2/$M/0:=markdown_col;count:=cnt(*)@sort(count::desc::,0)",
-                            1,
-                            ["<strong>one</strong>"],
-                            1,
-                            done
-                        );
-                    });
-
-                    it ("should not add count column if it's hidden and not part of sortColumns.", function (done) {
-                        testEntityCounts(
-                            mainFacets[1].column.groupAggregate.entityCounts(mainFacets[1].sortColumns, mainFacets[1].hideNumOccurences),
-                            "M:=faceting_schema:main/id=1/$M/0:=int_col,1:=id@sort(1::desc::)",
-                            1,
-                            ["11"],
-                            1,
-                            done
-                        );
-                    });
-                });
-
             });
         });
     });

@@ -420,6 +420,7 @@ to use for ERMrest JavaScript agents.
         * [.displayname](#ERMrest.FacetColumn+displayname) : <code>object</code>
         * [.comment](#ERMrest.FacetColumn+comment) : <code>string</code>
         * [.sortColumns](#ERMrest.FacetColumn+sortColumns) : <code>Array</code>
+        * [.scalarValuesReference](#ERMrest.FacetColumn+scalarValuesReference) : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)
         * [.hasNotNullFilter](#ERMrest.FacetColumn+hasNotNullFilter) : <code>Boolean</code>
         * [.searchFilters](#ERMrest.FacetColumn+searchFilters) : <code>Array.&lt;ERMREst.SearchFacetFilter&gt;</code>
         * [.choiceFilters](#ERMrest.FacetColumn+choiceFilters) : <code>Array.&lt;ERMREst.ChoiceFacetFilter&gt;</code>
@@ -4024,6 +4025,7 @@ Indicates that this ReferenceColumn is an inbound foreign key.
     * [.displayname](#ERMrest.FacetColumn+displayname) : <code>object</code>
     * [.comment](#ERMrest.FacetColumn+comment) : <code>string</code>
     * [.sortColumns](#ERMrest.FacetColumn+sortColumns) : <code>Array</code>
+    * [.scalarValuesReference](#ERMrest.FacetColumn+scalarValuesReference) : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)
     * [.hasNotNullFilter](#ERMrest.FacetColumn+hasNotNullFilter) : <code>Boolean</code>
     * [.searchFilters](#ERMrest.FacetColumn+searchFilters) : <code>Array.&lt;ERMREst.SearchFacetFilter&gt;</code>
     * [.choiceFilters](#ERMrest.FacetColumn+choiceFilters) : <code>Array.&lt;ERMREst.ChoiceFacetFilter&gt;</code>
@@ -4198,6 +4200,14 @@ Could be used as tooltip to provide more information about the facetColumn
 Returns the sortColumns when we're sorting this facet in scalar mode
 - uses row_order if defined.
 - otherwise it will be descending of num_occurrences and column order of base column.
+
+**Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
+<a name="ERMrest.FacetColumn+scalarValuesReference"></a>
+
+#### facetColumn.scalarValuesReference : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)
+An [AttributeGroupReference](#ERMrest.AttributeGroupReference) object that can be used to get
+the available scalar values of this facet. This will use the sortColumns, and hideNumOccurrences APIs.
+It will throw an error if it's used in entity-mode.
 
 **Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
 <a name="ERMrest.FacetColumn+hasNotNullFilter"></a>

@@ -1212,7 +1212,7 @@ function BucketAttributeGroupReference(baseColumn, baseRef, min, max, numberOfBu
     }
 
     var aggregateColumns = [
-        new AttributeGroupColumn("c2", countName, null, "Number of Occurences", new Type({typename: "int"}), "", true, true)
+        new AttributeGroupColumn("c2", countName, null, "Number of Occurrences", new Type({typename: "int"}), "", true, true)
     ];
 
     // call the parent constructor
