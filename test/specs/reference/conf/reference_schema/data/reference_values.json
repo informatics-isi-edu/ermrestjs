@@ -1,4 +1,4 @@
-[{"id":4000, "some_markdown": "**date is :**", "name":"Hank", "url": "https://www.google.com", "some_gene_sequence": "GATCGATCGCGTATT", "video_col": "http://techslides.com/demos/sample-videos/small.mp4" },
+[{"id":4000, "some_markdown": "**date is :**", "name":"Hank", "url": "https://www.google.com", "some_gene_sequence": "GATCGATCGCGTATT", "video_col": "http://techslides.com/demos/sample-videos/small.mp4", "catalog_snapshot": "schema:table"},
  {"id":4001, "name":"Harold","some_invisible_column": "Junior", "fk_col": 1},
  {"id":4002, "url": "https://www.google.com", "fk_col": 2},
  {"id":4003 ,"some_invisible_column": "Freshmen", "fk_col": 3},

@@ -56,7 +56,7 @@ exports.execute = function (options) {
         var expectedMomentValue = "<p>" + moment.day + " " + moment.date + "/" + moment.month + "/" + moment.year + "</p>\n";
         var testObjects ={
             "test1": {
-                    "rowValue" : ["id=4000, some_markdown= **date is :**, name=Hank, url= https://www.google.com, some_gene_sequence= GATCGATCGCGTATT, video_col= http://techslides.com/demos/sample-videos/small.mp4" ],
+                    "rowValue" : ["id=4000, some_markdown= **date is :**, name=Hank, url= https://www.google.com, some_gene_sequence= GATCGATCGCGTATT, video_col= http://techslides.com/demos/sample-videos/small.mp4, catalog_snapshot_uri=schema:table, catalog_id_uri=schema:table" ],
                     "expectedValue" : [ '4000',
                                         '<h2>Hank</h2>\n',
                                         '<p><a href="https://www.google.com/Hank">link</a></p>\n',
@@ -69,10 +69,11 @@ exports.execute = function (options) {
                                         '<code>GATCGATCGC GTATT</code>',
                                         'NA',
                                         '<video controls height=500 width=600 loop ><source src="http://techslides.com/demos/sample-videos/small.mp4" type="video/mp4"></video>',
-                                        '',
+                                        '', // This value is set later by setLinkRID()
+                                        '<p>'+catalog_id+': '+catalog_id+'/schema:table</p>\n',
                                         expectedMomentValue
                                          ],
-                    "isHTML" : [false, true, true, true, true, true, true, true, true, true, false, true, false, true]
+                    "isHTML" : [false, true, true, true, true, true, true, true, true, true, false, true, false, true, true]
                     },
             "test2": {
                 "rowValue" :["id=4001, name=Harold,some_invisible_column= Junior"],
@@ -90,9 +91,10 @@ exports.execute = function (options) {
                                 '<p><a href="http://example.com/Junior">Junior</a></p>\n',
                                 '',
                                 '',  // This value is set later by setLinkRID()
+                                '',
                                 expectedMomentValue
                             ],
-                "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true, true, true]
+                "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true, true, false, true]
                 },
             "test3": {
                 "rowValue" : ["id=4002, url= https://www.google.com, video_col= http://techslides.com/demos/sample-videos/small.mp4"],
@@ -110,9 +112,10 @@ exports.execute = function (options) {
                                 'NA',
                                 '',
                                 '', // This value is set later by setLinkRID()
+                                '',
                                 expectedMomentValue
                                 ],
-                "isHTML" : [false, false, false, true, true, true, false, true, false, true, false, true, true, true]
+                "isHTML" : [false, false, false, true, true, true, false, true, false, true, false, true, true, false, true]
                 },
             "test4": {
                 "rowValue" : ["id=4003 ,some_invisible_column= Freshmen"],
@@ -130,9 +133,10 @@ exports.execute = function (options) {
                                 '<p><a href="http://example.com/Freshmen">Freshmen</a></p>\n',
                                 '',
                                 '', // This value is set later by setLinkRID()
+                                '',
                                 expectedMomentValue
                                 ],
-                "isHTML" : [false, false, false, true, true, true, false, true, false, true, true, true, true, true]
+                "isHTML" : [false, false, false, true, true, true, false, true, false, true, true, true, true, false, true]
                 },
             "test5": {
                 "rowValue" :  ["id=4004, name= weird & HTML < "],
@@ -150,9 +154,10 @@ exports.execute = function (options) {
                                 'NA',
                                 '',
                                 '', // This value is set later by setLinkRID()
+                                '',
                                 expectedMomentValue
                                 ],
-                "isHTML" : [false, true, true, true, true, true, true, true, true, true, false, true, true, true]
+                "isHTML" : [false, true, true, true, true, true, true, true, true, true, false, true, true, false, true]
                 },
             "test6": {
                 "rowValue" : ["id=4005, name= <a href='javascript:alert();'></a>, some_invisible_column= Senior"],
@@ -170,9 +175,10 @@ exports.execute = function (options) {
                                 '<p><a href="http://example.com/Senior">Senior</a></p>\n',
                                 '',
                                 '', // This value is set later by setLinkRID()
+                                '',
                                 expectedMomentValue
                                 ],
-                "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true, true, true]
+                "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true, true, false, true]
                 },
             "test7": {
                 "rowValue" : ["id=4006, name= <script>alert();</script>, some_gene_sequence= GATCGATCGCGTATT, some_invisible_column= Sophomore"],
@@ -190,9 +196,10 @@ exports.execute = function (options) {
                                 '<p><a href="http://example.com/Sophomore">Sophomore</a></p>\n',
                                 '',
                                 '', // This value is set later by setLinkRID()
+                                '',
                                 expectedMomentValue
                                 ],
-                "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true, true, true]
+                "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true, true, false, true]
             }
         };
 
@@ -299,14 +306,14 @@ exports.execute = function (options) {
              * This function calls checkValueAndIsHTML for each column value at the specified tupleIndex
              */
             var testTupleValidity = function(tupleIndex, key) {
-                it("should return 14 values for a tuple", function() {
+                it("should return 15 values for a tuple", function() {
                     // get the RID value that was set on options.entities[schema_name][table_name]
                     setLinkRID(key);
 
-                    expect(tuples[tupleIndex].values.length).toBe(14);
+                    expect(tuples[tupleIndex].values.length).toBe(15);
                 });
 
-                var columnNames = ["id", "name", "url", "image", "image_with_size", "download_link", "iframe", "some_markdown", "some_markdown_with_pattern", "some_gene_sequence", "", "video_col", "fkeys_col", "moment_col"]
+                var columnNames = ["id", "name", "url", "image", "image_with_size", "download_link", "iframe", "some_markdown", "some_markdown_with_pattern", "some_gene_sequence", "", "video_col", "fkeys_col", "catalog_snapshot_uri", "catalog_id_uri", "moment_col"]
                 for (var j=0; j<columnNames.length; j++) {
                     (function (columnIndex) {
                         // NOTE: There was no index 10 in checkValueAndIsHTML functions defined before
