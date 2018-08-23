@@ -236,12 +236,11 @@ exports.execute = function (options) {
                     expect(ag_ref.columns.map(function (c) {return c.displayname.value;})).toEqual(colDisplaynames, "column names missmatch.");
                 };
 
-
                 it ("if there's a join in the path should return an attributegroup reference, using cnt_d(T:shortestKey) for count.", function (done) {
                     options.ermRest.resolve(tableWithJoinUri, {cid: "test"}).then(function (reference) {
                         expectAttrGroupRef(
-                            reference.columns[0].groupAggregate.entityCounts,
-                            tableWithJoinAttrGroupUri + "/value:=col;count:=cnt_d(T:RID)@sort(count::desc::,value)",
+                            reference.columns[0].groupAggregate.entityCounts(),
+                            tableWithJoinAttrGroupUri + "/0:=col;count:=cnt_d(T:RID)@sort(count::desc::,0)",
                             ["col", "Number of Occurences"]
                         );
                         done();
@@ -254,8 +253,8 @@ exports.execute = function (options) {
                 it ("should be able to handle table and columns with unicode characters.", function (done) {
                     options.ermRest.resolve(tableWithUnicode, {cid: "test"}).then(function (reference) {
                         expectAttrGroupRef(
-                            reference.columns[1].groupAggregate.entityCounts,
-                            tableWithUnicodeAttrGroupUri + "/value:=" + encodedCol + ";count:=cnt_d(T:RID)@sort(count::desc::,value)",
+                            reference.columns[1].groupAggregate.entityCounts(),
+                            tableWithUnicodeAttrGroupUri + "/0:=" + encodedCol + ";count:=cnt_d(T:RID)@sort(count::desc::,0)",
                             [decodedCol, "Number of Occurences"]
                         );
                         done();
@@ -267,46 +266,45 @@ exports.execute = function (options) {
 
                 it ("for int_agg should return an attributegroup reference, using cnt(*) for count.", function () {
                     expectAttrGroupRef(
-                        reference.columns[1].groupAggregate.entityCounts,
-                        attrGroupUri + "/value:=int_agg;count:=cnt(*)@sort(count::desc::,value)",
+                        reference.columns[1].groupAggregate.entityCounts(),
+                        attrGroupUri + "/0:=int_agg;count:=cnt(*)@sort(count::desc::,0)",
                         ["int_agg", "Number of Occurences"]
                     );
                 });
 
                 it ("for float_agg should return an attributegroup reference, using cnt(*) for count.", function () {
                     expectAttrGroupRef(
-                        reference.columns[2].groupAggregate.entityCounts,
-                        attrGroupUri + "/value:=float_agg;count:=cnt(*)@sort(count::desc::,value)",
+                        reference.columns[2].groupAggregate.entityCounts(),
+                        attrGroupUri + "/0:=float_agg;count:=cnt(*)@sort(count::desc::,0)",
                         ["float_agg", "Number of Occurences"]
                     );
                 });
 
                 it ("for text_agg should return an attributegroup reference, using cnt(*) for count.", function () {
                     expectAttrGroupRef(
-                        reference.columns[3].groupAggregate.entityCounts,
-                        attrGroupUri + "/value:=text_agg;count:=cnt(*)@sort(count::desc::,value)",
+                        reference.columns[3].groupAggregate.entityCounts(),
+                        attrGroupUri + "/0:=text_agg;count:=cnt(*)@sort(count::desc::,0)",
                         ["text_agg", "Number of Occurences"]
                     );
                 });
 
                 it ("for date_agg should return an attributegroup reference, using cnt(*) for count.", function () {
                     expectAttrGroupRef(
-                        reference.columns[4].groupAggregate.entityCounts,
-                        attrGroupUri + "/value:=date_agg;count:=cnt(*)@sort(count::desc::,value)",
+                        reference.columns[4].groupAggregate.entityCounts(),
+                        attrGroupUri + "/0:=date_agg;count:=cnt(*)@sort(count::desc::,0)",
                         ["date_agg", "Number of Occurences"]
                     );
                 });
 
-
                 it ("for timestamp_agg should return an attributegroup reference, using cnt(*) for count.", function () {
                     expectAttrGroupRef(
-                        reference.columns[5].groupAggregate.entityCounts,
-                        attrGroupUri + "/value:=timestamp_agg;count:=cnt(*)@sort(count::desc::,value)",
+                        reference.columns[5].groupAggregate.entityCounts(),
+                        attrGroupUri + "/0:=timestamp_agg;count:=cnt(*)@sort(count::desc::,0)",
                         ["timestamp_agg", "Number of Occurences"]
                     );
                 });
 
-
+                // NOTE we are testing the custom sort and hide num_occurrences in faceting spec
             });
 
             describe("histograms, ", function () {
@@ -572,8 +570,6 @@ exports.execute = function (options) {
                     });
                 });
             });
-
-            //TODO add test cases for entityValues
         });
     });
 };
