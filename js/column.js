@@ -1126,10 +1126,8 @@ ForeignKeyPseudoColumn.prototype.filteredRef = function(data, linkedData) {
     if (this.foreignKey.annotations.contains(module._annotations.FOREIGN_KEY)){
 
         var keyValues = module._getFormattedKeyValues(this._baseReference.table, this._context, data, linkedData);
-        var uriFilter = module._renderTemplate(
-            this.foreignKey.annotations.get(module._annotations.FOREIGN_KEY).content.domain_filter_pattern,
-            keyValues
-        );
+        var template = this.foreignKey.annotations.get(module._annotations.FOREIGN_KEY).content.domain_filter_pattern;
+        var uriFilter = module._renderTemplate(template, keyValues, this._baseReference.table);
 
         // should ignore the annotation if it's invalid
         if (typeof uriFilter === "string" && uriFilter.trim() !== '') {
@@ -1966,7 +1964,7 @@ FacetColumn.prototype = {
                 return typename.indexOf(type) > -1;
             }
 
-            return (includesType("serial") || includesType("int") || includesType("float") || includesType("date") || includesType("timestamp"));
+            return (includesType("serial") || includesType("int") || includesType("float") || includesType("date") || includesType("timestamp")) || (includesType("numeric"));
         }
 
         if (this._preferredMode === undefined) {

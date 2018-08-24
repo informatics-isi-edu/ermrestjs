@@ -283,6 +283,14 @@ exports.execute = function (options) {
             expect(module._validateMustacheTemplate("Local time string is {{$moment.localeTimeString}}", {})).toBe(true);
         });
 
+        it('module._renderMustacheTemplate() should inject $catalog obj', function() {
+            expect(module._renderMustacheTemplate("catalog snapshot: {{$catalog.snapshot}}, catalog id: {{$catalog.id}}", {}, options.catalog)).toBe("catalog snapshot: " + process.env.DEFAULT_CATALOG + ", catalog id: " + process.env.DEFAULT_CATALOG);
+        });
+
+        it("module._renderMustacheTemplate() should NOT inject $catalog obj if 'catalog' is not passed to the function", function() {
+            expect(module._renderMustacheTemplate("catalog snapshot:{{# $catalog.snapshot}} {{$catalog.snapshot}}{{/$catalog.snapshot}}", {})).toBe("catalog snapshot:");
+        });
+
         var obj = {
             "str.witha.": "**somevalue ] which is ! special and [ contains special <bold> characters 12/26/2016 ( and **",
             "m1": "[a markdown link](http://example.com/foo)",
@@ -428,7 +436,7 @@ exports.execute = function (options) {
 
             it('suppressed default helper log', function () {
                 try {
-                    module._renderHandlebarsTemplate("{{log 'Hello World'}}");
+                    module._renderHandlebarsTemplate("{{log 'Hello World'}}", {});
                 } catch (err) {
                     expect(err.message).toBe("You specified knownHelpersOnly, but used the unknown helper log - 1:0");
                 }
@@ -448,6 +456,14 @@ exports.execute = function (options) {
                 expect(module._renderHandlebarsTemplate("UTC string is {{$moment.UTCString}}", {})).toBe("UTC string is " + moment.UTCString);
 
                 expect(module._renderHandlebarsTemplate("Local time string is {{$moment.localeTimeString}}", {})).toBe("Local time string is " + moment.localeTimeString);
+            });
+
+            it('injecting $catalog obj', function() {
+                expect(module._renderHandlebarsTemplate("catalog snapshot: {{$catalog.snapshot}}, catalog id: {{$catalog.id}}", {}, options.catalog)).toBe("catalog snapshot: " + process.env.DEFAULT_CATALOG + ", catalog id: " + process.env.DEFAULT_CATALOG);
+            });
+
+            it("NOT injecting $catalog obj", function() {
+                expect(module._renderHandlebarsTemplate("catalog snapshot:{{#if $catalog.snapshot}} {{$catalog.snapshot}}{{/if}}", {})).toBe("catalog snapshot:");
             });
 
             var handlebarTemplateCases = [{

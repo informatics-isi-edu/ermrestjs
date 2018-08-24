@@ -16,7 +16,8 @@ exports.execute = function (options) {
             tableName9 = "table_w_rowname_fkeys2",
             tableName10 = "table_w_rowname_fkeys3",
             tableName11 = "table_w_table_display_annotation_w_title",
-            tableNameWoAnnot = "table_wo_annotation";
+            tableNameWoAnnot = "table_wo_annotation",
+            tableNameCatalogAnnot = "table_w_rowname_catalog_snapshot";
 
         var table1EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" +
             schemaName + ":" + tableName1 + "/@sort(id)";
@@ -57,6 +58,9 @@ exports.execute = function (options) {
 
         var tableWoAnnotEntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" +
             tableNameWoAnnot;
+
+        var tableCatalogAnnotEntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" +
+            tableNameCatalogAnnot;
 
         var findRID = function (tableName, id) {
             return options.entities[schemaName][tableName].filter(function (e) {
@@ -247,8 +251,7 @@ exports.execute = function (options) {
             });
         });
 
-
-         describe('table entities without name/title nor table-display:row_name context annotation with composite key, ', function() {
+        describe('table entities without name/title nor table-display:row_name context annotation with composite key, ', function() {
             var reference, page, tuple;
             var limit = 10;
 
@@ -480,7 +483,7 @@ exports.execute = function (options) {
                 expect(display.type).toEqual('markdown');
             });
 
-            var markdownPattern = ":::iframe [{{title}}](https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id={{_id}}) \n:::";
+            var markdownPattern = ":::iframe [{{title}}{{#$fkeys.schema_table_display.table_w_t_disp_annot_w_mp_fkey}}(with {{{rowName}}} from catalog {{{$catalog.snapshot}}}){{/$fkeys.schema_table_display.table_w_t_disp_annot_w_mp_fkey}}](https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id={{_id}}) \n:::";
             it("reference.display._markdownPattern should be '" + markdownPattern + "' ", function() {
                 expect(reference.display._markdownPattern).toEqual(markdownPattern);
             });
@@ -514,7 +517,17 @@ exports.execute = function (options) {
                 });
             });
 
-            var content = '<h2>Movie titles</h2>\n<figure class="embed-block" style=""><figcaption class="embed-caption" style="">Hamlet</figcaption><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20001" ></iframe></figure><figure class="embed-block" style=""><figcaption class="embed-caption" style="">The Adventures of Huckleberry Finn</figcaption><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20002" ></iframe></figure><figure class="embed-block" style=""><figcaption class="embed-caption" style="">Alice in Wonderland</figcaption><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20003" ></iframe></figure><figure class="embed-block" style=""><figcaption class="embed-caption" style="">Pride and Prejudice</figcaption><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20004" ></iframe></figure><figure class="embed-block" style=""><figcaption class="embed-caption" style="">Great Expectations</figcaption><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20005" ></iframe></figure><figure class="embed-block" style=""><figcaption class="embed-caption" style="">David Copperfield</figcaption><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20006" ></iframe></figure><figure class="embed-block" style=""><figcaption class="embed-caption" style="">Emma</figcaption><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20007" ></iframe></figure><figure class="embed-block" style=""><figcaption class="embed-caption" style="">As You Like It</figcaption><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20008" ></iframe></figure><figure class="embed-block" style=""><figcaption class="embed-caption" style="">The Adventures of Tom Sawyer</figcaption><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20009" ></iframe></figure><figure class="embed-block" style=""><figcaption class="embed-caption" style="">Through the Looking Glass</figcaption><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20010" ></iframe></figure>';
+            var content = '<h2>Movie titles</h2>\n' +
+            '<figure class="embed-block" style=""><figcaption class="embed-caption" style="">Hamlet(with <strong>William Shakespeare</strong> from catalog '+catalog_id+')</figcaption><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20001" ></iframe></figure>' +
+            '<figure class="embed-block" style=""><figcaption class="embed-caption" style="">The Adventures of Huckleberry Finn(with <strong>Mark Twain</strong> from catalog '+catalog_id+')</figcaption><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20002" ></iframe></figure>' +
+            '<figure class="embed-block" style=""><figcaption class="embed-caption" style="">Alice in Wonderland(with <strong>Lewis Carroll</strong> from catalog '+catalog_id+')</figcaption><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20003" ></iframe></figure>' +
+            '<figure class="embed-block" style=""><figcaption class="embed-caption" style="">Pride and Prejudice(with <strong>Jane Austen</strong> from catalog '+catalog_id+')</figcaption><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20004" ></iframe></figure>' +
+            '<figure class="embed-block" style=""><figcaption class="embed-caption" style="">Great Expectations</figcaption><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20005" ></iframe></figure>' +
+            '<figure class="embed-block" style=""><figcaption class="embed-caption" style="">David Copperfield</figcaption><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20006" ></iframe></figure>' +
+            '<figure class="embed-block" style=""><figcaption class="embed-caption" style="">Emma</figcaption><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20007" ></iframe></figure>' +
+            '<figure class="embed-block" style=""><figcaption class="embed-caption" style="">As You Like It</figcaption><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20008" ></iframe></figure>' +
+            '<figure class="embed-block" style=""><figcaption class="embed-caption" style="">The Adventures of Tom Sawyer</figcaption><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20009" ></iframe></figure>' +
+            '<figure class="embed-block" style=""><figcaption class="embed-caption" style="">Through the Looking Glass</figcaption><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20010" ></iframe></figure>';
             it('page.content should return HTML for all tuples using row_markdown_pattern and prefix_markdown and separator_markdown', function() {
                 expect(page.content).toEqual(content);
             });
@@ -609,6 +622,22 @@ exports.execute = function (options) {
                     page.tuples.forEach(function (t, index) {
                         expect(t.displayname.value).toEqual(expected[index], "index= " + index + ". displayname missmatch.");
                     });
+                    done();
+                }).catch(function (err) {
+                    console.log(err);
+                    done.fail();
+                });
+            });
+        });
+
+        describe("table entities with $catalog in their row_markdown_pattern.", function () {
+            it ('should be able to access row-name in annotation.', function (done) {
+                options.ermRest.resolve(tableCatalogAnnotEntityUri, {cid: "test"}).then(function (ref) {
+                    return ref.read(1);
+                }).then(function (page) {
+                    var expected = "catalog_snapshot:" + catalog_id + ", catalog_id:" + catalog_id;
+
+                    expect(page.tuples[0].displayname.value).toEqual(expected, "catalog snapshot displayname mismatch.");
                     done();
                 }).catch(function (err) {
                     console.log(err);

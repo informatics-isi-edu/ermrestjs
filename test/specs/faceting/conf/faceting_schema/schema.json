@@ -88,6 +88,12 @@
                     }
                 },
                 {
+                    "name": "numeric_col",
+                    "type": {
+                        "typename": "numeric"
+                    }
+                },
+                {
                     "name": "float_col",
                     "type": {
                         "typename": "float4"
@@ -187,7 +193,8 @@
                                 {"inbound": ["faceting_schema", "secondpath_1_fk1"]},
                                 {"inbound": ["faceting_schema", "secondpath_2_fk1"]},
                                 "id"
-                            ]}
+                            ]},
+                            {"source": "numeric_col"}
                         ]
                     }
                 }
