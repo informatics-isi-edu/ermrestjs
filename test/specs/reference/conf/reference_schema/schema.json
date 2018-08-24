@@ -253,7 +253,7 @@
             ],
             "annotations": {
                 "tag:isrd.isi.edu,2016:visible-columns": {
-                    "compact/brief": [
+                    "*": [
                         "id",
                         ["reference_schema", "fromname_fk_inbound_related_to_reference"],
                         ["reference_schema", "hidden_fk_inbound_related_to_reference"],
@@ -1139,6 +1139,19 @@
                   }
               },
               {
+                  "name": "catalog_snapshot",
+                  "type": {
+                      "typename": "text"
+                  },
+                  "annotations": {
+                      "tag:isrd.isi.edu,2016:column-display" : {
+                          "*" : {
+                              "markdown_pattern" : "{{# catalog_snapshot}}{{$catalog.snapshot}}: {{$catalog.id}}/{{catalog_snapshot}}{{/catalog_snapshot}}"
+                          }
+                      }
+                  }
+              },
+              {
                   "name": "array_int",
                   "type": {
                       "typename": "int4[]",
@@ -1151,7 +1164,7 @@
             ],
             "annotations": {
                 "tag:isrd.isi.edu,2016:visible-columns": {
-                  "*": ["id", "name", "url", "image", "image_with_size", "download_link", "iframe","some_markdown", "some_markdown_with_pattern", "some_gene_sequence", "column_using_invisble_column", "video_col", "fkeys_col", "moment_col"]
+                  "*": ["id", "name", "url", "image", "image_with_size", "download_link", "iframe","some_markdown", "some_markdown_with_pattern", "some_gene_sequence", "column_using_invisble_column", "video_col", "fkeys_col", "catalog_snapshot", "moment_col"]
                 }
             }
         },

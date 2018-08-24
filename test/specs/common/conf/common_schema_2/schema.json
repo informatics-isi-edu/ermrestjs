@@ -5,9 +5,21 @@
             "kind": "table",
             "table_name": "table_1_schema_2",
             "keys": [
-                { "unique_columns": ["table_1_first_key", "table_1_second_key"] }
+                { "unique_columns": ["table_1_first_key", "table_1_second_key"] },
+                { "unique_columns": ["table_1_int_key"]},
+                { "unique_columns": ["table_1_serial_key"]}
             ],
             "column_definitions": [
+                {
+                    "name": "table_1_int_key",
+                    "nullok": false,
+                    "type": {"typename": "int4"}
+                },
+                {
+                    "name": "table_1_serial_key",
+                    "nullok": false,
+                    "type": {"typename": "serial4"}
+                },
                 {
                     "name": "table_1_first_key",
                     "nullok": false,

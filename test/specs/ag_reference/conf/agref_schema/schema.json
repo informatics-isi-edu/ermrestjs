@@ -27,6 +27,23 @@
                     "type": {
                         "typename": "text"
                     }
+                },
+                {
+                    "name": "col_w_pre_format",
+                    "type": {
+                        "typename": "boolean"
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:column-display" : {
+                            "compact": {
+                                "pre_format": {
+                                    "format": "%t",
+                                    "bool_true_value": "YES",
+                                    "bool_false_value": "NO"
+                                }
+                            }
+                        }
+                    }
                 }
             ]
         },

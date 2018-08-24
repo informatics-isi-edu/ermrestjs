@@ -156,11 +156,17 @@ exports.execute = function(options) {
                     it('when context is not specified in options and default context it not defined in annotation, should return an empty string.', function() {
                         expect(columnWithoutAnnotation.formatvalue(null)).toBe("");
                     });
-                })
+                });
 
+                it ("should not format the value if column is part of a simple key.", function () {
+                    var col = table1_schema2.columns.get("table_1_int_key");
+                    expect(col.formatvalue("1234567")).toBe("1234567", "int missmatch.");
+                    col = table1_schema2.columns.get("table_1_serial_key");
+                    expect(col.formatvalue("1234567")).toBe("1234567", "int missmatch.");
+                });
 
                 describe('should call printText() to format,', function() {
-                    var formattedValue = undefined;
+                    formattedValue = undefined;
 
                     it('text columns correctly.', function() {
                         var textCol = table1_schema2.columns.get(columnName);
