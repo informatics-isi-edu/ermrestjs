@@ -2172,13 +2172,16 @@
             var isSerial = (this.type.name.indexOf('serial') === 0);
 
             if (context == module._contexts.CREATE) {
-                if (this.isGenerated || this.isSystemColumn) {
+                // only if insert: false in the ACLs
+                // (system columns also have insert:false but we want a better message for them)
+                if (this.isGenerated && !this.isSystemColumn) {
                     return {
-                        message: "Not Allowed"
+                        message: "Not allowed"
                     };
                 }
 
-                if (isGenerated || isSerial) {
+                // if system column, serial type, or generated based on annotation
+                if (this.isSystemColumn || isGenerated || isSerial) {
                     return {
                         message: "Automatically generated"
                     };
