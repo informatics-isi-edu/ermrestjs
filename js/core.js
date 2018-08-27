@@ -800,7 +800,6 @@
         if (this.annotations.contains(module._annotations.APP_LINKS)) {
             this._appLinksAnnotation = this.annotations.get(module._annotations.APP_LINKS).content;
         }
-
     }
 
     Table.prototype = {
