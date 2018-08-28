@@ -4221,10 +4221,10 @@
                 if (table.annotations.contains(module._annotations.CITATION)) {
                     /**
                      * citation specific properties include:
+                     *   - journal*
                      *   - author
                      *   - title
-                     *   - journal*
-                     *   - publication date*
+                     *   - year*
                      *   - url*
                      *   - id
                      * other properties:
@@ -4245,6 +4245,11 @@
                         ["author", "title", "journal", "year", "url", "id"].forEach(function (key) {
                             self._citation[key] = module._renderTemplate(citationAnno[key+"_pattern"], keyValues, table, null, options);
                         });
+
+                        // if after processing the templates, any of the required fields are null, template is invalid
+                        if (!this._citation.journal || !this._citation.year || !this._citation.url) {
+                            this._citation = null;
+                        }
                     } else {
                         this._citation = null;
                     }

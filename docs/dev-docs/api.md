@@ -10,6 +10,14 @@ to use for ERMrest JavaScript agents.</p>
 </dd>
 </dl>
 
+## Functions
+
+<dl>
+<dt><a href="#formatDate">formatDate()</a> ⇒</dt>
+<dd><p>{{formatDate value format}}</p>
+</dd>
+</dl>
+
 ## Typedefs
 
 <dl>
@@ -6419,6 +6427,13 @@ ERMrest.resolve('https://example.org/catalog/42/entity/s:t/k=123').then(
 | uri | <code>string</code> | An ERMrest resource URI, such as `https://example.org/ermrest/catalog/1/entity/s:t/k=123`. |
 | [contextHeaderParams] | <code>Object</code> | An optional context header parameters object. The (key, value) pairs from the object are converted to URL `key=value` query parameters and appended to every request to the ERMrest service. |
 
+<a name="formatDate"></a>
+
+## formatDate() ⇒
+{{formatDate value format}}
+
+**Kind**: global function  
+**Returns**: formatted string of `value` with corresponding `format`  
 <a name="appLinkFn"></a>
 
 ## appLinkFn : <code>function</code>

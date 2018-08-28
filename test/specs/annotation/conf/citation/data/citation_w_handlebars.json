@@ -1,0 +1,3 @@
+[{"id": 1, "journal": "Journal of ISRD Test Data", "title": "The First Data Row", "author": 1},
+ {"id": 2, "journal": "Journal of ISRD Test Data", "author": 1},
+ {"id": 3, "author": 1}]
