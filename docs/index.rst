@@ -1,4 +1,4 @@
-ermrestjs
+JavaScript Client Libraries (ERMrestJS)
 =========
 
 .. toctree::
