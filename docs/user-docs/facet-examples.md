@@ -1,6 +1,6 @@
 # Facet Examples
 
-In this document we will assume that you are familiar with facet filter syntax. If that is not the case, please read the [annotation document](https://github.com/informatics-isi-edu/ermrest/blob/master/docs/user-doc/annotation.md#2016-visible-columns).
+In this document we will assume that you are familiar with facet filter syntax. If that is not the case, please read the [annotation document](../ermrest/user-doc/annotation.html#visible-columns).
 
 All the examples are based on the given ERD and we are creating facet list for the `main` table.
 
