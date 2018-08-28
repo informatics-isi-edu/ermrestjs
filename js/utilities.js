@@ -3122,7 +3122,7 @@
         // default helpers - NOTE: 'log' and 'lookup' not included
         "blockHelperMissing", "each", "if", "helperMissing", "unless", "with",
         // ermrestJS helpers
-        "eq", "ne", "lt", "gt", "lte", "gte", "and", "or", "ifCond", "escape", "encode"
+        "eq", "ne", "lt", "gt", "lte", "gte", "and", "or", "ifCond", "escape", "encode", "formatDate"
     ];
 
     module._operationsFlag = Object.freeze({

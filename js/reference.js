@@ -4217,7 +4217,8 @@
 
         get citation() {
             if (this._citation === undefined) {
-                if (this.annotations.contains(module._annotations.CITATION)) {
+                var table = this._pageRef.table;
+                if (table.annotations.contains(module._annotations.CITATION)) {
                     /**
                      * citation specific properties include:
                      *   - author
@@ -4229,21 +4230,20 @@
                      * other properties:
                      *   - template_engine
                      */
-                    var citationAnno = this.annotations.get(module._annotations.CITATION).content;
+                    var citationAnno = table.annotations.get(module._annotations.CITATION).content;
 
                     // if required fields are present, render each template and set that value on the citation object
-                    if (citationAnno.journal_markdown_pattern && citationAnno.year_markdown_pattern && citationAnno.url_markdown_pattern) {
-                        var table = this.reference.table;
+                    if (citationAnno.journal_pattern && citationAnno.year_pattern && citationAnno.url_pattern) {
                         var options = {
                             templateEngine: citationAnno.template_engine // if undefined, _renderTemplate defaults to Mustache
-                        }
+                        };
                         var keyValues = module._getFormattedKeyValues(table, this.reference._context, this._data, this._linkedData);
 
                         this._citation = {};
                         var self = this;
                         // author, title, id set to null if not defined
                         ["author", "title", "journal", "year", "url", "id"].forEach(function (key) {
-                            self._citation[key] = module._renderTemplate(citationAnno[key+"_markdown_pattern"], keyValues, table, null, options),
+                            self._citation[key] = module._renderTemplate(citationAnno[key+"_pattern"], keyValues, table, null, options);
                         });
                     } else {
                         this._citation = null;
