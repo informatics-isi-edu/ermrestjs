@@ -899,10 +899,14 @@ AttributeGroupColumn.prototype = {
      * @type {string}
      */
     get name() {
-        if (typeof this._alias === "string" && this._alias.length !== 0) {
-            return this._alias;
+        if (this._name === undefined) {
+            if (typeof this._alias === "string" && this._alias.length !== 0) {
+                this._name = this._alias;
+            } else {
+                this._name = decodeURIComponent(this.term);
+            }
         }
-        return decodeURIComponent(this.term);
+        return this._name;
     },
 
     get displayname() {
