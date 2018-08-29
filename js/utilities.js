@@ -799,14 +799,18 @@
      *
      * @param  {string} columnOrder The object that defines the column/row order
      * @param  {ERMrest.Table} table
+     * @param  {Object} the extra options:
+     *                  - allowNumOccurrences: to allow the specific frequency column_order
      * @return {Array=} If it's undefined, the column_order that is defined is not valid
      */
-    _processColumnOrderList = function (columnOrder, table) {
+    _processColumnOrderList = function (columnOrder, table, options) {
+        options = options || {};
+
         if (columnOrder === false) {
             return false;
         }
 
-        var res, colName, descending, colNames = {};
+        var res, colName, descending, colNames = {}, numOccurr = false;
         if (Array.isArray(columnOrder)) {
             res = [];
             for (var i = 0 ; i < columnOrder.length; i++) {
@@ -815,6 +819,12 @@
                         colName = columnOrder[i];
                     } else if (columnOrder[i] && columnOrder[i].column) {
                         colName = columnOrder[i].column;
+                    } else if (options.allowNumOccurrences && !numOccurr && columnOrder[i] && columnOrder[i].num_occurrences) {
+                        numOccurr = true;
+                        // add the frequency sort
+                        res.push({num_occurrences: true, descending:  (columnOrder[i] && columnOrder[i].descending === true)});
+
+                        continue;
                     } else {
                         continue; // invalid syntax
                     }
@@ -3097,12 +3107,6 @@
     module._pseudoColAggregateFns = ["min", "max", "cnt", "cnt_d", "array"];
     module._pseudoColAggregateNames = ["Min", "Max", "#", "#", ""];
     module._pseudoColAggregateExplicitName = ["Minimum", "Maximum", "Number of", "Number of distinct", "List of"];
-
-    module._groupAggregateColumnNames = Object.freeze({
-        VALUE: "value",
-        COUNT: "count"
-    });
-
 
     module._systemColumns = ['RID', 'RCB', 'RMB', 'RCT', 'RMT'];
 

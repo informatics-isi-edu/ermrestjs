@@ -1226,10 +1226,7 @@
                     sortObject = this.display._rowOrder.map(function (ro) {
                         return {"column": ro.column.name, "descending": ro.descending};
                     });
-                    sortColNames = {};
-                    sortObject.forEach(function (so) {
-                        sortColNames[so.column.name] = true;
-                    });
+                    processSortObject(this);
                 }
 
                 // ermrest requires key columns to be in sort param for paging
@@ -1954,9 +1951,8 @@
                 if (annotation) {
 
                     // Set row_order value
-                    // columns defined in row_order can have column_order
-                    // This will take care of that and will return the actual columns that
-                    // we want sort to be based on.
+                    // this will just whatever is defined in row_order, it will not
+                    // take care of columns that have column_order. The caller should do that.
                     if (Array.isArray(annotation.row_order)) {
                         this._display._rowOrder = _processColumnOrderList(annotation.row_order, this._table);
                     }

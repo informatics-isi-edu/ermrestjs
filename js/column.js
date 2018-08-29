@@ -2210,6 +2210,66 @@ FacetColumn.prototype = {
         return this._comment;
     },
 
+    get hideNumOccurrences() {
+        if (this._hideNumOccurrences === undefined) {
+            this._hideNumOccurrences = (this._facetObject.hide_num_occurrences === true);
+        }
+        return this._hideNumOccurrences;
+    },
+
+    /**
+     * Returns the sortColumns when we're sorting this facet in scalar mode
+     * - uses row_order if defined.
+     * - otherwise it will be descending of num_occurrences and column order of base column.
+     * @type {Array}
+     */
+    get sortColumns() {
+        verify(!this.isEntityMode, "sortColumns cannot be used in entity mode.");
+
+        if (this._sortColumns === undefined) {
+            this._determineSortable();
+        }
+        return this._sortColumns;
+    },
+
+    _determineSortable: function () {
+        var self = this;
+
+        var rowOrder = _processColumnOrderList(
+            self._facetObject.order,
+            self._column.table,
+            {allowNumOccurrences: true}
+        );
+
+        // default sorting:
+        // - descending frequency + ascending the column sort columns
+        if (!Array.isArray(rowOrder) || rowOrder.length === 0) {
+            self._sortColumns = [
+                {num_occurrences: true, descending: true},
+                {column: self._column, descending: false}
+            ];
+            return;
+        }
+
+        self._sortColumns = rowOrder;
+        return;
+    },
+
+    /**
+     * An {@link ERMrest.AttributeGroupReference} object that can be used to get
+     * the available scalar values of this facet. This will use the sortColumns, and hideNumOccurrences APIs.
+     * It will throw an error if it's used in entity-mode.
+     * @type {ERMrest.AttributeGroupReference}
+     */
+    get scalarValuesReference() {
+        verify(!this.isEntityMode, "this API cannot be used in entity-mode");
+
+        if (this._scalarValuesRef === undefined) {
+            this._scalarValuesRef = this.column.groupAggregate.entityCounts(this.sortColumns, this.hideNumOccurrences);
+        }
+        return this._scalarValuesRef;
+    },
+
     /**
      * When presenting the applied choice filters, the displayname might be differnt from the value.
      * This only happens in case of entity-picker. Othercases we can just return the list of fitleres as is.
@@ -2955,43 +3015,14 @@ function ColumnGroupAggregateFn (column) {
 
 ColumnGroupAggregateFn.prototype = {
     /**
-     * Will return an appropriate reference which can be used to show distinct values of an entity
-     * NOTE: Will create a new reference by each call.
-     * @type {ERMrest.AttributeGroupReference}
-     */
-    get entityValues() {
-        if(this.column.isPseudo) {
-            throw new Error("Cannot use this API on pseudo-column.");
-        }
-
-        // search will be on the table not the aggregated results, so the column name must be the column name in the database
-        var searchObj = {"column": this.column.name, "term": null};
-
-        // sort will be on the aggregated results.
-        var sortObj = [{"column": module._groupAggregateColumnNames.VALUE, "descending": false}];
-
-        var loc = new AttributeGroupLocation(this._ref.location.service, this._ref.table.schema.catalog.id, this._ref.location.ermrestCompactPath, searchObj, sortObj);
-
-        // key columns
-        var keyColumns = [
-            new AttributeGroupColumn(
-                module._groupAggregateColumnNames.VALUE,
-                module._fixedEncodeURIComponent(this.column.name),
-                this.column, null, null, this.column.comment, true, true)
-        ];
-
-        // the reference
-        return new AttributeGroupReference(keyColumns, [], loc, this._ref.table.schema.catalog, module_context.COMPACT_SELECT);
-    },
-
-    /**
      * Will return an appropriate reference which can be used to show distinct values and their counts
      * The result is based on shortest key of the parent table. If we have join
      * in the path, we are counting the shortest key of the parent table (not the end table).
      * NOTE: Will create a new reference by each call.
-     * @type {ERMrest.AttributeGroupReference}
+     * @type {Object=} sortColumns the sort column object that you want to pass
+     * @returns {ERMrest.AttributeGroupReference}
      */
-    get entityCounts() {
+    entityCounts: function(sortColumns, hideNumOccurrences) {
         if (this.column.isPseudo) {
             throw new Error("Cannot use this API on pseudo-column.");
         }
@@ -3000,32 +3031,76 @@ ColumnGroupAggregateFn.prototype = {
             throw new Error("Table must have a simple key for entity counts: " + this._ref.projectionTable.name);
         }
 
-        // search will be on the table not the aggregated results, so the column name must be the column name in the database
-        var searchObj = {"column": this.column.name, "term": null};
+        var countColName = "count",
+            context = module._contexts.COMPACT_SELECT,
+            column = this.column,
+            self = this,
+            sortCounts = false,
+            keyColumns = [],
+            sortObj = [], i = 0, colAlias;
 
-        // sort will be on the aggregated results.
-        var sortObj = [{"column": module._groupAggregateColumnNames.COUNT, "descending": true}, {"column": module._groupAggregateColumnNames.VALUE, "descending": false}];
+        // key columns will have numbers as alias, and the aggregate is `count`
+        var addToKeyColumns = function (col, isVisible) {
+            colAlias = (i++).toString();
+            keyColumns.push(new AttributeGroupColumn(
+                colAlias,
+                module._fixedEncodeURIComponent(col.name),
+                col, null, null, col.comment, true, isVisible
+            ));
+            return colAlias;
+        };
 
-        var loc = new AttributeGroupLocation(this._ref.location.service, this._ref.table.schema.catalog.id, this._ref.location.ermrestCompactPath, searchObj, sortObj);
+        // the first column is always the column that we want to get the values of
+        addToKeyColumns(column._baseCols[0], true);
 
-        // key columns
-        var keyColumns = [
-            new AttributeGroupColumn(
-                module._groupAggregateColumnNames.VALUE,
-                module._fixedEncodeURIComponent(this.column.name),
-                this.column, null, null, this.column.comment, true, true)
-        ];
+        if (Array.isArray(sortColumns) && sortColumns.length > 0) {
+            sortColumns.forEach(function (sc) {
+                // if column is not sortable
+                if (sc.column && typeof sc.column._getSortColumns(context) === 'undefined') {
+                    console.log("column " + sc.column.name + " is not sortable and we're removing it from sort columns (entityCounts).");
+                    return;
+                }
 
-        var countName = "cnt(*)";
-        if (this._ref.location.hasJoin) {
-            countName = "cnt_d(" + this._ref.location.projectionTableAlias + ":" + module._fixedEncodeURIComponent(this._ref.projectionTable.shortestKey[0].name) + ")";
+                if (sc.num_occurrences && !sortCounts) {
+                    sortCounts = true;
+                    sortObj.push({column: countColName, descending: sc.descending});
+                } else if (sc.column.name === column.name) {
+                    sortObj.push({column: "0", descending: sc.descending});
+                } else {
+                    // add to key columns
+                    var keyAlias = addToKeyColumns(sc.column);
+
+                    // add to sortObj
+                    sortObj.push({column: keyAlias, descending: sc.descending});
+                }
+            });
+        } else {
+            // by default we're sorting based on descending count and ascending raw value.
+            sortObj = [{column: countColName, descending: true}, {column: "0", descending: false}];
+            showFrequency = true;
         }
 
-        var aggregateColumns = [
-            new AttributeGroupColumn(module._groupAggregateColumnNames.COUNT, countName, null, "Number of Occurences", new Type({typename: "int"}), "", true, true)
-        ];
+        // search will be on the table not the aggregated results, so the column name must be the column name in the database
+        var searchObj = {"column": self.column.name, "term": null};
 
-        return new AttributeGroupReference(keyColumns, aggregateColumns, loc, this._ref.table.schema.catalog, module._contexts.COMPACT_SELECT);
+        var loc = new AttributeGroupLocation(self._ref.location.service, self._ref.table.schema.catalog.id, self._ref.location.ermrestCompactPath, searchObj, sortObj);
+
+
+        var aggregateColumns = [];
+
+        // if it's hidden and also not in the sort, then we don't need it.
+        if (!hideNumOccurrences || sortCounts) {
+            var countName = "cnt(*)";
+            if (self._ref.location.hasJoin) {
+                countName = "cnt_d(" + self._ref.location.projectionTableAlias + ":" + module._fixedEncodeURIComponent(self._ref.projectionTable.shortestKey[0].name) + ")";
+            }
+
+            aggregateColumns.push(
+                new AttributeGroupColumn(countColName, countName, null, "Number of Occurrences", new Type({typename: "int"}), "", true, !hideNumOccurrences)
+            );
+        }
+
+        return new AttributeGroupReference(keyColumns, aggregateColumns, loc, self._ref.table.schema.catalog, context);
     },
 
     /**
