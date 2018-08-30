@@ -4211,6 +4211,51 @@
             return this._uniqueId;
         },
 
+        get citation() {
+            if (this._citation === undefined) {
+                var table = this._pageRef.table;
+                if (table.annotations.contains(module._annotations.CITATION)) {
+                    /**
+                     * citation specific properties include:
+                     *   - journal*
+                     *   - author
+                     *   - title
+                     *   - year*
+                     *   - url*
+                     *   - id
+                     * other properties:
+                     *   - template_engine
+                     */
+                    var citationAnno = table.annotations.get(module._annotations.CITATION).content;
+
+                    // if required fields are present, render each template and set that value on the citation object
+                    if (citationAnno.journal_pattern && citationAnno.year_pattern && citationAnno.url_pattern) {
+                        var options = {
+                            templateEngine: citationAnno.template_engine // if undefined, _renderTemplate defaults to Mustache
+                        };
+                        var keyValues = module._getFormattedKeyValues(table, this._pageRef._context, this._data, this._linkedData);
+
+                        this._citation = {};
+                        var self = this;
+                        // author, title, id set to null if not defined
+                        ["author", "title", "journal", "year", "url", "id"].forEach(function (key) {
+                            self._citation[key] = module._renderTemplate(citationAnno[key+"_pattern"], keyValues, table, null, options);
+                        });
+
+                        // if after processing the templates, any of the required fields are null, template is invalid
+                        if (!this._citation.journal || !this._citation.year || !this._citation.url) {
+                            this._citation = null;
+                        }
+                    } else {
+                        this._citation = null;
+                    }
+                } else {
+                    this._citation = null;
+                }
+            }
+            return this._citation;
+        },
+
         /**
          * If the Tuple is derived from an association related table,
          * this function will return a reference to the corresponding

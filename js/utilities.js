@@ -2677,13 +2677,14 @@
      * This function will generate formmatted values from the given data,
      * if you don't want the funciton to format the data, make sure to have
      * options.formatted = true
+     * options.templateEngine: "mustache" or "handlbars"
      *
-     * @param  {ERMrest.Table} table
-     * @param  {object} keyValues
-     * @param  {string} template
-     * @param  {string} context
+     * @param  {string} template - template to be rendered
+     * @param  {object} keyValues - formatted key value pairs needed for the template
+     * @param  {ERMrest.Table} table - the table representing the keyValues data
+     * @param  {string} context -
      * @param  {Array.<Object>=} options optioanl parameters
-     * @return {string} Returns a string produced as a result of templating using `Mustache`.
+     * @return {string} Returns a string produced as a result of templating using options.templateEngine or `Mustache` by default.
      */
     module._renderTemplate = function (template, keyValues, table, context, options) {
 
@@ -2692,6 +2693,7 @@
         if (typeof template !== 'string') return null;
 
         // to avoid computing keyValues mutliple times, or if we don't want the formatted values
+        // TODO: remove this from render template and enforce keyValues be formatted, also remove context param
         if (table && (options === undefined || !options.formatted)) {
             keyValues = module._getFormattedKeyValues(table, context, keyValues);
         }
@@ -2712,6 +2714,7 @@
      * it will take care of adding formmatted and unformatted values.
      * options.formmatted=true: to avoid formatting key values
      * options.ignoredColumns: list of columns that you want validator to ignore
+     * options.templateEngine: "mustache" or "handlbars"
      *
      * @param  {ERMrest.Table} table
      * @param  {object} data
@@ -2728,6 +2731,7 @@
         }
 
         // to avoid computing data multiple times, or if we don't want the formatted values
+        // TODO: remove this from render template, change `data` to `keyValues` for consistency with _renderTemplate, and enforce keyValues be formatted, also remove context param
         if (options === undefined || !options.formatted) {
             // make sure to add formatted columns too.
             if (ignoredColumns !== undefined) {
@@ -3013,7 +3017,8 @@
         NON_DELETABLE: "tag:isrd.isi.edu,2016:non-deletable",
         KEY_DISPLAY: "tag:isrd.isi.edu,2017:key-display",
         ASSET: "tag:isrd.isi.edu,2017:asset",
-        EXPORT: "tag:isrd.isi.edu,2016:export"
+        EXPORT: "tag:isrd.isi.edu,2016:export",
+        CITATION: "tag:isrd.isi.edu,2018:citation"
     });
 
     /**
@@ -3121,7 +3126,7 @@
         // default helpers - NOTE: 'log' and 'lookup' not included
         "blockHelperMissing", "each", "if", "helperMissing", "unless", "with",
         // ermrestJS helpers
-        "eq", "ne", "lt", "gt", "lte", "gte", "and", "or", "ifCond", "escape", "encode"
+        "eq", "ne", "lt", "gt", "lte", "gte", "and", "or", "ifCond", "escape", "encode", "formatDate"
     ];
 
     module._operationsFlag = Object.freeze({
