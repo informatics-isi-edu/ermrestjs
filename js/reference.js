@@ -4237,7 +4237,7 @@
                         var options = {
                             templateEngine: citationAnno.template_engine // if undefined, _renderTemplate defaults to Mustache
                         };
-                        var keyValues = module._getFormattedKeyValues(table, this.reference._context, this._data, this._linkedData);
+                        var keyValues = module._getFormattedKeyValues(table, this._pageRef._context, this._data, this._linkedData);
 
                         this._citation = {};
                         var self = this;
