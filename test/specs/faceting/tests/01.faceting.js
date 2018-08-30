@@ -1662,5 +1662,19 @@ exports.execute = function (options) {
                 });
             });
         });
+
+        describe("integration with other APIs, ", function () {
+
+            it ("changing facet should not remove the sort on the reference.", function () {
+                var refSorted = refMain.sort([{"column": "int_col", "descending": false}]);
+                var refSortedWithFilter = refSorted.facetColumns[10].addChoiceFilters(["1", "2"]);
+                expect(refSortedWithFilter.location.ermrestCompactPath).toBe(
+                    "M:=faceting_schema:main/id=1/$M/int_col::geq::-2/$M/left(fk_to_f1)=(faceting_schema:f1:id)/id=1;id=2/$M",
+                    "path missmatch."
+                );
+                expect(refSortedWithFilter.location.sortObject.length).toEqual(1, "sort length missmatch.");
+                expect(refSortedWithFilter.location.sortObject[0].column).toEqual("int_col", "sort column missmatch.");
+            });
+        });
     });
 };

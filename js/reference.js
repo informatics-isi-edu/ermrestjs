@@ -1440,15 +1440,15 @@
          * @throws {@link ERMrest.InvalidInputError} if `sort` is invalid.
          */
         sort: function(sort) {
-
-            // make a Reference copy
-            var newReference = _referenceCopy(this);
-
             if (sort) {
                 verify((sort instanceof Array), "input should be an array");
                 verify(sort.every(module._isValidSortElement), "invalid arguments in array");
 
             }
+
+            // make a Reference copy
+            var newReference = _referenceCopy(this);
+
 
             newReference._location = this._location._clone();
             newReference._location.sortObject = sort;
@@ -3038,6 +3038,25 @@
         // referenceCopy must be defined before _clone can copy values from source to referenceCopy
         module._shallowCopy(referenceCopy, source);
 
+        /*
+         * NOTE In the following whenever I say "reference" I mean ERMrest.Reference. other references
+         * just mean actual reference to the memory.
+         * the "reference" copy is doing a shallow copy, so all the references in
+         * the object is going to stay in tact and still refer to the original object. Therefore, we should
+         * delete any property that can be generated later (has a getter), just to make sure it's not
+         * going to refer to the old "reference" attributes and has is it's own references.
+         *
+         *  TODO technically _referenceColumns should be deleted too, but deleting that caused chaise
+         *  to throw "Maximum call stack size exceeded". This is happening because in most cases
+         *  we're blindly using _referenceCopy, while the better approach would be creating a new "reference" by passing url and catalog.
+         */
+        delete referenceCopy._facetColumns;
+        delete referenceCopy._display;
+        delete referenceCopy._canCreate;
+        delete referenceCopy._canRead;
+        delete referenceCopy._canUpdate;
+        delete referenceCopy._canDelete;
+
         referenceCopy.contextualize = new Contextualize(referenceCopy);
         return referenceCopy;
     }
@@ -3838,6 +3857,7 @@
         get reference() {
 
             if (this._ref === undefined) {
+                // TODO this should be changed to create a new reference using its constructor
                 this._ref = _referenceCopy(this._pageRef);
 
                 var uri = this._pageRef._location.service + "/catalog/" + this._pageRef._location.catalog + "/" +

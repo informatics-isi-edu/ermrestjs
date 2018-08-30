@@ -214,7 +214,7 @@
     };
 
     module.decodeFacet = function (blob, path) {
-        var err = new module.InvalidFacetOperatorError('', path);
+        var err = new module.InvalidFacetOperatorError('', typeof path === "string" ? path : "");
 
         try {
             var str = module._LZString.decompressFromEncodedURIComponent(blob);
