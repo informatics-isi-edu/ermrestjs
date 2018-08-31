@@ -30,6 +30,7 @@ All the other `encode`, `decode` helpers also change accordingly.
    * [With](#with-helper)
    * [Encode](#encode-helper)
    * [Escape](#escape-helper)
+   * [Format Date](#format-date-helper)
 * [Accessing keys with spaces and special characters](#accessing-keys-with-spaces-and-special-characters)
 * [Subexpressions](#subexpressions)
 * [Additional Helpers for Comparison](#additional-helpers-for-comparision)
@@ -279,6 +280,20 @@ In addition you can provide multiple inputs too which're concatenated and then e
 {{#escape key '-' value}}{{/escape}}
 ```
 for context `key="**somevalue ] which is ! special" and value="John"` will result in `\*\*somevalue \] which is \! special\-John`
+
+### Format Date helper
+
+You can use the `formatDate` helper to take any `date` or `timestamp[tz]` value and format it according to the [Pre Format Guide](https://github.com/informatics-isi-edu/ermrestjs/wiki/Pre-Format-Annotation#syntax-for-dates-and-timestamptzs).
+
+Syntax:
+```
+{{formatDate value format}}
+```
+
+Example:
+```
+{{formatDate '30-08-2018' 'YYYY'}} ==> '2018'
+```
 
 
 ## Accessing keys with spaces and special characters
