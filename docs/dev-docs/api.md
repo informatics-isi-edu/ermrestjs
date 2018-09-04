@@ -164,6 +164,7 @@ to use for ERMrest JavaScript agents.
         * [.displayname](#ERMrest.Column+displayname) : <code>object</code>
         * [.memberOfKeys](#ERMrest.Column+memberOfKeys) : [<code>Array.&lt;Key&gt;</code>](#ERMrest.Key)
         * [.memberOfForeignKeys](#ERMrest.Column+memberOfForeignKeys) : [<code>Array.&lt;ForeignKeyRef&gt;</code>](#ERMrest.ForeignKeyRef)
+        * [.ermrestDefault](#ERMrest.Column+ermrestDefault) : <code>object</code>
         * [.default](#ERMrest.Column+default) ⇒ <code>string</code>
         * [.formatvalue(data, context)](#ERMrest.Column+formatvalue) ⇒ <code>string</code> \| <code>Array.&lt;string&gt;</code>
         * [.formatPresentation(data, context, options)](#ERMrest.Column+formatPresentation) ⇒ <code>Object</code>
@@ -306,7 +307,6 @@ to use for ERMrest JavaScript agents.
         * [.defaultLogInfo](#ERMrest.Reference+defaultLogInfo) : <code>Object</code>
         * [.removeAllFacetFilters(sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
         * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
-            * [~columnDiff()](#ERMrest.Reference+create..columnDiff)
         * [.read(limit, contextHeaderParams)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
             * [~processSortObject()](#ERMrest.Reference+read..processSortObject)
         * [.sort(sort)](#ERMrest.Reference+sort) ⇒ <code>Reference</code>
@@ -583,7 +583,6 @@ to use for ERMrest JavaScript agents.
         * [.defaultLogInfo](#ERMrest.Reference+defaultLogInfo) : <code>Object</code>
         * [.removeAllFacetFilters(sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
         * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
-            * [~columnDiff()](#ERMrest.Reference+create..columnDiff)
         * [.read(limit, contextHeaderParams)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
             * [~processSortObject()](#ERMrest.Reference+read..processSortObject)
         * [.sort(sort)](#ERMrest.Reference+sort) ⇒ <code>Reference</code>
@@ -1441,6 +1440,7 @@ Constructor for Columns.
     * [.displayname](#ERMrest.Column+displayname) : <code>object</code>
     * [.memberOfKeys](#ERMrest.Column+memberOfKeys) : [<code>Array.&lt;Key&gt;</code>](#ERMrest.Key)
     * [.memberOfForeignKeys](#ERMrest.Column+memberOfForeignKeys) : [<code>Array.&lt;ForeignKeyRef&gt;</code>](#ERMrest.ForeignKeyRef)
+    * [.ermrestDefault](#ERMrest.Column+ermrestDefault) : <code>object</code>
     * [.default](#ERMrest.Column+default) ⇒ <code>string</code>
     * [.formatvalue(data, context)](#ERMrest.Column+formatvalue) ⇒ <code>string</code> \| <code>Array.&lt;string&gt;</code>
     * [.formatPresentation(data, context, options)](#ERMrest.Column+formatPresentation) ⇒ <code>Object</code>
@@ -1547,6 +1547,13 @@ keys that this column is a member of
 
 #### column.memberOfForeignKeys : [<code>Array.&lt;ForeignKeyRef&gt;</code>](#ERMrest.ForeignKeyRef)
 foreign key that this column is a member of
+
+**Kind**: instance property of [<code>Column</code>](#ERMrest.Column)  
+<a name="ERMrest.Column+ermrestDefault"></a>
+
+#### column.ermrestDefault : <code>object</code>
+This is the actual default that is defined on schema document.
+To get the default value that is suitable for client-side, please use .default
 
 **Kind**: instance property of [<code>Column</code>](#ERMrest.Column)  
 <a name="ERMrest.Column+default"></a>
@@ -2511,7 +2518,6 @@ Constructor for a ParsedFilter.
     * [.defaultLogInfo](#ERMrest.Reference+defaultLogInfo) : <code>Object</code>
     * [.removeAllFacetFilters(sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
     * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
-        * [~columnDiff()](#ERMrest.Reference+create..columnDiff)
     * [.read(limit, contextHeaderParams)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
         * [~processSortObject()](#ERMrest.Reference+read..processSortObject)
     * [.sort(sort)](#ERMrest.Reference+sort) ⇒ <code>Reference</code>
@@ -2808,16 +2814,6 @@ or rejected with any of the following errors:
 | data | <code>Array</code> | The array of data to be created as new tuples. |
 | contextHeaderParams | <code>Object</code> | the object that we want to log. |
 
-<a name="ERMrest.Reference+create..columnDiff"></a>
-
-##### create~columnDiff()
-This gets the difference between the two column sets. This is not the _symmetric_ difference.
-If minuend is [1,2,3,4,5]
-and subtrahend is [4,5,6]
-the difference is [1,2,3]
-The 6 is ignored because we only want to know what's in the minuend that is not in the subtrahend
-
-**Kind**: inner method of [<code>create</code>](#ERMrest.Reference+create)  
 <a name="ERMrest.Reference+read"></a>
 
 #### reference.read(limit, contextHeaderParams) ⇒ <code>Promise</code>
@@ -5554,7 +5550,6 @@ get PathColumn object by column name
     * [.defaultLogInfo](#ERMrest.Reference+defaultLogInfo) : <code>Object</code>
     * [.removeAllFacetFilters(sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
     * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
-        * [~columnDiff()](#ERMrest.Reference+create..columnDiff)
     * [.read(limit, contextHeaderParams)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
         * [~processSortObject()](#ERMrest.Reference+read..processSortObject)
     * [.sort(sort)](#ERMrest.Reference+sort) ⇒ <code>Reference</code>
@@ -5851,16 +5846,6 @@ or rejected with any of the following errors:
 | data | <code>Array</code> | The array of data to be created as new tuples. |
 | contextHeaderParams | <code>Object</code> | the object that we want to log. |
 
-<a name="ERMrest.Reference+create..columnDiff"></a>
-
-##### create~columnDiff()
-This gets the difference between the two column sets. This is not the _symmetric_ difference.
-If minuend is [1,2,3,4,5]
-and subtrahend is [4,5,6]
-the difference is [1,2,3]
-The 6 is ignored because we only want to know what's in the minuend that is not in the subtrahend
-
-**Kind**: inner method of [<code>create</code>](#ERMrest.Reference+create)  
 <a name="ERMrest.Reference+read"></a>
 
 #### reference.read(limit, contextHeaderParams) ⇒ <code>Promise</code>

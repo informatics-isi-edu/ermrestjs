@@ -71,76 +71,6 @@ exports.execute = function (options) {
         });
 
         // Test Cases:
-        describe("for creating an entity/entities,", function () {
-            var reference, createReference;
-
-            beforeAll(function (done) {
-                options.ermRest.resolve(baseUri, {cid: "test"}).then(function (response) {
-                    reference = response;
-                    createReference = response.contextualize.entryCreate;
-                    done();
-                }).catch(function (error) {
-                    console.dir(error);
-                    done.fail();
-                });
-            });
-
-            it("should return error if reference is not contextualized for create.", function(done) {
-                var rows = [{ id: 9999, name: "Paula", value: 5 }];
-
-                reference.create(rows).then(function(response) {
-                    throw new Error("Did not return any errors");
-                }).catch(function (err) {
-                    expect(err.message).toEqual("reference must be in 'entry/create' context.");
-                    done();
-                });
-            });
-
-            it("a single entity should return a Page object that is defined.", function(done) {
-                var rows = [{ id: 9999, name: "Paula", value: 5 }];
-
-                createReference.create(rows).then(function (response) {
-                    var page = response.successful;
-
-                    expect(page).toEqual(jasmine.any(Object));
-                    expect(page.reference._context).toEqual("compact", "page reference is not in the correct context.");
-                    expect(page._data.length).toBe(rows.length);
-                    expect(page._data[0].id).toBe((rows[0].id).toString());
-                    expect(page._data[0].name).toBe(rows[0].name);
-                    expect(page._data[0].value).toBe(rows[0].value);
-
-                    done();
-                }).catch(function (error) {
-                    console.dir(error);
-                    done.fail();
-                });
-            });
-
-            it("multiple entities should return a Page object that is defined.", function(done) {
-                var rows = [{ id: 9800, name: "Greg", value: 8 },
-                            { id: 9801, name: "Steven", value: 12 },
-                            { id: 9802, name: "Garnet", value: 36 }];
-
-                createReference.create(rows).then(function (response) {
-                    var page = response.successful;
-
-                    expect(page).toEqual(jasmine.any(Object));
-                    expect(page.reference._context).toEqual("compact", "page reference is not in the correct context.")
-                    expect(page._data.length).toBe(rows.length);
-                    for(var i = 0; i < page._data.length; i++) {
-                        expect(page._data[i].id).toBe((rows[i].id).toString());
-                        expect(page._data[i].name).toBe(rows[i].name);
-                        expect(page._data[i].value).toBe(rows[i].value);
-                    }
-
-                    done();
-                }).catch(function (error) {
-                    console.dir(error);
-                    done.fail();
-                });
-            });
-        });
-
         describe('for a single entity,', function() {
             var reference, page, tuple;
             var limit = 1;
@@ -509,73 +439,147 @@ exports.execute = function (options) {
             });
         }
 
-        describe("passing values for disabled columns (acl, annotation, or system columns), ", function () {
-            var ref,
-                expectedData = ["1", 1, "default generated", "default no insert"],
-                passedData = [{col_id: 1, col:"123", col_serial: 1234, col_generated: "1234", RID: "1234", col_no_insert: "1234"}];
-
-            var returnedData = function (data) {
-                var res = [];
-                res.push(data.col_id, data.col_serial, data.col_generated, data.col_no_insert);
-                return res;
+        describe('reference.create', function () {
+            var reference, createReference;
+            var testCreate = function (ref, rows, expectedData, done) {
+                createReference.create(rows).then(function (response) {
+                    var page = response.successful;
+                    expect(page.reference._context).toEqual("compact", "page reference is not in the correct context.");
+                    expect(page._data.length).toBe(expectedData.length, "data length missmatch.");
+                    expectedData.forEach(function (data, i) {
+                        for (var k in data) {
+                            expect(data[k]).toEqual(page._data[i][k], "data missmatch for row=", i, "column=", k);
+                        }
+                    });
+                    done();
+                }).catch(function (err) {
+                    done.fail(err);
+                });
             };
 
             beforeAll(function (done) {
-                // make sure the restricted user
-                // - have insert access to the table
-                // - doesn't have insert access to the table.
-                utils.setCatalogAcls(options.ermRest, done, entityWithDisabledColumns, catalog_id, {
-                    "catalog": {
-                        "id": catalog_id,
-                        "acls": {
-                            "enumerate": ["*"]
-                        },
-                        "schemas": {
-                            "permission_schema": {
-                                "tables": {
-                                    "table_w_disabled_columns": {
-                                        "acls": {
-                                            "select" : ["*"],
-                                            "insert": [process.env.RESTRICTED_AUTH_COOKIE_ID]
-                                        },
-                                        "columns": {
-                                            "col_no_insert": {
+                options.ermRest.resolve(baseUri, {cid: "test"}).then(function (response) {
+                    reference = response;
+                    createReference = response.contextualize.entryCreate;
+                    done();
+                }).catch(function (error) {
+                    console.dir(error);
+                    done.fail();
+                });
+            });
+
+            it("should return error if reference is not contextualized for create.", function(done) {
+                var rows = [{ id: 9999, name: "Paula", value: 5 }];
+
+                reference.create(rows).then(function(response) {
+                    throw new Error("Did not return any errors");
+                }).catch(function (err) {
+                    expect(err.message).toEqual("reference must be in 'entry/create' context.");
+                    done();
+                });
+            });
+
+            it("a single entity should return a Page object that is defined.", function(done) {
+                var rows = [{ id: "9999", name: "Paula", value: 5 }];
+                testCreate(createReference, rows, rows, done);
+            });
+
+            it("multiple entities should return a Page object that is defined.", function(done) {
+                var rows = [{ id: "9800", name: "Greg", value: 8 },
+                            { id: "9801", name: "Steven", value: 12 },
+                            { id: "9802", name: "Garnet", value: 36 }];
+                testCreate(createReference, rows, rows, done);
+            });
+
+            describe('regarding default values, ', function () {
+
+                it ("should not use the default value if value is passed in at least one of the rows.", function (done) {
+                    testCreate(
+                        createReference,
+                        [{id: "9900", name: "New 0"}, {id: "9901", name: "New 1", value: 2}],
+                        [{id: "9900", name: "New 0", value: null}, {id: "9901", name: "New 1", value: 2}],
+                        done
+                    );
+                });
+
+                it ("should use the default value if the value is missing in all the rows.", function (done) {
+                    testCreate(
+                        createReference,
+                        [{id: "9902", name: "New 2"}, {id: "9903", name: "New 3"}],
+                        [{id: "9902", name: "New 2", value: 1234}, {id: "9903", name: "New 3", value: 1234}],
+                        done
+                    );
+                });
+
+                describe("passing values for disabled columns (acl, annotation, or system columns), ", function () {
+                    var ref,
+                    expectedData = ["1", 1, "default generated", "default no insert"],
+                    passedData = [{col_id: 1, col:"123", col_serial: 1234, col_generated: "1234", RID: "1234", col_no_insert: "1234"}];
+
+                    var returnedData = function (data) {
+                        var res = [];
+                        res.push(data.col_id, data.col_serial, data.col_generated, data.col_no_insert);
+                        return res;
+                    };
+
+                    beforeAll(function (done) {
+                        // make sure the restricted user
+                        // - have insert access to the table
+                        // - doesn't have insert access to the table.
+                        utils.setCatalogAcls(options.ermRest, done, entityWithDisabledColumns, catalog_id, {
+                            "catalog": {
+                                "id": catalog_id,
+                                "acls": {
+                                    "enumerate": ["*"]
+                                },
+                                "schemas": {
+                                    "permission_schema": {
+                                        "tables": {
+                                            "table_w_disabled_columns": {
                                                 "acls": {
-                                                    "select": ["*"],
-                                                    "insert": []
+                                                    "select" : ["*"],
+                                                    "insert": [process.env.RESTRICTED_AUTH_COOKIE_ID]
+                                                },
+                                                "columns": {
+                                                    "col_no_insert": {
+                                                        "acls": {
+                                                            "select": ["*"],
+                                                            "insert": []
+                                                        }
+                                                    }
                                                 }
                                             }
                                         }
                                     }
                                 }
                             }
-                        }
-                    }
-                }, function (response) {
-                    ref = response.contextualize.entryCreate;
-                }, process.env.RESTRICTED_AUTH_COOKIE);
-            });
+                        }, function (response) {
+                            ref = response.contextualize.entryCreate;
+                        }, process.env.RESTRICTED_AUTH_COOKIE);
+                    });
 
-            it ("the passed value should be ignored and we should use the default value.", function (done) {
+                    it ("the passed value should be ignored and we should use the default value.", function (done) {
 
-                ref.create(passedData).then(function (response) {
-                    var page = response.successful;
-                    expect(page._data.length).toBe(1, "success page length missmatch.");
-                    expect(returnedData(page._data[0])).toEqual(expectedData, "success data missmatch");
-                    return ref.read(1);
-                }).then(function (newPage) {
-                    expect(returnedData(newPage._data[0])).toEqual(expectedData, "read data missmatch.");
+                        ref.create(passedData).then(function (response) {
+                            var page = response.successful;
+                            expect(page._data.length).toBe(1, "success page length missmatch.");
+                            expect(returnedData(page._data[0])).toEqual(expectedData, "success data missmatch");
+                            return ref.read(1);
+                        }).then(function (newPage) {
+                            expect(returnedData(newPage._data[0])).toEqual(expectedData, "read data missmatch.");
 
-                    // make sure the next test cases are using the correct user
-                    options.ermRest.setUserCookie(process.env.AUTH_COOKIE);
-                    utils.removeCachedCatalog(options.ermRest, catalog_id);
-                    done();
-                }).catch(function (error) {
-                    done.fail(error);
+                            // make sure the next test cases are using the correct user
+                            options.ermRest.setUserCookie(process.env.AUTH_COOKIE);
+                            utils.removeCachedCatalog(options.ermRest, catalog_id);
+                            done();
+                        }).catch(function (error) {
+                            done.fail(error);
+                        });
+                    });
                 });
             });
-        });
 
+        });
 
     });
 };

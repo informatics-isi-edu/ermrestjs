@@ -628,7 +628,7 @@ exports.execute = function (options) {
                 expect(tuple.reference).toBeDefined();
                 expect(tuple.reference._table.name).toBe(baseTable2);
                 expect(tuple.reference.displayname.value).toBe(baseTable2);
-                expect(tuple.reference._location.path).toStartWith(schemaNameEncoded + ":" + baseTable2Encoded);
+                expect(tuple.reference.location.path).toContain(schemaNameEncoded + ":" + baseTable2Encoded);
             });
 
             it('3.A.4 tuple read should return correct data from base table', function(done) {
