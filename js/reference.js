@@ -1008,62 +1008,35 @@
                 return module._q.reject(e);
             }
 
+            // return the columns that we should add to the defaults list
             function getDefaults() {
-                // any row in data is sufficient. data should include the full set of visible columns
-                var visibleColumnsNames = Object.keys(data[0]);
-                var tableColumnsNames = self.table.columns.all().map(function (col) {
-                    return col.name;
-                });
-                // This is gets the difference between the table's set of columns and the reference's set of columns
-                var defaults = columnDiff(tableColumnsNames, visibleColumnsNames);
+                var defaults = [];
+                self.table.columns.all().forEach(function (col) {
+                    // add disabled columns (even if data is passed for them, should be ignored)
+                    if (col.getInputDisabled(module._contexts.CREATE)) {
+                        defaults.push(col.name);
+                        return;
+                    }
 
-                // loop through the data and add any columns not set to the defaults
-                visibleColumnsNames.forEach(function (columnName) {
-                    var notSet = true;
-                    /**
-                     * Loop through the rows and make sure the current column is not set in any of the rows.
-                     * If not set in any row, add it to defaults.
-                     * If 1 row has it set and none of the others, it cannot be part of defaults
-                    **/
-                    for (var m = 0; m < data.length; m++) {
-                        if (data[m][columnName]!== undefined && data[m][columnName] !==null) {
-                            notSet = false;
+                    // if default is null, don't add it.
+                    // this is just to reduce the size of defaults. adding them
+                    // is harmless but it's not necessary. so we're just not going
+                    // to add them to make the default list shorter
+                    if (col.ermrestDefault == null) return;
+
+                    // add columns that their value is missing in all the rows
+                    var missing = true;
+                    for (var i = 0; i < data.length; i++) {
+                        // at least one of the rows has value for it
+                        if (data[i][col.name] !== undefined && data[i][col.name] !== null) {
+                            missing = false;
                             break;
                         }
                     }
-
-                    if (notSet) defaults.push(columnName);
+                    if (missing) defaults.push(col.name);
                 });
 
-                // columns that their input is disabled should use the default value of database
-                // this can be because of annotation or acls
-                self.table.columns.all().forEach(function(col) {
-                    if (col.getInputDisabled(module._contexts.CREATE) && defaults.indexOf(col.name) === -1) {
-                        defaults.push(col.name);
-                    }
-                });
-
-                // Remove system columns from defaults list and return
-                return defaults.filter(function(c) {
-                    return module._systemColumns.indexOf(c) === -1;
-                });
-            }
-
-            /**
-             * This gets the difference between the two column sets. This is not the _symmetric_ difference.
-             * If minuend is [1,2,3,4,5]
-             * and subtrahend is [4,5,6]
-             * the difference is [1,2,3]
-             * The 6 is ignored because we only want to know what's in the minuend that is not in the subtrahend
-             */
-            function columnDiff(minuend, subtrahend) {
-                var difference = [];
-
-                difference = minuend.filter(function(col) {
-                    return subtrahend.indexOf(col) == -1;
-                });
-
-                return difference;
+                return defaults;
             }
         },
 

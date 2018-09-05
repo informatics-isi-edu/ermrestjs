@@ -2075,6 +2075,14 @@
          */
         this.memberOfForeignKeys = [];
 
+
+        /**
+         * This is the actual default that is defined on schema document.
+         * To get the default value that is suitable for client-side, please use .default
+         * @type {object}
+         */
+        this.ermrestDefault = jsonColumn.default;
+
     }
 
     Column.prototype = {

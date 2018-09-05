@@ -115,7 +115,8 @@
                     "name": "value",
                     "type": {
                         "typename": "integer"
-                    }
+                    },
+                    "default": 1234
                 }
             ],
             "annotations": {
