@@ -2,6 +2,14 @@
 		module._injectExternalHandlerbarHelper = function(Handlebars) {
 
 			Handlebars.registerHelper({
+                /**
+                 * {{formatDate value format}}
+                 *
+                 * @returns formatted string of `value` with corresponding `format`
+                 */
+                formatDate: function (value, format) {
+                    return module._moment(value).format(format);
+                },
 			    /*
 			       {{#if (eq val1 val2)}}
  					.. content

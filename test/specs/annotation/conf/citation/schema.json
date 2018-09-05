@@ -1,0 +1,316 @@
+{
+    "schema_name": "citation_schema",
+    "tables": {
+        "citation_w_mustache": {
+            "kind": "table",
+            "keys": [
+                {
+                    "annotations": {},
+                    "unique_columns": [
+                        "id"
+                    ]
+                }
+            ],
+            "foreign_keys": [
+                {
+                    "names": [["citation_schema", "citation_w_mustache_author_fkey"]],
+                    "foreign_key_columns": [{
+                        "table_name": "citation_w_mustache",
+                        "schema_name": "citation_schema",
+                        "column_name": "author"
+                    }],
+                    "referenced_columns": [{
+                        "table_name": "author",
+                        "schema_name": "citation_schema",
+                        "column_name": "id"
+                    }]
+                }
+            ],
+            "table_name": "citation_w_mustache",
+            "schema_name": "citation_schema",
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "integer"
+                    }
+                },
+                {
+                    "name": "journal",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "title",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "author",
+                    "type": {
+                        "typename": "integer"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2018:citation": {
+                    "template_engine": "mustache",
+                    "journal_pattern": "{{{journal}}}",
+                    "author_pattern":  "{{#$fkeys.citation_schema.citation_w_mustache_author_fkey}}{{{values.first_name}}} {{{values.last_name}}}{{/$fkeys.citation_schema.citation_w_mustache_author_fkey}}",
+                    "title_pattern":   "{{#title}}{{{title}}}{{/title}}{{^title}}No title{{/title}}",
+                    "year_pattern":    "2018",
+                    "url_pattern":     "https://dev.isrd.isi.edu/chaise/record/#{{{$catalog.snapshot}}}/citation_schema:citation_w_mustache/id={{{id}}}",
+                    "id_pattern":      "{{{id}}}"
+                }
+            }
+        },
+        "citation_w_handlebars": {
+            "kind": "table",
+            "keys": [
+                {
+                    "annotations": {},
+                    "unique_columns": [
+                        "id"
+                    ]
+                }
+            ],
+            "foreign_keys": [
+                {
+                    "names": [["citation_schema", "citation_w_handlebars_author_fkey"]],
+                    "foreign_key_columns": [{
+                        "table_name": "citation_w_handlebars",
+                        "schema_name": "citation_schema",
+                        "column_name": "author"
+                    }],
+                    "referenced_columns": [{
+                        "table_name": "author",
+                        "schema_name": "citation_schema",
+                        "column_name": "id"
+                    }]
+                }
+            ],
+            "table_name": "citation_w_handlebars",
+            "schema_name": "citation_schema",
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "integer"
+                    }
+                },
+                {
+                    "name": "journal",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "title",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "author",
+                    "type": {
+                        "typename": "integer"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2018:citation": {
+                    "template_engine": "handlebars",
+                    "journal_pattern": "{{journal}}",
+                    "author_pattern":  "{{#with $fkeys.citation_schema.citation_w_handlebars_author_fkey}}{{values.first_name}} {{values.last_name}}{{/with}}",
+                    "title_pattern":   "{{#if title}}{{title}}{{else}}No title{{/if}}",
+                    "year_pattern":    "{{formatDate RCT 'YYYY'}}",
+                    "url_pattern":     "https://dev.isrd.isi.edu/chaise/record/#{{$catalog.snapshot}}/citation_schema:citation_w_handlebars/id={{id}}",
+                    "id_pattern":      "{{id}}"
+                }
+            }
+        },
+        "citation_without_template_engine": {
+            "kind": "table",
+            "keys": [
+                {
+                    "annotations": {},
+                    "unique_columns": [
+                        "id"
+                    ]
+                }
+            ],
+            "foreign_keys": [],
+            "table_name": "citation_without_template_engine",
+            "schema_name": "citation_schema",
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "integer"
+                    }
+                },
+                {
+                    "name": "journal",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "title",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "author",
+                    "type": {
+                        "typename": "integer"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2018:citation": {
+                    "journal_pattern": "Journal of ISRD Test Data",
+                    "author_pattern":  "John Doe",
+                    "title_pattern":   "The First Data Row",
+                    "year_pattern":    "2018",
+                    "url_pattern":     "https://dev.isrd.isi.edu/id=1",
+                    "id_pattern":      "1"
+                }
+            }
+        },
+        "missing_required": {
+            "kind": "table",
+            "keys": [
+                {
+                    "annotations": {},
+                    "unique_columns": [
+                        "id"
+                    ]
+                }
+            ],
+            "foreign_keys": [],
+            "table_name": "missing_required",
+            "schema_name": "citation_schema",
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "integer"
+                    }
+                },
+                {
+                    "name": "journal",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "title",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "author",
+                    "type": {
+                        "typename": "integer"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2018:citation": {
+                    "author_pattern":  "John Doe",
+                    "title_pattern":   "The First Data Row",
+                    "year_pattern":    "2018",
+                    "url_pattern":     "https://dev.isrd.isi.edu/id=1",
+                    "id_pattern":      "1"
+                }
+            }
+        },
+        "no_citation": {
+            "kind": "table",
+            "keys": [
+                {
+                    "annotations": {},
+                    "unique_columns": [
+                        "id"
+                    ]
+                }
+            ],
+            "foreign_keys": [],
+            "table_name": "no_citation",
+            "schema_name": "citation_schema",
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "integer"
+                    }
+                },
+                {
+                    "name": "journal",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "title",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "author",
+                    "type": {
+                        "typename": "integer"
+                    }
+                }
+            ],
+            "annotations": {}
+        },
+        "author": {
+            "kind": "table",
+            "keys": [
+                {
+                    "annotations": {},
+                    "unique_columns": [
+                        "id"
+                    ]
+                }
+            ],
+            "foreign_keys": [],
+            "table_name": "author",
+            "schema_name": "citation_schema",
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "integer"
+                    }
+                },
+                {
+                    "name": "first_name",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "last_name",
+                    "type": {
+                        "typename": "text"
+                    }
+                }
+            ],
+            "annotations": {}
+        }
+    }
+}

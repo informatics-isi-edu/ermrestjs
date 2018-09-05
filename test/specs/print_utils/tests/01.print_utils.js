@@ -392,6 +392,11 @@ exports.execute = function (options) {
                 expect(module._renderHandlebarsTemplate("{{#each values}}{{this}}\n{{/each}}", { values: [2, 3, 7, 9] })).toBe("2\n3\n7\n9\n");
             });
 
+            it('formatDate helper', function () {
+                expect(module._renderHandlebarsTemplate("{{formatDate '2018-07-26' 'YYYY'}}")).toBe("2018");
+                expect(module._renderHandlebarsTemplate("{{formatDate '02-16-97' 'YYYY'}}")).toBe("1997");
+            });
+
             it('if eq (equals) helper', function () {
                 expect(module._renderHandlebarsTemplate("Name {{#if (eq name 'Chloe')}}{{name}} is equal to Chloe{{else}}{{name}} is not equal to Chloe{{/if}}", { name: 'Chloe' })).toBe("Name Chloe is equal to Chloe");
                 expect(module._renderHandlebarsTemplate("Name {{#if (eq name 'Chloe')}}{{name}} is equal to Chloe{{else}}{{name}} is not equal to Chloe{{/if}}", { name: 'John' })).toBe("Name John is not equal to Chloe");

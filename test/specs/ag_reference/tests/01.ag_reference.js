@@ -28,9 +28,9 @@ exports.execute = function (options) {
             schemaName + ":" + unicodeTableEncoded
         ].join("/");
 
-        var ref, refWithModifiers, unicodeRef;
+        var ref, refWithModifiers, refColumnOrder, refColumnOrderSorted, unicodeRef;
         var loc, locWithModifiers, unicodeLoc;
-        var keyColVisible, keyColVisible2, keyColInvisible, aggColVisible, aggColInvisible, unicodeID, unicodeCol;
+        var keyColVisible, keyColVisible2, keyColInvisible, keyColOrder, keyColOrder2, aggColVisible, aggColInvisible, aggColNoSort, unicodeID, unicodeCol;
 
         var checkLocation = function (objName, obj, path) {
             expect(obj).toBeDefined(objName + " was not defined.");
@@ -90,9 +90,8 @@ exports.execute = function (options) {
 
             it ("sorting related attributes are correct.", function () {
                 expect(loc.sortObject).toBeUndefined("sortObject was defined.");
-                expect(loc.sort).toBeUndefined("sort was defined.");
 
-                expect(locWithModifiers.sort).toBe("@sort(alias)");
+                expect(locWithModifiers.sortObject[0]).toEqual({"column": "alias"}, "sortObject undefined for locWithModifiers");
             });
 
             it ("paging related attributes are correct.", function () {
@@ -116,16 +115,16 @@ exports.execute = function (options) {
                     var newLoc = loc.changeSort([{"column": "col", "descending": true}]);
                     expect(loc).not.toBe(newLoc, "Didn't return a new object.");
                     expect(loc.sortObject).toBeUndefined("changed original object.");
-                    expect(newLoc.sort).toBe("@sort(col::desc::)");
+                    expect(newLoc.sortObject[0]).toEqual({"column": "col", "descending": true}, "sortObject missmatch");
                 });
 
                 it ("should remove all the pagings.", function () {
                     var newLoc = locWithModifiers.changeSort([{"column": "col", "descending": true}]);
                     expect(locWithModifiers).not.toBe(newLoc, "Didn't return a new object.");
-                    expect(locWithModifiers.sort).toBe("@sort(alias)","changed original object.");
+                    expect(locWithModifiers.sortObject[0]).toEqual({"column": "alias"},"changed original object.");
                     expect(locWithModifiers.beforeObject).toBeDefined("changed original before.");
                     expect(locWithModifiers.afterObject).toBeDefined("changed original after.");
-                    expect(newLoc.sort).toBe("@sort(col::desc::)");
+                    expect(newLoc.sortObject[0]).toEqual({"column": "col", "descending": true}, "sortObject missmatch.");
                     expect(newLoc.beforeObject).toBeUndefined("didn't remove before.");
                     expect(newLoc.afterObject).toBeUndefined("didn't remove after.");
                 });
@@ -153,7 +152,22 @@ exports.execute = function (options) {
                 );
 
                 keyColInvisible = new options.ermRest.AttributeGroupColumn(
-                    "alias", "invis_col", null, "invisible column", "text", "", false, false
+                    "alias", "invis_col", null, "invisible column", "text", "", true, false
+                );
+
+
+                col = schema.tables.get(mainTable).columns.get("col_w_column_order");
+                keyColOrder = new options.ermRest.AttributeGroupColumn(
+                    "0", col.name, col, null, null, null, true, true
+                );
+
+                col = schema.tables.get(mainTable).columns.get("col_w_column_order_false");
+                keyColOrder2 = new options.ermRest.AttributeGroupColumn(
+                    "1", col.name, col, null, null, null, true, true
+                );
+
+                aggColNoSort = new options.ermRest.AttributeGroupColumn(
+                    "2", "cnt(*)", null, "count", "int4", "", false, false
                 );
 
                 aggColVisible = new options.ermRest.AttributeGroupColumn(
@@ -170,7 +184,7 @@ exports.execute = function (options) {
 
                 checkColumn("keyColVisible with base column", keyColVisible2, "col_w_pre_format", "col_w_pre_format", "boolean", null, true);
 
-                checkColumn("keyColInvisible", keyColInvisible, "invis_col", "invisible column", "text", "", false);
+                checkColumn("keyColInvisible", keyColInvisible, "invis_col", "invisible column", "text", "", true);
 
                 checkColumn("aggColVisible", aggColVisible, "cnt(*)", "count", "int4", "", true);
 
@@ -249,6 +263,14 @@ exports.execute = function (options) {
                     options.catalog,
                     "compact/select"
                 );
+
+                refColumnOrder = new options.ermRest.AttributeGroupReference(
+                    [keyColOrder, keyColOrder2],
+                    [aggColNoSort],
+                    loc,
+                    options.catalog,
+                    "compact/select"
+                );
             });
 
             it ('can create reference objects.', function () {
@@ -262,10 +284,25 @@ exports.execute = function (options) {
                 })).toEqual(["col", "col_w_pre_format", "c2"]);
             });
 
-            it ("shortestKey should return an array of key columns.", function () {
+            it ("shortestKey should return an array of visible key columns.", function () {
                 expect(ref.shortestKey.map(function (col) {
                     return col.name;
-                })).toEqual(["col", "alias", "col_w_pre_format"]);
+                })).toEqual(["col", "col_w_pre_format"]);
+            });
+
+            // since these are context based APIs, so they should be this way.
+            describe("Column _sortColumns and sortable", function () {
+                it ("sortable should return false if column is not sortable.", function () {
+
+                });
+
+                it ("should return the same column if it's sortable and has no baseColumn.", function () {
+
+                });
+
+                it ("should return the base column's column_order if it's defined.", function () {
+
+                });
             });
 
             it ("uri should return a complete uri to the data.", function () {
@@ -292,6 +329,11 @@ exports.execute = function (options) {
                 );
             });
 
+            it ("ermrestSortObject should return the sort object that will be used for ermest.", function () {
+                expect(ref.ermrestSortObject).toEqual([], "sortObject missmatch for ref");
+                expect(refWithModifiers.ermrestSortObject).toEqual([{ column: 'alias', descending: false, term: 'invis_col' }], "sortObject missmatch for ref with modifiers");
+            });
+
             describe("sort, ", function () {
                 it ("should verify the input", function () {
                     expect(function () {
@@ -303,9 +345,37 @@ exports.execute = function (options) {
                     }).toThrow("invalid arguments in array");
                 });
 
+                it ("should throw an error when trying to sort based on a column that is not sortable.", function () {
+                    expect(function () {
+                        var r = refColumnOrder.sort([{"column": "2", "descending": true}]);
+                    }).toThrow("column '2' is not sortable (Attributegroup)");
+
+                    expect(function () {
+                        var r = refColumnOrder.sort([{"column": "1", "descending": true}]);
+                    }).toThrow("column '1' is not sortable (Attributegroup)");
+                });
+
                 it ("should return a new reference with new sort.", function () {
-                    var newRef = refWithModifiers.sort([{"column": "invis_col", "descending": true}]);
-                    expect(newRef.location.sort).toBe("@sort(invis_col::desc::)");
+                    var newRef = refWithModifiers.sort([{"column": "alias", "descending": true}]);
+                    expect(newRef.location.sortObject[0]).toEqual({"column": "alias", "descending": true});
+                });
+
+                describe("based on a column that has baseColumn, ", function () {
+                    it ('should return a new reference.', function () {
+                        refColumnOrderSorted = refColumnOrder.sort([{"column": "0", "descending": true}]);
+                        expect(refColumnOrderSorted.location.sortObject[0]).toEqual({"column": "0", "descending": true});
+                    });
+
+                    it ("ermrestSortObject should return the actual sort object.", function () {
+                        expect(refColumnOrderSorted.ermrestSortObject).toEqual([
+                            { column: '3', descending: false, term: 'order_col' },
+                            { column: '4', descending: true, term: 'col' }
+                        ]);
+                    });
+
+                    it ("ermrestPath should return the correct path.", function () {
+                        expect(refColumnOrderSorted.ermrestPath).toEqual("agref_schema:main/0:=col_w_column_order,1:=col_w_column_order_false,3:=order_col,4:=col;2:=cnt(*)@sort(3,4::desc::)");
+                    });
                 });
             });
 
@@ -343,7 +413,6 @@ exports.execute = function (options) {
                     );
                     var aggList = [newRef.aggregate.countAgg];
                     newRef.getAggregates(aggList).then(function (response) {
-                        // TODO change this based on data
                         expect(response[0]).toBe(14);
                         done();
                     }).catch(function (err) {
@@ -354,12 +423,16 @@ exports.execute = function (options) {
             });
 
             describe("read, ", function () {
-                var page, tuples;
+                var page, tuples, pageColumnOrder, nextReferenceColumnOrder;
 
                 it ("should return a page object.", function (done) {
                     refWithModifiers.read(2).then(function (response) {
                         page = response;
                         expect(page).toBeDefined("page was not defined.");
+                        return refColumnOrderSorted.read(2);
+                    }).then(function (response2) {
+                        pageColumnOrder = response2;
+                        expect(pageColumnOrder).toBeDefined("page with order was not defined.");
                         done();
                     }).catch(function (err) {
                         consoel.log(err);
@@ -368,16 +441,47 @@ exports.execute = function (options) {
                 });
 
                 describe("page, ", function () {
-                    it ("next should return a new reference with paging options.", function () {
-                        var newRef = page.next;
-                        expect(newRef).toBeDefined("reference was not defined");
-                        expect(newRef.location.paging).toBe("@after(19)", "paging missmatch.");
+                    describe("next, ", function () {
+                        it ("should return a new reference with paging options.", function () {
+                            var newRef = page.next;
+                            expect(newRef).toBeDefined("reference was not defined");
+                            expect(newRef.location.paging).toBe("@after(19)", "paging missmatch.");
+                        });
+
+                        it ("should handle when sort is based on a column with column-order.", function (done) {
+                            var newRef = pageColumnOrder.next;
+                            expect(newRef).toBeDefined("reference was not defined");
+                            expect(newRef.ermrestPath).toEqual("agref_schema:main/0:=col_w_column_order,1:=col_w_column_order_false,3:=order_col,4:=col;2:=cnt(*)@sort(3,4::desc::)@after(02,%2A%2Atwo%2A%2A)", "ermrestPath missmatch for page.next.");
+
+                            newRef.read(2).then(function (p) {
+                                nextReferenceColumnOrder = p.next;
+                                expect(nextReferenceColumnOrder).toBeDefined("reference.next was not defined");
+                                expect(nextReferenceColumnOrder.ermrestPath).toEqual("agref_schema:main/0:=col_w_column_order,1:=col_w_column_order_false,3:=order_col,4:=col;2:=cnt(*)@sort(3,4::desc::)@after(04,%2A%2Afour%2A%2A)", "ermrestPath missmatch for page.next.next.");
+                                done();
+                            }).catch(function (err) {
+                                done.fail(err);
+                            });
+                        });
                     });
 
-                    it ("previous should return a new reference with paging options.", function () {
-                        var newRef = page.previous;
-                        expect(newRef).toBeDefined("reference was not defined");
-                        expect(newRef.location.paging).toBe("@before(18)", "paging missmatch.");
+                    describe("previous, ", function () {
+
+                        it ("should return a new reference with paging options.", function () {
+                            var newRef = page.previous;
+                            expect(newRef).toBeDefined("reference was not defined");
+                            expect(newRef.location.paging).toBe("@before(18)", "paging missmatch.");
+                        });
+
+                        it ("should handle when sort is based on a column with column-order.", function (done) {
+                            nextReferenceColumnOrder.read(2).then(function (p) {
+                                var newRef = p.previous;
+                                expect(newRef).toBeDefined("reference was not defined");
+                                expect(newRef.ermrestPath).toBe("agref_schema:main/0:=col_w_column_order,1:=col_w_column_order_false,3:=order_col,4:=col;2:=cnt(*)@sort(3,4::desc::)@before(05,%2A%2Afive%2A%2A)", "paging missmatch.");
+                                done();
+                            }).catch(function (err) {
+                                done.fail(err);
+                            });
+                        });
                     });
 
                     it ("tuples should return an array of tuples.", function () {
@@ -387,7 +491,7 @@ exports.execute = function (options) {
                     });
 
                     describe("tuple, ", function () {
-                        it ("values should return an array of valeus.", function () {
+                        it ("values should return an array of values.", function () {
                             var values = tuples[0].values;
                             expect(values).toEqual([
                                 '<strong>test2</strong>', 'YES', '2'
@@ -410,16 +514,16 @@ exports.execute = function (options) {
                             expect(data.c3).toEqual(1, "c3 data missmatch.");
                         });
 
-                        it ("displayname should return rowname based on key columns.", function () {
+                        it ("displayname should return rowname based on visible key columns.", function () {
                             var disp = tuples[0].displayname;
-                            expect(disp.value).toBe("<strong>test2</strong>:18:YES", "value missmatch.");
-                            expect(disp.unformatted).toBe("**test2**:18:YES", "unformatted missmatch.");
+                            expect(disp.value).toBe("<strong>test2</strong>:YES", "value missmatch.");
+                            expect(disp.unformatted).toBe("**test2**:YES", "unformatted missmatch.");
                             expect(disp.isHTML).toBe(true, "isHTML missmatch.");
                         });
 
                         describe("uniqueId, ", function () {
                             it ("should return an string based on shortest key values.", function () {
-                                expect(tuples[0].uniqueId).toBe("**test2**_18_YES");
+                                expect(tuples[0].uniqueId).toBe("**test2**_YES");
                             });
 
                             it ("should return null if any of the key columns are null.", function (done) {
@@ -489,11 +593,6 @@ exports.execute = function (options) {
                     expect(unicodeRef.uri).toBe(
                         unicodeTableBaseUri + "/" + encodedCol + "::ciregexp::test/" + encodedID + ";" + encodedCol + "@sort(" + encodedCol + ")@after(c)@before(z)"
                     );
-                });
-
-                it ("sort, should return a new reference with new sort.", function () {
-                    var newRef = refWithModifiers.sort([{"column": decodedCol, "descending": true}]);
-                    expect(newRef.location.sort).toBe("@sort("+encodedCol+"::desc::)");
                 });
 
                 it ("search, should return a new reference with new searchTerm.", function () {

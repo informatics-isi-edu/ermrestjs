@@ -1394,6 +1394,148 @@ exports.execute = function (options) {
                 });
             });
 
+            describe("hideNumOccurrences, ", function () {
+                it ('should return false if hide_num_occurrences is not `true`.', function () {
+                    expect(mainFacets[0].hideNumOccurrences).toBe(false, "missmatch for index=0");
+                    expect(mainFacets[2].hideNumOccurrences).toBe(false, "missmatch for index=2");
+                });
+
+                it ("otherwise should return true.", function () {
+                    expect(mainFacets[1].hideNumOccurrences).toBe(true, "missmatch for index=1");
+                    expect(mainFacets[7].hideNumOccurrences).toBe(true, "missmatch for index=7");
+                });
+            });
+
+            describe("sortColumns", function () {
+                var testSortColumns = function (returned, expected, message) {
+                    expect(returned.length).toBe(expected.length, "length missmatch");
+                    expected.forEach(function (e, i) {
+                        if (e.num_occurrences) {
+                            expect(returned[i].num_occurrences).toBe(e.num_occurrences, "num_occurrences missmatch for i=" + i + message);
+                        } else {
+                            expect(returned[i].column.name).toBe(e.column, "column missmatch for i=" + i + message);
+                        }
+                        expect(returned[i].descending).toBe(e.descending, "descending missmatch for i=" + i + message);
+                    });
+                };
+
+                it ('should throw an error in entity mode.', function () {
+                    expect(function () {
+                        var sc = mainFacets[10].sortColumns;
+                    }).toThrow("sortColumns cannot be used in entity mode.");
+                });
+
+                it ("when order is missing, should return descending num_occurrences and ascending value.", function () {
+                    testSortColumns(mainFacets[0].sortColumns, [
+                        {num_occurrences: true, descending: true},
+                        {column: "id", descending: false}
+                    ], "");
+                });
+
+                it ("when order is missing and column is not sortable, still should return desc num_occ and asc value.", function () {
+                    testSortColumns(mainFacets[9].sortColumns, [
+                        {num_occurrences: true, descending: true},
+                        {column: "jsonb_col", descending: false}
+                    ], "");
+                });
+
+                it ("when order is defined, should be honored.", function () {
+                    testSortColumns(mainFacets[1].sortColumns, [
+                        {column: "id", descending: true},
+                    ], "missing num_occurrences, missing actual column");
+
+                    testSortColumns(mainFacets[2].sortColumns, [
+                        {column: "id", descending: false},
+                        {column: "float_col", descending: true}
+                    ], "missing num_occurrences, having actual column");
+
+                    //text_col
+                    testSortColumns(mainFacets[5].sortColumns, [
+                        {column: "date_col", descending: false},
+                        {num_occurrences: true, descending: false}
+                    ], "having num_occurrences, missing actual column");
+                });
+
+                it ("when order is not valid array (or the columns were not valid), should return the default.", function () {
+                    testSortColumns(mainFacets[6].sortColumns, [
+                        {num_occurrences: true, descending: true},
+                        {column: "longtext_col", descending: false}
+                    ], "longtext");
+
+                    testSortColumns(mainFacets[7].sortColumns, [
+                        {num_occurrences: true, descending: true},
+                        {column: "markdown_col", descending: false}
+                    ], "markdown");
+                });
+            });
+
+            describe("scalarValuesReference", function () {
+                var testEntityCounts = function (entityCountRef, path, length, values, valuesLength, done) {
+                    expect(entityCountRef.ermrestPath).toEqual(path, "path missmatch.");
+                    entityCountRef.read(length).then(function (page) {
+                        expect(page.tuples.length).toBe(length, "length missmatch.");
+                        // all tuples are the same, just looking at the first one is enough
+                        // This is just to test that whether the sortColumns is messing with the values or not
+                        expect(page.tuples[0].values.length).toBe(valuesLength, "values length missmatch");
+                        expect(page.tuples.map(function (t) {
+                            return t.values[0];
+                        })).toEqual(values, "values missmatch.");
+                        done();
+                    }).catch(function (err) {
+                        done.fail(err);
+                    });
+                };
+
+                it ('should throw an error in entity mode.', function () {
+                    expect(function () {
+                        var sc = mainFacets[10].sortColumns;
+                    }).toThrow("sortColumns cannot be used in entity mode.");
+                });
+
+                it ("should return the list of avaialble facets sorted by frequency and tie break by column.", function (done) {
+                    testEntityCounts(
+                        mainFacets[0].scalarValuesReference,
+                        "M:=faceting_schema:main/int_col::geq::-2/$M/0:=id;count:=cnt(*)@sort(count::desc::,0)",
+                        10,
+                        ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'],
+                        2,
+                        done
+                    );
+                });
+
+                it ("should be able to pass the FacetColumn.sortColumns to it.", function (done) {
+                    testEntityCounts(
+                        mainFacets[2].scalarValuesReference,
+                        "M:=faceting_schema:main/id=1/$M/int_col::geq::-2/$M/0:=float_col,1:=id;count:=cnt(*)@sort(1,0::desc::)",
+                        1, // the reference has applied filters
+                        ["11.1100"],
+                        2,
+                        done
+                    );
+                });
+
+                it ("should be able to pass the FacetColumn.hideNumOccurrences to it (should still add the count and just hide it).", function (done) {
+                    testEntityCounts(
+                        mainFacets[7].scalarValuesReference,
+                        "M:=faceting_schema:main/id=1/$M/int_col::geq::-2/$M/0:=markdown_col;count:=cnt(*)@sort(count::desc::,0)",
+                        1,
+                        ["<strong>one</strong>"],
+                        1,
+                        done
+                    );
+                });
+
+                it ("should not add count column if it's hidden and not part of sortColumns.", function (done) {
+                    testEntityCounts(
+                        mainFacets[1].scalarValuesReference,
+                        "M:=faceting_schema:main/id=1/$M/0:=int_col,1:=id@sort(1::desc::)",
+                        1,
+                        ["11"],
+                        1,
+                        done
+                    );
+                });
+            });
         });
 
         describe("should be able to handle facets with long paths.", function () {
@@ -1518,6 +1660,20 @@ exports.execute = function (options) {
                     console.log(err);
                     done.fail();
                 });
+            });
+        });
+
+        describe("integration with other APIs, ", function () {
+
+            it ("changing facet should not remove the sort on the reference.", function () {
+                var refSorted = refMain.sort([{"column": "int_col", "descending": false}]);
+                var refSortedWithFilter = refSorted.facetColumns[10].addChoiceFilters(["1", "2"]);
+                expect(refSortedWithFilter.location.ermrestCompactPath).toBe(
+                    "M:=faceting_schema:main/id=1/$M/int_col::geq::-2/$M/left(fk_to_f1)=(faceting_schema:f1:id)/id=1;id=2/$M",
+                    "path missmatch."
+                );
+                expect(refSortedWithFilter.location.sortObject.length).toEqual(1, "sort length missmatch.");
+                expect(refSortedWithFilter.location.sortObject[0].column).toEqual("int_col", "sort column missmatch.");
             });
         });
     });

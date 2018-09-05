@@ -1226,10 +1226,7 @@
                     sortObject = this.display._rowOrder.map(function (ro) {
                         return {"column": ro.column.name, "descending": ro.descending};
                     });
-                    sortColNames = {};
-                    sortObject.forEach(function (so) {
-                        sortColNames[so.column.name] = true;
-                    });
+                    processSortObject(this);
                 }
 
                 // ermrest requires key columns to be in sort param for paging
@@ -1443,15 +1440,15 @@
          * @throws {@link ERMrest.InvalidInputError} if `sort` is invalid.
          */
         sort: function(sort) {
-
-            // make a Reference copy
-            var newReference = _referenceCopy(this);
-
             if (sort) {
                 verify((sort instanceof Array), "input should be an array");
                 verify(sort.every(module._isValidSortElement), "invalid arguments in array");
 
             }
+
+            // make a Reference copy
+            var newReference = _referenceCopy(this);
+
 
             newReference._location = this._location._clone();
             newReference._location.sortObject = sort;
@@ -1954,9 +1951,8 @@
                 if (annotation) {
 
                     // Set row_order value
-                    // columns defined in row_order can have column_order
-                    // This will take care of that and will return the actual columns that
-                    // we want sort to be based on.
+                    // this will just whatever is defined in row_order, it will not
+                    // take care of columns that have column_order. The caller should do that.
                     if (Array.isArray(annotation.row_order)) {
                         this._display._rowOrder = _processColumnOrderList(annotation.row_order, this._table);
                     }
@@ -3042,6 +3038,25 @@
         // referenceCopy must be defined before _clone can copy values from source to referenceCopy
         module._shallowCopy(referenceCopy, source);
 
+        /*
+         * NOTE In the following whenever I say "reference" I mean ERMrest.Reference. other references
+         * just mean actual reference to the memory.
+         * the "reference" copy is doing a shallow copy, so all the references in
+         * the object is going to stay in tact and still refer to the original object. Therefore, we should
+         * delete any property that can be generated later (has a getter), just to make sure it's not
+         * going to refer to the old "reference" attributes and has is it's own references.
+         *
+         *  TODO technically _referenceColumns should be deleted too, but deleting that caused chaise
+         *  to throw "Maximum call stack size exceeded". This is happening because in most cases
+         *  we're blindly using _referenceCopy, while the better approach would be creating a new "reference" by passing url and catalog.
+         */
+        delete referenceCopy._facetColumns;
+        delete referenceCopy._display;
+        delete referenceCopy._canCreate;
+        delete referenceCopy._canRead;
+        delete referenceCopy._canUpdate;
+        delete referenceCopy._canDelete;
+
         referenceCopy.contextualize = new Contextualize(referenceCopy);
         return referenceCopy;
     }
@@ -3842,6 +3857,7 @@
         get reference() {
 
             if (this._ref === undefined) {
+                // TODO this should be changed to create a new reference using its constructor
                 this._ref = _referenceCopy(this._pageRef);
 
                 var uri = this._pageRef._location.service + "/catalog/" + this._pageRef._location.catalog + "/" +
@@ -4213,6 +4229,51 @@
                 }
             }
             return this._uniqueId;
+        },
+
+        get citation() {
+            if (this._citation === undefined) {
+                var table = this._pageRef.table;
+                if (table.annotations.contains(module._annotations.CITATION)) {
+                    /**
+                     * citation specific properties include:
+                     *   - journal*
+                     *   - author
+                     *   - title
+                     *   - year*
+                     *   - url*
+                     *   - id
+                     * other properties:
+                     *   - template_engine
+                     */
+                    var citationAnno = table.annotations.get(module._annotations.CITATION).content;
+
+                    // if required fields are present, render each template and set that value on the citation object
+                    if (citationAnno.journal_pattern && citationAnno.year_pattern && citationAnno.url_pattern) {
+                        var options = {
+                            templateEngine: citationAnno.template_engine // if undefined, _renderTemplate defaults to Mustache
+                        };
+                        var keyValues = module._getFormattedKeyValues(table, this._pageRef._context, this._data, this._linkedData);
+
+                        this._citation = {};
+                        var self = this;
+                        // author, title, id set to null if not defined
+                        ["author", "title", "journal", "year", "url", "id"].forEach(function (key) {
+                            self._citation[key] = module._renderTemplate(citationAnno[key+"_pattern"], keyValues, table, null, options);
+                        });
+
+                        // if after processing the templates, any of the required fields are null, template is invalid
+                        if (!this._citation.journal || !this._citation.year || !this._citation.url) {
+                            this._citation = null;
+                        }
+                    } else {
+                        this._citation = null;
+                    }
+                } else {
+                    this._citation = null;
+                }
+            }
+            return this._citation;
         },
 
         /**

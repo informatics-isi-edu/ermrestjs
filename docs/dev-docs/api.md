@@ -10,6 +10,14 @@ to use for ERMrest JavaScript agents.</p>
 </dd>
 </dl>
 
+## Functions
+
+<dl>
+<dt><a href="#formatDate">formatDate()</a> ⇒</dt>
+<dd><p>{{formatDate value format}}</p>
+</dd>
+</dl>
+
 ## Typedefs
 
 <dl>
@@ -419,6 +427,8 @@ to use for ERMrest JavaScript agents.
         * [.sourceReference](#ERMrest.FacetColumn+sourceReference) : [<code>Reference</code>](#ERMrest.Reference)
         * [.displayname](#ERMrest.FacetColumn+displayname) : <code>object</code>
         * [.comment](#ERMrest.FacetColumn+comment) : <code>string</code>
+        * [.sortColumns](#ERMrest.FacetColumn+sortColumns) : <code>Array</code>
+        * [.scalarValuesReference](#ERMrest.FacetColumn+scalarValuesReference) : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)
         * [.hasNotNullFilter](#ERMrest.FacetColumn+hasNotNullFilter) : <code>Boolean</code>
         * [.searchFilters](#ERMrest.FacetColumn+searchFilters) : <code>Array.&lt;ERMREst.SearchFacetFilter&gt;</code>
         * [.choiceFilters](#ERMrest.FacetColumn+choiceFilters) : <code>Array.&lt;ERMREst.ChoiceFacetFilter&gt;</code>
@@ -458,8 +468,7 @@ to use for ERMrest JavaScript agents.
         * [.countDistinctAgg](#ERMrest.ColumnAggregateFn+countDistinctAgg) : <code>Object</code>
     * [.ColumnGroupAggregateFn](#ERMrest.ColumnGroupAggregateFn)
         * [new ColumnGroupAggregateFn(column)](#new_ERMrest.ColumnGroupAggregateFn_new)
-        * [.entityValues](#ERMrest.ColumnGroupAggregateFn+entityValues) : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)
-        * [.entityCounts](#ERMrest.ColumnGroupAggregateFn+entityCounts) : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)
+        * [.entityCounts()](#ERMrest.ColumnGroupAggregateFn+entityCounts) ⇒ [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)
         * [.histogram(bucketCount, min, max)](#ERMrest.ColumnGroupAggregateFn+histogram) ⇒ [<code>BucketAttributeGroupReference</code>](#ERMrest.BucketAttributeGroupReference)
     * [.AttributeGroupReference](#ERMrest.AttributeGroupReference)
         * [new AttributeGroupReference(keyColumns, aggregateColumns, location, catalog, context)](#new_ERMrest.AttributeGroupReference_new)
@@ -468,9 +477,11 @@ to use for ERMrest JavaScript agents.
         * [.aggregate](#ERMrest.AttributeGroupReference+aggregate) : [<code>ReferenceAggregateFn</code>](#ERMrest.ReferenceAggregateFn)
         * [.displayname](#ERMrest.AttributeGroupReference+displayname) : <code>object</code>
         * [.columns](#ERMrest.AttributeGroupReference+columns) : <code>Array.&lt;AttributeGroupColumn&gt;</code>
+        * [.shortestKey](#ERMrest.AttributeGroupReference+shortestKey) : <code>Array.&lt;ERMrest.AttributeGroupColumn&gt;</code>
         * [.uri](#ERMrest.AttributeGroupReference+uri) : <code>string</code>
         * [.ermrestPath](#ERMrest.AttributeGroupReference+ermrestPath) : <code>string</code>
         * [.read([limit], contextHeaderParams)](#ERMrest.AttributeGroupReference+read) ⇒ <code>ERMRest.AttributeGroupPage</code>
+        * [.getColumnByName(name)](#ERMrest.AttributeGroupReference+getColumnByName) ⇒ <code>ERMrest.AttributeGroupColumn</code>
     * [.AttributeGroupPage](#ERMrest.AttributeGroupPage)
         * [new AttributeGroupPage(reference, data, hasPrevious, hasNext)](#new_ERMrest.AttributeGroupPage_new)
         * [.reference](#ERMrest.AttributeGroupPage+reference) : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)
@@ -592,9 +603,11 @@ to use for ERMrest JavaScript agents.
         * [.aggregate](#ERMrest.AttributeGroupReference+aggregate) : [<code>ReferenceAggregateFn</code>](#ERMrest.ReferenceAggregateFn)
         * [.displayname](#ERMrest.AttributeGroupReference+displayname) : <code>object</code>
         * [.columns](#ERMrest.AttributeGroupReference+columns) : <code>Array.&lt;AttributeGroupColumn&gt;</code>
+        * [.shortestKey](#ERMrest.AttributeGroupReference+shortestKey) : <code>Array.&lt;ERMrest.AttributeGroupColumn&gt;</code>
         * [.uri](#ERMrest.AttributeGroupReference+uri) : <code>string</code>
         * [.ermrestPath](#ERMrest.AttributeGroupReference+ermrestPath) : <code>string</code>
         * [.read([limit], contextHeaderParams)](#ERMrest.AttributeGroupReference+read) ⇒ <code>ERMRest.AttributeGroupPage</code>
+        * [.getColumnByName(name)](#ERMrest.AttributeGroupReference+getColumnByName) ⇒ <code>ERMrest.AttributeGroupColumn</code>
     * [.AttributeGroupPage](#ERMrest.AttributeGroupPage) : <code>object</code>
         * [new AttributeGroupPage(reference, data, hasPrevious, hasNext)](#new_ERMrest.AttributeGroupPage_new)
         * [.reference](#ERMrest.AttributeGroupPage+reference) : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)
@@ -4019,6 +4032,8 @@ Indicates that this ReferenceColumn is an inbound foreign key.
     * [.sourceReference](#ERMrest.FacetColumn+sourceReference) : [<code>Reference</code>](#ERMrest.Reference)
     * [.displayname](#ERMrest.FacetColumn+displayname) : <code>object</code>
     * [.comment](#ERMrest.FacetColumn+comment) : <code>string</code>
+    * [.sortColumns](#ERMrest.FacetColumn+sortColumns) : <code>Array</code>
+    * [.scalarValuesReference](#ERMrest.FacetColumn+scalarValuesReference) : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)
     * [.hasNotNullFilter](#ERMrest.FacetColumn+hasNotNullFilter) : <code>Boolean</code>
     * [.searchFilters](#ERMrest.FacetColumn+searchFilters) : <code>Array.&lt;ERMREst.SearchFacetFilter&gt;</code>
     * [.choiceFilters](#ERMrest.FacetColumn+choiceFilters) : <code>Array.&lt;ERMREst.ChoiceFacetFilter&gt;</code>
@@ -4185,6 +4200,22 @@ Heuristics are as follows (first applicable rule):
 
 #### facetColumn.comment : <code>string</code>
 Could be used as tooltip to provide more information about the facetColumn
+
+**Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
+<a name="ERMrest.FacetColumn+sortColumns"></a>
+
+#### facetColumn.sortColumns : <code>Array</code>
+Returns the sortColumns when we're sorting this facet in scalar mode
+- uses row_order if defined.
+- otherwise it will be descending of num_occurrences and column order of base column.
+
+**Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
+<a name="ERMrest.FacetColumn+scalarValuesReference"></a>
+
+#### facetColumn.scalarValuesReference : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)
+An [AttributeGroupReference](#ERMrest.AttributeGroupReference) object that can be used to get
+the available scalar values of this facet. This will use the sortColumns, and hideNumOccurrences APIs.
+It will throw an error if it's used in entity-mode.
 
 **Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
 <a name="ERMrest.FacetColumn+hasNotNullFilter"></a>
@@ -4562,8 +4593,7 @@ distinct count aggregate representation
 
 * [.ColumnGroupAggregateFn](#ERMrest.ColumnGroupAggregateFn)
     * [new ColumnGroupAggregateFn(column)](#new_ERMrest.ColumnGroupAggregateFn_new)
-    * [.entityValues](#ERMrest.ColumnGroupAggregateFn+entityValues) : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)
-    * [.entityCounts](#ERMrest.ColumnGroupAggregateFn+entityCounts) : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)
+    * [.entityCounts()](#ERMrest.ColumnGroupAggregateFn+entityCounts) ⇒ [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)
     * [.histogram(bucketCount, min, max)](#ERMrest.ColumnGroupAggregateFn+histogram) ⇒ [<code>BucketAttributeGroupReference</code>](#ERMrest.BucketAttributeGroupReference)
 
 <a name="new_ERMrest.ColumnGroupAggregateFn_new"></a>
@@ -4580,22 +4610,15 @@ Usage:
 | --- | --- | --- |
 | column | [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn) | The column that is used for creating grouped aggregate |
 
-<a name="ERMrest.ColumnGroupAggregateFn+entityValues"></a>
-
-#### columnGroupAggregateFn.entityValues : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)
-Will return an appropriate reference which can be used to show distinct values of an entity
-NOTE: Will create a new reference by each call.
-
-**Kind**: instance property of [<code>ColumnGroupAggregateFn</code>](#ERMrest.ColumnGroupAggregateFn)  
 <a name="ERMrest.ColumnGroupAggregateFn+entityCounts"></a>
 
-#### columnGroupAggregateFn.entityCounts : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)
+#### columnGroupAggregateFn.entityCounts() ⇒ [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)
 Will return an appropriate reference which can be used to show distinct values and their counts
 The result is based on shortest key of the parent table. If we have join
 in the path, we are counting the shortest key of the parent table (not the end table).
 NOTE: Will create a new reference by each call.
 
-**Kind**: instance property of [<code>ColumnGroupAggregateFn</code>](#ERMrest.ColumnGroupAggregateFn)  
+**Kind**: instance method of [<code>ColumnGroupAggregateFn</code>](#ERMrest.ColumnGroupAggregateFn)  
 <a name="ERMrest.ColumnGroupAggregateFn+histogram"></a>
 
 #### columnGroupAggregateFn.histogram(bucketCount, min, max) ⇒ [<code>BucketAttributeGroupReference</code>](#ERMrest.BucketAttributeGroupReference)
@@ -4624,9 +4647,11 @@ parent table (not the end table).
     * [.aggregate](#ERMrest.AttributeGroupReference+aggregate) : [<code>ReferenceAggregateFn</code>](#ERMrest.ReferenceAggregateFn)
     * [.displayname](#ERMrest.AttributeGroupReference+displayname) : <code>object</code>
     * [.columns](#ERMrest.AttributeGroupReference+columns) : <code>Array.&lt;AttributeGroupColumn&gt;</code>
+    * [.shortestKey](#ERMrest.AttributeGroupReference+shortestKey) : <code>Array.&lt;ERMrest.AttributeGroupColumn&gt;</code>
     * [.uri](#ERMrest.AttributeGroupReference+uri) : <code>string</code>
     * [.ermrestPath](#ERMrest.AttributeGroupReference+ermrestPath) : <code>string</code>
     * [.read([limit], contextHeaderParams)](#ERMrest.AttributeGroupReference+read) ⇒ <code>ERMRest.AttributeGroupPage</code>
+    * [.getColumnByName(name)](#ERMrest.AttributeGroupReference+getColumnByName) ⇒ <code>ERMrest.AttributeGroupColumn</code>
 
 <a name="new_ERMrest.AttributeGroupReference_new"></a>
 
@@ -4681,6 +4706,12 @@ TODO not sure if this sis needed
 Visible columns
 
 **Kind**: instance property of [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)  
+<a name="ERMrest.AttributeGroupReference+shortestKey"></a>
+
+#### attributeGroupReference.shortestKey : <code>Array.&lt;ERMrest.AttributeGroupColumn&gt;</code>
+Returns the visible key columns
+
+**Kind**: instance property of [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)  
 <a name="ERMrest.AttributeGroupReference+uri"></a>
 
 #### attributeGroupReference.uri : <code>string</code>
@@ -4714,6 +4745,17 @@ NOTE:
 | --- | --- | --- |
 | [limit] | <code>int</code> |  |
 | contextHeaderParams | <code>Object</code> | the object that we want to log. |
+
+<a name="ERMrest.AttributeGroupReference+getColumnByName"></a>
+
+#### attributeGroupReference.getColumnByName(name) ⇒ <code>ERMrest.AttributeGroupColumn</code>
+Find a column in list of key and aggregate columns.
+
+**Kind**: instance method of [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| name | <code>string</code> | the column name |
 
 <a name="ERMrest.AttributeGroupPage"></a>
 
@@ -6076,9 +6118,11 @@ NOTE:
     * [.aggregate](#ERMrest.AttributeGroupReference+aggregate) : [<code>ReferenceAggregateFn</code>](#ERMrest.ReferenceAggregateFn)
     * [.displayname](#ERMrest.AttributeGroupReference+displayname) : <code>object</code>
     * [.columns](#ERMrest.AttributeGroupReference+columns) : <code>Array.&lt;AttributeGroupColumn&gt;</code>
+    * [.shortestKey](#ERMrest.AttributeGroupReference+shortestKey) : <code>Array.&lt;ERMrest.AttributeGroupColumn&gt;</code>
     * [.uri](#ERMrest.AttributeGroupReference+uri) : <code>string</code>
     * [.ermrestPath](#ERMrest.AttributeGroupReference+ermrestPath) : <code>string</code>
     * [.read([limit], contextHeaderParams)](#ERMrest.AttributeGroupReference+read) ⇒ <code>ERMRest.AttributeGroupPage</code>
+    * [.getColumnByName(name)](#ERMrest.AttributeGroupReference+getColumnByName) ⇒ <code>ERMrest.AttributeGroupColumn</code>
 
 <a name="new_ERMrest.AttributeGroupReference_new"></a>
 
@@ -6133,6 +6177,12 @@ TODO not sure if this sis needed
 Visible columns
 
 **Kind**: instance property of [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)  
+<a name="ERMrest.AttributeGroupReference+shortestKey"></a>
+
+#### attributeGroupReference.shortestKey : <code>Array.&lt;ERMrest.AttributeGroupColumn&gt;</code>
+Returns the visible key columns
+
+**Kind**: instance property of [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)  
 <a name="ERMrest.AttributeGroupReference+uri"></a>
 
 #### attributeGroupReference.uri : <code>string</code>
@@ -6166,6 +6216,17 @@ NOTE:
 | --- | --- | --- |
 | [limit] | <code>int</code> |  |
 | contextHeaderParams | <code>Object</code> | the object that we want to log. |
+
+<a name="ERMrest.AttributeGroupReference+getColumnByName"></a>
+
+#### attributeGroupReference.getColumnByName(name) ⇒ <code>ERMrest.AttributeGroupColumn</code>
+Find a column in list of key and aggregate columns.
+
+**Kind**: instance method of [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| name | <code>string</code> | the column name |
 
 <a name="ERMrest.AttributeGroupPage"></a>
 
@@ -6419,6 +6480,13 @@ ERMrest.resolve('https://example.org/catalog/42/entity/s:t/k=123').then(
 | uri | <code>string</code> | An ERMrest resource URI, such as `https://example.org/ermrest/catalog/1/entity/s:t/k=123`. |
 | [contextHeaderParams] | <code>Object</code> | An optional context header parameters object. The (key, value) pairs from the object are converted to URL `key=value` query parameters and appended to every request to the ERMrest service. |
 
+<a name="formatDate"></a>
+
+## formatDate() ⇒
+{{formatDate value format}}
+
+**Kind**: global function  
+**Returns**: formatted string of `value` with corresponding `format`  
 <a name="appLinkFn"></a>
 
 ## appLinkFn : <code>function</code>

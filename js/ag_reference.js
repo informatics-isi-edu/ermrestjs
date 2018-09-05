@@ -43,6 +43,8 @@ function AttributeGroupReference(keyColumns, aggregateColumns, location, catalog
      */
     this._aggregateColumns = aggregateColumns;
 
+    this._allColumns = keyColumns.concat(aggregateColumns);
+
     this.location = location;
 
     this._server = catalog.server;
@@ -54,7 +56,19 @@ function AttributeGroupReference(keyColumns, aggregateColumns, location, catalog
      */
     this.aggregate = new AttributeGroupReferenceAggregateFn(this);
 
-    this._context = context;
+    // column objects are created before the refernece.
+    // This makes sure that the columns are used in the context that reference is
+    // NOTE this is mutating the columns that are passed to it. Columns should not
+    // be shared between references with different contexts
+    if (typeof context === "string") {
+        this._context = context;
+        this._allColumns.forEach(function (c) {
+            c._setContext(context);
+        });
+    }
+
+    // this will force calling the uri api and therefore verifies the modifiers and location.
+    var uri = this.uri;
 }
 AttributeGroupReference.prototype = {
 
@@ -80,7 +94,7 @@ AttributeGroupReference.prototype = {
             this._columns = [];
 
             var addCol = function (col) {
-                if (col._visible) {
+                if (col.visible) {
                     self._columns.push(col);
                 }
             };
@@ -92,8 +106,14 @@ AttributeGroupReference.prototype = {
         return this._columns;
     },
 
+    /**
+     * Returns the visible key columns
+     * @type {ERMrest.AttributeGroupColumn[]}
+     */
     get shortestKey() {
-        return this._keyColumns;
+        return this._keyColumns.filter(function (kc) {
+            return kc.visible;
+        });
     },
 
     /**
@@ -164,7 +184,18 @@ AttributeGroupReference.prototype = {
       */
      get ermrestPath () {
          if (this._ermrestPath === undefined) {
-             var loc = this.location;
+             var loc = this.location, self = this;
+
+             // given an array of columns, return col1,col2,col3
+             var colString = function (colArray) {
+                 return colArray.map(function (col) {
+                     return col.toString();
+                 }).join(",");
+             };
+
+             var keyColumns = self._keyColumns.map(function (col) {
+                 return col.toString();
+             });
 
              // generate the url
              var uri = loc.path;
@@ -175,25 +206,36 @@ AttributeGroupReference.prototype = {
 
              uri += "/";
 
-             // given an array of columns, return col1,col2,col3
-             var colString = function (colArray) {
-                 return colArray.map(function (col) {
-                     return col.toString();
-                 }).join(",");
-             };
+             // make sure page object and sort are compatible
+             if ((loc.afterObject && loc.afterObject.length !== self.ermrestSortObject.length) ||
+                (loc.beforeObject && loc.beforeObject.length !== self.ermrestSortObject.length)) {
+                 throw new module.MalformedURIError("The given page options are not compatible with sort criteria (Attributegroup Reference).");
+             }
 
-             // add group columns
-             uri += colString(this._keyColumns);
+             // add extra sort columns to the key
+             self.ermrestSortObject.forEach(function (so) {
+                 // if the column doesn't exist, add it
+                 var k = self._allColumns.filter(function (col) {
+                     return col.name == so.column;
+                 })[0];
 
+                 if (k) return;
+
+                 keyColumns.push(
+                     module._fixedEncodeURIComponent(so.column) + ":=" + module._fixedEncodeURIComponent(so.term)
+                 );
+             });
+
+             uri += keyColumns.join(",");
 
              // add aggregate columns
-             if (this._aggregateColumns.length !== 0) {
-                 uri += ";" + colString(this._aggregateColumns);
+             if (self._aggregateColumns.length !== 0) {
+                 uri += ";" + colString(self._aggregateColumns);
              }
 
              // add sort
-             if (loc.sort && loc.sort.length > 0) {
-                 uri += loc.sort;
+             if (self.ermrestSortObject.length > 0) {
+                 uri += _getSortModifier(self.ermrestSortObject);
              }
 
              // add page
@@ -201,9 +243,80 @@ AttributeGroupReference.prototype = {
                  uri += loc.paging;
              }
 
-             this._ermrestPath = uri;
+             self._ermrestPath = uri;
          }
          return this._ermrestPath;
+     },
+
+     get ermrestSortObject() {
+         if (this._ermrestSortObject === undefined) {
+             var self = this, loc = this.location;
+
+             self._ermrestSortObject = [];
+             if (Array.isArray(loc.sortObject)) {
+                 // given a column name, tries to find it in the list of column (by term),
+                 // if not found, it will add it by appending a alias to it.
+                 // It will also return the used alias.
+                 var alias = 0;
+                 var allColumnNames = self._allColumns.map(function (col) {
+                     return col.name;
+                 });
+                 var getAlias = function (colName) {
+                     var col = self._allColumns.filter(function (c) {
+                         return decodeURIComponent(c.term) === colName;
+                     })[0];
+
+                     // column is not in the list of defined columns, we should add it
+                     if (col === undefined) {
+                        while (allColumnNames.indexOf(alias.toString()) !== -1) {
+                            ++alias;
+                        }
+                        return (alias++).toString();
+                     }
+                     return col.name;
+                 };
+
+                 var col, sortColNames = {}, addedCols = {}, desc, name;
+                 loc.sortObject.forEach(function (so) {
+
+                     // find the oclumn
+                     try {
+                         col = self.getColumnByName(so.column);
+                     } catch(e) {
+                         throw new module.MalformedURIError("The sort criteria is invalid. Column `" + so.column +"` was not found (Attributegroup Reference).");
+                     }
+
+                     // don't add duplciates
+                     if (col.name in sortColNames) return;
+                     sortColNames[col.name] = true;
+
+                     // make sure column is sortable
+                     if(!col.sortable) {
+                         throw new module.MalformedURIError("column '" + col.name + "' is not sortable (Attributegroup)");
+                     }
+
+                     // go through list of sort columns and add them to the key
+                     col._sortColumns.forEach(function (sc) {
+                         if (sc.column in addedCols) return;
+                         addedCols[sc.column] = true;
+
+                         // add to key columns if needed (won't add duplicates)
+                         name = getAlias(sc.column);
+
+                         desc = (so.descending === true);
+                         if (sc.descending) desc = !desc;
+
+                         // add to sort criteria
+                         self._ermrestSortObject.push({
+                             column: name,
+                             descending: desc,
+                             term: sc.column
+                         });
+                     });
+                 });
+             }
+         }
+         return this._ermrestSortObject;
      },
 
     /**
@@ -371,7 +484,30 @@ AttributeGroupReference.prototype = {
         });
 
         return defer.promise;
-    }
+    },
+
+    /**
+     * Find a column in list of key and aggregate columns.
+     * @param  {string} name the column name
+     * @return {ERMrest.AttributeGroupColumn}
+     */
+    getColumnByName: function (name) {
+
+        var findCol = function (list) {
+            for (i = 0; i < list.length; i++) {
+                if (list[i].name === name) {
+                    return list[i];
+                }
+            }
+            return false;
+        };
+
+        var c = findCol(this._allColumns);
+        if (c) {
+            return c;
+        }
+        throw new module.NotFoundError("", "Column " + name + " not found.");
+    },
 };
 
 
@@ -462,21 +598,10 @@ AttributeGroupPage.prototype = {
      * @type {ERMrest.AttributeGroupReference|null}
      */
     get next() {
-        if (!this.hasNext) {
-            return null;
+        if (this.hasNext) {
+            return this._getSiblingReference(true);
         }
-
-        var self = this;
-        var currRef = this.reference;
-        var rows = [];
-
-        currRef.location.sortObject.forEach(function (so) {
-            // assumes that sortObject columns are valid
-            rows.push(self._data[self._data.length-1][so.column]);
-        });
-
-        var newLocation = currRef.location.changePage(rows, null);
-        return new AttributeGroupReference(currRef._keyColumns, currRef._aggregateColumns, newLocation, self.reference._catalog, self.reference._context);
+        return null;
     },
 
     /**
@@ -494,20 +619,44 @@ AttributeGroupPage.prototype = {
      * @type {ERMrest.AttributeGroupReference|null}
      */
     get previous() {
-        if (!this.hasPrevious) {
-            return null;
+        if (this.hasPrevious) {
+            return this._getSiblingReference(false);
         }
+        return null;
+    },
 
+    // return a reference to the next or previous page.
+    _getSiblingReference: function (next) {
         var self = this;
         var currRef = this.reference;
         var rows = [];
 
-        currRef.location.sortObject.forEach(function (so) {
-            // assumes that sortObject columns are valid
-            rows.push(self._data[0][so.column]);
-        });
+        if (!Array.isArray(currRef.ermrestSortObject) || currRef.ermrestSortObject === 0) {
+            return null;
+        }
 
-        var newLocation = currRef.location.changePage(null, rows);
+        if (!self._data || self._data.length === 0) {
+            return null;
+        }
+
+        var rowIndex = next ? self._data.length-1 : 0;
+
+        var pageValues = [], data = self._data[rowIndex], name;
+        for (var i = 0; i < currRef.ermrestSortObject.length; i++) {
+            name = currRef.ermrestSortObject[i].column;
+            pageValues.push(data[name]);
+        }
+
+        if (pageValues === null) {
+            return null;
+        }
+
+        var newLocation;
+        if (next) {
+            newLocation = currRef.location.changePage(pageValues, null);
+        } else {
+            newLocation = currRef.location.changePage(null, pageValues);
+        }
         return new AttributeGroupReference(currRef._keyColumns, currRef._aggregateColumns, newLocation, self.reference._catalog, self.reference._context);
     }
 };
@@ -645,6 +794,12 @@ AttributeGroupTuple.prototype = {
 /**
  * Constructor for creating a column for creating a {@link ERMrest.AttributeGroupReference}
  *
+ * NOTE If you're passing baseColumn, we're assuming that the location path is ending
+ * in the table that this column belongs too. This assumption exists for sort logic.
+ * This because we're looking at the column_order of the baseColumn and we're appending
+ * them to the key columns. Now if that column is not in the table, this will not work.
+ * If that is not the case, you need to disable the sort.
+ *
  * @param       {string} alias the alias that we want to use. If alias exist we will use the alias=term for creating url.
  * @param       {string} term  the term string, e.g., cnt(*) or col1.
  * @param       {ERMrest.Column} baseColumn the database column that this is based on
@@ -715,17 +870,16 @@ function AttributeGroupColumn(alias, term, baseColumn, displayname, colType, com
      */
     this.comment = comment;
 
-    /**
-     * [sortable description]
-     * @type {boolean}
-     */
-    this.sortable = sortable; // sort only based on current column, what about sort basesd on other columns?
+    if (sortable === false) {
+        this._sortable = false;
+        this._sortColumns_cached = [];
+    }
 
     /**
      * We should have a concept of visible columns, this was the easiest way of implementing it to me.
      * @type {boolean}
      */
-    this._visible = visible;
+    this.visible = visible;
 }
 AttributeGroupColumn.prototype = {
     constructor: AttributeGroupColumn,
@@ -745,10 +899,14 @@ AttributeGroupColumn.prototype = {
      * @type {string}
      */
     get name() {
-        if (typeof this._alias === "string" && this._alias.length !== 0) {
-            return this._alias;
+        if (this._name === undefined) {
+            if (typeof this._alias === "string" && this._alias.length !== 0) {
+                this._name = this._alias;
+            } else {
+                this._name = decodeURIComponent(this.term);
+            }
         }
-        return decodeURIComponent(this.term);
+        return this._name;
     },
 
     get displayname() {
@@ -784,6 +942,63 @@ AttributeGroupColumn.prototype = {
             return {isHTML: true, value: module._formatUtils.printMarkdown(formattedValue, { inline: true }), unformatted: formattedValue};
         }
         return {isHTML: false, value: formattedValue, unformatted: formattedValue};
+    },
+
+    /**
+     * @desc An array of objects that have `column` which is column name (this is different from other sortColumns),
+     * and `descending` which is true/fals. The `descending` boolean indicates whether we should change the direction of sort or not.
+     * The column name is going to be database column names (equivalent to this.term)
+     *
+     * - if sortable passed as false, it will be empty.
+     * - if baseColumn exists, it will return the column order of baseColumn
+     * - otherwise the current column
+     * @type {Object[]}
+     */
+    get _sortColumns() {
+        if (this._sortColumns_cached === undefined) {
+            this._determineSortable();
+        }
+        return this._sortColumns_cached;
+    },
+
+    /**
+     * whether the column can be sorted or not
+     * - if sortable passed as false, it will be false
+     * - if baseColumn exists, it will return the column order of baseColumn
+     * - otherwise it will be true
+     * @type {boolean}
+     */
+    get sortable() {
+        if (this._sortable === undefined) {
+            this._determineSortable();
+        }
+        return this._sortable;
+    },
+
+    _determineSortable: function () {
+        this._sortColumns_cached = [{column: decodeURIComponent(this.term), descending: false}];
+        this._sortable = true;
+
+        if (!this.baseColumn) return;
+
+        var baseSortCols = this.baseColumn._getSortColumns(this._context);
+        if (typeof baseSortCols === 'undefined') {
+            this._sortColumns_cached = [];
+            this._sortable = false;
+            return;
+        }
+
+        this._sortColumns_cached = baseSortCols.map(function (ro) {
+            return {"column": ro.column.name, "descending": ro.descending};
+        });
+    },
+
+    /**
+     * @private
+     * sets the context of column
+     */
+    _setContext: function (context) {
+        this._context = context;
     }
 };
 
@@ -851,20 +1066,12 @@ function AttributeGroupLocation(service, catalog, path, searchObject, sortObject
     }
 
     /**
-     * The sort object. It will be an array of object with the following format:
-     * {"column": columnname, "descending": true|false}
-     * @private
-     * @type {?Object[]}
-     */
+    * The sort object. It will be an array of object with the following format:
+    * {"column": columnname, "descending": true|false}
+    * @private
+    * @type {?Object[]}
+    */
     this.sortObject = sortObject;
-
-    if (isObjectAndNotNull(this.sortObject)) {
-        /**
-         * The sort midifer string for creating the uri.
-         * @type {?string}
-         */
-        this.sort = _getSortModifier(this.sortObject);
-    }
 
     /**
      * Represents the paging. It will be an array of values.
@@ -1009,7 +1216,7 @@ function BucketAttributeGroupReference(baseColumn, baseRef, min, max, numberOfBu
     }
 
     var aggregateColumns = [
-        new AttributeGroupColumn("c2", countName, null, "Number of Occurences", new Type({typename: "int"}), "", true, true)
+        new AttributeGroupColumn("c2", countName, null, "Number of Occurrences", new Type({typename: "int"}), "", true, true)
     ];
 
     // call the parent constructor
