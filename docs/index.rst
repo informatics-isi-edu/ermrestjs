@@ -1,5 +1,5 @@
 JavaScript Client Libraries (ERMrestJS)
-=========
+========================================
 
 .. toctree::
    :maxdepth: 4
