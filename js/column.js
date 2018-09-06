@@ -606,9 +606,14 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
         // print the array in a comma seperated value (list) or bullets
         var res = "";
         switch (self.sourceObject.array_display) {
-            case "list":
+            case "ulist":
                 arrayRes.forEach(function (arrayVal) {
                     res += "* " + arrayVal + " \n";
+                });
+                break;
+            case "olist":
+                arrayRes.forEach(function (arrayVal, i) {
+                    res += (i+1) + ". " + arrayVal + " \n";
                 });
                 break;
             default: //csv
