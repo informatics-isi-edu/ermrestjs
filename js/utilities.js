@@ -1694,6 +1694,7 @@
          * @param  {Array} value the array of values
          * @param  {Object} options Configuration options. Accepted parameters:
          * - `isMarkdown`: if this is true, we will not esacpe markdown characters
+         * - `returnArray`: if this is true, it will return an array of strings.
          * @return {string} A string represntation of array.
          * @desc
          * Will generate a comma seperated value for an array. It will also change `null` and `""`
@@ -1707,7 +1708,7 @@
                 return '';
             }
 
-            return value.map(function (v) {
+            var arr = value.map(function (v) {
                 var isMarkdown = (options.isMarkdown === true);
                 var pv = v;
                 if (v === "") {
@@ -1721,7 +1722,10 @@
 
                 if (!isMarkdown) pv = module._escapeMarkdownCharacters(pv);
                 return pv;
-            }).join(", ");
+            });
+
+            if (options.returnArray) return arr;
+            return arr.join(", ");
         }
     };
 
@@ -3109,7 +3113,8 @@
         return module._facetFilterTypes[k];
     });
 
-    module._pseudoColAggregateFns = ["min", "max", "cnt", "cnt_d", "array"];
+    module._pseudoColAggregateFns = ["min", "max", "cnt", "cnt_d", "array", "array_d"];
+    module._pseudoColEntityAggregateFns = ["array", "array_d"];
     module._pseudoColAggregateNames = ["Min", "Max", "#", "#", ""];
     module._pseudoColAggregateExplicitName = ["Minimum", "Maximum", "Number of", "Number of distinct", "List of"];
 

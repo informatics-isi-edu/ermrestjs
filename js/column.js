@@ -520,6 +520,8 @@ PseudoColumn.prototype.formatPresentation = function(data, context, options) {
  * @return {Promise}
  */
 PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams) {
+    var URL_LENGTH_LIMIT = 2048;
+
     var defer = module._q.defer(),
         self = this,
         promises = [], values = [],
@@ -527,6 +529,7 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
         location = this._baseReference.location,
         http = this._baseReference._server._http,
         column = this._baseCols[0],
+        printUtils = module._formatUtils,
         keyColName, keyColNameEncoded,
         baseUri, uri, i, fk, str, projection;
 
@@ -548,7 +551,77 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
         headers: self.reference._generateContextHeader(contextHeaderParams, page.tuples.length)
     };
 
-    var URL_LENGTH_LIMIT = 2048;
+    var currTable = "T";
+    var baseTable = self.hasPath ? "M": currTable;
+
+    // this will dictates whether we should show rowname or not
+    var isRow = self.isEntityMode && module._pseudoColEntityAggregateFns.indexOf(self.sourceObject.aggregate) != -1;
+
+    // creates http request with the current uri
+    var addPromise = function () {
+        if (uri.charAt(uri.length-1) === ";") {
+            uri = uri.slice(0, -1);
+        }
+        promises.push(http.get(uri + projection, config));
+    };
+
+    // will format a single value
+    var getFormattedValue = function (val) {
+        if (isRow) {
+            var pres = module._generateRowPresentation(self._key, val, self._context);
+            return pres ? pres.unformatted : null;
+        }
+        if (val == null || val === "") {
+            return val;
+        }
+        return column.formatvalue(val, self._context);
+    };
+
+    // it will sort the array values and then format them.
+    var getArrayValue = function (val) {
+
+        // try to sort the values
+        try {
+            val.sort(function (a, b) {
+                // if isRow, a and b will be objects
+                if (isRow) {
+                    return a[column.name].localeCompare(b[column.name]);
+                }
+                return a.localeCompare(b);
+            });
+        } catch(e) {
+            // if sort threw any erros, we just leave it as is
+        }
+
+
+        // get the formatted values as an array
+        var arrayRes = printUtils.printArray(
+            val.map(getFormattedValue),
+            {
+                isMarkdown: (column.type.name === "markdown") || isRow,
+                returnArray: true
+            }
+        );
+
+        // print the array in a comma seperated value (list) or bullets
+        var res = "";
+        switch (self.sourceObject.array_display) {
+            case "ulist":
+                arrayRes.forEach(function (arrayVal) {
+                    res += "* " + arrayVal + " \n";
+                });
+                break;
+            case "olist":
+                arrayRes.forEach(function (arrayVal, i) {
+                    res += (i+1) + ". " + arrayVal + " \n";
+                });
+                break;
+            default: //csv
+                res = arrayRes.join(", ");
+        }
+        return printUtils.printMarkdown(res);
+    };
+
 
     // return empty list if page is empty
     if (page.tuples.length === 0) {
@@ -565,19 +638,12 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
 
     keyColName = mainTable.shortestKey[0].name;
     keyColNameEncoded = module._fixedEncodeURIComponent(mainTable.shortestKey[0].name);
-
-    // generate the base url in the following format:
-    // service/T:=pseudoColTable/path-from-pseudo-col-to-current/filters/project
-    var currTable = "T";
-    var baseTable = self.hasPath ? "M": currTable;
-
-    // this will dictates whether we should show rowname or not
-    var isRow = self.isEntityMode && self.sourceObject.aggregate === "array";
-
     projection = "/c:=:" + baseTable + ":" + keyColNameEncoded +
                  ";v:=" + self.sourceObject.aggregate +
                  "(" + currTable + ":" + (isRow ? "*" : module._fixedEncodeURIComponent(column.name)) + ")";
 
+     // generate the base url in the following format:
+     // service/T:=pseudoColTable/path-from-pseudo-col-to-current/filters/project
     baseUri =  [
         location.service, "catalog", location.catalog, "attributegroup",
         currTable + ":=" + module._fixedEncodeURIComponent(self.table.schema.name) + ":" +module._fixedEncodeURIComponent(self.table.name)
@@ -596,14 +662,6 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
         defer.resolve(values);
         return defer.promise;
     }
-
-    // creates http request with the current uri
-    var addPromise = function () {
-        if (uri.charAt(uri.length-1) === ";") {
-            uri = uri.slice(0, -1);
-        }
-        promises.push(http.get(uri + projection, config));
-    };
 
     // create the request urls
     uri = baseUri;
@@ -633,21 +691,9 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
         return defer.promise;
     }
 
-    var getFormattedValue = function (val) {
-        if (isRow) {
-            var pres = module._generateRowPresentation(self._key, val, self._context);
-            return pres ? pres.unformatted : null;
-        }
-        if (val == null || val === "") {
-            return val;
-        }
-        return column.formatvalue(val, self._context);
-    };
-
     module._q.all(promises).then(function (response) {
         var values = [],
             result = [],
-            printUtils = module._formatUtils,
             value, res, isHTML;
 
         response.forEach(function (r) {
@@ -661,39 +707,27 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
                 return v.c == t.data[keyColName];
             });
 
-            // format the value
-            res = ""; isHTML = false;
-            if (value && value.v) {
-                if (["cnt", "cnt_d"].indexOf(self.sourceObject.aggregate) !== -1) {
-                    res = module._formatUtils.printInteger(value.v);
-                } else {
-                    if (self.sourceObject.aggregate === "array"){
-                        try {
-                            value.v.sort(function (a, b) {
-                                // if isRow, a and b will be objects
-                                if (isRow) {
-                                    return a[column.name].localeCompare(b[column.name]);
-                                }
-                                return a.localeCompare(b);
-                            });
-                        } catch(e) {
-                            // if sort threw any erros, we just leave it as is
-                        }
+            // if given page is not valid (the key doesn't exist)
+            if (!value || !value.v){
+                return {isHTML: false, value: ""};
+            }
 
-                        isHTML = true;
-                        res = printUtils.printArray(
-                            value.v.map(getFormattedValue),
-                            { isMarkdown: (column.type.name === "markdown") || isRow }
-                        );
-                    } else {
-                        isHTML = (column.type.name === "markdown");
-                        res = getFormattedValue(value.v);
-                    }
+            // cnt and cnt_d are special since they will generate integer always
+            if (["cnt", "cnt_d"].indexOf(self.sourceObject.aggregate) !== -1) {
+                result.push({value: module._formatUtils.printInteger(value.v), isHTML: false});
+                return;
+            }
 
-                    if (isHTML) {
-                        res = printUtils.printMarkdown(res);
-                    }
-                }
+            // array formatting is different
+            if (self.sourceObject.aggregate.indexOf("array") === 0){
+                result.push({value: getArrayValue(value.v), isHTML: true});
+                return;
+            }
+
+            var isHTML = (column.type.name === "markdown");
+            var res = getFormattedValue(value.v);
+            if (isHTML) {
+                res = printUtils.printMarkdown(res);
             }
             result.push({isHTML: isHTML, value: res});
         });

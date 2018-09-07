@@ -19,9 +19,11 @@
  * 14: col - max (PseudoColumn)
  * 15: same as 8 with `array` in non entity mode
  * 16: same as 8 with `array` in entity mode
- * 17: inbound for testing long aggregate request (PseudoColumn)
- * 18: asset (AssetPseudoColumn)
- * 19: asset_filename (ReferenceColumn)
+ * 17: same as 8 with `array_d` in entity with array_display ulist
+ * 18: same as 8 with `array_d` in entity with array_display olist
+ * 19: inbound for testing long aggregate request (PseudoColumn)
+ * 20: asset (AssetPseudoColumn)
+ * 21: asset_filename (ReferenceColumn)
  *
  * Only the followin indeces are PseudoColumn:
  * 4 (outbound len 1, scalar)
@@ -118,18 +120,19 @@ exports.execute = function (options) {
              'GUABhSm2h_kaHHPGkzYWeA', 'gNTPCP0bGB0GRwFKEATipw', 'nGwW9Kpx5sLf8cpX-24WNQ',
              '0utuimdZvz8kTU4GI7tzWw', 'PEQDZ38621T5Y9J3P2Te2Q', 'plpeoINYqVjmca9rYYtFuw',
              'OpHtewN91L9_3b1Vq-jkOg', 'LHC_G9Tm_jYXQXyNNrZIGA', 'H3B-cJhnO5kI08bThBIMxw',
-             'ZJll4WjE6eMk_g5e9WE1rg', 'MJVZnQ5mBRdCFPfjIOMvkA', "asset", "asset_filename"
+             'ZJll4WjE6eMk_g5e9WE1rg', 'GFBydDhuUocHxUlF894ntQ', 'vd-zzWca-ApLn2yvu7fx1w',
+             'MJVZnQ5mBRdCFPfjIOMvkA', "asset", "asset_filename"
         ];
 
         var detailedPseudoColumnIndices = [
-            4, 5, 6, 9, 11,12, 13, 14, 15, 16, 17
+            4, 5, 6, 9, 11,12, 13, 14, 15, 16, 17, 18, 19
         ];
 
         var detailedColumnTypes = [
             "", "", "isKey", "isForeignKey", "isPathColumn", "isPathColumn",
             "isPathColumn", "isInboundForeignKey", "isInboundForeignKey", "isPathColumn",
             "isInboundForeignKey", "isPathColumn", "isPathColumn", "isPathColumn", "isPathColumn",
-            "isPathColumn", "isPathColumn", "isPathColumn", "isAsset", ""
+            "isPathColumn", "isPathColumn", "isPathColumn", "isPathColumn", "isPathColumn", "isAsset", ""
         ];
 
         var mainRef, mainRefDetailed, invalidRef, mainRefEntry,
@@ -156,7 +159,7 @@ exports.execute = function (options) {
                 '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:main/main_table_id_col=01">01</a>',
                 '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:outbound_1/RID=' + findRID('outbound_1', 'id','01') + '">01</a>',
                 '<p>01: 10</p>\n', '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:outbound_1_outbound_1/RID=' + findRID('outbound_1_outbound_1', 'id', '01') + '">01</a>',
-                '01', '', '', '', '', '', '', '', '', '', '', '', '', ''
+                '01', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''
             ];
         });
 
@@ -235,7 +238,7 @@ exports.execute = function (options) {
             });
 
             it ("should create the correct columns for valid list of sources.", function () {
-                expect(mainRefDetailed.columns.length).toBe(20, "length missmatch");
+                expect(mainRefDetailed.columns.length).toBe(22, "length missmatch");
                 checkReferenceColumns([{
                     "ref": mainRefDetailed,
                     "expected": [
@@ -274,6 +277,16 @@ exports.execute = function (options) {
                         ],
                         [{"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]}, "id"],
                         "col",
+                        [
+                            {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
+                            {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
+                            "id"
+                        ],
+                        [
+                            {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
+                            {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
+                            "id"
+                        ],
                         [
                             {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
                             {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
@@ -451,7 +464,7 @@ exports.execute = function (options) {
                         "3": "main fk cm",
                         "7": "inbound cm",
                         "8": "association table cm",
-                        "18": "asset cm"
+                        "20": "asset cm"
                     };
 
                     for (var i in expectedComments) {
@@ -466,7 +479,7 @@ exports.execute = function (options) {
                         "3": "main fk",
                         "7": "inbound",
                         "8": "<strong>association table</strong>",
-                        "18": "<strong>asset</strong>"
+                        "20": "<strong>asset</strong>"
                     };
 
                     for (var i in expectedComments) {
@@ -552,7 +565,7 @@ exports.execute = function (options) {
                 it ("if `markdown_name` is defined, should use it.", function () {
                     checkDisplayname(detailedColsWTuple[6], "<strong>Outbound Len 2</strong>", true, "for index=6");
 
-                    checkDisplayname(detailedColsWTuple[17], "<strong>Count Agg</strong>", true, "for index=15");
+                    checkDisplayname(detailedColsWTuple[19], "<strong>Count Agg</strong>", true, "for index=15");
                 });
 
                 describe("if it has aggreagte.", function () {
@@ -578,7 +591,7 @@ exports.execute = function (options) {
             describe("comment, ", function () {
                 it ('if `comment` is defined, should use it.', function () {
                     expect(detailedColsWTuple[6].comment).toBe("outbound len 2 cm", "missmatch for index=6");
-                    expect(detailedColsWTuple[17].comment).toBe("has long values", "missmatch for index=6");
+                    expect(detailedColsWTuple[19].comment).toBe("has long values", "missmatch for index=6");
                 });
 
                 it ("if it has aggregate, should append the aggregate function to the column comment.", function () {
@@ -609,7 +622,7 @@ exports.execute = function (options) {
                         'inbound_1', 'inbound_2', 'inbound_2_outbound_1',
                         'main_inbound_2_association', 'inbound_2',
                         'inbound_2_outbound_1', 'main_inbound_2_association',
-                        'main', 'inbound_2', 'inbound_2',
+                        'main', 'inbound_2', 'inbound_2', 'inbound_2', 'inbound_2',
                         'inbound 4 long table name', 'main', 'main'
                     ]);
                 });
@@ -675,6 +688,17 @@ exports.execute = function (options) {
             });
 
             describe("getAggregatedValue, ", function () {
+                var testGetAggregatedValue = function (index, value, isHTML, done) {
+                    detailedColsWTuple[index].getAggregatedValue(mainPage).then(function (val) {
+                        expect(val.length).toBe(1, "length missmatch.");
+                        expect(val[0].value).toEqual(value, "value missmatch.");
+                        expect(val[0].isHTML).toBe(isHTML, "isHTML missmatch.");
+                        done();
+                    }).catch(function (err) {
+                        done.fail(err);
+                    });
+                };
+
                 it ("should throw an error if column doesn't have aggregate.", function (done) {
                     detailedColsWTuple[9].getAggregatedValue(mainPage).then(function () {
                         done.fail("expected function to throw error");
@@ -713,48 +737,53 @@ exports.execute = function (options) {
                 });
 
                 it ("should handle aggregate from the same table.", function (done) {
-                    detailedColsWTuple[14].getAggregatedValue(mainPage).then(function (val) {
-                        expect(val.length).toBe(1, "length missmatch.");
-                        expect(val[0].value).toEqual("col val 01");
-                        done();
-                    }).catch(function (e) {
-                        console.log(e);
-                        done.fail();
-                    });
-                });
-
-                it ("should handle array aggregate in scalar mode.", function (done) {
-                    detailedColsWTuple[15].getAggregatedValue(mainPage).then(function (val) {
-                        expect(val.length).toBe(1, "length missmatch.");
-                        expect(val[0].value).toEqual('<p>01, 02, 03, 04, 05</p>\n', "value missmatch.");
-                        expect(val[0].isHTML).toBe(true, "isHTML missmatch.");
-                        done();
-                    }).catch(function (e) {
-                        done.fail(e);
-                    });
+                    testGetAggregatedValue(14, "col val 01", false, done);
                 });
 
                 it ("should handle array aggregate in entity mode.", function (done) {
-                    detailedColsWTuple[16].getAggregatedValue(mainPage).then(function (val) {
-                        expect(val.length).toBe(1, "length missmatch.");
+                    var value = [
+                        '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:inbound_2/RID=' + findRID("inbound_2","id","01") + '">01 with inbound_2 col 01</a>',
+                        '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:inbound_2/RID=' + findRID("inbound_2","id","02") + '">02 with inbound_2 col 02</a>',
+                        '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:inbound_2/RID=' + findRID("inbound_2","id","03") + '">03 with inbound_2 col 03</a>',
+                        '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:inbound_2/RID=' + findRID("inbound_2","id","04") + '">04 with inbound_2 col 04</a>',
+                        '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:inbound_2/RID=' + findRID("inbound_2","id","05") + '">05 with inbound_2 col 05</a>'
+                    ];
+                    value = "<p>" + value.join(", ") + "</p>\n";
+
+                    testGetAggregatedValue(16, value, true, done);
+                });
+
+                describe('should honor the given array_display, ', function () {
+                    it ("ulist should return an unordered list.", function (done) {
                         var value = [
-                            '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:inbound_2/RID=' + findRID("inbound_2","id","01") + '">01 with inbound_2 col 01</a>',
-                            '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:inbound_2/RID=' + findRID("inbound_2","id","02") + '">02 with inbound_2 col 02</a>',
-                            '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:inbound_2/RID=' + findRID("inbound_2","id","03") + '">03 with inbound_2 col 03</a>',
-                            '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:inbound_2/RID=' + findRID("inbound_2","id","04") + '">04 with inbound_2 col 04</a>',
-                            '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:inbound_2/RID=' + findRID("inbound_2","id","05") + '">05 with inbound_2 col 05</a>'
+                            '<li><a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:inbound_2/RID=' + findRID("inbound_2","id","01") + '">01 with inbound_2 col 01</a></li>',
+                            '<li><a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:inbound_2/RID=' + findRID("inbound_2","id","02") + '">02 with inbound_2 col 02</a></li>',
+                            '<li><a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:inbound_2/RID=' + findRID("inbound_2","id","03") + '">03 with inbound_2 col 03</a></li>',
+                            '<li><a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:inbound_2/RID=' + findRID("inbound_2","id","04") + '">04 with inbound_2 col 04</a></li>',
+                            '<li><a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:inbound_2/RID=' + findRID("inbound_2","id","05") + '">05 with inbound_2 col 05</a></li>'
                         ];
-                        expect(val[0].value).toEqual("<p>" + value.join(", ") + "</p>\n", "value missmatch.");
-                        expect(val[0].isHTML).toBe(true, "isHTML missmatch.");
-                        done();
-                    }).catch(function (e) {
-                        done.fail(e);
+                        value = "<ul>\n" + value.join("\n") + "\n</ul>\n";
+
+                        testGetAggregatedValue(17, value, true, done);
+                    });
+
+                    it ("olist should return an ordered list.", function (done) {
+                        var value = [
+                            '<li>01</li>', '<li>02</li>', '<li>03</li>', '<li>04</li>', '<li>05</li>'
+                        ];
+                        value = "<ol>\n" + value.join("\n") + "\n</ol>\n";
+
+                        testGetAggregatedValue(18, value, true, done);
+                    });
+
+                    it ("otherwise should return a comma seperated list", function (done) {
+                        testGetAggregatedValue(15, '<p>01, 02, 03, 04, 05</p>\n', true, done);
                     });
                 });
 
                 it ("should handle big page of data.", function (done) {
                     mainRefDetailed.read(22).then(function (page) {
-                        return detailedColsWTuple[17].getAggregatedValue(page);
+                        return detailedColsWTuple[19].getAggregatedValue(page);
                     }).then(function (val) {
                         // the whole intention of test was testing the logic of url limitation,
                         // the values is not important. since all of them are just one row, it will
