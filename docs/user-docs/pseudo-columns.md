@@ -66,9 +66,17 @@ In Chaise, comment is displayed as tooltip associated with columns. To change th
 
 #### aggregate
 
-This is only applicable in visible columns definition (Not applicable in Facet definition). You can use this attribute to get aggregate values instead of a table. The available functions are `cnt`, `cnt_d`, `max`, `min`, and `array`.
+This is only applicable in visible columns definition (Not applicable in Facet definition). You can use this attribute to get aggregate values instead of a table. The available functions are `cnt`, `cnt_d`, `max`, `min`, `array`, and `array_d`.
 - `min` and `max` are only applicable in scalar mode.
 - `array` will return ALL the values including duplicates associated with the specified columns. For data types that are sortable (e.g integer, text), the values will be sorted alphabetically or numerically. Otherwise, it displays values in the order that it receives from ERMrest. There is no paging mechanism to limit what's shown in the aggregate column, therefore please USE WITH CARE as it can incur performance overhead and ugly presentation.
+- `array_d` will return the distinct values. It has the same performance overhead as `array`, so pleas USE WITH CARE.
+
+### aggregate array_display
+
+If you have `"aggregate": "array"` or `"aggregate": "array_d"` in your pseudo-column definition, you can use `array_display` attribute to change the display of values. You can use 
+- `olist` for ordered bullet list.
+- `ulist` for unordered bullet list.
+- `csv` for comma-seperated values (the default presentation).
 
 ## Logic And Heuristics
 
@@ -145,7 +153,7 @@ Other examples:
 3. To show aggregate values:
 ```
 {"source": [{"inbound": ["S", "fk3_cons"]}, "main_f3_id"], "aggregate": "cnt_d"}
-{"source": [{"inbound": ["S", "fk3_cons"]}, {"outbound": ["S", "main_f3_cons"]}, "f3_id"], "aggregate": "array"}
+{"source": [{"inbound": ["S", "fk3_cons"]}, {"outbound": ["S", "main_f3_cons"]}, "f3_id"], "aggregate": "array", "array_display": "olist"}
 {"source": [{"inbound": ["S", "fk3_cons"]}, {"outbound": ["S", "main_f3_cons"]}, {"inbound": ["S", "f4_cons"]}, "f4_id"], "entity": false, "aggregate": "min"}
 ```
 
