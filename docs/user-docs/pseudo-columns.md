@@ -71,7 +71,7 @@ This is only applicable in visible columns definition (Not applicable in Facet d
 - `array` will return ALL the values including duplicates associated with the specified columns. For data types that are sortable (e.g integer, text), the values will be sorted alphabetically or numerically. Otherwise, it displays values in the order that it receives from ERMrest. There is no paging mechanism to limit what's shown in the aggregate column, therefore please USE WITH CARE as it can incur performance overhead and ugly presentation.
 - `array_d` will return the distinct values. It has the same performance overhead as `array`, so pleas USE WITH CARE.
 
-### aggregate array_display
+#### aggregate array_display
 
 If you have `"aggregate": "array"` or `"aggregate": "array_d"` in your pseudo-column definition, you can use `array_display` attribute to change the display of values. You can use 
 - `olist` for ordered bullet list.
