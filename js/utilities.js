@@ -3115,8 +3115,8 @@
 
     module._pseudoColAggregateFns = ["min", "max", "cnt", "cnt_d", "array", "array_d"];
     module._pseudoColEntityAggregateFns = ["array", "array_d"];
-    module._pseudoColAggregateNames = ["Min", "Max", "#", "#", ""];
-    module._pseudoColAggregateExplicitName = ["Minimum", "Maximum", "Number of", "Number of distinct", "List of"];
+    module._pseudoColAggregateNames = ["Min", "Max", "#", "#", "", ""];
+    module._pseudoColAggregateExplicitName = ["Minimum", "Maximum", "Number of", "Number of distinct", "List of", "List of distinct"];
 
     module._systemColumns = ['RID', 'RCB', 'RMB', 'RCT', 'RMT'];
 
