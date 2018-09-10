@@ -68,6 +68,9 @@ exports.execute = function (options) {
         var invalidEntityUri = options.url + "/catalog/" + catalog_id + "/entity/" +
             schemaName + ":" + invalidAnnotTableName + "/main_table_id_col=01";
 
+        var mainEntityUriNoAggVal = options.url + "/catalog/" + catalog_id + "/entity/" +
+            schemaName + ":" + tableName + "/main_table_id_col=1111;main_table_id_col=1112;main_table_id_col=1113";
+
         var chaiseURL = "https://dev.isrd.isi.edu/chaise";
         var recordURL = chaiseURL + "/record";
         var record2URL = chaiseURL + "/record-two";
@@ -778,6 +781,26 @@ exports.execute = function (options) {
 
                     it ("otherwise should return a comma seperated list", function (done) {
                         testGetAggregatedValue(15, '<p>01, 02, 03, 04, 05</p>\n', true, done);
+                    });
+                });
+
+                it ("should handle empty result.", function (done) {
+                    var ref, cols;
+                    options.ermRest.resolve(mainEntityUriNoAggVal, {cid: "test"}).then(function (response) {
+                        ref = response.contextualize.detailed;
+                        return ref.read(3);
+                    }).then(function (p) {
+                        return ref.columns[19].getAggregatedValue(p);
+                    }).then(function (val) {
+                        // vals must be all empty!
+                        expect(val.length).toBe(3, "length missmatch");
+                        val.forEach(function (v, i) {
+                            expect(v.value).toEqual("", "missmatch for value of index=" + i);
+                            expect(v.isHTML).toEqual(false, "missmatch for isHTML of index="+ i);
+                        });
+                        done();
+                    }).catch(function (e) {
+                        done.fail(e);
                     });
                 });
 
