@@ -834,14 +834,16 @@ var ERMrest = (function(module) {
      */
     upload.prototype._updateProgressBar = function(xhr) {
         var length = this.chunks.length;
-        var done = 0;
-        for (var i = 0; i < this.chunks.length; i++) {
-            done = done + this.chunks[i].progress;
+        var progressDone = 0;
+        var chunksComplete = 0;
+        for (var i = 0; i < length; i++) {
+            progressDone = progressDone + this.chunks[i].progress;
+            if (this.chunks[i].completed) chunksComplete++;
         }
 
-        if (this.uploadPromise) this.uploadPromise.notify(this.completed ? this.file.size : done, this.file.size);
+        if (this.uploadPromise) this.uploadPromise.notify(this.completed ? this.file.size : progressDone, this.file.size);
 
-        if (done >= this.file.size && !this.completed && (!xhr || (xhr && (xhr.status >= 200 && xhr.status < 300)))) {
+        if (chunksComplete === length && !this.completed && (!xhr || (xhr && (xhr.status >= 200 && xhr.status < 300)))) {
             this.completed = true;
             if (this.uploadPromise) this.uploadPromise.resolve(this.url);
         }
