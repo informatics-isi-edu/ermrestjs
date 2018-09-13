@@ -1496,15 +1496,19 @@
 
         // parse choices constraint
         var parseChoices = function (choices, column) {
-            return choices.reduce(function (prev, curr, i) {
+            var hasNull = false;
+            var value = choices.reduce(function (prev, curr, i) {
                 var res = prev += (i !== 0 ? ";": "");
                 if (isDefinedAndNotNull(curr)) {
                     res += module._fixedEncodeURIComponent(column) + "=" + module._fixedEncodeURIComponent(valueToString(curr));
                 } else {
+                    hasNull = true;
                     res += module._fixedEncodeURIComponent(column) + "::null::";
                 }
                 return res;
             }, "");
+
+            return {value: value, hasNull: hasNull};
         };
 
         // parse ranges constraint
@@ -1558,7 +1562,7 @@
         };
 
         // returns null if the path is invalid
-        var parseDataSource = function (source, tableName, catalogId) {
+        var parseDataSource = function (source, tableName, catalogId, isLeftOuter) {
             var res = [], fk, fkObj, i, table = tableName, isInbound, constraint;
             // from 0 to source.length-1 we have paths
             for (i = 0; i < source.length - 1; i++) {
@@ -1586,12 +1590,12 @@
 
                 // inbound
                 if (isInbound && fk.key.table.name === table) {
-                    res.push(fk.toString(false, true));
+                    res.push(fk.toString(false, isLeftOuter));
                     table = fk._table.name;
                 }
                 // outbound
                 else if (!isInbound && fk._table.name === table) {
-                    res.push(fk.toString(true, true));
+                    res.push(fk.toString(true, isLeftOuter));
                     table = fk.key.table.name;
                 }
                 else {
@@ -1605,10 +1609,11 @@
         // parse TERM (it will not do it recursively)
         // returns null if it's not valid
         var parseAnd = function (and) {
-            var res = [], i, term, col, path, constraints, parsed;
+            var innerJoins = [],
+                outerJoins = [],
+                res, i, term, col, path, constraints, parsed, hasNull;
 
             for (i = 0; i < and.length; i++) {
-                path = ""; // the source path if there are some joins
                 constraints = []; // the current constraints for this source
                 term = and[i];
 
@@ -1616,9 +1621,8 @@
                     return "";
                 }
 
-                // parse the source
+                // get the column name
                 if (_isFacetSourcePath(term.source)) {
-                    path = parseDataSource(term.source, tableName, catalogId);
                     col = term.source[term.source.length - 1];
                 } else {
                     col = _getFacetSourceColumnStr(term.source);
@@ -1627,18 +1631,15 @@
                     }
                 }
 
-                // if the data-path was invalid, ignore this facet
-                if (path === null) {
-                    return "";
-                }
-
                 // parse the constraints
+                hasNull = false;
                 if (Array.isArray(term[module._facetFilterTypes.CHOICE])) {
                     parsed = parseChoices(term[module._facetFilterTypes.CHOICE], col);
-                    if (!parsed) {
+                    if (!parsed.value) {
                         return "";
                     }
-                    constraints.push(parsed);
+                    hasNull = parsed.hasNull;
+                    constraints.push(parsed.value);
                 }
 
                 if (Array.isArray(term[module._facetFilterTypes.RANGE])) {
@@ -1665,9 +1666,27 @@
                     return "";
                 }
 
-                res.push((path.length !== 0 ? path + "/" : "") + constraints.join(";") + "/$" + alias);
+
+                path = ""; // the source path if there are some joins
+                // parse the path
+                if (_isFacetSourcePath(term.source)) {
+                    // if we have a null choice filter, we have to use left outer join
+                    path = parseDataSource(term.source, tableName, catalogId, hasNull);
+                }
+
+                // if the data-path was invalid, ignore this facet
+                if (path === null) {
+                    return "";
+                }
+
+                res = (path.length !== 0 ? path + "/" : "") + constraints.join(";") + "/$" + alias;
+                if (hasNull) {
+                    outerJoins.push(res);
+                } else {
+                    innerJoins.push(res);
+                }
             }
-            return res.join("/");
+            return innerJoins.concat(outerJoins).join("/");
         };
 
         var andOperator = module._FacetsLogicalOperators.AND;

@@ -2125,7 +2125,7 @@ FacetColumn.prototype = {
 
             // create a path from reference to this facetColumn
             this.foreignKeys.forEach(function (fkObj) {
-                pathFromSource.push(fkObj.obj.toString(!fkObj.isInbound, true));
+                pathFromSource.push(fkObj.obj.toString(!fkObj.isInbound, false));
             });
 
             // TODO might be able to improve this
@@ -2244,6 +2244,32 @@ FacetColumn.prototype = {
         return this._comment;
     },
 
+    /**
+     * Whether client should hide the null choice
+     * @type {Boolean}
+     */
+    get hideNullChoice() {
+        if (this._hideNullChoice === undefined) {
+            this._hideNullChoice = (this._facetObject.hide_null_choice === true);
+        }
+        return this._hideNullChoice;
+    },
+
+    /**
+     * Whether client should hide the not-null choice
+     * @type {Boolean}
+     */
+    get hideNotNullChoice() {
+        if (this._hideNotNullChoice === undefined) {
+            this._hideNotNullChoice = (this._facetObject.hide_not_null_choice === true);
+        }
+        return this._hideNotNullChoice;
+    },
+
+    /**
+     * Whether we should hide the number of Occurrences column
+     * @type {Boolean}
+     */
     get hideNumOccurrences() {
         if (this._hideNumOccurrences === undefined) {
             this._hideNumOccurrences = (this._facetObject.hide_num_occurrences === true);
@@ -2299,7 +2325,7 @@ FacetColumn.prototype = {
         verify(!this.isEntityMode, "this API cannot be used in entity-mode");
 
         if (this._scalarValuesRef === undefined) {
-            this._scalarValuesRef = this.column.groupAggregate.entityCounts(this.sortColumns, this.hideNumOccurrences);
+            this._scalarValuesRef = this.column.groupAggregate.entityCounts(this.sortColumns, this.hideNumOccurrences, true);
         }
         return this._scalarValuesRef;
     },
@@ -2312,6 +2338,8 @@ FacetColumn.prototype = {
      *  - If no fitler -> resolve with empty list.
      *  - If in scalar mode -> resolve with list of filters (don't change their displaynames.)
      *  - Otherwise (entity-mode) -> generate an ermrest request to get the displaynames.
+     *
+     * NOTE This function will not return the null filter.
      *
      * @return {Promise} A promise resolved with list of objects that have `uniqueId`, and `displayname`.
      */
@@ -2326,6 +2354,9 @@ FacetColumn.prototype = {
         // in scalar mode, use the their toString as displayname.
         else if (!this.isEntityMode) {
             this.choiceFilters.forEach(function (f) {
+                // don't return the null filter
+                if (f.term == null) return;
+
                 // we don't have access to the tuple, so we cannot send it.
                 filters.push({uniqueId: f.term, displayname: {value: f.toString(), isHTML:false}, tuple: null});
             });
@@ -2339,14 +2370,14 @@ FacetColumn.prototype = {
 
             // list of filters that we want their displaynames.
             this.choiceFilters.forEach(function (f) {
+                // don't return the null filter
                 if (f.term == null) {
-                    // term can be null, in this case we don't need to make a request for it.
-                    filters.push({uniqueId: null, displayname: {value: null, isHTML: false}, tuple: null});
-                } else {
-                    filterStr.push(
-                        module._fixedEncodeURIComponent(columnName) + "=" + module._fixedEncodeURIComponent(f.term)
-                    );
+                    return;
                 }
+
+                filterStr.push(
+                    module._fixedEncodeURIComponent(columnName) + "=" + module._fixedEncodeURIComponent(f.term)
+                );
             });
 
             // the case that we have only the null value.
@@ -2576,6 +2607,19 @@ FacetColumn.prototype = {
             })[0] !== undefined;
         }
         return this._hasNotNullFilter;
+    },
+
+    /**
+     * Returns true if choice null filter exists.
+     * @type {Boolean}
+     */
+    get hasNullFilter() {
+        if (this._hasNullFilter === undefined) {
+            this._hasNullFilter = this.filters.filter(function (f) {
+                return (f instanceof ChoiceFacetFilter) && f.term == null;
+            })[0] !== undefined;
+        }
+        return this._hasNullFilter;
     },
 
     /**
@@ -3054,9 +3098,11 @@ ColumnGroupAggregateFn.prototype = {
      * in the path, we are counting the shortest key of the parent table (not the end table).
      * NOTE: Will create a new reference by each call.
      * @type {Object=} sortColumns the sort column object that you want to pass
+     * @type {Boolean=} hideNumOccurrences whether we should add number of Occurrences or not.
+     * @type {Boolean=} dontAllowNull whether the null value should be returned for the facet or not.
      * @returns {ERMrest.AttributeGroupReference}
      */
-    entityCounts: function(sortColumns, hideNumOccurrences) {
+    entityCounts: function(sortColumns, hideNumOccurrences, dontAllowNull) {
         if (this.column.isPseudo) {
             throw new Error("Cannot use this API on pseudo-column.");
         }
@@ -3117,8 +3163,12 @@ ColumnGroupAggregateFn.prototype = {
         // search will be on the table not the aggregated results, so the column name must be the column name in the database
         var searchObj = {"column": self.column.name, "term": null};
 
-        var loc = new AttributeGroupLocation(self._ref.location.service, self._ref.table.schema.catalog.id, self._ref.location.ermrestCompactPath, searchObj, sortObj);
+        var path = self._ref.location.ermrestCompactPath;
+        if (dontAllowNull) {
+            path += "/!(" + module._fixedEncodeURIComponent(self.column.name) + "::null::)";
+        }
 
+        var loc = new AttributeGroupLocation(self._ref.location.service, self._ref.table.schema.catalog.id, path, searchObj, sortObj);
 
         var aggregateColumns = [];
 
