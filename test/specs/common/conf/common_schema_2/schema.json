@@ -112,6 +112,13 @@
                     }
                 },
                 {
+                    "name": "table_1_required",
+                    "type": { "typename": "text" },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2018:required": null
+                    }
+                },
+                {
                     "name": "table_1_serial4",
                     "type": { "typename": "serial4" }
                 },

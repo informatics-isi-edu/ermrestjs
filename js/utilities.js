@@ -3006,23 +3006,24 @@
      * @private
      */
     module._annotations = Object.freeze({
+        APP_LINKS: "tag:isrd.isi.edu,2016:app-links",
+        ASSET: "tag:isrd.isi.edu,2017:asset",
+        CITATION: "tag:isrd.isi.edu,2018:citation",
+        COLUMN_DISPLAY: "tag:isrd.isi.edu,2016:column-display",
         DISPLAY: "tag:misd.isi.edu,2015:display",
+        EXPORT: "tag:isrd.isi.edu,2016:export",
+        FOREIGN_KEY: "tag:isrd.isi.edu,2016:foreign-key",
+        GENERATED: "tag:isrd.isi.edu,2016:generated",
         HIDDEN: "tag:misd.isi.edu,2015:hidden", //TODO deprecated and should be deleted.
         IGNORE: "tag:isrd.isi.edu,2016:ignore", //TODO should not be used in column and foreign key
-        VISIBLE_COLUMNS: "tag:isrd.isi.edu,2016:visible-columns",
-        FOREIGN_KEY: "tag:isrd.isi.edu,2016:foreign-key",
-        VISIBLE_FOREIGN_KEYS: "tag:isrd.isi.edu,2016:visible-foreign-keys",
-        TABLE_DISPLAY: "tag:isrd.isi.edu,2016:table-display",
-        COLUMN_DISPLAY: "tag:isrd.isi.edu,2016:column-display",
-        TABLE_ALTERNATIVES: "tag:isrd.isi.edu,2016:table-alternatives",
-        APP_LINKS: "tag:isrd.isi.edu,2016:app-links",
-        GENERATED: "tag:isrd.isi.edu,2016:generated",
         IMMUTABLE: "tag:isrd.isi.edu,2016:immutable",
-        NON_DELETABLE: "tag:isrd.isi.edu,2016:non-deletable",
         KEY_DISPLAY: "tag:isrd.isi.edu,2017:key-display",
-        ASSET: "tag:isrd.isi.edu,2017:asset",
-        EXPORT: "tag:isrd.isi.edu,2016:export",
-        CITATION: "tag:isrd.isi.edu,2018:citation"
+        NON_DELETABLE: "tag:isrd.isi.edu,2016:non-deletable",
+        REQUIRED: "tag:isrd.isi.edu,2018:required",
+        TABLE_ALTERNATIVES: "tag:isrd.isi.edu,2016:table-alternatives",
+        TABLE_DISPLAY: "tag:isrd.isi.edu,2016:table-display",
+        VISIBLE_COLUMNS: "tag:isrd.isi.edu,2016:visible-columns",
+        VISIBLE_FOREIGN_KEYS: "tag:isrd.isi.edu,2016:visible-foreign-keys"
     });
 
     /**
@@ -3032,6 +3033,7 @@
     module._contexts = Object.freeze({
         COMPACT: 'compact',
         COMPACT_BRIEF: 'compact/brief',
+        COMPACT_BRIEF_INLINE: 'compact/brief/inline',
         COMPACT_SELECT: 'compact/select',
         CREATE: 'entry/create',
         DETAILED: 'detailed',
@@ -3040,8 +3042,7 @@
         FILTER: 'filter',
         DEFAULT: '*',
         ROWNAME :'row_name',
-        ROWNAME_UNFORMATTED: "row_name/unformatted",
-        COMPACT_BRIEF_INLINE: 'compact/brief/inline'
+        ROWNAME_UNFORMATTED: "row_name/unformatted"
     });
 
     module._dataFormats = Object.freeze({
