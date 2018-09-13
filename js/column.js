@@ -3165,7 +3165,12 @@ ColumnGroupAggregateFn.prototype = {
 
         var path = self._ref.location.ermrestCompactPath;
         if (dontAllowNull) {
-            path += "/!(" + module._fixedEncodeURIComponent(self.column.name) + "::null::)";
+            var encodedColName = module._fixedEncodeURIComponent(self.column.name);
+            path += "/!(" + encodedColName + "::null::";
+            if (self.column.type.name.indexOf('json') === 0) {
+                path += ";" + encodedColName + "=null";
+            }
+            path +=")";
         }
 
         var loc = new AttributeGroupLocation(self._ref.location.service, self._ref.table.schema.catalog.id, path, searchObj, sortObj);
