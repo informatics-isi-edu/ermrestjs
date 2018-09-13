@@ -707,9 +707,10 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
                 return v.c == t.data[keyColName];
             });
 
-            // if given page is not valid (the key doesn't exist)
+            // if given page is not valid (the key doesn't exist), or it returned empty result
             if (!value || !value.v){
-                return {isHTML: false, value: ""};
+                result.push({isHTML: false, value: ""});
+                return;
             }
 
             // cnt and cnt_d are special since they will generate integer always

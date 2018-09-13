@@ -1022,7 +1022,14 @@
                     // this is just to reduce the size of defaults. adding them
                     // is harmless but it's not necessary. so we're just not going
                     // to add them to make the default list shorter
-                    if (col.ermrestDefault == null) return;
+                    // NOTE we added nullok check because of a special case that we found.
+                    // In this case the column was not-null, no default value, and the value
+                    // was being populated by trigger. So we have to add the column to the default
+                    // list so ermrest doesn't throw the error.
+                    // if a column is not-null, we need to actually check for the value. if the value
+                    // is null, not adding it to the default list will always result in ermrest error.
+                    // But adding it to the default list might succeed (if the column has trigger for value)
+                    if (col.ermrestDefault == null && col.nullok) return;
 
                     // add columns that their value is missing in all the rows
                     var missing = true;
