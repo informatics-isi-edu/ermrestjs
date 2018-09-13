@@ -44,6 +44,10 @@ exports.execute = function(options) {
                 expect(column.memberOfForeignKeys.length).toBe(0);
             });
 
+            it('should have nullok false if required annotation is present.', function() {
+                expect(table1_schema2.columns.get('table_1_required').nullok).toBeFalsy();
+            });
+
             it('should have a .getInputDisabled method', function() {
                 expect(column.getInputDisabled).toBeDefined();
             });
