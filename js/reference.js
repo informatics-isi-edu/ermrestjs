@@ -836,13 +836,22 @@
                 // 3) not all visible columns in the table are generated
                 var ref = (this._context === module._contexts.CREATE) ? this : this.contextualize.entryCreate;
 
-                this._canCreate = ref._table.kind !== module._tableKinds.VIEW && !ref._table._isGenerated && ref._checkPermissions("insert");
+                if (ref._table.kind === module._tableKinds.VIEW) {
+                    this._canCreate = "Table is a view.";
+                } else if (ref._table._isGenerated) {
+                    this._canCreate = "Table is generated.";
+                } else if (!ref._checkPermissions("insert")) {
+                    this._canCreate = "No permissions to create.";
+                } else {
+                    this._canCreate = true;
+                }
 
-                if (this._canCreate) {
+                if (this._canCreate === true) {
                     var allColumnsDisabled = ref.columns.every(function (col) {
                         return (col.getInputDisabled(module._contexts.CREATE) !== false);
                     });
-                    this._canCreate = !allColumnsDisabled;
+
+                    if (allColumnsDisabled) this._canCreate = "All columns are disabled.";
                 }
             }
             return this._canCreate;
