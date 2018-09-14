@@ -1,16 +1,16 @@
 # Handlebars
 
-[Handlebars](http://handlebarsjs.com/) is almost similar to Mustache with some additional benefits. There are some things that you can't do in Mustache that Handlebars allows us to do easily using `helpers`.
+[Handlebars](http://handlebarsjs.com/) is almost similar to Mustache with some additional benefits. There are some things that you can't do in Mustache (e.g if-else statement) that Handlebars allows us to do easily using `helpers`.
 
-The syntax of blocks in Mustache changes a lot in Handlebars. For instance, something in Mustache that allows to do a null check would be
+Handlebars supports most of the Mustache syntax. However, there are a few features that are not supported by Handlebars. The primary one is the block syntax (e.g. `{{#name}}...{{/name}}`) which is often used in Deriva annoations to perform boolean (or null) check.  For example:
 
 ```js
 // Mustache
 
 {{#name}}Hello {{name}}{{/name}}{{^name}}No name available{{/name}}
 
-// name="John" => Hello John
-// name=null   => No name available
+// name="John" (or any object that evaluates to true in javascript)                 => Hello John
+// name=null (or any object that evaluate to false such as '', 0, false, [], etc)   => No name available
 ```
 With handlebars you need to pass the variables to an `if` helper to do the check.
 
