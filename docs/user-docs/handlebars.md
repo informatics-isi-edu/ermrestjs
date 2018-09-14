@@ -2,7 +2,7 @@
 
 [Handlebars](http://handlebarsjs.com/) is almost similar to Mustache with some additional benefits. There are some things that you can't do in Mustache (e.g if-else statement) that Handlebars allows us to do easily using `helpers`.
 
-Handlebars supports most of the Mustache syntax. However, there are a few features that are not supported by Handlebars. The primary one is the block syntax (e.g. `{{#name}}...{{/name}}`) which is often used in Deriva annoations to perform boolean (or null) check.  For example:
+Handlebars supports most of the Mustache syntax. However, there are a few features that are not supported by Handlebars. The primary ones are the block syntax (e.g. `{{#name}}...{{/name}}`) which is often used in Deriva annoations to perform boolean (or null) check, and the encode/decode methods (e.g. `{{#encode}}`, `{{#decode}}`). For example:
 
 ```js
 // Mustache
@@ -17,7 +17,8 @@ With handlebars you need to pass the variables to an `if` helper to do the check
 ```
 {{#if name}}Hello {{name}}{{else}}No name available{{/if}}
 ```
-All the other `encode`, `decode` helpers also change accordingly.
+
+Handlebars supports more complicated expression syntax and allow the comparison to be done at the finer level e.g. null v.s. false comparsion. This document summarizes the key concepts of Handlebars that are relevant to Deriva. 
 
 
 ## Notable differences between Mustache and Handlebars
