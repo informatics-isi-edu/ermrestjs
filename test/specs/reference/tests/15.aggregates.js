@@ -304,7 +304,7 @@ exports.execute = function (options) {
                     );
                 });
 
-                // NOTE we are testing the custom sort and hide num_occurrences in faceting spec
+                // NOTE we are testing the custom options of entityCounts in faceting spec
             });
 
             describe("histograms, ", function () {

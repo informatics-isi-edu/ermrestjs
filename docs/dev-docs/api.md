@@ -307,7 +307,7 @@ to use for ERMrest JavaScript agents.
         * [.defaultLogInfo](#ERMrest.Reference+defaultLogInfo) : <code>Object</code>
         * [.removeAllFacetFilters(sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
         * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
-        * [.read(limit, contextHeaderParams)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
+        * [.read(limit, contextHeaderParams, useEntity)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
             * [~processSortObject()](#ERMrest.Reference+read..processSortObject)
         * [.sort(sort)](#ERMrest.Reference+sort) ⇒ <code>Reference</code>
         * [.update(tuples, contextHeaderParams)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
@@ -427,9 +427,13 @@ to use for ERMrest JavaScript agents.
         * [.sourceReference](#ERMrest.FacetColumn+sourceReference) : [<code>Reference</code>](#ERMrest.Reference)
         * [.displayname](#ERMrest.FacetColumn+displayname) : <code>object</code>
         * [.comment](#ERMrest.FacetColumn+comment) : <code>string</code>
+        * [.hideNullChoice](#ERMrest.FacetColumn+hideNullChoice) : <code>Boolean</code>
+        * [.hideNotNullChoice](#ERMrest.FacetColumn+hideNotNullChoice) : <code>Boolean</code>
+        * [.hideNumOccurrences](#ERMrest.FacetColumn+hideNumOccurrences) : <code>Boolean</code>
         * [.sortColumns](#ERMrest.FacetColumn+sortColumns) : <code>Array</code>
         * [.scalarValuesReference](#ERMrest.FacetColumn+scalarValuesReference) : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)
         * [.hasNotNullFilter](#ERMrest.FacetColumn+hasNotNullFilter) : <code>Boolean</code>
+        * [.hasNullFilter](#ERMrest.FacetColumn+hasNullFilter) : <code>Boolean</code>
         * [.searchFilters](#ERMrest.FacetColumn+searchFilters) : <code>Array.&lt;ERMREst.SearchFacetFilter&gt;</code>
         * [.choiceFilters](#ERMrest.FacetColumn+choiceFilters) : <code>Array.&lt;ERMREst.ChoiceFacetFilter&gt;</code>
         * [.rangeFilters](#ERMrest.FacetColumn+rangeFilters) : <code>Array.&lt;ERMREst.RangeFacetFilter&gt;</code>
@@ -583,7 +587,7 @@ to use for ERMrest JavaScript agents.
         * [.defaultLogInfo](#ERMrest.Reference+defaultLogInfo) : <code>Object</code>
         * [.removeAllFacetFilters(sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
         * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
-        * [.read(limit, contextHeaderParams)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
+        * [.read(limit, contextHeaderParams, useEntity)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
             * [~processSortObject()](#ERMrest.Reference+read..processSortObject)
         * [.sort(sort)](#ERMrest.Reference+sort) ⇒ <code>Reference</code>
         * [.update(tuples, contextHeaderParams)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
@@ -2518,7 +2522,7 @@ Constructor for a ParsedFilter.
     * [.defaultLogInfo](#ERMrest.Reference+defaultLogInfo) : <code>Object</code>
     * [.removeAllFacetFilters(sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
     * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
-    * [.read(limit, contextHeaderParams)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
+    * [.read(limit, contextHeaderParams, useEntity)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
         * [~processSortObject()](#ERMrest.Reference+read..processSortObject)
     * [.sort(sort)](#ERMrest.Reference+sort) ⇒ <code>Reference</code>
     * [.update(tuples, contextHeaderParams)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
@@ -2816,7 +2820,7 @@ or rejected with any of the following errors:
 
 <a name="ERMrest.Reference+read"></a>
 
-#### reference.read(limit, contextHeaderParams) ⇒ <code>Promise</code>
+#### reference.read(limit, contextHeaderParams, useEntity) ⇒ <code>Promise</code>
 Reads the referenced resources and returns a promise for a page of
 tuples. The `limit` parameter is required and must be a positive
 integer. The page of tuples returned will be described by the
@@ -2848,6 +2852,7 @@ or rejected with any of these errors:
 | --- | --- | --- |
 | limit | <code>number</code> | The limit of results to be returned by the read request. __required__ |
 | contextHeaderParams | <code>Object</code> | the object that we want to log. |
+| useEntity | <code>Boolean</code> | whether we should use entity api or not (if true, we won't get foreignkey data) |
 
 <a name="ERMrest.Reference+read..processSortObject"></a>
 
@@ -4028,9 +4033,13 @@ Indicates that this ReferenceColumn is an inbound foreign key.
     * [.sourceReference](#ERMrest.FacetColumn+sourceReference) : [<code>Reference</code>](#ERMrest.Reference)
     * [.displayname](#ERMrest.FacetColumn+displayname) : <code>object</code>
     * [.comment](#ERMrest.FacetColumn+comment) : <code>string</code>
+    * [.hideNullChoice](#ERMrest.FacetColumn+hideNullChoice) : <code>Boolean</code>
+    * [.hideNotNullChoice](#ERMrest.FacetColumn+hideNotNullChoice) : <code>Boolean</code>
+    * [.hideNumOccurrences](#ERMrest.FacetColumn+hideNumOccurrences) : <code>Boolean</code>
     * [.sortColumns](#ERMrest.FacetColumn+sortColumns) : <code>Array</code>
     * [.scalarValuesReference](#ERMrest.FacetColumn+scalarValuesReference) : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)
     * [.hasNotNullFilter](#ERMrest.FacetColumn+hasNotNullFilter) : <code>Boolean</code>
+    * [.hasNullFilter](#ERMrest.FacetColumn+hasNullFilter) : <code>Boolean</code>
     * [.searchFilters](#ERMrest.FacetColumn+searchFilters) : <code>Array.&lt;ERMREst.SearchFacetFilter&gt;</code>
     * [.choiceFilters](#ERMrest.FacetColumn+choiceFilters) : <code>Array.&lt;ERMREst.ChoiceFacetFilter&gt;</code>
     * [.rangeFilters](#ERMrest.FacetColumn+rangeFilters) : <code>Array.&lt;ERMREst.RangeFacetFilter&gt;</code>
@@ -4198,6 +4207,24 @@ Heuristics are as follows (first applicable rule):
 Could be used as tooltip to provide more information about the facetColumn
 
 **Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
+<a name="ERMrest.FacetColumn+hideNullChoice"></a>
+
+#### facetColumn.hideNullChoice : <code>Boolean</code>
+Whether client should hide the null choice
+
+**Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
+<a name="ERMrest.FacetColumn+hideNotNullChoice"></a>
+
+#### facetColumn.hideNotNullChoice : <code>Boolean</code>
+Whether client should hide the not-null choice
+
+**Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
+<a name="ERMrest.FacetColumn+hideNumOccurrences"></a>
+
+#### facetColumn.hideNumOccurrences : <code>Boolean</code>
+Whether we should hide the number of Occurrences column
+
+**Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
 <a name="ERMrest.FacetColumn+sortColumns"></a>
 
 #### facetColumn.sortColumns : <code>Array</code>
@@ -4218,6 +4245,12 @@ It will throw an error if it's used in entity-mode.
 
 #### facetColumn.hasNotNullFilter : <code>Boolean</code>
 Returns true if the not-null filter exists.
+
+**Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
+<a name="ERMrest.FacetColumn+hasNullFilter"></a>
+
+#### facetColumn.hasNullFilter : <code>Boolean</code>
+Returns true if choice null filter exists.
 
 **Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
 <a name="ERMrest.FacetColumn+searchFilters"></a>
@@ -4251,6 +4284,8 @@ Therefore heuristic is as follows:
  - If no fitler -> resolve with empty list.
  - If in scalar mode -> resolve with list of filters (don't change their displaynames.)
  - Otherwise (entity-mode) -> generate an ermrest request to get the displaynames.
+
+NOTE This function will not return the null filter.
 
 **Kind**: instance method of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
 **Returns**: <code>Promise</code> - A promise resolved with list of objects that have `uniqueId`, and `displayname`.  
@@ -5550,7 +5585,7 @@ get PathColumn object by column name
     * [.defaultLogInfo](#ERMrest.Reference+defaultLogInfo) : <code>Object</code>
     * [.removeAllFacetFilters(sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
     * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
-    * [.read(limit, contextHeaderParams)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
+    * [.read(limit, contextHeaderParams, useEntity)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
         * [~processSortObject()](#ERMrest.Reference+read..processSortObject)
     * [.sort(sort)](#ERMrest.Reference+sort) ⇒ <code>Reference</code>
     * [.update(tuples, contextHeaderParams)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
@@ -5848,7 +5883,7 @@ or rejected with any of the following errors:
 
 <a name="ERMrest.Reference+read"></a>
 
-#### reference.read(limit, contextHeaderParams) ⇒ <code>Promise</code>
+#### reference.read(limit, contextHeaderParams, useEntity) ⇒ <code>Promise</code>
 Reads the referenced resources and returns a promise for a page of
 tuples. The `limit` parameter is required and must be a positive
 integer. The page of tuples returned will be described by the
@@ -5880,6 +5915,7 @@ or rejected with any of these errors:
 | --- | --- | --- |
 | limit | <code>number</code> | The limit of results to be returned by the read request. __required__ |
 | contextHeaderParams | <code>Object</code> | the object that we want to log. |
+| useEntity | <code>Boolean</code> | whether we should use entity api or not (if true, we won't get foreignkey data) |
 
 <a name="ERMrest.Reference+read..processSortObject"></a>
 
