@@ -246,6 +246,8 @@ to use for ERMrest JavaScript agents.
         * [new TimedOutError(status, message)](#new_ERMrest.TimedOutError_new)
     * [.BadRequestError](#ERMrest.BadRequestError)
         * [new BadRequestError(status, message)](#new_ERMrest.BadRequestError_new)
+    * [.QueryTimeoutError](#ERMrest.QueryTimeoutError)
+        * [new QueryTimeoutError(status, message)](#new_ERMrest.QueryTimeoutError_new)
     * [.UnauthorizedError](#ERMrest.UnauthorizedError)
         * [new UnauthorizedError(status, message)](#new_ERMrest.UnauthorizedError_new)
     * [.ForbiddenError](#ERMrest.ForbiddenError)
@@ -2207,6 +2209,19 @@ will be a type understandable by database.
 <a name="new_ERMrest.BadRequestError_new"></a>
 
 #### new BadRequestError(status, message)
+
+| Param | Type | Description |
+| --- | --- | --- |
+| status | <code>string</code> | the network error code |
+| message | <code>string</code> | error message |
+
+<a name="ERMrest.QueryTimeoutError"></a>
+
+### ERMrest.QueryTimeoutError
+**Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
+<a name="new_ERMrest.QueryTimeoutError_new"></a>
+
+#### new QueryTimeoutError(status, message)
 
 | Param | Type | Description |
 | --- | --- | --- |
