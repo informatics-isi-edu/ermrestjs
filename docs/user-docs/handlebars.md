@@ -1,25 +1,24 @@
 # Handlebars Templating
 
-[Handlebars](http://handlebarsjs.com/) is almost similar to Mustache with some additional benefits. There are some things that you can't do in Mustache that Handlebars allows us to do easily using `helpers`.
+[Handlebars](http://handlebarsjs.com/) is almost similar to Mustache with some additional benefits. There are some things that you can't do in Mustache (e.g if-else statement) that Handlebars allows us to do easily using `helpers`.
 
-Once templating is done, the returned string is passed to the Markdown renderer. To learn about the markdown syntax please refer to the [Markdown Formatting](markdown-formatting.md) page.
-
-The syntax of blocks in Mustache changes a lot in Handlebars. For instance, something in Mustache that allows you to do a null check would be:
+Handlebars supports most of the Mustache syntax. However, there are a few features that are not supported by Handlebars. The primary ones are the block syntax (e.g. `{{#name}}...{{/name}}`) which is often used in Deriva annoations to perform boolean (or null) check, and the encode/decode methods (e.g. `{{#encode}}`, `{{#decode}}`). For example:
 
 ```js
 // Mustache
 
 {{#name}}Hello {{name}}{{/name}}{{^name}}No name available{{/name}}
 
-// name="John" => Hello John
-// name=null   => No name available
+// name="John" (or any object that evaluates to true in javascript)                 => Hello John
+// name=null (or any object that evaluate to false such as '', 0, false, [], etc)   => No name available
 ```
 With handlebars you need to pass the variables to an `if` helper to do the check.
 
 ```
 {{#if name}}Hello {{name}}{{else}}No name available{{/if}}
 ```
-All the other `encode`, `decode` helpers also change accordingly.
+
+Handlebars supports more complicated expression syntax and allow the comparison to be done at the finer level e.g. null v.s. false comparsion. This document summarizes the key concepts of Handlebars that are relevant to Deriva. 
 
 
 ## Notable differences between Mustache and Handlebars

@@ -2014,11 +2014,6 @@
         this.type = new Type(jsonColumn.type);
 
         /**
-         * @type {Boolean}
-         */
-        this.nullok = jsonColumn.nullok;
-
-        /**
          * @desc Documentation for this column
          * @type {string}
          */
@@ -2045,6 +2040,15 @@
                 (jsonAnnotation === null || jsonAnnotation === [])) {
                 this.ignore = true;
             }
+        }
+
+        /**
+        * @type {Boolean}
+        */
+        this.nullok = jsonColumn.nullok;
+        // if false we don't even need to check for the presence of the annotation
+        if (this.nullok) {
+            this.nullok = !this.annotations.contains(module._annotations.REQUIRED);
         }
 
         this._nameStyle = {}; // Used in the displayname to store the name styles.

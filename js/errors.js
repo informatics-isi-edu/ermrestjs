@@ -8,6 +8,7 @@
     module.ConflictError = ConflictError;
     module.PreconditionFailedError = PreconditionFailedError;
     module.InternalServerError = InternalServerError;
+    module.BadGatewayError = BadGatewayError;
     module.ServiceUnavailableError = ServiceUnavailableError;
     module.InvalidFacetOperatorError = InvalidFacetOperatorError;
     module.InvalidFilterOperatorError = InvalidFilterOperatorError;
@@ -187,6 +188,19 @@
     InternalServerError.prototype = Object.create(ERMrestError.prototype);
     InternalServerError.prototype.constructor = InternalServerError;
 
+
+    /**
+     * @memberof ERMrest
+     * @param {string} status the network error code
+     * @param {string} message error message
+     * @constructor
+     */
+    function BadGatewayError(status, message) {
+        ERMrestError.call(this, module._HTTPErrorCodes.BAD_GATEWAY, status, message);
+    }
+
+    BadGatewayError.prototype = Object.create(ERMrestError.prototype);
+    BadGatewayError.prototype.constructor = BadGatewayError;
 
     /**
      * @memberof ERMrest

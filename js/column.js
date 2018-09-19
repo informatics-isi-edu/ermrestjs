@@ -520,6 +520,8 @@ PseudoColumn.prototype.formatPresentation = function(data, context, options) {
  * @return {Promise}
  */
 PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams) {
+    var URL_LENGTH_LIMIT = 2048;
+
     var defer = module._q.defer(),
         self = this,
         promises = [], values = [],
@@ -527,6 +529,7 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
         location = this._baseReference.location,
         http = this._baseReference._server._http,
         column = this._baseCols[0],
+        printUtils = module._formatUtils,
         keyColName, keyColNameEncoded,
         baseUri, uri, i, fk, str, projection;
 
@@ -548,7 +551,77 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
         headers: self.reference._generateContextHeader(contextHeaderParams, page.tuples.length)
     };
 
-    var URL_LENGTH_LIMIT = 2048;
+    var currTable = "T";
+    var baseTable = self.hasPath ? "M": currTable;
+
+    // this will dictates whether we should show rowname or not
+    var isRow = self.isEntityMode && module._pseudoColEntityAggregateFns.indexOf(self.sourceObject.aggregate) != -1;
+
+    // creates http request with the current uri
+    var addPromise = function () {
+        if (uri.charAt(uri.length-1) === ";") {
+            uri = uri.slice(0, -1);
+        }
+        promises.push(http.get(uri + projection, config));
+    };
+
+    // will format a single value
+    var getFormattedValue = function (val) {
+        if (isRow) {
+            var pres = module._generateRowPresentation(self._key, val, self._context);
+            return pres ? pres.unformatted : null;
+        }
+        if (val == null || val === "") {
+            return val;
+        }
+        return column.formatvalue(val, self._context);
+    };
+
+    // it will sort the array values and then format them.
+    var getArrayValue = function (val) {
+
+        // try to sort the values
+        try {
+            val.sort(function (a, b) {
+                // if isRow, a and b will be objects
+                if (isRow) {
+                    return a[column.name].localeCompare(b[column.name]);
+                }
+                return a.localeCompare(b);
+            });
+        } catch(e) {
+            // if sort threw any erros, we just leave it as is
+        }
+
+
+        // get the formatted values as an array
+        var arrayRes = printUtils.printArray(
+            val.map(getFormattedValue),
+            {
+                isMarkdown: (column.type.name === "markdown") || isRow,
+                returnArray: true
+            }
+        );
+
+        // print the array in a comma seperated value (list) or bullets
+        var res = "";
+        switch (self.sourceObject.array_display) {
+            case "ulist":
+                arrayRes.forEach(function (arrayVal) {
+                    res += "* " + arrayVal + " \n";
+                });
+                break;
+            case "olist":
+                arrayRes.forEach(function (arrayVal, i) {
+                    res += (i+1) + ". " + arrayVal + " \n";
+                });
+                break;
+            default: //csv
+                res = arrayRes.join(", ");
+        }
+        return printUtils.printMarkdown(res);
+    };
+
 
     // return empty list if page is empty
     if (page.tuples.length === 0) {
@@ -565,19 +638,12 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
 
     keyColName = mainTable.shortestKey[0].name;
     keyColNameEncoded = module._fixedEncodeURIComponent(mainTable.shortestKey[0].name);
-
-    // generate the base url in the following format:
-    // service/T:=pseudoColTable/path-from-pseudo-col-to-current/filters/project
-    var currTable = "T";
-    var baseTable = self.hasPath ? "M": currTable;
-
-    // this will dictates whether we should show rowname or not
-    var isRow = self.isEntityMode && self.sourceObject.aggregate === "array";
-
     projection = "/c:=:" + baseTable + ":" + keyColNameEncoded +
                  ";v:=" + self.sourceObject.aggregate +
                  "(" + currTable + ":" + (isRow ? "*" : module._fixedEncodeURIComponent(column.name)) + ")";
 
+     // generate the base url in the following format:
+     // service/T:=pseudoColTable/path-from-pseudo-col-to-current/filters/project
     baseUri =  [
         location.service, "catalog", location.catalog, "attributegroup",
         currTable + ":=" + module._fixedEncodeURIComponent(self.table.schema.name) + ":" +module._fixedEncodeURIComponent(self.table.name)
@@ -596,14 +662,6 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
         defer.resolve(values);
         return defer.promise;
     }
-
-    // creates http request with the current uri
-    var addPromise = function () {
-        if (uri.charAt(uri.length-1) === ";") {
-            uri = uri.slice(0, -1);
-        }
-        promises.push(http.get(uri + projection, config));
-    };
 
     // create the request urls
     uri = baseUri;
@@ -633,21 +691,9 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
         return defer.promise;
     }
 
-    var getFormattedValue = function (val) {
-        if (isRow) {
-            var pres = module._generateRowPresentation(self._key, val, self._context);
-            return pres ? pres.unformatted : null;
-        }
-        if (val == null || val === "") {
-            return val;
-        }
-        return column.formatvalue(val, self._context);
-    };
-
     module._q.all(promises).then(function (response) {
         var values = [],
             result = [],
-            printUtils = module._formatUtils,
             value, res, isHTML;
 
         response.forEach(function (r) {
@@ -661,39 +707,28 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
                 return v.c == t.data[keyColName];
             });
 
-            // format the value
-            res = ""; isHTML = false;
-            if (value && value.v) {
-                if (["cnt", "cnt_d"].indexOf(self.sourceObject.aggregate) !== -1) {
-                    res = module._formatUtils.printInteger(value.v);
-                } else {
-                    if (self.sourceObject.aggregate === "array"){
-                        try {
-                            value.v.sort(function (a, b) {
-                                // if isRow, a and b will be objects
-                                if (isRow) {
-                                    return a[column.name].localeCompare(b[column.name]);
-                                }
-                                return a.localeCompare(b);
-                            });
-                        } catch(e) {
-                            // if sort threw any erros, we just leave it as is
-                        }
+            // if given page is not valid (the key doesn't exist), or it returned empty result
+            if (!value || !value.v){
+                result.push({isHTML: false, value: ""});
+                return;
+            }
 
-                        isHTML = true;
-                        res = printUtils.printArray(
-                            value.v.map(getFormattedValue),
-                            { isMarkdown: (column.type.name === "markdown") || isRow }
-                        );
-                    } else {
-                        isHTML = (column.type.name === "markdown");
-                        res = getFormattedValue(value.v);
-                    }
+            // cnt and cnt_d are special since they will generate integer always
+            if (["cnt", "cnt_d"].indexOf(self.sourceObject.aggregate) !== -1) {
+                result.push({value: module._formatUtils.printInteger(value.v), isHTML: false});
+                return;
+            }
 
-                    if (isHTML) {
-                        res = printUtils.printMarkdown(res);
-                    }
-                }
+            // array formatting is different
+            if (self.sourceObject.aggregate.indexOf("array") === 0){
+                result.push({value: getArrayValue(value.v), isHTML: true});
+                return;
+            }
+
+            var isHTML = (column.type.name === "markdown");
+            var res = getFormattedValue(value.v);
+            if (isHTML) {
+                res = printUtils.printMarkdown(res);
             }
             result.push({isHTML: isHTML, value: res});
         });
@@ -2091,7 +2126,7 @@ FacetColumn.prototype = {
 
             // create a path from reference to this facetColumn
             this.foreignKeys.forEach(function (fkObj) {
-                pathFromSource.push(fkObj.obj.toString(!fkObj.isInbound, true));
+                pathFromSource.push(fkObj.obj.toString(!fkObj.isInbound, false));
             });
 
             // TODO might be able to improve this
@@ -2210,6 +2245,32 @@ FacetColumn.prototype = {
         return this._comment;
     },
 
+    /**
+     * Whether client should hide the null choice
+     * @type {Boolean}
+     */
+    get hideNullChoice() {
+        if (this._hideNullChoice === undefined) {
+            this._hideNullChoice = (this._facetObject.hide_null_choice === true);
+        }
+        return this._hideNullChoice;
+    },
+
+    /**
+     * Whether client should hide the not-null choice
+     * @type {Boolean}
+     */
+    get hideNotNullChoice() {
+        if (this._hideNotNullChoice === undefined) {
+            this._hideNotNullChoice = (this._facetObject.hide_not_null_choice === true);
+        }
+        return this._hideNotNullChoice;
+    },
+
+    /**
+     * Whether we should hide the number of Occurrences column
+     * @type {Boolean}
+     */
     get hideNumOccurrences() {
         if (this._hideNumOccurrences === undefined) {
             this._hideNumOccurrences = (this._facetObject.hide_num_occurrences === true);
@@ -2265,7 +2326,7 @@ FacetColumn.prototype = {
         verify(!this.isEntityMode, "this API cannot be used in entity-mode");
 
         if (this._scalarValuesRef === undefined) {
-            this._scalarValuesRef = this.column.groupAggregate.entityCounts(this.sortColumns, this.hideNumOccurrences);
+            this._scalarValuesRef = this.column.groupAggregate.entityCounts(this.sortColumns, this.hideNumOccurrences, true);
         }
         return this._scalarValuesRef;
     },
@@ -2278,6 +2339,8 @@ FacetColumn.prototype = {
      *  - If no fitler -> resolve with empty list.
      *  - If in scalar mode -> resolve with list of filters (don't change their displaynames.)
      *  - Otherwise (entity-mode) -> generate an ermrest request to get the displaynames.
+     *
+     * NOTE This function will not return the null filter.
      *
      * @return {Promise} A promise resolved with list of objects that have `uniqueId`, and `displayname`.
      */
@@ -2292,6 +2355,9 @@ FacetColumn.prototype = {
         // in scalar mode, use the their toString as displayname.
         else if (!this.isEntityMode) {
             this.choiceFilters.forEach(function (f) {
+                // don't return the null filter
+                if (f.term == null) return;
+
                 // we don't have access to the tuple, so we cannot send it.
                 filters.push({uniqueId: f.term, displayname: {value: f.toString(), isHTML:false}, tuple: null});
             });
@@ -2305,14 +2371,14 @@ FacetColumn.prototype = {
 
             // list of filters that we want their displaynames.
             this.choiceFilters.forEach(function (f) {
+                // don't return the null filter
                 if (f.term == null) {
-                    // term can be null, in this case we don't need to make a request for it.
-                    filters.push({uniqueId: null, displayname: {value: null, isHTML: false}, tuple: null});
-                } else {
-                    filterStr.push(
-                        module._fixedEncodeURIComponent(columnName) + "=" + module._fixedEncodeURIComponent(f.term)
-                    );
+                    return;
                 }
+
+                filterStr.push(
+                    module._fixedEncodeURIComponent(columnName) + "=" + module._fixedEncodeURIComponent(f.term)
+                );
             });
 
             // the case that we have only the null value.
@@ -2542,6 +2608,19 @@ FacetColumn.prototype = {
             })[0] !== undefined;
         }
         return this._hasNotNullFilter;
+    },
+
+    /**
+     * Returns true if choice null filter exists.
+     * @type {Boolean}
+     */
+    get hasNullFilter() {
+        if (this._hasNullFilter === undefined) {
+            this._hasNullFilter = this.filters.filter(function (f) {
+                return (f instanceof ChoiceFacetFilter) && f.term == null;
+            })[0] !== undefined;
+        }
+        return this._hasNullFilter;
     },
 
     /**
@@ -3020,9 +3099,11 @@ ColumnGroupAggregateFn.prototype = {
      * in the path, we are counting the shortest key of the parent table (not the end table).
      * NOTE: Will create a new reference by each call.
      * @type {Object=} sortColumns the sort column object that you want to pass
+     * @type {Boolean=} hideNumOccurrences whether we should add number of Occurrences or not.
+     * @type {Boolean=} dontAllowNull whether the null value should be returned for the facet or not.
      * @returns {ERMrest.AttributeGroupReference}
      */
-    entityCounts: function(sortColumns, hideNumOccurrences) {
+    entityCounts: function(sortColumns, hideNumOccurrences, dontAllowNull) {
         if (this.column.isPseudo) {
             throw new Error("Cannot use this API on pseudo-column.");
         }
@@ -3083,8 +3164,17 @@ ColumnGroupAggregateFn.prototype = {
         // search will be on the table not the aggregated results, so the column name must be the column name in the database
         var searchObj = {"column": self.column.name, "term": null};
 
-        var loc = new AttributeGroupLocation(self._ref.location.service, self._ref.table.schema.catalog.id, self._ref.location.ermrestCompactPath, searchObj, sortObj);
+        var path = self._ref.location.ermrestCompactPath;
+        if (dontAllowNull) {
+            var encodedColName = module._fixedEncodeURIComponent(self.column.name);
+            path += "/!(" + encodedColName + "::null::";
+            if (self.column.type.name.indexOf('json') === 0) {
+                path += ";" + encodedColName + "=null";
+            }
+            path +=")";
+        }
 
+        var loc = new AttributeGroupLocation(self._ref.location.service, self._ref.table.schema.catalog.id, path, searchObj, sortObj);
 
         var aggregateColumns = [];
 

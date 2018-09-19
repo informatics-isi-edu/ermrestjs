@@ -94,10 +94,10 @@ exports.execute = function (options) {
                             "name": "export_test_bag"
                         }
                     }
-                    expect(exportParams.catalog.queries.length).toBe(1);
-                    expect(exportParams.catalog.queries[0].query_path).toBe("/" + output.source.api + "/M:=" + output.source.table + "?limit=none");
-                    expect(exportParams.catalog.queries[0].output_path).toBe(output.destination.name);
-                    expect(exportParams.catalog.queries[0].output_format).toBe(output.destination.type);
+                    expect(exportParams.catalog.query_processors.length).toBe(1);
+                    expect(exportParams.catalog.query_processors[0].processor).toBe(output.destination.type);
+                    expect(exportParams.catalog.query_processors[0].processor_params.query_path).toBe("/" + output.source.api + "/M:=" + output.source.table + "?limit=none");
+                    expect(exportParams.catalog.query_processors[0].processor_params.output_path).toBe(output.destination.name);
                 });
 
                 it("exporter.run should return the proper response from iobox", function (done) {
@@ -145,10 +145,10 @@ exports.execute = function (options) {
                             "name": "export_test_file_csv"
                         }
                     }
-                    expect(exportParams.catalog.queries.length).toBe(1);
-                    expect(exportParams.catalog.queries[0].query_path).toBe("/" + output.source.api + "/M:=" + output.source.table + "?limit=none");
-                    expect(exportParams.catalog.queries[0].output_path).toBe(output.destination.name);
-                    expect(exportParams.catalog.queries[0].output_format).toBe(output.destination.type);
+                    expect(exportParams.catalog.query_processors.length).toBe(1);
+                    expect(exportParams.catalog.query_processors[0].processor).toBe(output.destination.type);
+                    expect(exportParams.catalog.query_processors[0].processor_params.query_path).toBe("/" + output.source.api + "/M:=" + output.source.table + "?limit=none");
+                    expect(exportParams.catalog.query_processors[0].processor_params.output_path).toBe(output.destination.name);
                 });
 
                 it("exporter.run should return the proper response from iobox", function (done) {
@@ -196,10 +196,10 @@ exports.execute = function (options) {
                             "name": "export_test_file_json"
                         }
                     }
-                    expect(exportParams.catalog.queries.length).toBe(1);
-                    expect(exportParams.catalog.queries[0].query_path).toBe("/" + output.source.api + "/M:=" + output.source.table + "?limit=none");
-                    expect(exportParams.catalog.queries[0].output_path).toBe(output.destination.name);
-                    expect(exportParams.catalog.queries[0].output_format).toBe(output.destination.type);
+                    expect(exportParams.catalog.query_processors.length).toBe(1);
+                    expect(exportParams.catalog.query_processors[0].processor).toBe(output.destination.type);
+                    expect(exportParams.catalog.query_processors[0].processor_params.query_path).toBe("/" + output.source.api + "/M:=" + output.source.table + "?limit=none");
+                    expect(exportParams.catalog.query_processors[0].processor_params.output_path).toBe(output.destination.name);
                 });
 
                 it("exporter.run should return the proper response from iobox", function (done) {

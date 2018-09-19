@@ -827,7 +827,7 @@ exports.execute = function (options) {
                         var ref = mainFacets[10].addChoiceFilters(["1", "2"]);
                         expect(ref).not.toBe(refMain, "reference didn't change.");
                         expect(ref.location.ermrestCompactPath).toBe(
-                            "M:=faceting_schema:main/id=1/$M/int_col::geq::-2/$M/left(fk_to_f1)=(faceting_schema:f1:id)/id=1;id=2/$M",
+                            "M:=faceting_schema:main/id=1/$M/int_col::geq::-2/$M/(fk_to_f1)=(faceting_schema:f1:id)/id=1;id=2/$M",
                             "path missmatch."
                         );
                         expect(ref.facetColumns[10].filters.length).toBe(2, "filters length missmatch.");
@@ -1086,12 +1086,26 @@ exports.execute = function (options) {
                 });
 
                 describe ("hasNotNullFilter,", function () {
+                    var newRef;
                     it ('should return true if facet has not-null filter', function () {
-
+                        newRef = mainFacets[0].addNotNullFilter().contextualize.detailed;
+                        expect(newRef.facetColumns[0].hasNotNullFilter).toEqual(true);
                     });
 
                     it ("otherwise it should return false.", function () {
+                        expect(mainFacets[0].hasNotNullFilter).toEqual(false);
+                    });
+                });
 
+                describe("hasNullFilter, ", function () {
+                    var newRef;
+                    it ('should return true if facet has null filter', function () {
+                        newRef = mainFacets[0].addChoiceFilters([null]).contextualize.detailed;
+                        expect(newRef.facetColumns[0].hasNullFilter).toEqual(true);
+                    });
+
+                    it ("otherwise it should return false.", function () {
+                        expect(mainFacets[0].hasNullFilter).toEqual(false);
                     });
                 });
 
@@ -1306,7 +1320,7 @@ exports.execute = function (options) {
                     checkSourceReference(
                         "mainTable with filter on FK, index = 11",
                         refMainFilterOnFK.facetColumns[11],
-                        "T:=faceting_schema:main/id=1/$T/int_col::geq::-2/$T/M:=left(fk_to_f2)=(faceting_schema:f2:id)",
+                        "T:=faceting_schema:main/id=1/$T/int_col::geq::-2/$T/M:=(fk_to_f2)=(faceting_schema:f2:id)",
                         {
                             "and":[
                                 {"source": "id", "choices": ["1"]},
@@ -1319,7 +1333,7 @@ exports.execute = function (options) {
                     checkSourceReference(
                         "mainTable with filter on FK, index = 0",
                         refMainFilterOnFK.facetColumns[0],
-                        "M:=faceting_schema:main/int_col::geq::-2/$M/left(fk_to_f2)=(faceting_schema:f2:id)/id=2;id=3/$M",
+                        "M:=faceting_schema:main/int_col::geq::-2/$M/(fk_to_f2)=(faceting_schema:f2:id)/id=2;id=3/$M",
                         {
                             "and":[
                                 {"source": "int_col", "ranges": [{"min":-2}]},
@@ -1334,7 +1348,7 @@ exports.execute = function (options) {
                     var sr = refWCustomFilters.facetColumns[0].sourceReference;
                     expect(sr.location.ermrestCompactPath).toBe("M:=faceting_schema:main/" + unsupportedFilter, "compactPath missmatch.");
                     sr = refWCustomFilters.facetColumns[11].sourceReference;
-                    expect(sr.location.ermrestCompactPath).toBe("T:=faceting_schema:main/" + unsupportedFilter + "/M:=left(fk_to_f2)=(faceting_schema:f2:id)" , "compactPath missmatch.");
+                    expect(sr.location.ermrestCompactPath).toBe("T:=faceting_schema:main/" + unsupportedFilter + "/M:=(fk_to_f2)=(faceting_schema:f2:id)" , "compactPath missmatch.");
                 });
             });
 
@@ -1379,13 +1393,12 @@ exports.execute = function (options) {
                     });
                 });
 
-                it ("should be able to handle null filter in entity-mode.", function (done) {
+                it ("should not return the null filter.", function (done) {
                     var newRef = refMainFilterOnFK.facetColumns[11].addChoiceFilters([null]);
                     newRef.facetColumns[11].getChoiceDisplaynames().then(function (res){
-                        expect(res.length).toEqual(3, "length missmatch.");
-                        checkChoiceDisplayname("index=0", res[0], null, null, false);
-                        checkChoiceDisplayname("index=1", res[1], 2, "<strong>two</strong>", true);
-                        checkChoiceDisplayname("index=2", res[2], 3, "<strong>three</strong>", true);
+                        expect(res.length).toEqual(2, "length missmatch.");
+                        checkChoiceDisplayname("index=1", res[0], 2, "<strong>two</strong>", true);
+                        checkChoiceDisplayname("index=2", res[1], 3, "<strong>three</strong>", true);
                         done();
                     }).catch(function (err) {
                         console.log(err);
@@ -1403,6 +1416,30 @@ exports.execute = function (options) {
                 it ("otherwise should return true.", function () {
                     expect(mainFacets[1].hideNumOccurrences).toBe(true, "missmatch for index=1");
                     expect(mainFacets[7].hideNumOccurrences).toBe(true, "missmatch for index=7");
+                });
+            });
+
+            describe("hideNullChoice, ", function () {
+                it ('should return false if hide_not_null_choice is not `true`.', function () {
+                    expect(mainFacets[0].hideNullChoice).toBe(false, "missmatch for index=0");
+                    expect(mainFacets[2].hideNullChoice).toBe(false, "missmatch for index=2");
+                });
+
+                it ("otherwise should return true.", function () {
+                    expect(mainFacets[1].hideNullChoice).toBe(true, "missmatch for index=1");
+                    expect(mainFacets[7].hideNullChoice).toBe(true, "missmatch for index=7");
+                });
+            });
+
+            describe("hideNotNullChoice, ", function () {
+                it ('should return false if hide_null_choice is not `true`.', function () {
+                    expect(mainFacets[1].hideNotNullChoice).toBe(false, "missmatch for index=1");
+                    expect(mainFacets[7].hideNotNullChoice).toBe(false, "missmatch for index=7");
+                });
+
+                it ("otherwise should return true.", function () {
+                    expect(mainFacets[0].hideNotNullChoice).toBe(true, "missmatch for index=0");
+                    expect(mainFacets[2].hideNotNullChoice).toBe(true, "missmatch for index=2");
                 });
             });
 
@@ -1495,7 +1532,7 @@ exports.execute = function (options) {
                 it ("should return the list of avaialble facets sorted by frequency and tie break by column.", function (done) {
                     testEntityCounts(
                         mainFacets[0].scalarValuesReference,
-                        "M:=faceting_schema:main/int_col::geq::-2/$M/0:=id;count:=cnt(*)@sort(count::desc::,0)",
+                        "M:=faceting_schema:main/int_col::geq::-2/$M/!(id::null::)/0:=id;count:=cnt(*)@sort(count::desc::,0)",
                         10,
                         ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'],
                         2,
@@ -1506,7 +1543,7 @@ exports.execute = function (options) {
                 it ("should be able to pass the FacetColumn.sortColumns to it.", function (done) {
                     testEntityCounts(
                         mainFacets[2].scalarValuesReference,
-                        "M:=faceting_schema:main/id=1/$M/int_col::geq::-2/$M/0:=float_col,1:=id;count:=cnt(*)@sort(1,0::desc::)",
+                        "M:=faceting_schema:main/id=1/$M/int_col::geq::-2/$M/!(float_col::null::)/0:=float_col,1:=id;count:=cnt(*)@sort(1,0::desc::)",
                         1, // the reference has applied filters
                         ["11.1100"],
                         2,
@@ -1517,7 +1554,7 @@ exports.execute = function (options) {
                 it ("should be able to pass the FacetColumn.hideNumOccurrences to it (should still add the count and just hide it).", function (done) {
                     testEntityCounts(
                         mainFacets[7].scalarValuesReference,
-                        "M:=faceting_schema:main/id=1/$M/int_col::geq::-2/$M/0:=markdown_col;count:=cnt(*)@sort(count::desc::,0)",
+                        "M:=faceting_schema:main/id=1/$M/int_col::geq::-2/$M/!(markdown_col::null::)/0:=markdown_col;count:=cnt(*)@sort(count::desc::,0)",
                         1,
                         ["<strong>one</strong>"],
                         1,
@@ -1528,7 +1565,7 @@ exports.execute = function (options) {
                 it ("should not add count column if it's hidden and not part of sortColumns.", function (done) {
                     testEntityCounts(
                         mainFacets[1].scalarValuesReference,
-                        "M:=faceting_schema:main/id=1/$M/0:=int_col,1:=id@sort(1::desc::)",
+                        "M:=faceting_schema:main/id=1/$M/!(int_col::null::)/0:=int_col,1:=id@sort(1::desc::)",
                         1,
                         ["11"],
                         1,
@@ -1543,21 +1580,21 @@ exports.execute = function (options) {
             it ("should be able to construct a reference with multiple filters.", function () {
                 // refMain has -> id=1, int_col>-2
                 ref = refMain.facetColumns[14].addChoiceFilters(["a", "test"]);
-                ref = ref.facetColumns[11].addChoiceFilters(["1", "2"]);
+                ref = ref.facetColumns[11].addChoiceFilters(["1", null]);
                 ref = ref.facetColumns[12].addSearchFilter("t");
                 ref = ref.facetColumns[2].addRangeFilter(-1, false, 20.2, false).reference;
 
                 uri = "M:=faceting_schema:main/id=1/$M/int_col::geq::-2/$M/float_col::geq::-1&float_col::leq::20.2/$M/" +
-                      "left(fk_to_f2)=(faceting_schema:f2:id)/id=1;id=2/$M/" +
-                      "left(id)=(faceting_schema:main_f3_assoc:id_main)/left(id_f3)=(faceting_schema:f3:id)/term::ciregexp::t/$M/" +
-                      "left(id)=(faceting_schema:longpath_1:id)/left(id)=(faceting_schema:longpath_2:id)/left(id)=(faceting_schema:longpath_3:id)/left(id)=(faceting_schema:longpath_4:id)/left(id)=(faceting_schema:longpath_5:id)/col=a;col=test/$M";
+                      "(id)=(faceting_schema:main_f3_assoc:id_main)/(id_f3)=(faceting_schema:f3:id)/term::ciregexp::t/$M/" +
+                      "(id)=(faceting_schema:longpath_1:id)/(id)=(faceting_schema:longpath_2:id)/(id)=(faceting_schema:longpath_3:id)/(id)=(faceting_schema:longpath_4:id)/(id)=(faceting_schema:longpath_5:id)/col=a;col=test/$M/" +
+                      "left(fk_to_f2)=(faceting_schema:f2:id)/id=1;id::null::/$M";
 
                 facetObj = {
                     "and": [
                         {"source": "id", "choices":["1"]},
                         {"source":"int_col","ranges":[{"min":-2}]},
                         {"source":["float_col"],"ranges":[{"max":20.2,"min":-1}]},
-                        {"source":[{"outbound":["faceting_schema","main_fk2"]},"id"],"choices":["1","2"]},
+                        {"source":[{"outbound":["faceting_schema","main_fk2"]},"id"],"choices":["1", null]},
                         {
                             "source": [
                                 {"inbound":  ["faceting_schema","main_f3_assoc_fk1"]},
@@ -1589,14 +1626,14 @@ exports.execute = function (options) {
                     "new refernece, index = 0",
                     ref.facetColumns[0],
                     "M:=faceting_schema:main/int_col::geq::-2/$M/float_col::geq::-1&float_col::leq::20.2/$M/" +
-                    "left(fk_to_f2)=(faceting_schema:f2:id)/id=1;id=2/$M/" +
-                    "left(id)=(faceting_schema:main_f3_assoc:id_main)/left(id_f3)=(faceting_schema:f3:id)/term::ciregexp::t/$M/" +
-                    "left(id)=(faceting_schema:longpath_1:id)/left(id)=(faceting_schema:longpath_2:id)/left(id)=(faceting_schema:longpath_3:id)/left(id)=(faceting_schema:longpath_4:id)/left(id)=(faceting_schema:longpath_5:id)/col=a;col=test/$M",
+                    "(id)=(faceting_schema:main_f3_assoc:id_main)/(id_f3)=(faceting_schema:f3:id)/term::ciregexp::t/$M/" +
+                    "(id)=(faceting_schema:longpath_1:id)/(id)=(faceting_schema:longpath_2:id)/(id)=(faceting_schema:longpath_3:id)/(id)=(faceting_schema:longpath_4:id)/(id)=(faceting_schema:longpath_5:id)/col=a;col=test/$M/" +
+                    "left(fk_to_f2)=(faceting_schema:f2:id)/id=1;id::null::/$M",
                     {
                         "and": [
                             {"source":"int_col","ranges":[{"min":-2}]},
                             {"source":["float_col"],"ranges":[{"max":20.2,"min":-1}]},
-                            {"source":[{"outbound":["faceting_schema","main_fk2"]},"id"],"choices":["1","2"]},
+                            {"source":[{"outbound":["faceting_schema","main_fk2"]},"id"],"choices":["1",null]},
                             {
                                 "source": [
                                     {"inbound":  ["faceting_schema","main_f3_assoc_fk1"]},
@@ -1625,15 +1662,15 @@ exports.execute = function (options) {
                     "new refernece, index = 14",
                     ref.facetColumns[14],
                     "T:=faceting_schema:main/id=1/$T/int_col::geq::-2/$T/float_col::geq::-1&float_col::leq::20.2/$T/" +
-                    "left(fk_to_f2)=(faceting_schema:f2:id)/id=1;id=2/$T/" +
-                    "left(id)=(faceting_schema:main_f3_assoc:id_main)/left(id_f3)=(faceting_schema:f3:id)/term::ciregexp::t/$T/" +
-                    "left(id)=(faceting_schema:longpath_1:id)/left(id)=(faceting_schema:longpath_2:id)/left(id)=(faceting_schema:longpath_3:id)/left(id)=(faceting_schema:longpath_4:id)/M:=left(id)=(faceting_schema:longpath_5:id)",
+                    "(id)=(faceting_schema:main_f3_assoc:id_main)/(id_f3)=(faceting_schema:f3:id)/term::ciregexp::t/$T/" +
+                    "left(fk_to_f2)=(faceting_schema:f2:id)/id=1;id::null::/$T/" +
+                    "(id)=(faceting_schema:longpath_1:id)/(id)=(faceting_schema:longpath_2:id)/(id)=(faceting_schema:longpath_3:id)/(id)=(faceting_schema:longpath_4:id)/M:=(id)=(faceting_schema:longpath_5:id)",
                     {
                         "and": [
                             {"source": "id", "choices":["1"]},
                             {"source":"int_col","ranges":[{"min":-2}]},
                             {"source":["float_col"],"ranges":[{"max":20.2,"min":-1}]},
-                            {"source":[{"outbound":["faceting_schema","main_fk2"]},"id"],"choices":["1","2"]},
+                            {"source":[{"outbound":["faceting_schema","main_fk2"]},"id"],"choices":["1",null]},
                             {
                                 "source": [
                                     {"inbound":  ["faceting_schema","main_f3_assoc_fk1"]},
@@ -1669,7 +1706,7 @@ exports.execute = function (options) {
                 var refSorted = refMain.sort([{"column": "int_col", "descending": false}]);
                 var refSortedWithFilter = refSorted.facetColumns[10].addChoiceFilters(["1", "2"]);
                 expect(refSortedWithFilter.location.ermrestCompactPath).toBe(
-                    "M:=faceting_schema:main/id=1/$M/int_col::geq::-2/$M/left(fk_to_f1)=(faceting_schema:f1:id)/id=1;id=2/$M",
+                    "M:=faceting_schema:main/id=1/$M/int_col::geq::-2/$M/(fk_to_f1)=(faceting_schema:f1:id)/id=1;id=2/$M",
                     "path missmatch."
                 );
                 expect(refSortedWithFilter.location.sortObject.length).toEqual(1, "sort length missmatch.");

@@ -1408,6 +1408,8 @@
                 return new module.PreconditionFailedError(response.statusText, response.data);
             case 500:
                 return new module.InternalServerError(response.statusText, response.data);
+            case 502:
+                return new module.BadGatewayError(response.statusText, response.data);
             case 503:
                 return new module.ServiceUnavailableError(response.statusText, response.data);
             default:
@@ -1694,6 +1696,7 @@
          * @param  {Array} value the array of values
          * @param  {Object} options Configuration options. Accepted parameters:
          * - `isMarkdown`: if this is true, we will not esacpe markdown characters
+         * - `returnArray`: if this is true, it will return an array of strings.
          * @return {string} A string represntation of array.
          * @desc
          * Will generate a comma seperated value for an array. It will also change `null` and `""`
@@ -1707,7 +1710,7 @@
                 return '';
             }
 
-            return value.map(function (v) {
+            var arr = value.map(function (v) {
                 var isMarkdown = (options.isMarkdown === true);
                 var pv = v;
                 if (v === "") {
@@ -1721,7 +1724,10 @@
 
                 if (!isMarkdown) pv = module._escapeMarkdownCharacters(pv);
                 return pv;
-            }).join(", ");
+            });
+
+            if (options.returnArray) return arr;
+            return arr.join(", ");
         }
     };
 
@@ -3002,23 +3008,24 @@
      * @private
      */
     module._annotations = Object.freeze({
+        APP_LINKS: "tag:isrd.isi.edu,2016:app-links",
+        ASSET: "tag:isrd.isi.edu,2017:asset",
+        CITATION: "tag:isrd.isi.edu,2018:citation",
+        COLUMN_DISPLAY: "tag:isrd.isi.edu,2016:column-display",
         DISPLAY: "tag:misd.isi.edu,2015:display",
+        EXPORT: "tag:isrd.isi.edu,2016:export",
+        FOREIGN_KEY: "tag:isrd.isi.edu,2016:foreign-key",
+        GENERATED: "tag:isrd.isi.edu,2016:generated",
         HIDDEN: "tag:misd.isi.edu,2015:hidden", //TODO deprecated and should be deleted.
         IGNORE: "tag:isrd.isi.edu,2016:ignore", //TODO should not be used in column and foreign key
-        VISIBLE_COLUMNS: "tag:isrd.isi.edu,2016:visible-columns",
-        FOREIGN_KEY: "tag:isrd.isi.edu,2016:foreign-key",
-        VISIBLE_FOREIGN_KEYS: "tag:isrd.isi.edu,2016:visible-foreign-keys",
-        TABLE_DISPLAY: "tag:isrd.isi.edu,2016:table-display",
-        COLUMN_DISPLAY: "tag:isrd.isi.edu,2016:column-display",
-        TABLE_ALTERNATIVES: "tag:isrd.isi.edu,2016:table-alternatives",
-        APP_LINKS: "tag:isrd.isi.edu,2016:app-links",
-        GENERATED: "tag:isrd.isi.edu,2016:generated",
         IMMUTABLE: "tag:isrd.isi.edu,2016:immutable",
-        NON_DELETABLE: "tag:isrd.isi.edu,2016:non-deletable",
         KEY_DISPLAY: "tag:isrd.isi.edu,2017:key-display",
-        ASSET: "tag:isrd.isi.edu,2017:asset",
-        EXPORT: "tag:isrd.isi.edu,2016:export",
-        CITATION: "tag:isrd.isi.edu,2018:citation"
+        NON_DELETABLE: "tag:isrd.isi.edu,2016:non-deletable",
+        REQUIRED: "tag:isrd.isi.edu,2018:required",
+        TABLE_ALTERNATIVES: "tag:isrd.isi.edu,2016:table-alternatives",
+        TABLE_DISPLAY: "tag:isrd.isi.edu,2016:table-display",
+        VISIBLE_COLUMNS: "tag:isrd.isi.edu,2016:visible-columns",
+        VISIBLE_FOREIGN_KEYS: "tag:isrd.isi.edu,2016:visible-foreign-keys"
     });
 
     /**
@@ -3028,6 +3035,7 @@
     module._contexts = Object.freeze({
         COMPACT: 'compact',
         COMPACT_BRIEF: 'compact/brief',
+        COMPACT_BRIEF_INLINE: 'compact/brief/inline',
         COMPACT_SELECT: 'compact/select',
         CREATE: 'entry/create',
         DETAILED: 'detailed',
@@ -3036,8 +3044,7 @@
         FILTER: 'filter',
         DEFAULT: '*',
         ROWNAME :'row_name',
-        ROWNAME_UNFORMATTED: "row_name/unformatted",
-        COMPACT_BRIEF_INLINE: 'compact/brief/inline'
+        ROWNAME_UNFORMATTED: "row_name/unformatted"
     });
 
     module._dataFormats = Object.freeze({
@@ -3109,9 +3116,10 @@
         return module._facetFilterTypes[k];
     });
 
-    module._pseudoColAggregateFns = ["min", "max", "cnt", "cnt_d", "array"];
-    module._pseudoColAggregateNames = ["Min", "Max", "#", "#", ""];
-    module._pseudoColAggregateExplicitName = ["Minimum", "Maximum", "Number of", "Number of distinct", "List of"];
+    module._pseudoColAggregateFns = ["min", "max", "cnt", "cnt_d", "array", "array_d"];
+    module._pseudoColEntityAggregateFns = ["array", "array_d"];
+    module._pseudoColAggregateNames = ["Min", "Max", "#", "#", "", ""];
+    module._pseudoColAggregateExplicitName = ["Minimum", "Maximum", "Number of", "Number of distinct", "List of", "List of distinct"];
 
     module._systemColumns = ['RID', 'RCB', 'RMB', 'RCT', 'RMT'];
 
@@ -3167,6 +3175,7 @@
         CONFLICT : 409,
         PRECONDITION_FAILED: 412,
         INTERNAL_SERVER_ERROR :500,
+        BAD_GATEWAY: 502,
         SERVIVE_UNAVAILABLE: 503
     });
 

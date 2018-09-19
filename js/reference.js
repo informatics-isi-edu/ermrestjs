@@ -1022,7 +1022,14 @@
                     // this is just to reduce the size of defaults. adding them
                     // is harmless but it's not necessary. so we're just not going
                     // to add them to make the default list shorter
-                    if (col.ermrestDefault == null) return;
+                    // NOTE we added nullok check because of a special case that we found.
+                    // In this case the column was not-null, no default value, and the value
+                    // was being populated by trigger. So we have to add the column to the default
+                    // list so ermrest doesn't throw the error.
+                    // if a column is not-null, we need to actually check for the value. if the value
+                    // is null, not adding it to the default list will always result in ermrest error.
+                    // But adding it to the default list might succeed (if the column has trigger for value)
+                    if (col.ermrestDefault == null && col.nullok) return;
 
                     // add columns that their value is missing in all the rows
                     var missing = true;
@@ -1063,6 +1070,7 @@
          * @param {!number} limit The limit of results to be returned by the
          * read request. __required__
          * @param {Object} contextHeaderParams the object that we want to log.
+         * @param {Boolean} useEntity whether we should use entity api or not (if true, we won't get foreignkey data)
          *
          * @returns {Promise} A promise resolved with {@link ERMrest.Page} of results,
          * or rejected with any of these errors:
@@ -1071,7 +1079,7 @@
          * - {@link ERMrest.NotFoundError}: If asks for sorting based on columns that are not valid.
          * - ERMrestjs corresponding http errors, if ERMrest returns http error.
          */
-        read: function(limit, contextHeaderParams) {
+        read: function(limit, contextHeaderParams, useEntity) {
             var defer = module._q.defer(), self = this;
 
             try {
@@ -1158,10 +1166,14 @@
                         // use the sort columns instead of the actual column.
                         for (j = 0; j < sortCols.length; j++) {
                             if (col.isForeignKey || (col.isPathColumn && col.isUnique && col.foreignKeys.length === 1)) {
+                                if (useEntity) addSort = false;
+
                                 fkIndex = foreignKeys.all().indexOf(col.isForeignKey ? col.foreignKey : col.foreignKeys[0].obj);
                                 colName = "F" + (foreignKeys.length() + k++);
                                 sortMap[colName] = ["F" + (fkIndex+1), module._fixedEncodeURIComponent(sortCols[j].column.name)].join(":");
                             } else if (col.isPathColumn && col.hasPath && col.isUnique && col.foreignKeys.length > 0) {
+                                if (useEntity) addSort = false;
+
                                 // we have added it to the projection list
                                 fkIndex = oneToOnePseudos.indexOf(col);
                                 colName = "P" + (oneToOnePseudos.length + l++);
@@ -1249,13 +1261,14 @@
                  *   2. Filter comes before the link syntax.
                  *   3. There is no trailing `/` in uri (as it will break the ermrest too).
                  * */
-                if (this._table.foreignKeys.length() > 0 || oneToOnePseudos.length > 0) {
+                if (!useEntity && (this._table.foreignKeys.length() > 0 || oneToOnePseudos.length > 0)) {
                     var compactPath = this._location.ermrestCompactPath,
                         mainTableAlias = this._location.mainTableAlias,
                         projectionTableAlias = this._location.projectionTableAlias,
                         aggList = [],
                         sortColumn,
-                        addedCols;
+                        addedCols,
+                        aggFn = "array_d";
 
                     // generate the projection for given pseudo column
                     var getPseudoPath = function (l) {
@@ -1275,14 +1288,14 @@
                         uri += "F" + (k+1) + ":=left" + this._table.foreignKeys.all()[k].toString(true) + "/$" + mainTableAlias + "/";
 
                         // F2:array(F2:*),F1:array(F1:*)
-                        aggList.push("F" + (k+1) + ":=array(F" + (k+1) + ":*)");
+                        aggList.push("F" + (k+1) + ":=" + aggFn +"(F" + (k+1) + ":*)");
                     }
 
                     // add pseudo paths
                     for (k = oneToOnePseudos.length - 1; k >= 0; k--) {
                         uri += getPseudoPath(k) + "/$" + mainTableAlias + "/";
 
-                        aggList.push("P" + (k+1) + ":=array(P" + (k+1) + ":*)");
+                        aggList.push("P" + (k+1) + ":=" + aggFn + "(P" + (k+1) + ":*)");
                     }
 
                     // add sort columns (it will include the key)
@@ -1307,7 +1320,7 @@
                         }
                     }
 
-                    uri += Object.keys(addedCols).join(",") + ";"+mainTableAlias+":=array("+mainTableAlias+":*)," + aggList.join(",");
+                    uri += Object.keys(addedCols).join(",") + ";"+mainTableAlias+":=" + aggFn + "("+mainTableAlias+":*)," + aggList.join(",");
                 }
 
                 // insert @sort()
