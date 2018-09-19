@@ -264,6 +264,8 @@ to use for ERMrest JavaScript agents.
         * [new PreconditionFailedError(status, message)](#new_ERMrest.PreconditionFailedError_new)
     * [.InternalServerError](#ERMrest.InternalServerError)
         * [new InternalServerError(status, message)](#new_ERMrest.InternalServerError_new)
+    * [.BadGatewayError](#ERMrest.BadGatewayError)
+        * [new BadGatewayError(status, message)](#new_ERMrest.BadGatewayError_new)
     * [.ServiceUnavailableError](#ERMrest.ServiceUnavailableError)
         * [new ServiceUnavailableError(status, message)](#new_ERMrest.ServiceUnavailableError_new)
     * [.InvalidFacetOperatorError](#ERMrest.InvalidFacetOperatorError)
@@ -2333,6 +2335,19 @@ DuplicateConflictError - Return error pertaining to Duplicate entried
 <a name="new_ERMrest.InternalServerError_new"></a>
 
 #### new InternalServerError(status, message)
+
+| Param | Type | Description |
+| --- | --- | --- |
+| status | <code>string</code> | the network error code |
+| message | <code>string</code> | error message |
+
+<a name="ERMrest.BadGatewayError"></a>
+
+### ERMrest.BadGatewayError
+**Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
+<a name="new_ERMrest.BadGatewayError_new"></a>
+
+#### new BadGatewayError(status, message)
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -5022,7 +5037,7 @@ TODO: add description
 <a name="ERMrest.exporter+run"></a>
 
 #### exporter.run() ⇒ <code>Promise</code>
-sends the export request to hatrac
+sends the export request to ioboxd
 
 **Kind**: instance method of [<code>exporter</code>](#ERMrest.exporter)  
 <a name="ERMrest.exporter+cancel"></a>
