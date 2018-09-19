@@ -10,7 +10,7 @@ If you want to just look at some examples, go [here](#examples).
 
 ## Where To Use
 
-You can use pseudo-columns while defining list of [visible columns](https://github.com/informatics-isi-edu/ermrest/blob/master/docs/user-doc/annotation.md#2016-visible-columns) and [visible foreign keys](https://github.com/informatics-isi-edu/ermrest/blob/master/docs/user-doc/annotation.md#2016-visible-foreign-keys). You can use any type of pseudo-columns in your list of visible columns, but only the pseudo-columns that have a path to another table will be allowed for visible foreign keys.
+You can use pseudo-columns while defining list of [visible columns](https://github.com/informatics-isi-edu/ermrest/blob/master/docs/user-doc/annotation.md#tag-2016-visible-columns) and [visible foreign keys](https://github.com/informatics-isi-edu/ermrest/blob/master/docs/user-doc/annotation.md#tag-2016-visible-foreign-keys). You can use any type of pseudo-columns in your list of visible columns, but only the pseudo-columns that have a path to another table will be allowed for visible foreign keys.
 
 
 ## Syntax
@@ -79,6 +79,7 @@ In this section, we will summarize the heuristics and logic of pseudo column att
 3. If the data-source is defining an inbound foreign key path of length one (or pure and binary association path), it should behave the same as having the constraint name of foreign key in the list of columns.
 
 #### Displayname
+
 1. Use the defined `markdown_name`.
 2. If the given data-path is defining a more specific pseudo-column type (Key, ForeignKey, or Inbound-Foreignkey) then the value that is returned will be based on that type.
 3. Otherwise if `aggregate` is defined, it will be returning a value in the `<Agg-Fn> <col-displayname>` format. The `<Agg-Fn>` map is as follows:
@@ -92,6 +93,7 @@ cnt_d -> #
 5. In scalar mode, return the column's displayname.
 
 #### Value
+
 1. Return null in entry mode, the paths that are not all-outbound (It's not applicable in these cases), and when aggregate is defined.
 2. If the given data-path is defining a more specific pseudo-column type (Key, ForeignKey, or Inbound-Foreignkey) then the value that is returned will be based on that type.
 3. In scalar mode, return the column's value.

@@ -1,7 +1,7 @@
 # Installing
 
 This pages documents how to install ERMrestJS, a Javascript client API for the
-[ERMrest](http://github.com/informatics-isi-edu/ermrest) service. It provides a higher-level, simplified interface for working with the entity-relationship concepts that are native to ERMrest.
+[ERMrest](http://github.com/informatics-isi-edu/ermrest/) service. It provides a higher-level, simplified interface for working with the entity-relationship concepts that are native to ERMrest.
 
 ## Development Dependencies
 
@@ -70,8 +70,6 @@ $ make test
 ```
 
 This command internally invokes the `node test/jasmine-runner.js` script. To find more information about unit testing see the [Unit Testing documentation](../dev-docs/unit-test.md).
-
-
 
 ## Code Quality
 

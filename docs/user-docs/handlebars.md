@@ -1,8 +1,10 @@
-# Handlebars
+# Handlebars Templating
 
 [Handlebars](http://handlebarsjs.com/) is almost similar to Mustache with some additional benefits. There are some things that you can't do in Mustache that Handlebars allows us to do easily using `helpers`.
 
-The syntax of blocks in Mustache changes a lot in Handlebars. For instance, something in Mustache that allows to do a null check would be
+Once templating is done, the returned string is passed to the Markdown renderer. To learn about the markdown syntax please refer to the [Markdown Formatting](markdown-formatting.md) page.
+
+The syntax of blocks in Mustache changes a lot in Handlebars. For instance, something in Mustache that allows you to do a null check would be:
 
 ```js
 // Mustache
@@ -283,7 +285,7 @@ for context `key="**somevalue ] which is ! special" and value="John"` will resul
 
 ### Format Date helper
 
-You can use the `formatDate` helper to take any `date` or `timestamp[tz]` value and format it according to the [Pre Format Guide](https://github.com/informatics-isi-edu/ermrestjs/wiki/Pre-Format-Annotation#syntax-for-dates-and-timestamptzs).
+You can use the `formatDate` helper to take any `date` or `timestamp[tz]` value and format it according to the [Pre Format Guide](pre-format.md#syntax-for-dates-and-timestamps).
 
 Syntax:
 ```
