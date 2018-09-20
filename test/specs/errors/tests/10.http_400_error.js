@@ -2,17 +2,16 @@ var nock = require('nock');
 
 exports.execute = function (options) {
 
-    describe("For determining http 400 error behaviour when Query imeout occurs,", function () {
+    describe("For determining http 400 error behaviour when Query timeout occurs,", function () {
         var server, ermRest, url,
             ops = {allowUnmocked: true};
 
-        beforeAll(function (done) {
+        beforeAll(function () {
             server = options.server;
             ermRest = options.ermRest;
             url = options.url.replace('ermrest', '');
 
             server._http.max_retries = 0;
-            done();
         });
 
         it("should be returned as a QueryTimeoutError.", function (done) {
@@ -23,9 +22,7 @@ exports.execute = function (options) {
                 .reply(400, queryTimeoutResponse)
                 .persist();
 
-            server.catalogs.get("1235").then(function(res) {
-                done.fail("success callback!");
-            }, function(err) {
+            server.catalogs.get("1235").then(null, function(err) {
                 expect(err.code).toBe(400);
                 expect(err.message).toBe(queryTimeoutResponse);
 
@@ -34,14 +31,14 @@ exports.execute = function (options) {
                 done();
             }).catch(function(err) {
                 console.log(err);
-                done.fail("catch callback");
+                done.fail();
             });
         });
 
-	    afterAll(function() {
+        afterAll(function() {
             nock.cleanAll();
-	        nock.enableNetConnect();
-	    });
+            nock.enableNetConnect();
+        });
 
     });
 
