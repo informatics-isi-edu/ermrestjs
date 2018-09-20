@@ -506,7 +506,7 @@ With attributes
 
 ### 12. Span (Attach Attributes To Text)
 
-This is not part of commonMark specification and it will result in an [inline](#inline-vs-block) element.  Openning tag is `:span:` and closing is `:/span:`.
+This is not part of commonMark specification and it will result in an [inline](#inline-vs-block) element.  Opening tag is `:span:` and closing is `:/span:`.
 
 ```html
 This :span:text:/span:{.cl-name style="color:red"} has new color.
