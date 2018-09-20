@@ -2,7 +2,7 @@ var nock = require('nock');
 
 exports.execute = function (options) {
 
-    describe("For determining http 400 error behaviour when Query imeout occurs,", function () {
+    describe("For determining http 400 error behaviour when Query timeout occurs,", function () {
         var server, ermRest, url,
             ops = {allowUnmocked: true};
 
