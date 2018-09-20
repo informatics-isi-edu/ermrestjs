@@ -4659,7 +4659,7 @@ Usage:
 <a name="ERMrest.ColumnGroupAggregateFn+entityCounts"></a>
 
 #### columnGroupAggregateFn.entityCounts() ⇒ [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)
-Will return an appropriate reference which can be used to show distinct values and their counts
+Will return a compact/select attribute group reference which can be used to show distinct values and their counts
 The result is based on shortest key of the parent table. If we have join
 in the path, we are counting the shortest key of the parent table (not the end table).
 NOTE: Will create a new reference by each call.
