@@ -487,6 +487,7 @@ to use for ERMrest JavaScript agents.
         * [.columns](#ERMrest.AttributeGroupReference+columns) : <code>Array.&lt;AttributeGroupColumn&gt;</code>
         * [.shortestKey](#ERMrest.AttributeGroupReference+shortestKey) : <code>Array.&lt;ERMrest.AttributeGroupColumn&gt;</code>
         * [.uri](#ERMrest.AttributeGroupReference+uri) : <code>string</code>
+        * [.unfilteredReference](#ERMrest.AttributeGroupReference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
         * [.ermrestPath](#ERMrest.AttributeGroupReference+ermrestPath) : <code>string</code>
         * [.read([limit], contextHeaderParams)](#ERMrest.AttributeGroupReference+read) ⇒ <code>ERMRest.AttributeGroupPage</code>
         * [.getColumnByName(name)](#ERMrest.AttributeGroupReference+getColumnByName) ⇒ <code>ERMrest.AttributeGroupColumn</code>
@@ -612,6 +613,7 @@ to use for ERMrest JavaScript agents.
         * [.columns](#ERMrest.AttributeGroupReference+columns) : <code>Array.&lt;AttributeGroupColumn&gt;</code>
         * [.shortestKey](#ERMrest.AttributeGroupReference+shortestKey) : <code>Array.&lt;ERMrest.AttributeGroupColumn&gt;</code>
         * [.uri](#ERMrest.AttributeGroupReference+uri) : <code>string</code>
+        * [.unfilteredReference](#ERMrest.AttributeGroupReference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
         * [.ermrestPath](#ERMrest.AttributeGroupReference+ermrestPath) : <code>string</code>
         * [.read([limit], contextHeaderParams)](#ERMrest.AttributeGroupReference+read) ⇒ <code>ERMRest.AttributeGroupPage</code>
         * [.getColumnByName(name)](#ERMrest.AttributeGroupReference+getColumnByName) ⇒ <code>ERMrest.AttributeGroupColumn</code>
@@ -4710,6 +4712,7 @@ parent table (not the end table).
     * [.columns](#ERMrest.AttributeGroupReference+columns) : <code>Array.&lt;AttributeGroupColumn&gt;</code>
     * [.shortestKey](#ERMrest.AttributeGroupReference+shortestKey) : <code>Array.&lt;ERMrest.AttributeGroupColumn&gt;</code>
     * [.uri](#ERMrest.AttributeGroupReference+uri) : <code>string</code>
+    * [.unfilteredReference](#ERMrest.AttributeGroupReference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
     * [.ermrestPath](#ERMrest.AttributeGroupReference+ermrestPath) : <code>string</code>
     * [.read([limit], contextHeaderParams)](#ERMrest.AttributeGroupReference+read) ⇒ <code>ERMRest.AttributeGroupPage</code>
     * [.getColumnByName(name)](#ERMrest.AttributeGroupReference+getColumnByName) ⇒ <code>ERMrest.AttributeGroupColumn</code>
@@ -4783,6 +4786,13 @@ NOTE:
 - Since this is the object that has knowledge of columns, this should be here.
   (we might want to relocate it to the AttributeGroupLocation object.)
 - ermrest can processs this uri.
+
+**Kind**: instance property of [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)  
+<a name="ERMrest.AttributeGroupReference+unfilteredReference"></a>
+
+#### attributeGroupReference.unfilteredReference : [<code>Reference</code>](#ERMrest.Reference)
+This will generate a new unfiltered reference each time.
+Returns a reference that points to all entities of current table
 
 **Kind**: instance property of [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)  
 <a name="ERMrest.AttributeGroupReference+ermrestPath"></a>
@@ -6171,6 +6181,7 @@ NOTE:
     * [.columns](#ERMrest.AttributeGroupReference+columns) : <code>Array.&lt;AttributeGroupColumn&gt;</code>
     * [.shortestKey](#ERMrest.AttributeGroupReference+shortestKey) : <code>Array.&lt;ERMrest.AttributeGroupColumn&gt;</code>
     * [.uri](#ERMrest.AttributeGroupReference+uri) : <code>string</code>
+    * [.unfilteredReference](#ERMrest.AttributeGroupReference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
     * [.ermrestPath](#ERMrest.AttributeGroupReference+ermrestPath) : <code>string</code>
     * [.read([limit], contextHeaderParams)](#ERMrest.AttributeGroupReference+read) ⇒ <code>ERMRest.AttributeGroupPage</code>
     * [.getColumnByName(name)](#ERMrest.AttributeGroupReference+getColumnByName) ⇒ <code>ERMrest.AttributeGroupColumn</code>
@@ -6244,6 +6255,13 @@ NOTE:
 - Since this is the object that has knowledge of columns, this should be here.
   (we might want to relocate it to the AttributeGroupLocation object.)
 - ermrest can processs this uri.
+
+**Kind**: instance property of [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)  
+<a name="ERMrest.AttributeGroupReference+unfilteredReference"></a>
+
+#### attributeGroupReference.unfilteredReference : [<code>Reference</code>](#ERMrest.Reference)
+This will generate a new unfiltered reference each time.
+Returns a reference that points to all entities of current table
 
 **Kind**: instance property of [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)  
 <a name="ERMrest.AttributeGroupReference+ermrestPath"></a>

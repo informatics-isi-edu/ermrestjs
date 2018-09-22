@@ -178,6 +178,15 @@
                 var count = 0;
                 function asyncfn() {
                     fn.apply(scope, args).then(function(response) {
+                        // console.log(response);
+                        // if (response.config.url.includes("term=ChIP-Seq/$M/!(accession::null::)/0:=accession") || response.config.url.includes("cnt_d")) {
+                        // // if (response.config.url.includes("array_d(T:int_col)") || response.config.url.includes("product-record:booking") || response.config.url.includes("product-record:media")) {
+                        // // if (response.config.url.includes("attributegroup/M:=product-record:accommodation/id=2002")) {
+                        //     var error = new Error();
+                        //     error.status = 400;
+                        //     error.data = "Query run time limit exceeded";
+                        //     deferred.reject(error);
+                        // }
                         module._onHTTPSuccess();
                         module._onload().then(function() {
                             deferred.resolve(response);

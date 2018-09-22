@@ -172,6 +172,21 @@ AttributeGroupReference.prototype = {
      },
 
      /**
+      * This will generate a new unfiltered reference each time.
+      * Returns a reference that points to all entities of current table
+      *
+      * @type {ERMrest.Reference}
+      */
+     get unfilteredReference() {
+         var table = this._keyColumns[0].baseColumn.table;
+         var uri = table.schema.catalog.server.uri + "/catalog/" + table.schema.catalog.id + "/" + this.location.api + "/" +
+             [module._fixedEncodeURIComponent(table.schema.name),module._fixedEncodeURIComponent(table.name)].join(":");
+         console.log(uri);
+         var newLocation = new Location(uri);
+         return new AttributeGroupReference(this._keyColumns, this._aggregateColumns, newLocation, this._catalog, this._context);
+     },
+
+     /**
       * The second part of Attributegroup uri.
       * <path>/<search>/<_keyColumns>;<_aggregateColumns><sort><page>
       *
