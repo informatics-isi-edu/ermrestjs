@@ -2254,7 +2254,8 @@ FacetColumn.prototype = {
      */
     get hideNullChoice() {
         if (this._hideNullChoice === undefined) {
-            this._hideNullChoice = (this._facetObject.hide_null_choice === true);
+            // this._hideNullChoice = (this._facetObject.hide_null_choice === true);
+            this._hideNullChoice = true;
         }
         return this._hideNullChoice;
     },
