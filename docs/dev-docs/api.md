@@ -479,7 +479,7 @@ to use for ERMrest JavaScript agents.
         * [.entityCounts()](#ERMrest.ColumnGroupAggregateFn+entityCounts) ⇒ [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)
         * [.histogram(bucketCount, min, max)](#ERMrest.ColumnGroupAggregateFn+histogram) ⇒ [<code>BucketAttributeGroupReference</code>](#ERMrest.BucketAttributeGroupReference)
     * [.AttributeGroupReference](#ERMrest.AttributeGroupReference)
-        * [new AttributeGroupReference(keyColumns, aggregateColumns, location, catalog, context)](#new_ERMrest.AttributeGroupReference_new)
+        * [new AttributeGroupReference(keyColumns, aggregateColumns, location, catalog, sourceTable, context)](#new_ERMrest.AttributeGroupReference_new)
         * [._keyColumns](#ERMrest.AttributeGroupReference+_keyColumns) : <code>Array.&lt;ERMrest.AttributeGroupColumn&gt;</code>
         * [._aggregateColumns](#ERMrest.AttributeGroupReference+_aggregateColumns) : <code>Array.&lt;ERMrest.AttributeGroupColumn&gt;</code>
         * [.aggregate](#ERMrest.AttributeGroupReference+aggregate) : [<code>ReferenceAggregateFn</code>](#ERMrest.ReferenceAggregateFn)
@@ -605,7 +605,7 @@ to use for ERMrest JavaScript agents.
         * [.getColumnByName(name)](#ERMrest.Reference+getColumnByName) ⇒ [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)
         * [.generateColumnsList(tuple)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
     * [.AttributeGroupReference](#ERMrest.AttributeGroupReference) : <code>object</code>
-        * [new AttributeGroupReference(keyColumns, aggregateColumns, location, catalog, context)](#new_ERMrest.AttributeGroupReference_new)
+        * [new AttributeGroupReference(keyColumns, aggregateColumns, location, catalog, sourceTable, context)](#new_ERMrest.AttributeGroupReference_new)
         * [._keyColumns](#ERMrest.AttributeGroupReference+_keyColumns) : <code>Array.&lt;ERMrest.AttributeGroupColumn&gt;</code>
         * [._aggregateColumns](#ERMrest.AttributeGroupReference+_aggregateColumns) : <code>Array.&lt;ERMrest.AttributeGroupColumn&gt;</code>
         * [.aggregate](#ERMrest.AttributeGroupReference+aggregate) : [<code>ReferenceAggregateFn</code>](#ERMrest.ReferenceAggregateFn)
@@ -4704,7 +4704,7 @@ parent table (not the end table).
 **Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
 
 * [.AttributeGroupReference](#ERMrest.AttributeGroupReference)
-    * [new AttributeGroupReference(keyColumns, aggregateColumns, location, catalog, context)](#new_ERMrest.AttributeGroupReference_new)
+    * [new AttributeGroupReference(keyColumns, aggregateColumns, location, catalog, sourceTable, context)](#new_ERMrest.AttributeGroupReference_new)
     * [._keyColumns](#ERMrest.AttributeGroupReference+_keyColumns) : <code>Array.&lt;ERMrest.AttributeGroupColumn&gt;</code>
     * [._aggregateColumns](#ERMrest.AttributeGroupReference+_aggregateColumns) : <code>Array.&lt;ERMrest.AttributeGroupColumn&gt;</code>
     * [.aggregate](#ERMrest.AttributeGroupReference+aggregate) : [<code>ReferenceAggregateFn</code>](#ERMrest.ReferenceAggregateFn)
@@ -4719,7 +4719,7 @@ parent table (not the end table).
 
 <a name="new_ERMrest.AttributeGroupReference_new"></a>
 
-#### new AttributeGroupReference(keyColumns, aggregateColumns, location, catalog, context)
+#### new AttributeGroupReference(keyColumns, aggregateColumns, location, catalog, sourceTable, context)
 Constructs a Reference object.
 
 This object will be the main object that client will interact with, when we want
@@ -4739,6 +4739,7 @@ Usage:
 | aggregateColumns | <code>Array.&lt;ERMRest.AttributeGroupColumn&gt;</code> | List of columns that will create the aggreagte columns list in the request. |
 | location | <code>ERMRest.AttributeGroupLocation</code> | The location object. |
 | catalog | <code>ERMRest.Catalog</code> | The catalog object. |
+| sourceTable | <code>ERMRest.Table</code> | The table object that represents this AG reference |
 | context | <code>String</code> | The context that this reference is used in |
 
 <a name="ERMrest.AttributeGroupReference+_keyColumns"></a>
@@ -6173,7 +6174,7 @@ NOTE:
 **Kind**: static namespace of [<code>ERMrest</code>](#ERMrest)  
 
 * [.AttributeGroupReference](#ERMrest.AttributeGroupReference) : <code>object</code>
-    * [new AttributeGroupReference(keyColumns, aggregateColumns, location, catalog, context)](#new_ERMrest.AttributeGroupReference_new)
+    * [new AttributeGroupReference(keyColumns, aggregateColumns, location, catalog, sourceTable, context)](#new_ERMrest.AttributeGroupReference_new)
     * [._keyColumns](#ERMrest.AttributeGroupReference+_keyColumns) : <code>Array.&lt;ERMrest.AttributeGroupColumn&gt;</code>
     * [._aggregateColumns](#ERMrest.AttributeGroupReference+_aggregateColumns) : <code>Array.&lt;ERMrest.AttributeGroupColumn&gt;</code>
     * [.aggregate](#ERMrest.AttributeGroupReference+aggregate) : [<code>ReferenceAggregateFn</code>](#ERMrest.ReferenceAggregateFn)
@@ -6188,7 +6189,7 @@ NOTE:
 
 <a name="new_ERMrest.AttributeGroupReference_new"></a>
 
-#### new AttributeGroupReference(keyColumns, aggregateColumns, location, catalog, context)
+#### new AttributeGroupReference(keyColumns, aggregateColumns, location, catalog, sourceTable, context)
 Constructs a Reference object.
 
 This object will be the main object that client will interact with, when we want
@@ -6208,6 +6209,7 @@ Usage:
 | aggregateColumns | <code>Array.&lt;ERMRest.AttributeGroupColumn&gt;</code> | List of columns that will create the aggreagte columns list in the request. |
 | location | <code>ERMRest.AttributeGroupLocation</code> | The location object. |
 | catalog | <code>ERMRest.Catalog</code> | The catalog object. |
+| sourceTable | <code>ERMRest.Table</code> | The table object that represents this AG reference |
 | context | <code>String</code> | The context that this reference is used in |
 
 <a name="ERMrest.AttributeGroupReference+_keyColumns"></a>

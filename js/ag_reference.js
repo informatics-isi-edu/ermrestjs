@@ -23,11 +23,12 @@ module.AttributeGroupColumn = AttributeGroupColumn;
  * @param       {?ERMRest.AttributeGroupColumn[]} aggregateColumns List of columns that will create the aggreagte columns list in the request.
  * @param       {ERMRest.AttributeGroupLocation} location  The location object.
  * @param       {ERMRest.Catalog} catalog  The catalog object.
+ * @param       {ERMRest.Table} sourceTable The table object that represents this AG reference
  * @param       {String} context The context that this reference is used in
  * @constructor
  * @memberof ERMrest
  */
-function AttributeGroupReference(keyColumns, aggregateColumns, location, catalog, context) {
+function AttributeGroupReference(keyColumns, aggregateColumns, location, catalog, sourceTable, context) {
 
     this.isAttributeGroup = true;
 
@@ -50,6 +51,8 @@ function AttributeGroupReference(keyColumns, aggregateColumns, location, catalog
     this._server = catalog.server;
 
     this._catalog = catalog;
+
+    this.table = sourceTable;
 
     /**
      * @type {ERMrest.ReferenceAggregateFn}
@@ -134,7 +137,7 @@ AttributeGroupReference.prototype = {
 
         // TODO doesn't support sort based on other columns.
         var newLocation = this.location.changeSort(sort);
-        return new AttributeGroupReference(this._keyColumns, this._aggregateColumns, newLocation, this._catalog, this._context);
+        return new AttributeGroupReference(this._keyColumns, this._aggregateColumns, newLocation, this._catalog, this.table, this._context);
     },
 
     search: function (term) {
@@ -146,7 +149,7 @@ AttributeGroupReference.prototype = {
         verify(typeof this.location.searchColumn === "string" && this.location.searchColumn.length > 0, "Location object doesnt have search column.");
 
         var newLocation = this.location.changeSearchTerm(term);
-        return new AttributeGroupReference(this._keyColumns, this._aggregateColumns, newLocation, this._catalog, this._context);
+        return new AttributeGroupReference(this._keyColumns, this._aggregateColumns, newLocation, this._catalog, this.table, this._context);
     },
 
     /**
@@ -178,12 +181,8 @@ AttributeGroupReference.prototype = {
       * @type {ERMrest.Reference}
       */
      get unfilteredReference() {
-         var table = this._keyColumns[0].baseColumn.table;
-         var uri = table.schema.catalog.server.uri + "/catalog/" + table.schema.catalog.id + "/" + this.location.api + "/" +
-             [module._fixedEncodeURIComponent(table.schema.name),module._fixedEncodeURIComponent(table.name)].join(":");
-         console.log(uri);
-         var newLocation = new Location(uri);
-         return new AttributeGroupReference(this._keyColumns, this._aggregateColumns, newLocation, this._catalog, this._context);
+         var newLocation = new AttributeGroupLocation(this.location.service, this.location.catalogId, [module._fixedEncodeURIComponent(this.table.schema.name),module._fixedEncodeURIComponent(this.table.name)].join(":"));
+         return new AttributeGroupReference(this._keyColumns, this._aggregateColumns, newLocation, this._catalog, this.table, this._context);
      },
 
      /**
@@ -399,7 +398,7 @@ AttributeGroupReference.prototype = {
                 if ( currRef.location.beforeObject && (response.data.length < limit || !hasPrevious) ) {
                     // a new location without paging
                     var newLocation = currRef.location.changePage();
-                    var referenceWithoutPaging = new AttributeGroupReference(currRef._keyColumns, currRef._aggregateColumns, newLocation, currRef._catalog, currRef._context);
+                    var referenceWithoutPaging = new AttributeGroupReference(currRef._keyColumns, currRef._aggregateColumns, newLocation, currRef._catalog, currRef.table, currRef._context);
                     referenceWithoutPaging.read(limit).then(function rereadReference(rereadPage) {
                         defer.resolve(rereadPage);
                     }, function error(err) {
@@ -672,7 +671,7 @@ AttributeGroupPage.prototype = {
         } else {
             newLocation = currRef.location.changePage(null, pageValues);
         }
-        return new AttributeGroupReference(currRef._keyColumns, currRef._aggregateColumns, newLocation, self.reference._catalog, self.reference._context);
+        return new AttributeGroupReference(currRef._keyColumns, currRef._aggregateColumns, newLocation, currRef._catalog, currRef.table, currRef._context);
     }
 };
 
@@ -1042,6 +1041,8 @@ function AttributeGroupLocation(service, catalog, path, searchObject, sortObject
      * @type {stirng}
      */
     this.catalogId = catalog;
+
+    this.api = "attributegroup";
 
     /**
      * The path that will be used for generating the uri in read.
