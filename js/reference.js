@@ -2148,6 +2148,128 @@
         },
 
         /**
+         * Will return the expor templates that are available for this reference.
+         * It will validate the templates that are defined in annotation.
+         * If its `detailed` context and annotation didn't have any valid templates,
+         * it will return the default export template.
+         * @type {Object}
+         */
+        get exportTemplates() {
+            if (this._exportTemplates === undefined) {
+                var res = this.table.exportTemplates;
+                if (res.length > 0 || this._context !== module._contexts.DETAILED) {
+                    this._exportTemplates = res;
+                } else {
+                    // this._exportTemplates = [JSON.parse(this.defaultExportTemplate)];
+                    this._exportTemplates = [this.defaultExportTemplate];
+                }
+            }
+            return this._exportTemplates;
+        },
+
+        /**
+         * Returns a object, that can be used as a default export template.
+         * It will include:
+         * - csv of entity API request to the main table.
+         * -  csv of entity API requests for all the related entities that are one level away from the main.
+         * - csv of attributegroup API requests for all the other related entities.
+         *   The projection list should include all the columns of the table plus
+         *   the foreignkey value to the main entity.
+         *   The request should be grouped by the value of table's key + foreign key value.
+         * - fetch all the assets. For fetch, we need to provide url, length, and md5 (or other checksum types).
+         *   If the column for these fields are defined in the asset annotation, we're going to use them.
+         *   Otherwise we're not going to provide these extra columns and will let ioboxd handle it.
+         * @type {string}
+         */
+        get defaultExportTemplate() {
+            if (this._defaultExportTemplate === undefined) {
+                var outputs = [], output;
+
+                var self = this;
+                var table = self.table,
+                    location = self.location,
+                    encode = module._fixedEncodeURIComponent;
+
+                // main entity
+                outputs.push({
+                    destination: {
+                        name: table.name,
+                        type: "csv"
+                    },
+                    source: {
+                        api: "entity",
+                        table: [encode(table.schema.name), encode(table.name)].join(":")
+                    }
+                });
+
+
+                // related entities
+                self.related().forEach(function (rel) {
+                    if (rel.pseudoColumn) {
+                        // look at the path
+                    } else if (rel.derivedAssociationReference) {
+                        // the path is two
+                    } else {
+                        // the path is length one
+                        outputs.push({
+                            destination: {
+                                name: rel.table.name,
+                                type: "csv"
+                            },
+                            source: {
+                                api: "entity",
+                                table: [encode(rel.table.name), encode(rel.table.name)].join(":"),
+                                path: rel.location.ermrestCompactPath
+                            }
+                        });
+                    }
+                });
+
+                // assets
+                self.columns.forEach(function (col) {
+                    if (!col.isAsset) return;
+                    var path = [];
+
+                    // url
+                    path.push("url:=" + encode(col.name));
+
+                    var attributes = {
+                        byteCountColumn: "length",
+                        filenameColumn: "filename",
+                        md5: "md5",
+                        sha256: "sha256"
+                    };
+
+                    for (var key in attributes) {
+                        if (! (col[key] instanceof Column) ) continue;
+                        path.push(attributes[key] + ":=" + encode(col[key].name));
+                    }
+
+                    outputs.push({
+                        destination: {
+                            name: col.name,
+                            type: "fetch"
+                        },
+                        source: {
+                            api: "attribute",
+                            table: [encode(table.schema.name), encode(table.name)].join(":"),
+                            path: path.join(";")
+                        }
+                    });
+                });
+
+                self._defaultExportTemplate = {
+                    name: "default_template",
+                    format_name: "BAG", // display name
+                    format_type: "BAG",
+                    outputs: outputs
+                };
+            }
+            // return JSON.stringify(this._defaultExportTemplate);
+            return this._defaultExportTemplate;
+        },
+
+        /**
          * create a new reference with the new search
          * by copying this reference and clears previous search filters
          * search term can be:
