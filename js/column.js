@@ -616,6 +616,9 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
                     res += (i+1) + ". " + arrayVal + " \n";
                 });
                 break;
+            case "raw":
+                res = arrayRes.join(" ");
+                break;
             default: //csv
                 res = arrayRes.join(", ");
         }
@@ -2259,7 +2262,8 @@ FacetColumn.prototype = {
      */
     get hideNullChoice() {
         if (this._hideNullChoice === undefined) {
-            this._hideNullChoice = (this._facetObject.hide_null_choice === true);
+            // this._hideNullChoice = (this._facetObject.hide_null_choice === true);
+            this._hideNullChoice = true;
         }
         return this._hideNullChoice;
     },
@@ -3102,7 +3106,7 @@ function ColumnGroupAggregateFn (column) {
 
 ColumnGroupAggregateFn.prototype = {
     /**
-     * Will return an appropriate reference which can be used to show distinct values and their counts
+     * Will return a compact/select attribute group reference which can be used to show distinct values and their counts
      * The result is based on shortest key of the parent table. If we have join
      * in the path, we are counting the shortest key of the parent table (not the end table).
      * NOTE: Will create a new reference by each call.
@@ -3176,6 +3180,8 @@ ColumnGroupAggregateFn.prototype = {
         if (dontAllowNull) {
             var encodedColName = module._fixedEncodeURIComponent(self.column.name);
             path += "/!(" + encodedColName + "::null::";
+            // when it's json, we cannot possibly know the difference between database null and
+            // json null, so we need to filter both.
             if (self.column.type.name.indexOf('json') === 0) {
                 path += ";" + encodedColName + "=null";
             }

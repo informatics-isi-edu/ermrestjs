@@ -1,6 +1,6 @@
 # PreFormat Column Value
 
-For information on the annotation **tag:isrd.isi.edu,2016:column-display** specifics you can refer this [annotations document](https://github.com/informatics-isi-edu/ermrest/blob/master/docs/user-doc/annotation.md#2016-column-display)
+For information on the annotation **tag:isrd.isi.edu,2016:column-display** specifics you can refer this [annotations document](annotation.md#tag-2016-column-display)
 
 The annotation is represented as follows:
 

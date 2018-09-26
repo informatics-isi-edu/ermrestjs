@@ -3,7 +3,7 @@
 > **Disclaimer**:
 > We are only supporting Mustache features that are explained in this guide. We are not responsible for other features that Mustache is supporting. Those features might or might not work in context of ERMrestJS.
 
-For information on the annotation **tag:isrd.isi.edu,2016:column-display** specifics you can refer to this [document](https://github.com/informatics-isi-edu/ermrest/blob/master/docs/user-doc/annotation.md#tag-2016-column-display)
+For information on the annotation **tag:isrd.isi.edu,2016:column-display** specifics you can refer to this [document](annotation.md#tag-2016-column-display)
 
 The annotation is represented as follows:
 

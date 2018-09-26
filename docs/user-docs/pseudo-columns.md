@@ -10,7 +10,7 @@ If you want to just look at some examples, go [here](#examples).
 
 ## Where To Use
 
-You can use pseudo-columns while defining list of [visible columns](https://github.com/informatics-isi-edu/ermrest/blob/master/docs/user-doc/annotation.md#tag-2016-visible-columns) and [visible foreign keys](https://github.com/informatics-isi-edu/ermrest/blob/master/docs/user-doc/annotation.md#tag-2016-visible-foreign-keys). You can use any type of pseudo-columns in your list of visible columns, but only the pseudo-columns that have a path to another table will be allowed for visible foreign keys.
+You can use pseudo-columns while defining list of [visible columns](annotation.md#tag-2016-visible-columns) and [visible foreign keys](annotation.md#tag-2016-visible-foreign-keys). You can use any type of pseudo-columns in your list of visible columns, but only the pseudo-columns that have a path to another table will be allowed for visible foreign keys.
 
 
 ## Syntax
