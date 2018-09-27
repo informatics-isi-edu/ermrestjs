@@ -857,10 +857,20 @@ exports.execute = function (options) {
                     );
                 });
 
-                it ("if mainTuple is not passed, should return an unfiltered referene.", function () {
+                it ("if mainTuple is not passed, should use the foreignkeys to traverse the path.", function () {
                     checkReference(detailedCols[6].reference, "outbound_1_outbound_1", undefined, "index=6");
 
+                    expect(detailedCols[6].reference.location.ermrestPath).toBe(
+                        "T:=pseudo_column_schema:main/(fk1)=(pseudo_column_schema:outbound_1:id)/M:=(fk)=(pseudo_column_schema:outbound_1_outbound_1:id)",
+                        "ermrestUri missmatch for index=6"
+                    );
+
                     checkReference(detailedCols[9].reference, "inbound_2_outbound_1", undefined, "index=9");
+
+                    expect(detailedCols[9].reference.location.ermrestPath).toBe(
+                        "T:=pseudo_column_schema:main/(main_table_id_col)=(pseudo_column_schema:main_inbound_2_association:fk_to_main)/(fk_to_inbound_2)=(pseudo_column_schema:inbound_2:id)/M:=(id)=(pseudo_column_schema:inbound_2_outbound_1:id)",
+                        "ermrestUri missmatch for index=9"
+                    );
                 });
             });
 

@@ -1057,11 +1057,10 @@ Object.defineProperty(PseudoColumn.prototype, "reference", {
 
                 // if data didn't exist, we should traverse the path
                 if ((noData || filters.length == 0) && !self._baseReference.hasJoin) {
-                    uri = self._baseReference.compactUri + "/" + this.foreignKeys.map(function (fk) {
+                    uri = self._baseReference.location.compactUri + "/" + this.foreignKeys.map(function (fk) {
                         return fk.obj.toString(!fk.isInbound, false);
                     }).join("/");
                 }
-
 
                 self._reference = new Reference(module.parse(uri), self.table.schema.catalog);
                 self._reference.parentDisplayname = parentDisplayname;

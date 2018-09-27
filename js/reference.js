@@ -2160,7 +2160,6 @@
                 if (res.length > 0 || this._context !== module._contexts.DETAILED) {
                     this._exportTemplates = res;
                 } else {
-                    // this._exportTemplates = [JSON.parse(this.defaultExportTemplate)];
                     this._exportTemplates = [this.defaultExportTemplate];
                 }
             }
@@ -2183,46 +2182,88 @@
          */
         get defaultExportTemplate() {
             if (this._defaultExportTemplate === undefined) {
-                var outputs = [], output;
+                var outputs = [];
 
-                var self = this;
-                var table = self.table,
-                    location = self.location,
+                var self = this,
                     encode = module._fixedEncodeURIComponent;
 
-                // main entity
-                outputs.push({
-                    destination: {
-                        name: table.name,
-                        type: "csv"
-                    },
-                    source: {
-                        api: "entity",
-                        table: [encode(table.schema.name), encode(table.name)].join(":")
-                    }
-                });
+                // given a table, will generate an entity output for it
+                var getEntityOutput = function (t) {
+                    return {
+                        destination: {
+                            name: t.name,
+                            type: "csv"
+                        },
+                        source: {
+                            api: "entity",
+                            table: [encode(t.schema.name), encode(t.name)].join(":")
+                        }
+                    };
+                };
 
+                // given a related reference and the path from main table to it,
+                // will generate the appropriate attribute group output
+                var getAttributeGroupOutput = function (relatedRef, path) {
+                    var projectionList = [], keyList = [];
+                    // shortestkey of the related reference
+                    relatedRef.table.shortestKey.forEach(function (col) {
+                        keyList.push(encode(col.name));
+                    });
+
+                    // shortestkey of the current table
+                    var i = 0, addedColPrefix = "main_table_";
+                    self.table.shortestKey.forEach(function (col) {
+                        // make sure the alias doesn't exist in the table
+                        while(relatedRef.table.columns.has(addedColPrefix + encode(col.name) + "_" + i)) i++;
+                        keyList.push(addedColPrefix + encode(col.name) + "_" + i + ":=" + self.location.mainTableAlias + ":"+ encode(col.name));
+                    });
+
+                    // projection list
+                    relatedRef.table.columns.all().forEach(function (col) {
+                        // column already has been added to the list
+                        if (keyList.indexOf(encode(col.name)) !== -1) return;
+                        projectionList.push(encode(col.name));
+                    });
+
+                    return {
+                        destination: {
+                            name: relatedRef.table.name,
+                            type: "csv"
+                        },
+                        source: {
+                            api: "attributegroup",
+                            table: [encode(self.table.schema.name), encode(self.table.name)].join(":"),
+                            path: path + "/" + keyList.join(",") + ";" + projectionList.join(",")
+                        }
+                    };
+                };
+
+                // main entity
+                outputs.push(getEntityOutput(self.table));
 
                 // related entities
                 self.related().forEach(function (rel) {
                     if (rel.pseudoColumn) {
-                        // look at the path
-                    } else if (rel.derivedAssociationReference) {
-                        // the path is two
-                    } else {
-                        // the path is length one
-                        outputs.push({
-                            destination: {
-                                name: rel.table.name,
-                                type: "csv"
-                            },
-                            source: {
-                                api: "entity",
-                                table: [encode(rel.table.name), encode(rel.table.name)].join(":"),
-                                path: rel.location.ermrestCompactPath
-                            }
-                        });
+                        if (rel.pseudoColumn.foreignKeys.length < 2) {
+                            outputs.push(getEntityOutput(rel.table));
+                        }
+                        // path from main to the related reference
+                        var path = rel.pseudoColumn.foreignKeys.map(function (fk) {
+                            return fk.obj.toString(!fk.isInbound, false);
+                        }).join("/");
+                        outputs.push(getAttributeGroupOutput(rel, path));
+                        return;
                     }
+
+                    // association table
+                    if (rel.derivedAssociationReference) {
+                        var assoc = rel.derivedAssociationReference;
+                        outputs.push(getAttributeGroupOutput(rel, assoc.origFKR.toString() +"/" + assoc._secondFKR.toString(true)));
+                        return;
+                    }
+
+                    // single inbound related
+                    outputs.push(getEntityOutput(rel.table));
                 });
 
                 // assets
@@ -2241,6 +2282,7 @@
                     };
 
                     for (var key in attributes) {
+                        // only add the attributes that are defined in the annotation
                         if (! (col[key] instanceof Column) ) continue;
                         path.push(attributes[key] + ":=" + encode(col[key].name));
                     }
@@ -2252,8 +2294,8 @@
                         },
                         source: {
                             api: "attribute",
-                            table: [encode(table.schema.name), encode(table.name)].join(":"),
-                            path: path.join(";")
+                            table: [encode(self.table.schema.name), encode(self.table.name)].join(":"),
+                            path: path.join(",")
                         }
                     });
                 });
@@ -2265,7 +2307,6 @@
                     outputs: outputs
                 };
             }
-            // return JSON.stringify(this._defaultExportTemplate);
             return this._defaultExportTemplate;
         },
 
@@ -3164,6 +3205,8 @@
         delete referenceCopy._canRead;
         delete referenceCopy._canUpdate;
         delete referenceCopy._canDelete;
+        delete referenceCopy._defaultExportTemplate;
+        delete referenceCopy._exportTemplates;
 
         referenceCopy.contextualize = new Contextualize(referenceCopy);
         return referenceCopy;
