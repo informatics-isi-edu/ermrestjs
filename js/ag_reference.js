@@ -181,6 +181,7 @@ AttributeGroupReference.prototype = {
       * @type {ERMrest.Reference}
       */
      get unfilteredReference() {
+         verify(this.table, "table is not defined for current reference");
          var newLocation = new AttributeGroupLocation(this.location.service, this.location.catalogId, [module._fixedEncodeURIComponent(this.table.schema.name),module._fixedEncodeURIComponent(this.table.name)].join(":"));
          return new AttributeGroupReference(this._keyColumns, this._aggregateColumns, newLocation, this._catalog, this.table, this._context);
      },
@@ -1041,8 +1042,6 @@ function AttributeGroupLocation(service, catalog, path, searchObject, sortObject
      * @type {stirng}
      */
     this.catalogId = catalog;
-
-    this.api = "attributegroup";
 
     /**
      * The path that will be used for generating the uri in read.

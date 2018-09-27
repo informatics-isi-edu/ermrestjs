@@ -59,7 +59,6 @@ exports.execute = function (options) {
 
         describe("AttributeGroupLocation, ", function () {
             beforeAll(function () {
-                console.log("before all tests");
                 loc = new options.ermRest.AttributeGroupLocation(options.url, catID, schemaName + ":" + mainTable);
                 locWithModifiers = new options.ermRest.AttributeGroupLocation(
                     options.url,
@@ -327,6 +326,14 @@ exports.execute = function (options) {
                     mainTableBaseUri + "/col::ciregexp::test/col,alias:=invis_col,col_w_pre_format;c2:=cnt(*),c3:=cnt_d(col)@sort(alias)@before(20)",
                     "refWithModifiers uri missmatch."
                 );
+            });
+
+            it ("unfilteredReference should return an error when a table is not defined as part of the constructor.", function () {
+                try {
+                    var errorRef = ref.unfilteredReference;
+                } catch (err) {
+                    expect(err.message).toBe("table is not defined for current reference");
+                }
             });
 
             it ("unfilteredReference should be defined when a table is defined as part of the constructor.", function () {
