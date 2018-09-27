@@ -17,7 +17,7 @@ exports.execute = function (options) {
      *    10: main_fk1, id (f1 table) | markdown_name: **F1**
      *    11: main_fk2, id (f2 table) | open
      *    12: f3, term (association table)
-     *    13: f4_fk1, id (inbound) | entity:false | ux_mode: choices
+     *    13: f4_fk1, id (inbound) | entity:false | ux_mode: check_presence
      *    14: a long path
      *    15: second path
      *    16: numeric_col
@@ -1420,22 +1420,57 @@ exports.execute = function (options) {
             });
 
             describe("hideNullChoice, ", function () {
-                it ("should always return true.", function () {
-                    expect(mainFacets[0].hideNullChoice).toBe(true, "missmatch for index=0");
-                    expect(mainFacets[2].hideNullChoice).toBe(true, "missmatch for index=2");
-                    expect(mainFacets[1].hideNullChoice).toBe(true, "missmatch for index=1");
-                    expect(mainFacets[7].hideNullChoice).toBe(true, "missmatch for index=7");
+                it ("should return `true` if hide_null_choice is set to `true`.", function () {
+                    [0, 10].forEach(function (index) {
+                        expect(mainFacets[index].hideNullChoice).toBe(true, "missmatch for index=" + index);
+                    });
                 });
 
-                xit ('should return false if hide_not_null_choice is not `true`.', function () {
-                    expect(mainFacets[0].hideNullChoice).toBe(false, "missmatch for index=0");
-                    expect(mainFacets[2].hideNullChoice).toBe(false, "missmatch for index=2");
-                }).pend("temporarily disabling this feature.");
+                it ("should return `true` if any of the other facets that have path, has null filter.", function () {
+                    var newRef = mainFacets[10].addChoiceFilters([null]).contextualize.detailed;
+                    newRef.facetColumns.forEach(function (fc, index) {
+                        expect(fc.hideNullChoice).toBe(true, "missmatch for index=" + index);
+                    });
+                });
 
-                xit ("otherwise should return true.", function () {
-                    expect(mainFacets[1].hideNullChoice).toBe(true, "missmatch for index=1");
-                    expect(mainFacets[7].hideNullChoice).toBe(true, "missmatch for index=7");
-                }).pend("temporarily disabling this feature.");
+                it ("should return `false if source doesn't have path.", function () {
+                    expect(mainFacets[1].hideNullChoice).toBe(false, "missmatch for index=0");
+                });
+
+                it ("should return `false` if source is all outbound.", function () {
+                    expect(mainFacets[11].hideNullChoice).toBe(false, "missmatch for index=11");
+                });
+
+                it ("should return `false if source is single inbound.`", function () {
+                    expect(mainFacets[13].hideNullChoice).toBe(false, "missmatch for index=13");
+                });
+
+                it ('should return `false` if source is association path.', function () {
+                    expect(mainFacets[12].hideNullChoice).toBe(false, "missmatch for index=12");
+                });
+
+                it ('otherwise should return `true`.', function () {
+                    [14, 15].forEach(function (index) {
+                        expect(mainFacets[index].hideNullChoice).toBe(true, "missmatch for index=" + index);
+                    });
+                });
+                //
+                // it ("should always return true.", function () {
+                //     expect(mainFacets[0].hideNullChoice).toBe(true, "missmatch for index=0");
+                //     expect(mainFacets[2].hideNullChoice).toBe(true, "missmatch for index=2");
+                //     expect(mainFacets[1].hideNullChoice).toBe(true, "missmatch for index=1");
+                //     expect(mainFacets[7].hideNullChoice).toBe(true, "missmatch for index=7");
+                // });
+                //
+                // xit ('should return false if hide_not_null_choice is not `true`.', function () {
+                //     expect(mainFacets[0].hideNullChoice).toBe(false, "missmatch for index=0");
+                //     expect(mainFacets[2].hideNullChoice).toBe(false, "missmatch for index=2");
+                // }).pend("temporarily disabling this feature.");
+                //
+                // xit ("otherwise should return true.", function () {
+                //     expect(mainFacets[1].hideNullChoice).toBe(true, "missmatch for index=1");
+                //     expect(mainFacets[7].hideNullChoice).toBe(true, "missmatch for index=7");
+                // }).pend("temporarily disabling this feature.");
             });
 
             describe("hideNotNullChoice, ", function () {

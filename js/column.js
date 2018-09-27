@@ -1981,6 +1981,17 @@ FacetColumn.prototype = {
     },
 
     /**
+     * Whether the source has path or not
+     * @type {Boolean}
+     */
+    get hasPath() {
+        if (this._hasPath === undefined) {
+            this._hasPath =_isFacetSourcePath(this.dataSource);
+        }
+        return this._hasPath;
+    },
+
+    /**
      * The Preferred ux mode.
      * Any of:
      * `choices`, `ranges`, or `check_presence`
@@ -2250,12 +2261,59 @@ FacetColumn.prototype = {
 
     /**
      * Whether client should hide the null choice
+     * This will return false if:
+     * - hide_null_choice is not defined as `true` in the annotation.
+     * - none of the other facets have `null` filter.
+     * and any of the following:
+     * - facet has no path (scalar column of main entity)
+     * - all outbound path.
+     * - single inbound path.
+     * - association table?
+     *
      * @type {Boolean}
      */
     get hideNullChoice() {
         if (this._hideNullChoice === undefined) {
-            // this._hideNullChoice = (this._facetObject.hide_null_choice === true);
-            this._hideNullChoice = true;
+            var getHideNull = function (self) {
+                if (self._facetObject.hide_null_choice === true) {
+                    return true;
+                }
+
+                // at least one of the other facets have null, so don't show this
+                var othersHaveNull = self.reference.facetColumns.some(function (fc, index) {
+                    return index !== self.index && fc.hasPath && fc.hasNullFilter;
+                });
+                if (othersHaveNull) {
+                    return true;
+                }
+
+                // doesn't have path
+                if (!self.hasPath) {
+                    return false;
+                }
+
+                // foreignkey length one
+                if (self.foreignKeys.length === 1) {
+                    return false;
+                }
+
+                // all outbound
+                var allOutbound = self.foreignKeys.every(function (fkObj) {
+                    return !fkObj.isInbound;
+                });
+                if (allOutbound) {
+                    return false;
+                }
+
+                // pure and binary association
+                if (self.foreignKeys.length === 2 && self.foreignKeys[0].isInbound &&
+                    !self.foreignKeys[1].isInbound && self.foreignKeys[0].obj._table._isPureBinaryAssociation()) {
+                    return false;
+                }
+
+                return true;
+            };
+            this._hideNullChoice = getHideNull(this);
         }
         return this._hideNullChoice;
     },

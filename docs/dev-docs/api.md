@@ -421,6 +421,7 @@ to use for ERMrest JavaScript agents.
         * [.dataSource](#ERMrest.FacetColumn+dataSource) : <code>obj</code> \| <code>string</code>
         * [.filters](#ERMrest.FacetColumn+filters)
         * [.isOpen](#ERMrest.FacetColumn+isOpen) : <code>Boolean</code>
+        * [.hasPath](#ERMrest.FacetColumn+hasPath) : <code>Boolean</code>
         * [.preferredMode](#ERMrest.FacetColumn+preferredMode) : <code>string</code>
         * [.isEntityMode](#ERMrest.FacetColumn+isEntityMode) : <code>Boolean</code>
         * [.barPlot](#ERMrest.FacetColumn+barPlot) : <code>Boolean</code>
@@ -4040,6 +4041,7 @@ Indicates that this ReferenceColumn is an inbound foreign key.
     * [.dataSource](#ERMrest.FacetColumn+dataSource) : <code>obj</code> \| <code>string</code>
     * [.filters](#ERMrest.FacetColumn+filters)
     * [.isOpen](#ERMrest.FacetColumn+isOpen) : <code>Boolean</code>
+    * [.hasPath](#ERMrest.FacetColumn+hasPath) : <code>Boolean</code>
     * [.preferredMode](#ERMrest.FacetColumn+preferredMode) : <code>string</code>
     * [.isEntityMode](#ERMrest.FacetColumn+isEntityMode) : <code>Boolean</code>
     * [.barPlot](#ERMrest.FacetColumn+barPlot) : <code>Boolean</code>
@@ -4131,6 +4133,12 @@ Filters that are applied to this facet.
 #### facetColumn.isOpen : <code>Boolean</code>
 If has filters it will return true,
 otherwise returns facetObject['open']
+
+**Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
+<a name="ERMrest.FacetColumn+hasPath"></a>
+
+#### facetColumn.hasPath : <code>Boolean</code>
+Whether the source has path or not
 
 **Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
 <a name="ERMrest.FacetColumn+preferredMode"></a>
@@ -4226,6 +4234,14 @@ Could be used as tooltip to provide more information about the facetColumn
 
 #### facetColumn.hideNullChoice : <code>Boolean</code>
 Whether client should hide the null choice
+This will return false if:
+- hide_null_choice is not defined as `true` in the annotation.
+- none of the other facets have `null` filter.
+and any of the following:
+- facet has no path (scalar column of main entity)
+- all outbound path.
+- single inbound path.
+- association table?
 
 **Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
 <a name="ERMrest.FacetColumn+hideNotNullChoice"></a>
