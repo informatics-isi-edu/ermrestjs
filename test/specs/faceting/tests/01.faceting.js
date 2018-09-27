@@ -1454,23 +1454,6 @@ exports.execute = function (options) {
                         expect(mainFacets[index].hideNullChoice).toBe(true, "missmatch for index=" + index);
                     });
                 });
-                //
-                // it ("should always return true.", function () {
-                //     expect(mainFacets[0].hideNullChoice).toBe(true, "missmatch for index=0");
-                //     expect(mainFacets[2].hideNullChoice).toBe(true, "missmatch for index=2");
-                //     expect(mainFacets[1].hideNullChoice).toBe(true, "missmatch for index=1");
-                //     expect(mainFacets[7].hideNullChoice).toBe(true, "missmatch for index=7");
-                // });
-                //
-                // xit ('should return false if hide_not_null_choice is not `true`.', function () {
-                //     expect(mainFacets[0].hideNullChoice).toBe(false, "missmatch for index=0");
-                //     expect(mainFacets[2].hideNullChoice).toBe(false, "missmatch for index=2");
-                // }).pend("temporarily disabling this feature.");
-                //
-                // xit ("otherwise should return true.", function () {
-                //     expect(mainFacets[1].hideNullChoice).toBe(true, "missmatch for index=1");
-                //     expect(mainFacets[7].hideNullChoice).toBe(true, "missmatch for index=7");
-                // }).pend("temporarily disabling this feature.");
             });
 
             describe("hideNotNullChoice, ", function () {

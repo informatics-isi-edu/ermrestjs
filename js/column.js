@@ -2260,16 +2260,13 @@ FacetColumn.prototype = {
     },
 
     /**
-     * Whether client should hide the null choice
-     * This will return false if:
-     * - hide_null_choice is not defined as `true` in the annotation.
-     * - none of the other facets have `null` filter.
-     * and any of the following:
-     * - facet has no path (scalar column of main entity)
-     * - all outbound path.
-     * - single inbound path.
-     * - association table?
-     *
+     * Whether client should hide the null choice.
+     * This will return `true` if any of the following:
+     * - hide_null_choice:true is in the facet definition.
+     * - any of the other faets with path have `null` filter.
+     * - facet source has a path that has a length of two or more
+     *   and is not pure and binary association.
+     * Otherwise it will return false
      * @type {Boolean}
      */
     get hideNullChoice() {
