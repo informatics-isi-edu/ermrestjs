@@ -297,6 +297,7 @@ to use for ERMrest JavaScript agents.
         * [.location](#ERMrest.Reference+location) ⇒ <code>ERMrest.Location</code>
         * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
         * [.canCreate](#ERMrest.Reference+canCreate) : <code>boolean</code> \| <code>undefined</code>
+        * [.canCreateReason](#ERMrest.Reference+canCreateReason) : <code>String</code> \| <code>undefined</code>
         * [.canRead](#ERMrest.Reference+canRead) : <code>boolean</code> \| <code>undefined</code>
         * [.canUpdate](#ERMrest.Reference+canUpdate) : <code>boolean</code> \| <code>undefined</code>
         * [.canDelete](#ERMrest.Reference+canDelete) : <code>boolean</code> \| <code>undefined</code>
@@ -577,6 +578,7 @@ to use for ERMrest JavaScript agents.
         * [.location](#ERMrest.Reference+location) ⇒ <code>ERMrest.Location</code>
         * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
         * [.canCreate](#ERMrest.Reference+canCreate) : <code>boolean</code> \| <code>undefined</code>
+        * [.canCreateReason](#ERMrest.Reference+canCreateReason) : <code>String</code> \| <code>undefined</code>
         * [.canRead](#ERMrest.Reference+canRead) : <code>boolean</code> \| <code>undefined</code>
         * [.canUpdate](#ERMrest.Reference+canUpdate) : <code>boolean</code> \| <code>undefined</code>
         * [.canDelete](#ERMrest.Reference+canDelete) : <code>boolean</code> \| <code>undefined</code>
@@ -2512,6 +2514,7 @@ Constructor for a ParsedFilter.
     * [.location](#ERMrest.Reference+location) ⇒ <code>ERMrest.Location</code>
     * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
     * [.canCreate](#ERMrest.Reference+canCreate) : <code>boolean</code> \| <code>undefined</code>
+    * [.canCreateReason](#ERMrest.Reference+canCreateReason) : <code>String</code> \| <code>undefined</code>
     * [.canRead](#ERMrest.Reference+canRead) : <code>boolean</code> \| <code>undefined</code>
     * [.canUpdate](#ERMrest.Reference+canUpdate) : <code>boolean</code> \| <code>undefined</code>
     * [.canDelete](#ERMrest.Reference+canDelete) : <code>boolean</code> \| <code>undefined</code>
@@ -2690,6 +2693,14 @@ console.log("This reference is unique?", (reference.isUnique ? 'yes' : 'no'));
 Indicates whether the client has the permission to _create_
 the referenced resource(s). In some cases, this permission cannot
 be determined and the value will be `undefined`.
+
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+canCreateReason"></a>
+
+#### reference.canCreateReason : <code>String</code> \| <code>undefined</code>
+Indicates the reason as to why a user cannot create for
+the referenced resource(s). In some cases, this won't be set
+because the user can create, so the value will be `undefined`.
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+canRead"></a>
@@ -5575,6 +5586,7 @@ get PathColumn object by column name
     * [.location](#ERMrest.Reference+location) ⇒ <code>ERMrest.Location</code>
     * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
     * [.canCreate](#ERMrest.Reference+canCreate) : <code>boolean</code> \| <code>undefined</code>
+    * [.canCreateReason](#ERMrest.Reference+canCreateReason) : <code>String</code> \| <code>undefined</code>
     * [.canRead](#ERMrest.Reference+canRead) : <code>boolean</code> \| <code>undefined</code>
     * [.canUpdate](#ERMrest.Reference+canUpdate) : <code>boolean</code> \| <code>undefined</code>
     * [.canDelete](#ERMrest.Reference+canDelete) : <code>boolean</code> \| <code>undefined</code>
@@ -5753,6 +5765,14 @@ console.log("This reference is unique?", (reference.isUnique ? 'yes' : 'no'));
 Indicates whether the client has the permission to _create_
 the referenced resource(s). In some cases, this permission cannot
 be determined and the value will be `undefined`.
+
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+canCreateReason"></a>
+
+#### reference.canCreateReason : <code>String</code> \| <code>undefined</code>
+Indicates the reason as to why a user cannot create for
+the referenced resource(s). In some cases, this won't be set
+because the user can create, so the value will be `undefined`.
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+canRead"></a>

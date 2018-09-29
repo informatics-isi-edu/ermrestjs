@@ -837,11 +837,14 @@
                 var ref = (this._context === module._contexts.CREATE) ? this : this.contextualize.entryCreate;
 
                 if (ref._table.kind === module._tableKinds.VIEW) {
-                    this._canCreate = "Table is a view.";
+                    this._canCreate = false;
+                    this._canCreateReason = "Table is a view. ";
                 } else if (ref._table._isGenerated) {
-                    this._canCreate = "Table is generated.";
+                    this._canCreate = false;
+                    this._canCreateReason = "Table is generated. ";
                 } else if (!ref._checkPermissions("insert")) {
-                    this._canCreate = "No permissions to create.";
+                    this._canCreate = false;
+                    this._canCreateReason = "No permissions to create. ";
                 } else {
                     this._canCreate = true;
                 }
@@ -851,10 +854,27 @@
                         return (col.getInputDisabled(module._contexts.CREATE) !== false);
                     });
 
-                    if (allColumnsDisabled) this._canCreate = "All columns are disabled.";
+                    if (allColumnsDisabled) {
+                        this._canCreate = false;
+                        this._canCreateReason = "All columns are disabled. ";
+                    }
                 }
             }
             return this._canCreate;
+        },
+
+        /**
+         * Indicates the reason as to why a user cannot create for
+         * the referenced resource(s). In some cases, this won't be set
+         * because the user can create, so the value will be `undefined`.
+         * @type {(String|undefined)}
+         */
+        get canCreateReason() {
+            if (this._canCreateReason === undefined) {
+                // will set the _canCreateReason property
+                this.canCreate();
+            }
+            return this._canCreateReason;
         },
 
         /**
@@ -886,16 +906,48 @@
             if (this._canUpdate === undefined) {
                 var ref = (this._context === module._contexts.EDIT) ? this : this.contextualize.entryEdit;
 
-                this._canUpdate = ref._table.kind !== module._tableKinds.VIEW && !ref._table._isGenerated && !ref._table._isImmutable && ref._checkPermissions("update");
+                if (ref._table.kind === module._tableKinds.VIEW) {
+                    this._canUpdate = false;
+                    this._canUpdateReason = "Table is a view. ";
+                } else if (ref._table._isGenerated) {
+                    this._canUpdate = false;
+                    this._canUpdateReason = "Table is generated. ";
+                } else if (ref._table._isImmutable) {
+                    this._canUpdate = false;
+                    this._canUpdateReason = "Table is immutable. ";
+                } else if (!ref._checkPermissions("update")) {
+                    this._canUpdate = false;
+                    this._canUpdateReason = "No permissions to update. ";
+                } else {
+                    this._canUpdate = true;
+                }
 
                 if (this._canUpdate) {
                     var allColumnsDisabled = ref.columns.every(function (col) {
                         return (col.getInputDisabled(module._contexts.EDIT) !== false);
                     });
-                    this._canUpdate = !allColumnsDisabled;
+
+                    if (allColumnsDisabled) {
+                        this._canUpdate = false;
+                        this._canUpdateReason = "All columns are disabled. ";
+                    }
                 }
             }
             return this._canUpdate;
+        },
+
+        /**
+         * Indicates the reason as to why a user cannot update for
+         * the referenced resource(s). In some cases, this won't be set
+         * because the user can update, so the value will be `undefined`.
+         * @type {(String|undefined)}
+         */
+        get canUpdateReason() {
+            if (this._canUpdateReason === undefined) {
+                // will set the _canUpdateReason property
+                this.canUpdate();
+            }
+            return this._canUpdateReason;
         },
 
         /**
