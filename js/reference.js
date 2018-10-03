@@ -1350,7 +1350,7 @@
                         // /F2:=left(id)=(s:t:c)/$M/F1:=left(id2)=(s1:t1:c1)/
                         uri += "F" + (k+1) + ":=left" + this._table.foreignKeys.all()[k].toString(true) + "/$" + mainTableAlias + "/";
 
-                        // F2:array(F2:*),F1:array(F1:*)
+                        // F2:array_d(F2:*),F1:array_d(F1:*)
                         aggList.push("F" + (k+1) + ":=" + aggFn +"(F" + (k+1) + ":*)");
                     }
 

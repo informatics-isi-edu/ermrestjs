@@ -132,7 +132,7 @@ var ERMrest = (function(module) {
                 var catalogParameters = {
                     host: base_url.substring(0, base_url.lastIndexOf("/")),
                     catalog_id: this.reference.location.catalog,
-                    queries: queries
+                    query_processors: queries
                 };
 
                 exportParameters.catalog = catalogParameters;
@@ -140,9 +140,12 @@ var ERMrest = (function(module) {
                 if (!template) {
                     // this is basically the same as a single file CSV or JSON export but packaged as a bag
                     var query = {
-                        output_path: bagOptions.name,
-                        output_format: bagOptions.table_format,
-                        query_path: "/" + this.reference.location.api + "/" + this.reference.location.ermrestCompactPath + "?limit=none"
+                        processor: bagOptions.table_format,
+                        processor_params: {
+                            output_path: bagOptions.name,
+                            query_path: "/" + this.reference.location.api + "/" +
+                                this.reference.location.ermrestCompactPath + "?limit=none"
+                        }
                     };
 
                     queries.push(query);
@@ -152,6 +155,7 @@ var ERMrest = (function(module) {
                     var predicate = this.reference.location.ermrestCompactPath;
                     outputs.forEach(function (output) {
                         var query = {};
+                        var queryParams = {};
                         var queryFrags = [];
                         var source = output.source;
                         // encodeURIComponent && module._fixedEncodeURIComponent encode `:` to ``
@@ -168,14 +172,24 @@ var ERMrest = (function(module) {
                         if (source.path !== undefined) {
                             queryFrags.push(source.path);
                         }
-                        query.query_path = "/" + queryFrags.join("/") + "?limit=none";
-                        query.output_path = dest.name || table;
-                        query.output_format = dest.type || bagOptions.table_format;
-                        if (dest.params != null) {
-                            query.output_format_params = dest.params;
+                        query.processor = dest.type || bagOptions.table_format;
+                        queryParams.output_path = dest.name || table;
+                        queryParams.query_path = "/" + queryFrags.join("/") + "?limit=none";
+                        if (dest.impl != null) {
+                            query.processor_type = dest.impl;
                         }
+                        if (dest.params != null) {
+                            Object.assign(queryParams, dest.params);
+                        }
+                        query.processor_params = queryParams;
                         queries.push(query);
                     });
+                }
+                if (template.transforms != null) {
+                    exportParameters.transform_processors = template.transforms;
+                }
+                if (template.postprocessors != null) {
+                    exportParameters.post_processors = template.postprocessors;
                 }
                 this._exportParameters = exportParameters;
             }
@@ -184,7 +198,7 @@ var ERMrest = (function(module) {
         },
 
         /**
-         * sends the export request to hatrac
+         * sends the export request to ioboxd
          * @returns {Promise}
          */
         run: function (contextHeaderParams) {

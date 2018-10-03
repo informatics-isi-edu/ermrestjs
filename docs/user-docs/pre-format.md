@@ -1,6 +1,6 @@
 # PreFormat Column Value
 
-For information on the annotation **tag:isrd.isi.edu,2016:column-display** specifics you can refer this [document](https://github.com/informatics-isi-edu/ermrest/blob/master/docs/user-doc/annotation.md#2016-column-display)
+For information on the annotation **tag:isrd.isi.edu,2016:column-display** specifics you can refer this [annotations document](annotation.md#tag-2016-column-display)
 
 The annotation is represented as follows:
 
@@ -49,20 +49,18 @@ The Flags field can be zero or more (in any order) of:
           Possible values are any other character precedeed by a # (hash). print("%#_5d",10) produces ___10
 ```
 ### Width field
-```
-The Width field specifies a minimum number of characters to output, and is typically used to pad fixed-width fields,
-where the fields would otherwise be smaller, although it does not cause truncation of oversized fields.
 
-For example, printf("%*d", 5, 10) will result in "   10" being printed, with a total width of 5 characters.
-Though not part of the width field, a leading zero is interpreted as the zero-padding flag mentioned above,
-and a negative value is treated as the positive value in conjunction with the left-alignment flag mentioned above.
+The Width field specifies a minimum number of characters to output, and is typically used to pad fixed-width fields, where the fields would otherwise be smaller, although it does not cause truncation of oversized fields.
+
+For example, `printf("%*d", 5, 10)` will result in `"   10"` being printed, with a total width of 5 characters.
+
+Though not part of the width field, a leading zero is interpreted as the zero-padding flag mentioned above, and a negative value is treated as the positive value in conjunction with the left-alignment flag mentioned above.
 
 When used with the j (JSON) type specifier, the padding length specifies the tab size used for indentation.
-```
+
 
 ### Precision Field
 
-```
 The Precision field usually specifies a maximum limit on the output, depending on the particular formatting type.
 
 For floating point numeric types, it specifies the number of digits to the right of the decimal point that the
@@ -70,8 +68,7 @@ output should be rounded.
 
 For the string type, it limits the number of characters that should be output, after which the string is truncated.
 
-For example, printf("%.3s", 3.42134) will result in 3.421 being printed.
-```
+For example, `printf("%.3s", 3.42134)` will result in `3.421` being printed.
 
 ### Type Field
 
@@ -200,8 +197,9 @@ Value => { name: 'John Doe', age: 24, school: { name: 'USC',  location: 'Los Ang
 Output => 'My name is John Doe. My age is 24 years and I study at USC located in Los Angeles CA. My GPA is 3.98'
 
 ```
-## Syntax for Dates and Timestamp[tz]s
-[String + Formats](https://momentjs.com/docs/#/parsing/string-format/) as defined in moment.js documentation
+## Syntax for Dates and Timestamps
+
+[String + Formats](https://momentjs.com/docs/#/parsing/string-format/) as defined in `moment.js` documentation.
 
 ### Most common Year, Month, and Day tokens:
 

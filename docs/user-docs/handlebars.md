@@ -1,4 +1,4 @@
-# Handlebars
+# Handlebars Templating
 
 [Handlebars](http://handlebarsjs.com/) is almost similar to Mustache with some additional benefits. There are some things that you can't do in Mustache (e.g if-else statement) that Handlebars allows us to do easily using `helpers`.
 
@@ -284,7 +284,7 @@ for context `key="**somevalue ] which is ! special" and value="John"` will resul
 
 ### Format Date helper
 
-You can use the `formatDate` helper to take any `date` or `timestamp[tz]` value and format it according to the [Pre Format Guide](https://github.com/informatics-isi-edu/ermrestjs/wiki/Pre-Format-Annotation#syntax-for-dates-and-timestamptzs).
+You can use the `formatDate` helper to take any `date` or `timestamp[tz]` value and format it according to the [Pre Format Guide](pre-format.md#syntax-for-dates-and-timestamps).
 
 Syntax:
 ```

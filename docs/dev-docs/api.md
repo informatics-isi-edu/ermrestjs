@@ -262,6 +262,8 @@ to use for ERMrest JavaScript agents.
         * [new PreconditionFailedError(status, message)](#new_ERMrest.PreconditionFailedError_new)
     * [.InternalServerError](#ERMrest.InternalServerError)
         * [new InternalServerError(status, message)](#new_ERMrest.InternalServerError_new)
+    * [.BadGatewayError](#ERMrest.BadGatewayError)
+        * [new BadGatewayError(status, message)](#new_ERMrest.BadGatewayError_new)
     * [.ServiceUnavailableError](#ERMrest.ServiceUnavailableError)
         * [new ServiceUnavailableError(status, message)](#new_ERMrest.ServiceUnavailableError_new)
     * [.InvalidFacetOperatorError](#ERMrest.InvalidFacetOperatorError)
@@ -2322,6 +2324,19 @@ DuplicateConflictError - Return error pertaining to Duplicate entried
 <a name="new_ERMrest.InternalServerError_new"></a>
 
 #### new InternalServerError(status, message)
+
+| Param | Type | Description |
+| --- | --- | --- |
+| status | <code>string</code> | the network error code |
+| message | <code>string</code> | error message |
+
+<a name="ERMrest.BadGatewayError"></a>
+
+### ERMrest.BadGatewayError
+**Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
+<a name="new_ERMrest.BadGatewayError_new"></a>
+
+#### new BadGatewayError(status, message)
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -4666,7 +4681,7 @@ Usage:
 <a name="ERMrest.ColumnGroupAggregateFn+entityCounts"></a>
 
 #### columnGroupAggregateFn.entityCounts() ⇒ [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)
-Will return an appropriate reference which can be used to show distinct values and their counts
+Will return a compact/select attribute group reference which can be used to show distinct values and their counts
 The result is based on shortest key of the parent table. If we have join
 in the path, we are counting the shortest key of the parent table (not the end table).
 NOTE: Will create a new reference by each call.
@@ -5029,7 +5044,7 @@ TODO: add description
 <a name="ERMrest.exporter+run"></a>
 
 #### exporter.run() ⇒ <code>Promise</code>
-sends the export request to hatrac
+sends the export request to ioboxd
 
 **Kind**: instance method of [<code>exporter</code>](#ERMrest.exporter)  
 <a name="ERMrest.exporter+cancel"></a>

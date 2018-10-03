@@ -1408,6 +1408,8 @@
                 return new module.PreconditionFailedError(response.statusText, response.data);
             case 500:
                 return new module.InternalServerError(response.statusText, response.data);
+            case 502:
+                return new module.BadGatewayError(response.statusText, response.data);
             case 503:
                 return new module.ServiceUnavailableError(response.statusText, response.data);
             default:
@@ -3173,6 +3175,7 @@
         CONFLICT : 409,
         PRECONDITION_FAILED: 412,
         INTERNAL_SERVER_ERROR :500,
+        BAD_GATEWAY: 502,
         SERVIVE_UNAVAILABLE: 503
     });
 
