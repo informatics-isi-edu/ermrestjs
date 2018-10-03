@@ -834,17 +834,18 @@
                 // 1) user has write permission
                 // 2) table is not generated
                 // 3) not all visible columns in the table are generated
+                var pm = module._permissionMessages;
                 var ref = (this._context === module._contexts.CREATE) ? this : this.contextualize.entryCreate;
 
                 if (ref._table.kind === module._tableKinds.VIEW) {
                     this._canCreate = false;
-                    this._canCreateReason = "Table is a view. ";
+                    this._canCreateReason = pm.TABLE_VIEW;
                 } else if (ref._table._isGenerated) {
                     this._canCreate = false;
-                    this._canCreateReason = "Table is generated. ";
+                    this._canCreateReason = pm.TABLE_GENERATED;
                 } else if (!ref._checkPermissions("insert")) {
                     this._canCreate = false;
-                    this._canCreateReason = "No permissions to create. ";
+                    this._canCreateReason = pm.NO_CREATE;
                 } else {
                     this._canCreate = true;
                 }
@@ -856,7 +857,7 @@
 
                     if (allColumnsDisabled) {
                         this._canCreate = false;
-                        this._canCreateReason = "All columns are disabled. ";
+                        this._canCreateReason = pm.DISABLED_COLUMNS;
                     }
                 }
             }
@@ -872,7 +873,7 @@
         get canCreateReason() {
             if (this._canCreateReason === undefined) {
                 // will set the _canCreateReason property
-                this.canCreate();
+                var bool = this.canCreate;
             }
             return this._canCreateReason;
         },
@@ -904,20 +905,21 @@
             // 3) table is not immutable
             // 4) not all visible columns in the table are generated/immutable
             if (this._canUpdate === undefined) {
+                var pm = module._permissionMessages;
                 var ref = (this._context === module._contexts.EDIT) ? this : this.contextualize.entryEdit;
 
                 if (ref._table.kind === module._tableKinds.VIEW) {
                     this._canUpdate = false;
-                    this._canUpdateReason = "Table is a view. ";
+                    this._canUpdateReason = pm.TABLE_VIEW;
                 } else if (ref._table._isGenerated) {
                     this._canUpdate = false;
-                    this._canUpdateReason = "Table is generated. ";
+                    this._canUpdateReason = pm.TABLE_GENERATED;
                 } else if (ref._table._isImmutable) {
                     this._canUpdate = false;
-                    this._canUpdateReason = "Table is immutable. ";
+                    this._canUpdateReason = pm.TABLE_IMMUTABLE;
                 } else if (!ref._checkPermissions("update")) {
                     this._canUpdate = false;
-                    this._canUpdateReason = "No permissions to update. ";
+                    this._canUpdateReason = pm.NO_UPDATE;
                 } else {
                     this._canUpdate = true;
                 }
@@ -929,7 +931,7 @@
 
                     if (allColumnsDisabled) {
                         this._canUpdate = false;
-                        this._canUpdateReason = "All columns are disabled. ";
+                        this._canUpdateReason = pm.DISABLED_COLUMNS;
                     }
                 }
             }
@@ -945,7 +947,7 @@
         get canUpdateReason() {
             if (this._canUpdateReason === undefined) {
                 // will set the _canUpdateReason property
-                this.canUpdate();
+                var bool = this.canUpdate;
             }
             return this._canUpdateReason;
         },

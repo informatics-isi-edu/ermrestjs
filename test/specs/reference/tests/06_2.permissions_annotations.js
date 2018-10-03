@@ -82,7 +82,7 @@ exports.execute = (options) => {
 
                 it("canCreate.", () => {
                     expect(reference.canCreate).toBe(false);
-                    expect(reference.canCreateReason).toBe("Table is generated. ");
+                    expect(reference.canCreateReason).toBe("Table is generated.");
                 });
 
                 it("canRead.", () => {
@@ -91,7 +91,7 @@ exports.execute = (options) => {
 
                 it("canUpdate.", () => {
                     expect(reference.canUpdate).toBe(false);
-                    expect(reference.canUpdateReason).toBe("Table is generated. ");
+                    expect(reference.canUpdateReason).toBe("Table is generated.");
                 });
 
                 it("canDelete.", () => {
@@ -123,7 +123,7 @@ exports.execute = (options) => {
 
                 it("canCreate.", () => {
                     expect(reference.canCreate).toBe(false);
-                    expect(reference.canCreateReason).toBe("Table is generated. ");
+                    expect(reference.canCreateReason).toBe("Table is generated.");
                 });
 
                 it("canRead.", () => {
@@ -132,7 +132,7 @@ exports.execute = (options) => {
 
                 it("canUpdate.", () => {
                     expect(reference.canUpdate).toBe(false);
-                    expect(reference.canUpdateReason).toBe("Table is generated. ");
+                    expect(reference.canUpdateReason).toBe("Table is generated.");
                 });
 
                 it("canDelete.", () => {
@@ -165,7 +165,7 @@ exports.execute = (options) => {
 
                 it("canCreate.", () => {
                     expect(reference.canCreate).toBe(false);
-                    expect(reference.canCreateReason).toBe("All columns are disabled. ");
+                    expect(reference.canCreateReason).toBe("All columns are disabled.");
                 });
 
                 it("canRead.", () => {
@@ -174,7 +174,7 @@ exports.execute = (options) => {
 
                 it("canUpdate.", () => {
                     expect(reference.canUpdate).toBe(false);
-                    expect(reference.canUpdateReason).toBe("All columns are disabled. ");
+                    expect(reference.canUpdateReason).toBe("All columns are disabled.");
                 });
 
                 it("canDelete.", () => {
@@ -253,7 +253,7 @@ exports.execute = (options) => {
 
                 it("canUpdate.", () => {
                     expect(reference.canUpdate).toBe(false);
-                    expect(reference.canUpdateReason).toBe("Table is immutable. ");
+                    expect(reference.canUpdateReason).toBe("Table is immutable.");
                 });
 
                 it("canDelete.", () => {
@@ -293,7 +293,7 @@ exports.execute = (options) => {
 
                 it("canUpdate.", () => {
                     expect(reference.canUpdate).toBe(false);
-                    expect(reference.canUpdateReason).toBe("Table is immutable. ");
+                    expect(reference.canUpdateReason).toBe("Table is immutable.");
                 });
 
                 it("canDelete.", () => {
@@ -333,7 +333,7 @@ exports.execute = (options) => {
 
                 it("canUpdate.", () => {
                     expect(reference.canUpdate).toBe(false);
-                    expect(reference.canUpdateReason).toBe("All columns are disabled. ");
+                    expect(reference.canUpdateReason).toBe("All columns are disabled.");
                 });
 
                 it("canDelete.", () => {
@@ -477,7 +477,7 @@ exports.execute = (options) => {
 
                 it("canCreate.", () => {
                     expect(reference.canCreate).toBe(false);
-                    expect(reference.canCreateReason).toBe("All columns are disabled. ");
+                    expect(reference.canCreateReason).toBe("All columns are disabled.");
                 });
 
                 it("canRead.", () => {
@@ -486,7 +486,7 @@ exports.execute = (options) => {
 
                 it("canUpdate.", () => {
                     expect(reference.canUpdate).toBe(false);
-                    expect(reference.canUpdateReason).toBe("All columns are disabled. ");
+                    expect(reference.canUpdateReason).toBe("All columns are disabled.");
                 });
 
                 it("canDelete.", () => {

@@ -101,12 +101,12 @@ exports.execute = (options) => {
             describe("should return false for ", () => {
                 it("canCreate.", () => {
                     expect(reference.canCreate).toBeFalsy();
-                    expect(reference.canCreateReason).toBe("Table is generated. ");
+                    expect(reference.canCreateReason).toBe("Table is generated.");
                 });
 
                 it("canUpdate.", () => {
                     expect(reference.canUpdate).toBeFalsy();
-                    expect(reference.canUpdateReason).toBe("Table is generated. ");
+                    expect(reference.canUpdateReason).toBe("Table is generated.");
                 });
 
                 it("canDelete.", () => {
@@ -194,7 +194,7 @@ exports.execute = (options) => {
 
                 it("canCreate.", () => {
                     expect(reference.canCreate).toBe(false);
-                    expect(reference.canCreateReason).toBe("No permissions to create. ");
+                    expect(reference.canCreateReason).toBe("No permissions to create.");
                 });
 
                 it("canRead.", () => {
@@ -203,7 +203,7 @@ exports.execute = (options) => {
 
                 it("canUpdate.", () => {
                     expect(reference.canUpdate).toBe(false);
-                    expect(reference.canUpdateReason).toBe("No permissions to update. ");
+                    expect(reference.canUpdateReason).toBe("No permissions to update.");
                 });
 
                 it("canDelete.", () => {
@@ -299,7 +299,7 @@ exports.execute = (options) => {
 
                 it("canCreate.", () => {
                     expect(reference.canCreate).toBe(false);
-                    expect(reference.canCreateReason).toBe("No permissions to create. ");
+                    expect(reference.canCreateReason).toBe("No permissions to create.");
                 });
 
                 it("canRead.", () => {
@@ -308,7 +308,7 @@ exports.execute = (options) => {
 
                 it("canUpdate.", () => {
                     expect(reference.canUpdate).toBe(false);
-                    expect(reference.canUpdateReason).toBe("No permissions to update. ");
+                    expect(reference.canUpdateReason).toBe("No permissions to update.");
                 });
 
                 it("canDelete.", () => {
