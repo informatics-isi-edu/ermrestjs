@@ -2148,6 +2148,169 @@
         },
 
         /**
+         * Will return the expor templates that are available for this reference.
+         * It will validate the templates that are defined in annotation.
+         * If its `detailed` context and annotation didn't have any valid templates,
+         * it will return the default export template.
+         * @type {Object}
+         */
+        get exportTemplates() {
+            if (this._exportTemplates === undefined) {
+                var res = this.table.exportTemplates;
+                if (res.length > 0 || this._context !== module._contexts.DETAILED) {
+                    this._exportTemplates = res;
+                } else {
+                    this._exportTemplates = [this.defaultExportTemplate];
+                }
+            }
+            return this._exportTemplates;
+        },
+
+        /**
+         * Returns a object, that can be used as a default export template.
+         * It will include:
+         * - csv of entity API request to the main table.
+         * -  csv of entity API requests for all the related entities that are one level away from the main.
+         * - csv of attributegroup API requests for all the other related entities.
+         *   The projection list should include all the columns of the table plus
+         *   the foreignkey value to the main entity.
+         *   The request should be grouped by the value of table's key + foreign key value.
+         * - fetch all the assets. For fetch, we need to provide url, length, and md5 (or other checksum types).
+         *   If the column for these fields are defined in the asset annotation, we're going to use them.
+         *   Otherwise we're not going to provide these extra columns and will let ioboxd handle it.
+         * @type {string}
+         */
+        get defaultExportTemplate() {
+            if (this._defaultExportTemplate === undefined) {
+                var outputs = [];
+
+                var self = this,
+                    encode = module._fixedEncodeURIComponent;
+
+                // given a table, will generate an entity output for it
+                var getEntityOutput = function (t) {
+                    return {
+                        destination: {
+                            name: t.name,
+                            type: "csv"
+                        },
+                        source: {
+                            api: "entity",
+                            table: [encode(t.schema.name), encode(t.name)].join(":")
+                        }
+                    };
+                };
+
+                // given a related reference and the path from main table to it,
+                // will generate the appropriate attribute group output
+                var getAttributeGroupOutput = function (relatedRef, path) {
+                    var projectionList = [], keyList = [];
+                    // shortestkey of the related reference
+                    relatedRef.table.shortestKey.forEach(function (col) {
+                        keyList.push(encode(col.name));
+                    });
+
+                    // shortestkey of the current table
+                    var i = 0, addedColPrefix = "main_table_";
+                    self.table.shortestKey.forEach(function (col) {
+                        // make sure the alias doesn't exist in the table
+                        while(relatedRef.table.columns.has(addedColPrefix + encode(col.name) + "_" + i)) i++;
+                        keyList.push(addedColPrefix + encode(col.name) + "_" + i + ":=" + self.location.mainTableAlias + ":"+ encode(col.name));
+                    });
+
+                    // projection list
+                    relatedRef.table.columns.all().forEach(function (col) {
+                        // column already has been added to the list
+                        if (keyList.indexOf(encode(col.name)) !== -1) return;
+                        projectionList.push(encode(col.name));
+                    });
+
+                    return {
+                        destination: {
+                            name: relatedRef.table.name,
+                            type: "csv"
+                        },
+                        source: {
+                            api: "attributegroup",
+                            table: [encode(self.table.schema.name), encode(self.table.name)].join(":"),
+                            path: path + "/" + keyList.join(",") + ";" + projectionList.join(",")
+                        }
+                    };
+                };
+
+                // main entity
+                outputs.push(getEntityOutput(self.table));
+
+                // related entities
+                self.related().forEach(function (rel) {
+                    if (rel.pseudoColumn) {
+                        if (rel.pseudoColumn.foreignKeys.length < 2) {
+                            outputs.push(getEntityOutput(rel.table));
+                        }
+                        // path from main to the related reference
+                        var path = rel.pseudoColumn.foreignKeys.map(function (fk) {
+                            return fk.obj.toString(!fk.isInbound, false);
+                        }).join("/");
+                        outputs.push(getAttributeGroupOutput(rel, path));
+                        return;
+                    }
+
+                    // association table
+                    if (rel.derivedAssociationReference) {
+                        var assoc = rel.derivedAssociationReference;
+                        outputs.push(getAttributeGroupOutput(rel, assoc.origFKR.toString() +"/" + assoc._secondFKR.toString(true)));
+                        return;
+                    }
+
+                    // single inbound related
+                    outputs.push(getEntityOutput(rel.table));
+                });
+
+                // assets
+                self.columns.forEach(function (col) {
+                    if (!col.isAsset) return;
+                    var path = [];
+
+                    // url
+                    path.push("url:=" + encode(col.name));
+
+                    var attributes = {
+                        byteCountColumn: "length",
+                        filenameColumn: "filename",
+                        md5: "md5",
+                        sha256: "sha256"
+                    };
+
+                    for (var key in attributes) {
+                        // only add the attributes that are defined in the annotation
+                        if (! (col[key] instanceof Column) ) continue;
+                        path.push(attributes[key] + ":=" + encode(col[key].name));
+                    }
+
+                    outputs.push({
+                        destination: {
+                            name: col.name,
+                            type: "fetch"
+                        },
+                        source: {
+                            api: "attribute",
+                            table: [encode(self.table.schema.name), encode(self.table.name)].join(":"),
+                            path: path.join(",")
+                        }
+                    });
+                });
+
+                self._defaultExportTemplate = {
+                    name: "default_template",
+                    format_name: "BAG", // display name
+                    format_type: "BAG",
+                    outputs: outputs
+                };
+            }
+            return this._defaultExportTemplate;
+        },
+
+        /**
          * create a new reference with the new search
          * by copying this reference and clears previous search filters
          * search term can be:
@@ -3042,6 +3205,8 @@
         delete referenceCopy._canRead;
         delete referenceCopy._canUpdate;
         delete referenceCopy._canDelete;
+        delete referenceCopy._defaultExportTemplate;
+        delete referenceCopy._exportTemplates;
 
         referenceCopy.contextualize = new Contextualize(referenceCopy);
         return referenceCopy;

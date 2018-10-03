@@ -152,6 +152,7 @@ var ERMrest = (function(module) {
                 } else {
                     var outputs = template.outputs;
                     var tableAliasToken = "X";
+                    var currentTable = [this.reference.table.schema.name, this.reference.table.name].join(":");
                     var predicate = this.reference.location.ermrestCompactPath;
                     outputs.forEach(function (output) {
                         var query = {};
@@ -163,7 +164,7 @@ var ERMrest = (function(module) {
                         var dest = output.destination;
 
                         queryFrags.push(source.api);
-                        if (predicate.startsWith("M:=" + table)) {
+                        if (currentTable === source.table) {
                             queryFrags.push(predicate);
                         } else {
                             queryFrags.push(predicate);

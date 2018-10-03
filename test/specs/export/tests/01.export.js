@@ -17,18 +17,23 @@ exports.execute = function (options) {
             tableNameInvalidTemplate = "invalid_temp",
             tableNameInvalidTemplate2 = "invalid_temp2",
             tableNameNoExport = "no_export_annot",
-            table, ermRest, reference, exportObj;
+            table, ermRest, reference, noAnnotReference, exportObj;
 
 
-        var baseUri = options.url + "/catalog/" + process.env.DEFAULT_CATALOG + "/entity/"
-            + schemaName + ":" + tableName;
+        var baseUri = options.url + "/catalog/" + process.env.DEFAULT_CATALOG + "/entity/" + schemaName + ":" + tableName;
+
+        // {"and":[{"source":"id","ranges":[{"min":"1","max":"10"}]},{"source":[{"inbound":["export","f1_fk_1"]},"id"],"choices":["1","2"]}]}
+        var facetBlob = "N4IghgdgJiBcDaoDOB7ArgJwMYFM4gEsYAaEDSAcxyTkRAFsCJ8BGEU+sAD1YAYQAvgF0BxZOmx4EoJgCN00WiBxcADigwAXdiABmLAPq6A1gbYjSREENJYAFigK4aCEG1IAma8IFA";
+        var noAnnotUri = options.url + "/catalog/" + process.env.DEFAULT_CATALOG + "/entity/" + schemaName + ":" + tableNameNoExport + "/id=1/*::facets::" + facetBlob;
 
         beforeAll(function (done) {
             ermRest = options.ermRest;
 
             ermRest.resolve(baseUri, { cid: "test" }).then(function (response) {
                 reference = response;
-
+                return ermRest.resolve(noAnnotUri, {cid: "test"});
+            }).then(function (ref) {
+                noAnnotReference = ref;
                 done();
             }, function (err) {
                 console.dir(err);
@@ -59,6 +64,116 @@ exports.execute = function (options) {
                     expect(table.exportTemplates.length).toBe(3);
                     expect(reference.table.exportTemplates.length).toBe(3);
                     expect(reference.table.exportTemplates).toEqual(table.exportTemplates);
+                });
+            });
+
+            describe("reference.exportTemplates, ", function () {
+                it ("if valid templates are defined on the table, should return them.", function () {
+                    expect(reference.exportTemplates.length).toBe(3, "length missmatch");
+                    expect(reference.exportTemplates).toEqual(table.exportTemplates, "templates missmatch");
+                });
+
+                it ("otherwise if context is not detailed should return an empty array.", function () {
+                    expect(noAnnotReference.exportTemplates.length).toBe(0);
+                });
+
+                it ("otherwise should return the default export template.", function () {
+                    var templates = noAnnotReference.contextualize.detailed.exportTemplates;
+                    expect(templates.length).toBe(1, "length missmatch");
+
+                    var expectedTemplates = [
+                        {
+                            destination: {
+                                name: "no_export_annot",
+                                type: "csv"
+                            },
+                            source: {
+                                api: "entity",
+                                table: "export:no_export_annot"
+                            }
+                        },
+                        {
+                            destination: {
+                                name: "f1",
+                                type: "csv"
+                            },
+                            source: {
+                                api: "entity",
+                                table: "export:f1"
+                            }
+                        },
+                        {
+                            destination: {
+                                name: "f2",
+                                type: "csv"
+                            },
+                            source: {
+                                api: "attributegroup",
+                                table: "export:no_export_annot",
+                                path: "(id)=(export:no_export_annot_f2_assoc:id_no_export_annot)/(id_f2)=(export:f2:id)/RID,main_table_RID_2:=M:RID;id,col_1,main_table_RID_0,main_table_RID_1,RCT,RMT,RCB,RMB"
+                            }
+                        },
+                        {
+                            destination: {
+                                name: "f3",
+                                type: "csv"
+                            },
+                            source: {
+                                api: "attributegroup",
+                                table: "export:no_export_annot",
+                                path: "(id)=(export:no_export_annot_f2_assoc:id_no_export_annot)/(id_f2)=(export:f2:id)/(id)=(export:f3:id)/RID,main_table_RID_0:=M:RID;id,RCT,RMT,RCB,RMB"
+                            }
+                        },
+                        {
+                            destination: {
+                                name: "asset_1",
+                                type: "fetch"
+                            },
+                            source: {
+                                api: "attribute",
+                                table: "export:no_export_annot",
+                                path: "url:=asset_1,length:=asset_1_bytes,filename:=asset_1_filename,md5:=asset_1_md5"
+                            }
+                        },
+                        {
+                            destination: {
+                                name: "asset_2",
+                                type: "fetch"
+                            },
+                            source: {
+                                api: "attribute",
+                                table: "export:no_export_annot",
+                                path: "url:=asset_2,length:=asset_2_bytes,filename:=asset_2_filename"
+                            }
+                        },
+                        {
+                            destination: {
+                                name: "asset_3",
+                                type: "fetch"
+                            },
+                            source: {
+                                api: "attribute",
+                                table: "export:no_export_annot",
+                                path: "url:=asset_3,filename:=asset_3_filename"
+                            }
+                        },
+                        {
+                            destination: {
+                                name: "asset_4",
+                                type: "fetch"
+                            },
+                            source: {
+                                api: "attribute",
+                                table: "export:no_export_annot",
+                                path: "url:=asset_4"
+                            }
+                        }
+                    ];
+
+                    // just to produce a better error message
+                    templates[0].outputs.forEach(function (temp, i) {
+                        expect(temp).toEqual(expectedTemplates[i], "template missmatch for index=" + i);
+                    });
                 });
             });
 
