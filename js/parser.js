@@ -495,7 +495,7 @@
          * @returns {String} catalog id
          */
         get catalog() {
-            return this._catalog;
+            return this._catalogSnapshot;
         },
 
         /**
