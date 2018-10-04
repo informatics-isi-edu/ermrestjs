@@ -106,7 +106,11 @@
         this._service = parts[1];
 
         // catalog id
-        this._catalog = parts[2];
+        this._catalogSnapshot = parts[2];
+
+        var catalogParts = this._catalogSnapshot.split('@');
+        this._catalog = catalogParts[0];
+        this._version = catalogParts[1] || null;
 
         // api
         this._api = parts[3];
@@ -492,6 +496,22 @@
          */
         get catalog() {
             return this._catalog;
+        },
+
+        /**
+         *
+         * @returns {String} just the catalog id
+         */
+        get catalogId() {
+            return this._catalog;
+        },
+
+        /**
+         *
+         * @returns {String} just the catalog version
+         */
+        get version() {
+            return this._version;
         },
 
         /**
