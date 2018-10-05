@@ -301,8 +301,10 @@ to use for ERMrest JavaScript agents.
         * [.location](#ERMrest.Reference+location) ⇒ <code>ERMrest.Location</code>
         * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
         * [.canCreate](#ERMrest.Reference+canCreate) : <code>boolean</code> \| <code>undefined</code>
+        * [.canCreateReason](#ERMrest.Reference+canCreateReason) : <code>String</code> \| <code>undefined</code>
         * [.canRead](#ERMrest.Reference+canRead) : <code>boolean</code> \| <code>undefined</code>
         * [.canUpdate](#ERMrest.Reference+canUpdate) : <code>boolean</code> \| <code>undefined</code>
+        * [.canUpdateReason](#ERMrest.Reference+canUpdateReason) : <code>String</code> \| <code>undefined</code>
         * [.canDelete](#ERMrest.Reference+canDelete) : <code>boolean</code> \| <code>undefined</code>
         * [.display](#ERMrest.Reference+display) : <code>Object</code>
         * [.unfilteredReference](#ERMrest.Reference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
@@ -582,8 +584,10 @@ to use for ERMrest JavaScript agents.
         * [.location](#ERMrest.Reference+location) ⇒ <code>ERMrest.Location</code>
         * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
         * [.canCreate](#ERMrest.Reference+canCreate) : <code>boolean</code> \| <code>undefined</code>
+        * [.canCreateReason](#ERMrest.Reference+canCreateReason) : <code>String</code> \| <code>undefined</code>
         * [.canRead](#ERMrest.Reference+canRead) : <code>boolean</code> \| <code>undefined</code>
         * [.canUpdate](#ERMrest.Reference+canUpdate) : <code>boolean</code> \| <code>undefined</code>
+        * [.canUpdateReason](#ERMrest.Reference+canUpdateReason) : <code>String</code> \| <code>undefined</code>
         * [.canDelete](#ERMrest.Reference+canDelete) : <code>boolean</code> \| <code>undefined</code>
         * [.display](#ERMrest.Reference+display) : <code>Object</code>
         * [.unfilteredReference](#ERMrest.Reference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
@@ -2544,8 +2548,10 @@ Constructor for a ParsedFilter.
     * [.location](#ERMrest.Reference+location) ⇒ <code>ERMrest.Location</code>
     * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
     * [.canCreate](#ERMrest.Reference+canCreate) : <code>boolean</code> \| <code>undefined</code>
+    * [.canCreateReason](#ERMrest.Reference+canCreateReason) : <code>String</code> \| <code>undefined</code>
     * [.canRead](#ERMrest.Reference+canRead) : <code>boolean</code> \| <code>undefined</code>
     * [.canUpdate](#ERMrest.Reference+canUpdate) : <code>boolean</code> \| <code>undefined</code>
+    * [.canUpdateReason](#ERMrest.Reference+canUpdateReason) : <code>String</code> \| <code>undefined</code>
     * [.canDelete](#ERMrest.Reference+canDelete) : <code>boolean</code> \| <code>undefined</code>
     * [.display](#ERMrest.Reference+display) : <code>Object</code>
     * [.unfilteredReference](#ERMrest.Reference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
@@ -2724,6 +2730,14 @@ the referenced resource(s). In some cases, this permission cannot
 be determined and the value will be `undefined`.
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+canCreateReason"></a>
+
+#### reference.canCreateReason : <code>String</code> \| <code>undefined</code>
+Indicates the reason as to why a user cannot create for
+the referenced resource(s). In some cases, this won't be set
+because the user can create, so the value will be `undefined`.
+
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+canRead"></a>
 
 #### reference.canRead : <code>boolean</code> \| <code>undefined</code>
@@ -2738,6 +2752,14 @@ be determined and the value will be `undefined`.
 Indicates whether the client has the permission to _update_
 the referenced resource(s). In some cases, this permission cannot
 be determined and the value will be `undefined`.
+
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+canUpdateReason"></a>
+
+#### reference.canUpdateReason : <code>String</code> \| <code>undefined</code>
+Indicates the reason as to why a user cannot update for
+the referenced resource(s). In some cases, this won't be set
+because the user can update, so the value will be `undefined`.
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+canDelete"></a>
@@ -4676,7 +4698,7 @@ Usage:
 <a name="ERMrest.ColumnGroupAggregateFn+entityCounts"></a>
 
 #### columnGroupAggregateFn.entityCounts() ⇒ [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)
-Will return an appropriate reference which can be used to show distinct values and their counts
+Will return a compact/select attribute group reference which can be used to show distinct values and their counts
 The result is based on shortest key of the parent table. If we have join
 in the path, we are counting the shortest key of the parent table (not the end table).
 NOTE: Will create a new reference by each call.
@@ -5616,8 +5638,10 @@ get PathColumn object by column name
     * [.location](#ERMrest.Reference+location) ⇒ <code>ERMrest.Location</code>
     * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
     * [.canCreate](#ERMrest.Reference+canCreate) : <code>boolean</code> \| <code>undefined</code>
+    * [.canCreateReason](#ERMrest.Reference+canCreateReason) : <code>String</code> \| <code>undefined</code>
     * [.canRead](#ERMrest.Reference+canRead) : <code>boolean</code> \| <code>undefined</code>
     * [.canUpdate](#ERMrest.Reference+canUpdate) : <code>boolean</code> \| <code>undefined</code>
+    * [.canUpdateReason](#ERMrest.Reference+canUpdateReason) : <code>String</code> \| <code>undefined</code>
     * [.canDelete](#ERMrest.Reference+canDelete) : <code>boolean</code> \| <code>undefined</code>
     * [.display](#ERMrest.Reference+display) : <code>Object</code>
     * [.unfilteredReference](#ERMrest.Reference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
@@ -5796,6 +5820,14 @@ the referenced resource(s). In some cases, this permission cannot
 be determined and the value will be `undefined`.
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+canCreateReason"></a>
+
+#### reference.canCreateReason : <code>String</code> \| <code>undefined</code>
+Indicates the reason as to why a user cannot create for
+the referenced resource(s). In some cases, this won't be set
+because the user can create, so the value will be `undefined`.
+
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+canRead"></a>
 
 #### reference.canRead : <code>boolean</code> \| <code>undefined</code>
@@ -5810,6 +5842,14 @@ be determined and the value will be `undefined`.
 Indicates whether the client has the permission to _update_
 the referenced resource(s). In some cases, this permission cannot
 be determined and the value will be `undefined`.
+
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+canUpdateReason"></a>
+
+#### reference.canUpdateReason : <code>String</code> \| <code>undefined</code>
+Indicates the reason as to why a user cannot update for
+the referenced resource(s). In some cases, this won't be set
+because the user can update, so the value will be `undefined`.
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+canDelete"></a>

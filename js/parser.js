@@ -106,7 +106,11 @@
         this._service = parts[1];
 
         // catalog id
-        this._catalog = parts[2];
+        this._catalogSnapshot = parts[2];
+
+        var catalogParts = this._catalogSnapshot.split('@');
+        this._catalog = catalogParts[0];
+        this._version = catalogParts[1] || null;
 
         // api
         this._api = parts[3];
@@ -491,7 +495,23 @@
          * @returns {String} catalog id
          */
         get catalog() {
+            return this._catalogSnapshot;
+        },
+
+        /**
+         *
+         * @returns {String} just the catalog id
+         */
+        get catalogId() {
             return this._catalog;
+        },
+
+        /**
+         *
+         * @returns {String} just the catalog version
+         */
+        get version() {
+            return this._version;
         },
 
         /**
@@ -1467,9 +1487,15 @@
      * For the structure of JSON, take a look at ParsedFacets documentation.
      *
      * NOTE:
-     * If any part of the facet is not as expected, it will throw emtpy string.
-     * Any part of the code that is using this function should guard against the result
-     * being empty, and throw error in that case.
+     * - If any part of the facet is not as expected, it will throw emtpy string.
+     *   Any part of the code that is using this function should guard against the result
+     *   being empty, and throw error in that case.
+     *
+     * - We're trying to use inner join for the facets as much as we can, but if a facet
+     *   has the `null` filter we have to use the left outer join. To organize the joins,
+     *   any facet that has `null` filter (and therefore left outer join) will be moved to the
+     *   end of url that we're returning. The structure would be :
+     *   S:T/(all the facets without null filter using inner join)/(all the facets with null filter using left outer)
      *
      * @param       {object} json  JSON representation of filters
      * @param       {string} alias the table alias
@@ -1686,6 +1712,9 @@
                     innerJoins.push(res);
                 }
             }
+
+
+            // return the inner joins first
             return innerJoins.concat(outerJoins).join("/");
         };
 

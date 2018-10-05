@@ -3198,3 +3198,12 @@
         NO_AGG_IN_ENTRY: "aggregate functions are not allowed in entry contexts.",
         NO_PATH_IN_ENTRY: "pseudo columns with path are not allowed in entry contexts (only single outbound path is allowed)."
     });
+
+    module._permissionMessages = Object.freeze({
+        TABLE_VIEW: "Table is a view.",
+        TABLE_GENERATED: "Table is generated.",
+        TABLE_IMMUTABLE: "Table is immutable.",
+        NO_CREATE: "No permissions to create.",
+        NO_UPDATE: "No permissions to update.",
+        DISABLED_COLUMNS: "All columns are disabled."
+    });
