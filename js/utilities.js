@@ -1393,6 +1393,7 @@
             case 0:
                 return new module.TimedOutError(response.statusText, response.data);
             case 400:
+                if (response.data.includes("Query run time limit exceeded")) return new module.QueryTimeoutError(response.statusText, response.data);
                 return new module.BadRequestError(response.statusText, response.data);
             case 401:
                 return new module.UnauthorizedError(response.statusText, response.data);

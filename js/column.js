@@ -3196,7 +3196,7 @@ ColumnGroupAggregateFn.prototype = {
             );
         }
 
-        return new AttributeGroupReference(keyColumns, aggregateColumns, loc, self._ref.table.schema.catalog, context);
+        return new AttributeGroupReference(keyColumns, aggregateColumns, loc, self._ref.table.schema.catalog, self._ref.table, context);
     },
 
     /**

@@ -2,6 +2,7 @@
     module.ERMrestError = ERMrestError;
     module.TimedOutError = TimedOutError;
     module.BadRequestError = BadRequestError;
+    module.QueryTimeoutError = QueryTimeoutError;
     module.UnauthorizedError = UnauthorizedError;
     module.ForbiddenError = ForbiddenError;
     module.NotFoundError = NotFoundError;
@@ -70,6 +71,18 @@
     BadRequestError.prototype = Object.create(ERMrestError.prototype);
     BadRequestError.prototype.constructor = BadRequestError;
 
+    /**
+     * @memberof ERMrest
+     * @param {string} status the network error code
+     * @param {string} message error message
+     * @constructor
+     */
+    function QueryTimeoutError(status, message) {
+        ERMrestError.call(this, module._HTTPErrorCodes.BAD_REQUEST, status, message);
+    }
+
+    QueryTimeoutError.prototype = Object.create(ERMrestError.prototype);
+    QueryTimeoutError.prototype.constructor = QueryTimeoutError;
 
     /**
      * @memberof ERMrest
