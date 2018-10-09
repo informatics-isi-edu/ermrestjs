@@ -3,7 +3,7 @@
         "main": {
             "kind": "table",
             "table_name": "main",
-            "schema_name": "export",
+            "schema_name": "export_table_annot_schema",
             "comment": "export table",
             "keys": [
                 {
@@ -72,7 +72,6 @@
                             "outputs": [
                                 {
                                     "source": {
-                                        "table": "export:main",
                                         "api": "entity"
                                     },
                                     "destination": {
@@ -82,13 +81,12 @@
                                 }
                             ],
                             "name": "export_data_bag",
-                            "format_name": "BDBag",
-                            "format_type": "BAG"
+                            "displayname": "BDBag",
+                            "type": "BAG"
                         }, {
                             "outputs": [
                                 {
                                     "source": {
-                                        "table": "export:main",
                                         "api": "entity"
                                     },
                                     "destination": {
@@ -97,14 +95,12 @@
                                     }
                                 }
                             ],
-                            "name": "export_data_file_csv",
-                            "format_name": "BDBag CSV",
-                            "format_type": "FILE"
+                            "displayname": "BDBag CSV",
+                            "type": "FILE"
                         }, {
                             "outputs": [
                                 {
                                     "source": {
-                                        "table": "export:main",
                                         "api": "entity"
                                     },
                                     "destination": {
@@ -114,15 +110,15 @@
                                 }
                             ],
                             "name": "export_data_file_json",
-                            "format_name": "BDBag JSON",
-                            "format_type": "FILE"
+                            "displayname": "BDBag JSON",
+                            "type": "FILE"
                         }
                     ]
                 }
             }
         },
         "invalid_temp": {
-            "schema_name": "export",
+            "schema_name": "export_table_annot_schema",
             "table_name": "invalid_temp",
             "kind": "table",
             "keys": [
@@ -144,7 +140,7 @@
             }
         },
         "invalid_temp2": {
-            "schema_name": "export",
+            "schema_name": "export_table_annot_schema",
             "table_name": "invalid_temp2",
             "kind": "table",
             "keys": [
@@ -163,10 +159,10 @@
                 "tag:isrd.isi.edu,2016:export": {
                     "templates": [
                         {
+                            "comment": "displayname is missing",
                             "outputs": [
                                 {
                                     "source": {
-                                        "table": "export:main",
                                         "api": "entity"
                                     },
                                     "destination": {
@@ -175,14 +171,13 @@
                                     }
                                 }
                             ],
-                            "format_name": "invalid_temp",
-                            "format_type": "BAG"
+                            "type": "BAG"
                         },
                         {
+                            "comment": "type is missing",
                             "outputs": [
                                 {
                                     "source": {
-                                        "table": "export:main",
                                         "api": "entity"
                                     },
                                     "destination": {
@@ -191,14 +186,12 @@
                                     }
                                 }
                             ],
-                            "name": "export_data_bag",
-                            "format_type": "BAG"
+                            "displayname": "invalid_temp"
                         },
                         {
                             "outputs": [
                                 {
                                     "source": {
-                                        "table": "export:main",
                                         "api": "entity"
                                     },
                                     "destination": {
@@ -207,14 +200,14 @@
                                     }
                                 }
                             ],
-                            "name": "export_data_bag",
-                            "format_name": "invalid_temp"
+                            "displayname": "valid_temp",
+                            "type": "BAG"
                         },
                         {
+                            "comment": "type is not valid",
                             "outputs": [
                                 {
                                     "source": {
-                                        "table": "export:main",
                                         "api": "entity"
                                     },
                                     "destination": {
@@ -223,47 +216,51 @@
                                     }
                                 }
                             ],
-                            "name": "export_data_bag",
-                            "format_name": "valid_temp",
-                            "format_type": "BAG"
+                            "displayname": "valid_temp",
+                            "type": "BAG2"
                         },
                         {
-                            "name": "export_data_bag",
-                            "format_name": "BDBag",
-                            "format_type": "BAG"
+                            "comment": "type is file and outputs is missing",
+                            "displayname": "invalid_temp",
+                            "type": "FILE"
                         },
                         {
+                            "comment": "outputs is not an array",
+                            "outputs": "test",
+                            "displayname": "invalid_temp",
+                            "type": "BAG"
+                        },
+                        {
+                            "comment": "output destination is missing",
                             "outputs": [
                                 {
                                     "source": {
-                                        "table": "export:main",
                                         "api": "entity"
                                     }
                                 }
                             ],
-                            "name": "export_data_bag",
-                            "format_name": "invalid_temp",
-                            "format_type": "BAG"
+                            "displayname": "invalid_temp",
+                            "type": "BAG"
                         },
                         {
+                            "comment": "output source is missing",
                             "outputs": [
                                 {
                                     "destination": {
-                                        "type": "csv",
+                                        "path": "csv",
                                         "name": "export_test_bag"
                                     }
                                 }
                             ],
-                            "name": "export_data_bag",
-                            "format_name": "invalid_temp",
-                            "format_type": "BAG"
+                            "displayname": "invalid_temp",
+                            "type": "BAG"
                         }
                     ]
                 }
             }
         },
         "no_export_annot": {
-            "schema_name": "export",
+            "schema_name": "export_table_annot_schema",
             "table_name": "no_export_annot",
             "kind": "table",
             "keys": [
@@ -276,6 +273,138 @@
                     "type": {
                         "typename": "text"
                     }
+                },
+                {
+                    "name": "asset_1",
+                    "type": {
+                        "typename": "text"
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2017:asset": {
+                            "url_pattern": "test.com",
+                            "filename_column": "asset_1_filename",
+                            "byte_count_column": "asset_1_bytes",
+                            "md5": "asset_1_md5"
+                        },
+                        "tag:misd.isi.edu,2015:display": {
+                          "displayname": "asset_1_displayname"
+                        }
+                    }
+                },
+                {
+                    "name": "asset_1_filename",
+                    "type": {"typename": "text"}
+                },
+                {
+                    "name": "asset_1_bytes",
+                    "type": {"typename": "int4"}
+                },
+                {
+                    "name": "asset_1_md5",
+                    "type": {"typename": "text"}
+                },
+                {
+                    "name": "asset_2",
+                    "type": {
+                        "typename": "text"
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2017:asset": {
+                            "url_pattern": "test.com",
+                            "filename_column": "asset_2_filename",
+                            "byte_count_column": "asset_2_bytes",
+                            "sha256": "asset_2_sha256"
+                        }
+                    }
+                },
+                {
+                    "name": "asset_2_filename",
+                    "type": {"typename": "text"}
+                },
+                {
+                    "name": "asset_2_bytes",
+                    "type": {"typename": "int4"}
+                },
+                {
+                    "name": "asset_2_sha256",
+                    "type": {"typename": "text"}
+                },
+                {
+                    "name": "asset_3",
+                    "type": {
+                        "typename": "text"
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2017:asset": {
+                            "url_pattern": "test.com",
+                            "filename_column": "asset_3_filename"
+                        }
+                    }
+                },
+                {
+                    "name": "asset_3_filename",
+                    "type": {"typename": "text"}
+                },
+                {
+                    "name": "asset_4",
+                    "type": {
+                        "typename": "text"
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2017:asset": {
+                            "url_pattern": "test.com",
+                            "filename_bytes": "asset_4_bytes"
+                        }
+                    }
+                },
+                {
+                    "name": "asset_4_bytes",
+                    "type": {"typename": "int4"}
+                },
+                {
+                    "name": "asset_5",
+                    "type": {
+                        "typename": "text"
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2017:asset": {
+                            "url_pattern": "test.com"
+                        }
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2016:visible-foreign-keys": {
+                    "*": [
+                        ["export_table_annot_schema", "f1_fk_1"],
+                        ["export_table_annot_schema", "no_export_annot_f2_assoc_fk_1"],
+                        {
+                            "source": [
+                                {"inbound": ["export_table_annot_schema", "no_export_annot_f2_assoc_fk_1"]},
+                                {"outbound": ["export_table_annot_schema", "no_export_annot_f2_assoc_fk_2"]},
+                                {"inbound": ["export_table_annot_schema", "f3_fk_1"]},
+                                "id"
+                            ]
+                        }
+                    ]
+                },
+                "tag:misd.isi.edu,2015:display": {
+                  "markdown_name": "**No Export Annot**"
+                }
+            }
+        },
+        "f1": {
+            "schema_name": "export_table_annot_schema",
+            "table_name": "f1",
+            "kind": "table",
+            "keys": [
+                {"unique_columns": ["id"]}
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {"typename": "text"}
                 },
                 {
                     "name": "asset_1",
@@ -312,7 +441,8 @@
                         "tag:isrd.isi.edu,2017:asset": {
                             "url_pattern": "test.com",
                             "filename_column": "asset_2_filename",
-                            "byte_count_column": "asset_2_bytes"
+                            "byte_count_column": "asset_2_bytes",
+                            "md5": "asset_2_md5"
                         }
                     }
                 },
@@ -325,82 +455,38 @@
                     "type": {"typename": "int4"}
                 },
                 {
-                    "name": "asset_3",
-                    "type": {
-                        "typename": "text"
-                    },
-                    "annotations": {
-                        "tag:isrd.isi.edu,2017:asset": {
-                            "url_pattern": "test.com",
-                            "filename_column": "asset_3_filename"
-                        }
-                    }
-                },
-                {
-                    "name": "asset_3_filename",
-                    "type": {"typename": "text"}
-                },
-                {
-                    "name": "asset_4",
-                    "type": {
-                        "typename": "text"
-                    },
-                    "annotations": {
-                        "tag:isrd.isi.edu,2017:asset": {
-                            "url_pattern": "test.com"
-                        }
-                    }
-                }
-            ],
-            "annotations": {
-                "tag:isrd.isi.edu,2016:visible-foreign-keys": {
-                    "*": [
-                        ["export", "f1_fk_1"],
-                        ["export", "no_export_annot_f2_assoc_fk_1"],
-                        {
-                            "source": [
-                                {"inbound": ["export", "no_export_annot_f2_assoc_fk_1"]},
-                                {"outbound": ["export", "no_export_annot_f2_assoc_fk_2"]},
-                                {"inbound": ["export", "f3_fk_1"]},
-                                "id"
-                            ]
-                        }
-                    ]
-                }
-            }
-        },
-        "f1": {
-            "schema_name": "export",
-            "table_name": "f1",
-            "kind": "table",
-            "keys": [
-                {"unique_columns": ["id"]}
-            ],
-            "column_definitions": [
-                {
-                    "name": "id",
-                    "nullok": false,
+                    "name": "asset_2_md5",
                     "type": {"typename": "text"}
                 }
             ],
             "foreign_keys": [
                 {
-                    "names": [["export", "f1_fk_1"]],
+                    "names": [["export_table_annot_schema", "f1_fk_1"]],
                     "foreign_key_columns": [{
                         "column_name": "id",
                         "table_name": "f1",
-                        "schema_name": "export"
+                        "schema_name": "export_table_annot_schema"
                     }],
                     "referenced_columns": [{
                         "column_name": "id",
                         "table_name": "no_export_annot",
-                        "schema_name": "export"
+                        "schema_name": "export_table_annot_schema"
                     }]
                 }
-            ]
+            ],
+            "annotations": {
+                "tag:misd.isi.edu,2015:display": {
+                  "name": "F1/table"
+                },
+                "tag:isrd.isi.edu,2016:visible-columns" : {
+                    "detailed": [
+                        "id", "asset_1"
+                    ]
+                }
+            }
         },
         "no_export_annot_f2_assoc": {
-            "schema_name": "export",
+            "schema_name": "export_table_annot_schema",
             "table_name": "no_export_annot_f2_assoc",
             "kind": "table",
             "keys": [
@@ -420,35 +506,35 @@
             ],
             "foreign_keys": [
                 {
-                    "names": [["export", "no_export_annot_f2_assoc_fk_1"]],
+                    "names": [["export_table_annot_schema", "no_export_annot_f2_assoc_fk_1"]],
                     "foreign_key_columns": [{
                         "column_name": "id_no_export_annot",
                         "table_name": "no_export_annot_f2_assoc",
-                        "schema_name": "export"
+                        "schema_name": "export_table_annot_schema"
                     }],
                     "referenced_columns": [{
                         "column_name": "id",
                         "table_name": "no_export_annot",
-                        "schema_name": "export"
+                        "schema_name": "export_table_annot_schema"
                     }]
                 },
                 {
-                    "names": [["export", "no_export_annot_f2_assoc_fk_2"]],
+                    "names": [["export_table_annot_schema", "no_export_annot_f2_assoc_fk_2"]],
                     "foreign_key_columns": [{
                         "column_name": "id_f2",
                         "table_name": "no_export_annot_f2_assoc",
-                        "schema_name": "export"
+                        "schema_name": "export_table_annot_schema"
                     }],
                     "referenced_columns": [{
                         "column_name": "id",
                         "table_name": "f2",
-                        "schema_name": "export"
+                        "schema_name": "export_table_annot_schema"
                     }]
                 }
             ]
         },
         "f2": {
-            "schema_name": "export",
+            "schema_name": "export_table_annot_schema",
             "table_name": "f2",
             "kind": "table",
             "keys": [
@@ -463,19 +549,11 @@
                 {
                     "name": "col_1",
                     "type": {"typename": "text"}
-                },
-                {
-                    "name": "main_table_RID_0",
-                    "type": {"typename": "text"}
-                },
-                {
-                    "name": "main_table_RID_1",
-                    "type": {"typename": "text"}
                 }
             ]
         },
         "f3": {
-            "schema_name": "export",
+            "schema_name": "export_table_annot_schema",
             "table_name": "f3",
             "kind": "table",
             "keys": [
@@ -486,27 +564,54 @@
                     "name": "id",
                     "nullok": false,
                     "type": {"typename": "text"}
+                },
+                {
+                    "name": "no_export_annot_RID",
+                    "type": {"typename": "text"}
+                },
+                {
+                    "name": "asset_1",
+                    "type": {
+                        "typename": "text"
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2017:asset": {
+                            "url_pattern": "test.com",
+                            "filename_column": "asset_1_filename",
+                            "byte_count_column": "asset_1_bytes",
+                            "md5": "asset_1_md5"
+                        }
+                    }
+                },
+                {
+                    "name": "asset_1_filename",
+                    "type": {"typename": "text"}
+                },
+                {
+                    "name": "asset_1_bytes",
+                    "type": {"typename": "int4"}
+                },
+                {
+                    "name": "asset_1_md5",
+                    "type": {"typename": "text"}
                 }
             ],
             "foreign_keys": [
                 {
-                    "names": [["export", "f3_fk_1"]],
+                    "names": [["export_table_annot_schema", "f3_fk_1"]],
                     "foreign_key_columns": [{
                         "column_name": "id",
                         "table_name": "f3",
-                        "schema_name": "export"
+                        "schema_name": "export_table_annot_schema"
                     }],
                     "referenced_columns": [{
                         "column_name": "id",
                         "table_name": "f2",
-                        "schema_name": "export"
+                        "schema_name": "export_table_annot_schema"
                     }]
                 }
             ]
         }
     },
-    "table_names": [
-        "main"
-    ],
-    "schema_name": "export"
+    "schema_name": "export_table_annot_schema"
 }

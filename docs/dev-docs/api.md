@@ -114,7 +114,7 @@ to use for ERMrest JavaScript agents.
             * [.shortestKey](#ERMrest.Table+shortestKey)
             * [.displayKey](#ERMrest.Table+displayKey) : [<code>Array.&lt;Column&gt;</code>](#ERMrest.Column)
             * [.uri](#ERMrest.Table+uri) : <code>string</code>
-            * [.exportTemplates](#ERMrest.Table+exportTemplates) : <code>Array</code>
+            * [.exportTemplates](#ERMrest.Table+exportTemplates) : <code>Array</code> \| <code>null</code>
             * [._getRowDisplayKey(context)](#ERMrest.Table+_getRowDisplayKey)
         * _static_
             * [.Entity](#ERMrest.Table.Entity)
@@ -989,7 +989,7 @@ get table by table name
         * [.shortestKey](#ERMrest.Table+shortestKey)
         * [.displayKey](#ERMrest.Table+displayKey) : [<code>Array.&lt;Column&gt;</code>](#ERMrest.Column)
         * [.uri](#ERMrest.Table+uri) : <code>string</code>
-        * [.exportTemplates](#ERMrest.Table+exportTemplates) : <code>Array</code>
+        * [.exportTemplates](#ERMrest.Table+exportTemplates) : <code>Array</code> \| <code>null</code>
         * [._getRowDisplayKey(context)](#ERMrest.Table+_getRowDisplayKey)
     * _static_
         * [.Entity](#ERMrest.Table.Entity)
@@ -1103,8 +1103,10 @@ uri to the table in ermrest with entity api
 **Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
 <a name="ERMrest.Table+exportTemplates"></a>
 
-#### table.exportTemplates : <code>Array</code>
+#### table.exportTemplates : <code>Array</code> \| <code>null</code>
 Returns the export templates that are defined on this table.
+NOTE If this returns `null`, then the exportTemplates is not defined on the table or schema
+NOTE The returned template might not have `outputs` attribute.
 
 **Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
 <a name="ERMrest.Table+_getRowDisplayKey"></a>
@@ -2811,7 +2813,7 @@ The default information that we want to be logged including catalog, schema_tabl
 #### reference.exportTemplates : <code>Object</code>
 Will return the expor templates that are available for this reference.
 It will validate the templates that are defined in annotation.
-If its `detailed` context and annotation didn't have any valid templates,
+If its `detailed` context and annotation was missing,
 it will return the default export template.
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
@@ -2827,8 +2829,8 @@ It will include:
   the foreignkey value to the main entity.
   The request should be grouped by the value of table's key + foreign key value.
 - fetch all the assets. For fetch, we need to provide url, length, and md5 (or other checksum types).
-  If the column for these fields are defined in the asset annotation, we're going to use them.
-  Otherwise we're not going to provide these extra columns and will let ioboxd handle it.
+  if these columns are missing from the asset annotation, they won't be added.
+- fetch all the assetes of related tables.
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+removeAllFacetFilters"></a>
@@ -5901,7 +5903,7 @@ The default information that we want to be logged including catalog, schema_tabl
 #### reference.exportTemplates : <code>Object</code>
 Will return the expor templates that are available for this reference.
 It will validate the templates that are defined in annotation.
-If its `detailed` context and annotation didn't have any valid templates,
+If its `detailed` context and annotation was missing,
 it will return the default export template.
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
@@ -5917,8 +5919,8 @@ It will include:
   the foreignkey value to the main entity.
   The request should be grouped by the value of table's key + foreign key value.
 - fetch all the assets. For fetch, we need to provide url, length, and md5 (or other checksum types).
-  If the column for these fields are defined in the asset annotation, we're going to use them.
-  Otherwise we're not going to provide these extra columns and will let ioboxd handle it.
+  if these columns are missing from the asset annotation, they won't be added.
+- fetch all the assetes of related tables.
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+removeAllFacetFilters"></a>

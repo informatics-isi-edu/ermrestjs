@@ -2150,17 +2150,28 @@
         /**
          * Will return the expor templates that are available for this reference.
          * It will validate the templates that are defined in annotation.
-         * If its `detailed` context and annotation didn't have any valid templates,
+         * If its `detailed` context and annotation was missing,
          * it will return the default export template.
          * @type {Object}
          */
         get exportTemplates() {
             if (this._exportTemplates === undefined) {
-                var res = this.table.exportTemplates;
-                if (res.length > 0 || this._context !== module._contexts.DETAILED) {
-                    this._exportTemplates = res;
+                var self = this;
+
+                // either null or array
+                var res = self.table.exportTemplates;
+
+                // annotation is missing
+                if (res === null) {
+                    self._exportTemplates = (self._context === module._contexts.DETAILED) ? [self.defaultExportTemplate]: [];
                 } else {
-                    this._exportTemplates = [this.defaultExportTemplate];
+                    // add missing outputs
+                    res.forEach(function (t) {
+                        if (!t.outputs) {
+                            t.outputs = self.defaultExportTemplate.outputs;
+                        }
+                    });
+                    self._exportTemplates = res;
                 }
             }
             return this._exportTemplates;
@@ -2176,8 +2187,8 @@
          *   the foreignkey value to the main entity.
          *   The request should be grouped by the value of table's key + foreign key value.
          * - fetch all the assets. For fetch, we need to provide url, length, and md5 (or other checksum types).
-         *   If the column for these fields are defined in the asset annotation, we're going to use them.
-         *   Otherwise we're not going to provide these extra columns and will let ioboxd handle it.
+         *   if these columns are missing from the asset annotation, they won't be added.
+         * - fetch all the assetes of related tables.
          * @type {string}
          */
         get defaultExportTemplate() {
@@ -2185,40 +2196,62 @@
                 var outputs = [];
 
                 var self = this,
-                    encode = module._fixedEncodeURIComponent;
+                    encode = module._fixedEncodeURIComponent,
+                    sanitize = module._sanitizeFilename;
 
-                // given a table, will generate an entity output for it
-                var getEntityOutput = function (t) {
+                // given a reference, will generate an entity output for it
+                var getEntityOutput = function (ref, path) {
+                    var source = {
+                        api: "entity"
+                    };
+
+                    if (path) {
+                        source.path = path;
+                    }
+
                     return {
                         destination: {
-                            name: t.name,
+                            name: sanitize(ref.displayname.unformatted),
                             type: "csv"
                         },
-                        source: {
-                            api: "entity",
-                            table: [encode(t.schema.name), encode(t.name)].join(":")
-                        }
+                        source: source
                     };
                 };
 
                 // given a related reference and the path from main table to it,
                 // will generate the appropriate attribute group output
+                // It will also change the projection list. Assume that this is the model:
+                // main_table <- t1 <- t2
+                // the key list will be based on:
+                // - shortestkey of main_table and t2
+                // the projection list will be based on:
+                // - visible columns of t2
+                // Since we're adding shortest key of main_table to the keylist, we
+                // have to add an alias, the alias will be in format of
+                // `<tablename>_<shortestkey_column_name>`
                 var getAttributeGroupOutput = function (relatedRef, path) {
-                    var projectionList = [], keyList = [];
+                    var projectionList = [], keyList = [],i = 0, name;
+
+
                     // shortestkey of the related reference
                     relatedRef.table.shortestKey.forEach(function (col) {
                         keyList.push(encode(col.name));
                     });
 
-                    // shortestkey of the current table
-                    var i = 0, addedColPrefix = "main_table_";
+                    // we have to add the shortestkey of main table
+                    var addedColPrefix = encode(self.table.name) + "_";
                     self.table.shortestKey.forEach(function (col) {
+                        name = addedColPrefix + encode(col.name);
+
                         // make sure the alias doesn't exist in the table
-                        while(relatedRef.table.columns.has(addedColPrefix + encode(col.name) + "_" + i)) i++;
-                        keyList.push(addedColPrefix + encode(col.name) + "_" + i + ":=" + self.location.mainTableAlias + ":"+ encode(col.name));
+                        while (relatedRef.table.columns.has(name)) {
+                            i++;
+                            name = addedColPrefix + encode(col.name) + "_" + i;
+                        }
+                        keyList.push(name + ":=" + self.location.mainTableAlias + ":"+ encode(col.name));
                     });
 
-                    // projection list
+                    // projection list (all the columns of related reference)
                     relatedRef.table.columns.all().forEach(function (col) {
                         // column already has been added to the list
                         if (keyList.indexOf(encode(col.name)) !== -1) return;
@@ -2227,83 +2260,124 @@
 
                     return {
                         destination: {
-                            name: relatedRef.table.name,
+                            name: sanitize(relatedRef.displayname.unformatted),
                             type: "csv"
                         },
                         source: {
                             api: "attributegroup",
-                            table: [encode(self.table.schema.name), encode(self.table.name)].join(":"),
                             path: path + "/" + keyList.join(",") + ";" + projectionList.join(",")
                         }
                     };
                 };
 
-                // main entity
-                outputs.push(getEntityOutput(self.table));
+                // will return `null` if asset is missing necessary columns.
+                // otherwise will return the appropriate output object
+                var getAssetOutput = function (col, destinationPath, sourcePath) {
+                    if (!col.isAsset) return null;
+                    var path = [], key;
 
-                // related entities
-                self.related().forEach(function (rel) {
-                    if (rel.pseudoColumn) {
-                        if (rel.pseudoColumn.foreignKeys.length < 2) {
-                            outputs.push(getEntityOutput(rel.table));
-                        }
-                        // path from main to the related reference
-                        var path = rel.pseudoColumn.foreignKeys.map(function (fk) {
-                            return fk.obj.toString(!fk.isInbound, false);
-                        }).join("/");
-                        outputs.push(getAttributeGroupOutput(rel, path));
-                        return;
-                    }
-
-                    // association table
-                    if (rel.derivedAssociationReference) {
-                        var assoc = rel.derivedAssociationReference;
-                        outputs.push(getAttributeGroupOutput(rel, assoc.origFKR.toString() +"/" + assoc._secondFKR.toString(true)));
-                        return;
-                    }
-
-                    // single inbound related
-                    outputs.push(getEntityOutput(rel.table));
-                });
-
-                // assets
-                self.columns.forEach(function (col) {
-                    if (!col.isAsset) return;
-                    var path = [];
-
-                    // url
-                    path.push("url:=" + encode(col.name));
-
+                    // required attributes
                     var attributes = {
                         byteCountColumn: "length",
-                        filenameColumn: "filename",
+                        filenameColumn: "filename"
+                    };
+
+                    // at least one of these must be available
+                    var checksum = {
                         md5: "md5",
                         sha256: "sha256"
                     };
 
-                    for (var key in attributes) {
-                        // only add the attributes that are defined in the annotation
-                        if (! (col[key] instanceof Column) ) continue;
+
+                    // add the url
+                    path.push("url:=" + encode(col.name));
+
+                    // add the required attributes
+                    for (key in attributes) {
+                        if (! (col[key] instanceof Column) ) return null;
                         path.push(attributes[key] + ":=" + encode(col[key].name));
                     }
 
-                    outputs.push({
+                    // at least one checksum must be available
+                    var hasChecksum = false;
+                    for (key in checksum) {
+                        if (! (col[key] instanceof Column) ) continue;
+                        hasChecksum = true;
+                        path.push(checksum[key] + ":=" + encode(col[key].name));
+                    }
+
+                    if (!hasChecksum) return null;
+
+                    return {
                         destination: {
-                            name: col.name,
+                            name: "assets/" + (destinationPath ?  sanitize(destinationPath) + "/" : "") + sanitize(col.name),
                             type: "fetch"
                         },
                         source: {
                             api: "attribute",
-                            table: [encode(self.table.schema.name), encode(self.table.name)].join(":"),
-                            path: path.join(",")
+                            path: (sourcePath ? sourcePath + "/": "") + path.join(",")
                         }
+                    };
+                };
+
+                // main entity
+                outputs.push(getEntityOutput(self));
+
+                // assets
+                self.columns.forEach(function (col) {
+                    var output = getAssetOutput(col, "", "");
+                    if (output === null) return;
+                    outputs.push(output);
+                });
+
+                // related entities
+                self.related().forEach(function (rel) {
+                    // the path that will be used for assets of related entities
+                    var destinationPath = rel.displayname.unformatted;
+                    // this will be used for source path
+                    var sourcePath = [encode(rel.table.schema.name), encode(rel.table.name)].join(":");
+
+                    if (rel.pseudoColumn) {
+                        // path length one, just adding the table would be enough
+                        if (rel.pseudoColumn.foreignKeys.length < 2) {
+                            outputs.push(getEntityOutput(rel, sourcePath));
+                        }
+                        else {
+                            // path from main to the related reference
+                            sourcePath = rel.pseudoColumn.foreignKeys.map(function (fk) {
+                                return fk.obj.toString(!fk.isInbound, false);
+                            }).join("/");
+                            outputs.push(getAttributeGroupOutput(rel, sourcePath));
+                        }
+                    }
+                    // association table
+                    else if (rel.derivedAssociationReference) {
+                        var assoc = rel.derivedAssociationReference;
+                        sourcePath = assoc.origFKR.toString() + "/" + assoc._secondFKR.toString(true);
+                        outputs.push(getAttributeGroupOutput(rel, sourcePath));
+                    }
+                    // single inbound related
+                    else {
+                        outputs.push(getEntityOutput(rel, sourcePath));
+                    }
+
+                    // add asset of the related table
+                    var detailedRef = rel.contextualize.detailed;
+
+                    // alternative table, don't add asset
+                    if (detailedRef.table !== rel.table) return;
+
+                    detailedRef.columns.forEach(function (col) {
+                        var output = getAssetOutput(col, destinationPath, sourcePath);
+                        if (output === null) return;
+                        outputs.push(output);
                     });
+
                 });
 
                 self._defaultExportTemplate = {
-                    name: "default_template",
-                    format_name: "BAG", // display name
-                    format_type: "BAG",
+                    displayname: "BAG",
+                    type: "BAG",
                     outputs: outputs
                 };
             }

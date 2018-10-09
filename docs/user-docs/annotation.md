@@ -541,7 +541,7 @@ Supported JSON _sortkey_ patterns:
 - `{ "column":` _columnname_ `}`: If omitted, the `"descending"` field defaults to `false` as per above.
 - _columnname_: A bare _columnname_ is a short-hand for `{ "column":` _columnname_ `}`.
 
-#### Table Display Settings Hierarchy 
+#### Table Display Settings Hierarchy
 
 The table display settings apply only to tables, but MAY be annotated at the schema level to set a schema-wide default, if appropriate in a particular model. Any table-level specification of these settings will override the behavior for that table. These settings on other model elements are meaningless and ignored.
 
@@ -592,16 +592,15 @@ See [Context Names](#context-names) section for the list of supported _context_ 
 
 `tag:isrd.isi.edu,2016:export`
 
-This key can be used to define export templates that will be used for `ioboxd` service integration with the client tools. For more information about the annotation payload please visit [the iobodx integration document](https://github.com/informatics-isi-edu/ioboxd/blob/master/doc/integration.md). 
+This key can be used to define export templates that will be used for `ioboxd` service integration with the client tools. For more information about the annotation payload please visit [the iobodx integration document](https://github.com/informatics-isi-edu/ioboxd/blob/master/doc/integration.md).
 
 Supported JSON payload patterns:
 
 - `{` `"templates":` `[`_template_`]` `}`: An array of _template_ objects to export.
 
 Supported _template_ patterns:
-- _name_: The name of the template instance, which should be unique among all other template instances in this _templates_ array.
-- _format_name_: The display name that will be used to populate the Chaise export drop-down for this _template_.
-- _format_type_: One of two keywords; _"FILE"_ or _"BAG"_, used to determine the container format for results.
+- _displayname_: The display name that will be used to populate the Chaise export drop-down for this _template_.
+- _type_: One of two keywords; _"FILE"_ or _"BAG"_, used to determine the container format for results.
 - `{`... `"outputs":` `[`_output_`]` `}`: An array of _output_ objects.
 
 Supported _output_ patterns:
@@ -615,7 +614,7 @@ Supported _sourceentry_ patterns:
 
 Supported _destinationentry_ patterns:
 -_name_: The base name to use for the output file.
--_type_: A type keyword that determines the output format. Supported values are dependent on the `template`.`format_type` selected. For the `FILE` type, the values `csv`, `json`, are currently supported. For the `BAG` type, the values `csv`, `json`, `fetch` and `download` are currently supported.
+-_type_: A type keyword that determines the output format. Supported values are dependent on the `template`.`type` selected. For the `FILE` type, the values `csv`, `json`, are currently supported. For the `BAG` type, the values `csv`, `json`, `fetch` and `download` are currently supported.
 -_params_: An optional object containing destination format-specific parameters.  Some destination formats (particularly those that require some kind of post-processing or data transformation), may require additional parameters  to be specified.
 
 ### Tag: 2017 Asset
