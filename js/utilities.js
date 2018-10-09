@@ -1433,6 +1433,7 @@
             case 0:
                 return new module.TimedOutError(response.statusText, response.data);
             case 400:
+                if (response.data.includes("Query run time limit exceeded")) return new module.QueryTimeoutError(response.statusText, response.data);
                 return new module.BadRequestError(response.statusText, response.data);
             case 401:
                 return new module.UnauthorizedError(response.statusText, response.data);
@@ -3236,4 +3237,13 @@
         MULTI_ENT_NEED_AGG: "aggregate functions are required for entity inbound-included paths in non-detailed contexts.",
         NO_AGG_IN_ENTRY: "aggregate functions are not allowed in entry contexts.",
         NO_PATH_IN_ENTRY: "pseudo columns with path are not allowed in entry contexts (only single outbound path is allowed)."
+    });
+
+    module._permissionMessages = Object.freeze({
+        TABLE_VIEW: "Table is a view.",
+        TABLE_GENERATED: "Table is generated.",
+        TABLE_IMMUTABLE: "Table is immutable.",
+        NO_CREATE: "No permissions to create.",
+        NO_UPDATE: "No permissions to update.",
+        DISABLED_COLUMNS: "All columns are disabled."
     });

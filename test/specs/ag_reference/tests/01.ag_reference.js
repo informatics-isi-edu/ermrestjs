@@ -247,8 +247,11 @@ exports.execute = function (options) {
         });
 
         describe("AttributeGroupReference, ", function () {
+            var table;
 
             beforeAll(function () {
+                table = schema.tables.get(mainTable);
+
                 ref = new options.ermRest.AttributeGroupReference(
                     [keyColVisible, keyColInvisible, keyColVisible2],
                     [aggColVisible, aggColInvisible],
@@ -261,6 +264,7 @@ exports.execute = function (options) {
                     [aggColVisible, aggColInvisible],
                     locWithModifiers,
                     options.catalog,
+                    table,
                     "compact/select"
                 );
 
@@ -269,6 +273,7 @@ exports.execute = function (options) {
                     [aggColNoSort],
                     loc,
                     options.catalog,
+                    null,
                     "compact/select"
                 );
             });
@@ -276,6 +281,12 @@ exports.execute = function (options) {
             it ('can create reference objects.', function () {
                 checkReference("ref", ref, loc);
                 checkReference("refWithModifiers", refWithModifiers, locWithModifiers);
+            });
+
+            it ("table should be the source table.", function () {
+                expect(ref.table).toBeUndefined(".table property when not present should be undefined");
+                expect(refWithModifiers.table).toBe(table, ".table is not the expected table");
+                expect(refColumnOrder.table).toBeNull(".table property when set as 'null' is not 'null'");
             });
 
             it ("columns should return visible columns.", function () {
@@ -293,15 +304,15 @@ exports.execute = function (options) {
             // since these are context based APIs, so they should be this way.
             describe("Column _sortColumns and sortable", function () {
                 it ("sortable should return false if column is not sortable.", function () {
-
+                    // TODO
                 });
 
                 it ("should return the same column if it's sortable and has no baseColumn.", function () {
-
+                    // TODO
                 });
 
                 it ("should return the base column's column_order if it's defined.", function () {
-
+                    // TODO
                 });
             });
 
@@ -315,6 +326,31 @@ exports.execute = function (options) {
                     mainTableBaseUri + "/col::ciregexp::test/col,alias:=invis_col,col_w_pre_format;c2:=cnt(*),c3:=cnt_d(col)@sort(alias)@before(20)",
                     "refWithModifiers uri missmatch."
                 );
+            });
+
+            it ("unfilteredReference should return an error when a table is not defined as part of the constructor.", function () {
+                try {
+                    var errorRef = ref.unfilteredReference;
+                } catch (err) {
+                    expect(err.message).toBe("table is not defined for current reference");
+                }
+            });
+
+            it ("unfilteredReference should be defined when a table is defined as part of the constructor.", function () {
+                var unfilteredRef = refWithModifiers.unfilteredReference;
+                var unfilteredUri = mainTableBaseUri + "/col,alias:=invis_col,col_w_pre_format;c2:=cnt(*),c3:=cnt_d(col)";
+                var unfilteredPath = mainTableBasePath + "/col,alias:=invis_col,col_w_pre_format;c2:=cnt(*),c3:=cnt_d(col)";
+
+                expect(unfilteredRef.location).toEqual(loc, "unfilteredRef location mismatch.");
+                expect(unfilteredRef._catalog).toBe(options.catalog, "unfilteredRef catalog mismatch.");
+                expect(unfilteredRef.table).toBe(table, "unfilteredRef table missmatch.");
+
+                // uri and ermrestPath should not have modifiers on it
+                expect(unfilteredRef.uri).toBe(unfilteredUri, "unfilteredRef uri mismatch.");
+                expect(unfilteredRef.ermrestPath).toBe(unfilteredPath, "unfilteredRef ermrestPath mismatch.");
+
+                // sort object should be empty
+                expect(unfilteredRef.ermrestSortObject).toEqual([], "unfilteredRef sortObject mismatch");
             });
 
             it("ermrestPath should return the path.", function () {
@@ -586,7 +622,7 @@ exports.execute = function (options) {
                 });
 
                 it ("reference should have the correct attributes.", function () {
-                    checkReference("Refrence: ", unicodeRef, unicodeLoc);
+                    checkReference("Reference: ", unicodeRef, unicodeLoc);
                 });
 
                 it ("uri should be correct.", function () {

@@ -246,6 +246,8 @@ to use for ERMrest JavaScript agents.
         * [new TimedOutError(status, message)](#new_ERMrest.TimedOutError_new)
     * [.BadRequestError](#ERMrest.BadRequestError)
         * [new BadRequestError(status, message)](#new_ERMrest.BadRequestError_new)
+    * [.QueryTimeoutError](#ERMrest.QueryTimeoutError)
+        * [new QueryTimeoutError(status, message)](#new_ERMrest.QueryTimeoutError_new)
     * [.UnauthorizedError](#ERMrest.UnauthorizedError)
         * [new UnauthorizedError(status, message)](#new_ERMrest.UnauthorizedError_new)
     * [.ForbiddenError](#ERMrest.ForbiddenError)
@@ -299,8 +301,10 @@ to use for ERMrest JavaScript agents.
         * [.location](#ERMrest.Reference+location) ⇒ <code>ERMrest.Location</code>
         * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
         * [.canCreate](#ERMrest.Reference+canCreate) : <code>boolean</code> \| <code>undefined</code>
+        * [.canCreateReason](#ERMrest.Reference+canCreateReason) : <code>String</code> \| <code>undefined</code>
         * [.canRead](#ERMrest.Reference+canRead) : <code>boolean</code> \| <code>undefined</code>
         * [.canUpdate](#ERMrest.Reference+canUpdate) : <code>boolean</code> \| <code>undefined</code>
+        * [.canUpdateReason](#ERMrest.Reference+canUpdateReason) : <code>String</code> \| <code>undefined</code>
         * [.canDelete](#ERMrest.Reference+canDelete) : <code>boolean</code> \| <code>undefined</code>
         * [.display](#ERMrest.Reference+display) : <code>Object</code>
         * [.unfilteredReference](#ERMrest.Reference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
@@ -479,7 +483,7 @@ to use for ERMrest JavaScript agents.
         * [.entityCounts()](#ERMrest.ColumnGroupAggregateFn+entityCounts) ⇒ [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)
         * [.histogram(bucketCount, min, max)](#ERMrest.ColumnGroupAggregateFn+histogram) ⇒ [<code>BucketAttributeGroupReference</code>](#ERMrest.BucketAttributeGroupReference)
     * [.AttributeGroupReference](#ERMrest.AttributeGroupReference)
-        * [new AttributeGroupReference(keyColumns, aggregateColumns, location, catalog, context)](#new_ERMrest.AttributeGroupReference_new)
+        * [new AttributeGroupReference(keyColumns, aggregateColumns, location, catalog, sourceTable, context)](#new_ERMrest.AttributeGroupReference_new)
         * [._keyColumns](#ERMrest.AttributeGroupReference+_keyColumns) : <code>Array.&lt;ERMrest.AttributeGroupColumn&gt;</code>
         * [._aggregateColumns](#ERMrest.AttributeGroupReference+_aggregateColumns) : <code>Array.&lt;ERMrest.AttributeGroupColumn&gt;</code>
         * [.aggregate](#ERMrest.AttributeGroupReference+aggregate) : [<code>ReferenceAggregateFn</code>](#ERMrest.ReferenceAggregateFn)
@@ -487,6 +491,7 @@ to use for ERMrest JavaScript agents.
         * [.columns](#ERMrest.AttributeGroupReference+columns) : <code>Array.&lt;AttributeGroupColumn&gt;</code>
         * [.shortestKey](#ERMrest.AttributeGroupReference+shortestKey) : <code>Array.&lt;ERMrest.AttributeGroupColumn&gt;</code>
         * [.uri](#ERMrest.AttributeGroupReference+uri) : <code>string</code>
+        * [.unfilteredReference](#ERMrest.AttributeGroupReference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
         * [.ermrestPath](#ERMrest.AttributeGroupReference+ermrestPath) : <code>string</code>
         * [.read([limit], contextHeaderParams)](#ERMrest.AttributeGroupReference+read) ⇒ <code>ERMRest.AttributeGroupPage</code>
         * [.getColumnByName(name)](#ERMrest.AttributeGroupReference+getColumnByName) ⇒ <code>ERMrest.AttributeGroupColumn</code>
@@ -581,8 +586,10 @@ to use for ERMrest JavaScript agents.
         * [.location](#ERMrest.Reference+location) ⇒ <code>ERMrest.Location</code>
         * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
         * [.canCreate](#ERMrest.Reference+canCreate) : <code>boolean</code> \| <code>undefined</code>
+        * [.canCreateReason](#ERMrest.Reference+canCreateReason) : <code>String</code> \| <code>undefined</code>
         * [.canRead](#ERMrest.Reference+canRead) : <code>boolean</code> \| <code>undefined</code>
         * [.canUpdate](#ERMrest.Reference+canUpdate) : <code>boolean</code> \| <code>undefined</code>
+        * [.canUpdateReason](#ERMrest.Reference+canUpdateReason) : <code>String</code> \| <code>undefined</code>
         * [.canDelete](#ERMrest.Reference+canDelete) : <code>boolean</code> \| <code>undefined</code>
         * [.display](#ERMrest.Reference+display) : <code>Object</code>
         * [.unfilteredReference](#ERMrest.Reference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
@@ -606,7 +613,7 @@ to use for ERMrest JavaScript agents.
         * [.getColumnByName(name)](#ERMrest.Reference+getColumnByName) ⇒ [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)
         * [.generateColumnsList(tuple)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
     * [.AttributeGroupReference](#ERMrest.AttributeGroupReference) : <code>object</code>
-        * [new AttributeGroupReference(keyColumns, aggregateColumns, location, catalog, context)](#new_ERMrest.AttributeGroupReference_new)
+        * [new AttributeGroupReference(keyColumns, aggregateColumns, location, catalog, sourceTable, context)](#new_ERMrest.AttributeGroupReference_new)
         * [._keyColumns](#ERMrest.AttributeGroupReference+_keyColumns) : <code>Array.&lt;ERMrest.AttributeGroupColumn&gt;</code>
         * [._aggregateColumns](#ERMrest.AttributeGroupReference+_aggregateColumns) : <code>Array.&lt;ERMrest.AttributeGroupColumn&gt;</code>
         * [.aggregate](#ERMrest.AttributeGroupReference+aggregate) : [<code>ReferenceAggregateFn</code>](#ERMrest.ReferenceAggregateFn)
@@ -614,6 +621,7 @@ to use for ERMrest JavaScript agents.
         * [.columns](#ERMrest.AttributeGroupReference+columns) : <code>Array.&lt;AttributeGroupColumn&gt;</code>
         * [.shortestKey](#ERMrest.AttributeGroupReference+shortestKey) : <code>Array.&lt;ERMrest.AttributeGroupColumn&gt;</code>
         * [.uri](#ERMrest.AttributeGroupReference+uri) : <code>string</code>
+        * [.unfilteredReference](#ERMrest.AttributeGroupReference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
         * [.ermrestPath](#ERMrest.AttributeGroupReference+ermrestPath) : <code>string</code>
         * [.read([limit], contextHeaderParams)](#ERMrest.AttributeGroupReference+read) ⇒ <code>ERMRest.AttributeGroupPage</code>
         * [.getColumnByName(name)](#ERMrest.AttributeGroupReference+getColumnByName) ⇒ <code>ERMrest.AttributeGroupColumn</code>
@@ -2221,6 +2229,19 @@ will be a type understandable by database.
 | status | <code>string</code> | the network error code |
 | message | <code>string</code> | error message |
 
+<a name="ERMrest.QueryTimeoutError"></a>
+
+### ERMrest.QueryTimeoutError
+**Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
+<a name="new_ERMrest.QueryTimeoutError_new"></a>
+
+#### new QueryTimeoutError(status, message)
+
+| Param | Type | Description |
+| --- | --- | --- |
+| status | <code>string</code> | the network error code |
+| message | <code>string</code> | error message |
+
 <a name="ERMrest.UnauthorizedError"></a>
 
 ### ERMrest.UnauthorizedError
@@ -2533,8 +2554,10 @@ Constructor for a ParsedFilter.
     * [.location](#ERMrest.Reference+location) ⇒ <code>ERMrest.Location</code>
     * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
     * [.canCreate](#ERMrest.Reference+canCreate) : <code>boolean</code> \| <code>undefined</code>
+    * [.canCreateReason](#ERMrest.Reference+canCreateReason) : <code>String</code> \| <code>undefined</code>
     * [.canRead](#ERMrest.Reference+canRead) : <code>boolean</code> \| <code>undefined</code>
     * [.canUpdate](#ERMrest.Reference+canUpdate) : <code>boolean</code> \| <code>undefined</code>
+    * [.canUpdateReason](#ERMrest.Reference+canUpdateReason) : <code>String</code> \| <code>undefined</code>
     * [.canDelete](#ERMrest.Reference+canDelete) : <code>boolean</code> \| <code>undefined</code>
     * [.display](#ERMrest.Reference+display) : <code>Object</code>
     * [.unfilteredReference](#ERMrest.Reference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
@@ -2715,6 +2738,14 @@ the referenced resource(s). In some cases, this permission cannot
 be determined and the value will be `undefined`.
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+canCreateReason"></a>
+
+#### reference.canCreateReason : <code>String</code> \| <code>undefined</code>
+Indicates the reason as to why a user cannot create for
+the referenced resource(s). In some cases, this won't be set
+because the user can create, so the value will be `undefined`.
+
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+canRead"></a>
 
 #### reference.canRead : <code>boolean</code> \| <code>undefined</code>
@@ -2729,6 +2760,14 @@ be determined and the value will be `undefined`.
 Indicates whether the client has the permission to _update_
 the referenced resource(s). In some cases, this permission cannot
 be determined and the value will be `undefined`.
+
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+canUpdateReason"></a>
+
+#### reference.canUpdateReason : <code>String</code> \| <code>undefined</code>
+Indicates the reason as to why a user cannot update for
+the referenced resource(s). In some cases, this won't be set
+because the user can update, so the value will be `undefined`.
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+canDelete"></a>
@@ -4720,7 +4759,7 @@ parent table (not the end table).
 **Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
 
 * [.AttributeGroupReference](#ERMrest.AttributeGroupReference)
-    * [new AttributeGroupReference(keyColumns, aggregateColumns, location, catalog, context)](#new_ERMrest.AttributeGroupReference_new)
+    * [new AttributeGroupReference(keyColumns, aggregateColumns, location, catalog, sourceTable, context)](#new_ERMrest.AttributeGroupReference_new)
     * [._keyColumns](#ERMrest.AttributeGroupReference+_keyColumns) : <code>Array.&lt;ERMrest.AttributeGroupColumn&gt;</code>
     * [._aggregateColumns](#ERMrest.AttributeGroupReference+_aggregateColumns) : <code>Array.&lt;ERMrest.AttributeGroupColumn&gt;</code>
     * [.aggregate](#ERMrest.AttributeGroupReference+aggregate) : [<code>ReferenceAggregateFn</code>](#ERMrest.ReferenceAggregateFn)
@@ -4728,13 +4767,14 @@ parent table (not the end table).
     * [.columns](#ERMrest.AttributeGroupReference+columns) : <code>Array.&lt;AttributeGroupColumn&gt;</code>
     * [.shortestKey](#ERMrest.AttributeGroupReference+shortestKey) : <code>Array.&lt;ERMrest.AttributeGroupColumn&gt;</code>
     * [.uri](#ERMrest.AttributeGroupReference+uri) : <code>string</code>
+    * [.unfilteredReference](#ERMrest.AttributeGroupReference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
     * [.ermrestPath](#ERMrest.AttributeGroupReference+ermrestPath) : <code>string</code>
     * [.read([limit], contextHeaderParams)](#ERMrest.AttributeGroupReference+read) ⇒ <code>ERMRest.AttributeGroupPage</code>
     * [.getColumnByName(name)](#ERMrest.AttributeGroupReference+getColumnByName) ⇒ <code>ERMrest.AttributeGroupColumn</code>
 
 <a name="new_ERMrest.AttributeGroupReference_new"></a>
 
-#### new AttributeGroupReference(keyColumns, aggregateColumns, location, catalog, context)
+#### new AttributeGroupReference(keyColumns, aggregateColumns, location, catalog, sourceTable, context)
 Constructs a Reference object.
 
 This object will be the main object that client will interact with, when we want
@@ -4754,6 +4794,7 @@ Usage:
 | aggregateColumns | <code>Array.&lt;ERMRest.AttributeGroupColumn&gt;</code> | List of columns that will create the aggreagte columns list in the request. |
 | location | <code>ERMRest.AttributeGroupLocation</code> | The location object. |
 | catalog | <code>ERMRest.Catalog</code> | The catalog object. |
+| sourceTable | <code>ERMRest.Table</code> | The table object that represents this AG reference |
 | context | <code>String</code> | The context that this reference is used in |
 
 <a name="ERMrest.AttributeGroupReference+_keyColumns"></a>
@@ -4801,6 +4842,13 @@ NOTE:
 - Since this is the object that has knowledge of columns, this should be here.
   (we might want to relocate it to the AttributeGroupLocation object.)
 - ermrest can processs this uri.
+
+**Kind**: instance property of [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)  
+<a name="ERMrest.AttributeGroupReference+unfilteredReference"></a>
+
+#### attributeGroupReference.unfilteredReference : [<code>Reference</code>](#ERMrest.Reference)
+This will generate a new unfiltered reference each time.
+Returns a reference that points to all entities of current table
 
 **Kind**: instance property of [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)  
 <a name="ERMrest.AttributeGroupReference+ermrestPath"></a>
@@ -5623,8 +5671,10 @@ get PathColumn object by column name
     * [.location](#ERMrest.Reference+location) ⇒ <code>ERMrest.Location</code>
     * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
     * [.canCreate](#ERMrest.Reference+canCreate) : <code>boolean</code> \| <code>undefined</code>
+    * [.canCreateReason](#ERMrest.Reference+canCreateReason) : <code>String</code> \| <code>undefined</code>
     * [.canRead](#ERMrest.Reference+canRead) : <code>boolean</code> \| <code>undefined</code>
     * [.canUpdate](#ERMrest.Reference+canUpdate) : <code>boolean</code> \| <code>undefined</code>
+    * [.canUpdateReason](#ERMrest.Reference+canUpdateReason) : <code>String</code> \| <code>undefined</code>
     * [.canDelete](#ERMrest.Reference+canDelete) : <code>boolean</code> \| <code>undefined</code>
     * [.display](#ERMrest.Reference+display) : <code>Object</code>
     * [.unfilteredReference](#ERMrest.Reference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
@@ -5805,6 +5855,14 @@ the referenced resource(s). In some cases, this permission cannot
 be determined and the value will be `undefined`.
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+canCreateReason"></a>
+
+#### reference.canCreateReason : <code>String</code> \| <code>undefined</code>
+Indicates the reason as to why a user cannot create for
+the referenced resource(s). In some cases, this won't be set
+because the user can create, so the value will be `undefined`.
+
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+canRead"></a>
 
 #### reference.canRead : <code>boolean</code> \| <code>undefined</code>
@@ -5819,6 +5877,14 @@ be determined and the value will be `undefined`.
 Indicates whether the client has the permission to _update_
 the referenced resource(s). In some cases, this permission cannot
 be determined and the value will be `undefined`.
+
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+canUpdateReason"></a>
+
+#### reference.canUpdateReason : <code>String</code> \| <code>undefined</code>
+Indicates the reason as to why a user cannot update for
+the referenced resource(s). In some cases, this won't be set
+because the user can update, so the value will be `undefined`.
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+canDelete"></a>
@@ -6208,7 +6274,7 @@ NOTE:
 **Kind**: static namespace of [<code>ERMrest</code>](#ERMrest)  
 
 * [.AttributeGroupReference](#ERMrest.AttributeGroupReference) : <code>object</code>
-    * [new AttributeGroupReference(keyColumns, aggregateColumns, location, catalog, context)](#new_ERMrest.AttributeGroupReference_new)
+    * [new AttributeGroupReference(keyColumns, aggregateColumns, location, catalog, sourceTable, context)](#new_ERMrest.AttributeGroupReference_new)
     * [._keyColumns](#ERMrest.AttributeGroupReference+_keyColumns) : <code>Array.&lt;ERMrest.AttributeGroupColumn&gt;</code>
     * [._aggregateColumns](#ERMrest.AttributeGroupReference+_aggregateColumns) : <code>Array.&lt;ERMrest.AttributeGroupColumn&gt;</code>
     * [.aggregate](#ERMrest.AttributeGroupReference+aggregate) : [<code>ReferenceAggregateFn</code>](#ERMrest.ReferenceAggregateFn)
@@ -6216,13 +6282,14 @@ NOTE:
     * [.columns](#ERMrest.AttributeGroupReference+columns) : <code>Array.&lt;AttributeGroupColumn&gt;</code>
     * [.shortestKey](#ERMrest.AttributeGroupReference+shortestKey) : <code>Array.&lt;ERMrest.AttributeGroupColumn&gt;</code>
     * [.uri](#ERMrest.AttributeGroupReference+uri) : <code>string</code>
+    * [.unfilteredReference](#ERMrest.AttributeGroupReference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
     * [.ermrestPath](#ERMrest.AttributeGroupReference+ermrestPath) : <code>string</code>
     * [.read([limit], contextHeaderParams)](#ERMrest.AttributeGroupReference+read) ⇒ <code>ERMRest.AttributeGroupPage</code>
     * [.getColumnByName(name)](#ERMrest.AttributeGroupReference+getColumnByName) ⇒ <code>ERMrest.AttributeGroupColumn</code>
 
 <a name="new_ERMrest.AttributeGroupReference_new"></a>
 
-#### new AttributeGroupReference(keyColumns, aggregateColumns, location, catalog, context)
+#### new AttributeGroupReference(keyColumns, aggregateColumns, location, catalog, sourceTable, context)
 Constructs a Reference object.
 
 This object will be the main object that client will interact with, when we want
@@ -6242,6 +6309,7 @@ Usage:
 | aggregateColumns | <code>Array.&lt;ERMRest.AttributeGroupColumn&gt;</code> | List of columns that will create the aggreagte columns list in the request. |
 | location | <code>ERMRest.AttributeGroupLocation</code> | The location object. |
 | catalog | <code>ERMRest.Catalog</code> | The catalog object. |
+| sourceTable | <code>ERMRest.Table</code> | The table object that represents this AG reference |
 | context | <code>String</code> | The context that this reference is used in |
 
 <a name="ERMrest.AttributeGroupReference+_keyColumns"></a>
@@ -6289,6 +6357,13 @@ NOTE:
 - Since this is the object that has knowledge of columns, this should be here.
   (we might want to relocate it to the AttributeGroupLocation object.)
 - ermrest can processs this uri.
+
+**Kind**: instance property of [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)  
+<a name="ERMrest.AttributeGroupReference+unfilteredReference"></a>
+
+#### attributeGroupReference.unfilteredReference : [<code>Reference</code>](#ERMrest.Reference)
+This will generate a new unfiltered reference each time.
+Returns a reference that points to all entities of current table
 
 **Kind**: instance property of [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)  
 <a name="ERMrest.AttributeGroupReference+ermrestPath"></a>

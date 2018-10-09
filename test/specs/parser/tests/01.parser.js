@@ -22,6 +22,8 @@ exports.execute = function(options) {
                 expect(location.path).toBe(schemaName + ":" + tableName + "/id=" + entityId);
                 expect(location.compactPath).toBe(schemaName + ":" + tableName + "/id=" + entityId);
                 expect(location.catalog).toBe(catalogId.toString());
+                expect(location.catalogId).toBe(catalogId.toString());
+                expect(location.version).toBeNull();
                 expect(location.sort).toBeUndefined();
                 expect(location.sortObject).toBe(null);
                 expect(location.paging).toBeUndefined();
@@ -61,6 +63,8 @@ exports.execute = function(options) {
                 expect(location.path).toBe(schemaName + ":" + tableName + "/id=");
                 expect(location.compactPath).toBe(schemaName + ":" + tableName + "/id=");
                 expect(location.catalog).toBe(catalogId.toString());
+                expect(location.catalogId).toBe(catalogId.toString());
+                expect(location.version).toBeNull();
                 expect(location.sort).toBeUndefined();
                 expect(location.sortObject).toBe(null);
                 expect(location.paging).toBeUndefined();
@@ -113,6 +117,8 @@ exports.execute = function(options) {
                 expect(location.afterObject.length).toBe(1);
                 expect(location.afterObject[0]).toBe("some random text");
                 expect(location.catalog).toBe(catalogId.toString());
+                expect(location.catalogId).toBe(catalogId.toString());
+                expect(location.version).toBeNull();
                 expect(location.schemaName).toBe(schemaName);
                 expect(location.tableName).toBe(tableName);
                 expect(location.filter instanceof options.ermRest.ParsedFilter).toBe(true);
@@ -158,6 +164,8 @@ exports.execute = function(options) {
                 expect(location.compactPath).toBe(schemaName + ":" +
                     tableName + "/id=" + firstEntityId + ";id=" + secondEntityId);
                 expect(location.catalog).toBe(catalogId.toString());
+                expect(location.catalogId).toBe(catalogId.toString());
+                expect(location.version).toBeNull();
                 expect(location.sort).toBeUndefined();
                 expect(location.sortObject).toBe(null);
                 expect(location.paging).toBeUndefined();
@@ -361,6 +369,8 @@ exports.execute = function(options) {
             expect(location.afterObject.length).toBe(2);
             expect(location.afterObject[1]).toBe("some random text");
             expect(location.catalog).toBe(catalogId.toString());
+            expect(location.catalog).toBe(catalogId.toString());
+            expect(location.version).toBeNull();
             expect(location.projectionSchemaName).toBe(schemaName);
             expect(location.projectionTableName).toBe(tableName);
             expect(location.schemaName).toBe(schemaName);
