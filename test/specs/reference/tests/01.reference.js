@@ -511,9 +511,9 @@ exports.execute = function (options) {
                     );
                 });
 
-                describe("passing values for disabled columns (acl, annotation, or system columns), ", function () {
+                describe("passing values for disabled columns (acl, or system columns), ", function () {
                     var ref,
-                    expectedData = ["1", 1, "default generated", "default no insert"],
+                    expectedData = ["1", 1234, "1234", "default no insert"],
                     passedData = [{col_id: 1, col:"123", col_serial: 1234, col_generated: "1234", RID: "1234", col_no_insert: "1234"}];
 
                     var returnedData = function (data) {

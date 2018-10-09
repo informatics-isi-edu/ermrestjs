@@ -1075,8 +1075,23 @@
             function getDefaults() {
                 var defaults = [];
                 self.table.columns.all().forEach(function (col) {
-                    // add disabled columns (even if data is passed for them, should be ignored)
-                    if (col.getInputDisabled(module._contexts.CREATE)) {
+                    // ignore the columns that user doesn't have insert access for.
+                    // If we allow this, ermerst will throw error.
+                    // NOTE At first we were ignoring any disabled inputs.
+                    // While that might sound more logical, there are some
+                    // disabled inputs that chaise is actually going to generate
+                    // value for and we need to store the value.
+                    // As the time of writing this comment, this is only true
+                    // for the asset's filename, md5, etc. columns.
+                    // In most deployments they are marked as generated but the expectation
+                    // would be that chaise/ermrestjs should generate the value.
+                    // The misconception here is when we're saying generated,
+                    // we mean chaise/ERMrestjs generated not necessarily database generated.
+                    // If we were interperting generated as just database generated,
+                    // then it wouldn't make sense to markd md5 as genereated
+                    // (it's not database generated it's just a column that chaise will generate value for.).
+                    // the issue: https://github.com/informatics-isi-edu/ermrestjs/issues/722
+                    if (col.rights.insert === false) {
                         defaults.push(col.name);
                         return;
                     }
