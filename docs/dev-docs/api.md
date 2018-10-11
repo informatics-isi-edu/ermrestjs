@@ -3728,10 +3728,10 @@ If aggregate function is defined on the column.
 
 #### pseudoColumn.reference : [<code>Reference</code>](#ERMrest.Reference)
 Returns a reference to the current pseudo-column
-TODO needs to be changed when we get to use it. Currently this is how it behaves:
+This is how it behaves:
 1. If pseudo-column has no path, it will return the base reference.
-2. If pseudo-column has path, and is inbound fk, or p&bA, apply the same logic as _generateRelatedReference
-3. Otherwise if mainTuple is available, use that to generate list of facets.
+3. if mainTuple is available, create the reference based on this path:
+     <pseudoColumnSchema:PseudoColumnTable>/<path from pseudo-column to main table>/<facets based on value of shortestkey of main table>
 4. Otherwise return the reference without any facet or filters (TODO needs to change eventually)
 
 **Kind**: instance property of [<code>PseudoColumn</code>](#ERMrest.PseudoColumn)  
