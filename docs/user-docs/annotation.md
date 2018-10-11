@@ -63,7 +63,7 @@ here is a quick matrix to locate them.
 | [2016 Table Display](#tag-2016-table-display) | - | X | - | - | - | Table-specific display options |
 | [2016 Visible Columns](#tag-2016-visible-columns) | - | X | - | - | - | Column visibility and presentation order |
 | [2016 Visible Foreign Keys](#tag-2016-visible-foreign-keys) | - | X | - | - | - | Foreign key visibility and presentation order |
-| [2016 Export](#tag-2016-export) | - | X | - | - | - | Describes export templates |
+| [2016 Export](#tag-2016-export) | X | X | - | - | - | Describes export templates |
 | [2017 Asset](#tag-2017-asset) | - | - | X | - | - | Describes assets |
 | [2018 Citation](#tag-2018-citation) | - | X | - | - | - | Describes citation |
 | [2018 Required](#tag-2018-required) | - | X | - | - | - | Required model column |
@@ -599,23 +599,28 @@ Supported JSON payload patterns:
 - `{` `"templates":` `[`_template_`]` `}`: An array of _template_ objects to export.
 
 Supported _template_ patterns:
-- _displayname_: The display name that will be used to populate the Chaise export drop-down for this _template_.
-- _type_: One of two keywords; _"FILE"_ or _"BAG"_, used to determine the container format for results.
-- `{`... `"outputs":` `[`_output_`]` `}`: An array of _output_ objects.
+- `{` ... `"displayname:"` _displayname_ ... `}`: The display name that will be used to populate the Chaise export drop-down for this _template_.
+- `{` ... `"type:"` _type_ ... `}` One of two keywords; _"FILE"_ or _"BAG"_, used to determine the container format for results.
+- `{`... `"outputs":` `[`_output_`]` ... `}`: An array of _output_ objects. If the template type is _"BAG"_ you MAY leave this attribute and not define it. In this case, the default `outputs` that the client generates will be used.
 
 Supported _output_ patterns:
-- `{`... `"source":` _sourceentry_ `}`: An object that contains parameters used to generate source data by querying ERMrest.
-- `{`... `"destination":` _destinationentry_ `}`: An object that contains parameters used to render the results of the source query into a specified destination format.
+- `{`... `"source:"` _sourceentry_ ... `}`: An object that contains parameters used to generate source data by querying ERMrest.
+- `{`... `"destination":` _destinationentry_  ... `}`: An object that contains parameters used to render the results of the source query into a specified destination format.
 
 Supported _sourceentry_ patterns:
-- _api_: The type of ERMrest query projection to perform. Valid values are _entity_, _attribute_, and _attributegroup_.
--_table_: A schema-qualified ERMrest table name in the form `schema_name:table_name`. The string MAY be escaped according to [RFC 3986](https://tools.ietf.org/html/rfc3986).
--_path_: An optional ERMrest path predicate. The string MUST be escaped according to [RFC 3986](https://tools.ietf.org/html/rfc3986) if it contains user-generated identifiers that use the reserved character set. See the [ERMRest URL conventions](https://github.com/informatics-isi-edu/ermrest/blob/master/docs/api-doc/index.md#url-conventions) for additional information.
+- `{` ... `"api:"` _api_ ... `}`: The type of ERMrest query projection to perform. Valid values are _entity_, _attribute_, and _attributegroup_.
+- `{` ... `"path":` _path_ ... `}`: An optional ERMrest path predicate. The string MUST be escaped according to [RFC 3986](https://tools.ietf.org/html/rfc3986) if it contains user-generated identifiers that use the reserved character set. See the [ERMRest URL conventions](https://github.com/informatics-isi-edu/ermrest/blob/master/docs/api-doc/index.md#url-conventions) for additional information.
 
 Supported _destinationentry_ patterns:
--_name_: The base name to use for the output file.
--_type_: A type keyword that determines the output format. Supported values are dependent on the `template`.`type` selected. For the `FILE` type, the values `csv`, `json`, are currently supported. For the `BAG` type, the values `csv`, `json`, `fetch` and `download` are currently supported.
--_params_: An optional object containing destination format-specific parameters.  Some destination formats (particularly those that require some kind of post-processing or data transformation), may require additional parameters  to be specified.
+- `{` ... `"name":` _name_ ... `}`: The base name to use for the output file.
+- `{` ... `"type":` _type_ ... `}`: A type keyword that determines the output format. Supported values are dependent on the `template`.`type` selected. For the `FILE` type, the values `csv`, `json`, are currently supported. For the `BAG` type, the values `csv`, `json`, `fetch` and `download` are currently supported.
+- `{` ... `"params":` _params_ ... `}`: An optional object containing destination format-specific parameters.  Some destination formats (particularly those that require some kind of post-processing or data transformation), may require additional parameters  to be specified.
+
+#### Export Annotation Hierarchy
+
+This annotation only applies to table but MAY be annotated at the schema level to set a schema-wide default. If the annotation is missing on the table, we will get the export definition from the schema.
+
+#### 
 
 ### Tag: 2017 Asset
 
