@@ -993,10 +993,10 @@ Object.defineProperty(PseudoColumn.prototype, "hasAggregate", {
 
 /**
  * Returns a reference to the current pseudo-column
- * TODO needs to be changed when we get to use it. Currently this is how it behaves:
+ * This is how it behaves:
  * 1. If pseudo-column has no path, it will return the base reference.
- * 2. If pseudo-column has path, and is inbound fk, or p&bA, apply the same logic as _generateRelatedReference
- * 3. Otherwise if mainTuple is available, use that to generate list of facets.
+ * 3. if mainTuple is available, create the reference based on this path:
+ *      <pseudoColumnSchema:PseudoColumnTable>/<path from pseudo-column to main table>/<facets based on value of shortestkey of main table>
  * 4. Otherwise return the reference without any facet or filters (TODO needs to change eventually)
  * @member {ERMrest.Reference} reference
  * @memberof ERMrest.PseudoColumn#
@@ -1026,22 +1026,19 @@ Object.defineProperty(PseudoColumn.prototype, "reference", {
                     fk = self.foreignKeys[i];
                     if (fk.isInbound) {
                         source.push({"outbound": fk.obj.constraint_names[0]});
-                        if (i === 0) {
-                            columns = fk.obj.key.colset.columns;
-                        }
                     } else {
                         source.push({"inbound": fk.obj.constraint_names[0]});
-                        if (i === 0) {
-                            columns = fk.obj.colset.columns;
-                        }
                     }
                 }
 
 
                 var filters = [], uri = self.table.uri;
                 if (self._mainTuple) {
-                    // create the filters based on the given tuple
-                    columns.forEach(function (col) {
+                    // create the filters based on the given tuple and shortestkey of table
+                    // NOTE we have to use shortest key of table, fk.key columns might not
+                    // be valid because it could be outbound and therefore the relationship
+                    // won't be one-to-one.
+                    self._baseReference.table.shortestKey.forEach(function (col) {
                         if (noData || (!self._mainTuple.data && !self._mainTuple.data[col.name])) {
                             noData = true;
                             return;

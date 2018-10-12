@@ -24,6 +24,7 @@
  * 19: inbound for testing long aggregate request (PseudoColumn)
  * 20: asset (AssetPseudoColumn)
  * 21: asset_filename (ReferenceColumn)
+ * 22: main -> outbound_2 <- outbound_2_inbound_1 (entity mode)
  *
  * Only the followin indeces are PseudoColumn:
  * 4 (outbound len 1, scalar)
@@ -124,18 +125,19 @@ exports.execute = function (options) {
              '0utuimdZvz8kTU4GI7tzWw', 'PEQDZ38621T5Y9J3P2Te2Q', 'plpeoINYqVjmca9rYYtFuw',
              'OpHtewN91L9_3b1Vq-jkOg', 'LHC_G9Tm_jYXQXyNNrZIGA', 'H3B-cJhnO5kI08bThBIMxw',
              'ZJll4WjE6eMk_g5e9WE1rg', 'GFBydDhuUocHxUlF894ntQ', 'vd-zzWca-ApLn2yvu7fx1w',
-             'MJVZnQ5mBRdCFPfjIOMvkA', "asset", "asset_filename"
+             'MJVZnQ5mBRdCFPfjIOMvkA', "asset", "asset_filename", 'IKxB9JkO83__MmKlV0Nnow'
         ];
 
         var detailedPseudoColumnIndices = [
-            4, 5, 6, 9, 11,12, 13, 14, 15, 16, 17, 18, 19
+            4, 5, 6, 9, 11,12, 13, 14, 15, 16, 17, 18, 19, 22
         ];
 
         var detailedColumnTypes = [
             "", "", "isKey", "isForeignKey", "isPathColumn", "isPathColumn",
             "isPathColumn", "isInboundForeignKey", "isInboundForeignKey", "isPathColumn",
             "isInboundForeignKey", "isPathColumn", "isPathColumn", "isPathColumn", "isPathColumn",
-            "isPathColumn", "isPathColumn", "isPathColumn", "isPathColumn", "isPathColumn", "isAsset", ""
+            "isPathColumn", "isPathColumn", "isPathColumn", "isPathColumn", "isPathColumn", "isAsset", "",
+            "isPathColumn"
         ];
 
         var mainRef, mainRefDetailed, invalidRef, mainRefEntry,
@@ -162,7 +164,7 @@ exports.execute = function (options) {
                 '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:main/main_table_id_col=01">01</a>',
                 '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:outbound_1/RID=' + findRID('outbound_1', 'id','01') + '">01</a>',
                 '<p>01: 10</p>\n', '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:outbound_1_outbound_1/RID=' + findRID('outbound_1_outbound_1', 'id', '01') + '">01</a>',
-                '01', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''
+                '01', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''
             ];
         });
 
@@ -241,7 +243,7 @@ exports.execute = function (options) {
             });
 
             it ("should create the correct columns for valid list of sources.", function () {
-                expect(mainRefDetailed.columns.length).toBe(22, "length missmatch");
+                expect(mainRefDetailed.columns.length).toBe(23, "length missmatch");
                 checkReferenceColumns([{
                     "ref": mainRefDetailed,
                     "expected": [
@@ -302,7 +304,8 @@ exports.execute = function (options) {
                         ],
                         [{"inbound": ["pseudo_column_schema", "inbound_4_long_table_name_fk"]}, "foreign key column name to main"],
                         "asset",
-                        "asset_filename"
+                        "asset_filename",
+                        [{"outbound": ["pseudo_column_schema", "main_fk2"]}, {"inbound": ["pseudo_column_schema", "outbound_2_inbound_1_fk1"]}, "id"]
                     ]
                 }]);
             });
@@ -626,7 +629,7 @@ exports.execute = function (options) {
                         'main_inbound_2_association', 'inbound_2',
                         'inbound_2_outbound_1', 'main_inbound_2_association',
                         'main', 'inbound_2', 'inbound_2', 'inbound_2', 'inbound_2',
-                        'inbound 4 long table name', 'main', 'main'
+                        'inbound 4 long table name', 'main', 'main', 'outbound_2_inbound_1'
                     ]);
                 });
             });
@@ -836,8 +839,8 @@ exports.execute = function (options) {
                             {"source": [
                                 {"inbound":[ 'pseudo_column_schema', 'outbound_1_fk1' ]},
                                 {"inbound":[ 'pseudo_column_schema', 'main_fk1' ]},
-                                "fk1"],
-                            "choices": ["01"]}
+                                "RID"],
+                            "choices": [findRID('main','main_table_id_col', '01')]}
                         ]},
                         "index=6"
                     );
@@ -850,8 +853,21 @@ exports.execute = function (options) {
                                 {"inbound":[ 'pseudo_column_schema', 'inbound_2_fk1' ]},
                                 {"inbound":[ 'pseudo_column_schema', 'main_inbound_2_association_fk2' ]},
                                 {"outbound":[ 'pseudo_column_schema', 'main_inbound_2_association_fk1' ]},
-                                "main_table_id_col"],
-                            "choices": ["01"]}
+                                "RID"],
+                            "choices": [findRID('main','main_table_id_col', '01')]}
+                        ]},
+                        "index=9"
+                    );
+
+                    checkReference(
+                        detailedColsWTuple[22].reference,
+                        "outbound_2_inbound_1",
+                        {"and": [
+                            {"source": [
+                                {"outbound":[ 'pseudo_column_schema', 'outbound_2_inbound_1_fk1' ]},
+                                {"inbound":[ 'pseudo_column_schema', 'main_fk2' ]},
+                                "RID"],
+                            "choices": [findRID('main','main_table_id_col', '01')]}
                         ]},
                         "index=9"
                     );
