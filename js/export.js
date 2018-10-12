@@ -33,14 +33,27 @@ var ERMrest = (function(module) {
         }
 
         // doesn't have the expected attributes
-        if (!module.ObjectHasAllKeys(template, ['name', 'format_name', 'format_type', 'outputs'])) {
+        if (!module.ObjectHasAllKeys(template, ['displayname', 'type'])) {
             console.log("export template ignored. Reason: first level required attributes are missing.");
             return false;
         }
 
-        // outputs is not an array
-        if (!Array.isArray(template.outputs) || template.outputs.length === 0) {
-            errMessage("outputs must be an array.");
+        //type must be either FILE or BAG
+        if (["BAG", "FILE"].indexOf(template.type) === -1) {
+            console.log("export template ignored. Reason: template.type must be either `BAG` or `FILE`.");
+            return false;
+        }
+
+        // in FILE, outputs must be properly defined
+        if (template.type === "FILE") {
+            if (!Array.isArray(template.outputs) || template.outputs.length === 0) {
+                errMessage("outputs must be an array when template type is FILE.");
+                return false;
+            }
+        } else if (template.outputs == null) {
+            return true; // it could be missing or null (in this case we should use the default outputs)
+        } else if (!Array.isArray(template.outputs) || template.outputs.length === 0) {
+            errMessage("if outputs is defined, it must be an array.");
             return false;
         }
 
@@ -60,8 +73,8 @@ var ERMrest = (function(module) {
                 return false;
             }
 
-            // output.source must have api and table
-            if (!module.ObjectHasAllKeys(output.source, ['api', 'table'])) {
+            // output.source must have api
+            if (!module.ObjectHasAllKeys(output.source, ['api'])) {
                 errMessage("output.source index=" + i + " has missing required attributes.");
                 return false;
             }
@@ -151,29 +164,24 @@ var ERMrest = (function(module) {
                     queries.push(query);
                 } else {
                     var outputs = template.outputs;
-                    var tableAliasToken = "X";
                     var predicate = this.reference.location.ermrestCompactPath;
-                    outputs.forEach(function (output) {
-                        var query = {};
-                        var queryParams = {};
-                        var queryFrags = [];
-                        var source = output.source;
-                        // encodeURIComponent && module._fixedEncodeURIComponent encode `:` to ``
-                        var table = encodeURI(decodeURI(source.table));
-                        var dest = output.destination;
 
-                        queryFrags.push(source.api);
-                        if (predicate.startsWith("M:=" + table)) {
-                            queryFrags.push(predicate);
-                        } else {
-                            queryFrags.push(predicate);
-                            queryFrags.push(tableAliasToken + ":=" + table);
+                    outputs.forEach(function (output) {
+                        var source = output.source, dest = output.destination;
+                        var query = {}, queryParams = {};
+
+                        // <api>/<current reference path>/<path>
+                        var queryFrags = [
+                            source.api,
+                            predicate
+                        ];
+                        if (typeof source.path === "string") {
+                            // remove the first and last slash if it has one
+                            queryFrags.push(source.path.replace(/^\/|\/$/g, ''));
                         }
-                        if (source.path !== undefined) {
-                            queryFrags.push(source.path);
-                        }
+
                         query.processor = dest.type || bagOptions.table_format;
-                        queryParams.output_path = dest.name || table;
+                        queryParams.output_path = dest.name;
                         queryParams.query_path = "/" + queryFrags.join("/") + "?limit=none";
                         if (dest.impl != null) {
                             query.processor_type = dest.impl;
@@ -205,7 +213,7 @@ var ERMrest = (function(module) {
             try {
                 var defer = module._q.defer(), self = this;
 
-                var serviceUrl = self.exportParameters.catalog.host + "/iobox/export/" + (self.template.format_type == "BAG" ? "bdbag" : "file");
+                var serviceUrl = self.exportParameters.catalog.host + "/iobox/export/" + (self.template.type == "BAG" ? "bdbag" : "file");
 
 
                 // log parameters

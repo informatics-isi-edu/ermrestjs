@@ -1019,9 +1019,6 @@ Object.defineProperty(PseudoColumn.prototype, "reference", {
                     parentDisplayname = this._baseReference.table.displayname;
                 }
 
-                self._reference = new Reference(module.parse(self.table.uri), self.table.schema.catalog);
-                self._reference.parentDisplayname = parentDisplayname;
-
                 var source = [], i, fk, columns, noData = false;
 
                 // create the reverse path
@@ -1035,7 +1032,7 @@ Object.defineProperty(PseudoColumn.prototype, "reference", {
                 }
 
 
-                var filters = [];
+                var filters = [], uri = self.table.uri;
                 if (self._mainTuple) {
                     // create the filters based on the given tuple and shortestkey of table
                     // NOTE we have to use shortest key of table, fk.key columns might not
@@ -1054,6 +1051,16 @@ Object.defineProperty(PseudoColumn.prototype, "reference", {
                         filters.push(filter);
                     });
                 }
+
+                // if data didn't exist, we should traverse the path
+                if ((noData || filters.length == 0) && !self._baseReference.hasJoin) {
+                    uri = self._baseReference.location.compactUri + "/" + this.foreignKeys.map(function (fk) {
+                        return fk.obj.toString(!fk.isInbound, false);
+                    }).join("/");
+                }
+
+                self._reference = new Reference(module.parse(uri), self.table.schema.catalog);
+                self._reference.parentDisplayname = parentDisplayname;
 
                 // make sure data exists
                 if (!noData && filters.length > 0) {

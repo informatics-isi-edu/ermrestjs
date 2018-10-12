@@ -114,7 +114,7 @@ to use for ERMrest JavaScript agents.
             * [.shortestKey](#ERMrest.Table+shortestKey)
             * [.displayKey](#ERMrest.Table+displayKey) : [<code>Array.&lt;Column&gt;</code>](#ERMrest.Column)
             * [.uri](#ERMrest.Table+uri) : <code>string</code>
-            * [.exportTemplates](#ERMrest.Table+exportTemplates) : <code>Array</code>
+            * [.exportTemplates](#ERMrest.Table+exportTemplates) : <code>Array</code> \| <code>null</code>
             * [._getRowDisplayKey(context)](#ERMrest.Table+_getRowDisplayKey)
         * _static_
             * [.Entity](#ERMrest.Table.Entity)
@@ -311,6 +311,8 @@ to use for ERMrest JavaScript agents.
         * [.appLink](#ERMrest.Reference+appLink) : <code>String</code>
         * [.csvDownloadLink](#ERMrest.Reference+csvDownloadLink) ⇒ <code>String</code>
         * [.defaultLogInfo](#ERMrest.Reference+defaultLogInfo) : <code>Object</code>
+        * [.exportTemplates](#ERMrest.Reference+exportTemplates) : <code>Object</code>
+        * [.defaultExportTemplate](#ERMrest.Reference+defaultExportTemplate) : <code>string</code>
         * [.removeAllFacetFilters(sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
         * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
         * [.read(limit, contextHeaderParams, useEntity)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
@@ -594,6 +596,8 @@ to use for ERMrest JavaScript agents.
         * [.appLink](#ERMrest.Reference+appLink) : <code>String</code>
         * [.csvDownloadLink](#ERMrest.Reference+csvDownloadLink) ⇒ <code>String</code>
         * [.defaultLogInfo](#ERMrest.Reference+defaultLogInfo) : <code>Object</code>
+        * [.exportTemplates](#ERMrest.Reference+exportTemplates) : <code>Object</code>
+        * [.defaultExportTemplate](#ERMrest.Reference+defaultExportTemplate) : <code>string</code>
         * [.removeAllFacetFilters(sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
         * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
         * [.read(limit, contextHeaderParams, useEntity)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
@@ -993,7 +997,7 @@ get table by table name
         * [.shortestKey](#ERMrest.Table+shortestKey)
         * [.displayKey](#ERMrest.Table+displayKey) : [<code>Array.&lt;Column&gt;</code>](#ERMrest.Column)
         * [.uri](#ERMrest.Table+uri) : <code>string</code>
-        * [.exportTemplates](#ERMrest.Table+exportTemplates) : <code>Array</code>
+        * [.exportTemplates](#ERMrest.Table+exportTemplates) : <code>Array</code> \| <code>null</code>
         * [._getRowDisplayKey(context)](#ERMrest.Table+_getRowDisplayKey)
     * _static_
         * [.Entity](#ERMrest.Table.Entity)
@@ -1107,8 +1111,10 @@ uri to the table in ermrest with entity api
 **Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
 <a name="ERMrest.Table+exportTemplates"></a>
 
-#### table.exportTemplates : <code>Array</code>
+#### table.exportTemplates : <code>Array</code> \| <code>null</code>
 Returns the export templates that are defined on this table.
+NOTE If this returns `null`, then the exportTemplates is not defined on the table or schema
+NOTE The returned template might not have `outputs` attribute.
 
 **Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
 <a name="ERMrest.Table+_getRowDisplayKey"></a>
@@ -2558,6 +2564,8 @@ Constructor for a ParsedFilter.
     * [.appLink](#ERMrest.Reference+appLink) : <code>String</code>
     * [.csvDownloadLink](#ERMrest.Reference+csvDownloadLink) ⇒ <code>String</code>
     * [.defaultLogInfo](#ERMrest.Reference+defaultLogInfo) : <code>Object</code>
+    * [.exportTemplates](#ERMrest.Reference+exportTemplates) : <code>Object</code>
+    * [.defaultExportTemplate](#ERMrest.Reference+defaultExportTemplate) : <code>string</code>
     * [.removeAllFacetFilters(sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
     * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
     * [.read(limit, contextHeaderParams, useEntity)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
@@ -2837,6 +2845,31 @@ NOTE It will not have the same sort and paging as the reference.
 
 #### reference.defaultLogInfo : <code>Object</code>
 The default information that we want to be logged including catalog, schema_table, and facet (filter).
+
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+exportTemplates"></a>
+
+#### reference.exportTemplates : <code>Object</code>
+Will return the expor templates that are available for this reference.
+It will validate the templates that are defined in annotation.
+If its `detailed` context and annotation was missing,
+it will return the default export template.
+
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+defaultExportTemplate"></a>
+
+#### reference.defaultExportTemplate : <code>string</code>
+Returns a object, that can be used as a default export template.
+It will include:
+- csv of entity API request to the main table.
+-  csv of entity API requests for all the related entities that are one level away from the main.
+- csv of attributegroup API requests for all the other related entities.
+  The projection list should include all the columns of the table plus
+  the foreignkey value to the main entity.
+  The request should be grouped by the value of table's key + foreign key value.
+- fetch all the assets. For fetch, we need to provide url, length, and md5 (or other checksum types).
+  if these columns are missing from the asset annotation, they won't be added.
+- fetch all the assetes of related tables.
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+removeAllFacetFilters"></a>
@@ -5648,6 +5681,8 @@ get PathColumn object by column name
     * [.appLink](#ERMrest.Reference+appLink) : <code>String</code>
     * [.csvDownloadLink](#ERMrest.Reference+csvDownloadLink) ⇒ <code>String</code>
     * [.defaultLogInfo](#ERMrest.Reference+defaultLogInfo) : <code>Object</code>
+    * [.exportTemplates](#ERMrest.Reference+exportTemplates) : <code>Object</code>
+    * [.defaultExportTemplate](#ERMrest.Reference+defaultExportTemplate) : <code>string</code>
     * [.removeAllFacetFilters(sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
     * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
     * [.read(limit, contextHeaderParams, useEntity)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
@@ -5927,6 +5962,31 @@ NOTE It will not have the same sort and paging as the reference.
 
 #### reference.defaultLogInfo : <code>Object</code>
 The default information that we want to be logged including catalog, schema_table, and facet (filter).
+
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+exportTemplates"></a>
+
+#### reference.exportTemplates : <code>Object</code>
+Will return the expor templates that are available for this reference.
+It will validate the templates that are defined in annotation.
+If its `detailed` context and annotation was missing,
+it will return the default export template.
+
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+defaultExportTemplate"></a>
+
+#### reference.defaultExportTemplate : <code>string</code>
+Returns a object, that can be used as a default export template.
+It will include:
+- csv of entity API request to the main table.
+-  csv of entity API requests for all the related entities that are one level away from the main.
+- csv of attributegroup API requests for all the other related entities.
+  The projection list should include all the columns of the table plus
+  the foreignkey value to the main entity.
+  The request should be grouped by the value of table's key + foreign key value.
+- fetch all the assets. For fetch, we need to provide url, length, and md5 (or other checksum types).
+  if these columns are missing from the asset annotation, they won't be added.
+- fetch all the assetes of related tables.
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+removeAllFacetFilters"></a>
