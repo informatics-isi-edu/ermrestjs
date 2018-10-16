@@ -649,7 +649,7 @@ exports.execute = function (options) {
             });
 
             it ("otherwise should only remove the filters.", function () {
-                var newRef = ref.removeAllFacetFilters(true);
+                var newRef = ref.removeAllFacetFilters(false, false, true);
                 expect(newRef).not.toBe(ref, "reference didn't change.");
                 expect(newRef.location.filter).toBeUndefined("filter missmatch.");
                 expect(newRef.location.facets).toBeDefined("facets was defined.");

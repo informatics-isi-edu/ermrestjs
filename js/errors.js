@@ -11,6 +11,7 @@
     module.BadGatewayError = BadGatewayError;
     module.ServiceUnavailableError = ServiceUnavailableError;
     module.InvalidFacetOperatorError = InvalidFacetOperatorError;
+    module.InvalidCustomFacetOperatorError = InvalidCustomFacetOperatorError;
     module.InvalidFilterOperatorError = InvalidFilterOperatorError;
     module.InvalidInputError = InvalidInputError;
     module.MalformedURIError = MalformedURIError;
@@ -246,6 +247,41 @@
         message = message ? message : module._errorMessage.facetingError;
         var redirectPath = removeInvalidFacetFilter(path);
         ERMrestError.call(this, '', module._errorStatus.facetingError, message, '', redirectPath);
+    }
+
+    InvalidFacetOperatorError.prototype = Object.create(ERMrestError.prototype);
+    InvalidFacetOperatorError.prototype.constructor = InvalidFacetOperatorError;
+
+    //remove invalid facet filterString from path
+    function removeInvalidCustomFacetFilter(path){
+      // if URI has modifier starting with '@' then find the blob and replace it with blank
+      // else remove entire facetFilter
+      var newPath,
+          modifierStart = path.indexOf('@'),
+          facetBlobStart = path.search('\\*::cfacets::');
+
+      if(modifierStart > 0){
+        var facetFilter = path.slice(facetBlobStart, modifierStart);
+        newPath = path.replace(facetFilter, '');
+      } else{
+        newPath = path.slice(0, facetBlobStart);
+      }
+      return newPath;
+    }
+    // Errors not associated with http status codes
+    // these are errors that we defined to manage errors in the API
+    /**
+     * @memberof ERMrest
+     * @param {string} message error message
+     * @param {string} path path for redirectLink
+     * @constructor
+     * @desc An invalid facet operator
+     */
+    function InvalidCustomFacetOperatorError(message, path) {
+
+        message = message ? message : module._errorMessage.customFacetngError;
+        var redirectPath = removeInvalidCustomFacetFilter(path);
+        ERMrestError.call(this, '', module._errorStatus.customFacetngError, message, '', redirectPath);
     }
 
     InvalidFacetOperatorError.prototype = Object.create(ERMrestError.prototype);

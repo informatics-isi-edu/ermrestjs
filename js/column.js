@@ -2119,12 +2119,13 @@ FacetColumn.prototype = {
             var jsonFilters = [],
                 pathFromSource = [], // the path from source reference to this facetColumn
                 self = this,
-                table = this.reference.table;
+                table = this.reference.table,
+                loc = this.reference.location;
 
             pathFromSource.push(module._fixedEncodeURIComponent(table.schema.name) + ":" + module._fixedEncodeURIComponent(table.name));
 
-            if (this.reference.location.filtersString) {
-                pathFromSource.push(this.reference.location.filtersString);
+            if (loc.filtersString) {
+                pathFromSource.push(loc.filtersString);
             }
 
             // create a path from reference to this facetColumn
@@ -2133,12 +2134,12 @@ FacetColumn.prototype = {
             });
 
             // TODO might be able to improve this
-            if (typeof this.reference.location.searchTerm === "string") {
-                jsonFilters.push({"source": "*", "search": [this.reference.location.searchTerm]});
+            if (typeof loc.searchTerm === "string") {
+                jsonFilters.push({"source": "*", "search": [loc.searchTerm]});
             }
 
             //get all the filters from other facetColumns
-            if (this.reference.location.facets !== null) {
+            if (loc.facets !== null) {
                 // create new facet filters
                 // TODO might be able to imporve this. Instead of recreating the whole json file.
                 this.reference.facetColumns.forEach(function (fc, index) {
@@ -2155,6 +2156,21 @@ FacetColumn.prototype = {
             ].join("/");
 
             this._sourceReference = new Reference(module.parse(uri), table.schema.catalog);
+
+            // add custom facets as the facets of the parent
+            if (loc.customFacets) {
+                //NOTE this whole feature is just a hack, so I don't think there's any problem with what we're doing here
+                // it looks like a hack to change the aliases to make it work with projection table, but the whole feature
+                // is a hack anyways.
+                var cfacet = module._simpleDeepCopy(loc.customFacets.decoded);
+                if (cfacet.ermrest_path) {
+                    // switch the alias names, the cfacet is originally written with the assumption of
+                    // the main table having "M" alias. So we just have to swap the aliases.
+                    cfacet.ermrest_path = cfacet.ermrest_path.replace(/\$\M/g, "$T");
+                }
+
+                this._sourceReference._location.customFacets = cfacet;
+            }
 
             if (jsonFilters.length > 0) {
                 this._sourceReference._location.projectionFacets = {"and": jsonFilters};
@@ -2830,7 +2846,7 @@ FacetColumn.prototype = {
      * @return {ERMrest.Reference} the reference with the new filter
      */
     _applyFilters: function (filters) {
-        var self = this;
+        var self = this, loc = this.reference.location;
         var newReference = _referenceCopy(this.reference);
         newReference._facetColumns = [];
 
@@ -2861,7 +2877,7 @@ FacetColumn.prototype = {
         newReference._location.afterObject = null;
 
         // TODO might be able to improve this
-        if (typeof this.reference.location.searchTerm === "string") {
+        if (typeof loc.searchTerm === "string") {
             jsonFilters.push({"source": "*", "search": [this.reference.location.searchTerm]});
         }
 
