@@ -1005,11 +1005,13 @@
 
         /**
          * Returns the export templates that are defined on this table.
-         * @type {Array}
+         * NOTE If this returns `null`, then the exportTemplates is not defined on the table or schema
+         * NOTE The returned template might not have `outputs` attribute.
+         * @type {Array|null}
          */
         get exportTemplates() {
             if (this._exportTemplates === undefined) {
-                var self = this, exp = module._annotations.EXPORT;
+                var self = this, exp = module._annotations.EXPORT, annot;
 
                 var getValidTemplates = function (templates) {
                     // make sure it's an array
@@ -1024,8 +1026,12 @@
                 };
 
                 self._exportTemplates = [];
-                if (self.annotations.contains(exp)) {
-                    self._exportTemplates = getValidTemplates(self.annotations.get(exp).content.templates);
+                if (self.annotations.contains(exp) || self.schema.annotations.contains(exp)) {
+                    annot = self.annotations.contains(exp) ? self.annotations : self.schema.annotations;
+                    self._exportTemplates = getValidTemplates(annot.get(exp).content.templates);
+                } else {
+                    // annotation is not defined
+                    self._exportTemplates = null;
                 }
             }
 

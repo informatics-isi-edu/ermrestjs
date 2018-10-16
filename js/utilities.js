@@ -268,6 +268,46 @@
     };
 
     /**
+     * Replaces characters in strings that are illegal/unsafe for filenames.
+     * Unsafe characters are either removed or replaced by a substitute set
+     * in the optional `options` object.
+     *
+     * Illegal Characters on Various Operating Systems
+     * / ? < > \ : * | "
+     * https://kb.acronis.com/content/39790
+     *
+     * Unicode Control codes
+     * C0 0x00-0x1f & C1 (0x80-0x9f)
+     * http://en.wikipedia.org/wiki/C0_and_C1_control_codes
+     *
+     * Reserved filenames on Unix-based systems (".", "..")
+     * Reserved filenames in Windows ("CON", "PRN", "AUX", "NUL", "COM1",
+     * "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
+     * "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", and
+     * "LPT9") case-insesitively and with or without filename extensions.
+     *
+     * source: https://github.com/parshap/node-sanitize-filename/blob/master/index.js
+     *
+     * @param {String} str original filename
+     * @param {String=} replacement the string that the invalid characters should be replaced with
+     * @return {String} sanitized filename
+     */
+    module._sanitizeFilename = function (str, replacement) {
+        replacement = (typeof replacement == "string") ? replacement : '_';
+
+        var illegalRe = /[\/\?<>\\:\*\|":]/g;
+        var controlRe = /[\x00-\x1f\x80-\x9f]/g;
+        var reservedRe = /^\.+$/;
+        var windowsReservedRe = /^(con|prn|aux|nul|com[0-9]|lpt[0-9])(\..*)?$/i;
+        var windowsTrailingRe = /[\. ]+$/;
+        return str.replace(illegalRe, replacement)
+            .replace(controlRe, replacement)
+            .replace(reservedRe, replacement)
+            .replace(windowsReservedRe, replacement)
+            .replace(windowsTrailingRe, replacement);
+    };
+
+    /**
      * @private
      * @param {Object} child child class
      * @param {Object} parent parent class
@@ -1393,6 +1433,7 @@
             case 0:
                 return new module.TimedOutError(response.statusText, response.data);
             case 400:
+                if (response.data.includes("Query run time limit exceeded")) return new module.QueryTimeoutError(response.statusText, response.data);
                 return new module.BadRequestError(response.statusText, response.data);
             case 401:
                 return new module.UnauthorizedError(response.statusText, response.data);
@@ -3198,4 +3239,13 @@
         MULTI_ENT_NEED_AGG: "aggregate functions are required for entity inbound-included paths in non-detailed contexts.",
         NO_AGG_IN_ENTRY: "aggregate functions are not allowed in entry contexts.",
         NO_PATH_IN_ENTRY: "pseudo columns with path are not allowed in entry contexts (only single outbound path is allowed)."
+    });
+
+    module._permissionMessages = Object.freeze({
+        TABLE_VIEW: "Table is a view.",
+        TABLE_GENERATED: "Table is generated.",
+        TABLE_IMMUTABLE: "Table is immutable.",
+        NO_CREATE: "No permissions to create.",
+        NO_UPDATE: "No permissions to update.",
+        DISABLED_COLUMNS: "All columns are disabled."
     });

@@ -993,10 +993,10 @@ Object.defineProperty(PseudoColumn.prototype, "hasAggregate", {
 
 /**
  * Returns a reference to the current pseudo-column
- * TODO needs to be changed when we get to use it. Currently this is how it behaves:
+ * This is how it behaves:
  * 1. If pseudo-column has no path, it will return the base reference.
- * 2. If pseudo-column has path, and is inbound fk, or p&bA, apply the same logic as _generateRelatedReference
- * 3. Otherwise if mainTuple is available, use that to generate list of facets.
+ * 3. if mainTuple is available, create the reference based on this path:
+ *      <pseudoColumnSchema:PseudoColumnTable>/<path from pseudo-column to main table>/<facets based on value of shortestkey of main table>
  * 4. Otherwise return the reference without any facet or filters (TODO needs to change eventually)
  * @member {ERMrest.Reference} reference
  * @memberof ERMrest.PseudoColumn#
@@ -1019,9 +1019,6 @@ Object.defineProperty(PseudoColumn.prototype, "reference", {
                     parentDisplayname = this._baseReference.table.displayname;
                 }
 
-                self._reference = new Reference(module.parse(self.table.uri), self.table.schema.catalog);
-                self._reference.parentDisplayname = parentDisplayname;
-
                 var source = [], i, fk, columns, noData = false;
 
                 // create the reverse path
@@ -1029,22 +1026,19 @@ Object.defineProperty(PseudoColumn.prototype, "reference", {
                     fk = self.foreignKeys[i];
                     if (fk.isInbound) {
                         source.push({"outbound": fk.obj.constraint_names[0]});
-                        if (i === 0) {
-                            columns = fk.obj.key.colset.columns;
-                        }
                     } else {
                         source.push({"inbound": fk.obj.constraint_names[0]});
-                        if (i === 0) {
-                            columns = fk.obj.colset.columns;
-                        }
                     }
                 }
 
 
-                var filters = [];
+                var filters = [], uri = self.table.uri;
                 if (self._mainTuple) {
-                    // create the filters based on the given tuple
-                    columns.forEach(function (col) {
+                    // create the filters based on the given tuple and shortestkey of table
+                    // NOTE we have to use shortest key of table, fk.key columns might not
+                    // be valid because it could be outbound and therefore the relationship
+                    // won't be one-to-one.
+                    self._baseReference.table.shortestKey.forEach(function (col) {
                         if (noData || (!self._mainTuple.data && !self._mainTuple.data[col.name])) {
                             noData = true;
                             return;
@@ -1057,6 +1051,16 @@ Object.defineProperty(PseudoColumn.prototype, "reference", {
                         filters.push(filter);
                     });
                 }
+
+                // if data didn't exist, we should traverse the path
+                if ((noData || filters.length == 0) && !self._baseReference.hasJoin) {
+                    uri = self._baseReference.location.compactUri + "/" + this.foreignKeys.map(function (fk) {
+                        return fk.obj.toString(!fk.isInbound, false);
+                    }).join("/");
+                }
+
+                self._reference = new Reference(module.parse(uri), self.table.schema.catalog);
+                self._reference.parentDisplayname = parentDisplayname;
 
                 // make sure data exists
                 if (!noData && filters.length > 0) {
@@ -3212,7 +3216,7 @@ ColumnGroupAggregateFn.prototype = {
             );
         }
 
-        return new AttributeGroupReference(keyColumns, aggregateColumns, loc, self._ref.table.schema.catalog, context);
+        return new AttributeGroupReference(keyColumns, aggregateColumns, loc, self._ref.table.schema.catalog, self._ref.table, context);
     },
 
     /**
