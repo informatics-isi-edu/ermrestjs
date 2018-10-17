@@ -755,8 +755,11 @@
         },
 
         /**
-         * Remove all the fitlers from facets
+         * Remove all the fitlers, facets, and custom-facets from the reference
+         * @param {boolean} sameFilter By default we're removing filters, if this is true filters won't be changed.
+         * @param {boolean} sameCustomFacet By default we're removing custom-facets, if this is true custom-facets won't be changed.
          * @param {boolean} sameFacet By default we're removing facets, if this is true facets won't be changed.
+         *
          * @return {ERMrest.reference} A reference without facet filters
          */
         removeAllFacetFilters: function (sameFilter, sameCustomFacet, sameFacet) {
