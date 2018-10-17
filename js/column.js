@@ -2163,11 +2163,21 @@ FacetColumn.prototype = {
 
             // add custom facets as the facets of the parent
             if (loc.customFacets) {
-                //NOTE this whole feature is just a hack, so I don't think there's any problem with what we're doing here
-                // it looks like a hack to change the aliases to make it work with projection table, but the whole feature
-                // is a hack anyways.
+                //NOTE this is just a hack, and since the whole feature is just a hack it's fine.
+                // In the ermrest_path we're allowing them to use the M alias. In here, we are making
+                // sure to change the M alias to T. Because we're going to use T to refer to the main
+                // reference when the facet has a path. In other words if the following is main reference
+                // M:=S:main_table/cutom-facet-that-might-have-$M-alias/facets-on-the-main-table
+                //
+                // Then the source reference for any of the facets will be
+                //
+                // T:=S:main_table/custom-facet-that-should-change-$M-to-$T/facets-on-the-main-table/join-path-to-current-facet/$M:=S:facet_table
+                //
+                // You can see why we are changing $M to $T.
+                //
+                // As I mentioned this is hacky, so we should eventually find a way around this.
                 var cfacet = module._simpleDeepCopy(loc.customFacets.decoded);
-                if (cfacet.ermrest_path) {
+                if (cfacet.ermrest_path && self.foreignKeys.length > 0) {
                     // switch the alias names, the cfacet is originally written with the assumption of
                     // the main table having "M" alias. So we just have to swap the aliases.
                     cfacet.ermrest_path = cfacet.ermrest_path.replace(/\$\M/g, "$T");

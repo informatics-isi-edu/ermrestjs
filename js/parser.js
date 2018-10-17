@@ -477,7 +477,7 @@
                     }
 
                     if (typeof this.customFacets.ermrestPath === "string") {
-                        uri += "/" + this.customFacets.ermrestPath.replace(/^\/|\/$/g, '');
+                        uri += "/" + this.customFacets.ermrestPath;
                     }
                 }
 
@@ -706,7 +706,7 @@
         set customFacets(json) {
             delete this._customFacets;
             if (typeof json === 'object' && json !== null) {
-                this._customFacets = new CustomFacets(json);
+                this._customFacets = new CustomFacets(json, '');
             }
             this._setDirty();
         },
@@ -1514,6 +1514,10 @@
      * @constructor
      */
     function CustomFacets (str, path) {
+
+        // the eror that we should throw if it's invalid
+        var error = new module.InvalidCustomFacetOperatorError('', path);
+
         if (typeof str === 'object') {
             /**
              * encode JSON object that represents facets
@@ -1528,12 +1532,18 @@
             this.encoded = module.encodeFacet(str);
         } else {
             this.encoded = str;
-            this.decoded = module.decodeFacet(str, path);
+
+            try {
+                this.decoded = module.decodeFacet(str, path);
+            } catch(exp) {
+                // the exp will be InvalidFacetOperatorError, so we should change it to custom-facet
+                throw error;
+            }
         }
 
         var obj = this.decoded;
-        if (!obj.hasOwnProperty("displayname") || (!!obj.hasOwnProperty("facets") && !obj.hasOwnProperty("ermrest_path"))) {
-            throw new module.InvalidCustomFacetOperatorError('', path);
+        if (!obj.hasOwnProperty("displayname") || (!obj.hasOwnProperty("facets") && !obj.hasOwnProperty("ermrest_path"))) {
+            throw error;
         }
 
         if (obj.facets) {
@@ -1544,12 +1554,12 @@
             this.facets = new ParsedFacets(obj.facets);
         }
 
-        if (obj.ermrest_path) {
+        if (typeof obj.ermrest_path === "string") {
             /**
              * The ermrset string path that will be appended to the url
              * @type {String}
              */
-            this.ermrestPath = obj.ermrest_path;
+            this.ermrestPath = obj.ermrest_path.replace(/^\/|\/$/g, '');
         }
 
         /**

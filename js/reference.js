@@ -577,8 +577,9 @@
                 };
 
 
-                // extract the filters and facets from the url
-                var hasFilterOrFacet =this.location.facets || this.location.filter;
+                // if location has facet or filter, we should honor it. we should not add preselected facets
+                var hasFilterOrFacet = this.location.facets || this.location.filter || this.location.customFacets;
+
                 var andFilters = [];
                 var jsonFilters = this.location.facets ? this.location.facets.decoded : null;
                 if (jsonFilters && jsonFilters.hasOwnProperty(andOperator) && Array.isArray(jsonFilters[andOperator])) {

@@ -292,13 +292,13 @@
      */
     function InvalidCustomFacetOperatorError(message, path) {
 
-        message = message ? message : module._errorMessage.customFacetngError;
+        message = message ? message : module._errorMessage.customFacetingError;
         var redirectPath = removeInvalidCustomFacetFilter(path);
-        ERMrestError.call(this, '', module._errorStatus.customFacetngError, message, '', redirectPath);
+        ERMrestError.call(this, '', module._errorStatus.customFacetingError, message, '', redirectPath);
     }
 
-    InvalidFacetOperatorError.prototype = Object.create(ERMrestError.prototype);
-    InvalidFacetOperatorError.prototype.constructor = InvalidFacetOperatorError;
+    InvalidCustomFacetOperatorError.prototype = Object.create(ERMrestError.prototype);
+    InvalidCustomFacetOperatorError.prototype.constructor = InvalidCustomFacetOperatorError;
 
     // path consits of facet filter alongwith table and schemaName
     // invalidFilter is removed from the path if found else everything is removed after path ends

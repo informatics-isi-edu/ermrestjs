@@ -1350,6 +1350,21 @@ exports.execute = function (options) {
                     sr = refWCustomFilters.facetColumns[11].sourceReference;
                     expect(sr.location.ermrestCompactPath).toBe("T:=faceting_schema:main/" + unsupportedFilter + "/M:=(fk_to_f2)=(faceting_schema:f2:id)" , "compactPath missmatch.");
                 });
+
+                it ("should handle custom facet on the main reference.", function (done) {
+                    // cfacet: {"displayname": "test", "ermrest_path": "(fk_to_f2)=(faceting_schema:f2:id)/term::ciregexp::test/$M/(fk_to_f1)=(faceting_schema:f1:id)/term::ciregexp::test/$M"}
+                    var cfacetBlob = "N4IgJglgzgDgNgQwJ4DsEFsCmIBcIAumU+IANCJgE7qVH4D6MC+AFriABQBmA1vfgHt6XAEwBKALzcEAY0z4IKAOb0oMlpnQIconBDBiA9IWo4cMiLSWYAHjDOFihgCQBZQ9z6DhARknS5BWVVdU1tLh89A2MqdDMLK1t7HEd8F1cQAF8gA";
+                    // facet: {"and": [{"source": "id", "choices": [2]}, {"source": "int_col", "ranges": [{"min": -5}]}]}
+                    var facetBlob = "N4IghgdgJiBcDaoDOB7ArgJwMYFM4gEsYAaELACxQNyTngCYBdAX2OXWz1kIgBcB9LCgA2IUhkgBzHLQSgAtgQhwAtAFZmLFkA";
+                    options.ermRest.resolve(createURL(tableMain) + "/*::cfacets::" + cfacetBlob + "/*::facets::" + facetBlob).then(function (ref) {
+                        expect(ref.facetColumns[0].sourceReference.location.ermrestCompactPath).toEqual("M:=faceting_schema:main/(fk_to_f2)=(faceting_schema:f2:id)/term::ciregexp::test/$M/(fk_to_f1)=(faceting_schema:f1:id)/term::ciregexp::test/$M/int_col::geq::-5/$M", "sourceReference index=0 missmatch");
+                        expect(ref.facetColumns[11].sourceReference.location.ermrestCompactPath).toEqual("T:=faceting_schema:main/(fk_to_f2)=(faceting_schema:f2:id)/term::ciregexp::test/$T/(fk_to_f1)=(faceting_schema:f1:id)/term::ciregexp::test/$T/id=2/$T/int_col::geq::-5/$T/M:=(fk_to_f2)=(faceting_schema:f2:id)", "sourceReference index=11 missmatch");
+                        expect(ref.location.ermrestCompactPath).toEqual("M:=faceting_schema:main/(fk_to_f2)=(faceting_schema:f2:id)/term::ciregexp::test/$M/(fk_to_f1)=(faceting_schema:f1:id)/term::ciregexp::test/$M/id=2/$M/int_col::geq::-5/$M", "reference ermrestCompactPath missmatch");
+                        done();
+                    }).catch(function (err) {
+                        done.fail(err);
+                    });
+                });
             });
 
             describe ("getChoiceDisplaynames, ", function () {

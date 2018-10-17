@@ -899,6 +899,119 @@ exports.execute = function(options) {
             });
         });
 
+        describe("CustomFacets, ", function () {
+            var baseUri = options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ":" + tableName;
+            var customFacetError = "Given encoded string for cfacets is not valid.", location, blob, cfacets;
+            var testCustomFacets = function (uri, blob, cfacets, ermrestPath) {
+                var loc = options.ermRest.parse(uri);
+                expect(loc.customFacets.decoded).toEqual(cfacets, "customFacets missmatch");
+                expect(loc.customFacets.encoded).toEqual(blob, "blob missmatch");
+                expect(loc.uri).toEqual(uri, "uri missmatch.");
+                expect(loc.ermrestPath).toEqual(ermrestPath, "ermrestCompactUri missmatch");
+                expect(loc.customFacets.displayname).toEqual(cfacets.displayname, "displayname missmatch");
+            };
+
+            describe("getter, ", function () {
+                it("when uri doesn't have any facets, Location.customFacets should be undefined.", function () {
+                    location = options.ermRest.parse(baseUri);
+                    expect(location.customFacets).toBeUndefined();
+                });
+
+                describe("when cfacets is not well-defined, ", function () {
+                    it ("when uri has an invalid cfacests blob, parser should throw an error.", function () {
+                        expect(function () {
+                            options.ermRest.parse(baseUri + "/*::cfacets::invalidblob");
+                        }).toThrow(customFacetError);
+                    });
+
+                    it ("when uri has a valid cfacets blob but `displayname` is missing, parser should throw an error.", function () {
+                        // {"ermrest_path": "id=2"}
+                        blob = "N4IgpgTgthYM4BcD6AHAhggFiAXCAlgCYC8ATCAL5A";
+                        expect(function () {
+                            options.ermRest.parse(baseUri + "/*::cfacets::" + blob);
+                        }).toThrow(customFacetError);
+                    });
+
+                    it ("when uri has a valid cfacets blob but `facets` and `ermrest_path` are missing, parser should throw an error.", function () {
+                        // {"displayname": "value"}
+                        blob = "N4IgJglgzgDgNgQwJ4DsEFsCmIBcIBuCcArtgL5A";
+                        expect(function () {
+                            options.ermRest.parse(baseUri + "/*::cfacets::" + blob);
+                        }).toThrow(customFacetError);
+                    });
+                });
+
+                describe("when cfacets is well-defined", function () {
+                    it ("should handle passing only facets.", function () {
+                        blob = "N4IgJglgzgDgNgQwJ4DsEFsCmIBcIBuCcArtgDQgBmCAxpgC5S6gIpi4DaoUA9sQE51cIGjzggKNABY8IdJjg4BGALoBfdWqA";
+                        testCustomFacets(
+                            baseUri + "/*::cfacets::" + blob,
+                            blob,
+                            {"displayname": "value", "facets": {"and": [{"source": "col", "choices": [1]}]}},
+                            "M:=parse_schema:parse_table/col=1/$M"
+                        );
+                    });
+
+                    it ("should handle passing only ermrest_path.", function () {
+                        blob = "N4IgJglgzgDgNgQwJ4DsEFsCmIBcIBuCcArtgDQiYBO6VmUALgPowIMAWuIEYAvAEwgAvkA";
+                        testCustomFacets(
+                            baseUri + "/*::cfacets::" + blob,
+                            blob,
+                            {"displayname": "value", "ermrest_path": "id=2"},
+                            "M:=parse_schema:parse_table/id=2"
+                        );
+                    });
+
+                    it ("should handle passing both facets and ermrest_path", function () {
+                        blob = "N4IgJglgzgDgNgQwJ4DsEFsCmIBcIBuCcArtgDQiYBO6VmUALgPowIMAWuIEYAvAEwgKAMwQBjTAyi5QCFGFwBtUFAD2xKhK5jVcISDHtVECdJyKAjAF0AvrZtA";
+                        testCustomFacets(
+                            baseUri + "/*::cfacets::" + blob,
+                            blob,
+                            {"displayname": "value", "ermrest_path": "id=2", "facets": {"and": [{"source": "col", "choices": [1]}]}},
+                            "M:=parse_schema:parse_table/col=1/$M/id=2"
+                        );
+                    });
+
+                    it ("should handle having both cfacets and facets.", function () {
+                        // {"displayname": "value", "ermrest_path": "id=2"}
+                        blob = "N4IgJglgzgDgNgQwJ4DsEFsCmIBcIBuCcArtgDQiYBO6VmUALgPowIMAWuIEYAvAEwgAvkA";
+
+                        // facetObj = {"and":[{"source":"accession", "choices":["1"]}, {"source":"*", "search":["test"]}]}
+                        var facetBlob = "N4IghgdgJiBcDaoDOB7ArgJwMYFM7i1ySQEsUIQAaELACxRKLnhAEYQBdAX0uXWzywQAKiogkOMNlrMQAFxxI5nLtyA";
+                        testCustomFacets(
+                            baseUri + "/*::cfacets::" + blob + "/*::facets::" + facetBlob,
+                            blob,
+                            {"displayname": "value", "ermrest_path": "id=2"},
+                            "M:=parse_schema:parse_table/id=2/accession=1/$M/*::ciregexp::test/$M"
+                        );
+                    });
+                });
+            });
+
+            describe("setter, ", function () {
+                var currLoc;
+                beforeEach(function () {
+                    currLoc = options.ermRest.parse(
+                        baseUri + "/*::cfacets::N4IgJglgzgDgNgQwJ4DsEFsCmIBcIBuCcArtgDQgBmCAxpgC5S6gIpi4DaoUA9sQE51cIGjzggKNABY8IdJjg4BGALoBfdWqA"
+                    );
+                });
+
+                it ('should be able to change it to something else', function () {
+                    var newCustomFacet = {"displayname": "value", "facets": {"and": [{"source": "col", "choices": [1]}]}};
+                    currLoc.customFacets = newCustomFacet;
+                    expect(currLoc.customFacets.decoded).toEqual(newCustomFacet, "custom facets missmatch");
+                    expect(currLoc.ermrestPath).toEqual("M:=parse_schema:parse_table/col=1/$M");
+                });
+
+                it ("should be able to set it to null.", function () {
+                    currLoc.customFacets = null;
+                    expect(currLoc.customFacets).toBeUndefined("custom facets missmatch");
+                    expect(currLoc.ermrestPath).toEqual("M:=parse_schema:parse_table");
+                });
+
+            });
+        });
+
         describe("createPath, ", function() {
             var validBlob = "N4IghgdgJiBcDaoDOB7ArgJwMYFM4gCoQAaEJHMbACznhABccl6QBdAXw6A";
             var facetObj = {
