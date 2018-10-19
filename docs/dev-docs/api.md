@@ -270,6 +270,8 @@ to use for ERMrest JavaScript agents.
         * [new ServiceUnavailableError(status, message)](#new_ERMrest.ServiceUnavailableError_new)
     * [.InvalidFacetOperatorError](#ERMrest.InvalidFacetOperatorError)
         * [new InvalidFacetOperatorError(message, path)](#new_ERMrest.InvalidFacetOperatorError_new)
+    * [.InvalidCustomFacetOperatorError](#ERMrest.InvalidCustomFacetOperatorError)
+        * [new InvalidCustomFacetOperatorError(message, path)](#new_ERMrest.InvalidCustomFacetOperatorError_new)
     * [.InvalidFilterOperatorError](#ERMrest.InvalidFilterOperatorError)
         * [new InvalidFilterOperatorError(message, path, invalidFilter)](#new_ERMrest.InvalidFilterOperatorError_new)
     * [.InvalidInputError](#ERMrest.InvalidInputError)
@@ -2386,6 +2388,21 @@ DuplicateConflictError - Return error pertaining to Duplicate entried
 <a name="new_ERMrest.InvalidFacetOperatorError_new"></a>
 
 #### new InvalidFacetOperatorError(message, path)
+An invalid facet operator
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| message | <code>string</code> | error message |
+| path | <code>string</code> | path for redirectLink |
+
+<a name="ERMrest.InvalidCustomFacetOperatorError"></a>
+
+### ERMrest.InvalidCustomFacetOperatorError
+**Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
+<a name="new_ERMrest.InvalidCustomFacetOperatorError_new"></a>
+
+#### new InvalidCustomFacetOperatorError(message, path)
 An invalid facet operator
 
 

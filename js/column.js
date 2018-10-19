@@ -2123,12 +2123,13 @@ FacetColumn.prototype = {
             var jsonFilters = [],
                 pathFromSource = [], // the path from source reference to this facetColumn
                 self = this,
-                table = this.reference.table;
+                table = this.reference.table,
+                loc = this.reference.location;
 
             pathFromSource.push(module._fixedEncodeURIComponent(table.schema.name) + ":" + module._fixedEncodeURIComponent(table.name));
 
-            if (this.reference.location.filtersString) {
-                pathFromSource.push(this.reference.location.filtersString);
+            if (loc.filtersString) {
+                pathFromSource.push(loc.filtersString);
             }
 
             // create a path from reference to this facetColumn
@@ -2137,12 +2138,12 @@ FacetColumn.prototype = {
             });
 
             // TODO might be able to improve this
-            if (typeof this.reference.location.searchTerm === "string") {
-                jsonFilters.push({"source": "*", "search": [this.reference.location.searchTerm]});
+            if (typeof loc.searchTerm === "string") {
+                jsonFilters.push({"source": "*", "search": [loc.searchTerm]});
             }
 
             //get all the filters from other facetColumns
-            if (this.reference.location.facets !== null) {
+            if (loc.facets !== null) {
                 // create new facet filters
                 // TODO might be able to imporve this. Instead of recreating the whole json file.
                 this.reference.facetColumns.forEach(function (fc, index) {
@@ -2159,6 +2160,31 @@ FacetColumn.prototype = {
             ].join("/");
 
             this._sourceReference = new Reference(module.parse(uri), table.schema.catalog);
+
+            // add custom facets as the facets of the parent
+            if (loc.customFacets) {
+                //NOTE this is just a hack, and since the whole feature is just a hack it's fine.
+                // In the ermrest_path we're allowing them to use the M alias. In here, we are making
+                // sure to change the M alias to T. Because we're going to use T to refer to the main
+                // reference when the facet has a path. In other words if the following is main reference
+                // M:=S:main_table/cutom-facet-that-might-have-$M-alias/facets-on-the-main-table
+                //
+                // Then the source reference for any of the facets will be
+                //
+                // T:=S:main_table/custom-facet-that-should-change-$M-to-$T/facets-on-the-main-table/join-path-to-current-facet/$M:=S:facet_table
+                //
+                // You can see why we are changing $M to $T.
+                //
+                // As I mentioned this is hacky, so we should eventually find a way around this.
+                var cfacet = module._simpleDeepCopy(loc.customFacets.decoded);
+                if (cfacet.ermrest_path && self.foreignKeys.length > 0) {
+                    // switch the alias names, the cfacet is originally written with the assumption of
+                    // the main table having "M" alias. So we just have to swap the aliases.
+                    cfacet.ermrest_path = cfacet.ermrest_path.replace(/\$\M/g, "$T");
+                }
+
+                this._sourceReference._location.customFacets = cfacet;
+            }
 
             if (jsonFilters.length > 0) {
                 this._sourceReference._location.projectionFacets = {"and": jsonFilters};
@@ -2834,7 +2860,7 @@ FacetColumn.prototype = {
      * @return {ERMrest.Reference} the reference with the new filter
      */
     _applyFilters: function (filters) {
-        var self = this;
+        var self = this, loc = this.reference.location;
         var newReference = _referenceCopy(this.reference);
         newReference._facetColumns = [];
 
@@ -2865,7 +2891,7 @@ FacetColumn.prototype = {
         newReference._location.afterObject = null;
 
         // TODO might be able to improve this
-        if (typeof this.reference.location.searchTerm === "string") {
+        if (typeof loc.searchTerm === "string") {
             jsonFilters.push({"source": "*", "search": [this.reference.location.searchTerm]});
         }
 

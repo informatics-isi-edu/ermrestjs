@@ -29,13 +29,14 @@
 
     /**
      * Given tableName, schemaName, and facets will generate a path in the following format:
-     * #<catalogId>/<tableName>:<schemaName>/*::facets::<FACETSBLOB>
+     * #<catalogId>/<tableName>:<schemaName>/*::cfacets:<CUSTOMFACETBLOB>/*::facets::<FACETSBLOB>
      * @param  {string} schemaName Name of schema, can be null
      * @param  {string} tableName  Name of table
      * @param  {object} facets     an object
+     * @param  {object} cfacets    an object
      * @return {string}            a path that ERMrestJS understands and can parse, can be undefined
      */
-    module.createPath = function (catalogId, schemaName, tableName, facets) {
+    module.createPath = function (catalogId, schemaName, tableName, facets, cfacets) {
         verify(typeof catalogId === "string" && catalogId.length > 0, "catalogId must be an string.");
         verify(typeof tableName === "string" && tableName.length > 0, "tableName must be an string.");
 
@@ -44,6 +45,10 @@
             compactPath += module._fixedEncodeURIComponent(schemaName) + ":";
         }
         compactPath += module._fixedEncodeURIComponent(tableName);
+
+        if (cfacets && typeof cfacets === "object" && Object.keys(cfacets).length !== 0) {
+            compactPath += "/*::cfacets::" + module.encodeFacet(cfacets);
+        }
 
         if (facets && typeof facets === "object" && Object.keys(facets).length !== 0) {
             compactPath += "/*::facets::" + module.encodeFacet(facets);
@@ -54,7 +59,7 @@
 
     /**
      * The parse handles URI in this format
-     * <service>/catalog/<catalog_id>/<api>/<schema>:<table>/[/filter(s)][/facets][/join(s)][@sort(col...)][@before(...)/@after(...)][?]
+     * <service>/catalog/<catalog_id>/<api>/<schema>:<table>/[/filter(s)][/cfacets][/facets][/join(s)][/facets][@sort(col...)][@before(...)/@after(...)][?]
      *
      * path =  <filters(s)>/<join(s)>/<facets>/<search>
      *
@@ -79,6 +84,7 @@
 
         var joinRegExp = /(?:left|right|full|^)\((.*)\)=\((.*:.*:.*)\)/;
         var facetsRegExp = /\*::facets::(.+)/;
+        var customFacetsRegExp = /\*::cfacets::(.+)/;
 
         // extract the query params
         if (uri.indexOf("?") !== -1) {
@@ -148,7 +154,7 @@
         }
 
         // Split compact path on '/'
-        // Expected format: "<schema:table>/<filter(s)>/<facets>/<joins(s)>/<facets>"
+        // Expected format: "<schema:table>/<filter(s)>/<cfacets>/<facets>/<joins(s)>/<facets>"
         parts = this._compactPath.split('/');
 
 
@@ -184,6 +190,15 @@
         }
         this._searchTerm = searchTerm;
 
+        //<cfacets>
+        if (startIndex <= endIndex) {
+            match = parts[startIndex].match(customFacetsRegExp);
+            if (match) { // this is the custom facets blob
+                this._customFacets = new CustomFacets(match[1], this._path);
+                startIndex++;
+            }
+        }
+
         // <projectionFacets>/<join(s)>
         this._joins = [];
         // parts[startIndex] to parts[endIndex] might be joins
@@ -210,9 +225,10 @@
             // TODO should refactor these checks into one match statement
             var isJoin = parts[1].match(joinRegExp);
             var isFacet = parts[1].match(facetsRegExp);
+            var isCustomFacet = parts[1].match(customFacetsRegExp);
 
             // parts[1] could be linking or search
-            if (!isJoin && !isFacet) {
+            if (!isJoin && !isFacet && !isCustomFacet) {
                 this._filtersString = parts[1];
 
                 // split by ';' and '&'
@@ -335,7 +351,7 @@
         },
 
         /**
-         * <projectionSchema:projectionTable>/<filters>/<<projectionFacets>>/<joins>/<<facets>>
+         * <projectionSchema:projectionTable>/<filters>/<cfacets>/<projectionFacets>/<joins>/<facets>
          * NOTE: some of the components might not be understanable by ermrest, because of pseudo operator (e.g., ::facets::).
          *
          * @returns {String} Path without modifiers or queries
@@ -350,6 +366,10 @@
 
                 if (this.filtersString) {
                     uri += "/" + this.filtersString;
+                }
+
+                if (this.customFacets) {
+                    uri += "/*::cfacets::" + this.customFacets.encoded;
                 }
 
                 if (this.projectionFacets) {
@@ -447,6 +467,20 @@
                     uri += "/" + this.filtersString;
                 }
 
+                if (this.customFacets) {
+                    if (this.customFacets.facets) {
+                        facetFilter = _JSONToErmrestFilter(this.customFacets.facets.decoded, this.projectionTableAlias, this.projectionTableAlias, this.catalog, module._constraintNames);
+                        if (!facetFilter) {
+                            throw new module.InvalidCustomFacetOperatorError('', this.path);
+                        }
+                        uri += "/" + facetFilter;
+                    }
+
+                    if (typeof this.customFacets.ermrestPath === "string") {
+                        uri += "/" + this.customFacets.ermrestPath;
+                    }
+                }
+
                 if (this.projectionFacets) {
                     facetFilter = _JSONToErmrestFilter(this.projectionFacets.decoded, this.projectionTableAlias, this.projectionTableName, this.catalog, module._constraintNames);
                     if (!facetFilter) throw new module.InvalidFacetOperatorError('', this.path);
@@ -461,8 +495,9 @@
 
                 if (this.facets) {
                     facetFilter = _JSONToErmrestFilter(this.facets.decoded, mainTableAlias, mainTableName, this.catalog, module._constraintNames);
-                    if (!facetFilter)
-                     throw new module.InvalidFacetOperatorError('', this.path);
+                    if (!facetFilter) {
+                        throw new module.InvalidFacetOperatorError('', this.path);
+                    }
                     uri += "/" + facetFilter;
                 }
 
@@ -666,6 +701,18 @@
          */
         get facets() {
             return this._facets;
+        },
+
+        set customFacets(json) {
+            delete this._customFacets;
+            if (typeof json === 'object' && json !== null) {
+                this._customFacets = new CustomFacets(json, '');
+            }
+            this._setDirty();
+        },
+
+        get customFacets() {
+            return this._customFacets;
         },
 
         /**
@@ -1425,7 +1472,7 @@
      * https://github.com/informatics-isi-edu/ermrestjs/issues/447
      *
      * @param       {String|Object} str Can be blob or json (object).
-     * @param       {String|Object} path to generate rediretUrl in error module.
+     * @param       {String} path to generate rediretUrl in error module.
      * @constructor
      */
     function ParsedFacets (str, path) {
@@ -1441,10 +1488,10 @@
              * JSON object that represents facets
              * @type {string}
              */
-            this.encoded = this._encodeJSON(str);
+            this.encoded = module.encodeFacet(str);
         } else {
             this.encoded = str;
-            this.decoded = this._decodeJSON(str, path);
+            this.decoded = module.decodeFacet(str, path);
         }
 
         var andOperator = module._FacetsLogicalOperators.AND, obj = this.decoded;
@@ -1456,32 +1503,71 @@
 
     }
 
-    ParsedFacets.prototype = {
-        constructor: ParsedFacets,
+    /**
+     * An object that will have the follwoing attributes:
+     *  - displayname: "a markdown displayname",
+     *  - facets: "the facet object"
+     *
+     *
+     * @param       {String|Object} str Can be blob or json (object).
+     * @param       {String} path to generate rediretUrl in error module.
+     * @constructor
+     */
+    function CustomFacets (str, path) {
 
-        /**
-         * Given a JSON return an encoded blob.
-         *
-         * @private
-         * @param       {object} json JSON object
-         * @return      {string} string blob
-         */
-        _encodeJSON: function (obj) {
-            return module.encodeFacet(obj);
-        },
+        // the eror that we should throw if it's invalid
+        var error = new module.InvalidCustomFacetOperatorError('', path);
 
-        /**
-         * Given a blob string return the JSON object.
-         *
-         * @private
-         * @param       {string} blob the encoded JSON object.
-         * @param       {String|Object} path to generate rediretUrl in error module.
-         * @return      {object} decoded JSON object.
-         */
-        _decodeJSON: function (blob, path) {
-            return module.decodeFacet(blob, path);
+        if (typeof str === 'object') {
+            /**
+             * encode JSON object that represents facets
+             * @type {object}
+             */
+            this.decoded = str;
+
+            /**
+             * JSON object that represents facets
+             * @type {string}
+             */
+            this.encoded = module.encodeFacet(str);
+        } else {
+            this.encoded = str;
+
+            try {
+                this.decoded = module.decodeFacet(str, path);
+            } catch(exp) {
+                // the exp will be InvalidFacetOperatorError, so we should change it to custom-facet
+                throw error;
+            }
         }
-    };
+
+        var obj = this.decoded;
+        if (!obj.hasOwnProperty("displayname") || (!obj.hasOwnProperty("facets") && !obj.hasOwnProperty("ermrest_path"))) {
+            throw error;
+        }
+
+        if (obj.facets) {
+            /**
+            * the facet that this custom facet is representing
+            * @type {ParsedFacets}
+            */
+            this.facets = new ParsedFacets(obj.facets);
+        }
+
+        if (typeof obj.ermrest_path === "string") {
+            /**
+             * The ermrset string path that will be appended to the url
+             * @type {String}
+             */
+            this.ermrestPath = obj.ermrest_path.replace(/^\/|\/$/g, '');
+        }
+
+        /**
+         * The name that should be used to represent the facet value
+         * @type {string}
+         */
+        this.displayname = obj.displayname;
+    }
 
     /**
      * For the structure of JSON, take a look at ParsedFacets documentation.

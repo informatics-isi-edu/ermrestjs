@@ -3194,6 +3194,7 @@
         forbidden : "Forbidden",
         itemNotFound : "Item Not Found",
         facetingError: "Invalid Facet Filters",
+        customFacetngError: "Invalid Custom Facet Filteres",
         invalidFilter : "Invalid Filter",
         invalidInput : "Invalid Input",
         invalidURI : "Invalid URI",
@@ -3204,7 +3205,8 @@
     });
 
     module._errorMessage = Object.freeze({
-        facetingError : "Given encoded string for facets is not valid."
+        facetingError : "Given encoded string for facets is not valid.",
+        customFacetingError : "Given encoded string for cfacets is not valid."
     });
 
     module._HTTPErrorCodes = Object.freeze({

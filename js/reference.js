@@ -577,8 +577,9 @@
                 };
 
 
-                // extract the filters and facets from the url
-                var hasFilterOrFacet =this.location.facets || this.location.filter;
+                // if location has facet or filter, we should honor it. we should not add preselected facets
+                var hasFilterOrFacet = this.location.facets || this.location.filter || this.location.customFacets;
+
                 var andFilters = [];
                 var jsonFilters = this.location.facets ? this.location.facets.decoded : null;
                 if (jsonFilters && jsonFilters.hasOwnProperty(andOperator) && Array.isArray(jsonFilters[andOperator])) {
@@ -754,14 +755,24 @@
         },
 
         /**
-         * Remove all the fitlers from facets
+         * Remove all the fitlers, facets, and custom-facets from the reference
+         * @param {boolean} sameFilter By default we're removing filters, if this is true filters won't be changed.
+         * @param {boolean} sameCustomFacet By default we're removing custom-facets, if this is true custom-facets won't be changed.
          * @param {boolean} sameFacet By default we're removing facets, if this is true facets won't be changed.
+         *
          * @return {ERMrest.reference} A reference without facet filters
          */
-        removeAllFacetFilters: function (sameFacet) {
+        removeAllFacetFilters: function (sameFilter, sameCustomFacet, sameFacet) {
+            verify(!(sameFilter && sameCustomFacet && sameFacet), "at least one of the options must be false.");
+
             var newReference = _referenceCopy(this);
 
             // update the facetColumns list
+            // NOTE there are two reasons for this:
+            // 1. avoid computing the facet columns logic each time that we are removing facets.
+            // 2. we don't want the list of facetColumns to be changed because of a change in the facets.
+            //    Some facetColumns are only in the list because they had an initial filter, and if we
+            //    compute that logic again, those facets will disappear.
             newReference._facetColumns = [];
             this.facetColumns.forEach(function (fc) {
                 newReference._facetColumns.push(
@@ -773,10 +784,18 @@
             newReference._location = this._location._clone();
             newReference._location.beforeObject = null;
             newReference._location.afterObject = null;
+
             if (!sameFacet) {
                 newReference._location.facets = null;
             }
-            newReference._location.removeFilters();
+
+            if (!sameCustomFacet) {
+                newReference._location.customFacets = null;
+            }
+
+            if (!sameFilter) {
+                newReference._location.removeFilters();
+            }
 
             return newReference;
         },
