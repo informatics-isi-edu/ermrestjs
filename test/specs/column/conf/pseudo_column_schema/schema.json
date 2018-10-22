@@ -19,19 +19,33 @@
                     }
                 }
             }],
-            "foreign_keys": [{
-                "names": [["pseudo_column_schema", "main_fk1"]],
-                "foreign_key_columns": [{
-                    "schema_name": "pseudo_column_schema",
-                    "table_name": "main",
-                    "column_name": "fk1"
-                }],
-                "referenced_columns": [{
-                    "schema_name": "pseudo_column_schema",
-                    "table_name": "outbound_1",
-                    "column_name": "id"
-                }]
-            }],
+            "foreign_keys": [
+                {
+                    "names": [["pseudo_column_schema", "main_fk1"]],
+                    "foreign_key_columns": [{
+                        "schema_name": "pseudo_column_schema",
+                        "table_name": "main",
+                        "column_name": "fk1"
+                    }],
+                    "referenced_columns": [{
+                        "schema_name": "pseudo_column_schema",
+                        "table_name": "outbound_1",
+                        "column_name": "id"
+                    }]
+                }, {
+                    "names": [["pseudo_column_schema", "main_fk2"]],
+                    "foreign_key_columns": [{
+                        "schema_name": "pseudo_column_schema",
+                        "table_name": "main",
+                        "column_name": "fk2"
+                    }],
+                    "referenced_columns": [{
+                        "schema_name": "pseudo_column_schema",
+                        "table_name": "outbound_2",
+                        "column_name": "id"
+                    }]
+                }
+            ],
             "column_definitions": [
                 {
                     "name": "main_table_id_col",
@@ -64,6 +78,12 @@
                 },
                 {
                     "name": "fk1",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "fk2",
                     "type": {
                         "typename": "text"
                     }
@@ -153,7 +173,8 @@
                         ], "aggregate": "array_d", "entity": false, "array_display": "olist"},
                         {"source": [{"inbound": ["pseudo_column_schema", "inbound_4_long_table_name_fk"]}, "foreign key column name to main"], "aggregate": "cnt", "markdown_name": "**Count Agg**", "comment": "has long values"},
                         {"source": "asset", "markdown_name": "Asset name", "comment": "asset cm", "markdown_name": "**asset**"},
-                        {"source": "asset_filename", "markdown_name": "filename"}
+                        {"source": "asset_filename", "markdown_name": "filename"},
+                        {"source": [{"outbound": ["pseudo_column_schema", "main_fk2"]}, {"inbound": ["pseudo_column_schema", "outbound_2_inbound_1_fk1"]}, "id"]}
                     ],
                     "entry": "detailed",
                     "compact/select": [
@@ -716,6 +737,49 @@
                 },
                 {
                     "name": "foreign key column name to main",
+                    "type": {"typename": "text"}
+                }
+            ]
+        },
+        "outbound_2": {
+            "kind": "table",
+            "table_name": "outbound_2",
+            "schema_name": "pseudo_column_schema",
+            "keys": [{"unique_columns": ["id"]}],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {"typename": "text"}
+                }
+            ]
+        },
+        "outbound_2_inbound_1": {
+            "kind": "table",
+            "table_name": "outbound_2_inbound_1",
+            "schema_name": "pseudo_column_schema",
+            "keys": [{"unique_columns": ["id"]}],
+            "foreign_keys": [{
+                "names": [["pseudo_column_schema", "outbound_2_inbound_1_fk1"]],
+                "foreign_key_columns": [{
+                    "schema_name": "pseudo_column_schema",
+                    "table_name": "outbound_2_inbound_1",
+                    "column_name": "fk1"
+                }],
+                "referenced_columns": [{
+                    "schema_name": "pseudo_column_schema",
+                    "table_name": "outbound_2",
+                    "column_name": "id"
+                }]
+            }],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {"typename": "text"}
+                },
+                {
+                    "name": "fk1",
                     "type": {"typename": "text"}
                 }
             ]

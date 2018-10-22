@@ -119,7 +119,7 @@ exports.execute = function(options) {
                     });
 
                     it ('should ignore the invalid (invalid, no path, non-entity, has aggregate) objects.', function () {
-                        expect(pathRelated.length).toBe(2);
+                        expect(pathRelated.length).toBe(3);
                     });
 
                     it ('should create the reference by using facet syntax (starting from related table with facet on shortestkey of main table.).', function () {
@@ -135,8 +135,19 @@ exports.execute = function(options) {
                                 {"inbound": ["reference_schema","fromname_fk_inbound_related_to_reference"]},
                                 {"inbound":["reference_schema","fk_to_inbound_related_reference_table"]},
                                 {"outbound":["reference_schema","id_fk_association_related_to_reference"]},
-                                "id"
-                            ], "choices":["9003"]}]}
+                                "RID"
+                            ], "choices":[findRID(schemaName, tableName, "id", "9003")]}]}
+                        );
+                    });
+
+                    it ("should be able to support paths that start with outbound.", function () {
+                        checkRelated(
+                            pathRelated[2], "reference_schema", "reference_outbound_1_inbound_1",
+                            {"and":[{"source": [
+                                {"outbound": ["reference_schema", "reference_outbound_1_inbound_1_fk1"]},
+                                {"inbound": ["reference_schema", "reference_table_fk1"]},
+                                "RID"
+                            ], "choices":[findRID(schemaName, tableName, "id", "9003")]}]}
                         );
                     });
                 });

@@ -5,9 +5,8 @@ The export annotation applies at the table level. It allows for downloading sets
 ```js
 templates: [
   {
-    name: <some-name>,  // cannot be the same in subsequent templates
-    format_name: <chaise-display-name>, // name displayed in dropdown menu in chaise
-    format_type: <FILE or BAG>,
+    displayname: <chaise-display-name>, // name displayed in dropdown menu in chaise
+    type: <FILE or BAG>,
     outputs: [
       {
         source: {

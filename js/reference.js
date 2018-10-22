@@ -577,8 +577,9 @@
                 };
 
 
-                // extract the filters and facets from the url
-                var hasFilterOrFacet =this.location.facets || this.location.filter;
+                // if location has facet or filter, we should honor it. we should not add preselected facets
+                var hasFilterOrFacet = this.location.facets || this.location.filter || this.location.customFacets;
+
                 var andFilters = [];
                 var jsonFilters = this.location.facets ? this.location.facets.decoded : null;
                 if (jsonFilters && jsonFilters.hasOwnProperty(andOperator) && Array.isArray(jsonFilters[andOperator])) {
@@ -754,14 +755,24 @@
         },
 
         /**
-         * Remove all the fitlers from facets
+         * Remove all the fitlers, facets, and custom-facets from the reference
+         * @param {boolean} sameFilter By default we're removing filters, if this is true filters won't be changed.
+         * @param {boolean} sameCustomFacet By default we're removing custom-facets, if this is true custom-facets won't be changed.
          * @param {boolean} sameFacet By default we're removing facets, if this is true facets won't be changed.
+         *
          * @return {ERMrest.reference} A reference without facet filters
          */
-        removeAllFacetFilters: function (sameFacet) {
+        removeAllFacetFilters: function (sameFilter, sameCustomFacet, sameFacet) {
+            verify(!(sameFilter && sameCustomFacet && sameFacet), "at least one of the options must be false.");
+
             var newReference = _referenceCopy(this);
 
             // update the facetColumns list
+            // NOTE there are two reasons for this:
+            // 1. avoid computing the facet columns logic each time that we are removing facets.
+            // 2. we don't want the list of facetColumns to be changed because of a change in the facets.
+            //    Some facetColumns are only in the list because they had an initial filter, and if we
+            //    compute that logic again, those facets will disappear.
             newReference._facetColumns = [];
             this.facetColumns.forEach(function (fc) {
                 newReference._facetColumns.push(
@@ -773,10 +784,18 @@
             newReference._location = this._location._clone();
             newReference._location.beforeObject = null;
             newReference._location.afterObject = null;
+
             if (!sameFacet) {
                 newReference._location.facets = null;
             }
-            newReference._location.removeFilters();
+
+            if (!sameCustomFacet) {
+                newReference._location.customFacets = null;
+            }
+
+            if (!sameFilter) {
+                newReference._location.removeFilters();
+            }
 
             return newReference;
         },
@@ -834,18 +853,48 @@
                 // 1) user has write permission
                 // 2) table is not generated
                 // 3) not all visible columns in the table are generated
+                var pm = module._permissionMessages;
                 var ref = (this._context === module._contexts.CREATE) ? this : this.contextualize.entryCreate;
 
-                this._canCreate = ref._table.kind !== module._tableKinds.VIEW && !ref._table._isGenerated && ref._checkPermissions("insert");
+                if (ref._table.kind === module._tableKinds.VIEW) {
+                    this._canCreate = false;
+                    this._canCreateReason = pm.TABLE_VIEW;
+                } else if (ref._table._isGenerated) {
+                    this._canCreate = false;
+                    this._canCreateReason = pm.TABLE_GENERATED;
+                } else if (!ref._checkPermissions("insert")) {
+                    this._canCreate = false;
+                    this._canCreateReason = pm.NO_CREATE;
+                } else {
+                    this._canCreate = true;
+                }
 
-                if (this._canCreate) {
+                if (this._canCreate === true) {
                     var allColumnsDisabled = ref.columns.every(function (col) {
                         return (col.getInputDisabled(module._contexts.CREATE) !== false);
                     });
-                    this._canCreate = !allColumnsDisabled;
+
+                    if (allColumnsDisabled) {
+                        this._canCreate = false;
+                        this._canCreateReason = pm.DISABLED_COLUMNS;
+                    }
                 }
             }
             return this._canCreate;
+        },
+
+        /**
+         * Indicates the reason as to why a user cannot create for
+         * the referenced resource(s). In some cases, this won't be set
+         * because the user can create, so the value will be `undefined`.
+         * @type {(String|undefined)}
+         */
+        get canCreateReason() {
+            if (this._canCreateReason === undefined) {
+                // will set the _canCreateReason property
+                var bool = this.canCreate;
+            }
+            return this._canCreateReason;
         },
 
         /**
@@ -875,18 +924,51 @@
             // 3) table is not immutable
             // 4) not all visible columns in the table are generated/immutable
             if (this._canUpdate === undefined) {
+                var pm = module._permissionMessages;
                 var ref = (this._context === module._contexts.EDIT) ? this : this.contextualize.entryEdit;
 
-                this._canUpdate = ref._table.kind !== module._tableKinds.VIEW && !ref._table._isGenerated && !ref._table._isImmutable && ref._checkPermissions("update");
+                if (ref._table.kind === module._tableKinds.VIEW) {
+                    this._canUpdate = false;
+                    this._canUpdateReason = pm.TABLE_VIEW;
+                } else if (ref._table._isGenerated) {
+                    this._canUpdate = false;
+                    this._canUpdateReason = pm.TABLE_GENERATED;
+                } else if (ref._table._isImmutable) {
+                    this._canUpdate = false;
+                    this._canUpdateReason = pm.TABLE_IMMUTABLE;
+                } else if (!ref._checkPermissions("update")) {
+                    this._canUpdate = false;
+                    this._canUpdateReason = pm.NO_UPDATE;
+                } else {
+                    this._canUpdate = true;
+                }
 
                 if (this._canUpdate) {
                     var allColumnsDisabled = ref.columns.every(function (col) {
                         return (col.getInputDisabled(module._contexts.EDIT) !== false);
                     });
-                    this._canUpdate = !allColumnsDisabled;
+
+                    if (allColumnsDisabled) {
+                        this._canUpdate = false;
+                        this._canUpdateReason = pm.DISABLED_COLUMNS;
+                    }
                 }
             }
             return this._canUpdate;
+        },
+
+        /**
+         * Indicates the reason as to why a user cannot update for
+         * the referenced resource(s). In some cases, this won't be set
+         * because the user can update, so the value will be `undefined`.
+         * @type {(String|undefined)}
+         */
+        get canUpdateReason() {
+            if (this._canUpdateReason === undefined) {
+                // will set the _canUpdateReason property
+                var bool = this.canUpdate;
+            }
+            return this._canUpdateReason;
         },
 
         /**
@@ -1012,8 +1094,21 @@
             function getDefaults() {
                 var defaults = [];
                 self.table.columns.all().forEach(function (col) {
-                    // add disabled columns (even if data is passed for them, should be ignored)
-                    if (col.getInputDisabled(module._contexts.CREATE)) {
+
+                    // ignore the columns that user doesn't have insert access for.
+                    // This is to avoid ermrest from throwing any errors.
+                    //
+                    // NOTE At first we were ignoring any disabled inputs.
+                    // While ignoring value for disabeld inputs might sound logical,
+                    // there are some disabled inputs that chaise is actually going to generate
+                    // value for and we need to store them. At the time of writing this comment,
+                    // this is only true for the asset's filename, md5, etc. columns.
+                    // In most deployments they are marked as generated and the expectation
+                    // would be that chaise/ermrestjs should generate the value.
+                    // The misconception here is the generated definition in the annotation.
+                    // by generated we mean chaise/ERMrestjs generated not necessarily database generated.
+                    // the issue: https://github.com/informatics-isi-edu/ermrestjs/issues/722
+                    if (col.rights.insert === false) {
                         defaults.push(col.name);
                         return;
                     }
@@ -2148,6 +2243,243 @@
         },
 
         /**
+         * Will return the expor templates that are available for this reference.
+         * It will validate the templates that are defined in annotation.
+         * If its `detailed` context and annotation was missing,
+         * it will return the default export template.
+         * @type {Object}
+         */
+        get exportTemplates() {
+            if (this._exportTemplates === undefined) {
+                var self = this;
+
+                // either null or array
+                var res = self.table.exportTemplates;
+
+                // annotation is missing
+                if (res === null) {
+                    self._exportTemplates = (self._context === module._contexts.DETAILED) ? [self.defaultExportTemplate]: [];
+                } else {
+                    // add missing outputs
+                    res.forEach(function (t) {
+                        if (!t.outputs) {
+                            t.outputs = self.defaultExportTemplate.outputs;
+                        }
+                    });
+                    self._exportTemplates = res;
+                }
+            }
+            return this._exportTemplates;
+        },
+
+        /**
+         * Returns a object, that can be used as a default export template.
+         * It will include:
+         * - csv of entity API request to the main table.
+         * -  csv of entity API requests for all the related entities that are one level away from the main.
+         * - csv of attributegroup API requests for all the other related entities.
+         *   The projection list should include all the columns of the table plus
+         *   the foreignkey value to the main entity.
+         *   The request should be grouped by the value of table's key + foreign key value.
+         * - fetch all the assets. For fetch, we need to provide url, length, and md5 (or other checksum types).
+         *   if these columns are missing from the asset annotation, they won't be added.
+         * - fetch all the assetes of related tables.
+         * @type {string}
+         */
+        get defaultExportTemplate() {
+            if (this._defaultExportTemplate === undefined) {
+                var outputs = [];
+
+                var self = this,
+                    encode = module._fixedEncodeURIComponent,
+                    sanitize = module._sanitizeFilename;
+
+                // given a reference, will generate an entity output for it
+                var getEntityOutput = function (ref, path) {
+                    var source = {
+                        api: "entity"
+                    };
+
+                    if (path) {
+                        source.path = path;
+                    }
+
+                    return {
+                        destination: {
+                            name: sanitize(ref.displayname.unformatted),
+                            type: "csv"
+                        },
+                        source: source
+                    };
+                };
+
+                // given a related reference and the path from main table to it,
+                // will generate the appropriate attribute group output
+                // It will also change the projection list. Assume that this is the model:
+                // main_table <- t1 <- t2
+                // the key list will be based on:
+                // - shortestkey of main_table and t2
+                // the projection list will be based on:
+                // - visible columns of t2
+                // Since we're adding shortest key of main_table to the keylist, we
+                // have to add an alias, the alias will be in format of
+                // `<tablename>_<shortestkey_column_name>`
+                var getAttributeGroupOutput = function (relatedRef, path) {
+                    var projectionList = [], keyList = [],i = 0, name;
+
+
+                    // shortestkey of the related reference
+                    relatedRef.table.shortestKey.forEach(function (col) {
+                        keyList.push(encode(col.name));
+                    });
+
+                    // we have to add the shortestkey of main table
+                    var addedColPrefix = encode(self.table.name) + "_";
+                    self.table.shortestKey.forEach(function (col) {
+                        name = addedColPrefix + encode(col.name);
+
+                        // make sure the alias doesn't exist in the table
+                        while (relatedRef.table.columns.has(name)) {
+                            i++;
+                            name = addedColPrefix + encode(col.name) + "_" + i;
+                        }
+                        keyList.push(name + ":=" + self.location.mainTableAlias + ":"+ encode(col.name));
+                    });
+
+                    // projection list (all the columns of related reference)
+                    relatedRef.table.columns.all().forEach(function (col) {
+                        // column already has been added to the list
+                        if (keyList.indexOf(encode(col.name)) !== -1) return;
+                        projectionList.push(encode(col.name));
+                    });
+
+                    return {
+                        destination: {
+                            name: sanitize(relatedRef.displayname.unformatted),
+                            type: "csv"
+                        },
+                        source: {
+                            api: "attributegroup",
+                            path: path + "/" + keyList.join(",") + ";" + projectionList.join(",")
+                        }
+                    };
+                };
+
+                // will return `null` if asset is missing necessary columns.
+                // otherwise will return the appropriate output object
+                var getAssetOutput = function (col, destinationPath, sourcePath) {
+                    if (!col.isAsset) return null;
+                    var path = [], key;
+
+                    // required attributes
+                    var attributes = {
+                        byteCountColumn: "length",
+                        filenameColumn: "filename"
+                    };
+
+                    // at least one of these must be available
+                    var checksum = {
+                        md5: "md5",
+                        sha256: "sha256"
+                    };
+
+
+                    // add the url
+                    path.push("url:=" + encode(col.name));
+
+                    // add the required attributes
+                    for (key in attributes) {
+                        if (! (col[key] instanceof Column) ) return null;
+                        path.push(attributes[key] + ":=" + encode(col[key].name));
+                    }
+
+                    // at least one checksum must be available
+                    var hasChecksum = false;
+                    for (key in checksum) {
+                        if (! (col[key] instanceof Column) ) continue;
+                        hasChecksum = true;
+                        path.push(checksum[key] + ":=" + encode(col[key].name));
+                    }
+
+                    if (!hasChecksum) return null;
+
+                    return {
+                        destination: {
+                            name: "assets/" + (destinationPath ?  sanitize(destinationPath) + "/" : "") + sanitize(col.name),
+                            type: "fetch"
+                        },
+                        source: {
+                            api: "attribute",
+                            path: (sourcePath ? sourcePath + "/": "") + path.join(",")
+                        }
+                    };
+                };
+
+                // main entity
+                outputs.push(getEntityOutput(self));
+
+                // assets
+                self.columns.forEach(function (col) {
+                    var output = getAssetOutput(col, "", "");
+                    if (output === null) return;
+                    outputs.push(output);
+                });
+
+                // related entities
+                self.related().forEach(function (rel) {
+                    // the path that will be used for assets of related entities
+                    var destinationPath = rel.displayname.unformatted;
+                    // this will be used for source path
+                    var sourcePath = [encode(rel.table.schema.name), encode(rel.table.name)].join(":");
+
+                    if (rel.pseudoColumn) {
+                        // path length one, just adding the table would be enough
+                        if (rel.pseudoColumn.foreignKeys.length < 2) {
+                            outputs.push(getEntityOutput(rel, sourcePath));
+                        }
+                        else {
+                            // path from main to the related reference
+                            sourcePath = rel.pseudoColumn.foreignKeys.map(function (fk) {
+                                return fk.obj.toString(!fk.isInbound, false);
+                            }).join("/");
+                            outputs.push(getAttributeGroupOutput(rel, sourcePath));
+                        }
+                    }
+                    // association table
+                    else if (rel.derivedAssociationReference) {
+                        var assoc = rel.derivedAssociationReference;
+                        sourcePath = assoc.origFKR.toString() + "/" + assoc._secondFKR.toString(true);
+                        outputs.push(getAttributeGroupOutput(rel, sourcePath));
+                    }
+                    // single inbound related
+                    else {
+                        outputs.push(getEntityOutput(rel, sourcePath));
+                    }
+
+                    // add asset of the related table
+                    var detailedRef = rel.contextualize.detailed;
+
+                    // alternative table, don't add asset
+                    if (detailedRef.table !== rel.table) return;
+
+                    detailedRef.columns.forEach(function (col) {
+                        var output = getAssetOutput(col, destinationPath, sourcePath);
+                        if (output === null) return;
+                        outputs.push(output);
+                    });
+
+                });
+
+                self._defaultExportTemplate = {
+                    displayname: "BAG",
+                    type: "BAG",
+                    outputs: outputs
+                };
+            }
+            return this._defaultExportTemplate;
+        },
+
+        /**
          * create a new reference with the new search
          * by copying this reference and clears previous search filters
          * search term can be:
@@ -3042,6 +3374,8 @@
         delete referenceCopy._canRead;
         delete referenceCopy._canUpdate;
         delete referenceCopy._canDelete;
+        delete referenceCopy._defaultExportTemplate;
+        delete referenceCopy._exportTemplates;
 
         referenceCopy.contextualize = new Contextualize(referenceCopy);
         return referenceCopy;

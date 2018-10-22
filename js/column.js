@@ -993,10 +993,10 @@ Object.defineProperty(PseudoColumn.prototype, "hasAggregate", {
 
 /**
  * Returns a reference to the current pseudo-column
- * TODO needs to be changed when we get to use it. Currently this is how it behaves:
+ * This is how it behaves:
  * 1. If pseudo-column has no path, it will return the base reference.
- * 2. If pseudo-column has path, and is inbound fk, or p&bA, apply the same logic as _generateRelatedReference
- * 3. Otherwise if mainTuple is available, use that to generate list of facets.
+ * 3. if mainTuple is available, create the reference based on this path:
+ *      <pseudoColumnSchema:PseudoColumnTable>/<path from pseudo-column to main table>/<facets based on value of shortestkey of main table>
  * 4. Otherwise return the reference without any facet or filters (TODO needs to change eventually)
  * @member {ERMrest.Reference} reference
  * @memberof ERMrest.PseudoColumn#
@@ -1019,9 +1019,6 @@ Object.defineProperty(PseudoColumn.prototype, "reference", {
                     parentDisplayname = this._baseReference.table.displayname;
                 }
 
-                self._reference = new Reference(module.parse(self.table.uri), self.table.schema.catalog);
-                self._reference.parentDisplayname = parentDisplayname;
-
                 var source = [], i, fk, columns, noData = false;
 
                 // create the reverse path
@@ -1029,22 +1026,19 @@ Object.defineProperty(PseudoColumn.prototype, "reference", {
                     fk = self.foreignKeys[i];
                     if (fk.isInbound) {
                         source.push({"outbound": fk.obj.constraint_names[0]});
-                        if (i === 0) {
-                            columns = fk.obj.key.colset.columns;
-                        }
                     } else {
                         source.push({"inbound": fk.obj.constraint_names[0]});
-                        if (i === 0) {
-                            columns = fk.obj.colset.columns;
-                        }
                     }
                 }
 
 
-                var filters = [];
+                var filters = [], uri = self.table.uri;
                 if (self._mainTuple) {
-                    // create the filters based on the given tuple
-                    columns.forEach(function (col) {
+                    // create the filters based on the given tuple and shortestkey of table
+                    // NOTE we have to use shortest key of table, fk.key columns might not
+                    // be valid because it could be outbound and therefore the relationship
+                    // won't be one-to-one.
+                    self._baseReference.table.shortestKey.forEach(function (col) {
                         if (noData || (!self._mainTuple.data && !self._mainTuple.data[col.name])) {
                             noData = true;
                             return;
@@ -1057,6 +1051,16 @@ Object.defineProperty(PseudoColumn.prototype, "reference", {
                         filters.push(filter);
                     });
                 }
+
+                // if data didn't exist, we should traverse the path
+                if ((noData || filters.length == 0) && !self._baseReference.hasJoin) {
+                    uri = self._baseReference.location.compactUri + "/" + this.foreignKeys.map(function (fk) {
+                        return fk.obj.toString(!fk.isInbound, false);
+                    }).join("/");
+                }
+
+                self._reference = new Reference(module.parse(uri), self.table.schema.catalog);
+                self._reference.parentDisplayname = parentDisplayname;
 
                 // make sure data exists
                 if (!noData && filters.length > 0) {
@@ -2130,12 +2134,13 @@ FacetColumn.prototype = {
             var jsonFilters = [],
                 pathFromSource = [], // the path from source reference to this facetColumn
                 self = this,
-                table = this.reference.table;
+                table = this.reference.table,
+                loc = this.reference.location;
 
             pathFromSource.push(module._fixedEncodeURIComponent(table.schema.name) + ":" + module._fixedEncodeURIComponent(table.name));
 
-            if (this.reference.location.filtersString) {
-                pathFromSource.push(this.reference.location.filtersString);
+            if (loc.filtersString) {
+                pathFromSource.push(loc.filtersString);
             }
 
             // create a path from reference to this facetColumn
@@ -2144,12 +2149,12 @@ FacetColumn.prototype = {
             });
 
             // TODO might be able to improve this
-            if (typeof this.reference.location.searchTerm === "string") {
-                jsonFilters.push({"source": "*", "search": [this.reference.location.searchTerm]});
+            if (typeof loc.searchTerm === "string") {
+                jsonFilters.push({"source": "*", "search": [loc.searchTerm]});
             }
 
             //get all the filters from other facetColumns
-            if (this.reference.location.facets !== null) {
+            if (loc.facets !== null) {
                 // create new facet filters
                 // TODO might be able to imporve this. Instead of recreating the whole json file.
                 this.reference.facetColumns.forEach(function (fc, index) {
@@ -2166,6 +2171,31 @@ FacetColumn.prototype = {
             ].join("/");
 
             this._sourceReference = new Reference(module.parse(uri), table.schema.catalog);
+
+            // add custom facets as the facets of the parent
+            if (loc.customFacets) {
+                //NOTE this is just a hack, and since the whole feature is just a hack it's fine.
+                // In the ermrest_path we're allowing them to use the M alias. In here, we are making
+                // sure to change the M alias to T. Because we're going to use T to refer to the main
+                // reference when the facet has a path. In other words if the following is main reference
+                // M:=S:main_table/cutom-facet-that-might-have-$M-alias/facets-on-the-main-table
+                //
+                // Then the source reference for any of the facets will be
+                //
+                // T:=S:main_table/custom-facet-that-should-change-$M-to-$T/facets-on-the-main-table/join-path-to-current-facet/$M:=S:facet_table
+                //
+                // You can see why we are changing $M to $T.
+                //
+                // As I mentioned this is hacky, so we should eventually find a way around this.
+                var cfacet = module._simpleDeepCopy(loc.customFacets.decoded);
+                if (cfacet.ermrest_path && self.foreignKeys.length > 0) {
+                    // switch the alias names, the cfacet is originally written with the assumption of
+                    // the main table having "M" alias. So we just have to swap the aliases.
+                    cfacet.ermrest_path = cfacet.ermrest_path.replace(/\$\M/g, "$T");
+                }
+
+                this._sourceReference._location.customFacets = cfacet;
+            }
 
             if (jsonFilters.length > 0) {
                 this._sourceReference._location.projectionFacets = {"and": jsonFilters};
@@ -2893,7 +2923,7 @@ FacetColumn.prototype = {
      * @return {ERMrest.Reference} the reference with the new filter
      */
     _applyFilters: function (filters) {
-        var self = this;
+        var self = this, loc = this.reference.location;
         var newReference = _referenceCopy(this.reference);
         newReference._facetColumns = [];
 
@@ -2924,7 +2954,7 @@ FacetColumn.prototype = {
         newReference._location.afterObject = null;
 
         // TODO might be able to improve this
-        if (typeof this.reference.location.searchTerm === "string") {
+        if (typeof loc.searchTerm === "string") {
             jsonFilters.push({"source": "*", "search": [this.reference.location.searchTerm]});
         }
 
@@ -3259,7 +3289,7 @@ ColumnGroupAggregateFn.prototype = {
             );
         }
 
-        return new AttributeGroupReference(keyColumns, aggregateColumns, loc, self._ref.table.schema.catalog, context);
+        return new AttributeGroupReference(keyColumns, aggregateColumns, loc, self._ref.table.schema.catalog, self._ref.table, context);
     },
 
     /**
