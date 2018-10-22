@@ -2261,32 +2261,40 @@ FacetColumn.prototype = {
 
     /**
      * Whether client should hide the null choice.
-     * This will return `true` if any of the following:
+     * This will return `true` if facet doesn't have null filter and any of the following:
      * - hide_null_choice:true is in the facet definition.
-     * - any of the other faets with path have `null` filter.
+     * - facet has path and any of the other facets with path have `null` filter.
      * - facet source has a path that has a length of two or more
      *   and is not pure and binary association.
      * Otherwise it will return false
+     * NOTE it will return false if facet has null filter.
      * @type {Boolean}
      */
     get hideNullChoice() {
         if (this._hideNullChoice === undefined) {
             var getHideNull = function (self) {
-                if (self._facetObject.hide_null_choice === true) {
-                    return true;
+                // if null filter exists, we have to show it
+                if (self.hasNullFilter) {
+                    return false;
                 }
 
-                // at least one of the other facets have null, so don't show this
-                var othersHaveNull = self.reference.facetColumns.some(function (fc, index) {
-                    return index !== self.index && fc.hasPath && fc.hasNullFilter;
-                });
-                if (othersHaveNull) {
+                // if facet definition tells us to hide it
+                if (self._facetObject.hide_null_choice === true) {
                     return true;
                 }
 
                 // doesn't have path
                 if (!self.hasPath) {
                     return false;
+                }
+
+                // at least one of the other facets with path have null, so don't show this
+                // because we don't want to have two different left outer join paths
+                var othersHaveNull = self.reference.facetColumns.some(function (fc, index) {
+                    return index !== self.index && fc.hasPath && fc.hasNullFilter;
+                });
+                if (othersHaveNull) {
+                    return true;
                 }
 
                 // foreignkey length one
@@ -2321,7 +2329,7 @@ FacetColumn.prototype = {
      */
     get hideNotNullChoice() {
         if (this._hideNotNullChoice === undefined) {
-            this._hideNotNullChoice = (this._facetObject.hide_not_null_choice === true);
+            this._hideNotNullChoice = !this.hasNotNullFilter && (this._facetObject.hide_not_null_choice === true);
         }
         return this._hideNotNullChoice;
     },

@@ -1426,10 +1426,14 @@ exports.execute = function (options) {
                     });
                 });
 
-                it ("should return `true` if any of the other facets that have path, has null filter.", function () {
+                it ("if a facet with path has `null` filter, facets with path should return true", function () {
                     var newRef = mainFacets[10].addChoiceFilters([null]).contextualize.detailed;
-                    newRef.facetColumns.forEach(function (fc, index) {
-                        expect(fc.hideNullChoice).toBe(true, "missmatch for index=" + index);
+                    [0, 11, 12, 13, 14, 15].forEach(function (index) {
+                        expect(newRef.facetColumns[index].hideNullChoice).toBe(true, "missmatch for index=" + index);
+                    });
+
+                    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 16].forEach(function (index) {
+                        expect(newRef.facetColumns[index].hideNullChoice).toBe(false, "missmatch for index=" + index);
                     });
                 });
 

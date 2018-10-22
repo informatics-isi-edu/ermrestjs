@@ -4233,15 +4233,14 @@ Could be used as tooltip to provide more information about the facetColumn
 <a name="ERMrest.FacetColumn+hideNullChoice"></a>
 
 #### facetColumn.hideNullChoice : <code>Boolean</code>
-Whether client should hide the null choice
-This will return false if:
-- hide_null_choice is not defined as `true` in the annotation.
-- none of the other facets have `null` filter.
-and any of the following:
-- facet has no path (scalar column of main entity)
-- all outbound path.
-- single inbound path.
-- association table?
+Whether client should hide the null choice.
+This will return `true` if facet doesn't have null filter and any of the following:
+- hide_null_choice:true is in the facet definition.
+- facet has path and any of the other facets with path have `null` filter.
+- facet source has a path that has a length of two or more
+  and is not pure and binary association.
+Otherwise it will return false
+NOTE it will return false if facet has null filter.
 
 **Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
 <a name="ERMrest.FacetColumn+hideNotNullChoice"></a>
