@@ -773,4 +773,4 @@ A web user agent that consumes this annotation and the related table data would 
 </p>
 ```
 
-For detailed explanation on template and markdown language please refer to [Mustache Templating](mustache-templating.md) and [handlebars.md](handlebars Templating) documents.
+For detailed explanation on template and markdown language please refer to [Mustache Templating](mustache-templating.md) and [Handlebars Templating](handlebars.md) documents.
