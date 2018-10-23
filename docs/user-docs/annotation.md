@@ -620,8 +620,6 @@ Supported _destinationentry_ patterns:
 
 This annotation only applies to table but MAY be annotated at the schema level to set a schema-wide default. If the annotation is missing on the table, we will get the export definition from the schema.
 
-#### 
-
 ### Tag: 2017 Asset
 
 `tag:isrd.isi.edu,2017:asset`
@@ -775,4 +773,4 @@ A web user agent that consumes this annotation and the related table data would 
 </p>
 ```
 
-For detailed explanation on template and markdown language please refer to [Template and Markdown Guide](https://github.com/informatics-isi-edu/ermrestjs/wiki/Template-and-Markdown-Guide).
+For detailed explanation on template and markdown language please refer to [Mustache Templating](mustache-templating.md) and [handlebars.md](handlebars Templating) documents.
