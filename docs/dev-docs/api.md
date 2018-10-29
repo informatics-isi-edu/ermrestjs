@@ -269,9 +269,9 @@ to use for ERMrest JavaScript agents.
     * [.ServiceUnavailableError](#ERMrest.ServiceUnavailableError)
         * [new ServiceUnavailableError(status, message)](#new_ERMrest.ServiceUnavailableError_new)
     * [.InvalidFacetOperatorError](#ERMrest.InvalidFacetOperatorError)
-        * [new InvalidFacetOperatorError(message, path)](#new_ERMrest.InvalidFacetOperatorError_new)
+        * [new InvalidFacetOperatorError(path, subMessage)](#new_ERMrest.InvalidFacetOperatorError_new)
     * [.InvalidCustomFacetOperatorError](#ERMrest.InvalidCustomFacetOperatorError)
-        * [new InvalidCustomFacetOperatorError(message, path)](#new_ERMrest.InvalidCustomFacetOperatorError_new)
+        * [new InvalidCustomFacetOperatorError(path, subMessage)](#new_ERMrest.InvalidCustomFacetOperatorError_new)
     * [.InvalidFilterOperatorError](#ERMrest.InvalidFilterOperatorError)
         * [new InvalidFilterOperatorError(message, path, invalidFilter)](#new_ERMrest.InvalidFilterOperatorError_new)
     * [.InvalidInputError](#ERMrest.InvalidInputError)
@@ -315,7 +315,7 @@ to use for ERMrest JavaScript agents.
         * [.defaultLogInfo](#ERMrest.Reference+defaultLogInfo) : <code>Object</code>
         * [.exportTemplates](#ERMrest.Reference+exportTemplates) : <code>Object</code>
         * [.defaultExportTemplate](#ERMrest.Reference+defaultExportTemplate) : <code>string</code>
-        * [.removeAllFacetFilters(sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
+        * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
         * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
         * [.read(limit, contextHeaderParams, useEntity)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
             * [~processSortObject()](#ERMrest.Reference+read..processSortObject)
@@ -601,7 +601,7 @@ to use for ERMrest JavaScript agents.
         * [.defaultLogInfo](#ERMrest.Reference+defaultLogInfo) : <code>Object</code>
         * [.exportTemplates](#ERMrest.Reference+exportTemplates) : <code>Object</code>
         * [.defaultExportTemplate](#ERMrest.Reference+defaultExportTemplate) : <code>string</code>
-        * [.removeAllFacetFilters(sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
+        * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
         * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
         * [.read(limit, contextHeaderParams, useEntity)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
             * [~processSortObject()](#ERMrest.Reference+read..processSortObject)
@@ -2388,14 +2388,14 @@ DuplicateConflictError - Return error pertaining to Duplicate entried
 **Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
 <a name="new_ERMrest.InvalidFacetOperatorError_new"></a>
 
-#### new InvalidFacetOperatorError(message, path)
+#### new InvalidFacetOperatorError(path, subMessage)
 An invalid facet operator
 
 
 | Param | Type | Description |
 | --- | --- | --- |
-| message | <code>string</code> | error message |
 | path | <code>string</code> | path for redirectLink |
+| subMessage | <code>string</code> | the details of the error message |
 
 <a name="ERMrest.InvalidCustomFacetOperatorError"></a>
 
@@ -2403,14 +2403,14 @@ An invalid facet operator
 **Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
 <a name="new_ERMrest.InvalidCustomFacetOperatorError_new"></a>
 
-#### new InvalidCustomFacetOperatorError(message, path)
+#### new InvalidCustomFacetOperatorError(path, subMessage)
 An invalid facet operator
 
 
 | Param | Type | Description |
 | --- | --- | --- |
-| message | <code>string</code> | error message |
 | path | <code>string</code> | path for redirectLink |
+| subMessage | <code>string</code> | the details of the error message |
 
 <a name="ERMrest.InvalidFilterOperatorError"></a>
 
@@ -2584,7 +2584,7 @@ Constructor for a ParsedFilter.
     * [.defaultLogInfo](#ERMrest.Reference+defaultLogInfo) : <code>Object</code>
     * [.exportTemplates](#ERMrest.Reference+exportTemplates) : <code>Object</code>
     * [.defaultExportTemplate](#ERMrest.Reference+defaultExportTemplate) : <code>string</code>
-    * [.removeAllFacetFilters(sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
+    * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
     * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
     * [.read(limit, contextHeaderParams, useEntity)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
         * [~processSortObject()](#ERMrest.Reference+read..processSortObject)
@@ -2892,14 +2892,16 @@ It will include:
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+removeAllFacetFilters"></a>
 
-#### reference.removeAllFacetFilters(sameFacet) ⇒ <code>ERMrest.reference</code>
-Remove all the fitlers from facets
+#### reference.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet) ⇒ <code>ERMrest.reference</code>
+Remove all the fitlers, facets, and custom-facets from the reference
 
 **Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
 **Returns**: <code>ERMrest.reference</code> - A reference without facet filters  
 
 | Param | Type | Description |
 | --- | --- | --- |
+| sameFilter | <code>boolean</code> | By default we're removing filters, if this is true filters won't be changed. |
+| sameCustomFacet | <code>boolean</code> | By default we're removing custom-facets, if this is true custom-facets won't be changed. |
 | sameFacet | <code>boolean</code> | By default we're removing facets, if this is true facets won't be changed. |
 
 <a name="ERMrest.Reference+create"></a>
@@ -4323,13 +4325,24 @@ Could be used as tooltip to provide more information about the facetColumn
 
 #### facetColumn.hideNullChoice : <code>Boolean</code>
 Whether client should hide the null choice.
-This will return `true` if facet doesn't have null filter and any of the following:
-- hide_null_choice:true is in the facet definition.
-- facet has path and any of the other facets with path have `null` filter.
-- facet source has a path that has a length of two or more
-  and is not pure and binary association.
-Otherwise it will return false
-NOTE it will return false if facet has null filter.
+`null` filter could mean any of the following:
+  - Scalar value being `null`. In terms of ermrest,
+  - No value exists in the given path (checking presence of a value in the path).
+Since we're not going to show two different options for these two meanings,
+we have to make sure to offer `null` option when only one of these two meanings would make sense.
+Based on this, we can categorize facets into these three groups:
+  1. (G1) Facets with less than two hop.
+  2. (G2) Facets with more than one hop in entity mode.
+     Since it's entity mode, the value cannot be null.
+     So the `null` filter in this case could only mean the check presence.
+  3. (G3) Facets with more than one hop in scalar mode. In this case, `null` could mean either of those.
+  Based on this, the following will be the logic of `hideNullChoice` (first applicable rule):
+    - If facet has `null` filter: `false`.
+    - If facet has `"hide_null_choice": true`: `true`.
+    - If G1: `false`.
+    - If G2 and at least on of other G2s have `null`: `true`.
+    - If G2 and none of other G2s have `null`: `false`.
+    - otherwise (G3): `true`
 
 **Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
 <a name="ERMrest.FacetColumn+hideNotNullChoice"></a>
@@ -5715,7 +5728,7 @@ get PathColumn object by column name
     * [.defaultLogInfo](#ERMrest.Reference+defaultLogInfo) : <code>Object</code>
     * [.exportTemplates](#ERMrest.Reference+exportTemplates) : <code>Object</code>
     * [.defaultExportTemplate](#ERMrest.Reference+defaultExportTemplate) : <code>string</code>
-    * [.removeAllFacetFilters(sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
+    * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
     * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
     * [.read(limit, contextHeaderParams, useEntity)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
         * [~processSortObject()](#ERMrest.Reference+read..processSortObject)
@@ -6023,14 +6036,16 @@ It will include:
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+removeAllFacetFilters"></a>
 
-#### reference.removeAllFacetFilters(sameFacet) ⇒ <code>ERMrest.reference</code>
-Remove all the fitlers from facets
+#### reference.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet) ⇒ <code>ERMrest.reference</code>
+Remove all the fitlers, facets, and custom-facets from the reference
 
 **Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
 **Returns**: <code>ERMrest.reference</code> - A reference without facet filters  
 
 | Param | Type | Description |
 | --- | --- | --- |
+| sameFilter | <code>boolean</code> | By default we're removing filters, if this is true filters won't be changed. |
+| sameCustomFacet | <code>boolean</code> | By default we're removing custom-facets, if this is true custom-facets won't be changed. |
 | sameFacet | <code>boolean</code> | By default we're removing facets, if this is true facets won't be changed. |
 
 <a name="ERMrest.Reference+create"></a>

@@ -2291,13 +2291,24 @@ FacetColumn.prototype = {
 
     /**
      * Whether client should hide the null choice.
-     * This will return `true` if facet doesn't have null filter and any of the following:
-     * - hide_null_choice:true is in the facet definition.
-     * - facet has path and any of the other facets with path have `null` filter.
-     * - facet source has a path that has a length of two or more
-     *   and is not pure and binary association.
-     * Otherwise it will return false
-     * NOTE it will return false if facet has null filter.
+     * `null` filter could mean any of the following:
+     *   - Scalar value being `null`. In terms of ermrest,
+     *   - No value exists in the given path (checking presence of a value in the path).
+     * Since we're not going to show two different options for these two meanings,
+     * we have to make sure to offer `null` option when only one of these two meanings would make sense.
+     * Based on this, we can categorize facets into these three groups:
+     *   1. (G1) Facets with less than two hop.
+     *   2. (G2) Facets with more than one hop in entity mode.
+     *      Since it's entity mode, the value cannot be null.
+     *      So the `null` filter in this case could only mean the check presence.
+     *   3. (G3) Facets with more than one hop in scalar mode. In this case, `null` could mean either of those.
+     *   Based on this, the following will be the logic of `hideNullChoice` (first applicable rule):
+     *     - If facet has `null` filter: `false`.
+     *     - If facet has `"hide_null_choice": true`: `true`.
+     *     - If G1: `false`.
+     *     - If G2 and at least on of other G2s have `null`: `true`.
+     *     - If G2 and none of other G2s have `null`: `false`.
+     *     - otherwise (G3): `true`
      * @type {Boolean}
      */
     get hideNullChoice() {
@@ -2313,39 +2324,20 @@ FacetColumn.prototype = {
                     return true;
                 }
 
-                // doesn't have path
-                if (!self.hasPath) {
+                // G1
+                if (self.foreignKeys.length < 2) {
                     return false;
                 }
 
-                // at least one of the other facets with path have null, so don't show this
-                // because we don't want to have two different left outer join paths
-                var othersHaveNull = self.reference.facetColumns.some(function (fc, index) {
-                    return index !== self.index && fc.hasPath && fc.hasNullFilter;
-                });
-                if (othersHaveNull) {
-                    return true;
+                // G2
+                if (self.isEntityMode) {
+                    var othersHaveNull = self.reference.facetColumns.some(function (fc, index) {
+                        return index !== self.index && fc.foreignKeys.length >= 2 && fc.hasNullFilter;
+                    });
+                    return othersHaveNull;
                 }
 
-                // foreignkey length one
-                if (self.foreignKeys.length === 1) {
-                    return false;
-                }
-
-                // all outbound
-                var allOutbound = self.foreignKeys.every(function (fkObj) {
-                    return !fkObj.isInbound;
-                });
-                if (allOutbound) {
-                    return false;
-                }
-
-                // pure and binary association
-                if (self.foreignKeys.length === 2 && self.foreignKeys[0].isInbound &&
-                    !self.foreignKeys[1].isInbound && self.foreignKeys[0].obj._table._isPureBinaryAssociation()) {
-                    return false;
-                }
-
+                //G3
                 return true;
             };
             this._hideNullChoice = getHideNull(this);

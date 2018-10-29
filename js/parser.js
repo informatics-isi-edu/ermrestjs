@@ -453,7 +453,7 @@
                 var joinsLength = this.joins.length,
                     mainTableAlias = this.mainTableAlias,
                     mainTableName = this.tableName,
-                    facetFilter;
+                    facetResult;
 
                 // add tableAlias
                 var uri = this.projectionTableAlias + ":=";
@@ -469,11 +469,11 @@
 
                 if (this.customFacets) {
                     if (this.customFacets.facets) {
-                        facetFilter = _JSONToErmrestFilter(this.customFacets.facets.decoded, this.projectionTableAlias, this.projectionTableAlias, this.catalog, module._constraintNames);
-                        if (!facetFilter) {
-                            throw new module.InvalidCustomFacetOperatorError('', this.path);
+                        facetResult = _JSONToErmrestFilter(this.customFacets.facets.decoded, this.projectionTableAlias, this.projectionTableAlias, this.catalog, module._constraintNames);
+                        if (!facetResult.successful) {
+                            throw new module.InvalidCustomFacetOperatorError(this.path, facetResult.message);
                         }
-                        uri += "/" + facetFilter;
+                        uri += "/" + facetResult.parsed;
                     }
 
                     if (typeof this.customFacets.ermrestPath === "string") {
@@ -482,9 +482,11 @@
                 }
 
                 if (this.projectionFacets) {
-                    facetFilter = _JSONToErmrestFilter(this.projectionFacets.decoded, this.projectionTableAlias, this.projectionTableName, this.catalog, module._constraintNames);
-                    if (!facetFilter) throw new module.InvalidFacetOperatorError('', this.path);
-                    uri += "/" + facetFilter;
+                    facetResult = _JSONToErmrestFilter(this.projectionFacets.decoded, this.projectionTableAlias, this.projectionTableName, this.catalog, module._constraintNames);
+                    if (!facetResult.successful) {
+                        throw new module.InvalidFacetOperatorError(this.path, facetResult.message);
+                    }
+                    uri += "/" + facetResult.parsed;
                 }
 
                 if (joinsLength > 0) {
@@ -494,11 +496,11 @@
                 }
 
                 if (this.facets) {
-                    facetFilter = _JSONToErmrestFilter(this.facets.decoded, mainTableAlias, mainTableName, this.catalog, module._constraintNames);
-                    if (!facetFilter) {
-                        throw new module.InvalidFacetOperatorError('', this.path);
+                    facetResult = _JSONToErmrestFilter(this.facets.decoded, mainTableAlias, mainTableName, this.catalog, module._constraintNames);
+                    if (!facetResult.successful) {
+                        throw new module.InvalidFacetOperatorError(this.path, facetResult.message);
                     }
-                    uri += "/" + facetFilter;
+                    uri += "/" + facetResult.parsed;
                 }
 
                 this._ermrestCompactPath = uri;
@@ -1498,7 +1500,7 @@
         if (!obj.hasOwnProperty(andOperator) || !Array.isArray(obj[andOperator])) {
             // we cannot actually parse the facet now, because we haven't
             // introspected the whole catalog yet, and don't have access to the constraint objects.
-            throw new module.InvalidFacetOperatorError('', path);
+            throw new module.InvalidFacetOperatorError(path, module._facetingErrors.invalidBooleanOperator);
         }
 
     }
@@ -1577,6 +1579,8 @@
      *   Any part of the code that is using this function should guard against the result
      *   being empty, and throw error in that case.
      *
+     * - If we encounter a `null` filter in a facet, the URL structure will change. It will be
+     *
      * - We're trying to use inner join for the facets as much as we can, but if a facet
      *   has the `null` filter we have to use the left outer join. To organize the joins,
      *   any facet that has `null` filter (and therefore left outer join) will be moved to the
@@ -1586,9 +1590,14 @@
      * @param       {object} json  JSON representation of filters
      * @param       {string} alias the table alias
      * @constructor
-     * @return      {string} A string representation of filters that is understanable by ermrest
+     * @return      {object} An object that will have the following attributes:
+     * - successful: Boolean (true means successful, false means cannot be parsed).
+     * - parsed: String  (if the given string was parsable).
+     * - message: String (if the given string was not parsable)
      */
     _JSONToErmrestFilter = function(json, alias, tableName, catalogId, consNames) {
+        var facetErrors = module._facetingErrors;
+
         var findConsName = function (catalogId, schemaName, constraintName) {
             var result;
             if ((catalogId in consNames) && (schemaName in consNames[catalogId])){
@@ -1596,7 +1605,6 @@
             }
             return (result === undefined) ? null : result;
         };
-
 
         var isDefinedAndNotNull = function (v) {
             return v !== undefined && v !== null;
@@ -1718,6 +1726,10 @@
             return res.length === 0 ? null : res.join("/");
         };
 
+        var getErrorOutput = function (message, index) {
+            return {successful: false, message: message + "(index=" + index +")"};
+        };
+
         // parse TERM (it will not do it recursively)
         // returns null if it's not valid
         var parseAnd = function (and) {
@@ -1730,7 +1742,7 @@
                 term = and[i];
 
                 if (typeof term !== "object") {
-                    return "";
+                    return getErrorOutput(facetErrors.invalidFacet, i);
                 }
 
                 // get the column name
@@ -1739,7 +1751,7 @@
                 } else {
                     col = _getFacetSourceColumnStr(term.source);
                     if (typeof col !== "string") {
-                        return "";
+                        return getErrorOutput(facetErrors.invalidSource, i);
                     }
                 }
 
@@ -1748,7 +1760,7 @@
                 if (Array.isArray(term[module._facetFilterTypes.CHOICE])) {
                     parsed = parseChoices(term[module._facetFilterTypes.CHOICE], col);
                     if (!parsed.value) {
-                        return "";
+                        return getErrorOutput(facetErrors.invalidChoice, i);
                     }
                     hasNull = parsed.hasNull;
                     constraints.push(parsed.value);
@@ -1757,7 +1769,7 @@
                 if (Array.isArray(term[module._facetFilterTypes.RANGE])) {
                     parsed = parseRanges(term[module._facetFilterTypes.RANGE], col);
                     if (!parsed) {
-                        return "";
+                        return getErrorOutput(facetErrors.invalidRange, i);
                     }
                     constraints.push(parsed);
                 }
@@ -1765,7 +1777,7 @@
                 if (Array.isArray(term[module._facetFilterTypes.SEARCH])) {
                     parsed = parseSearch(term[[module._facetFilterTypes.SEARCH]], col);
                     if (!parsed) {
-                        return "";
+                        return getErrorOutput(facetErrors.invalidSearch, i);
                     }
                     constraints.push(parsed);
                 }
@@ -1775,7 +1787,7 @@
                 }
 
                 if (constraints.length == 0) {
-                    return "";
+                    return getErrorOutput(facetErrors.missingConstraints, i);
                 }
 
 
@@ -1788,7 +1800,7 @@
 
                 // if the data-path was invalid, ignore this facet
                 if (path === null) {
-                    return "";
+                    return getErrorOutput(facetErrors.invalidSource, i);
                 }
 
                 res = (path.length !== 0 ? path + "/" : "") + constraints.join(";") + "/$" + alias;
@@ -1799,21 +1811,18 @@
                 }
             }
 
-
             // return the inner joins first
-            return innerJoins.concat(outerJoins).join("/");
+            return {successful: true, parsed: innerJoins.concat(outerJoins).join("/")};
         };
 
         var andOperator = module._FacetsLogicalOperators.AND;
 
         // NOTE we only support and at the moment.
         if (!json.hasOwnProperty(andOperator) || !Array.isArray(json[andOperator])) {
-            return "";
+            return {successful: false, message: "Only conjunction of facets are supported."};
         }
 
-        var ermrestFilter = parseAnd(json[andOperator]);
-
-        return !ermrestFilter ? "" : ermrestFilter;
+        return parseAnd(json[andOperator]);
     };
 
     _isFacetSourcePath = function (source) {

@@ -214,7 +214,10 @@
     };
 
     module.decodeFacet = function (blob, path) {
-        var err = new module.InvalidFacetOperatorError('', typeof path === "string" ? path : "");
+        var err = new module.InvalidFacetOperatorError(
+            typeof path === "string" ? path : "",
+            module._facetingErrors.invalidString
+        );
 
         try {
             var str = module._LZString.decompressFromEncodedURIComponent(blob);
@@ -3207,6 +3210,17 @@
     module._errorMessage = Object.freeze({
         facetingError : "Given encoded string for facets is not valid.",
         customFacetingError : "Given encoded string for cfacets is not valid."
+    });
+
+    module._facetingErrors = Object.freeze({
+        invalidString: "Given encoded string cannot be decoded.",
+        invalidFacet: "Facet description is invalid.",
+        invalidBooleanOperator: "Only conjunction of facets is supported currently.",
+        invalidSource: "Missing or invalid `source` attribute.",
+        invalidChoice: "invalid choices value.",
+        invalidRange: "invalid ranges value.",
+        invalidSearch: "invalid search value.",
+        missingConstraints: "No constraints are defined for the facet.",
     });
 
     module._HTTPErrorCodes = Object.freeze({
