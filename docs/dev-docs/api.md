@@ -315,7 +315,7 @@ to use for ERMrest JavaScript agents.
         * [.defaultLogInfo](#ERMrest.Reference+defaultLogInfo) : <code>Object</code>
         * [.exportTemplates](#ERMrest.Reference+exportTemplates) : <code>Object</code>
         * [.defaultExportTemplate](#ERMrest.Reference+defaultExportTemplate) : <code>string</code>
-        * [.removeAllFacetFilters(sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
+        * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
         * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
         * [.read(limit, contextHeaderParams, useEntity)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
             * [~processSortObject()](#ERMrest.Reference+read..processSortObject)
@@ -600,7 +600,7 @@ to use for ERMrest JavaScript agents.
         * [.defaultLogInfo](#ERMrest.Reference+defaultLogInfo) : <code>Object</code>
         * [.exportTemplates](#ERMrest.Reference+exportTemplates) : <code>Object</code>
         * [.defaultExportTemplate](#ERMrest.Reference+defaultExportTemplate) : <code>string</code>
-        * [.removeAllFacetFilters(sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
+        * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
         * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
         * [.read(limit, contextHeaderParams, useEntity)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
             * [~processSortObject()](#ERMrest.Reference+read..processSortObject)
@@ -1041,7 +1041,7 @@ Constructor for Table.
 **Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
 <a name="ERMrest.Table+_baseTable"></a>
 
-#### table._baseTable : [<code>Table</code>](#ERMrest.Table)
+#### table.\_baseTable : [<code>Table</code>](#ERMrest.Table)
 this defaults to itself on the first pass of introspection
 then might be changed on the second pass if this is an alternative table
 
@@ -1121,7 +1121,7 @@ NOTE The returned template might not have `outputs` attribute.
 **Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
 <a name="ERMrest.Table+_getRowDisplayKey"></a>
 
-#### table._getRowDisplayKey(context)
+#### table.\_getRowDisplayKey(context)
 This key will be used for referring to a row of data. Therefore it shouldn't be foreignkey and markdown type.
 It's the same as displaykey but with extra restrictions. It might return undefined.
 
@@ -1825,7 +1825,7 @@ Documentation for this key
 **Kind**: instance property of [<code>Key</code>](#ERMrest.Key)  
 <a name="ERMrest.Key+constraint_names"></a>
 
-#### key.constraint_names : <code>Array</code>
+#### key.constraint\_names : <code>Array</code>
 The exact `names` array in key definition
 
 **Kind**: instance property of [<code>Key</code>](#ERMrest.Key)  
@@ -2077,18 +2077,18 @@ use index 0 since all refCols should be of the same schema:table
 **Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
 <a name="ERMrest.ForeignKeyRef+constraint_names"></a>
 
-#### foreignKeyRef.constraint_names : <code>Array</code>
+#### foreignKeyRef.constraint\_names : <code>Array</code>
 The exact `names` array in foreign key definition
 The constraint names for this foreign key
 
 **Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
 <a name="ERMrest.ForeignKeyRef+from_name"></a>
 
-#### foreignKeyRef.from_name : <code>string</code>
+#### foreignKeyRef.from\_name : <code>string</code>
 **Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
 <a name="ERMrest.ForeignKeyRef+to_name"></a>
 
-#### foreignKeyRef.to_name : <code>string</code>
+#### foreignKeyRef.to\_name : <code>string</code>
 **Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
 <a name="ERMrest.ForeignKeyRef+ignore"></a>
 
@@ -2174,7 +2174,7 @@ Currently used to signal whether there is a base type for this column
 **Kind**: instance property of [<code>Type</code>](#ERMrest.Type)  
 <a name="ERMrest.Type+_isDomain"></a>
 
-#### type._isDomain : <code>boolean</code>
+#### type.\_isDomain : <code>boolean</code>
 Currently used to signal whether there is a base type for this column
 
 **Kind**: instance property of [<code>Type</code>](#ERMrest.Type)  
@@ -2583,7 +2583,7 @@ Constructor for a ParsedFilter.
     * [.defaultLogInfo](#ERMrest.Reference+defaultLogInfo) : <code>Object</code>
     * [.exportTemplates](#ERMrest.Reference+exportTemplates) : <code>Object</code>
     * [.defaultExportTemplate](#ERMrest.Reference+defaultExportTemplate) : <code>string</code>
-    * [.removeAllFacetFilters(sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
+    * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
     * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
     * [.read(limit, contextHeaderParams, useEntity)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
         * [~processSortObject()](#ERMrest.Reference+read..processSortObject)
@@ -2891,14 +2891,16 @@ It will include:
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+removeAllFacetFilters"></a>
 
-#### reference.removeAllFacetFilters(sameFacet) ⇒ <code>ERMrest.reference</code>
-Remove all the fitlers from facets
+#### reference.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet) ⇒ <code>ERMrest.reference</code>
+Remove all the fitlers, facets, and custom-facets from the reference
 
 **Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
 **Returns**: <code>ERMrest.reference</code> - A reference without facet filters  
 
 | Param | Type | Description |
 | --- | --- | --- |
+| sameFilter | <code>boolean</code> | By default we're removing filters, if this is true filters won't be changed. |
+| sameCustomFacet | <code>boolean</code> | By default we're removing custom-facets, if this is true custom-facets won't be changed. |
 | sameFacet | <code>boolean</code> | By default we're removing facets, if this is true facets won't be changed. |
 
 <a name="ERMrest.Reference+create"></a>
@@ -4049,7 +4051,7 @@ The column object that file extension is stored in.
 **Kind**: instance property of [<code>AssetPseudoColumn</code>](#ERMrest.AssetPseudoColumn)  
 <a name="ERMrest.AssetPseudoColumn+_determineInputDisabled"></a>
 
-#### assetPseudoColumn._determineInputDisabled(context) ⇒ <code>boolean</code> \| <code>object</code>
+#### assetPseudoColumn.\_determineInputDisabled(context) ⇒ <code>boolean</code> \| <code>object</code>
 If url_pattern is invalid or browser_upload=false the input will be disabled.
 
 **Kind**: instance method of [<code>AssetPseudoColumn</code>](#ERMrest.AssetPseudoColumn)  
@@ -4184,7 +4186,7 @@ If the ReferenceColumn is not provided, then the FacetColumn is for reference
 
 <a name="ERMrest.FacetColumn+_column"></a>
 
-#### facetColumn._column : [<code>Column</code>](#ERMrest.Column)
+#### facetColumn.\_column : [<code>Column</code>](#ERMrest.Column)
 The column object that the filters are based on
 
 **Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
@@ -4413,7 +4415,7 @@ It will be in the following format:
 **Kind**: instance method of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
 <a name="ERMrest.FacetColumn+_setFilters"></a>
 
-#### facetColumn._setFilters(json)
+#### facetColumn.\_setFilters(json)
 Given an object will create list of filters.
 
 NOTE: if we have not_null, other filters except =null are not relevant.
@@ -4816,13 +4818,13 @@ Usage:
 
 <a name="ERMrest.AttributeGroupReference+_keyColumns"></a>
 
-#### attributeGroupReference._keyColumns : <code>Array.&lt;ERMrest.AttributeGroupColumn&gt;</code>
+#### attributeGroupReference.\_keyColumns : <code>Array.&lt;ERMrest.AttributeGroupColumn&gt;</code>
 Array of AttributeGroupColumn that will be used as the key columns
 
 **Kind**: instance property of [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)  
 <a name="ERMrest.AttributeGroupReference+_aggregateColumns"></a>
 
-#### attributeGroupReference._aggregateColumns : <code>Array.&lt;ERMrest.AttributeGroupColumn&gt;</code>
+#### attributeGroupReference.\_aggregateColumns : <code>Array.&lt;ERMrest.AttributeGroupColumn&gt;</code>
 Array of AttributeGroupColumn that will be used for the aggregate results
 
 **Kind**: instance property of [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)  
@@ -5700,7 +5702,7 @@ get PathColumn object by column name
     * [.defaultLogInfo](#ERMrest.Reference+defaultLogInfo) : <code>Object</code>
     * [.exportTemplates](#ERMrest.Reference+exportTemplates) : <code>Object</code>
     * [.defaultExportTemplate](#ERMrest.Reference+defaultExportTemplate) : <code>string</code>
-    * [.removeAllFacetFilters(sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
+    * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
     * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
     * [.read(limit, contextHeaderParams, useEntity)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
         * [~processSortObject()](#ERMrest.Reference+read..processSortObject)
@@ -6008,14 +6010,16 @@ It will include:
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+removeAllFacetFilters"></a>
 
-#### reference.removeAllFacetFilters(sameFacet) ⇒ <code>ERMrest.reference</code>
-Remove all the fitlers from facets
+#### reference.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet) ⇒ <code>ERMrest.reference</code>
+Remove all the fitlers, facets, and custom-facets from the reference
 
 **Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
 **Returns**: <code>ERMrest.reference</code> - A reference without facet filters  
 
 | Param | Type | Description |
 | --- | --- | --- |
+| sameFilter | <code>boolean</code> | By default we're removing filters, if this is true filters won't be changed. |
+| sameCustomFacet | <code>boolean</code> | By default we're removing custom-facets, if this is true custom-facets won't be changed. |
 | sameFacet | <code>boolean</code> | By default we're removing facets, if this is true facets won't be changed. |
 
 <a name="ERMrest.Reference+create"></a>
@@ -6331,13 +6335,13 @@ Usage:
 
 <a name="ERMrest.AttributeGroupReference+_keyColumns"></a>
 
-#### attributeGroupReference._keyColumns : <code>Array.&lt;ERMrest.AttributeGroupColumn&gt;</code>
+#### attributeGroupReference.\_keyColumns : <code>Array.&lt;ERMrest.AttributeGroupColumn&gt;</code>
 Array of AttributeGroupColumn that will be used as the key columns
 
 **Kind**: instance property of [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)  
 <a name="ERMrest.AttributeGroupReference+_aggregateColumns"></a>
 
-#### attributeGroupReference._aggregateColumns : <code>Array.&lt;ERMrest.AttributeGroupColumn&gt;</code>
+#### attributeGroupReference.\_aggregateColumns : <code>Array.&lt;ERMrest.AttributeGroupColumn&gt;</code>
 Array of AttributeGroupColumn that will be used for the aggregate results
 
 **Kind**: instance property of [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)  

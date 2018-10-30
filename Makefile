@@ -88,7 +88,7 @@ $(BUILD)/$(PKG): $(SOURCE)
 # we should list all the tags that jsDoc accepst but the gccjs doesn't.
 $(BUILD)/$(MIN): $(SOURCE) $(BIN)
 	mkdir -p $(BUILD)
-	$(BIN)/google-closure-compiler-js $(BUILD)/$(PKG) > $(BUILD)/$(MIN) --extraAnnotationNames callback --extraAnnotationNames async
+	$(BIN)/google-closure-compiler $(BUILD)/$(PKG) > $(BUILD)/$(MIN)
 
 # Rule to lint the source (terminate build on errors)
 $(LINT): $(SOURCE) $(BIN)
