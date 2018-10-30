@@ -94,16 +94,16 @@ exports.execute = function (options) {
              expect(disp.isHTML).toBe(isHTML, "isHTML missmatch for index="+ index);
          };
 
-         var checkSourceReference = function (fcName, fc, compactPath, projectionFacets, colName) {
+         var checkSourceReference = function (fcName, fc, compactPath, rootFacets, colName) {
              var sr = fc.sourceReference;
              var col = fc.column;
 
              expect(sr.location.ermrestCompactPath).toBe(compactPath, fcName + ": compactPath missmatch.");
              expect(sr.location.facets).toBeUndefined(fcName + ": facets was defined.");
-             expect(sr.location.projectionFacets).toBeDefined(fcName + ": didn't have projection facets.");
-             expect(JSON.stringify(sr.location.projectionFacets.decoded)).toEqual(
-                 JSON.stringify(projectionFacets),
-                 fcName + ": projectionFacets missmatch."
+             expect(sr.location.rootFacets).toBeDefined(fcName + ": didn't have projection facets.");
+             expect(JSON.stringify(sr.location.rootFacets.decoded)).toEqual(
+                 JSON.stringify(rootFacets),
+                 fcName + ": rootFacets missmatch."
              );
              expect(col._baseReference).toBe(sr, fcName + ": column wasn't based on sourceReference.");
              expect(col.name).toBe(colName, fcName + ": colname missmatch.");

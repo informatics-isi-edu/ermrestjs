@@ -297,7 +297,7 @@ to use for ERMrest JavaScript agents.
         * [.displayname](#ERMrest.Reference+displayname) : <code>object</code>
         * [.uri](#ERMrest.Reference+uri) : <code>string</code>
         * [.table](#ERMrest.Reference+table) : [<code>Table</code>](#ERMrest.Table)
-        * [.projectionTable](#ERMrest.Reference+projectionTable) : [<code>Table</code>](#ERMrest.Table)
+        * [.rootTable](#ERMrest.Reference+rootTable) : [<code>Table</code>](#ERMrest.Table)
         * [.columns](#ERMrest.Reference+columns) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
         * [.facetColumns](#ERMrest.Reference+facetColumns) ⇒ [<code>Array.&lt;FacetColumn&gt;</code>](#ERMrest.FacetColumn)
         * [.location](#ERMrest.Reference+location) ⇒ <code>ERMrest.Location</code>
@@ -583,7 +583,7 @@ to use for ERMrest JavaScript agents.
         * [.displayname](#ERMrest.Reference+displayname) : <code>object</code>
         * [.uri](#ERMrest.Reference+uri) : <code>string</code>
         * [.table](#ERMrest.Reference+table) : [<code>Table</code>](#ERMrest.Table)
-        * [.projectionTable](#ERMrest.Reference+projectionTable) : [<code>Table</code>](#ERMrest.Table)
+        * [.rootTable](#ERMrest.Reference+rootTable) : [<code>Table</code>](#ERMrest.Table)
         * [.columns](#ERMrest.Reference+columns) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
         * [.facetColumns](#ERMrest.Reference+facetColumns) ⇒ [<code>Array.&lt;FacetColumn&gt;</code>](#ERMrest.FacetColumn)
         * [.location](#ERMrest.Reference+location) ⇒ <code>ERMrest.Location</code>
@@ -2566,7 +2566,7 @@ Constructor for a ParsedFilter.
     * [.displayname](#ERMrest.Reference+displayname) : <code>object</code>
     * [.uri](#ERMrest.Reference+uri) : <code>string</code>
     * [.table](#ERMrest.Reference+table) : [<code>Table</code>](#ERMrest.Table)
-    * [.projectionTable](#ERMrest.Reference+projectionTable) : [<code>Table</code>](#ERMrest.Table)
+    * [.rootTable](#ERMrest.Reference+rootTable) : [<code>Table</code>](#ERMrest.Table)
     * [.columns](#ERMrest.Reference+columns) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
     * [.facetColumns](#ERMrest.Reference+facetColumns) ⇒ [<code>Array.&lt;FacetColumn&gt;</code>](#ERMrest.FacetColumn)
     * [.location](#ERMrest.Reference+location) ⇒ <code>ERMrest.Location</code>
@@ -2665,10 +2665,10 @@ Should not be used for sending requests to ermrest, use this.location.ermrestCom
 The table object for this reference
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
-<a name="ERMrest.Reference+projectionTable"></a>
+<a name="ERMrest.Reference+rootTable"></a>
 
-#### reference.projectionTable : [<code>Table</code>](#ERMrest.Table)
-The projection table object,
+#### reference.rootTable : [<code>Table</code>](#ERMrest.Table)
+The root table object,
 if there's a join in path, this will return a different object from .table
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
@@ -5710,7 +5710,7 @@ get PathColumn object by column name
     * [.displayname](#ERMrest.Reference+displayname) : <code>object</code>
     * [.uri](#ERMrest.Reference+uri) : <code>string</code>
     * [.table](#ERMrest.Reference+table) : [<code>Table</code>](#ERMrest.Table)
-    * [.projectionTable](#ERMrest.Reference+projectionTable) : [<code>Table</code>](#ERMrest.Table)
+    * [.rootTable](#ERMrest.Reference+rootTable) : [<code>Table</code>](#ERMrest.Table)
     * [.columns](#ERMrest.Reference+columns) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
     * [.facetColumns](#ERMrest.Reference+facetColumns) ⇒ [<code>Array.&lt;FacetColumn&gt;</code>](#ERMrest.FacetColumn)
     * [.location](#ERMrest.Reference+location) ⇒ <code>ERMrest.Location</code>
@@ -5809,10 +5809,10 @@ Should not be used for sending requests to ermrest, use this.location.ermrestCom
 The table object for this reference
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
-<a name="ERMrest.Reference+projectionTable"></a>
+<a name="ERMrest.Reference+rootTable"></a>
 
-#### reference.projectionTable : [<code>Table</code>](#ERMrest.Table)
-The projection table object,
+#### reference.rootTable : [<code>Table</code>](#ERMrest.Table)
+The root table object,
 if there's a join in path, this will return a different object from .table
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  

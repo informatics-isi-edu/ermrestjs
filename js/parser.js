@@ -154,23 +154,22 @@
         }
 
         // Split compact path on '/'
-        // Expected format: "<schema:table>/<filter(s)>/<cfacets>/<facets>/<joins(s)>/<facets>"
+        // Expected format: "<schema:table>/<filter>/<cfacets>/<rootFacets>/<joins>/<facets>"
         parts = this._compactPath.split('/');
-
 
         //<schema:table>
         // first schema name and first table name
-        // we can't handle complex path right now, only knows the first schema and table
-        // so after doing a Reference.relate() and generate a new uri/location, we don't have schema/table information here
         if (parts[0]) {
             var params = parts[0].split(':');
             if (params.length > 1) {
-                this._projectionSchemaName = decodeURIComponent(params[0]);
-                this._projectionTableName = decodeURIComponent(params[1]);
+                this._rootSchemaName = decodeURIComponent(params[0]);
+                this._rootTableName = decodeURIComponent(params[1]);
             } else {
-                this._projectionSchemaName = null;
-                this._projectionTableName = decodeURIComponent(params[0]);
+                this._rootSchemaName = null;
+                this._rootTableName = decodeURIComponent(params[0]);
             }
+        } else {
+            throw new ERMrest.MalformedURIError("Given url must start with `schema:table.");
         }
 
         // from start to end can be filter, facets, and joins
@@ -199,7 +198,7 @@
             }
         }
 
-        // <projectionFacets>/<join(s)>
+        // <rootFacets>/<join(s)>
         this._joins = [];
         // parts[startIndex] to parts[endIndex] might be joins
         var linking;
@@ -212,7 +211,7 @@
         if (this._joins.length > 0) {
             match = parts[startIndex].match(facetsRegExp);
             if (match) { // this is the facets blob
-                this._projectionFacets = new ParsedFacets(match[1], this._path);
+                this._rootFacets = new ParsedFacets(match[1], this._path);
                 startIndex++;
             }
         }
@@ -310,7 +309,7 @@
 
 
         /**
-         * <service>/catalog/<catalogId>/<api>/<projectionSchema:projectionTable>/<filters>/<joins>/<sort>/<page>?<queryParams>
+         * <service>/catalog/<catalogId>/<api>/<rootSchema:rootTable>/<filters>/<joins>/<sort>/<page>?<queryParams>
          * NOTE: some of the components might not be understanable by ermrest, because of pseudo operator (e.g., ::facets::).
          *
          * @returns {String} The full URI of the location
@@ -323,7 +322,7 @@
         },
 
         /**
-         * <service>/catalog/<catalogId>/<api>/<projectionSchema:projectionTable>/<filters>/<joins>/<search>
+         * <service>/catalog/<catalogId>/<api>/<rootSchema:rootTable>/<filters>/<joins>/<search>
          *
          * NOTE: some of the components might not be understanable by ermrest, because of pseudo operator (e.g., ::search::).
          * @returns {String} The URI without modifiers or queries
@@ -337,7 +336,7 @@
         },
 
         /**
-         * <projectionSchema:projectionTable>/<filters>/<joins>/<search>/<sort>/<page>
+         * <rootSchema:rootTable>/<filters>/<joins>/<search>/<sort>/<page>
          *  NOTE: some of the components might not be understanable by ermrest, because of pseudo operator (e.g., ::search::).
          *
          * @returns {String} Path portion of the URI
@@ -351,7 +350,7 @@
         },
 
         /**
-         * <projectionSchema:projectionTable>/<filters>/<cfacets>/<projectionFacets>/<joins>/<facets>
+         * <rootSchema:rootTable>/<filters>/<cfacets>/<rootFacets>/<joins>/<facets>
          * NOTE: some of the components might not be understanable by ermrest, because of pseudo operator (e.g., ::facets::).
          *
          * @returns {String} Path without modifiers or queries
@@ -359,10 +358,10 @@
         get compactPath() {
             if (this._compactPath === undefined) {
                 var uri = "";
-                if (this.projectionSchemaName) {
-                    uri += module._fixedEncodeURIComponent(this.projectionSchemaName) + ":";
+                if (this.rootSchemaName) {
+                    uri += module._fixedEncodeURIComponent(this.rootSchemaName) + ":";
                 }
-                uri += module._fixedEncodeURIComponent(this.projectionTableName);
+                uri += module._fixedEncodeURIComponent(this.rootTableName);
 
                 if (this.filtersString) {
                     uri += "/" + this.filtersString;
@@ -372,8 +371,8 @@
                     uri += "/*::cfacets::" + this.customFacets.encoded;
                 }
 
-                if (this.projectionFacets) {
-                    uri += "/*::facets::" + this.projectionFacets.encoded;
+                if (this.rootFacets) {
+                    uri += "/*::facets::" + this.rootFacets.encoded;
                 }
 
                 if (this.joins.length > 0) {
@@ -399,7 +398,7 @@
          * TODO This might produce a url that is not understandable by ermrest (because of sort).
          * TODO should be removed or changed.
          *
-         * <service>/catalog/<catalogId>/<api>/<projectionSchema:projectionTable>/<filters>/<projectionFacets>/<joins>/<facets>/<sort>/<page>
+         * <service>/catalog/<catalogId>/<api>/<rootSchema:rootTable>/<filters>/<rootFacets>/<joins>/<facets>/<sort>/<page>
          * @returns {String} The full URI of the location for ermrest
          */
         get ermrestUri() {
@@ -411,7 +410,7 @@
 
         /**
          * should only be used for internal usage and sending request to ermrest
-         * <projectionSchema:projectionTable>/<filters>/<joins>/<search>
+         * <rootSchema:rootTable>/<filters>/<joins>/<search>
          *
          * NOTE: returns a uri that ermrest understands
          * @returns {String} The URI without modifiers or queries for ermrest
@@ -426,7 +425,7 @@
 
         /**
          * should only be used for internal usage and sending request to ermrest
-         * <projectionSchema:projectionTable>/<filters>/<projectionFacets>/<joins>/<facets>/<sort>/<page>
+         * <rootSchema:rootTable>/<filters>/<rootFacets>/<joins>/<facets>/<sort>/<page>
          *
          * NOTE: returns a path that ermrest understands
          * @returns {String} Path portion of the URI
@@ -441,7 +440,7 @@
 
         /**
          * should only be used for internal usage and sending request to ermrest
-         * <projectionSchema:projectionTable>/<filters>/<projectionFacets>/<joins>/<projectionFacets>
+         * <rootSchema:rootTable>/<filters>/<rootFacets>/<joins>/<rootFacets>
          *
          * NOTE:
          *  1. returns a path that ermrest understands
@@ -456,12 +455,12 @@
                     facetResult;
 
                 // add tableAlias
-                var uri = this.projectionTableAlias + ":=";
+                var uri = this.rootTableAlias + ":=";
 
-                if (this.projectionSchemaName) {
-                    uri += module._fixedEncodeURIComponent(this.projectionSchemaName) + ":";
+                if (this.rootSchemaName) {
+                    uri += module._fixedEncodeURIComponent(this.rootSchemaName) + ":";
                 }
-                uri += module._fixedEncodeURIComponent(this.projectionTableName);
+                uri += module._fixedEncodeURIComponent(this.rootTableName);
 
                 if (this.filtersString) {
                     uri += "/" + this.filtersString;
@@ -469,7 +468,7 @@
 
                 if (this.customFacets) {
                     if (this.customFacets.facets) {
-                        facetResult = _JSONToErmrestFilter(this.customFacets.facets.decoded, this.projectionTableAlias, this.projectionTableAlias, this.catalog, module._constraintNames);
+                        facetResult = _JSONToErmrestFilter(this.customFacets.facets.decoded, this.rootTableAlias, this.rootTableAlias, this.catalog, module._constraintNames);
                         if (!facetResult.successful) {
                             throw new module.InvalidCustomFacetOperatorError(this.path, facetResult.message);
                         }
@@ -481,8 +480,8 @@
                     }
                 }
 
-                if (this.projectionFacets) {
-                    facetResult = _JSONToErmrestFilter(this.projectionFacets.decoded, this.projectionTableAlias, this.projectionTableName, this.catalog, module._constraintNames);
+                if (this.rootFacets) {
+                    facetResult = _JSONToErmrestFilter(this.rootFacets.decoded, this.rootTableAlias, this.rootTableName, this.catalog, module._constraintNames);
                     if (!facetResult.successful) {
                         throw new module.InvalidFacetOperatorError(this.path, facetResult.message);
                     }
@@ -508,11 +507,11 @@
             return this._ermrestCompactPath;
         },
 
-        get projectionTableAlias () {
-            if (this._projectionTableAlias === undefined) {
-                this._projectionTableAlias = (this.joins.length === 0) ? this.mainTableAlias : "T";
+        get rootTableAlias () {
+            if (this._rootTableAlias === undefined) {
+                this._rootTableAlias = (this.joins.length === 0) ? this.mainTableAlias : "T";
             }
-            return this._projectionTableAlias;
+            return this._rootTableAlias;
         },
 
         get mainTableAlias() {
@@ -562,18 +561,18 @@
 
         /**
          *
-         * @returns {string} The schema name in the projection table, null if schema is not specified
+         * @returns {string} The first schema name in the projection table, null if schema is not specified
          */
-        get projectionSchemaName() {
-            return this._projectionSchemaName;
+        get rootSchemaName() {
+            return this._rootSchemaName;
         },
 
         /**
          * Subject to change soon
-         * @returns {string} The table name in the projection table
+         * @returns {string} The first table name in the projection table
          */
-        get projectionTableName() {
-            return this._projectionTableName;
+        get rootTableName() {
+            return this._rootTableName;
         },
 
         /**
@@ -586,7 +585,7 @@
                 if (joinLen > 0) {
                     this._schemaName = this._joins[joinLen-1].toSchema;
                 } else {
-                    this._schemaName = this._projectionSchemaName;
+                    this._schemaName = this._rootSchemaName;
                 }
             }
             return this._schemaName;
@@ -602,7 +601,7 @@
                 if (joinLen > 0) {
                     this._tableName = this._joins[joinLen-1].toTable;
                 } else {
-                    this._tableName = this._projectionTableName;
+                    this._tableName = this._rootTableName;
                 }
             }
             return this._tableName;
@@ -721,10 +720,10 @@
          * set the facet on the projection table
          * @param  {object} json the json object of facets
          */
-        set projectionFacets(json) {
-            delete this._projectionFacets;
+        set rootFacets(json) {
+            delete this._rootFacets;
             if (typeof json === 'object' && json !== null) {
-                this._projectionFacets = new ParsedFacets(json);
+                this._rootFacets = new ParsedFacets(json);
             }
             this._setDirty();
         },
@@ -733,8 +732,8 @@
          * facet on the projection table
          * @return {ParsedFacets} facets object
          */
-        get projectionFacets() {
-            return this._projectionFacets;
+        get rootFacets() {
+            return this._rootFacets;
         },
 
         /**

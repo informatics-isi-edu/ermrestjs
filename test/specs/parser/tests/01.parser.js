@@ -371,8 +371,8 @@ exports.execute = function(options) {
                 expect(location.catalog).toBe(catalogId.toString());
                 expect(location.catalog).toBe(catalogId.toString());
                 expect(location.version).toBeNull();
-                expect(location.projectionSchemaName).toBe(schemaName);
-                expect(location.projectionTableName).toBe(tableName);
+                expect(location.rootSchemaName).toBe(schemaName);
+                expect(location.rootTableName).toBe(tableName);
                 expect(location.schemaName).toBe(schemaName);
                 expect(location.tableName).toBe(tableName2);
                 expect(location.filter instanceof options.ermRest.ParsedFilter).toBe(true);
@@ -586,9 +586,9 @@ exports.execute = function(options) {
 
                     expect(location.facets).toBeUndefined("facets is defined.");
 
-                    expect(location.projectionFacets).toBeDefined("projectionFacets is not defined.");
-                    expect(location.projectionFacets.encoded).toEqual(validBlob, "projection facets encoded missmatch.");
-                    expect(JSON.stringify(location.projectionFacets.decoded)).toEqual(JSON.stringify(facetObj), "projection facets decoded missmatch.");
+                    expect(location.rootFacets).toBeDefined("rootFacets is not defined.");
+                    expect(location.rootFacets.encoded).toEqual(validBlob, "projection facets encoded missmatch.");
+                    expect(JSON.stringify(location.rootFacets.decoded)).toEqual(JSON.stringify(facetObj), "projection facets decoded missmatch.");
 
                     expect(location.ermrestCompactPath).toEqual("T:=parse_schema:parse_table/accession=1/$T/*::ciregexp::test/$T/M:=(id)=(s:otherTable:id)", "ermrestCompactPath missmatch");
                 });
@@ -600,7 +600,7 @@ exports.execute = function(options) {
 
                     expect(location.uri).toEqual(uri, "uri missmatch");
 
-                    expect(location.projectionFacets).toBeUndefined("projectionFacets is defined.");
+                    expect(location.rootFacets).toBeUndefined("rootFacets is defined.");
 
                     expect(location.facets).toBeDefined("facets is not defined.");
                     expect(location.facets.encoded).toEqual(validBlob2, "facets encoded missmatch.");
@@ -616,9 +616,9 @@ exports.execute = function(options) {
 
                     expect(location.uri).toEqual(uri, "uri missmatch");
 
-                    expect(location.projectionFacets).toBeDefined("projectionFacets is not defined.");
-                    expect(location.projectionFacets.encoded).toEqual(validBlob, "projection facets encoded missmatch.");
-                    expect(JSON.stringify(location.projectionFacets.decoded)).toEqual(JSON.stringify(facetObj), "projection facets decoded missmatch.");
+                    expect(location.rootFacets).toBeDefined("rootFacets is not defined.");
+                    expect(location.rootFacets.encoded).toEqual(validBlob, "projection facets encoded missmatch.");
+                    expect(JSON.stringify(location.rootFacets.decoded)).toEqual(JSON.stringify(facetObj), "projection facets decoded missmatch.");
 
                     expect(location.facets).toBeDefined("facets is not defined.");
                     expect(location.facets.encoded).toEqual(validBlob2, "facets encoded missmatch.");
@@ -641,8 +641,8 @@ exports.execute = function(options) {
                     expect(location.searchTerm).toEqual("test", "searchTerm missmatch.");
                 });
 
-                it("Location.projectionFacets setter should be able to change the facet and update other APIs.", function() {
-                    location.projectionFacets = facetObj2;
+                it("Location.rootFacets setter should be able to change the facet and update other APIs.", function() {
+                    location.rootFacets = facetObj2;
 
                     uri = baseUri + "/*::facets::" + validBlob2 + "/(id)=(s:otherTable:id)" + "/*::facets::" + validBlob;
                     expect(location.uri).toBe(uri, "uri missmatch.");

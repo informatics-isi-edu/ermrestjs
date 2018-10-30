@@ -2198,9 +2198,9 @@ FacetColumn.prototype = {
             }
 
             if (jsonFilters.length > 0) {
-                this._sourceReference._location.projectionFacets = {"and": jsonFilters};
+                this._sourceReference._location.rootFacets = {"and": jsonFilters};
             } else {
-                this._sourceReference._location.projectionFacets = null;
+                this._sourceReference._location.rootFacets = null;
             }
         }
         return this._sourceReference;
@@ -3197,8 +3197,8 @@ ColumnGroupAggregateFn.prototype = {
             throw new Error("Cannot use this API on pseudo-column.");
         }
 
-        if (this._ref.location.hasJoin && this._ref.projectionTable.shortestKey.length > 1) {
-            throw new Error("Table must have a simple key for entity counts: " + this._ref.projectionTable.name);
+        if (this._ref.location.hasJoin && this._ref.rootTable.shortestKey.length > 1) {
+            throw new Error("Table must have a simple key for entity counts: " + this._ref.rootTable.name);
         }
 
         var countColName = "count",
@@ -3273,7 +3273,7 @@ ColumnGroupAggregateFn.prototype = {
         if (!hideNumOccurrences || sortCounts) {
             var countName = "cnt(*)";
             if (self._ref.location.hasJoin) {
-                countName = "cnt_d(" + self._ref.location.projectionTableAlias + ":" + module._fixedEncodeURIComponent(self._ref.projectionTable.shortestKey[0].name) + ")";
+                countName = "cnt_d(" + self._ref.location.rootTableAlias + ":" + module._fixedEncodeURIComponent(self._ref.rootTable.shortestKey[0].name) + ")";
             }
 
             aggregateColumns.push(
@@ -3309,7 +3309,7 @@ ColumnGroupAggregateFn.prototype = {
             throw new Error("Binning is not supported on column type " + column.type.name);
         }
 
-        if (reference.location.hasJoin && reference.projectionTable.shortestKey.length > 1) {
+        if (reference.location.hasJoin && reference.rootTable.shortestKey.length > 1) {
             throw new Error("Table must have a simple key.");
         }
 
