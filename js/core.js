@@ -870,7 +870,7 @@
                             }
 
                             // the one that has lower column position
-                            return a.colset._getColumnPositions() > b.colset._getColumnPositions();
+                            return (a.colset._getColumnPositions() > b.colset._getColumnPositions()) ? 1 : -1;
                         })[0].colset.columns;
                     }
 
@@ -900,18 +900,18 @@
 
                         // shorter
                         if (keyA.colset.columns.length != keyB.colset.columns.length) {
-                            return keyA.colset.columns.length > keyB.colset.columns.length;
+                            return keyA.colset.columns.length - keyB.colset.columns.length;
                         }
 
                         // has more text
                         var aTextCount = countTextColumns(keyA);
                         var bTextCount = countTextColumns(keyB);
                         if (aTextCount != bTextCount) {
-                            return aTextCount < bTextCount;
+                            return bTextCount - aTextCount;
                         }
 
                         // the one that has lower column position
-                        return keyA.colset._getColumnPositions() > keyB.colset._getColumnPositions();
+                        return (keyA.colset._getColumnPositions() > keyB.colset._getColumnPositions()) ? 1 : -1;
                     })[0].colset.columns;
                 } else {
                     this._displayKey = this.columns.all();
@@ -966,18 +966,18 @@
 
                             // shorter
                             if (keyA.colset.columns.length != keyB.colset.columns.length) {
-                                return keyA.colset.columns.length > keyB.colset.columns.length;
+                                return keyA.colset.columns.length - keyB.colset.columns.length;
                             }
 
                             // has more text
                             var aTextCount = countTextColumns(keyA);
                             var bTextCount = countTextColumns(keyB);
                             if (aTextCount != bTextCount) {
-                                return aTextCount < bTextCount;
+                                return bTextCount - aTextCount;
                             }
 
                             // the one that has lower column position
-                            return keyA.colset._getColumnPositions() > keyB.colset._getColumnPositions();
+                            return (keyA.colset._getColumnPositions() > keyB.colset._getColumnPositions()) ? 1 : -1;
                         })[0];
                     }
                 }
