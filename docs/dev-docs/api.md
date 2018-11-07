@@ -430,6 +430,7 @@ to use for ERMrest JavaScript agents.
         * [.filters](#ERMrest.FacetColumn+filters)
         * [.isOpen](#ERMrest.FacetColumn+isOpen) : <code>Boolean</code>
         * [.hasPath](#ERMrest.FacetColumn+hasPath) : <code>Boolean</code>
+        * [.ermrestHasPath](#ERMrest.FacetColumn+ermrestHasPath) : <code>Boolean</code>
         * [.preferredMode](#ERMrest.FacetColumn+preferredMode) : <code>string</code>
         * [.isEntityMode](#ERMrest.FacetColumn+isEntityMode) : <code>Boolean</code>
         * [.barPlot](#ERMrest.FacetColumn+barPlot) : <code>Boolean</code>
@@ -4133,6 +4134,7 @@ Indicates that this ReferenceColumn is an inbound foreign key.
     * [.filters](#ERMrest.FacetColumn+filters)
     * [.isOpen](#ERMrest.FacetColumn+isOpen) : <code>Boolean</code>
     * [.hasPath](#ERMrest.FacetColumn+hasPath) : <code>Boolean</code>
+    * [.ermrestHasPath](#ERMrest.FacetColumn+ermrestHasPath) : <code>Boolean</code>
     * [.preferredMode](#ERMrest.FacetColumn+preferredMode) : <code>string</code>
     * [.isEntityMode](#ERMrest.FacetColumn+isEntityMode) : <code>Boolean</code>
     * [.barPlot](#ERMrest.FacetColumn+barPlot) : <code>Boolean</code>
@@ -4232,6 +4234,16 @@ otherwise returns facetObject['open']
 Whether the source has path or not
 
 **Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
+<a name="ERMrest.FacetColumn+ermrestHasPath"></a>
+
+#### facetColumn.ermrestHasPath : <code>Boolean</code>
+Whether the source is going to have path when sending the request to ermrest
+The path that is defined on the facet might be different from the one that
+we are going to use to talk with ermrest. We might optmize the path.
+Facets with only one hop where the column used in foreignkey is the same column for faceting, and is not nullable
+can be optmized by completely ignoring the foreignkey path and just doing a value check on main table.
+
+**Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
 <a name="ERMrest.FacetColumn+preferredMode"></a>
 
 #### facetColumn.preferredMode : <code>string</code>
@@ -4326,23 +4338,28 @@ Could be used as tooltip to provide more information about the facetColumn
 #### facetColumn.hideNullChoice : <code>Boolean</code>
 Whether client should hide the null choice.
 `null` filter could mean any of the following:
-  - Scalar value being `null`. In terms of ermrest,
-  - No value exists in the given path (checking presence of a value in the path).
+  - Scalar value being `null`. In terms of ermrest, a simple col::null:: query
+  - No value exists in the given path (checking presence of a value in the path). In terms of ermrest,
+    we have to construct an outer join. For performance we're going to use right outer join.
+    Because of ermrest limitation, we cannot have more than two right outer joins and therefore
+    two such null checks cannot co-exist.
 Since we're not going to show two different options for these two meanings,
 we have to make sure to offer `null` option when only one of these two meanings would make sense.
 Based on this, we can categorize facets into these three groups:
-  1. (G1) Facets with less than two hop.
-  2. (G2) Facets with more than one hop in entity mode.
-     Since it's entity mode, the value cannot be null.
-     So the `null` filter in this case could only mean the check presence.
-  3. (G3) Facets with more than one hop in scalar mode. In this case, `null` could mean either of those.
-  Based on this, the following will be the logic of `hideNullChoice` (first applicable rule):
-    - If facet has `null` filter: `false`.
-    - If facet has `"hide_null_choice": true`: `true`.
-    - If G1: `false`.
-    - If G2 and at least on of other G2s have `null`: `true`.
-    - If G2 and none of other G2s have `null`: `false`.
-    - otherwise (G3): `true`
+  1. (G1) Facets without any path.
+  2. (G2) Facets with path where the column is nullable: `null` could mean any of those.
+  3. (G3) Facets with path where the column is not nullable. Here `null` can only mean path existence.
+  3. (G3.1) Facets with only one hop where the column used in foreignkey is the same column for faceting.
+     In this case, we can completely ignore the foreignkey path and just do a value check on main table.
+
+Based on this, the following will be the logic for this function:
+    - If facet has `null` filter: `false`
+    - If facet has `"hide_null_choice": true`: `true`
+    - If G1: `false`
+    - If G2: `true`
+    - If G3.1: `false`
+    - If G3 and no other G3 has null: `false`
+    - otherwise: `false`
 
 **Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
 <a name="ERMrest.FacetColumn+hideNotNullChoice"></a>

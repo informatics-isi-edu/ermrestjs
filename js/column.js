@@ -1996,6 +1996,28 @@ FacetColumn.prototype = {
     },
 
     /**
+     * Whether the source is going to have path when sending the request to ermrest
+     * The path that is defined on the facet might be different from the one that
+     * we are going to use to talk with ermrest. We might optmize the path.
+     * Facets with only one hop where the column used in foreignkey is the same column for faceting, and is not nullable
+     * can be optmized by completely ignoring the foreignkey path and just doing a value check on main table.
+     *
+     * @type {Boolean}
+     */
+    get ermrestHasPath () {
+        if (this._ermrestHasPath === undefined) {
+            var isOneToOneFK = false, self = this;
+            if (this.foreignKeys.length === 1) {
+                var fk = self.foreignKeys[0].obj, isInbound = self.foreignKeys[0].isInbound;
+                isOneToOneFK = !self._column.nullok && fk.simple && ( (isInbound && self._column === fk.colset.columns[0]) || (!isInbound && self._column === fk.key.colset.columns[0]) ) ;
+            }
+
+            this._ermrestHasPath = this.foreignKeys.length > 0 && !isOneToOneFK;
+        }
+        return this._ermrestHasPath;
+    },
+
+    /**
      * The Preferred ux mode.
      * Any of:
      * `choices`, `ranges`, or `check_presence`
@@ -2292,23 +2314,28 @@ FacetColumn.prototype = {
     /**
      * Whether client should hide the null choice.
      * `null` filter could mean any of the following:
-     *   - Scalar value being `null`. In terms of ermrest,
-     *   - No value exists in the given path (checking presence of a value in the path).
+     *   - Scalar value being `null`. In terms of ermrest, a simple col::null:: query
+     *   - No value exists in the given path (checking presence of a value in the path). In terms of ermrest,
+     *     we have to construct an outer join. For performance we're going to use right outer join.
+     *     Because of ermrest limitation, we cannot have more than two right outer joins and therefore
+     *     two such null checks cannot co-exist.
      * Since we're not going to show two different options for these two meanings,
      * we have to make sure to offer `null` option when only one of these two meanings would make sense.
      * Based on this, we can categorize facets into these three groups:
-     *   1. (G1) Facets with less than two hop.
-     *   2. (G2) Facets with more than one hop in entity mode.
-     *      Since it's entity mode, the value cannot be null.
-     *      So the `null` filter in this case could only mean the check presence.
-     *   3. (G3) Facets with more than one hop in scalar mode. In this case, `null` could mean either of those.
-     *   Based on this, the following will be the logic of `hideNullChoice` (first applicable rule):
-     *     - If facet has `null` filter: `false`.
-     *     - If facet has `"hide_null_choice": true`: `true`.
-     *     - If G1: `false`.
-     *     - If G2 and at least on of other G2s have `null`: `true`.
-     *     - If G2 and none of other G2s have `null`: `false`.
-     *     - otherwise (G3): `true`
+     *   1. (G1) Facets without any path.
+     *   2. (G2) Facets with path where the column is nullable: `null` could mean any of those.
+     *   3. (G3) Facets with path where the column is not nullable. Here `null` can only mean path existence.
+     *   3. (G3.1) Facets with only one hop where the column used in foreignkey is the same column for faceting.
+     *      In this case, we can completely ignore the foreignkey path and just do a value check on main table.
+     *
+     * Based on this, the following will be the logic for this function:
+     *     - If facet has `null` filter: `false`
+     *     - If facet has `"hide_null_choice": true`: `true`
+     *     - If G1: `false`
+     *     - If G2: `true`
+     *     - If G3.1: `false`
+     *     - If G3 and no other G3 has null: `false`
+     *     - otherwise: `false`
      * @type {Boolean}
      */
     get hideNullChoice() {
@@ -2325,20 +2352,27 @@ FacetColumn.prototype = {
                 }
 
                 // G1
-                if (self.foreignKeys.length < 2) {
+                if (self.foreignKeys.length < 1) {
                     return false;
                 }
 
                 // G2
-                if (self.isEntityMode) {
-                    var othersHaveNull = self.reference.facetColumns.some(function (fc, index) {
-                        return index !== self.index && fc.foreignKeys.length >= 2 && fc.hasNullFilter;
-                    });
-                    return othersHaveNull;
+                if (self._column.nullok) {
+                    return true;
                 }
 
-                //G3
-                return true;
+                // G3.1
+                if (!self.ermrestHasPath) {
+                    return false;
+                }
+
+                // G3
+                var othersHaveNull = self.reference.facetColumns.some(function (fc, index) {
+                    return index !== self.index && fc.hasNullFilter && fc.ermrestHasPath;
+                });
+
+                return othersHaveNull;
+
             };
             this._hideNullChoice = getHideNull(this);
         }
