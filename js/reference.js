@@ -2408,6 +2408,7 @@
                         },
                         source: {
                             api: "attribute",
+                            // exporter will throw an error if the url is null, so we are adding the check for not-null.
                             path: (sourcePath ? sourcePath + "/": "") + "!(" + encode(col.name) + "::null::)/" + path.join(",")
                         }
                     };
