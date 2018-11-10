@@ -51,7 +51,7 @@ exports.execute = function (options) {
                     },
                     source: {
                         api: "attribute",
-                        path: "url:=asset_1,length:=asset_1_bytes,filename:=asset_1_filename,md5:=asset_1_md5"
+                        path: "!(asset_1::null::)/url:=asset_1,length:=asset_1_bytes,filename:=asset_1_filename,md5:=asset_1_md5"
                     }
                 },
                 {
@@ -61,7 +61,7 @@ exports.execute = function (options) {
                     },
                     source: {
                         api: "attribute",
-                        path: "url:=asset_2,length:=asset_2_bytes,filename:=asset_2_filename,sha256:=asset_2_sha256"
+                        path: "!(asset_2::null::)/url:=asset_2,length:=asset_2_bytes,filename:=asset_2_filename,sha256:=asset_2_sha256"
                     }
                 },
                 {
@@ -71,7 +71,7 @@ exports.execute = function (options) {
                     },
                     source: {
                         api: "entity",
-                        path: schema + ":f1"
+                        path: "(id)=(" + schema + ":f1:id)"
                     }
                 },
                 {
@@ -81,7 +81,7 @@ exports.execute = function (options) {
                     },
                     source: {
                         api: "attribute",
-                        path: schema + ":f1/url:=asset_1,length:=asset_1_bytes,filename:=asset_1_filename,md5:=asset_1_md5"
+                        path: "(id)=(" + schema + ":f1:id)/!(asset_1::null::)/url:=asset_1,length:=asset_1_bytes,filename:=asset_1_filename,md5:=asset_1_md5"
                     }
                 },
                 {
@@ -111,7 +111,7 @@ exports.execute = function (options) {
                     },
                     source: {
                         api: "attribute",
-                        path: "(id)=(" + schema + ":no_export_annot_f2_assoc:id_no_export_annot)/(id_f2)=(" + schema + ":f2:id)/(id)=(" + schema + ":f3:id)/url:=asset_1,length:=asset_1_bytes,filename:=asset_1_filename,md5:=asset_1_md5"
+                        path: "(id)=(" + schema + ":no_export_annot_f2_assoc:id_no_export_annot)/(id_f2)=(" + schema + ":f2:id)/(id)=(" + schema + ":f3:id)/!(asset_1::null::)/url:=asset_1,length:=asset_1_bytes,filename:=asset_1_filename,md5:=asset_1_md5"
                     }
                 }
             ];
@@ -171,53 +171,62 @@ exports.execute = function (options) {
                 });
             });
 
-            describe("reference.exportTemplates, ", function () {
+            describe("reference.getExportTemplates, ", function () {
+                var templates;
                 it ("if valid templates are defined on the table, should return them.", function () {
-                    expect(reference.exportTemplates.length).toBe(3, "length missmatch");
-                    expect(reference.exportTemplates).toEqual(table.exportTemplates, "templates missmatch");
+                    templates = reference.getExportTemplates();
+                    expect(templates.length).toBe(3, "length missmatch");
+                    expect(templates).toEqual(table.exportTemplates, "templates missmatch");
                 });
 
-                it ("if template is missing outputs, should use the default output.", function () {
-                    var templates = noExportoutputReference.exportTemplates;
-                    expect(templates.length).toBe(1, "length missmatch");
-
-                    expect(templates[0].displayname).toBe("default schema template", "displayname missmatch");
-                    expect(templates[0].type).toBe("BAG", "type missmatch");
-
-                    var defaultOutput = getDefaultOutputs(schemaName2);
-
-                    // just to produce a better error message
-                    templates[0].outputs.forEach(function (temp, i) {
-                        expect(temp).toEqual(defaultOutput[i], "template missmatch for index=" + i);
-                    });
-                });
-
-                describe("if annotation is missing from table and schema, ", function () {
-                    it ("if context is not detailed should return an empty array.", function () {
-                        expect(noAnnotReference.exportTemplates.length).toBe(0);
-                    });
-
-                    it ("otherwise should return the default export template.", function () {
-                        var templates = noAnnotReference.contextualize.detailed.exportTemplates;
+                describe('when useDefault is true,', function () {
+                    it ("if template is missing outputs, should use the default output.", function () {
+                        var templates = noExportoutputReference.getExportTemplates(true);
                         expect(templates.length).toBe(1, "length missmatch");
 
-                        expect(templates[0].displayname).toBe("BAG", "displayname missmatch");
+                        expect(templates[0].displayname).toBe("default schema template", "displayname missmatch");
                         expect(templates[0].type).toBe("BAG", "type missmatch");
 
-                        var defaultOutput = getDefaultOutputs(schemaName1);
+                        var defaultOutput = getDefaultOutputs(schemaName2);
 
                         // just to produce a better error message
                         templates[0].outputs.forEach(function (temp, i) {
                             expect(temp).toEqual(defaultOutput[i], "template missmatch for index=" + i);
                         });
                     });
+
+                    describe("if annotation is missing from table and schema, ", function () {
+                        it ("if context is not detailed should return an empty array.", function () {
+                            expect(noAnnotReference.getExportTemplates(true).length).toBe(0);
+                        });
+
+                        it ("otherwise should return the default export template.", function () {
+                            var templates = noAnnotReference.contextualize.detailed.getExportTemplates(true);
+                            expect(templates.length).toBe(1, "length missmatch");
+
+                            expect(templates[0].displayname).toBe("BAG", "displayname missmatch");
+                            expect(templates[0].type).toBe("BAG", "type missmatch");
+
+                            var defaultOutput = getDefaultOutputs(schemaName1);
+
+                            // just to produce a better error message
+                            templates[0].outputs.forEach(function (temp, i) {
+                                expect(temp).toEqual(defaultOutput[i], "template missmatch for index=" + i);
+                            });
+                        });
+                    });
+                });
+
+                it ("otherwise should return empty.", function () {
+                    var templates = noAnnotReference.contextualize.detailed.getExportTemplates(false);
+                    expect(templates.length).toBe(0);
                 });
 
             });
 
             describe("for BDBag template", function () {
                 it("should create an exporter object", function() {
-                    exportObj = new ermRest.Exporter(reference, reference.table.exportTemplates[0]);
+                    exportObj = new ermRest.Exporter(reference, "bag-name", reference.table.exportTemplates[0]);
 
                     expect(exportObj instanceof ermRest.Exporter).toBe(true);
                     expect(exportObj.template).toEqual(reference.table.exportTemplates[0]);
@@ -227,7 +236,7 @@ exports.execute = function (options) {
                     var exportParams = exportObj.exportParameters;
 
                     expect(exportParams.bag).toBeDefined();
-                    expect(exportParams.bag.bag_name).toBe(exportObj.formatOptions.BAG.name);
+                    expect(exportParams.bag.bag_name).toBe("bag-name");
                     expect(exportParams.bag.bag_algorithms).toBe(exportObj.formatOptions.BAG.algs);
                     expect(exportParams.bag.bag_archiver).toBe(exportObj.formatOptions.BAG.archiver);
                     expect(exportParams.bag.bag_metadata).toBe(exportObj.formatOptions.BAG.metadata);
@@ -267,7 +276,7 @@ exports.execute = function (options) {
 
             describe("for BDBag CSV template", function () {
                 it("should create an exporter object", function() {
-                    exportObj = new ermRest.Exporter(reference, reference.table.exportTemplates[1]);
+                    exportObj = new ermRest.Exporter(reference, "bag-name", reference.table.exportTemplates[1]);
 
                     expect(exportObj instanceof ermRest.Exporter).toBe(true);
                     expect(exportObj.template).toEqual(reference.table.exportTemplates[1]);
@@ -277,7 +286,7 @@ exports.execute = function (options) {
                     var exportParams = exportObj.exportParameters;
 
                     expect(exportParams.bag).toBeDefined();
-                    expect(exportParams.bag.bag_name).toBe(exportObj.formatOptions.BAG.name);
+                    expect(exportParams.bag.bag_name).toBe("bag-name");
                     expect(exportParams.bag.bag_algorithms).toBe(exportObj.formatOptions.BAG.algs);
                     expect(exportParams.bag.bag_archiver).toBe(exportObj.formatOptions.BAG.archiver);
                     expect(exportParams.bag.bag_metadata).toBe(exportObj.formatOptions.BAG.metadata);
@@ -317,7 +326,7 @@ exports.execute = function (options) {
 
             describe("for BDBag JSON template", function () {
                 it("should create an exporter object", function() {
-                    exportObj = new ermRest.Exporter(reference, reference.table.exportTemplates[2]);
+                    exportObj = new ermRest.Exporter(reference, "bag-name", reference.table.exportTemplates[2]);
 
                     expect(exportObj instanceof ermRest.Exporter).toBe(true);
                     expect(exportObj.template).toEqual(reference.table.exportTemplates[2]);
@@ -327,7 +336,7 @@ exports.execute = function (options) {
                     var exportParams = exportObj.exportParameters;
 
                     expect(exportParams.bag).toBeDefined();
-                    expect(exportParams.bag.bag_name).toBe(exportObj.formatOptions.BAG.name);
+                    expect(exportParams.bag.bag_name).toBe("bag-name");
                     expect(exportParams.bag.bag_algorithms).toBe(exportObj.formatOptions.BAG.algs);
                     expect(exportParams.bag.bag_archiver).toBe(exportObj.formatOptions.BAG.archiver);
                     expect(exportParams.bag.bag_metadata).toBe(exportObj.formatOptions.BAG.metadata);

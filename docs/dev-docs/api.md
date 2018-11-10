@@ -313,7 +313,6 @@ to use for ERMrest JavaScript agents.
         * [.appLink](#ERMrest.Reference+appLink) : <code>String</code>
         * [.csvDownloadLink](#ERMrest.Reference+csvDownloadLink) ⇒ <code>String</code>
         * [.defaultLogInfo](#ERMrest.Reference+defaultLogInfo) : <code>Object</code>
-        * [.exportTemplates](#ERMrest.Reference+exportTemplates) : <code>Object</code>
         * [.defaultExportTemplate](#ERMrest.Reference+defaultExportTemplate) : <code>string</code>
         * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
         * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
@@ -324,6 +323,7 @@ to use for ERMrest JavaScript agents.
         * [.delete(contextHeaderParams)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
             * [~self](#ERMrest.Reference+delete..self)
         * [.related([tuple])](#ERMrest.Reference+related) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
+        * [.getExportTemplates(useDefault)](#ERMrest.Reference+getExportTemplates) ⇒ <code>Object</code>
         * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
         * [.getAggregates(aggregateList)](#ERMrest.Reference+getAggregates) ⇒ <code>Promise</code>
         * [.setSamePaging(page)](#ERMrest.Reference+setSamePaging) ⇒ [<code>Reference</code>](#ERMrest.Reference)
@@ -516,7 +516,7 @@ to use for ERMrest JavaScript agents.
     * [.exporter](#ERMrest.exporter)
         * [new exporter(reference, template)](#new_ERMrest.exporter_new)
         * [.exportParameters](#ERMrest.exporter+exportParameters)
-        * [.run()](#ERMrest.exporter+run) ⇒ <code>Promise</code>
+        * [.run(contextHeaderParams)](#ERMrest.exporter+run) ⇒ <code>Promise</code>
         * [.cancel()](#ERMrest.exporter+cancel) ⇒ <code>boolean</code>
     * [.Checksum](#ERMrest.Checksum)
         * [new Checksum({file}, {options})](#new_ERMrest.Checksum_new)
@@ -598,7 +598,6 @@ to use for ERMrest JavaScript agents.
         * [.appLink](#ERMrest.Reference+appLink) : <code>String</code>
         * [.csvDownloadLink](#ERMrest.Reference+csvDownloadLink) ⇒ <code>String</code>
         * [.defaultLogInfo](#ERMrest.Reference+defaultLogInfo) : <code>Object</code>
-        * [.exportTemplates](#ERMrest.Reference+exportTemplates) : <code>Object</code>
         * [.defaultExportTemplate](#ERMrest.Reference+defaultExportTemplate) : <code>string</code>
         * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
         * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
@@ -609,6 +608,7 @@ to use for ERMrest JavaScript agents.
         * [.delete(contextHeaderParams)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
             * [~self](#ERMrest.Reference+delete..self)
         * [.related([tuple])](#ERMrest.Reference+related) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
+        * [.getExportTemplates(useDefault)](#ERMrest.Reference+getExportTemplates) ⇒ <code>Object</code>
         * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
         * [.getAggregates(aggregateList)](#ERMrest.Reference+getAggregates) ⇒ <code>Promise</code>
         * [.setSamePaging(page)](#ERMrest.Reference+setSamePaging) ⇒ [<code>Reference</code>](#ERMrest.Reference)
@@ -2581,7 +2581,6 @@ Constructor for a ParsedFilter.
     * [.appLink](#ERMrest.Reference+appLink) : <code>String</code>
     * [.csvDownloadLink](#ERMrest.Reference+csvDownloadLink) ⇒ <code>String</code>
     * [.defaultLogInfo](#ERMrest.Reference+defaultLogInfo) : <code>Object</code>
-    * [.exportTemplates](#ERMrest.Reference+exportTemplates) : <code>Object</code>
     * [.defaultExportTemplate](#ERMrest.Reference+defaultExportTemplate) : <code>string</code>
     * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
     * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
@@ -2592,6 +2591,7 @@ Constructor for a ParsedFilter.
     * [.delete(contextHeaderParams)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
         * [~self](#ERMrest.Reference+delete..self)
     * [.related([tuple])](#ERMrest.Reference+related) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
+    * [.getExportTemplates(useDefault)](#ERMrest.Reference+getExportTemplates) ⇒ <code>Object</code>
     * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
     * [.getAggregates(aggregateList)](#ERMrest.Reference+getAggregates) ⇒ <code>Promise</code>
     * [.setSamePaging(page)](#ERMrest.Reference+setSamePaging) ⇒ [<code>Reference</code>](#ERMrest.Reference)
@@ -2864,15 +2864,6 @@ NOTE It will not have the same sort and paging as the reference.
 The default information that we want to be logged including catalog, schema_table, and facet (filter).
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
-<a name="ERMrest.Reference+exportTemplates"></a>
-
-#### reference.exportTemplates : <code>Object</code>
-Will return the expor templates that are available for this reference.
-It will validate the templates that are defined in annotation.
-If its `detailed` context and annotation was missing,
-it will return the default export template.
-
-**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+defaultExportTemplate"></a>
 
 #### reference.defaultExportTemplate : <code>string</code>
@@ -3058,6 +3049,20 @@ has other moderating attributes, for instance that indicate the
 | Param | Type | Description |
 | --- | --- | --- |
 | [tuple] | [<code>Tuple</code>](#ERMrest.Tuple) | the current tuple |
+
+<a name="ERMrest.Reference+getExportTemplates"></a>
+
+#### reference.getExportTemplates(useDefault) ⇒ <code>Object</code>
+Will return the expor templates that are available for this reference.
+It will validate the templates that are defined in annotation.
+If its `detailed` context and annotation was missing,
+it will return the default export template.
+
+**Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| useDefault | <code>Boolean</code> | whether we should use default template or not |
 
 <a name="ERMrest.Reference+search"></a>
 
@@ -5099,7 +5104,7 @@ Therefore the returned count might not be exactly the same as number of returned
 * [.exporter](#ERMrest.exporter)
     * [new exporter(reference, template)](#new_ERMrest.exporter_new)
     * [.exportParameters](#ERMrest.exporter+exportParameters)
-    * [.run()](#ERMrest.exporter+run) ⇒ <code>Promise</code>
+    * [.run(contextHeaderParams)](#ERMrest.exporter+run) ⇒ <code>Promise</code>
     * [.cancel()](#ERMrest.exporter+cancel) ⇒ <code>boolean</code>
 
 <a name="new_ERMrest.exporter_new"></a>
@@ -5121,10 +5126,15 @@ TODO: add description
 **Kind**: instance property of [<code>exporter</code>](#ERMrest.exporter)  
 <a name="ERMrest.exporter+run"></a>
 
-#### exporter.run() ⇒ <code>Promise</code>
+#### exporter.run(contextHeaderParams) ⇒ <code>Promise</code>
 sends the export request to ioboxd
 
 **Kind**: instance method of [<code>exporter</code>](#ERMrest.exporter)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| contextHeaderParams | <code>Object</code> | the object that will be logged |
+
 <a name="ERMrest.exporter+cancel"></a>
 
 #### exporter.cancel() ⇒ <code>boolean</code>
@@ -5700,7 +5710,6 @@ get PathColumn object by column name
     * [.appLink](#ERMrest.Reference+appLink) : <code>String</code>
     * [.csvDownloadLink](#ERMrest.Reference+csvDownloadLink) ⇒ <code>String</code>
     * [.defaultLogInfo](#ERMrest.Reference+defaultLogInfo) : <code>Object</code>
-    * [.exportTemplates](#ERMrest.Reference+exportTemplates) : <code>Object</code>
     * [.defaultExportTemplate](#ERMrest.Reference+defaultExportTemplate) : <code>string</code>
     * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
     * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
@@ -5711,6 +5720,7 @@ get PathColumn object by column name
     * [.delete(contextHeaderParams)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
         * [~self](#ERMrest.Reference+delete..self)
     * [.related([tuple])](#ERMrest.Reference+related) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
+    * [.getExportTemplates(useDefault)](#ERMrest.Reference+getExportTemplates) ⇒ <code>Object</code>
     * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
     * [.getAggregates(aggregateList)](#ERMrest.Reference+getAggregates) ⇒ <code>Promise</code>
     * [.setSamePaging(page)](#ERMrest.Reference+setSamePaging) ⇒ [<code>Reference</code>](#ERMrest.Reference)
@@ -5983,15 +5993,6 @@ NOTE It will not have the same sort and paging as the reference.
 The default information that we want to be logged including catalog, schema_table, and facet (filter).
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
-<a name="ERMrest.Reference+exportTemplates"></a>
-
-#### reference.exportTemplates : <code>Object</code>
-Will return the expor templates that are available for this reference.
-It will validate the templates that are defined in annotation.
-If its `detailed` context and annotation was missing,
-it will return the default export template.
-
-**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+defaultExportTemplate"></a>
 
 #### reference.defaultExportTemplate : <code>string</code>
@@ -6177,6 +6178,20 @@ has other moderating attributes, for instance that indicate the
 | Param | Type | Description |
 | --- | --- | --- |
 | [tuple] | [<code>Tuple</code>](#ERMrest.Tuple) | the current tuple |
+
+<a name="ERMrest.Reference+getExportTemplates"></a>
+
+#### reference.getExportTemplates(useDefault) ⇒ <code>Object</code>
+Will return the expor templates that are available for this reference.
+It will validate the templates that are defined in annotation.
+If its `detailed` context and annotation was missing,
+it will return the default export template.
+
+**Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| useDefault | <code>Boolean</code> | whether we should use default template or not |
 
 <a name="ERMrest.Reference+search"></a>
 

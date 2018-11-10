@@ -2247,29 +2247,27 @@
          * It will validate the templates that are defined in annotation.
          * If its `detailed` context and annotation was missing,
          * it will return the default export template.
-         * @type {Object}
+         * @param {Boolean} useDefault whether we should use default template or not
+         * @return {Object}
          */
-        get exportTemplates() {
-            if (this._exportTemplates === undefined) {
-                var self = this;
+        getExportTemplates: function (useDefault) {
+            var self = this;
 
-                // either null or array
-                var res = self.table.exportTemplates;
+            // either null or array
+            var res = self.table.exportTemplates;
 
-                // annotation is missing
-                if (res === null) {
-                    self._exportTemplates = (self._context === module._contexts.DETAILED) ? [self.defaultExportTemplate]: [];
-                } else {
-                    // add missing outputs
-                    res.forEach(function (t) {
-                        if (!t.outputs) {
-                            t.outputs = self.defaultExportTemplate.outputs;
-                        }
-                    });
-                    self._exportTemplates = res;
-                }
+            // annotation is missing
+            if (res === null) {
+                return (self._context === module._contexts.DETAILED && useDefault) ? [self.defaultExportTemplate]: [];
             }
-            return this._exportTemplates;
+
+            // add missing outputs
+            res.forEach(function (t) {
+                if (!t.outputs) {
+                    t.outputs = self.defaultExportTemplate.outputs;
+                }
+            });
+            return res;
         },
 
         /**
@@ -2410,7 +2408,8 @@
                         },
                         source: {
                             api: "attribute",
-                            path: (sourcePath ? sourcePath + "/": "") + path.join(",")
+                            // exporter will throw an error if the url is null, so we are adding the check for not-null.
+                            path: (sourcePath ? sourcePath + "/": "") + "!(" + encode(col.name) + "::null::)/" + path.join(",")
                         }
                     };
                 };
@@ -2430,18 +2429,17 @@
                     // the path that will be used for assets of related entities
                     var destinationPath = rel.displayname.unformatted;
                     // this will be used for source path
-                    var sourcePath = [encode(rel.table.schema.name), encode(rel.table.name)].join(":");
-
+                    var sourcePath;
                     if (rel.pseudoColumn) {
+                        // path from main to the related reference
+                        sourcePath = rel.pseudoColumn.foreignKeys.map(function (fk) {
+                            return fk.obj.toString(!fk.isInbound, false);
+                        }).join("/");
+
                         // path length one, just adding the table would be enough
                         if (rel.pseudoColumn.foreignKeys.length < 2) {
                             outputs.push(getEntityOutput(rel, sourcePath));
-                        }
-                        else {
-                            // path from main to the related reference
-                            sourcePath = rel.pseudoColumn.foreignKeys.map(function (fk) {
-                                return fk.obj.toString(!fk.isInbound, false);
-                            }).join("/");
+                        } else {
                             outputs.push(getAttributeGroupOutput(rel, sourcePath));
                         }
                     }
@@ -2453,6 +2451,7 @@
                     }
                     // single inbound related
                     else {
+                        sourcePath = rel.origFKR.toString(false, false);
                         outputs.push(getEntityOutput(rel, sourcePath));
                     }
 

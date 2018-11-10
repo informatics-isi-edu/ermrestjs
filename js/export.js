@@ -101,7 +101,7 @@ var ERMrest = (function(module) {
      * @returns {Export}
      * @constructor
      */
-    var exporter = function (reference, template) {
+    var exporter = function (reference, bagName, template) {
         if (!module.validateExportTemplate(template)) {
             throw new module.InvalidInputError("Given Template is not valid.");
         }
@@ -110,7 +110,7 @@ var ERMrest = (function(module) {
         this.template = template;
         this.formatOptions = {
             "BAG": {
-                name: reference.location.tableName,
+                name: bagName,
                 algs: ["md5"],
                 archiver: "zip",
                 metadata: {},
@@ -207,6 +207,7 @@ var ERMrest = (function(module) {
 
         /**
          * sends the export request to ioboxd
+         * @param {Object} contextHeaderParams the object that will be logged
          * @returns {Promise}
          */
         run: function (contextHeaderParams) {
