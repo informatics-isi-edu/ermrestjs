@@ -16,7 +16,6 @@ templates: [
       {
         source: {
           api: <ermrest-query-type>, // entity, attribute, attribute-group
-          table: <schema:table>
           path: <optional-ermrest-predicate> // used to represent more complex queries
         },
         destination: {
