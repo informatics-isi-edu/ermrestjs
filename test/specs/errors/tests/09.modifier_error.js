@@ -9,8 +9,8 @@ exports.execute = function(options) {
 
         var invalidPageConditionErrorObjWOSort = {
             'status': 'Invalid Page Criteria',
-            'messageWithCondition': "Invalid uri: " + options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ":" + tableName + "/id=269@after(). Sort modifier is required with paging.",
-            'messageWithConditions': "Invalid uri: " + options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ":" + tableName + "/id=269@after(3)@before(7). Sort modifier is required with paging.",
+            'messageWithCondition': "Sort modifier is required with paging.",
+            'messageWithConditions': "Sort modifier is required with paging.",
             'errorData': {
                 'redirectPath': schemaName + ":" + tableName + '/id=269'
             }
@@ -26,11 +26,11 @@ exports.execute = function(options) {
 
         var invalidFilterOperatorErrorObj = {
             'status': 'Invalid Filter',
-            'message': "Invalid uri: " + options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ":" + tableName + "/id::gt:269. Couldn't parse 'id::gt:269' filter.",
+            'message': "Couldn't parse 'id::gt:269' filter.",
             'errorData': {
                 'redirectPath': schemaName + ":" + tableName + '/'
             },
-            'messageWithSort': "Invalid uri: " + options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ":" + tableName + "/id::gt:269@sort(). Couldn't parse 'id::gt:269' filter.",
+            'messageWithSort': "Couldn't parse 'id::gt:269' filter.",
             'errorDataWithSort': {
                 'redirectPath': schemaName + ":" + tableName + '/@sort()'
             }

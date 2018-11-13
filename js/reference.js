@@ -188,7 +188,7 @@
         // if schema was not provided in the URI, find the schema
         this._table = catalog.schemas.findTable(location.tableName, location.schemaName);
 
-        this._rootTable = catalog.schemas.findTable(location.rootTableName, location.rootSchemaName);
+        this._facetBaseTable = catalog.schemas.findTable(location.facetBaseTableName, location.facetBaseSchemaName);
 
         this._shortestKey = this._table.shortestKey;
 
@@ -252,12 +252,12 @@
          },
 
          /**
-          * The root table object,
+          * The base table object that is used for faceting,
           * if there's a join in path, this will return a different object from .table
           * @type {ERMrest.Table}
           */
-         get rootTable() {
-             return this._rootTable;
+         get facetBaseTable() {
+             return this._facetBaseTable;
          },
 
         /**
@@ -2243,7 +2243,7 @@
 
         /**
          * Will return the expor templates that are available for this reference.
-         * It will validate the templates that are defined in annotation.
+         * It will validate the templates that are defined in annotations.
          * If its `detailed` context and annotation was missing,
          * it will return the default export template.
          * @type {Object}

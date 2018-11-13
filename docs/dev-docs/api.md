@@ -297,7 +297,7 @@ to use for ERMrest JavaScript agents.
         * [.displayname](#ERMrest.Reference+displayname) : <code>object</code>
         * [.uri](#ERMrest.Reference+uri) : <code>string</code>
         * [.table](#ERMrest.Reference+table) : [<code>Table</code>](#ERMrest.Table)
-        * [.rootTable](#ERMrest.Reference+rootTable) : [<code>Table</code>](#ERMrest.Table)
+        * [.facetBaseTable](#ERMrest.Reference+facetBaseTable) : [<code>Table</code>](#ERMrest.Table)
         * [.columns](#ERMrest.Reference+columns) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
         * [.facetColumns](#ERMrest.Reference+facetColumns) ⇒ [<code>Array.&lt;FacetColumn&gt;</code>](#ERMrest.FacetColumn)
         * [.location](#ERMrest.Reference+location) ⇒ <code>ERMrest.Location</code>
@@ -584,7 +584,7 @@ to use for ERMrest JavaScript agents.
         * [.displayname](#ERMrest.Reference+displayname) : <code>object</code>
         * [.uri](#ERMrest.Reference+uri) : <code>string</code>
         * [.table](#ERMrest.Reference+table) : [<code>Table</code>](#ERMrest.Table)
-        * [.rootTable](#ERMrest.Reference+rootTable) : [<code>Table</code>](#ERMrest.Table)
+        * [.facetBaseTable](#ERMrest.Reference+facetBaseTable) : [<code>Table</code>](#ERMrest.Table)
         * [.columns](#ERMrest.Reference+columns) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
         * [.facetColumns](#ERMrest.Reference+facetColumns) ⇒ [<code>Array.&lt;FacetColumn&gt;</code>](#ERMrest.FacetColumn)
         * [.location](#ERMrest.Reference+location) ⇒ <code>ERMrest.Location</code>
@@ -2567,7 +2567,7 @@ Constructor for a ParsedFilter.
     * [.displayname](#ERMrest.Reference+displayname) : <code>object</code>
     * [.uri](#ERMrest.Reference+uri) : <code>string</code>
     * [.table](#ERMrest.Reference+table) : [<code>Table</code>](#ERMrest.Table)
-    * [.rootTable](#ERMrest.Reference+rootTable) : [<code>Table</code>](#ERMrest.Table)
+    * [.facetBaseTable](#ERMrest.Reference+facetBaseTable) : [<code>Table</code>](#ERMrest.Table)
     * [.columns](#ERMrest.Reference+columns) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
     * [.facetColumns](#ERMrest.Reference+facetColumns) ⇒ [<code>Array.&lt;FacetColumn&gt;</code>](#ERMrest.FacetColumn)
     * [.location](#ERMrest.Reference+location) ⇒ <code>ERMrest.Location</code>
@@ -2666,10 +2666,10 @@ Should not be used for sending requests to ermrest, use this.location.ermrestCom
 The table object for this reference
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
-<a name="ERMrest.Reference+rootTable"></a>
+<a name="ERMrest.Reference+facetBaseTable"></a>
 
-#### reference.rootTable : [<code>Table</code>](#ERMrest.Table)
-The root table object,
+#### reference.facetBaseTable : [<code>Table</code>](#ERMrest.Table)
+The base table object that is used for faceting,
 if there's a join in path, this will return a different object from .table
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
@@ -2870,7 +2870,7 @@ The default information that we want to be logged including catalog, schema_tabl
 
 #### reference.exportTemplates : <code>Object</code>
 Will return the expor templates that are available for this reference.
-It will validate the templates that are defined in annotation.
+It will validate the templates that are defined in annotations.
 If its `detailed` context and annotation was missing,
 it will return the default export template.
 
@@ -5727,7 +5727,7 @@ get PathColumn object by column name
     * [.displayname](#ERMrest.Reference+displayname) : <code>object</code>
     * [.uri](#ERMrest.Reference+uri) : <code>string</code>
     * [.table](#ERMrest.Reference+table) : [<code>Table</code>](#ERMrest.Table)
-    * [.rootTable](#ERMrest.Reference+rootTable) : [<code>Table</code>](#ERMrest.Table)
+    * [.facetBaseTable](#ERMrest.Reference+facetBaseTable) : [<code>Table</code>](#ERMrest.Table)
     * [.columns](#ERMrest.Reference+columns) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
     * [.facetColumns](#ERMrest.Reference+facetColumns) ⇒ [<code>Array.&lt;FacetColumn&gt;</code>](#ERMrest.FacetColumn)
     * [.location](#ERMrest.Reference+location) ⇒ <code>ERMrest.Location</code>
@@ -5826,10 +5826,10 @@ Should not be used for sending requests to ermrest, use this.location.ermrestCom
 The table object for this reference
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
-<a name="ERMrest.Reference+rootTable"></a>
+<a name="ERMrest.Reference+facetBaseTable"></a>
 
-#### reference.rootTable : [<code>Table</code>](#ERMrest.Table)
-The root table object,
+#### reference.facetBaseTable : [<code>Table</code>](#ERMrest.Table)
+The base table object that is used for faceting,
 if there's a join in path, this will return a different object from .table
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
@@ -6030,7 +6030,7 @@ The default information that we want to be logged including catalog, schema_tabl
 
 #### reference.exportTemplates : <code>Object</code>
 Will return the expor templates that are available for this reference.
-It will validate the templates that are defined in annotation.
+It will validate the templates that are defined in annotations.
 If its `detailed` context and annotation was missing,
 it will return the default export template.
 

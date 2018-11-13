@@ -3221,7 +3221,8 @@
         invalidRange: "invalid ranges value.",
         invalidSearch: "invalid search value.",
         missingConstraints: "No constraints are defined for the facet.",
-        onlyOneNullFilter: "Only one null filter is allowed in the facets"
+        onlyOneNullFilter: "Only one null filter is allowed in the facets",
+        duplicateFacets: "Cannot define two different sets of facets"
     });
 
     module._HTTPErrorCodes = Object.freeze({

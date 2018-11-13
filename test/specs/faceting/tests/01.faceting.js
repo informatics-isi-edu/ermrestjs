@@ -95,17 +95,11 @@ exports.execute = function (options) {
              expect(disp.isHTML).toBe(isHTML, "isHTML missmatch for index="+ index);
          };
 
-         var checkSourceReference = function (fcName, fc, compactPath, rootFacets, colName) {
+         var checkSourceReference = function (fcName, fc, compactPath, colName) {
              var sr = fc.sourceReference;
              var col = fc.column;
 
              expect(sr.location.ermrestCompactPath).toBe(compactPath, fcName + ": compactPath missmatch.");
-             expect(sr.location.facets).toBeUndefined(fcName + ": facets was defined.");
-             expect(sr.location.rootFacets).toBeDefined(fcName + ": didn't have projection facets.");
-             expect(JSON.stringify(sr.location.rootFacets.decoded)).toEqual(
-                 JSON.stringify(rootFacets),
-                 fcName + ": rootFacets missmatch."
-             );
              expect(col._baseReference).toBe(sr, fcName + ": column wasn't based on sourceReference.");
              expect(col.name).toBe(colName, fcName + ": colname missmatch.");
          };
@@ -643,6 +637,7 @@ exports.execute = function (options) {
             it ("should return all facets and filters if input is not true.", function () {
                 var newRef = ref.removeAllFacetFilters();
                 expect(newRef).not.toBe(ref, "reference didn't change.");
+                expect(ref.location.facets).toBeDefined("original reference changed.");
                 expect(newRef.location.filter).toBeUndefined("filter missmatch.");
                 expect(newRef.location.facets).toBeUndefined("facets was defined.");
                 expect(newRef.facetColumns.filter(function (f) {
@@ -653,8 +648,9 @@ exports.execute = function (options) {
             it ("otherwise should only remove the filters.", function () {
                 var newRef = ref.removeAllFacetFilters(false, false, true);
                 expect(newRef).not.toBe(ref, "reference didn't change.");
+                expect(ref.location.filtersString).toBeDefined("original reference changed.");
                 expect(newRef.location.filter).toBeUndefined("filter missmatch.");
-                expect(newRef.location.facets).toBeDefined("facets was defined.");
+                expect(newRef.location.facets).toBeDefined("facets missmatch.");
                 expect(JSON.stringify(newRef.location.facets.decoded)).toEqual(JSON.stringify(
                     {and: [{"source": "id", "choices": ["1"]}]}
                 ));
@@ -1257,12 +1253,6 @@ exports.execute = function (options) {
                         "mainTable, index=0",
                         refMainMoreFilters.facetColumns[0],
                         "M:=faceting_schema:main/int_col::geq::-2/$M/text_col=a;text_col=b;text_col::geq::a;text_col::leq::b;text_col::ciregexp::a;text_col::ciregexp::b/$M",
-                        {
-                            "and":[
-                                {"source": "int_col", "ranges": [{"min":-2}]},
-                                {"source": "text_col", "choices": ["a","b"], "ranges": [ {"min":"a"},{"max":"b"}], "search": ["a","b"]}
-                            ]
-                        },
                         "id"
                     );
 
@@ -1270,12 +1260,6 @@ exports.execute = function (options) {
                         "mainTable, index=1",
                         refMainMoreFilters.facetColumns[1],
                         "M:=faceting_schema:main/id=1/$M/text_col=a;text_col=b;text_col::geq::a;text_col::leq::b;text_col::ciregexp::a;text_col::ciregexp::b/$M",
-                        {
-                            "and":[
-                                {"source": "id", "choices": ["1"]},
-                                {"source": "text_col", "choices": ["a","b"], "ranges": [ {"min":"a"},{"max":"b"}], "search": ["a","b"]}
-                            ]
-                        },
                         "int_col"
                     );
 
@@ -1283,12 +1267,6 @@ exports.execute = function (options) {
                         "mainTable, index =5",
                         refMainMoreFilters.facetColumns[5],
                         "M:=faceting_schema:main/id=1/$M/int_col::geq::-2/$M",
-                        {
-                            "and":[
-                                {"source": "id", "choices": ["1"]},
-                                {"source": "int_col", "ranges": [{"min":-2}]}
-                            ]
-                        },
                         "text_col"
                     );
                 });
@@ -1298,7 +1276,6 @@ exports.execute = function (options) {
                         "secondpath_2, index=0",
                         refSP2.facetColumns[0],
                         "M:=faceting_schema:secondpath_2/*::ciregexp::term/$M",
-                        {"and":[{"source":"*","search":["term"]}]},
                         "id"
                     );
 
@@ -1307,13 +1284,6 @@ exports.execute = function (options) {
                         "mainTable, index=0, with search",
                         ref.facetColumns[5],
                         "M:=faceting_schema:main/*::ciregexp::sometext/$M/id=1/$M/int_col::geq::-2/$M",
-                        {
-                            "and":[
-                                {"source":"*","search":["sometext"]},
-                                {"source": "id", "choices": ["1"]},
-                                {"source": "int_col", "ranges": [{"min":-2}]}
-                            ]
-                        },
                         "text_col"
                     );
                 });
@@ -1323,12 +1293,6 @@ exports.execute = function (options) {
                         "mainTable with filter on FK, index = 11",
                         refMainFilterOnFK.facetColumns[11],
                         "T:=faceting_schema:main/id=1/$T/int_col::geq::-2/$T/M:=(fk_to_f2)=(faceting_schema:f2:id)",
-                        {
-                            "and":[
-                                {"source": "id", "choices": ["1"]},
-                                {"source": "int_col", "ranges": [{"min":-2}]}
-                            ]
-                        },
                         "id"
                     );
 
@@ -1336,12 +1300,6 @@ exports.execute = function (options) {
                         "mainTable with filter on FK, index = 0",
                         refMainFilterOnFK.facetColumns[0],
                         "M:=faceting_schema:main/int_col::geq::-2/$M/fk_to_f2=2;fk_to_f2=3/$M",
-                        {
-                            "and":[
-                                {"source": "int_col", "ranges": [{"min":-2}]},
-                                {"source": [{ "outbound":["faceting_schema", "main_fk2"]}, "id"], "choices":["2", "3"]}
-                            ]
-                        },
                         "id"
                     );
                 });
@@ -1358,10 +1316,10 @@ exports.execute = function (options) {
                     var cfacetBlob = "N4IgJglgzgDgNgQwJ4DsEFsCmIBcIAumU+IANCJgE7qVH4D6MC+AFriABQBmA1vfgHt6XAEwBKALzcEAY0z4IKAOb0oMlpnQIconBDBiA9IWo4cMiLSWYAHjDOFihgCQBZQ9z6DhARknS5BWVVdU1tLh89A2MqdDMLK1t7HEd8F1cQAF8gA";
                     // facet: {"and": [{"source": "id", "choices": [2]}, {"source": "int_col", "ranges": [{"min": -5}]}]}
                     var facetBlob = "N4IghgdgJiBcDaoDOB7ArgJwMYFM4gEsYAaELACxQNyTngCYBdAX2OXWz1kIgBcB9LCgA2IUhkgBzHLQSgAtgQhwAtAFZmLFkA";
-                    options.ermRest.resolve(createURL(tableMain) + "/*::cfacets::" + cfacetBlob + "/*::facets::" + facetBlob).then(function (ref) {
+                    options.ermRest.resolve(createURL(tableMain) + "/*::facets::" + facetBlob + "/*::cfacets::" + cfacetBlob).then(function (ref) {
                         expect(ref.facetColumns[0].sourceReference.location.ermrestCompactPath).toEqual("M:=faceting_schema:main/int_col::geq::-5/$M/(fk_to_f2)=(faceting_schema:f2:id)/term::ciregexp::test/$M/(fk_to_f1)=(faceting_schema:f1:id)/term::ciregexp::test/$M", "sourceReference index=0 missmatch");
                         expect(ref.facetColumns[11].sourceReference.location.ermrestCompactPath).toEqual("T:=faceting_schema:main/id=2/$T/int_col::geq::-5/$T/(fk_to_f2)=(faceting_schema:f2:id)/term::ciregexp::test/$T/(fk_to_f1)=(faceting_schema:f1:id)/term::ciregexp::test/$T/M:=(fk_to_f2)=(faceting_schema:f2:id)", "sourceReference index=11 missmatch");
-                        expect(ref.location.ermrestCompactPath).toEqual("M:=faceting_schema:main/(fk_to_f2)=(faceting_schema:f2:id)/term::ciregexp::test/$M/(fk_to_f1)=(faceting_schema:f1:id)/term::ciregexp::test/$M/id=2/$M/int_col::geq::-5/$M", "reference ermrestCompactPath missmatch");
+                        expect(ref.location.ermrestCompactPath).toEqual("M:=faceting_schema:main/id=2/$M/int_col::geq::-5/$M/(fk_to_f2)=(faceting_schema:f2:id)/term::ciregexp::test/$M/(fk_to_f1)=(faceting_schema:f1:id)/term::ciregexp::test/$M", "reference ermrestCompactPath missmatch");
                         done();
                     }).catch(function (err) {
                         done.fail(err);
@@ -1687,39 +1645,6 @@ exports.execute = function (options) {
                     "faceting_schema:secondpath_2/RID=1;RID::null::/(id)=(faceting_schema:secondpath_1:id)/M:=right(id)=(faceting_schema:main:id)/" + "int_col::geq::-2/$M/float_col::geq::-1&float_col::leq::20.2/$M/" +
                     "(id)=(faceting_schema:main_f3_assoc:id_main)/(id_f3)=(faceting_schema:f3:id)/term::ciregexp::t/$M/" +
                     "(id)=(faceting_schema:longpath_1:id)/(id)=(faceting_schema:longpath_2:id)/(id)=(faceting_schema:longpath_3:id)/(id)=(faceting_schema:longpath_4:id)/(id)=(faceting_schema:longpath_5:id)/col=a;col=test/$M",
-                    {
-                        "and": [
-                            {"source":"int_col","ranges":[{"min":-2}]},
-                            {"source":["float_col"],"ranges":[{"max":20.2,"min":-1}]},
-                            {
-                                "source": [
-                                    {"inbound":  ["faceting_schema","main_f3_assoc_fk1"]},
-                                    {"outbound": ["faceting_schema","main_f3_assoc_fk2"]},
-                                    "term"
-                                ],
-                                "search": ["t"]
-                            },
-                            {
-                                "source": [
-                                    {"inbound": ["faceting_schema","longpath_1_fk1"]},
-                                    {"inbound": ["faceting_schema","longpath_2_fk1"]},
-                                    {"inbound": ["faceting_schema","longpath_3_fk1"]},
-                                    {"inbound": ["faceting_schema","longpath_4_fk1"]},
-                                    {"inbound": ["faceting_schema","longpath_5_fk1"]},
-                                    "col"
-                                ],
-                                "choices":["a","test"]
-                            },
-                            {
-                                "source": [
-                                    {"inbound": ["faceting_schema", "secondpath_1_fk1"]},
-                                    {"inbound": ["faceting_schema", "secondpath_2_fk1"]},
-                                    "RID"
-                                ],
-                                "choices": ["1", null]
-                            }
-                        ]
-                    },
                     "id"
                 );
 
@@ -1730,29 +1655,6 @@ exports.execute = function (options) {
                     "id=1/$T/int_col::geq::-2/$T/float_col::geq::-1&float_col::leq::20.2/$T/" +
                     "(id)=(faceting_schema:main_f3_assoc:id_main)/(id_f3)=(faceting_schema:f3:id)/term::ciregexp::t/$T/" +
                     "(id)=(faceting_schema:longpath_1:id)/(id)=(faceting_schema:longpath_2:id)/(id)=(faceting_schema:longpath_3:id)/(id)=(faceting_schema:longpath_4:id)/M:=(id)=(faceting_schema:longpath_5:id)",
-                    {
-                        "and": [
-                            {"source": "id", "choices":["1"]},
-                            {"source":"int_col","ranges":[{"min":-2}]},
-                            {"source":["float_col"],"ranges":[{"max":20.2,"min":-1}]},
-                            {
-                                "source": [
-                                    {"inbound":  ["faceting_schema","main_f3_assoc_fk1"]},
-                                    {"outbound": ["faceting_schema","main_f3_assoc_fk2"]},
-                                    "term"
-                                ],
-                                "search": ["t"]
-                            },
-                            {
-                                "source": [
-                                    {"inbound": ["faceting_schema", "secondpath_1_fk1"]},
-                                    {"inbound": ["faceting_schema", "secondpath_2_fk1"]},
-                                    "RID"
-                                ],
-                                "choices": ["1", null]
-                            }
-                        ]
-                    },
                     "col"
                 );
             });

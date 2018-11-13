@@ -2159,21 +2159,13 @@ FacetColumn.prototype = {
                 table = this.reference.table,
                 loc = this.reference.location;
 
-            pathFromSource.push(module._fixedEncodeURIComponent(table.schema.name) + ":" + module._fixedEncodeURIComponent(table.name));
-
-            if (loc.filtersString) {
-                pathFromSource.push(loc.filtersString);
-            }
-
-            // create a path from reference to this facetColumn
-            this.foreignKeys.forEach(function (fkObj) {
-                pathFromSource.push(fkObj.obj.toString(!fkObj.isInbound, false));
-            });
 
             // TODO might be able to improve this
             if (typeof loc.searchTerm === "string") {
                 jsonFilters.push({"source": "*", "search": [loc.searchTerm]});
             }
+
+            var newLoc = module.parse(loc.compactUri);
 
             //get all the filters from other facetColumns
             if (loc.facets !== null) {
@@ -2186,13 +2178,11 @@ FacetColumn.prototype = {
                 });
             }
 
-            var uri = [
-                table.schema.catalog.server.uri ,"catalog" ,
-                table.schema.catalog.id, "entity",
-                pathFromSource.join("/")
-            ].join("/");
-
-            this._sourceReference = new Reference(module.parse(uri), table.schema.catalog);
+            if (jsonFilters.length > 0) {
+                newLoc.facets = {"and": jsonFilters};
+            } else {
+                newLoc.facets = null;
+            }
 
             // add custom facets as the facets of the parent
             if (loc.customFacets) {
@@ -2209,21 +2199,27 @@ FacetColumn.prototype = {
                 // You can see why we are changing $M to $T.
                 //
                 // As I mentioned this is hacky, so we should eventually find a way around this.
-                var cfacet = module._simpleDeepCopy(loc.customFacets.decoded);
+                cfacet = module._simpleDeepCopy(loc.customFacets.decoded);
                 if (cfacet.ermrest_path && self.foreignKeys.length > 0) {
                     // switch the alias names, the cfacet is originally written with the assumption of
                     // the main table having "M" alias. So we just have to swap the aliases.
-                    cfacet.ermrest_path = cfacet.ermrest_path.replace(/\$\M/g, "$T");
+                    var alias = "T" + (newLoc.hasJoin ? newLoc.pathParts.length : "");
+                    cfacet.ermrest_path = cfacet.ermrest_path.replace(/\$\M/g, "$" + alias);
                 }
-
-                this._sourceReference._location.customFacets = cfacet;
+                newLoc.customFacets = cfacet;
             }
 
-            if (jsonFilters.length > 0) {
-                this._sourceReference._location.rootFacets = {"and": jsonFilters};
-            } else {
-                this._sourceReference._location.rootFacets = null;
+            // create a path from reference to this facetColumn
+            this.foreignKeys.forEach(function (fkObj) {
+                pathFromSource.push(fkObj.obj.toString(!fkObj.isInbound, false));
+            });
+
+            var uri = newLoc.compactUri;
+            if (pathFromSource.length > 0) {
+                uri += "/" + pathFromSource.join("/");
             }
+
+            this._sourceReference = new Reference(module.parse(uri), table.schema.catalog);
         }
         return this._sourceReference;
     },
@@ -3231,8 +3227,8 @@ ColumnGroupAggregateFn.prototype = {
             throw new Error("Cannot use this API on pseudo-column.");
         }
 
-        if (this._ref.location.hasJoin && this._ref.rootTable.shortestKey.length > 1) {
-            throw new Error("Table must have a simple key for entity counts: " + this._ref.rootTable.name);
+        if (this._ref.location.hasJoin && this._ref.facetBaseTable.shortestKey.length > 1) {
+            throw new Error("Table must have a simple key for entity counts: " + this._ref.facetBaseTable.name);
         }
 
         var countColName = "count",
@@ -3307,7 +3303,7 @@ ColumnGroupAggregateFn.prototype = {
         if (!hideNumOccurrences || sortCounts) {
             var countName = "cnt(*)";
             if (self._ref.location.hasJoin) {
-                countName = "cnt_d(" + self._ref.location.rootTableAlias + ":" + module._fixedEncodeURIComponent(self._ref.rootTable.shortestKey[0].name) + ")";
+                countName = "cnt_d(" + self._ref.location.facetBaseTableAlias + ":" + module._fixedEncodeURIComponent(self._ref.facetBaseTable.shortestKey[0].name) + ")";
             }
 
             aggregateColumns.push(
@@ -3343,7 +3339,7 @@ ColumnGroupAggregateFn.prototype = {
             throw new Error("Binning is not supported on column type " + column.type.name);
         }
 
-        if (reference.location.hasJoin && reference.rootTable.shortestKey.length > 1) {
+        if (reference.location.hasJoin && reference.facetBaseTable.shortestKey.length > 1) {
             throw new Error("Table must have a simple key.");
         }
 
