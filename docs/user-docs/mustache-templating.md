@@ -236,3 +236,13 @@ Locale datetime is {{$moment.LocaleString}}
 ```js
 ISO datetime is {{$moment.ISOString}}
 ```
+
+#### $catalog Usage
+`$catalog` is an object that gives you access to the catalog information including version if it is present. The following properties are currently included:
+```
+{
+  snapshot: <id>@<version>,
+  id: id,
+  version: version
+}
+```
