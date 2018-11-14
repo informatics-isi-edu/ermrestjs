@@ -297,6 +297,7 @@ Supported _columnentry_ patterns:
     - `olist` for ordered bullet list.
     - `ulist` for unordered bullet list.
     - `csv` for comma-seperated values.
+    - `raw` for space-seperated values.
 
 Supported _sourceentry_ pattern:
 - _columnname_: : A string literal. _columnname_ identifies a constituent column of the table.
