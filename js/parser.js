@@ -29,7 +29,7 @@
 
     /**
      * Given tableName, schemaName, and facets will generate a path in the following format:
-     * #<catalogId>/<tableName>:<schemaName>/*::cfacets:<CUSTOMFACETBLOB>/*::facets::<FACETSBLOB>
+     * #<catalogId>/<tableName>:<schemaName>/*::facets::<FACETSBLOB>/*::cfacets:<CUSTOMFACETBLOB>/
      * @param  {string} schemaName Name of schema, can be null
      * @param  {string} tableName  Name of table
      * @param  {object} facets     an object
@@ -46,12 +46,12 @@
         }
         compactPath += module._fixedEncodeURIComponent(tableName);
 
-        if (cfacets && typeof cfacets === "object" && Object.keys(cfacets).length !== 0) {
-            compactPath += "/*::cfacets::" + module.encodeFacet(cfacets);
-        }
-
         if (facets && typeof facets === "object" && Object.keys(facets).length !== 0) {
             compactPath += "/*::facets::" + module.encodeFacet(facets);
+        }
+
+        if (cfacets && typeof cfacets === "object" && Object.keys(cfacets).length !== 0) {
+            compactPath += "/*::cfacets::" + module.encodeFacet(cfacets);
         }
 
         return compactPath;
@@ -62,13 +62,16 @@
 
     /**
      * The parse handles URI in this format
-     * <service>/catalog/<catalog_id>/<api>/<schema>:<table>/[/filter(s)][/cfacets][/facets][/join(s)][/facets][@sort(col...)][@before(...)/@after(...)][?]
+     *  <service>/catalog/<catalog_id>/<api>/<schema>:<table>/[path parts][modifiers][query params]
      *
-     * path =  <filters(s)>/<join(s)>/<facets>/<search>
+     * where
+     *  - path part: [facet][cfacet][filter]
+     *  - modifiers: [@sort(col...)][@before(...)/@after(...)]
+     *
      *
      * uri = <service>/catalog/<catalog>/<api>/<path><sort><paging>?<limit>
      * service: the ERMrest service endpoint such as https://www.example.com/ermrest.
-     * catalog: the catalog identifier for one dataset such as 42.
+     * catalog: the catalog identifier for one dataset.
      * api: the API or data resource space identifier such as entity, attribute, attributegroup, or aggregate.
      * path: the data path which identifies one filtered entity set with optional joined context.
      * sort: optional @sort
@@ -151,7 +154,6 @@
         }
 
         // Split compact path on '/'
-        // Expected format: "<schema:table>/<filter>/<cfacets>/<rootFacets>/<joins>/<facets>"
         var parts = this._compactPath.split('/');
 
         if (parts.length === 0) throw new ERMrest.MalformedURIError("Given url must start with `schema:table.");
@@ -167,14 +169,16 @@
             this._rootTableName = decodeURIComponent(params[0]);
         }
 
-        // pathParts: <joins/filter/cfacet/facet>
-        var joinRegExp = /(?:left|right|full|^)\((.*)\)=\((.*:.*:.*)\)/;
-        var facetsRegExp = /\*::facets::(.+)/;
-        var customFacetsRegExp = /\*::cfacets::(.+)/;
-        var self = this;
-        var facets, cfacets, filter, filtersString, searchTerm, join, match, joins = [], prevJoin = false;
-        var pathParts = [], alias;
+        // pathParts: <joins/facet/cfacet/filter/>
+        var joinRegExp = /(?:left|right|full|^)\((.*)\)=\((.*:.*:.*)\)/,
+            facetsRegExp = /\*::facets::(.+)/,
+            customFacetsRegExp = /\*::cfacets::(.+)/;
+
         var schemaTable = parts[0], table = this._rootTableName, schema = this._rootSchemaName;
+        var self = this, pathParts = [], alias, match, prevJoin = false;
+        var facets, cfacets, filter, filtersString, searchTerm, join, joins = [];
+
+        // go through each of the parts
         parts.forEach(function (part, index) {
             // this is the schema:table
             if (index === 0) return;
@@ -185,8 +189,11 @@
             // join
             match = part.match(joinRegExp);
             if (match) {
+                // there wasn't any join before, so this is the start of new path,
+                // so we should create an object for the previous one.
                 if (!prevJoin && index !== 1) {
                     // we're creating this for the previous section, so we should use the previous index
+                    // Alias will be T, T1, T2, ... (notice we don't have T0)
                     alias = JOIN_TABLE_ALIAS_PREFIX + (pathParts.length > 1 ? pathParts.length-1 : "");
                     pathParts.push(new PathPart(alias, joins, schema, table, facets, cfacets, filter, filtersString));
                     filter = undefined; filtersString = undefined; cfacets = undefined; facets = undefined; join = undefined; joins = [];
@@ -229,13 +236,14 @@
             filter = _processFilterPathPart(part, self._path);
         });
 
+        // this is for the last part of url that might not end with join.
         if (filter || cfacets || facets || joins) {
             pathParts.push(new PathPart(MAIN_TABLE_ALIAS, joins, schema, table, facets, cfacets, filter, filtersString));
         }
 
         this._pathParts = pathParts;
 
-        // just to make sure the url can be parsed in ermrest
+        // just to make sure the url can be parsed completely and throw the error now
         var dummy = this.ermrestCompactUri;
     }
 
@@ -251,7 +259,7 @@
 
 
         /**
-         * <service>/catalog/<catalogId>/<api>/<rootSchema:rootTable>/<filters>/<joins>/<sort>/<page>?<queryParams>
+         * The complete uri that is understandable by ermrestjs
          * NOTE: some of the components might not be understanable by ermrest, because of pseudo operator (e.g., ::facets::).
          *
          * @returns {String} The full URI of the location
@@ -278,7 +286,7 @@
         },
 
         /**
-         * <rootSchema:rootTable>/<filters>/<joins>/<search>/<sort>/<page>
+         * A path that is understanable by ermrestjs. It includes the modifiers.
          *  NOTE: some of the components might not be understanable by ermrest, because of pseudo operator (e.g., ::search::).
          *
          * @returns {String} Path portion of the URI
@@ -292,7 +300,7 @@
         },
 
         /**
-         * <rootSchema:rootTable>/<filters>/<cfacets>/<rootFacets>/<joins>/<facets>
+         * A path that is understanable by ermrestjs. It doesn't inlcude the modifiers
          * NOTE: some of the components might not be understanable by ermrest, because of pseudo operator (e.g., ::facets::).
          *
          * @returns {String} Path without modifiers or queries
@@ -330,29 +338,10 @@
             return this._compactPath;
         },
 
-
         /**
+         * Returns a uri that ermrest understands.
          * should only be used for internal usage and sending request to ermrest
-         * NOTE: returns a uri that ermrest understands
          *
-         * TODO This might produce a url that is not understandable by ermrest (because of sort).
-         * TODO should be removed or changed.
-         *
-         * <service>/catalog/<catalogId>/<api>/<rootSchema:rootTable>/<filters>/<rootFacets>/<joins>/<facets>/<sort>/<page>
-         * @returns {String} The full URI of the location for ermrest
-         */
-        get ermrestUri() {
-            if (this._ermrestUri === undefined) {
-                this._ermrestUri = this.ermrestCompactUri + this._modifiers;
-            }
-            return this._ermrestUri;
-        },
-
-        /**
-         * should only be used for internal usage and sending request to ermrest
-         * <rootSchema:rootTable>/<filters>/<joins>/<search>
-         *
-         * NOTE: returns a uri that ermrest understands
          * @returns {String} The URI without modifiers or queries for ermrest
          */
         get ermrestCompactUri() {
@@ -364,10 +353,9 @@
         },
 
         /**
-         * should only be used for internal usage and sending request to ermrest
-         * <rootSchema:rootTable>/<filters>/<rootFacets>/<joins>/<facets>/<sort>/<page>
+         * Returns a path that ermrest understands.
+         * should only be used for internal usage and sending request to ermrest.
          *
-         * NOTE: returns a path that ermrest understands
          * @returns {String} Path portion of the URI
          * This is everything after the catalog id for ermrest
          */
@@ -379,12 +367,25 @@
         },
 
         /**
-         * should only be used for internal usage and sending request to ermrest
-         * <rootSchema:rootTable>/<filters>/<rootFacets>/<joins>/<rootFacets>
+         * Returns a path that ermrest understands. It doesn't include the modifiers.
+         * This attribute will add extra aliases to the url, so the facets can refer to those
+         * aliases. So assuming that the follwoing is the path (F means the combination of filter, facet, and cfacet):
          *
-         * NOTE:
-         *  1. returns a path that ermrest understands
-         *  2. Adds `M` alias to the last table.
+         * S:R /F0 /J1 /F1 /J2 /F2 /…/Ji-1 /Fi-1 /Ji /Fi /Ji+1 /Fi+1 /… /Jn /Fn
+         *
+         * This will be the ermrest path:
+         *
+         * T:=S:R /F0 /T1:=J1 /F1 /… /Ti-1:=Ji-1 /Fi-1 /Ti:=Ji /Fi /Ti+1:=Ji+1 /Fi+1 /…./M:=Jn /Fn
+         *
+         * And if Fi has null filter, and therefore is using a right join,
+         * the following will be the ermest path:
+         *
+         * Ti:=Fi /Ti-1:=RevJi /Fi-1 /Ti-2:=RevJi-1 /… /T1:=RevJ2 /F1 /T:=RevJ1 /F0 /$Ti /Ti+1:=Ji+1 /Fi+1 /… /M:=Jn/Fn
+         *
+         * Which will be in this format:
+         * (<parsed facets starting from the faect with null>/<rev join of the parsed facets>)+/$T(facet with null)/(<parsed facet and join of parts after the null index>)*
+         *
+         *
          * @returns {String} Path without modifiers or queries for ermrest
          */
         get ermrestCompactPath() {
@@ -393,6 +394,11 @@
                 var rightJoinIndex = -1, i;
                 var uri = "", alias;
 
+                // returns the proper string presentation of a series of joins
+                // parameters:
+                //  - joins: array of ParsedJoin objects.
+                //  - alias: the alias that will be attached to the end of the path
+                //  - reverse: whether we want to return the reversed join string
                 var joinsStr = function (joins, alias, reverse) {
                     var fn = reverse ? "reduceRight" : "reduce";
                     var joinStr = reverse ? "strReverse" : "str";
@@ -410,12 +416,12 @@
 
                     // facet
                     if (part.facets) {
-                        //TODO change alias
                         facetRes = _JSONToErmrestFilter(part.facets.decoded, part.alias, part.table, self.catalog, module._constraintNames);
                         if (!facetRes.successful) {
                             throw new module.InvalidFacetOperatorError(self.path, facetRes.message);
                         }
                         if (facetRes.rightJoin) {
+                            // we only allow one right join (null fitler)
                             if (rightJoinIndex !== -1) {
                                 throw new module.MalformedURIError("Only one facet in url can have `null` filter.");
                             }
@@ -461,16 +467,18 @@
                 // we have right index, then every path before null must be reversed
                 else {
                     // url format:
-                    // <facet with null>/<rev join>/<other part of pathPart>/$T(facet with null)/<next path parts>
+                    // (<parsed facets starting from the faect with null>/<rev join of the parsed facets>)+/$T(facet with null)/(<parsed facet and join of parts after the null index>)*
                     for (i = rightJoinIndex; i >= 0; i--) {
                         if (parsedPartsWithoutJoin[i]) {
                             uri += (uri.length > 0 ? "/" : "") + parsedPartsWithoutJoin[i];
                         }
-                        alias = i > 0 ? self.pathPart[i-1].alias : self.rootTableAlias;
+
                         if (self.pathParts[i].joins.length > 0) {
+                            alias = i > 0 ? self.pathPart[i-1].alias : self.rootTableAlias;
                             uri += "/" + joinStr(self.pathParts[i].joins, alias, true);
                         }
                     }
+
                     // if there was pathParts before facet with null, change back to the facet with null
                     if (self.pathParts[rightJoinIndex].joins.length > 0) {
                         uri += "/$" + self.pathParts[i].alias;
@@ -493,27 +501,12 @@
             return this._ermrestCompactPath;
         },
 
+        /**
+         * Array of path parts
+         * @type {PathPart[]}
+         */
         get pathParts() {
             return this._pathParts;
-        },
-
-        get facetBaseTableAlias() {
-            if (this._facetBaseTableAlias === undefined) {
-                var secondTolast = this.facetBasePathPart;
-                this._facetBaseTableAlias = secondTolast ? secondTolast.alias : this.rootTableAlias;
-            }
-            return this._facetBaseTableAlias;
-        },
-
-        get rootTableAlias () {
-            if (this._rootTableAlias === undefined) {
-                this._rootTableAlias = this.hasJoin ? "T" : this.mainTableAlias;
-            }
-            return this._rootTableAlias;
-        },
-
-        get mainTableAlias() {
-            return "M";
         },
 
         /**
@@ -586,7 +579,7 @@
 
         /**
          *
-         * @returns {string} the table name which the uri referres to
+         * @type {string} the table name which the uri referres to
          */
         get tableName() {
             if (this._tableName === undefined) {
@@ -595,6 +588,10 @@
             return this._tableName;
         },
 
+        /**
+         * Name of the schema name for the base table of faceting
+         * @type {String}
+         */
         get facetBaseSchemaName() {
             if (this._baseSchemaName === undefined) {
                 var secondTolast = this.facetBasePathPart;
@@ -603,6 +600,10 @@
             return this._baseSchemaName;
         },
 
+        /**
+         * Name of the base table for faceting
+         * @type{String}
+         */
         get facetBaseTableName() {
             if (this._baseTableName === undefined) {
                 var secondTolast = this.facetBasePathPart;
@@ -610,6 +611,38 @@
             }
             return this._baseTableName;
         },
+
+        /**
+         * The alias that will be used for the base table that should be used for faceting
+         * @type {String}
+         */
+        get facetBaseTableAlias() {
+            if (this._facetBaseTableAlias === undefined) {
+                var secondTolast = this.facetBasePathPart;
+                this._facetBaseTableAlias = secondTolast ? secondTolast.alias : this.rootTableAlias;
+            }
+            return this._facetBaseTableAlias;
+        },
+
+        /**
+         * The alias that will be used for the root table
+         * @type {String}
+         */
+        get rootTableAlias () {
+            if (this._rootTableAlias === undefined) {
+                this._rootTableAlias = this.hasJoin ? "T" : this.mainTableAlias;
+            }
+            return this._rootTableAlias;
+        },
+
+        /**
+         * The alias that will be used for the main table (the projection table)
+         * @type {String}
+         */
+        get mainTableAlias() {
+            return MAIN_TABLE_ALIAS;
+        },
+
 
         /**
          * filter is converted to the last join table (if uri has join)
@@ -621,17 +654,6 @@
 
         get filtersString() {
             return this.lastPathPart ? this.lastPathPart.filtersString : null;
-        },
-
-        /**
-         * Remove the filters from the location
-         */
-        removeFilters: function () {
-          if (this.lastPathPart) {
-              delete this.lastPathPart.filter;
-              delete this.lastPathPart.filtersString;
-              this._setDirty();
-          }
         },
 
         /**
@@ -693,7 +715,7 @@
         },
 
         /**
-         * set the facets.decoded to the given JSON. will populate the .encoded too.
+         * set the facet of the last path part
          * @param  {object} json the json object of facets
          */
         set facets(json) {
@@ -710,13 +732,17 @@
         },
 
         /**
-         * facets object. It has .encoded and .decoded apis.
+         * facets object of the last path part
          * @return {ParsedFacets} facets object
          */
         get facets() {
             return this.lastPathPart ? this.lastPathPart.facets : undefined;
         },
 
+        /**
+         * Chnge the custom facet of the last path part
+         * @param  {Object} json
+         */
         set customFacets(json) {
             var newFacet;
             if (typeof json === 'object' && json !== null) {
@@ -730,6 +756,10 @@
             this._setDirty();
         },
 
+        /**
+         * the custom facet of the last path part
+         * @type {CustomFacets}
+         */
         get customFacets() {
             return this.lastPathPart ? this.lastPathPart.customFacets : null;
         },
@@ -743,64 +773,7 @@
         },
 
         /**
-         * Apply, replace, clear filter term on the location
-         * @param {string} term - optional, set or clear search
-         */
-        search: function(t) {
-            var term = (t == null || t === "") ? null : t;
-
-            if (term === this.searchTerm) {
-                return;
-            }
-
-            var newSearchFacet = {"source": "*", "search": [term]};
-            var hasSearch = this.searchTerm != null;
-            var hasFacets = this.facets != null;
-            var andOperator = module._FacetsLogicalOperators.AND;
-
-            var facetObject, andFilters;
-            if (term === null) {
-                // hasSearch must be true, if not there's something wrong with logic.
-                // if term === null, that means the searchTerm is not null, therefore has search
-                facetObject = [];
-                this.facets.decoded[andOperator].forEach(function (f) {
-                    if (f.source !== "*") {
-                        facetObject.push(f);
-                    }
-                });
-
-                if (facetObject.length !== 0) {
-                    facetObject = {"and": facetObject};
-                }
-            } else {
-                if (hasFacets) {
-                    facetObject = JSON.parse(JSON.stringify(this.facets.decoded));
-                    if (!hasSearch) {
-                        facetObject[andOperator].unshift(newSearchFacet);
-                    } else {
-                        andFilters  = facetObject[andOperator];
-                        for (var i = 0; i < andFilters.length; i++) {
-                            if (andFilters[i].source === "*") {
-                                if (Array.isArray(andFilters[i].search)) {
-                                    andFilters[i].search = [term];
-                                }
-                                break;
-                            }
-                        }
-                    }
-                } else {
-                    facetObject = {"and": [newSearchFacet]};
-                }
-            }
-
-            this.facets = (facetObject && facetObject.and) ? facetObject : null;
-
-            // enforce updating uri
-            this._setDirty();
-        },
-
-        /**
-         * Not saved because new search
+         * last searchTerm of the last path part
          * @returns {string} the search term
          */
         get searchTerm() {
@@ -984,7 +957,75 @@
         },
 
         /**
-         * Makes a shallow copy of the Location object
+         * Apply, replace, clear filter term on the location
+         * @param {string} term - optional, set or clear search
+         */
+        search: function(t) {
+            var term = (t == null || t === "") ? null : t;
+
+            if (term === this.searchTerm) {
+                return;
+            }
+
+            var newSearchFacet = {"source": "*", "search": [term]};
+            var hasSearch = this.searchTerm != null;
+            var hasFacets = this.facets != null;
+            var andOperator = module._FacetsLogicalOperators.AND;
+
+            var facetObject, andFilters;
+            if (term === null) {
+                // hasSearch must be true, if not there's something wrong with logic.
+                // if term === null, that means the searchTerm is not null, therefore has search
+                facetObject = [];
+                this.facets.decoded[andOperator].forEach(function (f) {
+                    if (f.source !== "*") {
+                        facetObject.push(f);
+                    }
+                });
+
+                if (facetObject.length !== 0) {
+                    facetObject = {"and": facetObject};
+                }
+            } else {
+                if (hasFacets) {
+                    facetObject = JSON.parse(JSON.stringify(this.facets.decoded));
+                    if (!hasSearch) {
+                        facetObject[andOperator].unshift(newSearchFacet);
+                    } else {
+                        andFilters  = facetObject[andOperator];
+                        for (var i = 0; i < andFilters.length; i++) {
+                            if (andFilters[i].source === "*") {
+                                if (Array.isArray(andFilters[i].search)) {
+                                    andFilters[i].search = [term];
+                                }
+                                break;
+                            }
+                        }
+                    }
+                } else {
+                    facetObject = {"and": [newSearchFacet]};
+                }
+            }
+
+            this.facets = (facetObject && facetObject.and) ? facetObject : null;
+
+            // enforce updating uri
+            this._setDirty();
+        },
+
+        /**
+         * Remove the filters from the location
+         */
+        removeFilters: function () {
+          if (this.lastPathPart) {
+              delete this.lastPathPart.filter;
+              delete this.lastPathPart.filtersString;
+              this._setDirty();
+          }
+        },
+
+        /**
+         * Create a new location object with the same uri
          * @returns {ERMrest.Location} new location object
          * @private
          */
@@ -1004,6 +1045,27 @@
         }
     };
 
+    /**
+     * Container for the path part, It will have the following attributes:
+     * - joins: an array of ParsedJoin objects.
+     * - alias: The alias that the facets should refer to
+     * - schema: The schema that the join ends up with
+     * - table: the table that the joins end up with
+     * - facets: the facets object
+     * - searchTerm: the search term that is in the facets
+     * - customFacets: the custom facets objects.
+     * - fitler: the filter object
+     * - filtersString: the string representation of the filter
+     * @param       {String} alias              The alias that the facets should refer to
+     * @param       {ParsedJoin[]} joins        an array of ParsedJoin objects.
+     * @param       {String} schema             The schema that the join ends up with
+     * @param       {String} table              The table that the join ends up with
+     * @param       {ParsedFacets} facets       the facets object
+     * @param       {CustomFacets} cfacets      the custom facets object
+     * @param       {ParsedFilter} filter       the filter object
+     * @param       {String} filtersString      the string representation of the filter
+     * @constructor
+     */
     function PathPart(alias, joins, schema, table, facets, cfacets, filter, filtersString) {
         this.alias = alias;
         this.joins = Array.isArray(joins) ? joins : [];
@@ -1017,6 +1079,9 @@
     }
 
     PathPart.prototype = {
+        /**
+         * Set the facets, this will take crea of the searchTerm attribute.
+         */
         set facets(facets) {
             delete this._facets;
             this._facets = facets;
@@ -1659,17 +1724,22 @@
      * For the structure of JSON, take a look at ParsedFacets documentation.
      *
      * NOTE:
-     * - If any part of the facet is not as expected, it will throw emtpy string.
+     * - If any part of the facet is not as expected, it will throw an object
+     *   with ``"successful": false` and an appropriate `message`.
      *   Any part of the code that is using this function should guard against the result
      *   being empty, and throw error in that case.
      *
-     * - If we encounter a `null` filter in a facet, the URL structure will change. It will be
+     * - We are not handling multiple `null` in the facet and it will restult in an error.
      *
-     * - We're trying to use inner join for the facets as much as we can, but if a facet
-     *   has the `null` filter we have to use the left outer join. To organize the joins,
-     *   any facet that has `null` filter (and therefore left outer join) will be moved to the
-     *   end of url that we're returning. The structure would be :
-     *   S:T/(all the facets without null filter using inner join)/(all the facets with null filter using left outer)
+     * - If we encounter a `null` filter, we are going to change the structure of url.
+     *   Assume that this facet is for table `A` and table `B` has null filter. Therefore
+     *   the url will be:
+     *      S:B/<filters of B>/<path from B to A where the last join is right join>/<parsed filter of all the other facets>/$alias
+     *   Compare this with the following which will be the result if none of the facets have `null`:
+     *      <parsed fitler of all the facets>/$alias
+     *   In this case, we are returning a `"rightJoin": true`. In this case, we
+     *   have to make sure that the returned value must be the start of url and
+     *   cannot be simply appended to the rest of url.
      *
      * @param       {object} json  JSON representation of filters
      * @param       {string} alias the table alias

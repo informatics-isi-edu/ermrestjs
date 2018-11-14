@@ -395,7 +395,6 @@ exports.execute = function(options) {
                 expect(location.uri).toBe(uriWithQuery, "uri mismatch.");
                 expect(location.path).toBe(path, "path mismatch.");
                 expect(location.compactPath).toBe(path, "compactPath mismatch.");
-                expect(location.ermrestUri).toBe(ermrestUriWithoutQuery, "ermrestUri mismatch.");
                 expect(location.ermrestPath).toBe("M:=" + path, "ermrestPath mismatch.");
                 expect(location.ermrestCompactPath).toBe("M:=" + path, "ermrestCompactPath mismatch.");
             });
@@ -622,7 +621,7 @@ exports.execute = function(options) {
                 var expectError = function (blob) {
                     expect(function () {
                         var loc = options.ermRest.parse(baseUri + "/*::facets::" + blob);
-                        var ermrestURL = loc.ermrestUri;
+                        var ermrestURL = loc.ermrestCompactUri;
                     }).toThrow(facetError);
                 };
 

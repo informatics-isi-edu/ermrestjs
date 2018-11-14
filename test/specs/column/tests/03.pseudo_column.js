@@ -828,7 +828,7 @@ exports.execute = function (options) {
 
             describe("reference, ", function () {
                 it ("should return the main reference if source doesn't have path", function () {
-                    expect(detailedColsWTuple[14].reference.location.ermrestUri).toBe(mainRefDetailed.location.ermrestUri, "missmatch for index=" + i);
+                    expect(detailedColsWTuple[14].reference.location.uri).toBe(mainRefDetailed.location.uri, "missmatch for index=" + i);
                 });
 
                 it ("should be generated based on mainTuple.", function () {
