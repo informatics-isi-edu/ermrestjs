@@ -242,9 +242,6 @@
         }
 
         this._pathParts = pathParts;
-
-        // just to make sure the url can be parsed completely and throw the error now
-        var dummy = this.ermrestCompactUri;
     }
 
     Location.prototype = {
