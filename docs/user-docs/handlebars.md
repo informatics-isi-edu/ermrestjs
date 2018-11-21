@@ -18,12 +18,14 @@ With handlebars you need to pass the variables to an `if` helper to do the check
 {{#if name}}Hello {{name}}{{else}}No name available{{/if}}
 ```
 
-Handlebars supports more complicated expression syntax and allow the comparison to be done at the finer level e.g. null v.s. false comparsion. This document summarizes the key concepts of Handlebars that are relevant to Deriva. 
+Handlebars supports more complicated expression syntax and allow the comparison to be done at the finer level e.g. null v.s. false comparsion. This document summarizes the key concepts of Handlebars that are relevant to Deriva.
 
 
 ## Notable differences between Mustache and Handlebars
 
 * [Handlebar Paths](#handlebars-paths)
+* [Helpers](#helpers)
+   * [FormatDate](#formatdate-helper)
 * [Block Helpers](#block-helpers)
    * [If](#if-helper)
    * [Unless](#unless-helper)
@@ -31,7 +33,7 @@ Handlebars supports more complicated expression syntax and allow the comparison 
    * [With](#with-helper)
    * [Encode](#encode-helper)
    * [Escape](#escape-helper)
-   * [Format Date](#format-date-helper)
+   * [EncodeFacet](#encodefacet-helper)
 * [Accessing keys with spaces and special characters](#accessing-keys-with-spaces-and-special-characters)
 * [Subexpressions](#subexpressions)
 * [Additional Helpers for Comparison](#additional-helpers-for-comparision)
@@ -99,7 +101,37 @@ In this example all of the above reference the same `permalink` value even thoug
 ```
 Any of the above would cause the name field on the current context to be used rather than a helper of the same name.
 
+## Helpers
+
+A Handlebars helper call is a simple identifier, followed by zero or more parameters (separated by space). Each parameter is a Handlebars expression.
+
+```
+{{HELPER_NAME PARAM1 PARAM2 }}
+```
+
+### FormatDate helper
+
+You can use the `formatDate` helper to take any `date` or `timestamp[tz]` value and format it according to the [Pre Format Guide](pre-format.md#syntax-for-dates-and-timestamps).
+
+Syntax:
+```
+{{formatDate value format}}
+```
+
+Example:
+```
+{{formatDate '30-08-2018' 'YYYY'}} ==> '2018'
+```
+
 ## Block Helpers
+
+Block helpers make it possible to define custom iterators and other functionality that can invoke the passed block with a new context. These helpers are very similar to functions that we have in mustache.
+
+```
+{{#HELPER_NAME}}
+ CONTENT
+{{/HELPER_NAME}}
+```
 
 ### If helper
 
@@ -282,19 +314,24 @@ In addition you can provide multiple inputs too which're concatenated and then e
 ```
 for context `key="**somevalue ] which is ! special" and value="John"` will result in `\*\*somevalue \] which is \! special\-John`
 
-### Format Date helper
+### Encodefacet helper
 
-You can use the `formatDate` helper to take any `date` or `timestamp[tz]` value and format it according to the [Pre Format Guide](pre-format.md#syntax-for-dates-and-timestamps).
+You can use the `encodeFacet` helper to compress a JSON object. The compressed string can be used for creating a url path with facets. The string that you are passing as content MUST be JSON parsable. It will be ignored otherwise.
 
-Syntax:
 ```
-{{formatDate value format}}
+{{#encodeFacet}}
+{
+  \"and\": [
+    {
+      \"source\": [{\"inbound\": [\"schema\", \"fk_1\"]}]}, \"RID\"],
+      \"choices\": [\"{{{RID}}}\"]
+    }
+  ]
+}
+{{/encodeFacet}}
 ```
 
-Example:
-```
-{{formatDate '30-08-2018' 'YYYY'}} ==> '2018'
-```
+As you can see in this example I am escaping all the `"`s. This is because you are usually passing this value in a string in a JSON document. So all the `"`s must be escaped.
 
 
 ## Accessing keys with spaces and special characters
