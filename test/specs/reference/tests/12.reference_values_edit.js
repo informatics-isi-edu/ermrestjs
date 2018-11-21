@@ -124,7 +124,7 @@ exports.execute = function (options) {
             it("should return 15 values for a tuple", function() {
                 var values = tuples[tupleIndex].values;
 
-                expect(values.length).toBe(15);
+                expect(values.length).toBe(16);
             });
 
             checkValueAndIsHTML("id", tupleIndex, 0, expectedValues);
@@ -141,6 +141,7 @@ exports.execute = function (options) {
             checkValueAndIsHTML("fkeys_col", tupleIndex, 12, expectedValues);
             checkValueAndIsHTML("catalog_snapshot", tupleIndex, 13, expectedValues);
             checkValueAndIsHTML("moment_col", tupleIndex, 14, expectedValues);
+            checkValueAndIsHTML("encodefacet_col", tupleIndex, 15, expectedValues);
 
         };
 
@@ -152,31 +153,31 @@ exports.execute = function (options) {
             var testObjects ={
                 "test1": {
                         "rowValue" : ["id=4000, some_markdown= **date is :**, name=Hank, url= https://www.google.com, some_gene_sequence= GATCGATCGCGTATT, video_col= http://techslides.com/demos/sample-videos/small.mp4, catalog_snapshot=schema:table" ],
-                        "expectedValue": ["4000", "Hank", "https://www.google.com", null, null, null, null, '**date is :**', '**Name is :**', "GATCGATCGCGTATT",null, "http://techslides.com/demos/sample-videos/small.mp4", null, "schema:table", null]
+                        "expectedValue": ["4000", "Hank", "https://www.google.com", null, null, null, null, '**date is :**', '**Name is :**', "GATCGATCGCGTATT",null, "http://techslides.com/demos/sample-videos/small.mp4", null, "schema:table", null, null]
                         },
                 "test2": {
                         "rowValue" : ["id=4001, name=Harold,some_invisible_column= Junior, video_col= http://techslides.com/demos/sample-videos/small.mp4"],
-                        "expectedValue" : ["4001", "Harold", null, null, null, null, null, '**This is some markdown** with some `code` and a [link](http://www.example.com)', '**Name is :**', null, null, null, null, null, null]
+                        "expectedValue" : ["4001", "Harold", null, null, null, null, null, '**This is some markdown** with some `code` and a [link](http://www.example.com)', '**Name is :**', null, null, null, null, null, null, null]
                         },
                 "test3": {
                         "rowValue" : ["id=4002, url= https://www.google.com, video_col= http://techslides.com/demos/sample-videos/small.mp4"],
-                        "expectedValue" : ["4002", null, "https://www.google.com", null, null, null, null, '**This is some markdown** with some `code` and a [link](http://www.example.com)', '**Name is :**', null, null, null, null, null, null]
+                        "expectedValue" : ["4002", null, "https://www.google.com", null, null, null, null, '**This is some markdown** with some `code` and a [link](http://www.example.com)', '**Name is :**', null, null, null, null, null, null, null]
                         },
                 "test4": {
                         "rowValue" : ["id=4003 ,some_invisible_column= Freshmen, video_col= http://techslides.com/demos/sample-videos/small.mp4"],
-                        "expectedValue" :["4003", null, null, null, null, null, null, '**This is some markdown** with some `code` and a [link](http://www.example.com)', '**Name is :**',null, null, null, null, null, null]
+                        "expectedValue" :["4003", null, null, null, null, null, null, '**This is some markdown** with some `code` and a [link](http://www.example.com)', '**Name is :**',null, null, null, null, null, null, null]
                         },
                 "test5": {
                         "rowValue" :["id=4004, name= weird & HTML < , video_col= http://techslides.com/demos/sample-videos/small.mp4"],
-                        "expectedValue" :["4004", "weird & HTML < ", null, null, null, null, null, '**This is some markdown** with some `code` and a [link](http://www.example.com)', '**Name is :**', null, null, null, null, null, null]
+                        "expectedValue" :["4004", "weird & HTML < ", null, null, null, null, null, '**This is some markdown** with some `code` and a [link](http://www.example.com)', '**Name is :**', null, null, null, null, null, null, null]
                         },
                 "test6": {
                         "rowValue": ["id=4005, name= <a href='javascript:alert();'></a>, some_invisible_column= Senior, video_col= http://techslides.com//small.mp4"],
-                        "expectedValue": ["4005", "<a href='javascript:alert();'></a>", null, null, null, null, null, '**This is some markdown** with some `code` and a [link](http://www.example.com)', '**Name is :**', null, null, null, null, null, null]
+                        "expectedValue": ["4005", "<a href='javascript:alert();'></a>", null, null, null, null, null, '**This is some markdown** with some `code` and a [link](http://www.example.com)', '**Name is :**', null, null, null, null, null, null, null]
                         },
                 "test7": {
                         "rowValue" :["id=4006, name= <script>alert();</script>, some_gene_sequence= GATCGATCGCGTATT, some_invisible_column= Sophomore, video_col= http://techs.com/sample/small.mp4"],
-                        "expectedValue": ["4006", "<script>alert();</script>", null, null, null, null, null, '**This is some markdown** with some `code` and a [link](http://www.example.com)', '**Name is :**', "GATCGATCGCGTATT", null, null, null, null, null]
+                        "expectedValue": ["4006", "<script>alert();</script>", null, null, null, null, null, '**This is some markdown** with some `code` and a [link](http://www.example.com)', '**Name is :**', "GATCGATCGCGTATT", null, null, null, null, null, null]
                         }
                 }
             var i =0;
