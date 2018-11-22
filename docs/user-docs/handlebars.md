@@ -318,8 +318,9 @@ for context `key="**somevalue ] which is ! special" and value="John"` will resul
 
 You can use the `encodeFacet` helper to compress a JSON object. The compressed string can be used for creating a url path with facets. The string that you are passing as content MUST be JSON parsable. It will be ignored otherwise.
 
+Template:
 ```
-{{#encodeFacet}}
+[caption](example.com/chaise/recordset/#1/S:T/*::facets::{{#encodeFacet}}
 {
   \"and\": [
     {
@@ -328,7 +329,11 @@ You can use the `encodeFacet` helper to compress a JSON object. The compressed s
     }
   ]
 }
-{{/encodeFacet}}
+{{/encodeFacet}})
+```
+Result:
+```
+<a href="example.com/chaise/recordset/#1/S:T/*::facets::FSADAUczxcafd">caption</a>
 ```
 
 As you can see in this example I am escaping all the `"`s. This is because you are usually passing this value in a string in a JSON document. So all the `"`s must be escaped.
