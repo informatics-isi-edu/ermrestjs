@@ -6,6 +6,7 @@
      * @type {Object}
      */
     var _http_status_codes = {
+        no_connection: -1,
         timed_out: 0,
         no_content: 204,
         unauthorized: 401,
@@ -21,6 +22,7 @@
      * @type {Array<Number>}
      */
     var _retriable_error_codes = [
+        _http_status_codes.no_connection,
         _http_status_codes.timed_out,
         _http_status_codes.internal_server_error,
         _http_status_codes.service_unavailable];
