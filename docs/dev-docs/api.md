@@ -16,6 +16,11 @@ to use for ERMrest JavaScript agents.</p>
 <dt><a href="#formatDate">formatDate()</a> ⇒</dt>
 <dd><p>{{formatDate value format}}</p>
 </dd>
+<dt><a href="#encodeFacet">encodeFacet()</a> ⇒</dt>
+<dd><p>{{#encodeFacet}}
+ str
+{{/encodeFacet}}</p>
+</dd>
 </dl>
 
 ## Typedefs
@@ -6694,6 +6699,15 @@ ERMrest.resolve('https://example.org/catalog/42/entity/s:t/k=123').then(
 
 **Kind**: global function  
 **Returns**: formatted string of `value` with corresponding `format`  
+<a name="encodeFacet"></a>
+
+## encodeFacet() ⇒
+{{#encodeFacet}}
+ str
+{{/encodeFacet}}
+
+**Kind**: global function  
+**Returns**: encoded facet string that can be used in url  
 <a name="appLinkFn"></a>
 
 ## appLinkFn : <code>function</code>

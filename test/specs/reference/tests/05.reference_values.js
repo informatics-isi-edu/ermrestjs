@@ -71,9 +71,10 @@ exports.execute = function (options) {
                                         '<video controls height=500 width=600 loop ><source src="http://techslides.com/demos/sample-videos/small.mp4" type="video/mp4"></video>',
                                         '', // This value is set later by setLinkRID()
                                         '<p>'+catalog_id+': '+catalog_id+'/schema:table</p>\n',
-                                        expectedMomentValue
+                                        expectedMomentValue,
+                                        '<p>/*::facets::N4IghgdgJiBcAEBteoDOB7ArgJwMYFM54QBLGAGmNwAt0SDUjEAWABnYF14BfeL7oA</p>\n'
                                          ],
-                    "isHTML" : [false, true, true, true, true, true, true, true, true, true, false, true, false, true, true]
+                    "isHTML" : [false, true, true, true, true, true, true, true, true, true, false, true, false, true, true, true]
                     },
             "test2": {
                 "rowValue" :["id=4001, name=Harold,some_invisible_column= Junior"],
@@ -92,9 +93,10 @@ exports.execute = function (options) {
                                 '',
                                 '',  // This value is set later by setLinkRID()
                                 '',
-                                expectedMomentValue
+                                expectedMomentValue,
+                                '<p>/*::facets::N4IghgdgJiBcAEBteoDOB7ArgJwMYFM54QBLGAGmNwAt0SDUjEAWABlYEYBdeAX3h68gA</p>\n'
                             ],
-                "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true, true, false, true]
+                "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true, true, false, true, true]
                 },
             "test3": {
                 "rowValue" : ["id=4002, url= https://www.google.com, video_col= http://techslides.com/demos/sample-videos/small.mp4"],
@@ -113,9 +115,10 @@ exports.execute = function (options) {
                                 '',
                                 '', // This value is set later by setLinkRID()
                                 '',
-                                expectedMomentValue
+                                expectedMomentValue,
+                                '<p>/*::facets::N4IghgdgJiBcAEBteoDOB7ArgJwMYFM54QBLGAGmNwAt0SDUjEAWABlYCYBdeAX3h68gA</p>\n'
                                 ],
-                "isHTML" : [false, false, false, true, true, true, false, true, false, true, false, true, true, false, true]
+                "isHTML" : [false, false, false, true, true, true, false, true, false, true, false, true, true, false, true, true]
                 },
             "test4": {
                 "rowValue" : ["id=4003 ,some_invisible_column= Freshmen"],
@@ -134,9 +137,10 @@ exports.execute = function (options) {
                                 '',
                                 '', // This value is set later by setLinkRID()
                                 '',
-                                expectedMomentValue
+                                expectedMomentValue,
+                                '<p>/*::facets::N4IghgdgJiBcAEBteoDOB7ArgJwMYFM54QBLGAGmNwAt0SDUjEAWABlYGYBdeAX3h68gA</p>\n'
                                 ],
-                "isHTML" : [false, false, false, true, true, true, false, true, false, true, true, true, true, false, true]
+                "isHTML" : [false, false, false, true, true, true, false, true, false, true, true, true, true, false, true, true]
                 },
             "test5": {
                 "rowValue" :  ["id=4004, name= weird & HTML < "],
@@ -155,9 +159,10 @@ exports.execute = function (options) {
                                 '',
                                 '', // This value is set later by setLinkRID()
                                 '',
-                                expectedMomentValue
+                                expectedMomentValue,
+                                '<p>/*::facets::N4IghgdgJiBcAEBteoDOB7ArgJwMYFM54QBLGAGmNwAt0SDUjEAWABleYF14BfebnkA</p>\n'
                                 ],
-                "isHTML" : [false, true, true, true, true, true, true, true, true, true, false, true, true, false, true]
+                "isHTML" : [false, true, true, true, true, true, true, true, true, true, false, true, true, false, true, true]
                 },
             "test6": {
                 "rowValue" : ["id=4005, name= <a href='javascript:alert();'></a>, some_invisible_column= Senior"],
@@ -176,9 +181,10 @@ exports.execute = function (options) {
                                 '',
                                 '', // This value is set later by setLinkRID()
                                 '',
-                                expectedMomentValue
+                                expectedMomentValue,
+                                '<p>/*::facets::N4IghgdgJiBcAEBteoDOB7ArgJwMYFM54QBLGAGmNwAt0SDUjEAWABlYFYBdeAX3h68gA</p>\n'
                                 ],
-                "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true, true, false, true]
+                "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true, true, false, true, true]
                 },
             "test7": {
                 "rowValue" : ["id=4006, name= <script>alert();</script>, some_gene_sequence= GATCGATCGCGTATT, some_invisible_column= Sophomore"],
@@ -197,9 +203,10 @@ exports.execute = function (options) {
                                 '',
                                 '', // This value is set later by setLinkRID()
                                 '',
-                                expectedMomentValue
+                                expectedMomentValue,
+                                '<p>/*::facets::N4IghgdgJiBcAEBteoDOB7ArgJwMYFM54QBLGAGmNwAt0SDUjEAWABlYDYBdeAX3h68gA</p>\n'
                                 ],
-                "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true, true, false, true]
+                "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true, true, false, true, true]
             }
         };
 
@@ -306,14 +313,20 @@ exports.execute = function (options) {
              * This function calls checkValueAndIsHTML for each column value at the specified tupleIndex
              */
             var testTupleValidity = function(tupleIndex, key) {
-                it("should return 15 values for a tuple", function() {
+                it("should return 16 values for a tuple", function() {
                     // get the RID value that was set on options.entities[schema_name][table_name]
                     setLinkRID(key);
 
-                    expect(tuples[tupleIndex].values.length).toBe(15);
+                    expect(tuples[tupleIndex].values.length).toBe(16);
                 });
 
-                var columnNames = ["id", "name", "url", "image", "image_with_size", "download_link", "iframe", "some_markdown", "some_markdown_with_pattern", "some_gene_sequence", "", "video_col", "fkeys_col", "catalog_snapshot_uri", "catalog_id_uri", "moment_col"]
+                var columnNames = [
+                    "id", "name", "url", "image", "image_with_size", "download_link",
+                    "iframe","some_markdown", "some_markdown_with_pattern",
+                    "some_gene_sequence", "column_using_invisble_column",
+                    "video_col", "fkeys_col", "catalog_snapshot",
+                    "moment_col", "encodefacet_col"
+                ]
                 for (var j=0; j<columnNames.length; j++) {
                     (function (columnIndex) {
                         // NOTE: There was no index 10 in checkValueAndIsHTML functions defined before

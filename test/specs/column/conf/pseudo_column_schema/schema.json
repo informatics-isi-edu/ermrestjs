@@ -559,8 +559,9 @@
             ],
             "annotations": {
                 "tag:isrd.isi.edu,2016:table-display": {
-                    "row_name": {
-                        "row_markdown_pattern": "{{{id}}} with {{{col}}}"
+                    "row_name/detailed": {
+                        "row_markdown_pattern": "{{{id}}}, facet: {{#encodeFacet}}{\"and\": [{\"source\": \"id\", \"choices\": [\"{{{id}}}\"]}]}{{/encodeFacet}}",
+                        "template_engine": "handlebars"
                     }
                 }
             }

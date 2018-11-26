@@ -209,6 +209,26 @@
         return str.replace(/-/g, '+').replace(/_/g, '/');
     };
 
+    /**
+     * Given a string represting a JSON document returns the compressed version of it.
+     * It will return null if the given string is not a valid JSON.
+     * @param  {String} str
+     * @return {String}
+     */
+    module.encodeFacetString = function (str) {
+        try {
+            JSON.parse(str);
+        } catch (e) {
+            return "";
+        }
+        return module._LZString.compressToEncodedURIComponent(str);
+    };
+
+    /**
+     * Given an object, returns the string comrpessed version of it
+     * @param  {Object} obj
+     * @return {String}
+     */
     module.encodeFacet = function (obj) {
         return module._LZString.compressToEncodedURIComponent(JSON.stringify(obj,null,0));
     };
@@ -3175,7 +3195,8 @@
         // default helpers - NOTE: 'log' and 'lookup' not included
         "blockHelperMissing", "each", "if", "helperMissing", "unless", "with",
         // ermrestJS helpers
-        "eq", "ne", "lt", "gt", "lte", "gte", "and", "or", "ifCond", "escape", "encode", "formatDate"
+        "eq", "ne", "lt", "gt", "lte", "gte", "and", "or", "ifCond",
+        "escape", "encode", "formatDate", "encodeFacet"
     ];
 
     module._operationsFlag = Object.freeze({
