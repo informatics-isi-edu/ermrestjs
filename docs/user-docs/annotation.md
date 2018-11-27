@@ -754,14 +754,15 @@ The following matrix illustrates which context is meaningful in which annotation
 
 ## Pattern Expansion
 
-When deriving a field value from a _pattern_, the _pattern_ MAY contain markers for substring replacements of the form `{{column name}}` or `{{{ column name}}}` where `column name` MUST reference a column in the table. Any particular column name MAY be referenced and expanded zero or more times in the same _pattern_. Each pattern is passed through a templating environment. By default, this templating environment is `Mustache`. A `template_engine` parameter can be defined alongside any _pattern_ to define which templating engine to use.
+When deriving a field value from a _pattern_, the _pattern_ MAY contain markers for substring replacements of the form `{{column name}}` or `{{{ column name}}}` where `column name` MUST reference a column in the table. Any particular column name MAY be referenced and expanded zero or more times in the same _pattern_. Each pattern is passed through a templating environment. By default, this templating environment is `Mustache`. A `template_engine` parameter can be defined alongside any _pattern_ to define which templating engine to use. Currently you can choose between `handlebars` and `mustache`. For detailed explanation on template and markdown language please refer to [Mustache Templating](mustache-templating.md) and [Handlebars Templating](handlebars.md) documents.
 
-For example, a _column_ may have a [`tag:isrd.isi.edu,2016:column-display`](#tag-2016-column-display) annotation containing the following payload:
+As an example, a _column_ may have a [`tag:isrd.isi.edu,2016:column-display`](#tag-2016-column-display) annotation containing the following payload:
 
 ```
 {
    "*" : {
-       "markdown_pattern": "[{{{title}}}](https://dev.isrd.isi.edu/chaise/search?name={{{_name}}})"
+       "markdown_pattern": "[{{{title}}}](https://dev.isrd.isi.edu/chaise/search?name={{{_name}}})",
+       "template_engine": "handlebars"
    }
 }
 ```
@@ -773,5 +774,3 @@ A web user agent that consumes this annotation and the related table data would 
     <img src="https://dev.isrd.isi.edu/chaise/search?name=col%20name" alt="Title of Image">
 </p>
 ```
-
-For detailed explanation on template and markdown language please refer to [Mustache Templating](mustache-templating.md) and [Handlebars Templating](handlebars.md) documents.

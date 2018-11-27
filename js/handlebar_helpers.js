@@ -10,6 +10,18 @@
                 formatDate: function (value, format) {
                     return module._moment(value).format(format);
                 },
+
+                /**
+                 * {{#encodeFacet}}
+                 *  str
+                 * {{/encodeFacet}}
+                 *
+                 * @returns encoded facet string that can be used in url
+                 */
+                encodeFacet: function (options) {
+                    return module.encodeFacetString(options.fn(this));
+                },
+
 			    /*
 			       {{#if (eq val1 val2)}}
  					.. content
