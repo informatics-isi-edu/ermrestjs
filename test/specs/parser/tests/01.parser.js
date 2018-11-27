@@ -371,30 +371,11 @@ exports.execute = function(options) {
                 expect(location.catalog).toBe(catalogId.toString());
                 expect(location.catalog).toBe(catalogId.toString());
                 expect(location.version).toBeNull();
-                expect(location.projectionSchemaName).toBe(schemaName);
-                expect(location.projectionTableName).toBe(tableName);
+                expect(location.rootSchemaName).toBe(schemaName);
+                expect(location.rootTableName).toBe(tableName);
                 expect(location.schemaName).toBe(schemaName);
                 expect(location.tableName).toBe(tableName2);
-                expect(location.filter instanceof options.ermRest.ParsedFilter).toBe(true);
-            });
-
-            it('parsedFilter should have methods and values properly defined.', function() {
-                expect(parsedFilter).toBeDefined();
-
-                expect(parsedFilter.type).toBe("Conjunction");
-                expect(parsedFilter.filters).toBeDefined();
-
-                var filter1 = parsedFilter.filters[0];
-                expect(filter1.type).toBe("BinaryPredicate");
-                expect(filter1.column).toBe("id");
-                expect(filter1.operator).toBe("::gt::");
-                expect(filter1.value).toBe(lowerLimit.toString());
-
-                var filter2 = parsedFilter.filters[1];
-                expect(filter2.type).toBe("BinaryPredicate");
-                expect(filter2.column).toBe("id");
-                expect(filter2.operator).toBe("::lt::");
-                expect(filter2.value).toBe(upperLimit.toString());
+                expect(location.filter).toBeUndefined();
             });
         });
 
@@ -414,7 +395,6 @@ exports.execute = function(options) {
                 expect(location.uri).toBe(uriWithQuery, "uri mismatch.");
                 expect(location.path).toBe(path, "path mismatch.");
                 expect(location.compactPath).toBe(path, "compactPath mismatch.");
-                expect(location.ermrestUri).toBe(ermrestUriWithoutQuery, "ermrestUri mismatch.");
                 expect(location.ermrestPath).toBe("M:=" + path, "ermrestPath mismatch.");
                 expect(location.ermrestCompactPath).toBe("M:=" + path, "ermrestCompactPath mismatch.");
             });
@@ -453,15 +433,15 @@ exports.execute = function(options) {
             var location, uri;
             var invalidPageConditionErrorObj = {
                 'status': 'Invalid Page Criteria',
-                'messageWithCondition': "Invalid uri: " + options.url + "/catalog/1/entity/parse_schema:parse_table/id=269@after(). Sort modifier is required with paging.",
-                'messageWithConditions': "Invalid uri: " + options.url + "/catalog/1/entity/parse_schema:parse_table/id=269@after(3)@before(7). Sort modifier is required with paging.",
+                'messageWithCondition': "Sort modifier is required with paging.",
+                'messageWithConditions': "Sort modifier is required with paging.",
                 'errorData': { 'redirectPath': 'parse_schema:parse_table/id=269' }
             };
             var invalidFilterOperatorErrorObj = {
                 'status': 'Invalid Filter',
-                'message': "Invalid uri: " + options.url + "/catalog/1/entity/parse_schema:parse_table/id::gt:269. Couldn't parse 'id::gt:269' filter.",
+                'message': "Couldn't parse 'id::gt:269' filter.",
                 'errorData': { 'redirectPath': 'parse_schema:parse_table/' },
-                'messageWithSort': "Invalid uri: " + options.url + "/catalog/1/entity/parse_schema:parse_table/id::gt:269@sort(). Couldn't parse 'id::gt:269' filter.",
+                'messageWithSort': "Couldn't parse 'id::gt:269' filter.",
                 'errorDataWithSort': { 'redirectPath': 'parse_schema:parse_table/@sort()' }
             };
             var invalidFacetFilterErrorObj = {
@@ -586,10 +566,6 @@ exports.execute = function(options) {
 
                     expect(location.facets).toBeUndefined("facets is defined.");
 
-                    expect(location.projectionFacets).toBeDefined("projectionFacets is not defined.");
-                    expect(location.projectionFacets.encoded).toEqual(validBlob, "projection facets encoded missmatch.");
-                    expect(JSON.stringify(location.projectionFacets.decoded)).toEqual(JSON.stringify(facetObj), "projection facets decoded missmatch.");
-
                     expect(location.ermrestCompactPath).toEqual("T:=parse_schema:parse_table/accession=1/$T/*::ciregexp::test/$T/M:=(id)=(s:otherTable:id)", "ermrestCompactPath missmatch");
                 });
 
@@ -600,7 +576,7 @@ exports.execute = function(options) {
 
                     expect(location.uri).toEqual(uri, "uri missmatch");
 
-                    expect(location.projectionFacets).toBeUndefined("projectionFacets is defined.");
+                    expect(location.rootFacets).toBeUndefined("rootFacets is defined.");
 
                     expect(location.facets).toBeDefined("facets is not defined.");
                     expect(location.facets.encoded).toEqual(validBlob2, "facets encoded missmatch.");
@@ -615,10 +591,6 @@ exports.execute = function(options) {
                     expect(location).toBeDefined("location is not defined");
 
                     expect(location.uri).toEqual(uri, "uri missmatch");
-
-                    expect(location.projectionFacets).toBeDefined("projectionFacets is not defined.");
-                    expect(location.projectionFacets.encoded).toEqual(validBlob, "projection facets encoded missmatch.");
-                    expect(JSON.stringify(location.projectionFacets.decoded)).toEqual(JSON.stringify(facetObj), "projection facets decoded missmatch.");
 
                     expect(location.facets).toBeDefined("facets is not defined.");
                     expect(location.facets.encoded).toEqual(validBlob2, "facets encoded missmatch.");
@@ -640,15 +612,6 @@ exports.execute = function(options) {
 
                     expect(location.searchTerm).toEqual("test", "searchTerm missmatch.");
                 });
-
-                it("Location.projectionFacets setter should be able to change the facet and update other APIs.", function() {
-                    location.projectionFacets = facetObj2;
-
-                    uri = baseUri + "/*::facets::" + validBlob2 + "/(id)=(s:otherTable:id)" + "/*::facets::" + validBlob;
-                    expect(location.uri).toBe(uri, "uri missmatch.");
-
-                    expect(location.searchTerm).toEqual("test", "searchTerm missmatch.");
-                });
             });
 
             describe("regarding handling different facets syntaxes, ", function () {
@@ -658,7 +621,7 @@ exports.execute = function(options) {
                 var expectError = function (blob) {
                     expect(function () {
                         var loc = options.ermRest.parse(baseUri + "/*::facets::" + blob);
-                        var ermrestURL = loc.ermrestUri;
+                        var ermrestURL = loc.ermrestCompactUri;
                     }).toThrow(facetError);
                 };
 
@@ -979,10 +942,10 @@ exports.execute = function(options) {
                         // facetObj = {"and":[{"source":"accession", "choices":["1"]}, {"source":"*", "search":["test"]}]}
                         var facetBlob = "N4IghgdgJiBcDaoDOB7ArgJwMYFM7i1ySQEsUIQAaELACxRKLnhAEYQBdAX0uXWzywQAKiogkOMNlrMQAFxxI5nLtyA";
                         testCustomFacets(
-                            baseUri + "/*::cfacets::" + blob + "/*::facets::" + facetBlob,
+                            baseUri + "/*::facets::" + facetBlob + "/*::cfacets::" + blob,
                             blob,
                             {"displayname": "value", "ermrest_path": "id=2"},
-                            "M:=parse_schema:parse_table/id=2/accession=1/$M/*::ciregexp::test/$M"
+                            "M:=parse_schema:parse_table/accession=1/$M/*::ciregexp::test/$M/id=2"
                         );
                     });
                 });
