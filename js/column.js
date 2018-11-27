@@ -1985,6 +1985,39 @@ FacetColumn.prototype = {
     },
 
     /**
+     * Whether the source has path or not
+     * @type {Boolean}
+     */
+    get hasPath() {
+        if (this._hasPath === undefined) {
+            this._hasPath =_isFacetSourcePath(this.dataSource);
+        }
+        return this._hasPath;
+    },
+
+    /**
+     * Whether the source is going to have path when sending the request to ermrest
+     * The path that is defined on the facet might be different from the one that
+     * we are going to use to talk with ermrest. We might optmize the path.
+     * Facets with only one hop where the column used in foreignkey is the same column for faceting, and is not nullable
+     * can be optmized by completely ignoring the foreignkey path and just doing a value check on main table.
+     *
+     * @type {Boolean}
+     */
+    get ermrestHasPath () {
+        if (this._ermrestHasPath === undefined) {
+            var isOneToOneFK = false, self = this;
+            if (this.foreignKeys.length === 1) {
+                var fk = self.foreignKeys[0].obj, isInbound = self.foreignKeys[0].isInbound;
+                isOneToOneFK = !self._column.nullok && fk.simple && ( (isInbound && self._column === fk.colset.columns[0]) || (!isInbound && self._column === fk.key.colset.columns[0]) ) ;
+            }
+
+            this._ermrestHasPath = this.foreignKeys.length > 0 && !isOneToOneFK;
+        }
+        return this._ermrestHasPath;
+    },
+
+    /**
      * The Preferred ux mode.
      * Any of:
      * `choices`, `ranges`, or `check_presence`
@@ -2126,21 +2159,13 @@ FacetColumn.prototype = {
                 table = this.reference.table,
                 loc = this.reference.location;
 
-            pathFromSource.push(module._fixedEncodeURIComponent(table.schema.name) + ":" + module._fixedEncodeURIComponent(table.name));
-
-            if (loc.filtersString) {
-                pathFromSource.push(loc.filtersString);
-            }
-
-            // create a path from reference to this facetColumn
-            this.foreignKeys.forEach(function (fkObj) {
-                pathFromSource.push(fkObj.obj.toString(!fkObj.isInbound, false));
-            });
 
             // TODO might be able to improve this
             if (typeof loc.searchTerm === "string") {
                 jsonFilters.push({"source": "*", "search": [loc.searchTerm]});
             }
+
+            var newLoc = module.parse(loc.compactUri);
 
             //get all the filters from other facetColumns
             if (loc.facets !== null) {
@@ -2153,13 +2178,11 @@ FacetColumn.prototype = {
                 });
             }
 
-            var uri = [
-                table.schema.catalog.server.uri ,"catalog" ,
-                table.schema.catalog.id, "entity",
-                pathFromSource.join("/")
-            ].join("/");
-
-            this._sourceReference = new Reference(module.parse(uri), table.schema.catalog);
+            if (jsonFilters.length > 0) {
+                newLoc.facets = {"and": jsonFilters};
+            } else {
+                newLoc.facets = null;
+            }
 
             // add custom facets as the facets of the parent
             if (loc.customFacets) {
@@ -2176,21 +2199,27 @@ FacetColumn.prototype = {
                 // You can see why we are changing $M to $T.
                 //
                 // As I mentioned this is hacky, so we should eventually find a way around this.
-                var cfacet = module._simpleDeepCopy(loc.customFacets.decoded);
+                cfacet = module._simpleDeepCopy(loc.customFacets.decoded);
                 if (cfacet.ermrest_path && self.foreignKeys.length > 0) {
                     // switch the alias names, the cfacet is originally written with the assumption of
                     // the main table having "M" alias. So we just have to swap the aliases.
-                    cfacet.ermrest_path = cfacet.ermrest_path.replace(/\$\M/g, "$T");
+                    var alias = "T" + (newLoc.hasJoin ? newLoc.pathParts.length : "");
+                    cfacet.ermrest_path = cfacet.ermrest_path.replace(/\$\M/g, "$" + alias);
                 }
-
-                this._sourceReference._location.customFacets = cfacet;
+                newLoc.customFacets = cfacet;
             }
 
-            if (jsonFilters.length > 0) {
-                this._sourceReference._location.projectionFacets = {"and": jsonFilters};
-            } else {
-                this._sourceReference._location.projectionFacets = null;
+            // create a path from reference to this facetColumn
+            this.foreignKeys.forEach(function (fkObj) {
+                pathFromSource.push(fkObj.obj.toString(!fkObj.isInbound, false));
+            });
+
+            var uri = newLoc.compactUri;
+            if (pathFromSource.length > 0) {
+                uri += "/" + pathFromSource.join("/");
             }
+
+            this._sourceReference = new Reference(module.parse(uri), table.schema.catalog);
         }
         return this._sourceReference;
     },
@@ -2279,13 +2308,69 @@ FacetColumn.prototype = {
     },
 
     /**
-     * Whether client should hide the null choice
+     * Whether client should hide the null choice.
+     * `null` filter could mean any of the following:
+     *   - Scalar value being `null`. In terms of ermrest, a simple col::null:: query
+     *   - No value exists in the given path (checking presence of a value in the path). In terms of ermrest,
+     *     we have to construct an outer join. For performance we're going to use right outer join.
+     *     Because of ermrest limitation, we cannot have more than two right outer joins and therefore
+     *     two such null checks cannot co-exist.
+     * Since we're not going to show two different options for these two meanings,
+     * we have to make sure to offer `null` option when only one of these two meanings would make sense.
+     * Based on this, we can categorize facets into these three groups:
+     *   1. (G1) Facets without any path.
+     *   2. (G2) Facets with path where the column is nullable: `null` could mean any of those.
+     *   3. (G3) Facets with path where the column is not nullable. Here `null` can only mean path existence.
+     *   3. (G3.1) Facets with only one hop where the column used in foreignkey is the same column for faceting.
+     *      In this case, we can completely ignore the foreignkey path and just do a value check on main table.
+     *
+     * Based on this, the following will be the logic for this function:
+     *     - If facet has `null` filter: `false`
+     *     - If facet has `"hide_null_choice": true`: `true`
+     *     - If G1: `false`
+     *     - If G2: `true`
+     *     - If G3.1: `false`
+     *     - If G3 and no other G3 has null: `false`
+     *     - otherwise: `false`
      * @type {Boolean}
      */
     get hideNullChoice() {
         if (this._hideNullChoice === undefined) {
-            // this._hideNullChoice = (this._facetObject.hide_null_choice === true);
-            this._hideNullChoice = true;
+            var getHideNull = function (self) {
+                // if null filter exists, we have to show it
+                if (self.hasNullFilter) {
+                    return false;
+                }
+
+                // if facet definition tells us to hide it
+                if (self._facetObject.hide_null_choice === true) {
+                    return true;
+                }
+
+                // G1
+                if (self.foreignKeys.length < 1) {
+                    return false;
+                }
+
+                // G2
+                if (self._column.nullok) {
+                    return true;
+                }
+
+                // G3.1
+                if (!self.ermrestHasPath) {
+                    return false;
+                }
+
+                // G3
+                var othersHaveNull = self.reference.facetColumns.some(function (fc, index) {
+                    return index !== self.index && fc.hasNullFilter && fc.ermrestHasPath;
+                });
+
+                return othersHaveNull;
+
+            };
+            this._hideNullChoice = getHideNull(this);
         }
         return this._hideNullChoice;
     },
@@ -2296,7 +2381,7 @@ FacetColumn.prototype = {
      */
     get hideNotNullChoice() {
         if (this._hideNotNullChoice === undefined) {
-            this._hideNotNullChoice = (this._facetObject.hide_not_null_choice === true);
+            this._hideNotNullChoice = !this.hasNotNullFilter && (this._facetObject.hide_not_null_choice === true);
         }
         return this._hideNotNullChoice;
     },
@@ -3142,8 +3227,8 @@ ColumnGroupAggregateFn.prototype = {
             throw new Error("Cannot use this API on pseudo-column.");
         }
 
-        if (this._ref.location.hasJoin && this._ref.projectionTable.shortestKey.length > 1) {
-            throw new Error("Table must have a simple key for entity counts: " + this._ref.projectionTable.name);
+        if (this._ref.location.hasJoin && this._ref.facetBaseTable.shortestKey.length > 1) {
+            throw new Error("Table must have a simple key for entity counts: " + this._ref.facetBaseTable.name);
         }
 
         var countColName = "count",
@@ -3218,7 +3303,7 @@ ColumnGroupAggregateFn.prototype = {
         if (!hideNumOccurrences || sortCounts) {
             var countName = "cnt(*)";
             if (self._ref.location.hasJoin) {
-                countName = "cnt_d(" + self._ref.location.projectionTableAlias + ":" + module._fixedEncodeURIComponent(self._ref.projectionTable.shortestKey[0].name) + ")";
+                countName = "cnt_d(" + self._ref.location.facetBaseTableAlias + ":" + module._fixedEncodeURIComponent(self._ref.facetBaseTable.shortestKey[0].name) + ")";
             }
 
             aggregateColumns.push(
@@ -3254,7 +3339,7 @@ ColumnGroupAggregateFn.prototype = {
             throw new Error("Binning is not supported on column type " + column.type.name);
         }
 
-        if (reference.location.hasJoin && reference.projectionTable.shortestKey.length > 1) {
+        if (reference.location.hasJoin && reference.facetBaseTable.shortestKey.length > 1) {
             throw new Error("Table must have a simple key.");
         }
 

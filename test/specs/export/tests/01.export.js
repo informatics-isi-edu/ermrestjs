@@ -22,8 +22,8 @@ exports.execute = function (options) {
 
         var baseUri = options.url + "/catalog/" + process.env.DEFAULT_CATALOG + "/entity/" + schemaName1 + ":" + tableName;
 
-        // {"and":[{"source":"id","ranges":[{"min":"1","max":"10"}]},{"source":[{"inbound":["export","f1_fk_1"]},"id"],"choices":["1","2"]}]}
-        var facetBlob = "N4IghgdgJiBcDaoDOB7ArgJwMYFM4gEsYAaEDSAcxyTkRAFsCJ8BGEU+sAD1YAYQAvgF0BxZOmx4EoJgCN00WiBxcADigwAXdiABmLAPq6A1gbYjSREENJYAFigK4aCEG1IAma8IFA";
+        // {"and":[{"source":"id","ranges":[{"min":"1","max":"10"}]},{"source":[{"inbound":["export_table_annot_schema","f1_fk_1"]},"id"],"choices":["1","2"]}]}
+        var facetBlob = "N4IghgdgJiBcDaoDOB7ArgJwMYFM4gEsYAaEDSAcxyTkRAFsCJ8BGEU+sAD1YAYQAvgF0BxZOmx4EoJgCN00WiBxcADigwAXAPqawsgDY5tkCCh1IsACxyd2IAGYttDgNba2I0kRBDS1lAJcGgQQNlIAJl9hASA";
         var noAnnotUri = options.url + "/catalog/" + process.env.DEFAULT_CATALOG + "/entity/" + schemaName1 + ":" + tableNameNoExport + "/id=1/*::facets::" + facetBlob;
 
         var noExportOutputUri = options.url + "/catalog/" + process.env.DEFAULT_CATALOG + "/entity/" + schemaName2 + ":" + tableNameNoExport;

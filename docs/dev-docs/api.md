@@ -274,9 +274,9 @@ to use for ERMrest JavaScript agents.
     * [.ServiceUnavailableError](#ERMrest.ServiceUnavailableError)
         * [new ServiceUnavailableError(status, message)](#new_ERMrest.ServiceUnavailableError_new)
     * [.InvalidFacetOperatorError](#ERMrest.InvalidFacetOperatorError)
-        * [new InvalidFacetOperatorError(message, path)](#new_ERMrest.InvalidFacetOperatorError_new)
+        * [new InvalidFacetOperatorError(path, subMessage)](#new_ERMrest.InvalidFacetOperatorError_new)
     * [.InvalidCustomFacetOperatorError](#ERMrest.InvalidCustomFacetOperatorError)
-        * [new InvalidCustomFacetOperatorError(message, path)](#new_ERMrest.InvalidCustomFacetOperatorError_new)
+        * [new InvalidCustomFacetOperatorError(path, subMessage)](#new_ERMrest.InvalidCustomFacetOperatorError_new)
     * [.InvalidFilterOperatorError](#ERMrest.InvalidFilterOperatorError)
         * [new InvalidFilterOperatorError(message, path, invalidFilter)](#new_ERMrest.InvalidFilterOperatorError_new)
     * [.InvalidInputError](#ERMrest.InvalidInputError)
@@ -302,7 +302,7 @@ to use for ERMrest JavaScript agents.
         * [.displayname](#ERMrest.Reference+displayname) : <code>object</code>
         * [.uri](#ERMrest.Reference+uri) : <code>string</code>
         * [.table](#ERMrest.Reference+table) : [<code>Table</code>](#ERMrest.Table)
-        * [.projectionTable](#ERMrest.Reference+projectionTable) : [<code>Table</code>](#ERMrest.Table)
+        * [.facetBaseTable](#ERMrest.Reference+facetBaseTable) : [<code>Table</code>](#ERMrest.Table)
         * [.columns](#ERMrest.Reference+columns) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
         * [.facetColumns](#ERMrest.Reference+facetColumns) ⇒ [<code>Array.&lt;FacetColumn&gt;</code>](#ERMrest.FacetColumn)
         * [.location](#ERMrest.Reference+location) ⇒ <code>ERMrest.Location</code>
@@ -434,6 +434,8 @@ to use for ERMrest JavaScript agents.
         * [.dataSource](#ERMrest.FacetColumn+dataSource) : <code>obj</code> \| <code>string</code>
         * [.filters](#ERMrest.FacetColumn+filters)
         * [.isOpen](#ERMrest.FacetColumn+isOpen) : <code>Boolean</code>
+        * [.hasPath](#ERMrest.FacetColumn+hasPath) : <code>Boolean</code>
+        * [.ermrestHasPath](#ERMrest.FacetColumn+ermrestHasPath) : <code>Boolean</code>
         * [.preferredMode](#ERMrest.FacetColumn+preferredMode) : <code>string</code>
         * [.isEntityMode](#ERMrest.FacetColumn+isEntityMode) : <code>Boolean</code>
         * [.barPlot](#ERMrest.FacetColumn+barPlot) : <code>Boolean</code>
@@ -587,7 +589,7 @@ to use for ERMrest JavaScript agents.
         * [.displayname](#ERMrest.Reference+displayname) : <code>object</code>
         * [.uri](#ERMrest.Reference+uri) : <code>string</code>
         * [.table](#ERMrest.Reference+table) : [<code>Table</code>](#ERMrest.Table)
-        * [.projectionTable](#ERMrest.Reference+projectionTable) : [<code>Table</code>](#ERMrest.Table)
+        * [.facetBaseTable](#ERMrest.Reference+facetBaseTable) : [<code>Table</code>](#ERMrest.Table)
         * [.columns](#ERMrest.Reference+columns) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
         * [.facetColumns](#ERMrest.Reference+facetColumns) ⇒ [<code>Array.&lt;FacetColumn&gt;</code>](#ERMrest.FacetColumn)
         * [.location](#ERMrest.Reference+location) ⇒ <code>ERMrest.Location</code>
@@ -2392,14 +2394,14 @@ DuplicateConflictError - Return error pertaining to Duplicate entried
 **Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
 <a name="new_ERMrest.InvalidFacetOperatorError_new"></a>
 
-#### new InvalidFacetOperatorError(message, path)
+#### new InvalidFacetOperatorError(path, subMessage)
 An invalid facet operator
 
 
 | Param | Type | Description |
 | --- | --- | --- |
-| message | <code>string</code> | error message |
 | path | <code>string</code> | path for redirectLink |
+| subMessage | <code>string</code> | the details of the error message |
 
 <a name="ERMrest.InvalidCustomFacetOperatorError"></a>
 
@@ -2407,14 +2409,14 @@ An invalid facet operator
 **Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
 <a name="new_ERMrest.InvalidCustomFacetOperatorError_new"></a>
 
-#### new InvalidCustomFacetOperatorError(message, path)
+#### new InvalidCustomFacetOperatorError(path, subMessage)
 An invalid facet operator
 
 
 | Param | Type | Description |
 | --- | --- | --- |
-| message | <code>string</code> | error message |
 | path | <code>string</code> | path for redirectLink |
+| subMessage | <code>string</code> | the details of the error message |
 
 <a name="ERMrest.InvalidFilterOperatorError"></a>
 
@@ -2570,7 +2572,7 @@ Constructor for a ParsedFilter.
     * [.displayname](#ERMrest.Reference+displayname) : <code>object</code>
     * [.uri](#ERMrest.Reference+uri) : <code>string</code>
     * [.table](#ERMrest.Reference+table) : [<code>Table</code>](#ERMrest.Table)
-    * [.projectionTable](#ERMrest.Reference+projectionTable) : [<code>Table</code>](#ERMrest.Table)
+    * [.facetBaseTable](#ERMrest.Reference+facetBaseTable) : [<code>Table</code>](#ERMrest.Table)
     * [.columns](#ERMrest.Reference+columns) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
     * [.facetColumns](#ERMrest.Reference+facetColumns) ⇒ [<code>Array.&lt;FacetColumn&gt;</code>](#ERMrest.FacetColumn)
     * [.location](#ERMrest.Reference+location) ⇒ <code>ERMrest.Location</code>
@@ -2669,10 +2671,10 @@ Should not be used for sending requests to ermrest, use this.location.ermrestCom
 The table object for this reference
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
-<a name="ERMrest.Reference+projectionTable"></a>
+<a name="ERMrest.Reference+facetBaseTable"></a>
 
-#### reference.projectionTable : [<code>Table</code>](#ERMrest.Table)
-The projection table object,
+#### reference.facetBaseTable : [<code>Table</code>](#ERMrest.Table)
+The base table object that is used for faceting,
 if there's a join in path, this will return a different object from .table
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
@@ -3059,7 +3061,7 @@ has other moderating attributes, for instance that indicate the
 
 #### reference.getExportTemplates(useDefault) ⇒ <code>Object</code>
 Will return the expor templates that are available for this reference.
-It will validate the templates that are defined in annotation.
+It will validate the templates that are defined in annotations.
 If its `detailed` context and annotation was missing,
 it will return the default export template.
 
@@ -4141,6 +4143,8 @@ Indicates that this ReferenceColumn is an inbound foreign key.
     * [.dataSource](#ERMrest.FacetColumn+dataSource) : <code>obj</code> \| <code>string</code>
     * [.filters](#ERMrest.FacetColumn+filters)
     * [.isOpen](#ERMrest.FacetColumn+isOpen) : <code>Boolean</code>
+    * [.hasPath](#ERMrest.FacetColumn+hasPath) : <code>Boolean</code>
+    * [.ermrestHasPath](#ERMrest.FacetColumn+ermrestHasPath) : <code>Boolean</code>
     * [.preferredMode](#ERMrest.FacetColumn+preferredMode) : <code>string</code>
     * [.isEntityMode](#ERMrest.FacetColumn+isEntityMode) : <code>Boolean</code>
     * [.barPlot](#ERMrest.FacetColumn+barPlot) : <code>Boolean</code>
@@ -4232,6 +4236,22 @@ Filters that are applied to this facet.
 #### facetColumn.isOpen : <code>Boolean</code>
 If has filters it will return true,
 otherwise returns facetObject['open']
+
+**Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
+<a name="ERMrest.FacetColumn+hasPath"></a>
+
+#### facetColumn.hasPath : <code>Boolean</code>
+Whether the source has path or not
+
+**Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
+<a name="ERMrest.FacetColumn+ermrestHasPath"></a>
+
+#### facetColumn.ermrestHasPath : <code>Boolean</code>
+Whether the source is going to have path when sending the request to ermrest
+The path that is defined on the facet might be different from the one that
+we are going to use to talk with ermrest. We might optmize the path.
+Facets with only one hop where the column used in foreignkey is the same column for faceting, and is not nullable
+can be optmized by completely ignoring the foreignkey path and just doing a value check on main table.
 
 **Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
 <a name="ERMrest.FacetColumn+preferredMode"></a>
@@ -4326,7 +4346,30 @@ Could be used as tooltip to provide more information about the facetColumn
 <a name="ERMrest.FacetColumn+hideNullChoice"></a>
 
 #### facetColumn.hideNullChoice : <code>Boolean</code>
-Whether client should hide the null choice
+Whether client should hide the null choice.
+`null` filter could mean any of the following:
+  - Scalar value being `null`. In terms of ermrest, a simple col::null:: query
+  - No value exists in the given path (checking presence of a value in the path). In terms of ermrest,
+    we have to construct an outer join. For performance we're going to use right outer join.
+    Because of ermrest limitation, we cannot have more than two right outer joins and therefore
+    two such null checks cannot co-exist.
+Since we're not going to show two different options for these two meanings,
+we have to make sure to offer `null` option when only one of these two meanings would make sense.
+Based on this, we can categorize facets into these three groups:
+  1. (G1) Facets without any path.
+  2. (G2) Facets with path where the column is nullable: `null` could mean any of those.
+  3. (G3) Facets with path where the column is not nullable. Here `null` can only mean path existence.
+  3. (G3.1) Facets with only one hop where the column used in foreignkey is the same column for faceting.
+     In this case, we can completely ignore the foreignkey path and just do a value check on main table.
+
+Based on this, the following will be the logic for this function:
+    - If facet has `null` filter: `false`
+    - If facet has `"hide_null_choice": true`: `true`
+    - If G1: `false`
+    - If G2: `true`
+    - If G3.1: `false`
+    - If G3 and no other G3 has null: `false`
+    - otherwise: `false`
 
 **Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
 <a name="ERMrest.FacetColumn+hideNotNullChoice"></a>
@@ -5699,7 +5742,7 @@ get PathColumn object by column name
     * [.displayname](#ERMrest.Reference+displayname) : <code>object</code>
     * [.uri](#ERMrest.Reference+uri) : <code>string</code>
     * [.table](#ERMrest.Reference+table) : [<code>Table</code>](#ERMrest.Table)
-    * [.projectionTable](#ERMrest.Reference+projectionTable) : [<code>Table</code>](#ERMrest.Table)
+    * [.facetBaseTable](#ERMrest.Reference+facetBaseTable) : [<code>Table</code>](#ERMrest.Table)
     * [.columns](#ERMrest.Reference+columns) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
     * [.facetColumns](#ERMrest.Reference+facetColumns) ⇒ [<code>Array.&lt;FacetColumn&gt;</code>](#ERMrest.FacetColumn)
     * [.location](#ERMrest.Reference+location) ⇒ <code>ERMrest.Location</code>
@@ -5798,10 +5841,10 @@ Should not be used for sending requests to ermrest, use this.location.ermrestCom
 The table object for this reference
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
-<a name="ERMrest.Reference+projectionTable"></a>
+<a name="ERMrest.Reference+facetBaseTable"></a>
 
-#### reference.projectionTable : [<code>Table</code>](#ERMrest.Table)
-The projection table object,
+#### reference.facetBaseTable : [<code>Table</code>](#ERMrest.Table)
+The base table object that is used for faceting,
 if there's a join in path, this will return a different object from .table
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
@@ -6188,7 +6231,7 @@ has other moderating attributes, for instance that indicate the
 
 #### reference.getExportTemplates(useDefault) ⇒ <code>Object</code>
 Will return the expor templates that are available for this reference.
-It will validate the templates that are defined in annotation.
+It will validate the templates that are defined in annotations.
 If its `detailed` context and annotation was missing,
 it will return the default export template.
 

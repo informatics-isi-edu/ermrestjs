@@ -250,16 +250,15 @@
     // these are errors that we defined to manage errors in the API
     /**
      * @memberof ERMrest
-     * @param {string} message error message
      * @param {string} path path for redirectLink
+     * @param {string} subMessage the details of the error message
      * @constructor
      * @desc An invalid facet operator
      */
-    function InvalidFacetOperatorError(message, path) {
-
-        message = message ? message : module._errorMessage.facetingError;
+    function InvalidFacetOperatorError(path, subMessage) {
+        var message = module._errorMessage.facetingError;
         var redirectPath = removeInvalidFacetFilter(path);
-        ERMrestError.call(this, '', module._errorStatus.facetingError, message, '', redirectPath);
+        ERMrestError.call(this, '', module._errorStatus.facetingError, message, subMessage, redirectPath);
     }
 
     InvalidFacetOperatorError.prototype = Object.create(ERMrestError.prototype);
@@ -285,16 +284,15 @@
     // these are errors that we defined to manage errors in the API
     /**
      * @memberof ERMrest
-     * @param {string} message error message
      * @param {string} path path for redirectLink
+     * @param {string} subMessage the details of the error message
      * @constructor
      * @desc An invalid facet operator
      */
-    function InvalidCustomFacetOperatorError(message, path) {
-
-        message = message ? message : module._errorMessage.customFacetingError;
+    function InvalidCustomFacetOperatorError(path, subMessage) {
+        var message = module._errorMessage.customFacetingError;
         var redirectPath = removeInvalidCustomFacetFilter(path);
-        ERMrestError.call(this, '', module._errorStatus.customFacetingError, message, '', redirectPath);
+        ERMrestError.call(this, '', module._errorStatus.customFacetingError, message, subMessage, redirectPath);
     }
 
     InvalidCustomFacetOperatorError.prototype = Object.create(ERMrestError.prototype);

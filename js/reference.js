@@ -188,7 +188,7 @@
         // if schema was not provided in the URI, find the schema
         this._table = catalog.schemas.findTable(location.tableName, location.schemaName);
 
-        this._projectionTable = catalog.schemas.findTable(location.projectionTableName, location.projectionSchemaName);
+        this._facetBaseTable = catalog.schemas.findTable(location.facetBaseTableName, location.facetBaseSchemaName);
 
         this._shortestKey = this._table.shortestKey;
 
@@ -252,12 +252,12 @@
          },
 
          /**
-          * The projection table object,
+          * The base table object that is used for faceting,
           * if there's a join in path, this will return a different object from .table
           * @type {ERMrest.Table}
           */
-         get projectionTable() {
-             return this._projectionTable;
+         get facetBaseTable() {
+             return this._facetBaseTable;
          },
 
         /**
@@ -1359,7 +1359,6 @@
                 if (!useEntity && (this._table.foreignKeys.length() > 0 || oneToOnePseudos.length > 0)) {
                     var compactPath = this._location.ermrestCompactPath,
                         mainTableAlias = this._location.mainTableAlias,
-                        projectionTableAlias = this._location.projectionTableAlias,
                         aggList = [],
                         sortColumn,
                         addedCols,
@@ -2244,7 +2243,7 @@
 
         /**
          * Will return the expor templates that are available for this reference.
-         * It will validate the templates that are defined in annotation.
+         * It will validate the templates that are defined in annotations.
          * If its `detailed` context and annotation was missing,
          * it will return the default export template.
          * @param {Boolean} useDefault whether we should use default template or not
@@ -2679,7 +2678,7 @@
 
         setNewTable: function(table) {
             this._table = table;
-            this._projectionTable = table;
+            this._rootTable = table;
             this._shortestKey = table.shortestKey;
             this._displayname = table.displayname;
             delete this._referenceColumns;
@@ -3858,8 +3857,7 @@
         if (this._ref._table.foreignKeys.length() > 0 || oneToOnePseudos.length > 0) {
 
             var fks = reference._table.foreignKeys.all(), i, j, colFKs;
-            var mTableAlias = this._ref.location.mainTableAlias,
-                pTabeAlias = this._ref.location.projectionTableAlias;
+            var mTableAlias = this._ref.location.mainTableAlias;
 
             try {
                 // the attributegroup output
