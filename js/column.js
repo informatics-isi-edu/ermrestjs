@@ -2037,36 +2037,38 @@ FacetColumn.prototype = {
         if (this._preferredMode === undefined) {
             var modes = module._facetUXModes;
 
-            // returns true is the typename includes the given string
-            var includesType = function (type) {
-                return typename.indexOf(type) > -1;
-            }
-
             // a facet is in range mode if it's column's type is integer, float, date, timestamp, or serial
             var isRangeMode = function (column) {
                 var typename = column.type.rootName;
 
                 //default facet for unique not null integer/serial should be choice (not range)
-                if (includesType("serial") || includesType("int")) {
-                    return column.nullok || col.memberOfKeys.filter(function (key) {
+                if (typename.startsWith("serial") || typename.startsWith("int")) {
+                    return column.nullok || column.memberOfKeys.filter(function (key) {
                         return key.simple;
                     }).length === 0;
                 }
 
-                return includesType("float") || includesType("date") || includesType("timestamp")) || (includesType("numeric"));
-            }
+                return typename.startsWith("float") || typename.startsWith("date") || typename.startsWith("timestamp") || typename.startsWith("numeric");
+            };
 
             var getPreferredMode = function (self) {
                 // see if only one type of facet is preselected
                 var onlyChoice = false, onlyRange = false;
-                if (self.filters.length > 0) {
-                    onlyChoice = self.choiceFilters.length === self.filters.length;
-                    onlyRange = self.rangeFilters.length === self.filters.length;
+
+                // (not-null can be applied to both choices and ranges)
+                var filterLen = self.filters.length;
+                if (self.hasNotNullFilter) {
+                    filterLen--;
+                }
+
+                if (filterLen > 0) {
+                    onlyChoice = self.choiceFilters.length === filterLen;
+                    onlyRange = self.rangeFilters.length === filterLen;
                 }
 
                 // if only choices or ranges preselected, honor it
                 if (onlyChoice || onlyRange) {
-                    return onlyChoice ? modes.CHOICE : mode.RANGE;
+                    return onlyChoice ? modes.CHOICE : modes.RANGE;
                 }
 
                 // use the defined ux_mode
@@ -2076,7 +2078,7 @@ FacetColumn.prototype = {
 
                 // use the column type to determien its ux_mode
                 return (!self.isEntityMode && isRangeMode(self._column)) ? modes.RANGE : modes.CHOICE;
-            }
+            };
 
             this._preferredMode = getPreferredMode(this);
         }
