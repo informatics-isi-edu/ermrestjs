@@ -330,6 +330,7 @@ Configuration attributes (optional):
 - `open`: Setting this attribute to `true`, will force the facet to open by default.
 - `bar_plot`: This attribute is meant to be an object of properties that control the display of the histogram. Setting this attribute to `false` will force the histogram to not be shown in the facet in the facet panel. If unspecified, default is `true` (or show the histogram).
 - `ux_mode`: `choices`, `ranges`, or `check_presence`. If a multi-modal facet control UX is available, it will specify the default UX mode that should be used (If `ux_mode` is defined, the other type of constraint will not be displayed even if you have defined it in the annotation). In `check_presence` mode only two options will be available to the users, "not-null" and "null".
+- `hide_null_choice` and `hide_not_null_choice`: By default, we are going to add `null` and `not-null` options in the choice picker. Setting any of these variables to `true`, will hide its respective option.
 
 `bar_plot` attributes (optional):
 - `n_bins`: Used to define the number of bins the histogram uses to fetch and display data. If undefined, default is 30 bins.
