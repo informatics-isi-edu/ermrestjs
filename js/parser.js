@@ -106,6 +106,8 @@
         } else {
             this._compactUri = uri;
         }
+        // there might be an extra slash at the end of the url
+        this._compactUri = module._stripTrailingSlash(this._compactUri);
 
         // service
         parts = uri.match(/(.*)\/catalog\/([^\/]*)\/(entity|attribute|aggregate|attributegroup)\/(.*)/);
@@ -128,6 +130,9 @@
 
         // compactPath is path without modifiers
         this._compactPath = (modifiers === "" ? this._path : this._path.split(modifiers)[0]);
+
+        // there might be an extra slash at the end of the url
+        this._compactPath = module._stripTrailingSlash(this._compactPath);
 
         // <sort>/<page>
         // sort and paging
@@ -237,7 +242,7 @@
         });
 
         // this is for the last part of url that might not end with join.
-        if (filter || cfacets || facets || joins) {
+        if (filter || cfacets || facets || joins.length > 0) {
             pathParts.push(new PathPart(MAIN_TABLE_ALIAS, joins, schema, table, facets, cfacets, filter, filtersString));
         }
 
@@ -646,11 +651,11 @@
          * @returns {ParsedFilter} undefined if there is no filter
          */
         get filter() {
-            return this.lastPathPart ? this.lastPathPart.filter : null;
+            return this.lastPathPart ? this.lastPathPart.filter : undefined;
         },
 
         get filtersString() {
-            return this.lastPathPart ? this.lastPathPart.filtersString : null;
+            return this.lastPathPart ? this.lastPathPart.filtersString : undefined;
         },
 
         /**
@@ -676,7 +681,7 @@
         get hasJoin() {
             if (this._hasJoin === undefined) {
                 var len = this.pathParts.length;
-                this._hasJoin =  (len > 1) || this.pathParts[len-1].joins.length > 0;
+                this._hasJoin =  (len > 1) || (len == 1 && this.pathParts[0].joins.length > 0);
             }
             return this._hasJoin;
         },
@@ -698,7 +703,7 @@
          * @type {PathPart}
          */
         get lastPathPart() {
-            return this.pathParts.length > 0 ? this.pathParts[this.pathParts.length-1] : null;
+            return this.pathParts.length > 0 ? this.pathParts[this.pathParts.length-1] : undefined;
         },
 
         /**
@@ -708,7 +713,7 @@
          */
         get facetBasePathPart() {
             var len = this.pathParts.length;
-            return len >= 2 ? this.pathParts[len-2] : null;
+            return len >= 2 ? this.pathParts[len-2] : undefined;
         },
 
         /**
@@ -758,7 +763,7 @@
          * @type {CustomFacets}
          */
         get customFacets() {
-            return this.lastPathPart ? this.lastPathPart.customFacets : null;
+            return this.lastPathPart ? this.lastPathPart.customFacets : undefined;
         },
 
         /**
