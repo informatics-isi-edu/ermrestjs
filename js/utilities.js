@@ -501,6 +501,10 @@
         return res;
     };
 
+    module._stripTrailingSlash = function (str) {
+        return str.endsWith("/") ? str.slice(0, -1) : str;
+    };
+
     /**
      * @function
      * @param {String} str string to be encoded.
