@@ -2536,10 +2536,8 @@
                 headers: this._generateContextHeader(contextHeaderParams)
             };
 
-            var URL_LENGTH_LIMIT = 2048;
-
             var urlSet = [];
-            var baseUri = this.location.service + "/catalog/" + this.location.catalog + "/aggregate/" + this.location.ermrestCompactPath + "/";
+            var baseUri = this.location.ermrestCompactPath + "/";
             // create a url: ../aggregate/../0:=fn(),1:=fn()..
             // TODO could be re-written
             for (var i = 0; i < aggregateList.length; i++) {
@@ -2553,7 +2551,7 @@
                 }
 
                 // if adding the next aggregate to the url will push it past url length limit, push url onto the urlSet and reset the working url
-                if ((url + i + ":=" + agg).length > URL_LENGTH_LIMIT) {
+                if ((url + i + ":=" + agg).length > module.URL_PATH_LENGTH_LIMIT) {
                     // if cannot even add the first one
                     if (i === 0) {
                         defer.reject(new module.InvalidInputError("Cannot send the request because of URL length limit."));
@@ -2581,7 +2579,9 @@
             var aggregatePromises = [];
             var http = this._server._http;
             for (var j = 0; j < urlSet.length; j++) {
-                aggregatePromises.push(http.get(urlSet[j], config));
+                aggregatePromises.push(
+                    http.get(this.location.service + "/catalog/" + this.location.catalog + "/aggregate/" + urlSet[j], config)
+                );
             }
 
             module._q.all(aggregatePromises).then(function getAggregates(response) {

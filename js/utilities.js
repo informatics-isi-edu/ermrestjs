@@ -502,6 +502,16 @@
     };
 
     /**
+     * Strip the trailing slash if there's any
+     * @private
+     * @param  {String} str
+     * @return {String}
+     */
+    module._stripTrailingSlash = function (str) {
+        return str.endsWith("/") ? str.slice(0, -1) : str;
+    };
+
+    /**
      * @function
      * @param {String} str string to be encoded.
      * @desc
@@ -3057,6 +3067,18 @@
         // take care of facet and fitler
         return truncateFacet(obj, header).res;
     };
+
+    // for more information on url length limit refer to the following issue:
+    // https://github.com/informatics-isi-edu/chaise/issues/1669
+    module.URL_PATH_LENGTH_LIMIT = 4000;
+    var isNode =  typeof process !== 'undefined' && process.versions != null && process.versions.node != null;
+    if (!isNode) {
+        var isIE = /*@cc_on!@*/false || !!document.documentMode, // Internet Explorer 6-11
+        isEdge = !isIE && !!window.StyleMedia; // Edge
+        if(isIE || isEdge) {
+            module.URL_PATH_LENGTH_LIMIT = 2000;
+        }
+    }
 
     module._constraintTypes = Object.freeze({
         KEY: "k",
