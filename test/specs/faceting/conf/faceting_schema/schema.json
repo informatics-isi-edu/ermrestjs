@@ -166,15 +166,15 @@
                     "filter": {
                         "and": [
                             {"source": "*", "choices": ["test"]},
-                            {"source": "id", "ux_mode": "choices", "choices": ["1"], "hide_num_occurrences": false, "hide_not_null_choice": true, "hide_null_choice": true},
-                            {"source": "int_col", "ranges": [{"min": -2}], "order": [{"column": "id", "descending": true}], "hide_num_occurrences": true},
+                            {"source": "id", "ux_mode": "ranges", "choices": ["1"], "hide_num_occurrences": false, "hide_not_null_choice": true, "hide_null_choice": true},
+                            {"source": "int_col", "ux_mode": "choices", "ranges": [{"min": -2}], "order": [{"column": "id", "descending": true}], "hide_num_occurrences": true},
                             {"source": ["float_col"], "ux_mode": "invalid mode", "order": [{"column": "id"}, {"column": "float_col", "descending": true}], "hide_not_null_choice": true},
                             {"source": "date_col"},
                             {"source": "timestamp_col"},
                             {"source": "text_col", "ux_mode": "invalid mode", "order": [{"column": "date_col"}, {"num_occurrences": true}]},
                             {"source": "longtext_col", "comment": "long text comment in facet", "order": false},
                             {"source": "markdown_col", "order": [{"column": "invalid!!"}], "hide_num_occurrences": true, "hide_not_null_choice": false},
-                            {"source": "boolean_col"},
+                            {"source": "boolean_col", "ux_mode": "ranges"},
                             {"source": ["json_col"]},
                             {"source": ["jsonb_col"]},
                             {"source": [{"outbound": ["faceting_schema", "main_fk1"]}, "id"], "markdown_name": "**F1**", "hide_null_choice": true},
@@ -199,6 +199,11 @@
                                 {"inbound": ["faceting_schema", "secondpath_2_fk1"]},
                                 "RID"
                             ]},
+                            {"source": [
+                                {"inbound": ["faceting_schema", "secondpath_1_fk1"]},
+                                {"inbound": ["faceting_schema", "secondpath_2_fk1"]},
+                                "id"
+                            ], "entity": false},
                             {"source": [{"inbound": ["faceting_schema", "main_f3_assoc_fk1"]}, {"outbound": ["faceting_schema", "main_f3_assoc_fk2"]}, "id"]},
                             {"source": "numeric_col"}
                         ]

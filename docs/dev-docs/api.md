@@ -4262,11 +4262,15 @@ can be optmized by completely ignoring the foreignkey path and just doing a valu
 The Preferred ux mode.
 Any of:
 `choices`, `ranges`, or `check_presence`
-This should be used if we're not in entity mode.
+This should be used if we're not in entity mode. In entity mode it will
+always return `choices`.
 
-1. use ux_mode if available
-2. use choices if in entity mode
-3. use range or chocies based on type.
+The logic is as follows,
+1. if facet has only choice or range filter, return that.
+2. use ux_mode if available
+3. use choices if in entity mode
+4. return choices if int or serial, part of key, and not null.
+5. return ranges or choices based on the type.
 
 **Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
 <a name="ERMrest.FacetColumn+isEntityMode"></a>
