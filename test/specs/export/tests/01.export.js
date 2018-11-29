@@ -226,7 +226,7 @@ exports.execute = function (options) {
 
             describe("for BDBag template", function () {
                 it("should create an exporter object", function() {
-                    exportObj = new ermRest.Exporter(reference, "bag-name", reference.table.exportTemplates[0]);
+                    exportObj = new ermRest.Exporter(reference, "bag-name", reference.table.exportTemplates[0], "/iobox/export/");
 
                     expect(exportObj instanceof ermRest.Exporter).toBe(true);
                     expect(exportObj.template).toEqual(reference.table.exportTemplates[0]);
@@ -276,7 +276,7 @@ exports.execute = function (options) {
 
             describe("for BDBag CSV template", function () {
                 it("should create an exporter object", function() {
-                    exportObj = new ermRest.Exporter(reference, "bag-name", reference.table.exportTemplates[1]);
+                    exportObj = new ermRest.Exporter(reference, "bag-name", reference.table.exportTemplates[1], "iobox/export/");
 
                     expect(exportObj instanceof ermRest.Exporter).toBe(true);
                     expect(exportObj.template).toEqual(reference.table.exportTemplates[1]);
@@ -326,7 +326,7 @@ exports.execute = function (options) {
 
             describe("for BDBag JSON template", function () {
                 it("should create an exporter object", function() {
-                    exportObj = new ermRest.Exporter(reference, "bag-name", reference.table.exportTemplates[2]);
+                    exportObj = new ermRest.Exporter(reference, "bag-name", reference.table.exportTemplates[2], "/iobox/export/");
 
                     expect(exportObj instanceof ermRest.Exporter).toBe(true);
                     expect(exportObj.template).toEqual(reference.table.exportTemplates[2]);

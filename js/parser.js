@@ -1712,7 +1712,7 @@
              * The ermrset string path that will be appended to the url
              * @type {String}
              */
-            this.ermrestPath = obj.ermrest_path.replace(/^\/|\/$/g, '');
+            this.ermrestPath = module.trimSlashes(obj.ermrest_path);
         }
 
         /**

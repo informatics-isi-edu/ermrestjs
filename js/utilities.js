@@ -506,6 +506,15 @@
     };
 
     /**
+     * trim the slashes that might exist at the begining or end of the string
+     * @param  {String} str
+     * @return {String}
+     */
+    module.trimSlashes = function (str) {
+        return str.replace(/^\/+|\/+$/g, '');
+    };
+
+    /**
      * @function
      * @param {String} str string to be encoded.
      * @desc
