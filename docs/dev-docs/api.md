@@ -521,7 +521,7 @@ to use for ERMrest JavaScript agents.
         * [new AttributeGroupReferenceAggregateFn(reference)](#new_ERMrest.AttributeGroupReferenceAggregateFn_new)
         * [.countAgg](#ERMrest.AttributeGroupReferenceAggregateFn+countAgg) : <code>Object</code>
     * [.exporter](#ERMrest.exporter)
-        * [new exporter(reference, template)](#new_ERMrest.exporter_new)
+        * [new exporter(reference, bagName, template, servicePath)](#new_ERMrest.exporter_new)
         * [.exportParameters](#ERMrest.exporter+exportParameters)
         * [.run(contextHeaderParams)](#ERMrest.exporter+run) ⇒ <code>Promise</code>
         * [.cancel()](#ERMrest.exporter+cancel) ⇒ <code>boolean</code>
@@ -5154,21 +5154,23 @@ Therefore the returned count might not be exactly the same as number of returned
 **Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
 
 * [.exporter](#ERMrest.exporter)
-    * [new exporter(reference, template)](#new_ERMrest.exporter_new)
+    * [new exporter(reference, bagName, template, servicePath)](#new_ERMrest.exporter_new)
     * [.exportParameters](#ERMrest.exporter+exportParameters)
     * [.run(contextHeaderParams)](#ERMrest.exporter+run) ⇒ <code>Promise</code>
     * [.cancel()](#ERMrest.exporter+cancel) ⇒ <code>boolean</code>
 
 <a name="new_ERMrest.exporter_new"></a>
 
-#### new exporter(reference, template)
+#### new exporter(reference, bagName, template, servicePath)
 Export Object
 
 
 | Param | Type | Description |
 | --- | --- | --- |
 | reference | [<code>Reference</code>](#ERMrest.Reference) |  |
+| bagName | <code>String</code> | the name that will be used for the bag |
 | template | <code>Object</code> | the tempalte must be in the valid format. |
+| servicePath | <code>String</code> | the path to the service, i.e. "/deriva/export/" |
 
 <a name="ERMrest.exporter+exportParameters"></a>
 

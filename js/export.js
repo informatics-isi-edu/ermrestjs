@@ -95,19 +95,25 @@ var ERMrest = (function(module) {
      * @memberof ERMrest
      * @class
      * @param {ERMrest.Reference} reference
+     * @param {String} bagName the name that will be used for the bag
      * @param {Object} template the tempalte must be in the valid format.
+     * @param {String} servicePath the path to the service, i.e. "/deriva/export/"
      *
      *
      * @returns {Export}
      * @constructor
      */
-    var exporter = function (reference, bagName, template) {
+    var exporter = function (reference, bagName, template, servicePath) {
         if (!module.validateExportTemplate(template)) {
             throw new module.InvalidInputError("Given Template is not valid.");
+        }
+        if (typeof servicePath !== "string" || servicePath.length === 0) {
+            throw new module.InvalidInputError("Given service path is not valid.");
         }
 
         this.reference = reference;
         this.template = template;
+        this.servicePath = module.trimSlashes(servicePath);
         this.formatOptions = {
             "BAG": {
                 name: bagName,
@@ -177,7 +183,7 @@ var ERMrest = (function(module) {
                         ];
                         if (typeof source.path === "string") {
                             // remove the first and last slash if it has one
-                            queryFrags.push(source.path.replace(/^\/|\/$/g, ''));
+                            queryFrags.push(module.trimSlashes(source.path));
                         }
 
                         query.processor = dest.type || bagOptions.table_format;
@@ -214,8 +220,11 @@ var ERMrest = (function(module) {
             try {
                 var defer = module._q.defer(), self = this;
 
-                var serviceUrl = self.exportParameters.catalog.host + "/iobox/export/" + (self.template.type == "BAG" ? "bdbag" : "file");
-
+                var serviceUrl = [
+                    self.exportParameters.catalog.host,
+                    self.servicePath,
+                    (self.template.type == "BAG" ? "bdbag" : "file")
+                ].join("/");
 
                 // log parameters
                 var headers = {};
