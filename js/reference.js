@@ -233,6 +233,13 @@
             return this._location.compactUri;
         },
 
+        get readPath() {
+            if (this._readPath === undefined) {
+                this._readPath = this._getReadPath(false).value;
+            }
+            return this._readPath;
+        },
+
         /**
          * The session object from the server
          * @param {Object} session - the session object
@@ -1190,254 +1197,13 @@
                 verify(typeof(limit) == 'number', "'limit' must be a number");
                 verify(limit > 0, "'limit' must be greater than 0");
 
-                // the pseudo-columns that their path is all outbound and Therefore
-                // creates a one-to-one relation between source and destination, hence
-                // we can just add them to the projection list to get the single value.
-                var oneToOnePseudos = this.columns.filter(function (c) {
-                    return c.isPseudo && c.isPathColumn && c.hasPath && c.isUnique && c.foreignKeys.length > 1;
-                });
-
-                var hasSort = Array.isArray(this._location.sortObject) && (this._location.sortObject.length !== 0),
-                    locationPath = this.location.path,
-                    _modifiedSortObject = [], // the sort object that is used for url creation (if location has sort).
-                    sortMap = {}, // maps an alias to PseudoColumn, used for sorting
-                    sortObject,  // the sort that will be accessible by this._location.sortObject
-                    sortColNames = {}, // to avoid adding duplciate columns
-                    sortObjectNames = {}, // to avoid computing sortObject logic more than once
-                    addSort,
-                    sortCols,
-                    col, i, j, k, l;
-
-                // make sure the page and modified sort object have teh same length
-                var checkPageObject = function (loc, sortObject) {
-                    sortObject = sortObject || loc.sortObject;
-                    if (loc.afterObject && loc.afterObject.length !== sortObject.length) {
-                        throw new module.InvalidPageCriteria("sort and after should have the same number of columns.", locationPath);
-                    }
-
-                    if (loc.beforeObject && loc.beforeObject.length !== sortObject.length) {
-                        throw new module.InvalidPageCriteria("sort and before should have the same number of columns.", locationPath);
-                    }
-
-                    return true;
-                };
-
-                /** Check the sort object. Does not change the `this._location` object.
-                 *   - Throws an error if the column doesn't exist or is not sortable.
-                 *   - maps the sorting to its sort columns.
-                 *       - for columns it's straighforward and uses the actual column name.
-                 *       - for PseudoColumns we need
-                 *           - A new alias: F# where the # is a positive integer.
-                 *           - The sort column name must be the "foreignkey_alias:column_name".
-                 * */
-                var processSortObject= function (self) {
-                    var foreignKeys = self._table.foreignKeys,
-                        colName,
-                        fkIndex, fk, desc;
-
-                    for (i = 0, k = 1, l = 1; i < sortObject.length; i++) {
-                        // find the column in ReferenceColumns
-                        try {
-                            col = self.getColumnByName(sortObject[i].column);
-                        } catch (e) {
-                            throw new module.InvalidSortCriteria("Given column name `" + sortObject[i].column + "` in sort is not valid.",  locationPath);
-                        }
-                        // sortObject[i].column = col.name;
-
-                        // column is not sortable
-                        if (!col.sortable) {
-                            throw new module.InvalidSortCriteria("Column " + sortObject[i].column + " is not sortable.",  locationPath);
-                        }
-
-                        // avoid computing columns twice
-                        if (sortObject[i].column in sortObjectNames) {
-                            continue;
-                        }
-                        sortObjectNames[sortObject[i].column] = true;
-                        addSort = true;
-
-                        sortCols = col._sortColumns;
-
-                        // use the sort columns instead of the actual column.
-                        for (j = 0; j < sortCols.length; j++) {
-                            if (col.isForeignKey || (col.isPathColumn && col.isUnique && col.foreignKeys.length === 1)) {
-                                if (useEntity) addSort = false;
-
-                                fkIndex = foreignKeys.all().indexOf(col.isForeignKey ? col.foreignKey : col.foreignKeys[0].obj);
-                                colName = "F" + (foreignKeys.length() + k++);
-                                sortMap[colName] = ["F" + (fkIndex+1), module._fixedEncodeURIComponent(sortCols[j].column.name)].join(":");
-                            } else if (col.isPathColumn && col.hasPath && col.isUnique && col.foreignKeys.length > 0) {
-                                if (useEntity) addSort = false;
-
-                                // we have added it to the projection list
-                                fkIndex = oneToOnePseudos.indexOf(col);
-                                colName = "P" + (oneToOnePseudos.length + l++);
-                                sortMap[colName] = ["P" + (fkIndex+1), module._fixedEncodeURIComponent(sortCols[j].column.name)].join(":");
-                            } else {
-                                colName = sortCols[j].column.name;
-                                if (colName in sortColNames) {
-                                    addSort = false;
-                                }
-                                sortColNames[colName] = true;
-                            }
-
-                            desc = sortObject[i].descending !== undefined ? sortObject[i].descending : false;
-                            // if descending is true on the column_order, then the sort should be reverted
-                            if (sortCols[j].descending) {
-                                desc = !desc;
-                            }
-
-                            if (addSort) {
-                                _modifiedSortObject.push({
-                                    "column": colName,
-                                    "descending": desc
-                                });
-                            }
-                         }
-                    }
-                };
-
-                if (hasSort) {
-                    sortObject = this._location.sortObject;
-                    processSortObject(this);
+                var uri = [this._location.service, "catalog", this._location.catalog].join("/");
+                var readPath = this._getReadPath(useEntity);
+                if (readPath.isAttributeGroup) {
+                    uri += "/attributegroup/" + readPath.value;
+                } else {
+                    uri += "/entity/" + readPath.value;
                 }
-                // use row-order if sort was not provided
-                else if (this.display._rowOrder){
-                    sortObject = this.display._rowOrder.map(function (ro) {
-                        return {"column": ro.column.name, "descending": ro.descending};
-                    });
-                    processSortObject(this);
-                }
-
-                // ermrest requires key columns to be in sort param for paging
-                if (typeof sortObject !== 'undefined') {
-                    // if any of the sortCols is a key, then we don't neede to add the shortest key
-                    var hasKey = this._table.keys.all().some(function (key) {
-                        return key.colset.columns.every(function(c) {
-                            return (c.name in sortColNames);
-                        });
-                    });
-
-                    if (!hasKey) {
-                        for (i = 0; i < this._shortestKey.length; i++) { // all the key columns
-                            col = this._shortestKey[i].name;
-                            // add if key col is not in the sortby list
-                            if (!(col in sortColNames)) {
-                                sortObject.push({"column": col, "descending":false}); // add key to sort
-                                _modifiedSortObject.push({"column": col, "descending":false});
-                            }
-                        }
-                    }
-                } else { // no sort provieded: use shortest key for sort
-                    sortObject = [];
-                    for (var sk = 0; sk < this._shortestKey.length; sk++) {
-                        col = this._shortestKey[sk].name;
-                        sortObject.push({"column":col, "descending":false});
-                    }
-                }
-
-                // this will update location.sort and all the uri and path
-                this._location.sortObject = sortObject;
-
-                var uri = this._location.ermrestCompactUri; // used for the http request
-
-                /** Change api to attributegroup for retrieving extra information
-                 * These information include:
-                 * - Values for the foreignkeys.
-                 * - Value for one-to-one pseudo-columns. These are the columns
-                 * that their defined path is all in the outbound direction.
-                 *
-                 * This will just affect the http request and not this._location
-                 *
-                 * NOTE:
-                 * This piece of code is dependent on the same assumptions as the current parser, which are:
-                 *   0. There is no table called `T`, `M`, `F1`, `F2`, ..., `P1`, `P2`, ...
-                 *   1. There is no alias in url (more precisely `T`, `M`, `F1`, `F2`, `F3`, `P1`, `P2`, ...)
-                 *   2. Filter comes before the link syntax.
-                 *   3. There is no trailing `/` in uri (as it will break the ermrest too).
-                 * */
-                if (!useEntity && (this._table.foreignKeys.length() > 0 || oneToOnePseudos.length > 0)) {
-                    var compactPath = this._location.ermrestCompactPath,
-                        mainTableAlias = this._location.mainTableAlias,
-                        aggList = [],
-                        sortColumn,
-                        addedCols,
-                        aggFn = "array_d";
-
-                    // generate the projection for given pseudo column
-                    var getPseudoPath = function (l) {
-                        var pseudoPath = [];
-                        oneToOnePseudos[l].foreignKeys.forEach(function (f, index, arr) {
-                            pseudoPath.push(((index === arr.length-1) ? ("P" + (k+1) + ":=") : "") + f.obj.toString(!f.isInbound,true));
-                        });
-                        return pseudoPath.join("/");
-                    };
-
-                    // create the uri with attributegroup and alias
-                    uri = [this._location.service, "catalog", this._location.catalog, "attributegroup", compactPath].join("/") + "/";
-
-                    // add joins for foreign keys
-                    for (k = this._table.foreignKeys.length() - 1;k >= 0 ; k--) {
-                        // /F2:=left(id)=(s:t:c)/$M/F1:=left(id2)=(s1:t1:c1)/
-                        uri += "F" + (k+1) + ":=left" + this._table.foreignKeys.all()[k].toString(true) + "/$" + mainTableAlias + "/";
-
-                        // F2:array_d(F2:*),F1:array_d(F1:*)
-                        aggList.push("F" + (k+1) + ":=" + aggFn +"(F" + (k+1) + ":*)");
-                    }
-
-                    // add pseudo paths
-                    for (k = oneToOnePseudos.length - 1; k >= 0; k--) {
-                        uri += getPseudoPath(k) + "/$" + mainTableAlias + "/";
-
-                        aggList.push("P" + (k+1) + ":=" + aggFn + "(P" + (k+1) + ":*)");
-                    }
-
-                    // add sort columns (it will include the key)
-                    if (hasSort) {
-                        sortCols = _modifiedSortObject.map(function(sort) {return sort.column;});
-                    } else {
-                        sortCols = sortObject.map(function(sort) {return sort.column;});
-                    }
-
-                    addedCols = {};
-                    for(k = 0; k < sortCols.length; k++) {
-                        if (sortCols[k] in sortMap) {
-                            // sort column has been created via PseudoColumn, so we should use a new alias
-                            sortColumn = module._fixedEncodeURIComponent(sortCols[k]) + ":=" + sortMap[sortCols[k]];
-                        } else {
-                            sortColumn = module._fixedEncodeURIComponent(sortCols[k]);
-                        }
-
-                        // don't add duplicate columns
-                        if (!(sortColumn in addedCols)) {
-                            addedCols[sortColumn] = 1;
-                        }
-                    }
-
-                    uri += Object.keys(addedCols).join(",") + ";"+mainTableAlias+":=" + aggFn + "("+mainTableAlias+":*)," + aggList.join(",");
-                }
-
-                // insert @sort()
-                if (hasSort) { // then we have modified the sort
-                    // if sort is modified, we should use the modified sort Object for uri,
-                    // and the actual sort object for this._location.sortObject
-                    this._location.sortObject = _modifiedSortObject; // this will change the this._location.sort
-                    uri = uri + this._location.sort;
-
-                    this._location.sortObject = sortObject;
-                } else if (this._location.sort) { // still there will be sort (shortestkey)
-                    uri = uri + this._location.sort;
-                }
-
-                // check that page object is valid
-                checkPageObject(this._location, hasSort ? _modifiedSortObject : null);
-
-
-                // insert paging
-                if (this._location.paging) {
-                    uri = uri + this._location.paging;
-                }
-
                 // add limit
                 uri = uri + "?limit=" + (limit + 1); // read extra row, for determining whether the returned page has next/previous page
 
@@ -2536,10 +2302,8 @@
                 headers: this._generateContextHeader(contextHeaderParams)
             };
 
-            var URL_LENGTH_LIMIT = 2048;
-
             var urlSet = [];
-            var baseUri = this.location.service + "/catalog/" + this.location.catalog + "/aggregate/" + this.location.ermrestCompactPath + "/";
+            var baseUri = this.location.ermrestCompactPath + "/";
             // create a url: ../aggregate/../0:=fn(),1:=fn()..
             // TODO could be re-written
             for (var i = 0; i < aggregateList.length; i++) {
@@ -2553,7 +2317,7 @@
                 }
 
                 // if adding the next aggregate to the url will push it past url length limit, push url onto the urlSet and reset the working url
-                if ((url + i + ":=" + agg).length > URL_LENGTH_LIMIT) {
+                if ((url + i + ":=" + agg).length > module.URL_PATH_LENGTH_LIMIT) {
                     // if cannot even add the first one
                     if (i === 0) {
                         defer.reject(new module.InvalidInputError("Cannot send the request because of URL length limit."));
@@ -2581,7 +2345,9 @@
             var aggregatePromises = [];
             var http = this._server._http;
             for (var j = 0; j < urlSet.length; j++) {
-                aggregatePromises.push(http.get(urlSet[j], config));
+                aggregatePromises.push(
+                    http.get(this.location.service + "/catalog/" + this.location.catalog + "/aggregate/" + urlSet[j], config)
+                );
             }
 
             module._q.all(aggregatePromises).then(function getAggregates(response) {
@@ -3339,6 +3105,269 @@
             var headers = {};
             headers[module._contextHeaderName] = contextHeaderParams;
             return headers;
+        },
+
+
+        /**
+         * The actual path that will be used for read request.
+         *  It will return an object that will have:
+         *   - value: the string value of the path
+         *   - isAttributeGroup: whether we should use attributegroup api or not.
+         *                       (if the reference doesn't have any fks, we don't need to use attributegroup)
+         * NOTE Might throw an error if modifiers are not valid
+         * @type {Object}
+         */
+         _getReadPath: function(useEntity) {
+            // the pseudo-columns that their path is all outbound and Therefore
+            // creates a one-to-one relation between source and destination, hence
+            // we can just add them to the projection list to get the single value.
+            var oneToOnePseudos = this.columns.filter(function (c) {
+                return c.isPseudo && c.isPathColumn && c.hasPath && c.isUnique && c.foreignKeys.length > 1;
+            });
+
+            var hasSort = Array.isArray(this._location.sortObject) && (this._location.sortObject.length !== 0),
+                locationPath = this.location.path,
+                _modifiedSortObject = [], // the sort object that is used for url creation (if location has sort).
+                sortMap = {}, // maps an alias to PseudoColumn, used for sorting
+                sortObject,  // the sort that will be accessible by this._location.sortObject
+                sortColNames = {}, // to avoid adding duplciate columns
+                sortObjectNames = {}, // to avoid computing sortObject logic more than once
+                addSort,
+                sortCols,
+                col, i, j, k, l;
+
+            // make sure the page and modified sort object have teh same length
+            var checkPageObject = function (loc, sortObject) {
+                sortObject = sortObject || loc.sortObject;
+                if (loc.afterObject && loc.afterObject.length !== sortObject.length) {
+                    throw new module.InvalidPageCriteria("sort and after should have the same number of columns.", locationPath);
+                }
+
+                if (loc.beforeObject && loc.beforeObject.length !== sortObject.length) {
+                    throw new module.InvalidPageCriteria("sort and before should have the same number of columns.", locationPath);
+                }
+
+                return true;
+            };
+
+            /** Check the sort object. Does not change the `this._location` object.
+             *   - Throws an error if the column doesn't exist or is not sortable.
+             *   - maps the sorting to its sort columns.
+             *       - for columns it's straighforward and uses the actual column name.
+             *       - for PseudoColumns we need
+             *           - A new alias: F# where the # is a positive integer.
+             *           - The sort column name must be the "foreignkey_alias:column_name".
+             * */
+            var processSortObject= function (self) {
+                var foreignKeys = self._table.foreignKeys,
+                    colName,
+                    fkIndex, fk, desc;
+
+                for (i = 0, k = 1, l = 1; i < sortObject.length; i++) {
+                    // find the column in ReferenceColumns
+                    try {
+                        col = self.getColumnByName(sortObject[i].column);
+                    } catch (e) {
+                        throw new module.InvalidSortCriteria("Given column name `" + sortObject[i].column + "` in sort is not valid.",  locationPath);
+                    }
+                    // sortObject[i].column = col.name;
+
+                    // column is not sortable
+                    if (!col.sortable) {
+                        throw new module.InvalidSortCriteria("Column " + sortObject[i].column + " is not sortable.",  locationPath);
+                    }
+
+                    // avoid computing columns twice
+                    if (sortObject[i].column in sortObjectNames) {
+                        continue;
+                    }
+                    sortObjectNames[sortObject[i].column] = true;
+                    addSort = true;
+
+                    sortCols = col._sortColumns;
+
+                    // use the sort columns instead of the actual column.
+                    for (j = 0; j < sortCols.length; j++) {
+                        if (col.isForeignKey || (col.isPathColumn && col.isUnique && col.foreignKeys.length === 1)) {
+                            if (useEntity) addSort = false;
+
+                            fkIndex = foreignKeys.all().indexOf(col.isForeignKey ? col.foreignKey : col.foreignKeys[0].obj);
+                            colName = "F" + (foreignKeys.length() + k++);
+                            sortMap[colName] = ["F" + (fkIndex+1), module._fixedEncodeURIComponent(sortCols[j].column.name)].join(":");
+                        } else if (col.isPathColumn && col.hasPath && col.isUnique && col.foreignKeys.length > 0) {
+                            if (useEntity) addSort = false;
+
+                            // we have added it to the projection list
+                            fkIndex = oneToOnePseudos.indexOf(col);
+                            colName = "P" + (oneToOnePseudos.length + l++);
+                            sortMap[colName] = ["P" + (fkIndex+1), module._fixedEncodeURIComponent(sortCols[j].column.name)].join(":");
+                        } else {
+                            colName = sortCols[j].column.name;
+                            if (colName in sortColNames) {
+                                addSort = false;
+                            }
+                            sortColNames[colName] = true;
+                        }
+
+                        desc = sortObject[i].descending !== undefined ? sortObject[i].descending : false;
+                        // if descending is true on the column_order, then the sort should be reverted
+                        if (sortCols[j].descending) {
+                            desc = !desc;
+                        }
+
+                        if (addSort) {
+                            _modifiedSortObject.push({
+                                "column": colName,
+                                "descending": desc
+                            });
+                        }
+                     }
+                }
+            };
+
+            if (hasSort) {
+                sortObject = this._location.sortObject;
+                processSortObject(this);
+            }
+            // use row-order if sort was not provided
+            else if (this.display._rowOrder){
+                sortObject = this.display._rowOrder.map(function (ro) {
+                    return {"column": ro.column.name, "descending": ro.descending};
+                });
+                processSortObject(this);
+            }
+
+            // ermrest requires key columns to be in sort param for paging
+            if (typeof sortObject !== 'undefined') {
+                // if any of the sortCols is a key, then we don't neede to add the shortest key
+                var hasKey = this._table.keys.all().some(function (key) {
+                    return key.colset.columns.every(function(c) {
+                        return (c.name in sortColNames);
+                    });
+                });
+
+                if (!hasKey) {
+                    for (i = 0; i < this._shortestKey.length; i++) { // all the key columns
+                        col = this._shortestKey[i].name;
+                        // add if key col is not in the sortby list
+                        if (!(col in sortColNames)) {
+                            sortObject.push({"column": col, "descending":false}); // add key to sort
+                            _modifiedSortObject.push({"column": col, "descending":false});
+                        }
+                    }
+                }
+            } else { // no sort provieded: use shortest key for sort
+                sortObject = [];
+                for (var sk = 0; sk < this._shortestKey.length; sk++) {
+                    col = this._shortestKey[sk].name;
+                    sortObject.push({"column":col, "descending":false});
+                }
+            }
+
+            // this will update location.sort and all the uri and path
+            this._location.sortObject = sortObject;
+
+            var uri = this._location.ermrestCompactPath; // used for the http request
+            var isAttributeGroup = !useEntity && (this._table.foreignKeys.length() > 0 || oneToOnePseudos.length > 0);
+
+            /** Change api to attributegroup for retrieving extra information
+             * These information include:
+             * - Values for the foreignkeys.
+             * - Value for one-to-one pseudo-columns. These are the columns
+             * that their defined path is all in the outbound direction.
+             *
+             * This will just affect the http request and not this._location
+             *
+             * NOTE:
+             * This piece of code is dependent on the same assumptions as the current parser, which are:
+             *   0. There is no table called `T`, `M`, `F1`, `F2`, ..., `P1`, `P2`, ...
+             *   1. There is no alias in url (more precisely `T`, `M`, `F1`, `F2`, `F3`, `P1`, `P2`, ...)
+             *   2. Filter comes before the link syntax.
+             *   3. There is no trailing `/` in uri (as it will break the ermrest too).
+             * */
+            if (isAttributeGroup) {
+                var compactPath = this._location.ermrestCompactPath,
+                    mainTableAlias = this._location.mainTableAlias,
+                    aggList = [],
+                    sortColumn,
+                    addedCols,
+                    aggFn = "array_d";
+
+                // generate the projection for given pseudo column
+                var getPseudoPath = function (l) {
+                    var pseudoPath = [];
+                    oneToOnePseudos[l].foreignKeys.forEach(function (f, index, arr) {
+                        pseudoPath.push(((index === arr.length-1) ? ("P" + (k+1) + ":=") : "") + f.obj.toString(!f.isInbound,true));
+                    });
+                    return pseudoPath.join("/");
+                };
+
+                // create the uri with attributegroup and alias
+                uri = compactPath + "/";
+
+                // add joins for foreign keys
+                for (k = this._table.foreignKeys.length() - 1;k >= 0 ; k--) {
+                    // /F2:=left(id)=(s:t:c)/$M/F1:=left(id2)=(s1:t1:c1)/
+                    uri += "F" + (k+1) + ":=left" + this._table.foreignKeys.all()[k].toString(true) + "/$" + mainTableAlias + "/";
+
+                    // F2:array_d(F2:*),F1:array_d(F1:*)
+                    aggList.push("F" + (k+1) + ":=" + aggFn +"(F" + (k+1) + ":*)");
+                }
+
+                // add pseudo paths
+                for (k = oneToOnePseudos.length - 1; k >= 0; k--) {
+                    uri += getPseudoPath(k) + "/$" + mainTableAlias + "/";
+
+                    aggList.push("P" + (k+1) + ":=" + aggFn + "(P" + (k+1) + ":*)");
+                }
+
+                // add sort columns (it will include the key)
+                if (hasSort) {
+                    sortCols = _modifiedSortObject.map(function(sort) {return sort.column;});
+                } else {
+                    sortCols = sortObject.map(function(sort) {return sort.column;});
+                }
+
+                addedCols = {};
+                for(k = 0; k < sortCols.length; k++) {
+                    if (sortCols[k] in sortMap) {
+                        // sort column has been created via PseudoColumn, so we should use a new alias
+                        sortColumn = module._fixedEncodeURIComponent(sortCols[k]) + ":=" + sortMap[sortCols[k]];
+                    } else {
+                        sortColumn = module._fixedEncodeURIComponent(sortCols[k]);
+                    }
+
+                    // don't add duplicate columns
+                    if (!(sortColumn in addedCols)) {
+                        addedCols[sortColumn] = 1;
+                    }
+                }
+
+                uri += Object.keys(addedCols).join(",") + ";"+mainTableAlias+":=" + aggFn + "("+mainTableAlias+":*)," + aggList.join(",");
+            }
+
+            // insert @sort()
+            if (hasSort) { // then we have modified the sort
+                // if sort is modified, we should use the modified sort Object for uri,
+                // and the actual sort object for this._location.sortObject
+                this._location.sortObject = _modifiedSortObject; // this will change the this._location.sort
+                uri = uri + this._location.sort;
+
+                this._location.sortObject = sortObject;
+            } else if (this._location.sort) { // still there will be sort (shortestkey)
+                uri = uri + this._location.sort;
+            }
+
+            // check that page object is valid
+            checkPageObject(this._location, hasSort ? _modifiedSortObject : null);
+
+
+            // insert paging
+            if (this._location.paging) {
+                uri = uri + this._location.paging;
+            }
+
+            return {value: uri, isAttributeGroup: isAttributeGroup};
         }
     };
 
@@ -3374,6 +3403,7 @@
         delete referenceCopy._canDelete;
         delete referenceCopy._defaultExportTemplate;
         delete referenceCopy._exportTemplates;
+        delete referenceCopy._readPath;
 
         referenceCopy.contextualize = new Contextualize(referenceCopy);
         return referenceCopy;

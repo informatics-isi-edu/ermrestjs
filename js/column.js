@@ -520,8 +520,6 @@ PseudoColumn.prototype.formatPresentation = function(data, context, options) {
  * @return {Promise}
  */
 PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams) {
-    var URL_LENGTH_LIMIT = 2048;
-
     var defer = module._q.defer(),
         self = this,
         promises = [], values = [],
@@ -531,7 +529,7 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
         column = this._baseCols[0],
         printUtils = module._formatUtils,
         keyColName, keyColNameEncoded,
-        baseUri, uri, i, fk, str, projection;
+        baseUri, basePath, uri, i, fk, str, projection;
 
     // verify the input
     try {
@@ -558,11 +556,12 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
     var isRow = self.isEntityMode && module._pseudoColEntityAggregateFns.indexOf(self.sourceObject.aggregate) != -1;
 
     // creates http request with the current uri
+    baseUri = [location.service, "catalog", location.catalog, "attributegroup"].join("/") + "/";
     var addPromise = function () {
         if (uri.charAt(uri.length-1) === ";") {
             uri = uri.slice(0, -1);
         }
-        promises.push(http.get(uri + projection, config));
+        promises.push(http.get(baseUri + uri + projection, config));
     };
 
     // will format a single value
@@ -645,37 +644,34 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
                  ";v:=" + self.sourceObject.aggregate +
                  "(" + currTable + ":" + (isRow ? "*" : module._fixedEncodeURIComponent(column.name)) + ")";
 
-     // generate the base url in the following format:
-     // service/T:=pseudoColTable/path-from-pseudo-col-to-current/filters/project
-    baseUri =  [
-        location.service, "catalog", location.catalog, "attributegroup",
-        currTable + ":=" + module._fixedEncodeURIComponent(self.table.schema.name) + ":" +module._fixedEncodeURIComponent(self.table.name)
-    ].join("/") + "/";
+     // generate the base path in the following format:
+     // T:=pseudoColTable/path-from-pseudo-col-to-current/filters/project
+     basePath = currTable + ":=" + module._fixedEncodeURIComponent(self.table.schema.name) + ":" + module._fixedEncodeURIComponent(self.table.name) + "/";
 
     // add the join (path from pseudoColumn's table to current table)
     for (i = self.foreignKeys.length - 1; i >= 0; i--) {
         fk = self.foreignKeys[i];
-        if (i === 0) baseUri += baseTable + ":=";
-        baseUri += fk.obj.toString(fk.isInbound, true) + "/";
+        if (i === 0) basePath += baseTable + ":=";
+        basePath += fk.obj.toString(fk.isInbound, true) + "/";
     }
 
     // make sure just projection and base uri doesn't go over limit.
-    if (baseUri.length + projection.length >= URL_LENGTH_LIMIT) {
+    if (basePath.length + projection.length >= module.URL_PATH_LENGTH_LIMIT) {
         console.log("couldn't generate the requests because of url limitation");
         defer.resolve(values);
         return defer.promise;
     }
 
     // create the request urls
-    uri = baseUri;
+    uri = basePath;
     for (i = 0; i < page.tuples.length; i++) {
         str = keyColNameEncoded + "=" + page.tuples[i].data[keyColName] + ";";
 
         // adding this will go over limit, create a request with the previous uri
-        if ((uri.length + str.length + projection.length > URL_LENGTH_LIMIT)) {
-            if (uri.length !== baseUri.length) {
+        if ((uri.length + str.length + projection.length) > module.URL_PATH_LENGTH_LIMIT) {
+            if (uri.length !== basePath.length) {
                 addPromise();
-                uri = baseUri + str;
+                uri = basePath + str;
             }
         } else {
             uri += str;
