@@ -19,10 +19,11 @@ exports.execute = function (options) {
      *    12: f3, term (association table) | scalar
      *    13: f4_fk1, id (inbound) | entity:false | ux_mode: check_presence
      *    14: a long path
-     *    15: second path
-     *    16: same as 15 but in entity mode (based on id)
-     *    17: same as 15 but in entity mode (based on RID)
-     *    18: numeric_col
+     *    15: second path (based on id), entity
+     *    16: second path (based on RID), entity
+     *    17: second path (based on id), scalar
+     *    18: f3, id (association table), entity
+     *    19: numeric_col
      *
      * f1:
      *  - main has fk to it.
@@ -32,7 +33,6 @@ exports.execute = function (options) {
      *  - has filter annotation, but the source that is there is invalid
      *
      * f4:
-     *  -
      *  - doesn't have facet annotation.
      *  - visible columns in compact, and related entities in detailed are wellformed.
      *
@@ -308,13 +308,13 @@ exports.execute = function (options) {
                 });
 
                 it ("should create facets based on what data modelers have defined, and ignore the column types that are not supported (json).", function () {
-                    expect(refMain.facetColumns.length).toBe(19);
+                    expect(refMain.facetColumns.length).toBe(20);
 
                     expect(refMain.facetColumns.map(function (fc) {
                         return fc._column.name;
                     })).toEqual(
                         ['id', 'int_col', 'float_col', 'date_col', 'timestamp_col', 'text_col', 'longtext_col',
-                         'markdown_col', 'boolean_col', 'jsonb_col', 'id', 'id', 'term', 'id', 'col', 'id', 'RID', 'id', 'numeric_col']
+                         'markdown_col', 'boolean_col', 'jsonb_col', 'id', 'id', 'term', 'id', 'col', 'id', 'RID', 'id', 'id', 'numeric_col']
                     );
                 });
 
@@ -349,9 +349,9 @@ exports.execute = function (options) {
                     facetObj = { "and": [ {"source": "unfaceted_column", "search": ["test"]} ] };
                     options.ermRest.resolve(createURL(tableMain, facetObj)).then(function (ref) {
                         var facetColumns = ref.facetColumns;
-                        expect(ref.facetColumns.length).toBe(20, "length missmatch.");
-                        expect(ref.facetColumns[19]._column.name).toBe("unfaceted_column", "column name missmatch.");
-                        expect(ref.facetColumns[19].filters.length).toBe(1, "# of filters defined is incorrect");
+                        expect(ref.facetColumns.length).toBe(21, "length missmatch.");
+                        expect(ref.facetColumns[20]._column.name).toBe("unfaceted_column", "column name missmatch.");
+                        expect(ref.facetColumns[20].filters.length).toBe(1, "# of filters defined is incorrect");
                         expect(ref.location.facets).toBeDefined("facets is undefined.");
                         expect(ref.location.ermrestCompactPath).toEqual(
                             "M:=faceting_schema:main/unfaceted_column::ciregexp::test/$M",
@@ -367,7 +367,7 @@ exports.execute = function (options) {
                 it ("If the facet exists in the annotation should only add the filter to that facet from uri. (choices)", function (done) {
                     facetObj = { "and": [ {"source": "id", "choices": ["2"]} ] };
                     options.ermRest.resolve(createURL(tableMain, facetObj)).then(function (ref) {
-                        expect(ref.facetColumns.length).toBe(19, "length missmatch.");
+                        expect(ref.facetColumns.length).toBe(20, "length missmatch.");
                         expect(ref.facetColumns[0].filters.length).toBe(1, "# of filters defined is incorrect");
                         expect(ref.location.facets).toBeDefined("facets is undefined.");
                         expect(ref.location.ermrestCompactPath).toBe(
@@ -384,7 +384,7 @@ exports.execute = function (options) {
                 it ("If the facet exists in the annotation should only add the filter to that facet from uri. (ranges)", function (done) {
                     facetObj = { "and": [ {"source": "int_col", "ranges": [{"max": 12, "min": 5}]} ] };
                     options.ermRest.resolve(createURL(tableMain, facetObj)).then(function (ref) {
-                        expect(ref.facetColumns.length).toBe(19, "length missmatch.");
+                        expect(ref.facetColumns.length).toBe(20, "length missmatch.");
                         expect(ref.facetColumns[1].filters.length).toBe(1, "# of filters defined is incorrect");
                         expect(ref.location.facets).toBeDefined("facets is undefined.");
                         expect(ref.location.ermrestCompactPath).toBe(
@@ -408,7 +408,7 @@ exports.execute = function (options) {
                     };
                     options.ermRest.resolve(createURL(tableMain, facetObj)).then(function (ref) {
                         refMainMoreFilters = ref;
-                        expect(ref.facetColumns.length).toBe(19, "length missmatch.");
+                        expect(ref.facetColumns.length).toBe(20, "length missmatch.");
                         expect(ref.facetColumns[0].filters.length).toBe(1, "# of filters defined is incorrect");
                         expect(ref.facetColumns[1].filters.length).toBe(1, "# of filters defined is incorrect");
                         expect(ref.facetColumns[5].filters.length).toBe(6, "# of filters defined is incorrect");
@@ -428,9 +428,9 @@ exports.execute = function (options) {
                     it ("when the facet exists in the annotation.", function (done) {
                         facetObj = { "and": [ {"source": "id", "choices": ["1"]}, {"source": "id", "choices": ["2"]} ] };
                         options.ermRest.resolve(createURL(tableMain, facetObj)).then(function (ref) {
-                            expect(ref.facetColumns.length).toBe(20, "length missmatch.");
+                            expect(ref.facetColumns.length).toBe(21, "length missmatch.");
                             expect(ref.facetColumns[0].filters.length).toBe(1, "# of filters defined is incorrect for index=0");
-                            expect(ref.facetColumns[19].filters.length).toBe(1, "# of filters defined is incorrect for index=19");
+                            expect(ref.facetColumns[20].filters.length).toBe(1, "# of filters defined is incorrect for index=19");
                             expect(ref.location.facets).toBeDefined("facets is undefined.");
                             expect(ref.location.ermrestCompactPath).toBe(
                                 "M:=faceting_schema:main/id=1/$M/id=2/$M",
@@ -446,9 +446,9 @@ exports.execute = function (options) {
                     it ("when the facet does not exist in the annotation.", function (done) {
                         facetObj = { "and": [ {"source": "unfaceted_column", "choices": ["1"]}, {"source": "unfaceted_column", "choices": ["2"]} ] };
                         options.ermRest.resolve(createURL(tableMain, facetObj)).then(function (ref) {
-                            expect(ref.facetColumns.length).toBe(21, "length missmatch.");
-                            expect(ref.facetColumns[19].filters.length).toBe(1, "# of filters defined is incorrect for index=17");
-                            expect(ref.facetColumns[20].filters.length).toBe(1, "# of filters defined is incorrect for index=18");
+                            expect(ref.facetColumns.length).toBe(22, "length missmatch.");
+                            expect(ref.facetColumns[20].filters.length).toBe(1, "# of filters defined is incorrect for index=20");
+                            expect(ref.facetColumns[21].filters.length).toBe(1, "# of filters defined is incorrect for index=21");
                             expect(ref.location.facets).toBeDefined("facets is undefined.");
                             expect(ref.location.ermrestCompactPath).toBe(
                                 "M:=faceting_schema:main/unfaceted_column=1/$M/unfaceted_column=2/$M",
@@ -481,7 +481,7 @@ exports.execute = function (options) {
                     it ("if facet has =null filter too, should return an empty list for its filters.", function (done) {
                         var fObj = { "and": [ {"source": "id", "not_null": true, "choices": [null]} ] };
                         options.ermRest.resolve(createURL(tableMain, fObj)).then(function (r) {
-                            expect(r.facetColumns.length).toBe(19, "facet list length missmatch.");
+                            expect(r.facetColumns.length).toBe(20, "facet list length missmatch.");
                             expect(r.facetColumns[0].filters.length).toBe(0, "filters length missmatch.");
                             expect(r.location.ermrestCompactPath).toEqual(
                                 "M:=faceting_schema:main/id::null::;!(id::null::)/$M",
@@ -497,7 +497,7 @@ exports.execute = function (options) {
                     it ("otherwise should only return the not-null filter and ignore other filters.", function (done) {
                         var fObj = { "and": [ {"source": "id", "not_null": true, "choices": ["1"], "search": ["1"], "ranges": [{'min': 1}]} ] };
                         options.ermRest.resolve(createURL(tableMain, fObj)).then(function (ref) {
-                            expect(ref.facetColumns.length).toBe(19, "facet list length missmatch.");
+                            expect(ref.facetColumns.length).toBe(20, "facet list length missmatch.");
                             expect(ref.facetColumns[0].filters.length).toBe(1, "filters length missmatch.");
                             expect(ref.location.facets).toBeDefined("facets is defined.");
                             expect(ref.location.ermrestCompactPath).toEqual(
@@ -518,7 +518,7 @@ exports.execute = function (options) {
                         filter = "(id=1;id=2)&(int_col::geq::5;int_col::leq::15;int_col::gt::6)";
                         options.ermRest.resolve(createURL(tableMain) + "/" + filter).then(function (ref) {
                             var facetColumns = ref.facetColumns;
-                            expect(ref.facetColumns.length).toBe(19, "length missmatch.");
+                            expect(ref.facetColumns.length).toBe(20, "length missmatch.");
                             expect(ref.location.facets).toBeDefined("facets is undefined.");
                             expect(ref.location.filter).toBeUndefined("filter was defined.");
                             expect(ref.location.filtersString).toBeUndefined("filtersString was defined.");
@@ -539,7 +539,7 @@ exports.execute = function (options) {
                         options.ermRest.resolve(createURL(tableMain) + "/" + unsupportedFilter).then(function (ref) {
                             refWCustomFilters = ref;
 
-                            expect(ref.facetColumns.length).toBe(19, "length missmatch.");
+                            expect(ref.facetColumns.length).toBe(20, "length missmatch.");
                             expect(ref.location.facets).toBeUndefined("facets is defined.");
                             expect(ref.location.filter).toBeDefined("filter was undefined.");
                             expect(ref.location.ermrestCompactPath).toBe(
@@ -702,30 +702,43 @@ exports.execute = function (options) {
             });
 
             describe("preferredMode, ", function () {
-                it ('if ux_mode is defined and is valid, should return it.', function () {
+                it ("if facet has check_presence mode in annotation and also null, should return check_presence.", function () {
+                    var newRef = mainFacets[13].addChoiceFilters([null]);
+                    expect(newRef.facetColumns[13].preferredMode).toBe("check_presence");
+                });
+
+                it ('if facet has preselected choices or ranges facet, honor it.', function () {
                     expect(mainFacets[0].preferredMode).toBe("choices", "missmatch for facet index=0");
+                    expect(mainFacets[1].preferredMode).toBe("ranges", "missmatch for facet index=0");
+                });
+
+                it ('if ux_mode is defined and is valid, should return it.', function () {
+                    expect(mainFacets[8].preferredMode).toBe("ranges", "missmatch for facet index=8");
                     expect(mainFacets[13].preferredMode).toBe("check_presence", "missmatch for facet index=13");
                 });
 
-                describe("otherwise, ", function () {
-                    it ("if in entity mode should return `choices`.", function () {
-                        for (i = 10; i < 12; i ++) {
-                            expect(mainFacets[i].preferredMode).toBe("choices", "missmatch for facet index="+ i);
-                        }
-                    });
 
-                    it ("if its a range supported type, should return ranges.", function () {
-                        for (i = 1; i < 5; i ++) {
-                            expect(mainFacets[i].preferredMode).toBe("ranges", "missmatch for facet index="+ i);
-                        }
-                        // numeric type
-                        expect(mainFacets[18].preferredMode).toBe("ranges", "missmatch for facet index=18");
+                it ("if in entity mode should return `choices`.", function () {
+                    [10, 11, 15, 16, 18].forEach(function (fc) {
+                        expect(mainFacets[fc].preferredMode).toBe("choices", "missmatch for facet index=" + fc);
                     });
+                });
 
-                    it ("otherwise should return choices.", function () {
-                        [5, 6, 7, 12, 14, 15].forEach(function (fc) {
-                            expect(mainFacets[fc].preferredMode).toBe("choices", "missmatch for facet index=" + fc);
-                        });
+                it ("if unique not-null int/serial, should return `choices`.", function () {
+                    expect(mainFacets[17].preferredMode).toBe("choices", "missmatch for facet index=17");
+                });
+
+                it ("if its a range supported type, should return ranges.", function () {
+                    for (i = 2; i <= 4; i ++) {
+                        expect(mainFacets[i].preferredMode).toBe("ranges", "missmatch for facet index="+ i);
+                    }
+                    // numeric type
+                    expect(mainFacets[19].preferredMode).toBe("ranges", "missmatch for facet index=19");
+                });
+
+                it ("otherwise should return choices.", function () {
+                    [5, 6, 7, 9, 12, 14].forEach(function (fc) {
+                        expect(mainFacets[fc].preferredMode).toBe("choices", "missmatch for facet index=" + fc);
                     });
                 });
             });
@@ -1056,7 +1069,7 @@ exports.execute = function (options) {
                             return f.term;
                         })).toEqual(["1"], "filter missmatch for facet index=0");
 
-                        for (i = 2; i < 18; i ++) {
+                        for (i = 2; i < 20; i ++) {
                             expect(mainFacets[i].filters.length).toBe(0, "missmatch for facet index="+ i);
                         }
                     });
@@ -1415,7 +1428,7 @@ exports.execute = function (options) {
                 });
 
                 it ("should return `false` if source doesn't have any path.", function () {
-                    testHideNullChoice([1, 2, 3, 4, 5, 6, 7, 8, 9, 18], false);
+                    testHideNullChoice([1, 2, 3, 4, 5, 6, 7, 8, 9, 19], false);
                 });
 
                 it ("should return `true` if source has a path and column is nullable.", function () {
@@ -1428,13 +1441,13 @@ exports.execute = function (options) {
 
                 describe("otherwise for facets with column not-null and path, ", function () {
                     it ("if any other such facet has null, it should return `true`.", function () {
-                        [16,17].forEach(function (index) {
+                        [16,18].forEach(function (index) {
                             expect(newRefWithNull.facetColumns[index].hideNullChoice).toBe(true, "missmatch for index=" + index);
                         })
                     });
 
                     it ("otherwise should return `false`.", function () {
-                        testHideNullChoice([16,17],false);
+                        testHideNullChoice([16,18],false);
                     });
                 })
             });

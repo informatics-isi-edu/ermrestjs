@@ -36,5 +36,5 @@ This annotation only applies to table but MAY be annotated at the schema level t
 - `csv` of `entity` API request to the main table.
 - `csv` of `entity` API for all the related entities that are one level away from the main table.
 - `csv` of `attributegroup` API for all the other related entities. The projection list should include all the columns of the table, plus the foreignkey value of the main entity. This request will be grouped by the value of table's key and foreignkey value.
-- `fetch` all assets on the main entity that have `length`, `filename`, and `md5` defined on the asset annotation.
-- `fetch` all assets of related entities that have `length`, `filename`, and `md5` defined on the asset annotation.
+- `fetch` all assets on the main entity that have `byte_count_column`, `filename_column`, and `md5` (or `sha256`) defined on the asset annotation.
+- `fetch` all assets of related entities that have `byte_count_column`, `filename_column`, and `md5` (or `sha256`) defined on the asset annotation.

@@ -2017,34 +2017,70 @@ FacetColumn.prototype = {
      * The Preferred ux mode.
      * Any of:
      * `choices`, `ranges`, or `check_presence`
-     * This should be used if we're not in entity mode.
+     * This should be used if we're not in entity mode. In entity mode it will
+     * always return `choices`.
      *
-     * 1. use ux_mode if available
-     * 2. use choices if in entity mode
-     * 3. use range or chocies based on type.
+     * The logic is as follows,
+     * 1. if facet has only choice or range filter, return that.
+     * 2. use ux_mode if available
+     * 3. use choices if in entity mode
+     * 4. return choices if int or serial, part of key, and not null.
+     * 5. return ranges or choices based on the type.
      *
      * @type {string}
      */
     get preferredMode() {
-        // a facet is in range mode if it's column's type is integer, float, date, timestamp, or serial
-        function isRangeMode(column) {
-            var typename = column.type.rootName;
-
-            // returns true is the typename includes the given string
-            function includesType(type) {
-                return typename.indexOf(type) > -1;
-            }
-
-            return (includesType("serial") || includesType("int") || includesType("float") || includesType("date") || includesType("timestamp")) || (includesType("numeric"));
-        }
-
         if (this._preferredMode === undefined) {
             var modes = module._facetUXModes;
-            if (module._facetUXModeNames.indexOf(this._facetObject.ux_mode) !== -1) {
-                this._preferredMode = this._facetObject.ux_mode;
-            } else {
-                this._preferredMode = (this.isEntityMode ? modes.CHOICE : (isRangeMode(this._column) ? modes.RANGE : modes.CHOICE) );
-            }
+
+            // a facet is in range mode if it's column's type is integer, float, date, timestamp, or serial
+            var isRangeMode = function (column) {
+                var typename = column.type.rootName;
+
+                //default facet for unique not null integer/serial should be choice (not range)
+                if (typename.startsWith("serial") || typename.startsWith("int")) {
+                    return column.nullok || column.memberOfKeys.filter(function (key) {
+                        return key.simple;
+                    }).length === 0;
+                }
+
+                return typename.startsWith("float") || typename.startsWith("date") || typename.startsWith("timestamp") || typename.startsWith("numeric");
+            };
+
+            var getPreferredMode = function (self) {
+                // see if only one type of facet is preselected
+                var onlyChoice = false, onlyRange = false;
+
+                // (not-null can be applied to both choices and ranges)
+                var filterLen = self.filters.length;
+                if (self.hasNotNullFilter) {
+                    filterLen--;
+                }
+
+                // null is acceptable for check_presence
+                if (filterLen === 1 && self.hasNullFilter && self._facetObject.ux_mode === modes.PRESENCE) {
+                    return modes.PRESENCE;
+                }
+
+                if (filterLen > 0) {
+                    onlyChoice = self.choiceFilters.length === filterLen;
+                    onlyRange = self.rangeFilters.length === filterLen;
+                }
+                // if only choices or ranges preselected, honor it
+                if (onlyChoice || onlyRange) {
+                    return onlyChoice ? modes.CHOICE : modes.RANGE;
+                }
+
+                // use the defined ux_mode
+                if (module._facetUXModeNames.indexOf(self._facetObject.ux_mode) !== -1) {
+                    return self._facetObject.ux_mode;
+                }
+
+                // use the column type to determien its ux_mode
+                return (!self.isEntityMode && isRangeMode(self._column)) ? modes.RANGE : modes.CHOICE;
+            };
+
+            this._preferredMode = getPreferredMode(this);
         }
         return this._preferredMode;
     },
