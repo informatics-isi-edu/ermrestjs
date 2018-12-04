@@ -2061,11 +2061,15 @@ FacetColumn.prototype = {
                     filterLen--;
                 }
 
+                // null is acceptable for check_presence
+                if (filterLen === 1 && self.hasNullFilter && self._facetObject.ux_mode === modes.PRESENCE) {
+                    return modes.PRESENCE;
+                }
+
                 if (filterLen > 0) {
                     onlyChoice = self.choiceFilters.length === filterLen;
                     onlyRange = self.rangeFilters.length === filterLen;
                 }
-
                 // if only choices or ranges preselected, honor it
                 if (onlyChoice || onlyRange) {
                     return onlyChoice ? modes.CHOICE : modes.RANGE;

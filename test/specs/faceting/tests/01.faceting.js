@@ -702,6 +702,11 @@ exports.execute = function (options) {
             });
 
             describe("preferredMode, ", function () {
+                it ("if facet has check_presence mode in annotation and also null, should return check_presence.", function () {
+                    var newRef = mainFacets[13].addChoiceFilters([null]);
+                    expect(newRef.facetColumns[13].preferredMode).toBe("check_presence");
+                });
+
                 it ('if facet has preselected choices or ranges facet, honor it.', function () {
                     expect(mainFacets[0].preferredMode).toBe("choices", "missmatch for facet index=0");
                     expect(mainFacets[1].preferredMode).toBe("ranges", "missmatch for facet index=0");
