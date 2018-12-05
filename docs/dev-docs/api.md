@@ -322,7 +322,6 @@ to use for ERMrest JavaScript agents.
         * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
         * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
         * [.read(limit, contextHeaderParams, useEntity)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
-            * [~processSortObject()](#ERMrest.Reference+read..processSortObject)
         * [.sort(sort)](#ERMrest.Reference+sort) ⇒ <code>Reference</code>
         * [.update(tuples, contextHeaderParams)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
         * [.delete(contextHeaderParams)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
@@ -334,6 +333,8 @@ to use for ERMrest JavaScript agents.
         * [.setSamePaging(page)](#ERMrest.Reference+setSamePaging) ⇒ [<code>Reference</code>](#ERMrest.Reference)
         * [.getColumnByName(name)](#ERMrest.Reference+getColumnByName) ⇒ [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)
         * [.generateColumnsList(tuple)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
+        * [._getReadPath()](#ERMrest.Reference+_getReadPath) : <code>Object</code>
+            * [~processSortObject()](#ERMrest.Reference+_getReadPath..processSortObject)
     * [.Page](#ERMrest.Page)
         * [new Page(reference, etag, data, hasPrevious, hasNext, extraData)](#new_ERMrest.Page_new)
         * [.reference](#ERMrest.Page+reference) : [<code>Reference</code>](#ERMrest.Reference)
@@ -609,7 +610,6 @@ to use for ERMrest JavaScript agents.
         * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
         * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
         * [.read(limit, contextHeaderParams, useEntity)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
-            * [~processSortObject()](#ERMrest.Reference+read..processSortObject)
         * [.sort(sort)](#ERMrest.Reference+sort) ⇒ <code>Reference</code>
         * [.update(tuples, contextHeaderParams)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
         * [.delete(contextHeaderParams)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
@@ -621,6 +621,8 @@ to use for ERMrest JavaScript agents.
         * [.setSamePaging(page)](#ERMrest.Reference+setSamePaging) ⇒ [<code>Reference</code>](#ERMrest.Reference)
         * [.getColumnByName(name)](#ERMrest.Reference+getColumnByName) ⇒ [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)
         * [.generateColumnsList(tuple)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
+        * [._getReadPath()](#ERMrest.Reference+_getReadPath) : <code>Object</code>
+            * [~processSortObject()](#ERMrest.Reference+_getReadPath..processSortObject)
     * [.AttributeGroupReference](#ERMrest.AttributeGroupReference) : <code>object</code>
         * [new AttributeGroupReference(keyColumns, aggregateColumns, location, catalog, sourceTable, context)](#new_ERMrest.AttributeGroupReference_new)
         * [._keyColumns](#ERMrest.AttributeGroupReference+_keyColumns) : <code>Array.&lt;ERMrest.AttributeGroupColumn&gt;</code>
@@ -2592,7 +2594,6 @@ Constructor for a ParsedFilter.
     * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
     * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
     * [.read(limit, contextHeaderParams, useEntity)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
-        * [~processSortObject()](#ERMrest.Reference+read..processSortObject)
     * [.sort(sort)](#ERMrest.Reference+sort) ⇒ <code>Reference</code>
     * [.update(tuples, contextHeaderParams)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
     * [.delete(contextHeaderParams)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
@@ -2604,6 +2605,8 @@ Constructor for a ParsedFilter.
     * [.setSamePaging(page)](#ERMrest.Reference+setSamePaging) ⇒ [<code>Reference</code>](#ERMrest.Reference)
     * [.getColumnByName(name)](#ERMrest.Reference+getColumnByName) ⇒ [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)
     * [.generateColumnsList(tuple)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
+    * [._getReadPath()](#ERMrest.Reference+_getReadPath) : <code>Object</code>
+        * [~processSortObject()](#ERMrest.Reference+_getReadPath..processSortObject)
 
 <a name="new_ERMrest.Reference_new"></a>
 
@@ -2958,18 +2961,6 @@ or rejected with any of these errors:
 | contextHeaderParams | <code>Object</code> | the object that we want to log. |
 | useEntity | <code>Boolean</code> | whether we should use entity api or not (if true, we won't get foreignkey data) |
 
-<a name="ERMrest.Reference+read..processSortObject"></a>
-
-##### read~processSortObject()
-Check the sort object. Does not change the `this._location` object.
-  - Throws an error if the column doesn't exist or is not sortable.
-  - maps the sorting to its sort columns.
-      - for columns it's straighforward and uses the actual column name.
-      - for PseudoColumns we need
-          - A new alias: F# where the # is a positive integer.
-          - The sort column name must be the "foreignkey_alias:column_name".
-
-**Kind**: inner method of [<code>read</code>](#ERMrest.Reference+read)  
 <a name="ERMrest.Reference+sort"></a>
 
 #### reference.sort(sort) ⇒ <code>Reference</code>
@@ -3182,6 +3173,29 @@ NOTE:
 | --- | --- | --- |
 | tuple | [<code>Tuple</code>](#ERMrest.Tuple) | the data for the current refe |
 
+<a name="ERMrest.Reference+_getReadPath"></a>
+
+#### reference.\_getReadPath() : <code>Object</code>
+The actual path that will be used for read request.
+ It will return an object that will have:
+  - value: the string value of the path
+  - isAttributeGroup: whether we should use attributegroup api or not.
+                      (if the reference doesn't have any fks, we don't need to use attributegroup)
+NOTE Might throw an error if modifiers are not valid
+
+**Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+_getReadPath..processSortObject"></a>
+
+##### _getReadPath~processSortObject()
+Check the sort object. Does not change the `this._location` object.
+  - Throws an error if the column doesn't exist or is not sortable.
+  - maps the sorting to its sort columns.
+      - for columns it's straighforward and uses the actual column name.
+      - for PseudoColumns we need
+          - A new alias: F# where the # is a positive integer.
+          - The sort column name must be the "foreignkey_alias:column_name".
+
+**Kind**: inner method of [<code>\_getReadPath</code>](#ERMrest.Reference+_getReadPath)  
 <a name="ERMrest.Page"></a>
 
 ### ERMrest.Page
@@ -5768,7 +5782,6 @@ get PathColumn object by column name
     * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
     * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
     * [.read(limit, contextHeaderParams, useEntity)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
-        * [~processSortObject()](#ERMrest.Reference+read..processSortObject)
     * [.sort(sort)](#ERMrest.Reference+sort) ⇒ <code>Reference</code>
     * [.update(tuples, contextHeaderParams)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
     * [.delete(contextHeaderParams)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
@@ -5780,6 +5793,8 @@ get PathColumn object by column name
     * [.setSamePaging(page)](#ERMrest.Reference+setSamePaging) ⇒ [<code>Reference</code>](#ERMrest.Reference)
     * [.getColumnByName(name)](#ERMrest.Reference+getColumnByName) ⇒ [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)
     * [.generateColumnsList(tuple)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
+    * [._getReadPath()](#ERMrest.Reference+_getReadPath) : <code>Object</code>
+        * [~processSortObject()](#ERMrest.Reference+_getReadPath..processSortObject)
 
 <a name="new_ERMrest.Reference_new"></a>
 
@@ -6134,18 +6149,6 @@ or rejected with any of these errors:
 | contextHeaderParams | <code>Object</code> | the object that we want to log. |
 | useEntity | <code>Boolean</code> | whether we should use entity api or not (if true, we won't get foreignkey data) |
 
-<a name="ERMrest.Reference+read..processSortObject"></a>
-
-##### read~processSortObject()
-Check the sort object. Does not change the `this._location` object.
-  - Throws an error if the column doesn't exist or is not sortable.
-  - maps the sorting to its sort columns.
-      - for columns it's straighforward and uses the actual column name.
-      - for PseudoColumns we need
-          - A new alias: F# where the # is a positive integer.
-          - The sort column name must be the "foreignkey_alias:column_name".
-
-**Kind**: inner method of [<code>read</code>](#ERMrest.Reference+read)  
 <a name="ERMrest.Reference+sort"></a>
 
 #### reference.sort(sort) ⇒ <code>Reference</code>
@@ -6358,6 +6361,29 @@ NOTE:
 | --- | --- | --- |
 | tuple | [<code>Tuple</code>](#ERMrest.Tuple) | the data for the current refe |
 
+<a name="ERMrest.Reference+_getReadPath"></a>
+
+#### reference.\_getReadPath() : <code>Object</code>
+The actual path that will be used for read request.
+ It will return an object that will have:
+  - value: the string value of the path
+  - isAttributeGroup: whether we should use attributegroup api or not.
+                      (if the reference doesn't have any fks, we don't need to use attributegroup)
+NOTE Might throw an error if modifiers are not valid
+
+**Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+_getReadPath..processSortObject"></a>
+
+##### _getReadPath~processSortObject()
+Check the sort object. Does not change the `this._location` object.
+  - Throws an error if the column doesn't exist or is not sortable.
+  - maps the sorting to its sort columns.
+      - for columns it's straighforward and uses the actual column name.
+      - for PseudoColumns we need
+          - A new alias: F# where the # is a positive integer.
+          - The sort column name must be the "foreignkey_alias:column_name".
+
+**Kind**: inner method of [<code>\_getReadPath</code>](#ERMrest.Reference+_getReadPath)  
 <a name="ERMrest.AttributeGroupReference"></a>
 
 ### ERMrest.AttributeGroupReference : <code>object</code>
