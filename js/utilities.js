@@ -3243,7 +3243,8 @@
 
     module._errorMessage = Object.freeze({
         facetingError : "Given encoded string for facets is not valid.",
-        customFacetingError : "Given encoded string for cfacets is not valid."
+        customFacetingError : "Given encoded string for cfacets is not valid.",
+        facetOrFilterError: "Given filter or facet is not valid."
     });
 
     module._facetingErrors = Object.freeze({

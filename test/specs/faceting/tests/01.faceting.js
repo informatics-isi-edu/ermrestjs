@@ -345,6 +345,33 @@ exports.execute = function (options) {
             });
 
             describe("if reference already has facets or filters applied, ", function () {
+
+                it ("should throw an error if the facet in the url is invalid.", function (done) {
+                    facetObj = { "and": [ {"source": "invalid_column_that_doesnt_exist", "choice": ["test"]} ] };
+                    options.ermRest.resolve(createURL(tableMain, facetObj)).then(function (ref) {
+                        expect(function () {
+                            var facetColumns = ref.facetColumns;
+                        }).toThrow("Given filter or facet is not valid.");
+                        done();
+                    }).catch(function (err) {
+                        console.log(err);
+                        done.fail();
+                    });
+                });
+
+                it ("should throw an error if the filter in the url is invalid.", function (done) {
+                    var invalidURL =  options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + tableMain + "/invalid_column_that_doesnt_exist=1234";
+                    options.ermRest.resolve(invalidURL).then(function (ref) {
+                        expect(function () {
+                            var facetColumns = ref.facetColumns;
+                        }).toThrow("Given filter or facet is not valid.");
+                        done();
+                    }).catch(function (err) {
+                        console.log(err);
+                        done.fail();
+                    });
+                });
+
                 it ("should merge the facet lists, but get the filters from uri.", function (done) {
                     facetObj = { "and": [ {"source": "unfaceted_column", "search": ["test"]} ] };
                     options.ermRest.resolve(createURL(tableMain, facetObj)).then(function (ref) {

@@ -706,9 +706,11 @@
                     // couldn't find the facet, create a new facet object
                     if (!found) {
                         var filterCol = checkFacetObject(andFilters[i]);
-                        if (filterCol) {
-                            facetObjects.push({"obj": andFilters[i], "column": filterCol});
+                        // this means that the facet/filter in url was not valid
+                        if (!filterCol) {
+                            throw new module.InvalidFilterOperatorError(module._errorMessage.facetOrFilterError, self.location.path, '');
                         }
+                        facetObjects.push({"obj": andFilters[i], "column": filterCol});
                     }
                 }
 
