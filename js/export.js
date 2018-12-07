@@ -209,6 +209,9 @@ var ERMrest = (function(module) {
                 if (template.public != null) {
                     exportParameters.public = template.public;
                 }
+                if (template.bag_archiver != null) {
+                    exportParameters.bag.bag_archiver = template.bag_archiver;
+                }
                 this._exportParameters = exportParameters;
             }
 
