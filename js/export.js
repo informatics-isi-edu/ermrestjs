@@ -207,7 +207,7 @@ var ERMrest = (function(module) {
                     exportParameters.post_processors = template.postprocessors;
                 }
                 if (template.public != null) {
-                    exportParameters.public = template.public
+                    exportParameters.public = template.public;
                 }
                 this._exportParameters = exportParameters;
             }
@@ -246,7 +246,7 @@ var ERMrest = (function(module) {
 
                 self.canceled = false;
                 if (self.exportParameters.public != null) {
-                    serviceUrl += "?public=" + self.exportParameters.public
+                    serviceUrl += "?public=" + self.exportParameters.public;
                 }
                 self.reference._server._http.post(serviceUrl, self.exportParameters, {headers: headers}).then(function success(response) {
                     return defer.resolve({data: response.data.split("\n"), canceled: self.canceled});
