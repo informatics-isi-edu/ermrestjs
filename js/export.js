@@ -171,7 +171,7 @@ var ERMrest = (function(module) {
                 } else {
                     var outputs = template.outputs;
                     var predicate = this.reference.location.ermrestCompactPath;
-                    var output_path = this.reference.displayname.unformatted; // needs call to sanitize first, i think
+                    var output_path = module._sanitizeFilename(this.reference.displayname.unformatted);
 
                     outputs.forEach(function (output) {
                         var source = output.source, dest = output.destination;
