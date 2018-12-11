@@ -79,8 +79,8 @@ var ERMrest = (function(module) {
                 return false;
             }
 
-            // output.destination must have name and type
-            if (!module.ObjectHasAllKeys(output.destination, ['name', 'type'])) {
+            // output.destination must have at least a type
+            if (!module.ObjectHasAllKeys(output.destination, ['type'])) {
                 errMessage("output.destination index=" + i + " has missing required attributes.");
                 return false;
             }
@@ -171,6 +171,7 @@ var ERMrest = (function(module) {
                 } else {
                     var outputs = template.outputs;
                     var predicate = this.reference.location.ermrestCompactPath;
+                    var output_path = module._sanitizeFilename(this.reference.displayname.unformatted);
 
                     outputs.forEach(function (output) {
                         var source = output.source, dest = output.destination;
@@ -187,7 +188,7 @@ var ERMrest = (function(module) {
                         }
 
                         query.processor = dest.type || bagOptions.table_format;
-                        queryParams.output_path = dest.name;
+                        queryParams.output_path = dest.name || output_path;
                         queryParams.query_path = "/" + queryFrags.join("/") + "?limit=none";
                         if (dest.impl != null) {
                             query.processor_type = dest.impl;
@@ -204,6 +205,12 @@ var ERMrest = (function(module) {
                 }
                 if (template.postprocessors != null) {
                     exportParameters.post_processors = template.postprocessors;
+                }
+                if (template.public != null) {
+                    exportParameters.public = template.public;
+                }
+                if (template.bag_archiver != null) {
+                    exportParameters.bag.bag_archiver = template.bag_archiver;
                 }
                 this._exportParameters = exportParameters;
             }
@@ -241,6 +248,9 @@ var ERMrest = (function(module) {
                 headers[module._contextHeaderName] = contextHeaderParams;
 
                 self.canceled = false;
+                if (self.exportParameters.public != null) {
+                    serviceUrl += "?public=" + self.exportParameters.public;
+                }
                 self.reference._server._http.post(serviceUrl, self.exportParameters, {headers: headers}).then(function success(response) {
                     return defer.resolve({data: response.data.split("\n"), canceled: self.canceled});
                 }).catch(function (err) {
