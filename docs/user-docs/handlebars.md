@@ -34,6 +34,7 @@ Handlebars supports more complicated expression syntax and allow the comparison 
    * [Encode](#encode-helper)
    * [Escape](#escape-helper)
    * [EncodeFacet](#encodefacet-helper)
+* [Using Arrays](#using-arrays)
 * [Accessing keys with spaces and special characters](#accessing-keys-with-spaces-and-special-characters)
 * [Subexpressions](#subexpressions)
 * [Additional Helpers for Comparison](#additional-helpers-for-comparision)
@@ -337,6 +338,31 @@ Result:
 ```
 
 As you can see in this example I am escaping all the `"`s. This is because you are usually passing this value in a string in a JSON document. So all the `"`s must be escaped.
+
+## Using Arrays
+
+You can use the [Each Helper](each-helper) to iterate over its data. You can also use the `{{array.INDEX}}` pattern if you want to access array data by index; where index starts from zero and it is the position of element that you want to access.
+
+Template:
+```
+{{{arr.0.value}}}
+```
+
+When used with this context:
+```js
+{
+  arr: [
+      {value: "first element"},
+      {value: "second element"},
+      {value: "third element"}
+  ]
+}
+```
+
+Result:
+```
+first element
+```
 
 
 ## Accessing keys with spaces and special characters

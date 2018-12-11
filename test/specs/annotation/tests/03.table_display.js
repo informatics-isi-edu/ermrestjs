@@ -484,8 +484,8 @@ exports.execute = function (options) {
             });
 
             var markdownPattern = ":::iframe [{{title}}{{#$fkeys.schema_table_display.table_w_t_disp_annot_w_mp_fkey}}(with {{{rowName}}} from catalog {{{$catalog.snapshot}}}){{/$fkeys.schema_table_display.table_w_t_disp_annot_w_mp_fkey}}](https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id={{_id}}) \n:::";
-            it("reference.display._markdownPattern should be '" + markdownPattern + "' ", function() {
-                expect(reference.display._markdownPattern).toEqual(markdownPattern);
+            it("reference.display._rowMarkdownPattern should be '" + markdownPattern + "' ", function() {
+                expect(reference.display._rowMarkdownPattern).toEqual(markdownPattern);
             });
 
             it("reference.display._separator should be '\n'", function() {

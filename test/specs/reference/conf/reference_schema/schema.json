@@ -283,6 +283,12 @@
                         ["reference_schema", "hidden_fk_inbound_related_to_reference"],
                         ["reference_schema","fk_inbound_related_to_reference"]
                     ]
+                },
+                "tag:isrd.isi.edu,2016:table-display": {
+                    "*": {
+                        "page_markdown_pattern": "{{#$page.parent}}{{{schema}}}:{{{table}}}{{/$page.parent}}, parent name={{{$page.parent.values._name}}}, where id is one of {{#each $page.values}}{{{this._id}}}{{/each}}",
+                        "template_engine": "handlebars"
+                    }
                 }
             }
         },
@@ -1831,7 +1837,14 @@
                     "name": "fk1",
                     "type": {"typename": "text"}
                 }
-            ]
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2016:table-display": {
+                    "*": {
+                        "row_markdown_pattern": "{{{id}}}, {{{_fk1}}}"
+                    }
+                }
+            }
         }
     },
     "comment": null,

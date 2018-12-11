@@ -1819,23 +1819,27 @@
 
                         this._display.type = module._displayTypes.MODULE;
 
-                    } else if (typeof annotation.row_markdown_pattern === 'string') {
+                    } else if (typeof annotation.row_markdown_pattern === 'string' || typeof annotation.page_markdown_pattern === 'string') {
 
                         this._display.type = module._displayTypes.MARKDOWN;
 
                         this._display.templateEngine = annotation.template_engine;
 
-                        // Render the row by composing a markdown representation
-                        this._display._markdownPattern = annotation.row_markdown_pattern;
+                        if (typeof annotation.page_markdown_pattern === 'string') {
+                            this._display._pageMarkdownPattern = annotation.page_markdown_pattern;
+                        } else {
+                            // Render the row by composing a markdown representation
+                            this._display._rowMarkdownPattern = annotation.row_markdown_pattern;
 
-                        // Insert separator markdown text between each expanded rowpattern when presenting row sets. Default is new line "\n"
-                        this._display._separator = (typeof annotation.separator_markdown === 'string') ? annotation.separator_markdown : "\n";
+                            // Insert separator markdown text between each expanded rowpattern when presenting row sets. Default is new line "\n"
+                            this._display._separator = (typeof annotation.separator_markdown === 'string') ? annotation.separator_markdown : "\n";
 
-                        // Insert prefix markdown before the first rowpattern expansion when presenting row sets. (Default empty string "".)
-                        this._display._prefix = (typeof annotation.prefix_markdown === 'string') ? annotation.prefix_markdown : "";
+                            // Insert prefix markdown before the first rowpattern expansion when presenting row sets. (Default empty string "".)
+                            this._display._prefix = (typeof annotation.prefix_markdown === 'string') ? annotation.prefix_markdown : "";
 
-                        // Insert suffix markdown after the last rowpattern expansion when presenting row sets. (Default empty string "".)
-                        this._display._suffix = (typeof annotation.suffix_markdown === 'string') ? annotation.suffix_markdown : "";
+                            // Insert suffix markdown after the last rowpattern expansion when presenting row sets. (Default empty string "".)
+                            this._display._suffix = (typeof annotation.suffix_markdown === 'string') ? annotation.suffix_markdown : "";
+                        }
 
                     }
                 }
@@ -2982,6 +2986,12 @@
             // the name of pseudocolumn that represents origFKR
             newRef.origColumnName = _generateForeignKeyName(fkr);
 
+            // the tuple of the main table
+            newRef.mainTuple = (typeof tuple === 'object') ? tuple : undefined;
+
+            // the main table
+            newRef.mainTable = this.table;
+
             // this name will be used to provide more information about the linkage
             if (fkr.to_name) {
                 newRef.parentDisplayname = { "value": fkr.to_name,  "unformatted": fkr.to_name, "isHTMl" : false };
@@ -4125,51 +4135,100 @@
          *    console.log(content);
          * }
          *```
+         *
+         * It will return:
+         * 1. the rendered page_markdown_pattern if it's defined.
+         * 2. the rendered row_markdown_pattern if it's defined.
+         * 3. list of links that point to the row. Caption is going to be the row-name.
          * @type {string|null}
          */
         get content() {
-                if (this._content === undefined) {
-                    if (!this._data || !this._data.length) {
-                    this._content = null;
-                } else {
+            if (this._content === undefined) {
+                var getContent = function (self, ref) {
+                    if (!self._data || !self._data.length) return null;
+
                     var i, value, pattern, values = [], keyValues;
-                    if (typeof this._ref.display._markdownPattern === 'string') {
-                       // Iterate over all data rows to compute the row values depending on the row_markdown_pattern.
-                       for (i = 0; i < this._data.length; i++) {
 
-                           // make sure we have the formatted key values
-                           keyValues = module._getFormattedKeyValues(this._ref.table, this._ref._context, this._data[i], this._linkedData[i]);
+                    // page_markdown_pattern
+                    /*
+                     the object structure that is available on the annotation:
+                       $page = {
+                            values: [],
+                            parent: {
+                                values: [],
+                                table: "",
+                                schema: ""
+                            }
+                        }
+                     */
+                    if (typeof ref.display._pageMarkdownPattern === 'string') {
+                        var $page = {
+                            values: self._data.map(function (d, i) {
+                                return module._getFormattedKeyValues(ref.table, ref._context, d, self._linkedData[i]);
+                            })
+                        };
 
-                           // render template
-                           value = module._renderTemplate(this._ref.display._markdownPattern, keyValues, this._ref._table, this._ref._context, { templateEngine: this._ref.display.templateEngine, formatted: true });
+                        if (ref.mainTable) {
+                            parent = {
+                                schema: ref.mainTable.schema.name,
+                                table: ref.mainTable.name,
+                            };
 
-                           // If value is null or empty, return value on basis of `show_nulls`
-                           if (value === null || value.trim() === '') {
-                               value = module._getNullValue(this._ref._table, this._ref._context, [this._ref._table, this._ref._table.schema]);
-                           }
-                           // If final value is not null then push it in values array
-                           if (value !== null) {
-                               values.push(value);
-                           }
-                       }
+                            if (ref.mainTuple) {
+                                parent.values = module._getFormattedKeyValues(ref.mainTable, ref._context, ref.mainTuple._data, ref.mainTuple._linkedData);
+                            }
 
-                       // Join the values array using the separator and prepend it with the prefix and append suffix to it.
-                       pattern = this._ref.display._prefix + values.join(this._ref.display._separator) + this._ref.display._suffix;
+                            $page.parent = parent;
+                        }
 
-                   }else{
+                        pattern = module._renderTemplate(ref.display._pageMarkdownPattern, {$page: $page}, ref.table, ref._context, { templateEngine: ref.display.templateEngine, formatted: true });
 
-                      for ( i = 0; i < this.tuples.length; i++) {
-                         var tuple = this.tuples[i];
-                         var url = tuple.reference.contextualize.detailed.appLink;
+                        if (pattern === null || pattern.trim() === '') {
+                            pattern = module._getNullValue(ref.table, ref._context, [ref.table, ref.table.schema]);
+                        }
 
-                         values.push("* ["+ tuple.displayname.value +"](" + url + ") " + this._ref.display._separator);
-                      }
-                      pattern = this._ref.display._prefix + values.join(" \n") + this._ref.display._suffix;
-                   }
-                   this._content =  module._formatUtils.printMarkdown(pattern);
-              }
-           }
-           return this._content;
+                        return module._formatUtils.printMarkdown(pattern);
+                    }
+
+                    // row_markdown_pattern
+                    if (typeof ref.display._rowMarkdownPattern === 'string') {
+                        // Iterate over all data rows to compute the row values depending on the row_markdown_pattern.
+                        for (i = 0; i < self._data.length; i++) {
+
+                            // make sure we have the formatted key values
+                            keyValues = module._getFormattedKeyValues(ref.table, ref._context, self._data[i], self._linkedData[i]);
+
+                            // render template
+                            value = module._renderTemplate(ref.display._rowMarkdownPattern, keyValues, ref.table, ref._context, { templateEngine: ref.display.templateEngine, formatted: true });
+
+                            // If value is null or empty, return value on basis of `show_nulls`
+                            if (value === null || value.trim() === '') {
+                                value = module._getNullValue(ref.table, ref._context, [ref.table, ref.table.schema]);
+                            }
+                            // If final value is not null then push it in values array
+                            if (value !== null) {
+                                values.push(value);
+                            }
+                        }
+                        // Join the values array using the separator and prepend it with the prefix and append suffix to it.
+                        pattern = ref.display._prefix + values.join(ref.display._separator) + ref.display._suffix;
+                        return module._formatUtils.printMarkdown(pattern);
+                    }
+
+                    // no markdown_pattern, just return the list of row-names
+                    for ( i = 0; i < self.tuples.length; i++) {
+                        var tuple = self.tuples[i];
+                        var url = tuple.reference.contextualize.detailed.appLink;
+
+                        values.push("* ["+ tuple.displayname.value +"](" + url + ") " + ref.display._separator);
+                    }
+                    pattern = ref.display._prefix + values.join(" \n") + ref.display._suffix;
+                    return module._formatUtils.printMarkdown(pattern);
+                };
+
+                this._content = getContent(this, this._ref);
+            }
+            return this._content;
        }
     };
 
