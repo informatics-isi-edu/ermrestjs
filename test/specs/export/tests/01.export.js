@@ -252,7 +252,7 @@ exports.execute = function (options) {
                         },
                         "destination": {
                             "type": "csv",
-                            "name": "export_test_bag"
+                            "name": "Main _ table"
                         }
                     }
                     expect(exportParams.catalog.query_processors.length).toBe(1);

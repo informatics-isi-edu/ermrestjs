@@ -66,6 +66,9 @@
                 "tag:isrd.isi.edu,2016:visible-columns" : {
                     "*": ["id", "text_col", "lgt", "markdown_col", "int_col", "float_col", "date_col", "timestamp_col"]
                 },
+                "tag:misd.isi.edu,2015:display": {
+                  "name": "Main / table"
+                },
                 "tag:isrd.isi.edu,2016:export": {
                     "templates": [
                         {
@@ -75,8 +78,7 @@
                                         "api": "entity"
                                     },
                                     "destination": {
-                                        "type": "csv",
-                                        "name": "export_test_bag"
+                                        "type": "csv"
                                     }
                                 }
                             ],
@@ -287,7 +289,7 @@
                             "md5": "asset_1_md5"
                         },
                         "tag:misd.isi.edu,2015:display": {
-                          "displayname": "asset_1_displayname"
+                          "name": "asset_1_displayname"
                         }
                     }
                 },
