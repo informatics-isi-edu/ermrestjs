@@ -4286,6 +4286,8 @@ otherwise it will true if filter is based on key.
 #### facetColumn.isAllOutboundNotNull : <code>Boolean</code>
 Whether the facet is defining an all outbound path that the columns used
 in the path are all not-null.
+NOTE even if the column.nullok is false, ermrest could return null value for it
+if the user rights to select that column is `null`.
 
 **Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
 <a name="ERMrest.FacetColumn+barPlot"></a>
@@ -4378,6 +4380,8 @@ Other types of facet that null won't be applicable to them and therefore
 we shouldn't even offer the option:
   1. (G4) Scalar columns of main table that are not-null.
   2. (G5) All outbound foreignkey facets that all the columns invloved are not-null
+Although if user is vewing a snapshot of catalog, ermrest might actually return null
+value for a not-null column, and therefore we should not do this check if user is in that state.
 
 Based on this, the following will be the logic for this function:
     - If facet has `null` filter: `false`

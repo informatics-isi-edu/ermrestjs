@@ -1419,11 +1419,19 @@ exports.execute = function (options) {
                 });
 
                 it ("should return `true` if hide_null_choice is set to `true`.", function () {
-                    testHideNullChoice([0, 10, 15], true);
+                    testHideNullChoice([10, 15], true);
                 });
 
-                it ("should return `false` if source doesn't have any path.", function () {
+                it ("should return `true` if source doesn't have any patha nd it's not-null.", function () {
+                    testHideNullChoice([0], true);
+                });
+
+                it ("should return `false` if source doesn't have any path and it's nullable.", function () {
                     testHideNullChoice([1, 2, 3, 4, 5, 6, 7, 8, 9, 19], false);
+                });
+
+                it ("should return `true` if it's an all outbound path with all the columns being not-null.", function () {
+                    testHideNullChoice([11], true);
                 });
 
                 it ("should return `true` if source has a path and column is nullable.", function () {
@@ -1431,7 +1439,7 @@ exports.execute = function (options) {
                 });
 
                 it ("should return `false` if column is not nullable, and source has path one and foreignkey can be ignored.", function () {
-                    testHideNullChoice([11, 13], false);
+                    testHideNullChoice([13], false);
                 });
 
                 describe("otherwise for facets with column not-null and path, ", function () {
@@ -1448,15 +1456,37 @@ exports.execute = function (options) {
             });
 
             describe("hideNotNullChoice, ", function () {
-                it ('should return false if hide_null_choice is not `true`.', function () {
-                    expect(mainFacets[1].hideNotNullChoice).toBe(false, "missmatch for index=1");
-                    expect(mainFacets[7].hideNotNullChoice).toBe(false, "missmatch for index=7");
+                var testHideNotNullChoice = function (indices, res) {
+                    indices.forEach(function (index) {
+                        expect(mainFacets[index].hideNotNullChoice).toBe(res, "missmatch for index=" + index);
+                    });
+                };
+
+                var newRefWithNull;
+                beforeAll(function () {
+                    newRefWithNull = mainFacets[2].addNotNullFilter().contextualize.detailed;
                 });
 
-                it ("otherwise should return true.", function () {
-                    expect(mainFacets[0].hideNotNullChoice).toBe(true, "missmatch for index=0");
-                    expect(mainFacets[2].hideNotNullChoice).toBe(true, "missmatch for index=2");
+                it ("should return `false` if facet has not-null.", function () {
+                    expect(newRefWithNull.facetColumns[2].hideNullChoice).toBe(false, "missmatch for index=10");
                 });
+
+                it ("should return true if hide_not_null_choice is `true`.", function () {
+                    testHideNotNullChoice([1,2,12], true);
+                });
+
+                it ("should return `true` if facet doesn't have any path and is not-null.", function () {
+                    testHideNotNullChoice([0], true);
+                });
+
+                it ("should return `true` for all-outbound facets that all the column in path are not-null.", function () {
+                    testHideNotNullChoice([10, 11], true);
+                });
+
+                it ('otherwise should return `false`.', function () {
+                    testHideNotNullChoice([3,4,5,6,7,8,9,13,14,15,16,17,18,19], false);
+                });
+
             });
 
             describe("sortColumns", function () {

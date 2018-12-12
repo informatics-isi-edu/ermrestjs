@@ -2112,21 +2112,23 @@ FacetColumn.prototype = {
     /**
      * Whether the facet is defining an all outbound path that the columns used
      * in the path are all not-null.
+     * NOTE even if the column.nullok is false, ermrest could return null value for it
+     * if the user rights to select that column is `null`.
      * @type {Boolean}
      */
     get isAllOutboundNotNull () {
         if (this._isAllOutboundNotNull === undefined) {
             var colsetNotNull = function (colset) {
                 return colset.columns.every(function (col) {
-                    return !col.nullok;
+                    return !col.nullok && col.rights.select === true;
                 });
             };
 
-            this._isAllOutboundNotNull = self.foreignKeys.every(function (fk) {
-                return !fk.isInbound && colsetNotNull(fk.colset) && colsetNotNull(fk.key.colset);
+            this._isAllOutboundNotNull = this.foreignKeys.length > 0 && this.foreignKeys.every(function (fk) {
+                return !fk.isInbound && colsetNotNull(fk.obj.colset) && colsetNotNull(fk.obj.key.colset);
             });
         }
-        return this.isAllOutboundNotNull;
+        return this._isAllOutboundNotNull;
     },
 
     /**
@@ -2379,6 +2381,8 @@ FacetColumn.prototype = {
      * we shouldn't even offer the option:
      *   1. (G4) Scalar columns of main table that are not-null.
      *   2. (G5) All outbound foreignkey facets that all the columns invloved are not-null
+     * Although if user is vewing a snapshot of catalog, ermrest might actually return null
+     * value for a not-null column, and therefore we should not do this check if user is in that state.
      *
      * Based on this, the following will be the logic for this function:
      *     - If facet has `null` filter: `false`
@@ -2409,7 +2413,7 @@ FacetColumn.prototype = {
                 }
 
                 // G5
-                if (this.isAllOutboundNotNull) {
+                if (!self.reference.table.schema.catalog.version && self.isAllOutboundNotNull) {
                     return true;
                 }
 
@@ -2461,7 +2465,7 @@ FacetColumn.prototype = {
                 }
 
                 //if all outbound not-null don't show it.
-                return self.isAllOutboundNotNull;
+                return !self.reference.table.schema.catalog.version && self.isAllOutboundNotNull;
             };
 
             this._hideNotNullChoice = getHideNotNull(this);
