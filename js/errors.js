@@ -306,7 +306,8 @@
       if (invalidFilter != ''){
         newPath = path.replace(invalidFilter, '');
       } else{
-        newPath = path.slice(0, path.indexOf('/'));
+        var lastIndex = path.indexOf('/');
+        newPath = (lastIndex === -1) ? path : path.slice(0, lastIndex);
       }
       return newPath;
     }

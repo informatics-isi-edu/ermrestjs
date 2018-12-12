@@ -425,20 +425,14 @@ AttributeGroupReference.prototype = {
     getAggregates: function (aggregateList) {
         var defer = module._q.defer();
         var url;
-
-        var URL_LENGTH_LIMIT = 2048;
-
         var urlSet = [];
         var loc = this.location;
-        var baseUri = [
-            loc.service, "catalog", loc.catalogId, "aggregate", loc.path
-        ];
 
+        var baseUri = loc.path;
         if (typeof loc.searchFilter === "string" && loc.searchFilter.length > 0) {
-            baseUri.push(loc.searchFilter);
+            baseUri += "/" + loc.searchFilter;
         }
-
-        baseUri = baseUri.join("/") + "/";
+        baseUri += "/";
 
         for (var i = 0; i < aggregateList.length; i++) {
             var agg = aggregateList[i];
@@ -451,7 +445,7 @@ AttributeGroupReference.prototype = {
             }
 
             // if adding the next aggregate to the url will push it past url length limit, push url onto the urlSet and reset the working url
-            if ((url + i + ":=" + agg).length > URL_LENGTH_LIMIT) {
+            if ((url + i + ":=" + agg).length > module.URL_PATH_LENGTH_LIMIT) {
                 // strip off an extra ','
                 if (url.charAt(url.length-1) === ',') {
                     url = url.substring(0, url.length-1);
@@ -473,7 +467,7 @@ AttributeGroupReference.prototype = {
         var aggregatePromises = [];
         var http = this._server._http;
         for (var j = 0; j < urlSet.length; j++) {
-            aggregatePromises.push(http.get(urlSet[j]));
+            aggregatePromises.push(http.get(loc.service + "/catalog/" + loc.catalogId + "/aggregate/" + urlSet[j]));
         }
 
         module._q.all(aggregatePromises).then(function getAggregates(response) {

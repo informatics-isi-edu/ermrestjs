@@ -506,6 +506,16 @@
     };
 
     /**
+     * Strip the trailing slash if there's any
+     * @private
+     * @param  {String} str
+     * @return {String}
+     */
+    module._stripTrailingSlash = function (str) {
+        return str.endsWith("/") ? str.slice(0, -1) : str;
+    };
+
+    /**
      * trim the slashes that might exist at the begining or end of the string
      * @param  {String} str
      * @return {String}
@@ -3071,6 +3081,18 @@
         return truncateFacet(obj, header).res;
     };
 
+    // for more information on url length limit refer to the following issue:
+    // https://github.com/informatics-isi-edu/chaise/issues/1669
+    module.URL_PATH_LENGTH_LIMIT = 4000;
+    var isNode =  typeof process !== 'undefined' && process.versions != null && process.versions.node != null;
+    if (!isNode) {
+        var isIE = /*@cc_on!@*/false || !!document.documentMode, // Internet Explorer 6-11
+        isEdge = !isIE && !!window.StyleMedia; // Edge
+        if(isIE || isEdge) {
+            module.URL_PATH_LENGTH_LIMIT = 2000;
+        }
+    }
+
     module._constraintTypes = Object.freeze({
         KEY: "k",
         FOREIGN_KEY: "fk"
@@ -3243,7 +3265,8 @@
 
     module._errorMessage = Object.freeze({
         facetingError : "Given encoded string for facets is not valid.",
-        customFacetingError : "Given encoded string for cfacets is not valid."
+        customFacetingError : "Given encoded string for cfacets is not valid.",
+        facetOrFilterError: "Given filter or facet is not valid."
     });
 
     module._facetingErrors = Object.freeze({
