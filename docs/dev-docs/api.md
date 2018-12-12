@@ -4400,7 +4400,8 @@ value for a not-null column, and therefore we should not do this check if user i
 Based on this, the following will be the logic for this function:
     - If facet has `null` filter: `false`
     - If facet has `"hide_null_choice": true`: `true`
-    - If G1: `true` if the column is not-null otherwise `false`
+    - If G1: `true` if the column is not-null and user has select right otherwise `false`
+    - If G5: `true`
     - If G2: `true`
     - If G3.1: `false`
     - If G3 and no other G3 has null: `false`

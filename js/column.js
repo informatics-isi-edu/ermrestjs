@@ -2387,7 +2387,8 @@ FacetColumn.prototype = {
      * Based on this, the following will be the logic for this function:
      *     - If facet has `null` filter: `false`
      *     - If facet has `"hide_null_choice": true`: `true`
-     *     - If G1: `true` if the column is not-null otherwise `false`
+     *     - If G1: `true` if the column is not-null and user has select right otherwise `false`
+     *     - If G5: `true`
      *     - If G2: `true`
      *     - If G3.1: `false`
      *     - If G3 and no other G3 has null: `false`
@@ -2407,13 +2408,15 @@ FacetColumn.prototype = {
                     return true;
                 }
 
+                var versioned = self.reference.table.schema.catalog.version;
+
                 // G1 / G4
                 if (self.foreignKeys.length < 1) {
-                    return !self._column.nullok;
+                    return !versioned && !self._column.nullok && self._column.rights.select === true;
                 }
 
                 // G5
-                if (!self.reference.table.schema.catalog.version && self.isAllOutboundNotNull) {
+                if (!versioned && self.isAllOutboundNotNull) {
                     return true;
                 }
 
@@ -2459,13 +2462,15 @@ FacetColumn.prototype = {
                 // if hide_not_null_choice is available in facet definition
                 if (self._facetObject.hide_not_null_choice === true) return true;
 
+                var versioned = self.reference.table.schema.catalog.version;
+
                 //if from the same column, don't show if it's not-null
                 if (self.foreignKeys.length === 0) {
-                    return !self._column.nullok;
+                    return !versioned && !self._column.nullok && self._column.rights.select === true;
                 }
 
                 //if all outbound not-null don't show it.
-                return !self.reference.table.schema.catalog.version && self.isAllOutboundNotNull;
+                return !versioned && self.isAllOutboundNotNull;
             };
 
             this._hideNotNullChoice = getHideNotNull(this);
