@@ -225,6 +225,11 @@
          */
         this.id = id;
 
+        var catalogSnapshot = id.split("@");
+        if (catalogSnapshot.length === 2) {
+            this.version = catalogSnapshot[1];
+        }
+
         this._uri = server.uri + "/catalog/" + id;
 
         /**

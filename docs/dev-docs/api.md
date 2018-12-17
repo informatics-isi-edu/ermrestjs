@@ -439,6 +439,7 @@ to use for ERMrest JavaScript agents.
         * [.ermrestHasPath](#ERMrest.FacetColumn+ermrestHasPath) : <code>Boolean</code>
         * [.preferredMode](#ERMrest.FacetColumn+preferredMode) : <code>string</code>
         * [.isEntityMode](#ERMrest.FacetColumn+isEntityMode) : <code>Boolean</code>
+        * [.isAllOutboundNotNull](#ERMrest.FacetColumn+isAllOutboundNotNull) : <code>Boolean</code>
         * [.barPlot](#ERMrest.FacetColumn+barPlot) : <code>Boolean</code>
         * [.histogramBucketCount](#ERMrest.FacetColumn+histogramBucketCount) : <code>Integer</code>
         * [.column](#ERMrest.FacetColumn+column) : [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)
@@ -4161,6 +4162,7 @@ Indicates that this ReferenceColumn is an inbound foreign key.
     * [.ermrestHasPath](#ERMrest.FacetColumn+ermrestHasPath) : <code>Boolean</code>
     * [.preferredMode](#ERMrest.FacetColumn+preferredMode) : <code>string</code>
     * [.isEntityMode](#ERMrest.FacetColumn+isEntityMode) : <code>Boolean</code>
+    * [.isAllOutboundNotNull](#ERMrest.FacetColumn+isAllOutboundNotNull) : <code>Boolean</code>
     * [.barPlot](#ERMrest.FacetColumn+barPlot) : <code>Boolean</code>
     * [.histogramBucketCount](#ERMrest.FacetColumn+histogramBucketCount) : <code>Integer</code>
     * [.column](#ERMrest.FacetColumn+column) : [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)
@@ -4293,6 +4295,15 @@ If facetObject['entity'] is defined as false, it will return false,
 otherwise it will true if filter is based on key.
 
 **Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
+<a name="ERMrest.FacetColumn+isAllOutboundNotNull"></a>
+
+#### facetColumn.isAllOutboundNotNull : <code>Boolean</code>
+Whether the facet is defining an all outbound path that the columns used
+in the path are all not-null.
+NOTE even if the column.nullok is false, ermrest could return null value for it
+if the user rights to select that column is `null`.
+
+**Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
 <a name="ERMrest.FacetColumn+barPlot"></a>
 
 #### facetColumn.barPlot : <code>Boolean</code>
@@ -4379,11 +4390,18 @@ Based on this, we can categorize facets into these three groups:
   3. (G3) Facets with path where the column is not nullable. Here `null` can only mean path existence.
   3. (G3.1) Facets with only one hop where the column used in foreignkey is the same column for faceting.
      In this case, we can completely ignore the foreignkey path and just do a value check on main table.
+Other types of facet that null won't be applicable to them and therefore
+we shouldn't even offer the option:
+  1. (G4) Scalar columns of main table that are not-null.
+  2. (G5) All outbound foreignkey facets that all the columns invloved are not-null
+Although if user is vewing a snapshot of catalog, ermrest might actually return null
+value for a not-null column, and therefore we should not do this check if user is in that state.
 
 Based on this, the following will be the logic for this function:
     - If facet has `null` filter: `false`
     - If facet has `"hide_null_choice": true`: `true`
-    - If G1: `false`
+    - If G1: `true` if the column is not-null and user has select right otherwise `false`
+    - If G5: `true`
     - If G2: `true`
     - If G3.1: `false`
     - If G3 and no other G3 has null: `false`
@@ -4393,7 +4411,12 @@ Based on this, the following will be the logic for this function:
 <a name="ERMrest.FacetColumn+hideNotNullChoice"></a>
 
 #### facetColumn.hideNotNullChoice : <code>Boolean</code>
-Whether client should hide the not-null choice
+Whether client should hide the not-null choice. The logic is as follows:
+- `false` if facet has not-null filter.
+- `true` if facet has hide_not_null_choice in it's definition
+- `true` if facet is from the same table and it's not-nullable.
+- `true` if facet is all outbound not null.
+- otherwise `false`
 
 **Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
 <a name="ERMrest.FacetColumn+hideNumOccurrences"></a>
