@@ -320,6 +320,7 @@ to use for ERMrest JavaScript agents.
         * [.defaultLogInfo](#ERMrest.Reference+defaultLogInfo) : <code>Object</code>
         * [.defaultExportTemplate](#ERMrest.Reference+defaultExportTemplate) : <code>string</code>
         * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
+        * [.hideFacets()](#ERMrest.Reference+hideFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
         * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
         * [.read(limit, contextHeaderParams, useEntity)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
         * [.sort(sort)](#ERMrest.Reference+sort) ⇒ <code>Reference</code>
@@ -608,6 +609,7 @@ to use for ERMrest JavaScript agents.
         * [.defaultLogInfo](#ERMrest.Reference+defaultLogInfo) : <code>Object</code>
         * [.defaultExportTemplate](#ERMrest.Reference+defaultExportTemplate) : <code>string</code>
         * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
+        * [.hideFacets()](#ERMrest.Reference+hideFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
         * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
         * [.read(limit, contextHeaderParams, useEntity)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
         * [.sort(sort)](#ERMrest.Reference+sort) ⇒ <code>Reference</code>
@@ -2592,6 +2594,7 @@ Constructor for a ParsedFilter.
     * [.defaultLogInfo](#ERMrest.Reference+defaultLogInfo) : <code>Object</code>
     * [.defaultExportTemplate](#ERMrest.Reference+defaultExportTemplate) : <code>string</code>
     * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
+    * [.hideFacets()](#ERMrest.Reference+hideFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
     * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
     * [.read(limit, contextHeaderParams, useEntity)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
     * [.sort(sort)](#ERMrest.Reference+sort) ⇒ <code>Reference</code>
@@ -2904,6 +2907,12 @@ Remove all the fitlers, facets, and custom-facets from the reference
 | sameCustomFacet | <code>boolean</code> | By default we're removing custom-facets, if this is true custom-facets won't be changed. |
 | sameFacet | <code>boolean</code> | By default we're removing facets, if this is true facets won't be changed. |
 
+<a name="ERMrest.Reference+hideFacets"></a>
+
+#### reference.hideFacets() ⇒ [<code>Reference</code>](#ERMrest.Reference)
+Will return a reference with the same facets but hidden.
+
+**Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+create"></a>
 
 #### reference.create(data, contextHeaderParams) ⇒ <code>Promise</code>
@@ -5780,6 +5789,7 @@ get PathColumn object by column name
     * [.defaultLogInfo](#ERMrest.Reference+defaultLogInfo) : <code>Object</code>
     * [.defaultExportTemplate](#ERMrest.Reference+defaultExportTemplate) : <code>string</code>
     * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
+    * [.hideFacets()](#ERMrest.Reference+hideFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
     * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
     * [.read(limit, contextHeaderParams, useEntity)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
     * [.sort(sort)](#ERMrest.Reference+sort) ⇒ <code>Reference</code>
@@ -6092,6 +6102,12 @@ Remove all the fitlers, facets, and custom-facets from the reference
 | sameCustomFacet | <code>boolean</code> | By default we're removing custom-facets, if this is true custom-facets won't be changed. |
 | sameFacet | <code>boolean</code> | By default we're removing facets, if this is true facets won't be changed. |
 
+<a name="ERMrest.Reference+hideFacets"></a>
+
+#### reference.hideFacets() ⇒ [<code>Reference</code>](#ERMrest.Reference)
+Will return a reference with the same facets but hidden.
+
+**Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+create"></a>
 
 #### reference.create(data, contextHeaderParams) ⇒ <code>Promise</code>

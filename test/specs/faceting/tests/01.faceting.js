@@ -581,6 +581,32 @@ exports.execute = function (options) {
                         });
                     });
                 });
+
+                describe("if reference has hidden filters," ,function () {
+                    var refWithHiddenFacets;
+                    beforeAll(function (done) {
+                        facetObj = { "and": [ {"source": "id", "choices": ["2"], "hidden": true}, {"source": "unfaceted_column", "choices": ["4"], "hidden": true} ] };
+                        options.ermRest.resolve(createURL(tableMain, facetObj)).then(function (ref) {
+                            refWithHiddenFacets = ref;
+                            done();
+                        }).catch(function (err) {
+                            console.log(err);
+                            done.fail();
+                        });
+                    });
+
+                    it ("should not create new facet column for it.", function () {
+                        expect(refWithHiddenFacets.facetColumns.length).toBe(20);
+                    });
+
+                    it ("should not apply preselected annotation filters.", function () {
+                        expect(refWithHiddenFacets.facetColumns[0].filters.length).toBe(0);
+                    });
+
+                    it ("location should still have the facets", function () {
+                        expect(refWithHiddenFacets.location.facets.decoded).toEqual(facetObj);
+                    });
+                });
             });
 
             describe("regarding alternative tables for main table, ", function () {
@@ -683,6 +709,50 @@ exports.execute = function (options) {
                 ));
             });
         });
+
+        describe("Reference.hideFacets", function () {
+            it ("should throw an error if the reference doesn't have any facets.", function (done) {
+                options.ermRest.resolve(createURL(tableMain), {cid: "test"}).then(function (ref) {
+                    expect(function () {
+                        var h = ref.hideFacets();
+                    }).toThrow("Reference doesn't have any facets.");
+                    done();
+                }).catch(function (err) {
+                    done.fail(err);
+                })
+            });
+
+            var refWithHiddenFacets;
+            it ("should return a reference with same facets but hidden.", function () {
+                refWithHiddenFacets = refMain.hideFacets();
+                refWithHiddenFacets.facetColumns.forEach(function (f, index) {
+                    expect(f.filters).toEqual([], 'fitlers missmatch index=' + index);
+                });
+
+                expect(refWithHiddenFacets.location.ermrestCompactPath).toBe(
+                    "M:=faceting_schema:main/id=1/$M/int_col::geq::-2/$M",
+                    "path missmatch."
+                );
+            });
+
+            it ("should be able to add new filters to the reference that are not hidden.", function () {
+                var newRef = refWithHiddenFacets.facetColumns[0].addChoiceFilters(["2"]);
+                expect(newRef.facetColumns[0].filters.length).toEqual(1, "filters length missmatch");
+                expect(newRef.location.ermrestCompactPath).toBe(
+                    "M:=faceting_schema:main/id=2/$M/id=1/$M/int_col::geq::-2/$M",
+                    "path missmatch."
+                );
+            });
+
+            it ("removeAllFacetFilters should not remove hidden facets.", function () {
+                var newRef = refWithHiddenFacets.removeAllFacetFilters();
+                expect(newRef.facetColumns[0].filters.length).toEqual(0, "filters length missmatch");
+                expect(newRef.location.ermrestCompactPath).toBe(
+                    "M:=faceting_schema:main/id=1/$M/int_col::geq::-2/$M",
+                    "path missmatch."
+                );
+            });
+        })
 
         describe("FacetColumn APIs, ", function () {
             describe("isOpen, ", function () {

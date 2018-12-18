@@ -1655,6 +1655,7 @@
             throw new module.InvalidFacetOperatorError(path, module._facetingErrors.invalidBooleanOperator);
         }
 
+        this.andFilters = obj[andOperator];
     }
     /**
      * An object that will have the follwoing attributes:
