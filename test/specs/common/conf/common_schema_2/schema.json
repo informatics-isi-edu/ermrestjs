@@ -445,7 +445,7 @@
                 },
                 {
                     "name": "boolean_improper",
-                    "default": "",
+                    "default": null,
                     "type": { "typename": "boolean" }
                 },
                 {
@@ -455,7 +455,7 @@
                 },
                 {
                     "name": "date_improper",
-                    "default": "",
+                    "default": null,
                     "type": { "typename": "date" }
                 },
                 {
@@ -465,7 +465,7 @@
                 },
                 {
                     "name": "timestamp_improper",
-                    "default": "",
+                    "default": null,
                     "type": { "typename": "timestamp" }
                 },
                 {
@@ -475,7 +475,7 @@
                 },
                 {
                     "name": "timestamptz_improper",
-                    "default": "",
+                    "default": null,
                     "type": { "typename": "timestamptz" }
                 },
                 {
@@ -485,7 +485,7 @@
                 },
                 {
                     "name": "float4_improper",
-                    "default": "",
+                    "default": null,
                     "type": { "typename": "float4" }
                 },
                 {
@@ -495,7 +495,7 @@
                 },
                 {
                     "name": "float8_improper",
-                    "default": "",
+                    "default": null,
                     "type": { "typename": "float8" }
                 },
                 {
@@ -505,7 +505,7 @@
                 },
                 {
                     "name": "numeric_improper",
-                    "default": "",
+                    "default": null,
                     "type": { "typename": "numeric" }
                 },
                 {
@@ -515,7 +515,7 @@
                 },
                 {
                     "name": "int2_improper",
-                    "default": "",
+                    "default": null,
                     "type": { "typename": "int2" }
                 },
                 {
@@ -525,7 +525,7 @@
                 },
                 {
                     "name": "int4_improper",
-                    "default": "",
+                    "default": null,
                     "type": { "typename": "int4" }
                 },
                 {
@@ -535,7 +535,7 @@
                 },
                 {
                     "name": "int8_improper",
-                    "default": "",
+                    "default": null,
                     "type": { "typename": "int8" }
                 }
             ],

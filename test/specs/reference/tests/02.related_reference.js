@@ -15,6 +15,42 @@ exports.execute = function(options) {
         var singleEnitityUri = options.url + "/catalog/" + catalog_id + "/entity/"
             + schemaName + ":" + tableName + "/id=" + entityId;
 
+        var chaiseURL = "https://dev.isrd.isi.edu/chaise";
+        var recordURL = chaiseURL + "/record";
+        var record2URL = chaiseURL + "/record-two";
+        var viewerURL = chaiseURL + "/viewer";
+        var searchURL = chaiseURL + "/search";
+        var recordsetURL = chaiseURL + "/recordset";
+
+        var appLinkFn = function (tag, location) {
+            var url;
+            switch (tag) {
+                case "tag:isrd.isi.edu,2016:chaise:record":
+                    url = recordURL;
+                    break;
+                case "tag:isrd.isi.edu,2016:chaise:record-two":
+                    url = record2URL;
+                    break;
+                case "tag:isrd.isi.edu,2016:chaise:viewer":
+                    url = viewerURL;
+                    break;
+                case "tag:isrd.isi.edu,2016:chaise:search":
+                    url = searchURL;
+                    break;
+                case "tag:isrd.isi.edu,2016:chaise:recordset":
+                    url = recordsetURL;
+                    break;
+                default:
+                    url = recordURL;
+                    break;
+            }
+
+            url = url + "/" + location.path;
+
+            return url;
+        };
+
+        var pathRelatedWithTuple, compactSelectRef;
         var reference, related, relatedWithTuple, page;
 
         function checkReferenceColumns(tesCases) {
@@ -24,6 +60,12 @@ exports.execute = function(options) {
                 })).toEqual(test.expected, "missmatch for " + test.title);
             });
         }
+
+        function checkRelated (ref, schema, table, facet) {
+            expect(ref.table.schema.name).toBe(schema, "schema missmatch.");
+            expect(ref.table.name).toBe(table, "table missmatch.");
+            expect(JSON.stringify(ref.location.facets.decoded)).toEqual(JSON.stringify(facet), "facet missmatch.");
+        };
 
         // you should use this function only after options.entities value is populated
         // (in any of jasmine blocks)
@@ -35,6 +77,7 @@ exports.execute = function(options) {
         }
 
         beforeAll(function(done) {
+            options.ermRest.appLinkFn(appLinkFn);
             options.ermRest.resolve(singleEnitityUri, {
                 cid: "test"
             }).then(function(response) {
@@ -44,6 +87,11 @@ exports.execute = function(options) {
             }).then(function (responsePage) {
                 delete reference._related;
                 relatedWithTuple = reference.related(responsePage.tuples[0]);
+
+                compactSelectRef = reference.contextualize.compactSelect;
+                return compactSelectRef.read(1);
+            }).then(function (page) {
+                pathRelatedWithTuple = compactSelectRef.related(page.tuples[0]);
                 done();
             }).catch(function(error){
                 done.fail(error);
@@ -101,36 +149,20 @@ exports.execute = function(options) {
                 });
 
                 describe("regarding column objects defining path.", function () {
-                    var pathRelated, compactSelectRef;
-                    var checkRelated = function (ref, schema, table, facet) {
-                        expect(ref.table.schema.name).toBe(schema, "schema missmatch.");
-                        expect(ref.table.name).toBe(table, "table missmatch.");
-                        expect(JSON.stringify(ref.location.facets.decoded)).toEqual(JSON.stringify(facet), "facet missmatch.");
-                    };
-                    beforeAll(function (done) {
-                        compactSelectRef = reference.contextualize.compactSelect;
-                        compactSelectRef.read(1).then(function (page) {
-                            pathRelated = compactSelectRef.related(page.tuples[0]);
-                            done();
-                        }).catch(function (err) {
-                            console.log(err);
-                            done.fail();
-                        });
-                    });
 
                     it ('should ignore the invalid (invalid, no path, non-entity, has aggregate) objects.', function () {
-                        expect(pathRelated.length).toBe(3);
+                        expect(pathRelatedWithTuple.length).toBe(3);
                     });
 
                     it ('should create the reference by using facet syntax (starting from related table with facet on shortestkey of main table.).', function () {
                         checkRelated(
-                            pathRelated[0], "reference_schema", "association table with id",
+                            pathRelatedWithTuple[0], "reference_schema", "association table with id",
                             {"and": [{"source" :[{"outbound": ["reference_schema","id_fk_association_related_to_reference"]}, "RID"], "choices": [findRID(schemaName, tableName, "id", "9003")]}]});
                     });
 
                     it ('should be able to support path with longer length.', function () {
                         checkRelated(
-                            pathRelated[1], "reference_schema", "reference_table",
+                            pathRelatedWithTuple[1], "reference_schema", "reference_table",
                             {"and":[{"source":[
                                 {"inbound": ["reference_schema","fromname_fk_inbound_related_to_reference"]},
                                 {"inbound":["reference_schema","fk_to_inbound_related_reference_table"]},
@@ -142,7 +174,7 @@ exports.execute = function(options) {
 
                     it ("should be able to support paths that start with outbound.", function () {
                         checkRelated(
-                            pathRelated[2], "reference_schema", "reference_outbound_1_inbound_1",
+                            pathRelatedWithTuple[2], "reference_schema", "reference_outbound_1_inbound_1",
                             {"and":[{"source": [
                                 {"outbound": ["reference_schema", "reference_outbound_1_inbound_1_fk1"]},
                                 {"inbound": ["reference_schema", "reference_table_fk1"]},
@@ -413,5 +445,35 @@ exports.execute = function(options) {
             });
         });
 
+        describe("integration with other APIs", function () {
+            describe("Page.content", function () {
+                var testPageContent = function (ref, pageSize, content, done) {
+                    ref.read(pageSize).then(function (page) {
+                        expect(page.content).toEqual(content, "page.content invalid for related");
+                        done();
+                    }).catch(function (err) {
+                        done.fail(err);
+                    });
+                };
+
+                it ("should be able to use page_markdown_pattern and have access to the parent attributes.", function (done) {
+                    testPageContent(relatedWithTuple[1], 1, '<p>reference_schema:reference_table, parent name=Henry, where id is one of 1</p>\n', done);
+                });
+
+                it ("otherwise should use the row_markdown_pattern.", function (done) {
+                    testPageContent(pathRelatedWithTuple[2], 1, '<p>01, 1</p>\n', done);
+                });
+
+                it ("if none of the markdown_patterns are not defined, should return a list of rownames.", function (done) {
+                    content = '<ul>\n<li>\n';
+                    content += '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table/RID=' + findRID(schemaName, tableName, "id", "9002") + '">Heather</a></p>\n';
+                    content += '</li>\n<li>\n';
+                    content += '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table/RID=' + findRID(schemaName, tableName, "id", "9003") + '">Henry</a></p>\n';
+                    content += '</li>\n</ul>\n';
+
+                    testPageContent(pathRelatedWithTuple[1], 5, content, done);
+                });
+            });
+        });
     });
 };
