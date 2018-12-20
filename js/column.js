@@ -2222,12 +2222,19 @@ FacetColumn.prototype = {
             var newLoc = module.parse(loc.compactUri);
 
             //get all the filters from other facetColumns
-            if (loc.facets !== null) {
+            if (loc.facets) {
                 // create new facet filters
                 // TODO might be able to imporve this. Instead of recreating the whole json file.
                 this.reference.facetColumns.forEach(function (fc, index) {
                     if (index !== self.index && fc.filters.length !== 0) {
                         jsonFilters.push(fc.toJSON());
+                    }
+                });
+
+                // apply the hidden filters
+                loc.facets.andFilters.forEach(function (f) {
+                    if (f.hidden) {
+                        jsonFilters.push(f);
                     }
                 });
             }
@@ -3070,6 +3077,15 @@ FacetColumn.prototype = {
         // TODO might be able to improve this
         if (typeof loc.searchTerm === "string") {
             jsonFilters.push({"source": "*", "search": [this.reference.location.searchTerm]});
+        }
+
+        // apply the hidden facets
+        if (loc.facets) {
+            loc.facets.andFilters.forEach(function (f) {
+                if (f.hidden) {
+                    jsonFilters.push(f);
+                }
+            });
         }
 
         // change the facets in location object

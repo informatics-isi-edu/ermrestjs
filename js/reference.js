@@ -587,12 +587,7 @@
                 // if location has facet or filter, we should honor it. we should not add preselected facets
                 var hasFilterOrFacet = this.location.facets || this.location.filter || this.location.customFacets;
 
-                var andFilters = [];
-                var jsonFilters = this.location.facets ? this.location.facets.decoded : null;
-                if (jsonFilters && jsonFilters.hasOwnProperty(andOperator) && Array.isArray(jsonFilters[andOperator])) {
-                    andFilters = jsonFilters[andOperator];
-                }
-
+                var andFilters = this.location.facets ? this.location.facets.andFilters : [];
                 // change filters to facet NOTE can be optimized to actually merge instead of just appending to list
                 if (this.location.filter && this.location.filter.depth === 1 && Array.isArray(this.location.filter.facet.and)) {
                     Array.prototype.push.apply(andFilters, this.location.filter.facet.and);
@@ -687,11 +682,26 @@
                 // we should have facetObjects untill here, now we should combine it with andFilters
                 var checkedObjects = {};
 
+                /*
+                 * In some cases we are updating the given sources and therefore the
+                 * filter will change, so we must make sure that we update the url
+                 * to reflect those changes. These chagnes are
+                 * 1. When annotation is used and we have preselected filters.
+                 * 2. When the main table has an alternative table.
+                 * 3. When facet tables have alternative table
+                 * This is just to make sure the facet filters and url are in sync.
+                 */
+                var newFilters = [];
+
                 // if we have filters in the url, we should just get the structure from annotation
                 var j, facetLen = facetObjects.length;
                 for (var i = 0; i < andFilters.length; i++) {
                     if (!andFilters[i].source) continue;
                     if (andFilters[i].source === "*") continue;
+                    if (andFilters[i].hidden) {
+                        newFilters.push(andFilters[i]);
+                        continue;
+                    }
 
                     found = false;
 
@@ -731,18 +741,6 @@
                     self._facetColumns.push(new FacetColumn(self, index, fo.column, fo.obj));
                 });
 
-
-
-                /*
-                 * In some cases we are updating the given sources and therefore the
-                 * filter will change, so we must make sure that we update the url
-                 * to reflect those changes. These chagnes are
-                 * 1. When annotation is used and we have preselected filters.
-                 * 2. When the main table has an alternative table.
-                 * 3. When facet tables have alternative table
-                 * This is just to make sure the facet filters and url are in sync.
-                 */
-                var newFilters = [];
                 self._facetColumns.forEach(function(fc) {
                     if (fc.filters.length !== 0) {
                         newFilters.push(fc.toJSON());
@@ -795,7 +793,16 @@
             newReference._location.afterObject = null;
 
             if (!sameFacet) {
-                newReference._location.facets = null;
+
+                // the hidden filters should still remain
+                var andFilters = this.location.facets ? this.location.facets.andFilters : [];
+                var newFilters = [];
+                andFilters.forEach(function (f) {
+                    if (f.hidden) {
+                        newFilters.push(f);
+                    }
+                });
+                newReference._location.facets = newFilters.length > 0 ? {"and": newFilters} : null;
             }
 
             if (!sameCustomFacet) {
@@ -805,6 +812,36 @@
             if (!sameFilter) {
                 newReference._location.removeFilters();
             }
+
+            return newReference;
+        },
+
+        /**
+         * Will return a reference with the same facets but hidden.
+         *
+         * @return {ERMrest.Reference}
+         */
+        hideFacets: function () {
+            var andFilters = this.location.facets ? this.location.facets.andFilters : [];
+
+            verify(andFilters.length > 0, "Reference doesn't have any facets.");
+
+            var newReference = _referenceCopy(this), newFilters = [], newFilter;
+            delete newReference._facetColumns;
+
+            // update the location object
+            newReference._location = this._location._clone();
+            newReference._location.beforeObject = null;
+            newReference._location.afterObject = null;
+
+            // make all the facets as hidden
+            andFilters.forEach(function (f) {
+                newFilter = module._simpleDeepCopy(f);
+                newFilter.hidden = true;
+                newFilters.push(newFilter);
+            });
+
+            newReference._location.facets = {"and": newFilters};
 
             return newReference;
         },
