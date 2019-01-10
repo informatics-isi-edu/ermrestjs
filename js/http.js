@@ -181,7 +181,7 @@
                 function asyncfn() {
                     fn.apply(scope, args).then(function(response) {
                         module._onHTTPSuccess();
-                        module._onload().then(function() {
+                        module.onload().then(function() {
                             deferred.resolve(response);
                         });
                     },
@@ -215,7 +215,7 @@
                                 response.status = response.statusCode = _http_status_codes.no_content;
                             }
 
-                            module._onload().then(function() {
+                            module.onload().then(function() {
                                 deferred.resolve(response);
                             });
                         } else if (response.status == _http_status_codes.unauthorized) {
@@ -269,7 +269,7 @@
                                 response.data = "An unexpected error has occurred. Please report this problem to your system administrators.";
                             }
 
-                            module._onload().then(function() {
+                            module.onload().then(function() {
                                 deferred.reject(response);
                             });
                         }

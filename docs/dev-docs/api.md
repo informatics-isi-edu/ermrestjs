@@ -3329,6 +3329,11 @@ if (content) {
 }
 ```
 
+It will return:
+1. the rendered page_markdown_pattern if it's defined.
+2. the rendered row_markdown_pattern if it's defined.
+3. list of links that point to the row. Caption is going to be the row-name.
+
 **Kind**: instance property of [<code>Page</code>](#ERMrest.Page)  
 <a name="ERMrest.Tuple"></a>
 

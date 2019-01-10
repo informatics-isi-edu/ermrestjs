@@ -191,7 +191,7 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
  * This function is used by http. It resolves promises by calling this function
  * to make sure thirdparty scripts are loaded.
  */
-ERMrest._onload = function() {
+ERMrest.onload = function() {
     var defer = ERMrest._q.defer();
 
     if (_scriptsLoaded) defer.resolve(ERMrest);

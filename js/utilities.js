@@ -2560,6 +2560,7 @@
         try {
             content = module._mustache.render(template, obj);
         } catch(e) {
+            console.log(e);
             content = null;
         }
 

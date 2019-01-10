@@ -63,7 +63,7 @@
             var location;
 
             // make sure all the dependencies are loaded
-            module._onload().then(function () {
+            module.onload().then(function () {
             //added try block to make sure it rejects all parse() related error
             // It should have been taken care by outer try but did not work
               try{
