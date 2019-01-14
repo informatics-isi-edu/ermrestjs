@@ -1403,8 +1403,8 @@
 
 
             var fkConstraint = generatedErrMessage.match(/foreign key constraint \"(.*?)\"/)[1];    //get constraintName
-            if(reference instanceof ERMrest.Reference && fkConstraint != 'undefined' && fkConstraint != ''){
-              var relatedRef = referene.related(); //get all related references
+            if(typeof reference === 'object' && typeof fkConstraint === 'string' && fkConstraint != ''){
+              var relatedRef = reference.related(); //get all related references
 
               for(var i = 0; i < relatedRef.length; i++){
                   key  = relatedRef[i];
