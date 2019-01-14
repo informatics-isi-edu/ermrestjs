@@ -440,7 +440,7 @@
         var http = module._wrap_http(module._http);
 
         var headers = {};
-        headers[module._contextHeaderName] = {
+        headers[module.contextHeaderName] = {
             e: 1,
             name: err.constructor.name,
             message: err.message

@@ -525,7 +525,7 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
         promises = [], values = [],
         mainTable = this._currentTable,
         location = this._baseReference.location,
-        http = this._baseReference._server._http,
+        http = this._baseReference._server.http,
         column = this._baseCols[0],
         printUtils = module._formatUtils,
         keyColName, keyColNameEncoded,
@@ -734,7 +734,7 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
 
         defer.resolve(result);
     }).catch(function (err) {
-        defer.reject(module._responseToError(err));
+        defer.reject(module.responseToError(err));
     });
 
     return defer.promise;
@@ -2624,7 +2624,7 @@ FacetColumn.prototype = {
                 });
                 defer.resolve(filters);
             }).catch(function (err) {
-                defer.reject(module._responseToError(err));
+                defer.reject(module.responseToError(err));
             });
 
         }

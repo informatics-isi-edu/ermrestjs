@@ -1088,7 +1088,7 @@
                 };
 
                 //  do the 'post' call
-                this._server._http.post(uri, data, config).then(function(response) {
+                this._server.http.post(uri, data, config).then(function(response) {
                     var etag = response.headers().etag;
                     //  new page will have a new reference (uri that filters on a disjunction of ids of these tuples)
                     var uri = self._location.compactUri + '/',
@@ -1124,7 +1124,7 @@
                       "failed": null
                     });
                 }, function error(response) {
-                    var error = module._responseToError(response);
+                    var error = module.responseToError(response);
                     return defer.reject(error);
                 }).catch(function (error) {
                     return defer.reject(error);
@@ -1255,7 +1255,7 @@
                 var config = {
                     headers: this._generateContextHeader(contextHeaderParams, limit)
                 };
-                this._server._http.get(uri, config).then(function (response) {
+                this._server.http.get(uri, config).then(function (response) {
                     var etag = response.headers().etag;
 
                     var hasPrevious, hasNext = false;
@@ -1294,7 +1294,7 @@
                         referenceWithoutPaging.read(limit).then(function rereadReference(rereadPage) {
                             defer.resolve(rereadPage);
                         }, function error(response) {
-                            var error = module._responseToError(response);
+                            var error = module.responseToError(response);
                             defer.reject(error);
                         });
                     } else {
@@ -1302,7 +1302,7 @@
                     }
 
                 }).catch(function (e) {
-                    defer.reject(module._responseToError(e));
+                    defer.reject(module.responseToError(e));
                 });
             } catch (e) {
                 defer.reject(e);
@@ -1582,7 +1582,7 @@
                 var config = {
                     headers: this._generateContextHeader(contextHeaderParams, submissionData.length)
                 };
-                this._server._http.put(uri, submissionData, config).then(function updateReference(response) {
+                this._server.http.put(uri, submissionData, config).then(function updateReference(response) {
                     // Some data was not updated
                     if (response.status === 200 && response.data.length < submissionData.length) {
                         var updatedRows = response.data;
@@ -1713,7 +1713,7 @@
                         "failed": failedPage
                     });
                 }, function error(response) {
-                    var error = module._responseToError(response);
+                    var error = module.responseToError(response);
                     return defer.reject(error);
                 }).catch(function (error) {
                     return defer.reject(error);
@@ -1759,12 +1759,12 @@
                 var config = {
                     headers: this._generateContextHeader(contextHeaderParams)
                 };
-                this._server._http.delete(this.location.ermrestCompactUri, config).then(function (deleteResponse) {
+                this._server.http.delete(this.location.ermrestCompactUri, config).then(function (deleteResponse) {
                     defer.resolve();
                 }, function error(deleteError) {
-                    return defer.reject(module._responseToError(deleteError, self, delFlag));
+                    return defer.reject(module.responseToError(deleteError, self, delFlag));
                 }).catch(function (catchError) {
-                    return defer.reject(module._responseToError(catchError, self, delFlag));
+                    return defer.reject(module.responseToError(catchError, self, delFlag));
                 });
 
                 return defer.promise;
@@ -2386,7 +2386,7 @@
             }
 
             var aggregatePromises = [];
-            var http = this._server._http;
+            var http = this._server.http;
             for (var j = 0; j < urlSet.length; j++) {
                 aggregatePromises.push(
                     http.get(this.location.service + "/catalog/" + this.location.catalog + "/aggregate/" + urlSet[j], config)
@@ -2409,7 +2409,7 @@
 
                 defer.resolve(responseArray);
             }, function error(response) {
-                var error = module._responseToError(response);
+                var error = module.responseToError(response);
                 return defer.reject(error);
             }).catch(function (error) {
                 return defer.reject(error);
@@ -3152,7 +3152,7 @@
             }
 
             var headers = {};
-            headers[module._contextHeaderName] = contextHeaderParams;
+            headers[module.contextHeaderName] = contextHeaderParams;
             return headers;
         },
 

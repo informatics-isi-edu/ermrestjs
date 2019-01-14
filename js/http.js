@@ -146,10 +146,10 @@
                 if (this.contextHeaderParams) {
                     // Iterate over headers iff they do not collide
                     var contextHeader;
-                    if (typeof config.headers[module._contextHeaderName] === "object" && config.headers[module._contextHeaderName]) {
-                        contextHeader = config.headers[module._contextHeaderName];
+                    if (typeof config.headers[module.contextHeaderName] === "object" && config.headers[module.contextHeaderName]) {
+                        contextHeader = config.headers[module.contextHeaderName];
                     } else {
-                        contextHeader = config.headers[module._contextHeaderName] = {};
+                        contextHeader = config.headers[module.contextHeaderName] = {};
                     }
                     for (var key in this.contextHeaderParams) {
                         if (!(key in contextHeader)) {
@@ -168,9 +168,9 @@
                   *     alpha: A - Z and a - z
                   *
                   **/
-                if (typeof config.headers[module._contextHeaderName] === 'object') {
+                if (typeof config.headers[module.contextHeaderName] === 'object') {
                     // encode and make sure it's not very lengthy
-                    config.headers[module._contextHeaderName] = module._certifyContextHeader(config.headers[module._contextHeaderName]);
+                    config.headers[module.contextHeaderName] = module._certifyContextHeader(config.headers[module.contextHeaderName]);
                 }
 
                 // now call the fn, with retry logic

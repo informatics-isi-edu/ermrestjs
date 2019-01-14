@@ -206,7 +206,7 @@ var ERMrest = (function(module) {
         }
 
         var headers = {};
-        headers[module._contextHeaderName] = contextHeaderParams;
+        headers[module.contextHeaderName] = contextHeaderParams;
         return headers;
     };
 
@@ -251,7 +251,7 @@ var ERMrest = (function(module) {
 
         this.SERVER_URI = this.reference._server.uri.replace("/ermrest", "");
 
-        this.http = this.reference._server._http;
+        this.http = this.reference._server.http;
 
         this.isPaused = false;
         this.otherInfo = otherInfo;
@@ -388,7 +388,7 @@ var ERMrest = (function(module) {
             if (response.status == 403 || response.status == 404 || response.status == 409) {
               deferred.resolve(self.url);
             } else {
-              deferred.reject(module._responseToError(response));
+              deferred.reject(module.responseToError(response));
             }
         });
 
@@ -456,7 +456,7 @@ var ERMrest = (function(module) {
                 deferred.resolve(self.chunkUrl);
             }
         }, function(response) {
-            var error = module._responseToError(response);
+            var error = module.responseToError(response);
             deferred.reject(error);
         });
 
@@ -570,11 +570,11 @@ var ERMrest = (function(module) {
             if (response.headers('location')) {
                 deferred.resolve(response.headers('location'));
             } else {
-                deferred.reject(module._responseToError(response));
+                deferred.reject(module.responseToError(response));
             }
 
         }, function(response) {
-            deferred.reject(module._responseToError(response));
+            deferred.reject(module.responseToError(response));
         });
 
         return deferred.promise;
@@ -681,7 +681,7 @@ var ERMrest = (function(module) {
         this.http.delete(this._getAbsoluteUrl(this.url), config).then(function (response) {
             deferred.resolve();
         }, function () {
-            deferred.reject(module._responseToError(response));
+            deferred.reject(module.responseToError(response));
         });
 
         return deferred.promise;
@@ -893,7 +893,7 @@ var ERMrest = (function(module) {
     upload.prototype._onUploadError = function(response) {
         if (this.erred) return;
         this.erred = true;
-        this.uploadPromise.reject(module._responseToError(response));
+        this.uploadPromise.reject(module.responseToError(response));
     };
 
     module.Upload = upload;

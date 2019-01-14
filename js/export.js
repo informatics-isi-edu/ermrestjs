@@ -245,7 +245,7 @@ var ERMrest = (function(module) {
                 }
                 // add the template
                 contextHeaderParams.template = self.template;
-                headers[module._contextHeaderName] = contextHeaderParams;
+                headers[module.contextHeaderName] = contextHeaderParams;
 
                 self.canceled = false;
                 if (self.exportParameters.public != null) {
@@ -254,7 +254,7 @@ var ERMrest = (function(module) {
                 self.reference._server._http.post(serviceUrl, self.exportParameters, {headers: headers}).then(function success(response) {
                     return defer.resolve({data: response.data.split("\n"), canceled: self.canceled});
                 }).catch(function (err) {
-                    var error = module._responseToError(err);
+                    var error = module.responseToError(err);
                     return defer.reject(error);
                 });
 

@@ -119,9 +119,9 @@
          * @private
          * @type {Object}
          */
-        this._http = module._wrap_http(module._http);
-        this._http.contextHeaderParams = contextHeaderParams || {};
-        this._http.contextHeaderParams.cid = this._http.contextHeaderParams.cid || null;
+        this.http = module._wrap_http(module._http);
+        this.http.contextHeaderParams = contextHeaderParams || {};
+        this.http.contextHeaderParams.cid = this.http.contextHeaderParams.cid || null;
 
         /**
          *
@@ -256,7 +256,7 @@
         _introspect: function () {
             // load all schemas
             var self = this;
-            return this.server._http.get(this._uri + "/schema").then(function (response) {
+            return this.server.http.get(this._uri + "/schema").then(function (response) {
                 var jsonSchemas = response.data;
 
                 self.rights = jsonSchemas.rights;
@@ -291,7 +291,7 @@
 
                 return self.schemas;
             }, function (response) {
-                var error = module._responseToError(response);
+                var error = module.responseToError(response);
                 return module._q.reject(error);
             });
         },
@@ -1438,10 +1438,10 @@
 
             uri = uri + "/row_count:=cnt(*)";
 
-            return this._server._http.get(uri).then(function(response) {
+            return this._server.http.get(uri).then(function(response) {
                 return response.data[0].row_count;
             }, function (response) {
-                var error = module._responseToError(response);
+                var error = module.responseToError(response);
                 return module._q.reject(error);
             });
         },
@@ -1465,10 +1465,10 @@
             var uri = this._toURI(filter, columns, sortby, null, null, limit);
 
             var self = this;
-            return this._server._http.get(uri).then(function(response) {
+            return this._server.http.get(uri).then(function(response) {
                 return new Rows(self._table, response.data, filter, limit, columns, sortby);
             }, function (response) {
-                var error = module._responseToError(response);
+                var error = module.responseToError(response);
                 return module._q.reject(error);
             });
         },
@@ -1494,10 +1494,10 @@
                 this._toURI(filter, columns, sortby, "before", row, limit);
 
             var self = this;
-            return this._server._http.get(uri).then(function(response) {
+            return this._server.http.get(uri).then(function(response) {
                 return new Rows(self._table, response.data, filter, limit, columns, sortby);
             }, function (response) {
-                var error = module._responseToError(response);
+                var error = module.responseToError(response);
                 return module._q.reject(error);
             });
         },
@@ -1521,10 +1521,10 @@
                 this._toURI(filter, columns, sortby, "after", row, limit);
 
             var self = this;
-            return this._server._http.get(uri).then(function(response) {
+            return this._server.http.get(uri).then(function(response) {
                 return new Rows(self._table, response.data, filter, limit, columns, sortby);
             }, function (response) {
-                var error = module._responseToError(response);
+                var error = module.responseToError(response);
                 return module._q.reject(error);
             });
         },
@@ -1541,10 +1541,10 @@
         delete: function (filter) {
             var uri = this._toURI(filter);
 
-            return this._server._http.delete(uri).then(function(response) {
+            return this._server.http.delete(uri).then(function(response) {
                 return response.data;
             }, function (response) {
-                var error = module._responseToError(response);
+                var error = module.responseToError(response);
                 return module._q.reject(error);
             });
         },
@@ -1561,10 +1561,10 @@
 
             var uri = this._toURI();
 
-            return this._server._http.put(uri, rows).then(function(response) {
+            return this._server.http.put(uri, rows).then(function(response) {
                 return response.data;
             }, function (response) {
-                var error = module._responseToError(response);
+                var error = module.responseToError(response);
                 return module._q.reject(error);
             });
         },
@@ -1594,10 +1594,10 @@
                 }
             }
 
-            return this._server._http.post(uri, rows).then(function(response) {
+            return this._server.http.post(uri, rows).then(function(response) {
                return response.data;
             }, function(response) {
-                var error = module._responseToError(response);
+                var error = module.responseToError(response);
                 return module._q.reject(error);
             });
         }

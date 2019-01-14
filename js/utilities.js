@@ -1384,7 +1384,6 @@
      */
     module._conflictErrorMapping = function(errorStatusText, generatedErrMessage, reference, actionFlag) {
       var mappedErrMessage, refTable, tableDisplayName = '';
-      var ref = reference;
       var conflictErrorPrefix = "409 Conflict\nThe request conflicts with the state of the server. ",
           siteAdminMsg = "\nIf you have trouble removing dependencies please contact the site administrator.";
 
@@ -1404,8 +1403,8 @@
 
 
             var fkConstraint = generatedErrMessage.match(/foreign key constraint \"(.*?)\"/)[1];    //get constraintName
-            if(fkConstraint != 'undefined' && fkConstraint != ''){
-              var relatedRef = ref.related(); //get all related references
+            if(reference instanceof ERMrest.Reference && fkConstraint != 'undefined' && fkConstraint != ''){
+              var relatedRef = referene.related(); //get all related references
 
               for(var i = 0; i < relatedRef.length; i++){
                   key  = relatedRef[i];
@@ -1467,11 +1466,13 @@
 
     /**
      * @function
-     * @param {Object} response http response object
-     * @return {Object} error object
      * @desc create an error object from http response
+     * @param {Object} response http response object
+     * @param {ERMrest.Reference=} reference the reference object
+     * @param {string=} actionFlag the flag that signals the action that the error occurred from
+     * @return {Object} error object
      */
-    module._responseToError = function (response, reference, actionFlag) {
+    module.responseToError = function (response, reference, actionFlag) {
         var status = response.status || response.statusCode;
         switch(status) {
             case -1:
@@ -3226,7 +3227,7 @@
     // NOTE: currently we only ignore the system columns
     module._ignoreDefaultsNames = module._systemColumns;
 
-    module._contextHeaderName = 'Deriva-Client-Context';
+    module.contextHeaderName = 'Deriva-Client-Context';
 
     module.HANDLEBARS = "handlebars";
 

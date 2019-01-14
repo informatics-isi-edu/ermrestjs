@@ -124,7 +124,7 @@
                 return module._http.get(uri).then(function(response){
                     return response.data; // TODO rowset?
                 }, function(response){
-                    var error = module._responseToError(response);
+                    var error = module.responseToError(response);
                     return module._q.reject(error);
                 });
             },
@@ -150,7 +150,7 @@
                 return module._http.delete(uri).then(function(response) {
                     return response.data;
                 }, function(response) {
-                    var error = module._responseToError(response);
+                    var error = module.responseToError(response);
                     return module._q.reject(error);
                 });
             }

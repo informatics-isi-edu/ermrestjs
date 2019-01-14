@@ -358,11 +358,11 @@ AttributeGroupReference.prototype = {
             contextHeaderParams.page_size = limit;
 
             var headers = {};
-            headers[module._contextHeaderName] = contextHeaderParams;
+            headers[module.contextHeaderName] = contextHeaderParams;
             var config = {
                 headers: headers
             };
-            this._server._http.get(uri, config).then(function (response) {
+            this._server.http.get(uri, config).then(function (response) {
 
                 //determine hasNext and hasPrevious
                 var hasPrevious, hasNext = false;
@@ -410,7 +410,7 @@ AttributeGroupReference.prototype = {
                 }
 
             }).catch(function (response) {
-                var error = module._responseToError(response);
+                var error = module.responseToError(response);
                 defer.reject(error);
             });
 
@@ -465,7 +465,7 @@ AttributeGroupReference.prototype = {
         }
 
         var aggregatePromises = [];
-        var http = this._server._http;
+        var http = this._server.http;
         for (var j = 0; j < urlSet.length; j++) {
             aggregatePromises.push(http.get(loc.service + "/catalog/" + loc.catalogId + "/aggregate/" + urlSet[j]));
         }
@@ -486,7 +486,7 @@ AttributeGroupReference.prototype = {
 
             defer.resolve(responseArray);
         }, function error(response) {
-            var error = module._responseToError(response);
+            var error = module.responseToError(response);
             return defer.reject(error);
         }).catch(function (error) {
             return defer.reject(error);
@@ -1286,7 +1286,7 @@ BucketAttributeGroupReference.prototype.read = function () {
         var uri = this.uri;
 
         var currRef = this;
-        this._server._http.get(uri).then(function (response) {
+        this._server.http.get(uri).then(function (response) {
             var data = {
                 x: [],
                 y: []
@@ -1381,7 +1381,7 @@ BucketAttributeGroupReference.prototype.read = function () {
             defer.resolve(data);
 
         }).catch(function (response) {
-            var error = module._responseToError(response);
+            var error = module.responseToError(response);
             defer.reject(error);
         });
 
