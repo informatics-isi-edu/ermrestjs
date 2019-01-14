@@ -72,7 +72,7 @@ exports.execute = function (options) {
             // reference associated
             expect(uploadObj.reference).toEqual(reference, "reference is incorrect");
             expect(uploadObj.SERVER_URI).toBe(serverUri, "server uri is incorrect");
-            expect(uploadObj.http).toEqual(reference._server._http, "http is incorrect");
+            expect(uploadObj.http).toEqual(reference._server.http, "http is incorrect");
 
             // initial values
             expect(uploadObj.isPaused).toBeFalsy("is paused is incorrect");

@@ -25,7 +25,7 @@ exports.execute = function (options) {
             catalog = options.catalog;
             url = options.url.replace('ermrest', '');
 
-            server._http.max_retries = 0;
+            server.http.max_retries = 0;
         });
 
         it("should be returned as a 500 error.", function (done) {

@@ -60,7 +60,7 @@ exports.execute = function (options) {
                 done.fail();
             });
 
-            server._http.max_retries = 0;
+            server.http.max_retries = 0;
         });
 
         it("if it's an integrity error, we should generate a more readable message.", function (done) {

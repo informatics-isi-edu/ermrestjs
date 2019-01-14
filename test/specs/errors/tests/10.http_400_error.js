@@ -11,7 +11,7 @@ exports.execute = function (options) {
             ermRest = options.ermRest;
             url = options.url.replace('ermrest', '');
 
-            server._http.max_retries = 0;
+            server.http.max_retries = 0;
         });
 
         it("should be returned as a QueryTimeoutError.", function (done) {

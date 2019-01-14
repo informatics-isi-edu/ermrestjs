@@ -46,7 +46,7 @@ exports.testForErrors = function(method, errorTypes, cb, message, mockUrl) {
 				if (mockUrl) {
 					var url = mockUrl;
 					if (typeof mockUrl == 'function') url = mockUrl();
-					server._http.max_retries = 0;
+					server.http.max_retries = 0;
 		            
 	            	var scope = nock(ermrestUrl, ops)
 				       				.filteringPath(function(path){

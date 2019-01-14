@@ -15,7 +15,7 @@ exports.execute = function (options) {
             table = schema.tables.get('valid_table_name');
             catalogId = options.catalogId;
 
-            server._http.max_retries = 0;
+            server.http.max_retries = 0;
 
             table.keys.all().forEach(function(k) {
                 k.colset.columns.forEach(function(c) {

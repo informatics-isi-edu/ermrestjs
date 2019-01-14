@@ -251,7 +251,7 @@ var ERMrest = (function(module) {
                 if (self.exportParameters.public != null) {
                     serviceUrl += "?public=" + self.exportParameters.public;
                 }
-                self.reference._server._http.post(serviceUrl, self.exportParameters, {headers: headers}).then(function success(response) {
+                self.reference._server.http.post(serviceUrl, self.exportParameters, {headers: headers}).then(function success(response) {
                     return defer.resolve({data: response.data.split("\n"), canceled: self.canceled});
                 }).catch(function (err) {
                     var error = module.responseToError(err);
