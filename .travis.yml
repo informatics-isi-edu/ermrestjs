@@ -48,6 +48,9 @@ before_install:
   - sudo a2enmod ssl
   - sudo a2ensite default-ssl
   - sudo groupadd -o -g $(id -g www-data) apache
+  - sudo pip3 --version
+  - sudo su -c 'python3 -c "import site;print(site.PREFIXES);"'
+  - sudo su -c 'python3 -c "import site;print(site.getsitepackages())"'
   - sudo pip3 install requests
   - sudo pip3 install psycopg2-binary
   - sudo pip3 install git+https://github.com/informatics-isi-edu/webpy.git
@@ -57,6 +60,7 @@ before_install:
   - git clone https://github.com/informatics-isi-edu/webauthn.git
   - cd webauthn
   - git checkout py3
+  - sudo make testvars
   - sudo make install
   - sudo make deploy
   - sudo bash ./test/ubuntu-travis-setup.sh
