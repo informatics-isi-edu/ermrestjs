@@ -83,8 +83,9 @@ before_install:
   - git clone https://github.com/informatics-isi-edu/ermrest.git
   - cd ermrest
   - git checkout py3
-  - sudo make install PLATFORM=ubuntu1604
-  - sudo make deploy PLATFORM=ubuntu1604
+  - sudo -H make install PLATFORM=ubuntu1604
+  - sudo which ermrest-deploy
+  - sudo -H make deploy PLATFORM=ubuntu1604
   - cd ..
   - curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash -
   - sudo apt-get install -y nodejs
