@@ -43,7 +43,6 @@ addons:
 
 before_install:
   - export TZ=America/Los_Angeles
-  - pip3 install --upgrade pip
   - sudo su -c 'echo /usr/lib/python3.5/site-packages > /usr/local/lib/python3.5/dist-packages/sys-site-packages.pth'
   - sudo ln -s /etc/apache2/conf-enabled /etc/apache2/conf.d
   - sudo service postgresql stop
