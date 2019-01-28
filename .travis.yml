@@ -82,7 +82,7 @@ before_install:
   - cd ..
   - git clone https://github.com/informatics-isi-edu/ermrest.git
   - cd ermrest
-  - git checkout py
+  - git checkout py3
   - sudo make install PLATFORM=ubuntu1604
   - sudo make deploy PLATFORM=ubuntu1604
   - cd ..
