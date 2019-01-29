@@ -2081,210 +2081,81 @@
         /**
          * Returns a object, that can be used as a default export template.
          * It will include:
-         * - csv of entity API request to the main table.
-         * -  csv of entity API requests for all the related entities that are one level away from the main.
-         * - csv of attributegroup API requests for all the other related entities.
-         *   The projection list should include all the columns of the table plus
-         *   the foreignkey value to the main entity.
-         *   The request should be grouped by the value of table's key + foreign key value.
+         * - csv of the main table.
+         * - csv of all the related entities
          * - fetch all the assets. For fetch, we need to provide url, length, and md5 (or other checksum types).
          *   if these columns are missing from the asset annotation, they won't be added.
          * - fetch all the assetes of related tables.
          * @type {string}
          */
-        get defaultExportTemplate() {
-            if (this._defaultExportTemplate === undefined) {
-                var outputs = [];
+         get defaultExportTemplate() {
+             if (this._defaultExportTemplate === undefined) {
+                 var self = this,
+                     outputs = [],
+                     relatedTableAlias = "R";
 
-                var self = this,
-                    encode = module._fixedEncodeURIComponent,
-                    sanitize = module._sanitizeFilename;
+                 var getTableOutput = module._referenceExportOutput,
+                     getAssetOutput = module._getAssetExportOutput;
 
-                // given a reference, will generate an entity output for it
-                var getEntityOutput = function (ref, path) {
-                    var source = {
-                        api: "entity"
-                    };
+                 // main entity
+                 outputs.push(getTableOutput(self, self.location.mainTableAlias));
 
-                    if (path) {
-                        source.path = path;
-                    }
+                 // assets
+                 self.columns.forEach(function(col) {
+                     var output = getAssetOutput(col, "", "");
+                     if (output === null) return;
+                     outputs.push(output);
+                 });
 
-                    return {
-                        destination: {
-                            name: sanitize(ref.displayname.unformatted),
-                            type: "csv"
-                        },
-                        source: source
-                    };
-                };
+                 // related entities
+                 self.related().forEach(function(rel) {
+                     // the path that will be used for assets of related entities
+                     var destinationPath = rel.displayname.unformatted;
+                     // this will be used for source path
+                     var sourcePath;
+                     if (rel.pseudoColumn) {
+                         // path from main to the related reference
+                         sourcePath = rel.pseudoColumn.foreignKeys.map(function(fk, i, allFks) {
+                             return ((i == allFks.length - 1) ? (relatedTableAlias + ":=") : "") + fk.obj.toString(!fk.isInbound, false);
+                         }).join("/");
 
-                // given a related reference and the path from main table to it,
-                // will generate the appropriate attribute group output
-                // It will also change the projection list. Assume that this is the model:
-                // main_table <- t1 <- t2
-                // the key list will be based on:
-                // - shortestkey of main_table and t2
-                // the projection list will be based on:
-                // - visible columns of t2
-                // Since we're adding shortest key of main_table to the keylist, we
-                // have to add an alias, the alias will be in format of
-                // `<tablename>_<shortestkey_column_name>`
-                var getAttributeGroupOutput = function (relatedRef, path) {
-                    var projectionList = [], keyList = [],i = 0, name;
+                         // path more than length one, we need to add the main table fkey
+                         outputs.push(getTableOutput(rel, relatedTableAlias, sourcePath, rel.pseudoColumn.foreignKeys.length >= 2, self));
+                     }
+                     // association table
+                     else if (rel.derivedAssociationReference) {
+                         var assoc = rel.derivedAssociationReference;
+                         sourcePath = assoc.origFKR.toString() + "/" + relatedTableAlias + ":=" + assoc._secondFKR.toString(true);
+                         outputs.push(getTableOutput(rel, relatedTableAlias, sourcePath, true, self));
+                     }
+                     // single inbound related
+                     else {
+                         sourcePath = relatedTableAlias + ":=" + rel.origFKR.toString(false, false);
+                         outputs.push(getTableOutput(rel, relatedTableAlias, sourcePath));
+                     }
 
+                     // add asset of the related table
+                     var detailedRef = rel.contextualize.detailed;
 
-                    // shortestkey of the related reference
-                    relatedRef.table.shortestKey.forEach(function (col) {
-                        keyList.push(encode(col.name));
-                    });
+                     // alternative table, don't add asset
+                     if (detailedRef.table !== rel.table) return;
 
-                    // we have to add the shortestkey of main table
-                    var addedColPrefix = encode(self.table.name) + "_";
-                    self.table.shortestKey.forEach(function (col) {
-                        name = addedColPrefix + encode(col.name);
+                     detailedRef.columns.forEach(function(col) {
+                         var output = getAssetOutput(col, destinationPath, sourcePath);
+                         if (output === null) return;
+                         outputs.push(output);
+                     });
 
-                        // make sure the alias doesn't exist in the table
-                        while (relatedRef.table.columns.has(name)) {
-                            i++;
-                            name = addedColPrefix + encode(col.name) + "_" + i;
-                        }
-                        keyList.push(name + ":=" + self.location.mainTableAlias + ":"+ encode(col.name));
-                    });
+                 });
 
-                    // projection list (all the columns of related reference)
-                    relatedRef.table.columns.all().forEach(function (col) {
-                        // column already has been added to the list
-                        if (keyList.indexOf(encode(col.name)) !== -1) return;
-                        projectionList.push(encode(col.name));
-                    });
-
-                    return {
-                        destination: {
-                            name: sanitize(relatedRef.displayname.unformatted),
-                            type: "csv"
-                        },
-                        source: {
-                            api: "attributegroup",
-                            path: path + "/" + keyList.join(",") + ";" + projectionList.join(",")
-                        }
-                    };
-                };
-
-                // will return `null` if asset is missing necessary columns.
-                // otherwise will return the appropriate output object
-                var getAssetOutput = function (col, destinationPath, sourcePath) {
-                    if (!col.isAsset) return null;
-                    var path = [], key;
-
-                    // required attributes
-                    var attributes = {
-                        byteCountColumn: "length",
-                        filenameColumn: "filename"
-                    };
-
-                    // at least one of these must be available
-                    var checksum = {
-                        md5: "md5",
-                        sha256: "sha256"
-                    };
-
-
-                    // add the url
-                    path.push("url:=" + encode(col.name));
-
-                    // add the required attributes
-                    for (key in attributes) {
-                        if (! (col[key] instanceof Column) ) return null;
-                        path.push(attributes[key] + ":=" + encode(col[key].name));
-                    }
-
-                    // at least one checksum must be available
-                    var hasChecksum = false;
-                    for (key in checksum) {
-                        if (! (col[key] instanceof Column) ) continue;
-                        hasChecksum = true;
-                        path.push(checksum[key] + ":=" + encode(col[key].name));
-                    }
-
-                    if (!hasChecksum) return null;
-
-                    return {
-                        destination: {
-                            name: "assets/" + (destinationPath ?  sanitize(destinationPath) + "/" : "") + sanitize(col.name),
-                            type: "fetch"
-                        },
-                        source: {
-                            api: "attribute",
-                            // exporter will throw an error if the url is null, so we are adding the check for not-null.
-                            path: (sourcePath ? sourcePath + "/": "") + "!(" + encode(col.name) + "::null::)/" + path.join(",")
-                        }
-                    };
-                };
-
-                // main entity
-                outputs.push(getEntityOutput(self));
-
-                // assets
-                self.columns.forEach(function (col) {
-                    var output = getAssetOutput(col, "", "");
-                    if (output === null) return;
-                    outputs.push(output);
-                });
-
-                // related entities
-                self.related().forEach(function (rel) {
-                    // the path that will be used for assets of related entities
-                    var destinationPath = rel.displayname.unformatted;
-                    // this will be used for source path
-                    var sourcePath;
-                    if (rel.pseudoColumn) {
-                        // path from main to the related reference
-                        sourcePath = rel.pseudoColumn.foreignKeys.map(function (fk) {
-                            return fk.obj.toString(!fk.isInbound, false);
-                        }).join("/");
-
-                        // path length one, just adding the table would be enough
-                        if (rel.pseudoColumn.foreignKeys.length < 2) {
-                            outputs.push(getEntityOutput(rel, sourcePath));
-                        } else {
-                            outputs.push(getAttributeGroupOutput(rel, sourcePath));
-                        }
-                    }
-                    // association table
-                    else if (rel.derivedAssociationReference) {
-                        var assoc = rel.derivedAssociationReference;
-                        sourcePath = assoc.origFKR.toString() + "/" + assoc._secondFKR.toString(true);
-                        outputs.push(getAttributeGroupOutput(rel, sourcePath));
-                    }
-                    // single inbound related
-                    else {
-                        sourcePath = rel.origFKR.toString(false, false);
-                        outputs.push(getEntityOutput(rel, sourcePath));
-                    }
-
-                    // add asset of the related table
-                    var detailedRef = rel.contextualize.detailed;
-
-                    // alternative table, don't add asset
-                    if (detailedRef.table !== rel.table) return;
-
-                    detailedRef.columns.forEach(function (col) {
-                        var output = getAssetOutput(col, destinationPath, sourcePath);
-                        if (output === null) return;
-                        outputs.push(output);
-                    });
-
-                });
-
-                self._defaultExportTemplate = {
-                    displayname: "BAG",
-                    type: "BAG",
-                    outputs: outputs
-                };
-            }
-            return this._defaultExportTemplate;
-        },
+                 self._defaultExportTemplate = {
+                     displayname: "BAG",
+                     type: "BAG",
+                     outputs: outputs
+                 };
+             }
+             return this._defaultExportTemplate;
+         },
 
         /**
          * create a new reference with the new search
