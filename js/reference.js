@@ -4252,12 +4252,13 @@
                         return module._formatUtils.printMarkdown(pattern);
                     }
 
-                    // no markdown_pattern, just return the list of row-names
+                    // no markdown_pattern, just return the list of row-names in this context (row_name/<context>)
                     for ( i = 0; i < self.tuples.length; i++) {
                         var tuple = self.tuples[i];
                         var url = tuple.reference.contextualize.detailed.appLink;
+                        var rowName = module._generateRowName(ref.table, ref._context, tuple._data, tuple._linkedData);
 
-                        values.push("* ["+ tuple.displayname.value +"](" + url + ") " + ref.display._separator);
+                        values.push("* ["+ rowName.unformatted +"](" + url + ") " + ref.display._separator);
                     }
                     pattern = ref.display._prefix + values.join(" \n") + ref.display._suffix;
                     return module._formatUtils.printMarkdown(pattern);

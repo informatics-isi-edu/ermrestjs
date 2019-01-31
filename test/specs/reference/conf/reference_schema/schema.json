@@ -184,9 +184,6 @@
                     ]
                 },
                 "tag:isrd.isi.edu,2016:table-display": {
-                    "row_name/unformatted": {
-                        "row_markdown_pattern": "{{id}} and {{name}}"
-                    },
                     "*": {
                         "row_order": [{"column":"id"}]
                     }
