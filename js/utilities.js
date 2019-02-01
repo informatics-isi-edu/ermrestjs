@@ -1023,7 +1023,7 @@
      * @desc Returns the row name (html) using annotation or heuristics.
      */
     module._generateRowName = function (table, context, data, linkedData, isTitle) {
-        var annotation, col, template, keyValues, unformatted, unformattedAnnotation, pattern, actualContext;
+        var annotation, col, template, keyValues, pattern, actualContext;
 
         var formattedValues = module._getFormattedKeyValues(table, context, data, linkedData);
 
@@ -1034,16 +1034,6 @@
                 [module._contexts.ROWNAME, actualContext].join("/"),
                 table.annotations.get(module._annotations.TABLE_DISPLAY).content
             );
-
-            // getting the defined unformatted value
-            unformattedAnnotation = module._getRecursiveAnnotationValue(
-                [module._contexts.ROWNAME_UNFORMATTED, actualContext].join("/"),
-                table.annotations.get(module._annotations.TABLE_DISPLAY).content
-            );
-            if (unformattedAnnotation && typeof unformattedAnnotation.row_markdown_pattern) {
-                // get templated patten after replacing the values using Mustache
-                unformatted = module._renderTemplate(unformattedAnnotation.row_markdown_pattern, formattedValues, table, context, {formatted: true, templateEngine: unformattedAnnotation.template_engine});
-            }
         }
 
         // if annotation is populated and annotation has display.rowName property
@@ -1053,7 +1043,6 @@
             pattern = module._renderTemplate(template, formattedValues, table, context, {formatted: true, templateEngine: annotation.template_engine});
 
         }
-
 
         // annotation was not defined, or it's producing empty string.
         if (pattern == null || pattern.trim() === '') {
@@ -1133,7 +1122,7 @@
 
         return {
             "value": module._formatUtils.printMarkdown(pattern, { inline: true }),
-            "unformatted": (typeof unformatted === 'undefined' || unformatted === null ) ? pattern : unformatted,
+            "unformatted": pattern,
             "isHTML": true
         };
 
@@ -3144,8 +3133,7 @@
         ENTRY: 'entry',
         FILTER: 'filter',
         DEFAULT: '*',
-        ROWNAME :'row_name',
-        ROWNAME_UNFORMATTED: "row_name/unformatted"
+        ROWNAME :'row_name'
     });
 
     module._dataFormats = Object.freeze({

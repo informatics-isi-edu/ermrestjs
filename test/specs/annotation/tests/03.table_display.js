@@ -10,7 +10,7 @@ exports.execute = function (options) {
             tableName4 = "table_w_composite_key_wo_annotation",
             tableName5 = "table_w_table_display_annotation",
             tableName5b = "table_w_table_display_annotation_handlebars",
-            tableName6 = "table_w_table_display_annotation_w_unformatted",
+            tableName6 = 'table_w_table_display_annotation_w_row_name_context',
             tableName7 = "table_w_table_display_annotation_w_markdown_pattern",
             tableName8 = "table_w_rowname_fkeys1",
             tableName9 = "table_w_rowname_fkeys2",
@@ -383,53 +383,6 @@ exports.execute = function (options) {
             });
         });
 
-        describe('table entities with table-display.row-name and table-display.row-name/unformatted annotation, ', function() {
-            var reference, page, tuple;
-            var limit = 5;
-
-            it('resolve should return a Reference object that is defined.', function(done) {
-                options.ermRest.resolve(table6EntityUri, {cid: "test"}).then(function (response) {
-                    reference = response;
-
-                    expect(reference).toEqual(jasmine.any(Object));
-
-                    done();
-                }, function (err) {
-                    console.dir(err);
-                    done.fail();
-                });
-            });
-
-            it('reference.display should be an object that is defined and display.type is set to table', function() {
-                var display = reference.display;
-                expect(display).toEqual(jasmine.any(Object));
-                expect(display.type).toEqual('table');
-            });
-
-            it('read should return a Page object that is defined.', function(done) {
-                reference.read(limit).then(function (response) {
-                    page = response;
-
-                    expect(page).toEqual(jasmine.any(Object));
-
-                    done();
-                }, function (err) {
-                    console.dir(err);
-                    done.fail();
-                });
-            });
-
-            it('tuple displayname should return the defined formatted and unformatted values in annotation.', function() {
-                var tuples = page.tuples;
-                for(var i = 0; i < limit; i++) {
-                    var tuple = tuples[i];
-                    var expected = tuple.values[1] + " " + tuple.values[2];
-                    expect(tuple.displayname.value).toBe("<strong>" + expected + "</strong>");
-                    expect(tuple.displayname.unformatted).toBe(expected);
-                }
-            });
-        });
-
         describe('table entities with table-display.row-name/title annotation.', function () {
             var ref, limit = 5;
             beforeAll(function (done) {
@@ -449,7 +402,7 @@ exports.execute = function (options) {
                             var tuple = page.tuples[i];
                             var expected = tuple.values[2];
                             expect(tuple.displayname.value).toBe("<span class=\"new-class\">" + expected + "</span>", "value missmatch for tuple index="+i);
-                            expect(tuple.displayname.unformatted).toBe(expected, "unformatted missmatch for tuple index="+i);
+                            expect(tuple.displayname.unformatted).toBe(":span:" + expected + ":/span:{.new-class}", "unformatted missmatch for tuple index="+i);
                         }
                         done();
                     }).catch(function (err) {
@@ -466,7 +419,7 @@ exports.execute = function (options) {
 
             it('resolve should return a Reference object that is defined.', function(done) {
                 options.ermRest.resolve(table7EntityUri, {cid: "test"}).then(function (response) {
-                    reference = response;
+                    reference = response.contextualize.detailed;
 
                     expect(reference).toEqual(jasmine.any(Object));
 
@@ -534,24 +487,39 @@ exports.execute = function (options) {
 
         });
 
-        describe('markdown display in case of no annotation is defined', function() {
-            it('when no annotation is defiend; content should appear in unordered list format.', function(done){
-                var content_without_annotation_w_para = '<ul>\n<li>\n<p><a href="https://dev.isrd.isi.edu/chaise/record/schema_table_display:table_wo_title_wo_annotation/RID=' +
-                                                        findRID(tableName1, "20001") + '">20001</a></p>\n</li>\n<li>\n<p><a href="https://dev.isrd.isi.edu/chaise/record/schema_table_display:table_wo_title_wo_annotation/RID=' +
-                                                        findRID(tableName1, "20002") + '">20002</a></p>\n</li>\n</ul>\n';
-                options.ermRest.resolve(table1EntityUri, {cid: "test"}).then(function (response) {
-                    return response;
-                }).then(function (reference){
-                    return reference.read(2);
+        describe('Page.content', function() {
+            var testPageContent = function (uri, limit, expected, done) {
+                options.ermRest.resolve(uri, {cid: "test"}).then(function (reference) {
+                    return reference.contextualize.compact.read(2);
                 }).then(function (page){
-                    expect(page.content).toBe(content_without_annotation_w_para);
+                    expect(page.content).toBe(expected);
                     done();
                 }).catch(function(err) {
-                    console.log(err);
-                    done.fail();
+                    done.fail(err);
+                });
+            };
+
+            // row_markdown_pattern test is in the previous describe
+
+            // page_markdown_pattern test is in related reference spec
+
+            describe("when row_markdown_pattern or page_markdown_pattern are not defined for the context, ", function () {
+                it ("should return an unordered list of clickable row-names.", function (done) {
+                    var expected = '<ul>\n' +
+                                   '<li>\n<p><a href="https://dev.isrd.isi.edu/chaise/record/schema_table_display:table_wo_title_wo_annotation/RID=' + findRID(tableName1, "20001") + '">20001</a></p>\n</li>\n' +
+                                   '<li>\n<p><a href="https://dev.isrd.isi.edu/chaise/record/schema_table_display:table_wo_title_wo_annotation/RID=' + findRID(tableName1, "20002") + '">20002</a></p>\n</li>\n' +
+                                   '</ul>\n';
+                    testPageContent(table1EntityUri, 2, expected, done);
                 });
 
-            })
+                it ("row-names should be using the row_name/<context> context format.", function (done) {
+                    var expected = '<ul>\n' +
+                                   '<li>\n<p><a href="https://dev.isrd.isi.edu/chaise/record/schema_table_display:table_w_table_display_annotation_w_row_name_context/RID=' + findRID(tableName6, "10001") + '"><strong>Shakespeare</strong></a></p>\n</li>\n' +
+                                   '<li>\n<p><a href="https://dev.isrd.isi.edu/chaise/record/schema_table_display:table_w_table_display_annotation_w_row_name_context/RID=' + findRID(tableName6, "10002") + '"><strong>Twain</strong></a></p>\n</li>\n' +
+                                   '</ul>\n';
+                    testPageContent(table6EntityUri, 2, expected, done);
+                });
+            });
         });
 
         describe("table entities with $fkeys in their row_markdown_pattern.", function () {
