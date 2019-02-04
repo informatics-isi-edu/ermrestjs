@@ -533,8 +533,8 @@ Supported JSON _option_ payload patterns:
   - Ignore if `"row_markdown_pattern"` is not also configured.
 - `"suffix_markdown":` _suffix_: Insert _suffix_ markdown after the last _rowpattern_ expansion when presenting row sets. (Default empty string `""`.)
   - Ignore if `"row_markdown_pattern"` is not also configured.
-- `"module":` _module_: Activate _module_ to present the entity set. The string literal _module_ name SHOULD be one that Chaise associates with a table-presentation plug-in.
-- `"module_attribute_path":` _pathsuffix_: Configure the data source for activated _module_. Ignore if _module_ is not configured or not understood.
+- `"module":` _module_ (NOT SUPPORTED IN CHAISE): Activate _module_ to present the entity set. The string literal _module_ name SHOULD be one that Chaise associates with a table-presentation plug-in.
+- `"module_attribute_path":` _pathsuffix_ (NOT SUPPORTED IN CHAISE): Configure the data source for activated _module_. Ignore if _module_ is not configured or not understood.
   - If _pathsuffix_ is omitted, use the ERMrest `/entity/` API and a data path denoting the desired set of entities.
   - If _pathsuffix_ is specified, use the ERMrest `/attribute/` API and append _pathsuffix_ to a data path denoting the desired set of entities and which binds `S` as the table alias for this entire entity set.
     - The provided _pathsuffix_ MUST provide the appropriate projection-list to form a valid `/attribute/` API URI.
