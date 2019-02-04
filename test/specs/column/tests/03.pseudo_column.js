@@ -691,6 +691,14 @@ exports.execute = function (options) {
                 });
 
                 describe("if it's a one-to-one path", function () {
+                    it ("it should return null, if the value is null.", function () {
+                        expect(detailedColsWTuple[5].formatPresentation({},"detailed").value).toEqual('', "index=5 missmatch.");
+
+                        expect(detailedColsWTuple[4].formatPresentation({},"detailed").value).toEqual('', "index=4 missmatch.");
+
+                        expect(detailedColsWTuple[6].formatPresentation({},"detailed").value).toEqual('', "index=6 missmatch.");
+                    });
+
                     it ("if in entity mode, should apply the foreignkey logic.", function () {
                         expect(detailedColsWTuple[5].formatPresentation(
                             {"col": "A value", "id": "101"},

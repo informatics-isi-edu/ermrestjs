@@ -509,7 +509,7 @@ PseudoColumn.prototype.formatPresentation = function(data, context, options) {
 
     // in entity mode, return the foreignkey value
     var pres = module._generateRowPresentation(this._lastForeignKey.obj.key, data, context);
-    return pres ? pres: {isHTML: false, value: nullValue, unformatted: nullValue};
+    return pres ? pres: nullValue;
 };
 
 /**
