@@ -165,12 +165,48 @@
                             {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
                             {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
                             "id"
-                        ], "aggregate": "array_d", "array_display": "ulist"},
+                        ], "aggregate": "array_d", "array_display": "ulist", "array_options": {"invalid values": true}},
                         {"source": [
                             {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
                             {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
                             "id"
                         ], "aggregate": "array_d", "entity": false, "array_display": "olist"},
+                        {
+                            "source": [
+                                {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
+                                {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
+                                "RID"
+                            ],
+                            "aggregate": "array_d",
+                            "array_options": {
+                                "max_length": 1,
+                                "order": [
+                                    {"column":"invalidCOl"},
+                                    {"column": "int4_col", "descending": true},
+                                    {"column": "boolean_col", "descending": true},
+                                    {"column": "longtext_col", "descending": false},
+                                    {"column": "markdown_col", "descending": false},
+                                    {"column": "date_col", "descending": false},
+                                    {"column": "timestamptz_col", "descending": false},
+                                    {"column": "timestamp_col", "descending": true}
+                                ]
+                            }
+                        },
+                        {
+                            "source": [
+                                {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
+                                {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
+                                "timestamp_col"
+                            ],
+                            "aggregate": "array_d",
+                            "array_options": {
+                                "max_length": 3,
+                                "order": [
+                                    {"column": "id", "descending": false},
+                                    {"column": "timestamp_col", "descending": false}
+                                ]
+                            }
+                        },
                         {"source": [{"inbound": ["pseudo_column_schema", "inbound_4_long_table_name_fk"]}, "foreign key column name to main"], "aggregate": "cnt", "markdown_name": "**Count Agg**", "comment": "has long values"},
                         {"source": "asset", "markdown_name": "Asset name", "comment": "asset cm", "markdown_name": "**asset**"},
                         {"source": "asset_filename", "markdown_name": "filename"},
@@ -555,11 +591,45 @@
                 {
                     "name": "col",
                     "type": {"typename": "text"}
+                },
+                {
+                    "name": "int4_col",
+                    "type": {"typename": "int4"}
+                },
+                {
+                    "name": "boolean_col",
+                    "type": {"typename": "boolean"}
+                },
+                {
+                    "name": "longtext_col",
+                    "type": {"typename": "longtext"}
+                },
+                {
+                    "name": "markdown_col",
+                    "type": {
+                        "typename": "markdown",
+                        "is_domain": true,
+                        "base_type": {
+                          "typename": "text"
+                        }
+                    }
+                },
+                {
+                    "name": "date_col",
+                    "type": {"typename": "date"}
+                },
+                {
+                    "name": "timestamptz_col",
+                    "type": {"typename": "timestamptz"}
+                },
+                {
+                    "name": "timestamp_col",
+                    "type": {"typename": "timestamp"}
                 }
             ],
             "annotations": {
                 "tag:isrd.isi.edu,2016:table-display": {
-                    "row_name/detailed": {
+                    "row_name/compact": {
                         "row_markdown_pattern": "{{{id}}}, facet: {{#encodeFacet}}{\"and\": [{\"source\": \"id\", \"choices\": [\"{{{id}}}\"]}]}{{/encodeFacet}}",
                         "template_engine": "handlebars"
                     }

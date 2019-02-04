@@ -292,12 +292,15 @@ Supported _columnentry_ patterns:
   - `aggregate`: The aggregate function that should be used for getting an aggregated result. The available aggregate functions are `min`, `max`, `cnt`, `cnt_d`, `array`, and `array_d`.
     - `array` will return ALL the values including duplicates associated with the specified columns. For data types that are sortable (e.g integer, text), the values will be sorted alphabetically or numerically. Otherwise, it displays values in the order that it receives from ERMrest. There is no paging mechanism to limit what's shown in the aggregate column, therefore please USE WITH CARE as it can incur performance overhead and ugly presentation.
     - `array_d` will return distinct values. It has the same performance overhead as `array`, so pleas USE WITH CARE.
-    - Using `array` or `array_d` aggregate in entity mode will provide an array of row-names instead of just the value of the column.
+    - Using `array` or `array_d` aggregate in entity mode will provide an array of row-names instead of just the value of the column. Row-names will be derived from the `row_name/compact` context.
   - `array_display`: If you have `"aggregate": "array"` or `"aggregate": "array_d"` in the pseudo-column definition, a comma-seperated value will be presented to the user. You can use `array_display` attribute to change that. The available options are,
     - `olist` for ordered bullet list.
     - `ulist` for unordered bullet list.
     - `csv` for comma-seperated values.
     - `raw` for space-seperated values.
+  - `array_options`: This attribute is meant to be an object of properties that control the display of `array` or `array_d` aggregate column. These options will only affect the display and have no effect on the generated ERMrest query. The available options are:
+    - `order`: An alternative sort method to apply when a client wants to semantically sort by key values. It follows the same syntax as `column_order`. In scalar array aggregate, you cannot sort based on other columns values, you can only sort based on the scalar value of the column.
+    - `max_length`: `<number>` A number that defines the maximum number of elements that should be displayed.
 
 Supported _sourceentry_ pattern:
 - _columnname_: : A string literal. _columnname_ identifies a constituent column of the table.
@@ -728,8 +731,9 @@ This annotation is a hint to ERMrest during table or column creation, when index
 List of _context_ names that are used in ERMrest:
 
 - `"compact"`: Any compact, tabular presentation of data from multiple entities.
-  - `"compact/brief"`: A limited compact, tabular presentation of data from multiple entities to be shown under the `detailed` context. In this context, only a page of data will be shown with a link to the access the `compact` context for more detail.  
-  - `"compact/select"`: A sub-context of `compact` that is used for selecting entities, e.g. when prompting the user for choosing a foreign key value.
+  - `"compact/brief"`: A limited compact, tabular presentation of data from multiple entities to be shown under the `detailed` context. In this context, only a page of data will be shown with a link to the access the `compact` context for more detail (related entities section).  
+  - `"compact/brief/inline"`: A limited inline, compact, tabular presentation of data from multiple entities to be shown under the `detailed` context. In this context, only a page of data will be shown with a link to the access the `compact` context for more detail (inline related entities section).  
+  - `"compact/select"`: A sub-context of `compact` that is used for selecting entities, e.g. when prompting the user for choosing a foreign key or facet value.
 - `"detailed"`: Any detailed read-only, entity-level presentation context.
 - `"entry"`: Any data-entry presentation context, i.e. when prompting the user for input column values.
   - `"entry/edit"`: A sub-context of `entry` that only applies to editing existing resources.
@@ -737,7 +741,7 @@ List of _context_ names that are used in ERMrest:
 - `"filter"`: Any data-filtering control context, i.e. when prompting the user for column constraints or facets.
 - `"row_name"`: Any abbreviated title-like presentation context.
   - `"row_name/title"`: A sub-context of `row_name` that only applies to title of page.
-  - `"row_name/compact"`: A sub-context of `row_name` that only applies to compact, tabluar presentation of a row (When a foreignkey value is displayed in a tabular presentation).
+  - `"row_name/compact"`: A sub-context of `row_name` that only applies to compact, tabluar presentation of a row (When a foreignkey value is displayed in a tabular presentation. Or when displaying an entity array aggregate pseudo-column).
   - `"row_name/detailed"`: A sub-context of `row_name` that only applies to entity-level presentation of a row (When a foreignkey value is displayed in the entity-level page).
 - `"*"`: A default to apply for any context not matched by a more specific context name.
 
