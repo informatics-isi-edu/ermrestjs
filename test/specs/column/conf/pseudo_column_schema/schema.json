@@ -112,7 +112,7 @@
                     "compact": "detailed",
                     "detailed": [
                         "main_table_id_col", {"source": "col", "markdown_name": "new name", "comment": "new comment"},
-                        {"source": "main_table_id_col", "markdown_name": "main table key", "comment": "main table key"},
+                        {"source": "main_table_id_col", "self_link": true, "markdown_name": "main table key", "comment": "main table key"},
                         {"source": [{"outbound": ["pseudo_column_schema", "main_fk1"]}, "id"], "markdown_name": "main fk", "comment": "main fk cm"},
                         {"source": [{"outbound": ["pseudo_column_schema", "main_fk1"]}, "id"], "entity": false},
                         {"source": [
@@ -183,14 +183,14 @@
                         ["pseudo_column_schema", "main_key1"],
                         ["pseudo_column_schema", "main_fk1"],
                         {"source": "col"},
-                        {"source": "main_table_id_col", "entity": false},
                         {"source": "main_table_id_col"},
+                        {"source": "main_table_id_col", "self_link": true},
                         {"source": [{"outbound": ["pseudo_column_schema", "main_fk1"]}, "RID"]}
                     ],
                     "compact/brief": [
                         {"source": "col"},
                         {"source": "main_table_id_col", "entity": false},
-                        {"source": "main_table_id_col"},
+                        {"source": "main_table_id_col", "self_link": true},
                         {"source": [{"outbound": ["pseudo_column_schema", "main_fk1"]}, "RID"]},
                         "col",
                         "main_table_id_col",
@@ -320,7 +320,10 @@
                         {"source": [{"inbound": ["pseudo_column_schema", "table_w_invalid_pseudo_cols_fk1"]}, "id"]},
                         {"source": [{"outbound": ["pseudo_column_schema", "table_w_invalid_pseudo_cols_fk1"]}, "id"], "aggregate": "invalid"},
                         {"source": [{"outbound": ["pseudo_column_schema", "table_w_invalid_pseudo_cols_fk1"]}, {"inbound": ["pseudo_column_schema", "inbound_1_fk1"]}, "id"], "entity": false},
-                        {"source": [{"outbound": ["pseudo_column_schema", "table_w_invalid_pseudo_cols_fk1"]}, {"inbound": ["pseudo_column_schema", "inbound_1_fk1"]}, "id"]}
+                        {"source": [{"outbound": ["pseudo_column_schema", "table_w_invalid_pseudo_cols_fk1"]}, {"inbound": ["pseudo_column_schema", "inbound_1_fk1"]}, "id"]},
+                        {"source": "id", "entity": false, "self_link": true},
+                        {"source": "col", "self_link": true},
+                        {"source": [{"outbound": ["pseudo_column_schema", "table_w_invalid_pseudo_cols_fk1"]}, "id"], "self_link": true}
                     ],
                     "compact/select": [
                         {"source": "col"}, {"source": "col"},
@@ -332,7 +335,7 @@
                         {"source": "col", "aggregate": "cnt"},
                         {"source": "col", "aggregate": "cnt_d"},
                         {"source": "col", "aggregate": "cnt_d"},
-                        {"source": "id"}, {"source": "id"},
+                        {"source": "id", "self_link": true}, {"source": "id", "self_link": true},
                         {"source": [{"outbound": ["pseudo_column_schema", "table_w_invalid_pseudo_cols_fk1"]}, "main_table_id_col"]},
                         {"source": [{"outbound": ["pseudo_column_schema", "table_w_invalid_pseudo_cols_fk1"]}, "main_table_id_col"], "entity": false},
                         {"source": [{"outbound": ["pseudo_column_schema", "table_w_invalid_pseudo_cols_fk1"]}, "main_table_id_col"]},

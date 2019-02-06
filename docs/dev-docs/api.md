@@ -3790,7 +3790,6 @@ If the pseudoColumn is referring to a unique row (the path is one to one)
 
 #### pseudoColumn.isEntityMode : <code>boolean</code>
 If the pseudoColumn is in entity mode
-This includes columns without path too.
 
 **Kind**: instance property of [<code>PseudoColumn</code>](#ERMrest.PseudoColumn)  
 <a name="ERMrest.PseudoColumn+key"></a>

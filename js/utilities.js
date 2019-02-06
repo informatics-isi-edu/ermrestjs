@@ -748,11 +748,11 @@
         if (typeof colObject === "object") {
             if (!colObject.source) return null;
 
-            if (_isFacetSourcePath(colObject.source)) {
+            if (_sourceHasPath(colObject.source)) {
                 // since it's an array, it will preserve the order
                 str += JSON.stringify(colObject.source);
             } else {
-                str += _getFacetSourceColumnStr(colObject.source);
+                str += _getSourceColumnStr(colObject.source);
             }
 
             if (typeof colObject.aggregate === "string") {
@@ -762,6 +762,10 @@
             // entity true doesn't change anything
             if (colObject.entity === false) {
                 str += colObject.entity;
+            }
+
+            if (colObject.self_link === true) {
+                str += colObject.self_link;
             }
         } else if (typeof colObject === "string"){
             str = colObject;
@@ -788,7 +792,7 @@
      * @desc generates a name for the given pseudo-column
      */
     _generatePseudoColumnName = function (colObject, column) {
-        if ((typeof colObject.aggregate === "string") || _isFacetSourcePath(colObject.source) || _isFacetEntityMode(colObject, column)) {
+        if ((typeof colObject.aggregate === "string") || _sourceHasPath(colObject.source) || _isSourceObjectEntityMode(colObject, column)) {
             return {name: module.generatePseudoColumnHashName(colObject), isHash: true};
         }
 
@@ -3301,7 +3305,8 @@
         MULTI_SCALAR_NEED_AGG: "aggregate functions are required for scalar inbound-included paths.",
         MULTI_ENT_NEED_AGG: "aggregate functions are required for entity inbound-included paths in non-detailed contexts.",
         NO_AGG_IN_ENTRY: "aggregate functions are not allowed in entry contexts.",
-        NO_PATH_IN_ENTRY: "pseudo columns with path are not allowed in entry contexts (only single outbound path is allowed)."
+        NO_PATH_IN_ENTRY: "pseudo columns with path are not allowed in entry contexts (only single outbound path is allowed).",
+        INVALID_SELF_LINK: "given source is not a valid self-link."
     });
 
     module._permissionMessages = Object.freeze({
