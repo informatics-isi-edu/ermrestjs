@@ -31,9 +31,6 @@ If you want to just look at some examples, go [here](#examples).
   + [Visible ForeignKey List](#visible-foreignkey-list)
   + [Specific Pseudo Columns](#specific-pseudo-columns)
 
-<small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>Table of contents generated with markdown-toc</a></i></small>
-
-
 ## Where To Use
 
 You can use pseudo-columns while defining list of [visible columns](annotation.md#tag-2016-visible-columns) and [visible foreign keys](annotation.md#tag-2016-visible-foreign-keys). You can use any type of pseudo-columns in your list of visible columns, but only the pseudo-columns that have a path to another table will be allowed for visible foreign keys.
