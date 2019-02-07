@@ -84,41 +84,45 @@ If you have `"aggregate": "array"` or `"aggregate": "array_d"` in your pseudo-co
 If you have `"aggregate": "array"` or `"aggregate": "array_d"` in your pseudo-column definition, you can use `array_options` to change the array of data that client will present. It will not have any effect on the generated ERMrest query and manipulation of the array is happening on the client side. The available options are:
 
 - `order`: An alternative sort method to apply when a client wants to semantically sort by key values. Its syntax is similar to `column_order`.
-  - In scalar mode, you can only sort based on the scalar value of the column (other table columns are not available).
   - Assuming your path ends with column `col`, the default order is `{"column": "col", "descending": false}`.
+  - In scalar mode, you can only sort based on the scalar value of the column (other table columns are not available). So you can only switch the sort from ascending to descending.
 
 
 - `max_length`: A number that defines the maximum number of elements that should be displayed. We are not going to apply any default value for this attribute. If you don't provide any `max_length`, we are going to show all the values that ERMrest returns.
 
 ```
 {
-    "source": <a valid path in entity mode>,
-    "entity": true,
-    "aggregate": <array or array_d>,
+  "source": <a valid path in entity mode>,
+  "entity": true,
+  "aggregate": <array or array_d>,
+  "array_options": {
     "order": [
-        {
-            "column": <a column in the projected table>,
-            "descending": <boolean value>,
-        },
-        {
-            "column": <another column in the projected table>,
-            "descending": <boolean value>,
-        },
-        ...
+      {
+        "column": <a column in the projected table>,
+        "descending": <boolean value>,
+      },
+      {
+        "column": <another column in the projected table>,
+        "descending": <boolean value>,
+      },
+      ...
     ],
     "max_length": <number>
+  }
 },
 {
-    "source": <a valid path in scalar mode>,
-    "entity": false,
-    "aggregate": <array or array_d>,
+  "source": <a valid path in scalar mode>,
+  "entity": false,
+  "aggregate": <array or array_d>,
+  "array_options": {
     "order": [
-        {
-            "column": <the scalar projected column>,
-            "descending": <boolean value>,
-        }
+      {
+        "column": <the scalar projected column>,
+        "descending": <boolean value>,
+      }
     ],
     "max_length": <number>
+  }
 }
 ```
 
