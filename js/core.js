@@ -2616,7 +2616,7 @@
             if (this._name === undefined) {
                 var obj = this._constraintName;
                 if (this.simple) {
-                    obj = {source: this.colset.columns[0].name};
+                    obj = {source: this.colset.columns[0].name, self_link: true};
                 }
                 this._name = module.generatePseudoColumnHashName(obj);
             }
@@ -2956,14 +2956,14 @@
                 }
                 // path
                 else if (typeof orders[i] === "object" && orders[i].source) {
-                    col = _getFacetSourceColumn(orders[i].source, this._table, module._constraintNames);
+                    col = _getSourceColumn(orders[i].source, this._table, module._constraintNames);
 
                     // invalid if:
                     // 1. invalid source and not a path.
                     // 2. not entity mode
                     // 3. has aggregate
-                    invalid = logErr(!col || !_isFacetSourcePath(orders[i].source), wm.INVALID_FK, i) ||
-                              logErr(!_isFacetEntityMode(orders[i], col), wm.SCALAR_NOT_ALLOWED) ||
+                    invalid = logErr(!col || !_sourceHasPath(orders[i].source), wm.INVALID_FK, i) ||
+                              logErr(!_isSourceObjectEntityMode(orders[i], col), wm.SCALAR_NOT_ALLOWED) ||
                               logErr(orders[i].aggregate, wm.AGG_NOT_ALLOWED);
 
                     if (!invalid) {

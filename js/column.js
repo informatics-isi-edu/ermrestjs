@@ -6,17 +6,17 @@
  * Will create the appropriate ReferenceColumn object based on the given sourceObject.
  * It will return the follwing objects:
  * - If aggregate: PseudoColumn
+ * - If self_link: KeyPseudoColumn
  * - If no path, scalar, asset annot:AssetPseudoColumn
  * - If no path, scalar (or entity in entry context): ReferenceColumn
- * - If no path, entity, non-entry context: KeyPseudoColumn
  * - If path, entity, outbound length 1: ForeignKeyPseudoColumn
  * - If path, entity, inbound length 1: InboundForeignKeyPseudoColumn
  * - If path, entity, p&b association: InboundForeignKeyPseudoColumn
  * - Otherwise: PseudoColumn
  *
  * @private
- * @param  {ERMrest.Reference}  reference    [description]
- * @param  {ERMrest.Column}  column       [description]
+ * @param  {ERMrest.Reference}  reference    the parent reference
+ * @param  {ERMrest.Column}  column       the underlying column object
  * @param  {Object}  sourceObject the column definition
  * @param  {String}  name         the name to avoid computing it again.
  * @param  {ERMrest.Tuple}  mainTuple    the main tuple
@@ -41,22 +41,22 @@ module._createPseudoColumn = function (reference, column, sourceObject, name, ma
         return generalPseudo();
     }
 
-    if (!_isFacetSourcePath(source)) {
-        if (!isEntity) {
-            // no path, scalar, asset
-            if (column.type.name === "text" && column.annotations.contains(module._annotations.ASSET)) {
-                return new AssetPseudoColumn(reference, column, sourceObject);
-            }
-
-            // no path, scalar
-            return new ReferenceColumn(reference, [column], sourceObject);
+    if (!_sourceHasPath(source)) {
+        if (isEntity && sourceObject.self_link === true) {
+            // no path, entity
+            var key = column.memberOfKeys.filter(function (key) {
+                return key.simple;
+            })[0];
+            return new KeyPseudoColumn(reference, key, sourceObject, name);
         }
 
-        // no path, entity
-        var key = column.memberOfKeys.filter(function (key) {
-            return key.simple;
-        })[0];
-        return new KeyPseudoColumn(reference, key, sourceObject, name);
+        // no path, scalar, asset
+        if (column.type.name === "text" && column.annotations.contains(module._annotations.ASSET)) {
+            return new AssetPseudoColumn(reference, column, sourceObject);
+        }
+
+        // no path, scalar
+        return new ReferenceColumn(reference, [column], sourceObject);
     }
 
     // path, entity, outbound length 1,
@@ -958,7 +958,6 @@ Object.defineProperty(PseudoColumn.prototype, "isUnique", {
 
 /**
  * If the pseudoColumn is in entity mode
- * This includes columns without path too.
  * @member {boolean} isEntityMode
  * @memberof ERMrest.PseudoColumn#
  */
@@ -968,7 +967,7 @@ Object.defineProperty(PseudoColumn.prototype, "isEntityMode", {
             this._isEntityMode = false;
 
             var currCol = this._baseCols[0], key;
-            if (this.sourceObject.entity !== false && !currCol.nullok) {
+            if (this.hasPath && this.sourceObject.entity !== false && !currCol.nullok) {
                 key = currCol.memberOfKeys.filter(function (key) {
                     return key.simple;
                 })[0];
@@ -1004,7 +1003,7 @@ Object.defineProperty(PseudoColumn.prototype, "key", {
 Object.defineProperty(PseudoColumn.prototype, "hasPath", {
     get: function () {
         if (this._hasPath === undefined) {
-            this._hasPath =_isFacetSourcePath(this.sourceObject.source);
+            this._hasPath =_sourceHasPath(this.sourceObject.source);
         }
         return this._hasPath;
     }
@@ -2052,7 +2051,7 @@ FacetColumn.prototype = {
      */
     get hasPath() {
         if (this._hasPath === undefined) {
-            this._hasPath =_isFacetSourcePath(this.dataSource);
+            this._hasPath =_sourceHasPath(this.dataSource);
         }
         return this._hasPath;
     },

@@ -222,7 +222,7 @@ exports.execute = function (options) {
         describe('.name, ', function () {
             it('for pseudoColumns, should return a unique and deterministic string.', function () {
                 //ref_table_outbound_fks_key
-                expect(compactColumns[0].name).toBe("uAu3dAKI_aHyAYkDdaYMjw", "name missmatch for compact, index=0");
+                expect(compactColumns[0].name).toBe("l-7AKq6z2IDzE63S0vQNPg", "name missmatch for compact, index=0");
                 //outbound_fk_8
                 expect(compactColumns[19].name).toBe("xJcbAuoxdRZ08TEXbbZ5VQ", "name missmatch for compact, index=13");
                 //inbound_related_to_columns_table_2_fkey

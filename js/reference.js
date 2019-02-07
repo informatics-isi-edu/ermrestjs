@@ -385,7 +385,7 @@
                     obj = {"source": refCol.name};
 
                     // integer and serial key columns should show choice picker
-                    if (_isFacetEntityMode(obj, refCol._baseCols[0]) &&
+                    if (_isSourceObjectEntityMode(obj, refCol._baseCols[0]) &&
                        (refCol.type.name.indexOf("int") === 0 || refCol.type.name.indexOf("serial") === 0)) {
                         obj.ux_mode = module._facetFilterTypes.CHOICE;
                     }
@@ -399,7 +399,7 @@
                         return false;
                     }
 
-                    var col = _getFacetSourceColumn(obj.source, self.table, module._constraintNames);
+                    var col = _getSourceColumn(obj.source, self.table, module._constraintNames);
 
                     // column type array is not supported
                     if (!col || col.type.isArray) {
@@ -454,8 +454,8 @@
                  * - [{"inbound":['s', 'c']}, {"outbound": ['s', 'c2']}, 'col']
                  */
                 var sameSource = function (source, filterSource) {
-                    if (!_isFacetSourcePath(source)) {
-                        return !_isFacetSourcePath(filterSource) && _getFacetSourceColumnStr(source) === _getFacetSourceColumnStr(filterSource);
+                    if (!_sourceHasPath(source)) {
+                        return !_sourceHasPath(filterSource) && _getSourceColumnStr(source) === _getSourceColumnStr(filterSource);
                     }
 
                     if (source.length !== filterSource.length) {
@@ -2740,7 +2740,7 @@
                         if (logCol(!col.source, wm.INVALID_SOURCE, i)) continue;
 
                         // check the path and get the column object
-                        sourceCol = _getFacetSourceColumn(col.source, this._table, module._constraintNames);
+                        sourceCol = _getSourceColumn(col.source, this._table, module._constraintNames);
 
                         // invalid source
                         if (logCol(!sourceCol, wm.INVALID_SOURCE, i)) {
@@ -2751,18 +2751,20 @@
                         pseudoNameObj = _generatePseudoColumnName(col, sourceCol);
                         pseudoName = pseudoNameObj.name;
                         isHash = pseudoNameObj.isHash; // whether its the actual name of column, or generated hash
-                        hasPath = _isFacetSourcePath(col.source);
+                        hasPath = _sourceHasPath(col.source);
                         hasInbound = _sourceHasInbound(col.source);
-                        isEntity = _isFacetEntityMode(col, sourceCol);
+                        isEntity = _isSourceObjectEntityMode(col, sourceCol);
 
                         // invalid/hidden pseudo-column:
                         // 1. duplicate
                         // 2. column/foreignkey that needs to be hidden.
-                        // 3. The generated hash is a column for the table in database
+                        // 3. invalid self_link (must be entity and without path)
                         // 4. invalid aggregate function
+                        // 3. The generated hash is a column for the table in database
                         ignore = logCol((pseudoName in consideredColumns), wm.DUPLICATE_PC, i) ||
                                  hideFKRByName(pseudoName) ||
                                  (!hasPath && hideColumn(sourceCol)) ||
+                                 logCol(col.self_link === true && !(isEntity && !hasPath), wm.INVALID_SELF_LINK, i) ||
                                  logCol((col.aggregate && module._pseudoColAggregateFns.indexOf(col.aggregate) === -1), wm.INVALID_AGG, i) ||
                                  logCol((!col.aggregate && hasInbound && !isEntity), wm.MULTI_SCALAR_NEED_AGG, i) ||
                                  logCol((!col.aggregate && hasInbound && isEntity && context !== module._contexts.DETAILED), wm.MULTI_ENT_NEED_AGG, i) ||
@@ -3661,7 +3663,7 @@
 
                             var fk = null;
 
-                            if (_isFacetSourcePath(f.source)) {
+                            if (_sourceHasPath(f.source)) {
                                 var cons, isInbound = false, fkObj;
 
                                 if ("inbound" in f.source[0]) {

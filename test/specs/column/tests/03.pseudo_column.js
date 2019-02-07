@@ -126,7 +126,7 @@ exports.execute = function (options) {
         var detailedExpectedValue;
 
         var detailedExpectedNames = [
-             'main_table_id_col', 'col', '06fr6g_9dDm8WuAmEirSRg', 'xRrChcQgxGIr0CNyYQtQ0Q',
+             'main_table_id_col', 'col', 'vMKDORVxEGDzdAwQEH0pJA', 'xRrChcQgxGIr0CNyYQtQ0Q',
              'o7Gpk7dRlnzNv3_JjhqDIg', 'CaEhWBd7gSjuYCLun-8D-A', '1EC_6-rbhKc3tIjczjq1fQ',
              'GUABhSm2h_kaHHPGkzYWeA', 'gNTPCP0bGB0GRwFKEATipw', 'nGwW9Kpx5sLf8cpX-24WNQ',
              '0utuimdZvz8kTU4GI7tzWw', 'PEQDZ38621T5Y9J3P2Te2Q', 'plpeoINYqVjmca9rYYtFuw',
@@ -574,14 +574,15 @@ exports.execute = function (options) {
 
             describe('isEntityMode, ', function () {
                 it ("should return true if column is not-null and part of simple key, and entity is not false.", function () {
-                    var i;
-                    expect(detailedColsWTuple[5].isEntityMode).toBe(true, "missmatch for index=5");
-                    expect(detailedColsWTuple[9].isEntityMode).toBe(true, "missmatch for index=5");
+                    [5, 9, 11, 12, 16, 17].forEach(function (i) {
+                        expect(detailedColsWTuple[i].isEntityMode).toBe(true, "missmatch for index=" + i);
+                    });
                 });
 
                 it ("otherwise it should return true", function () {
-                    expect(detailedColsWTuple[4].isEntityMode).toBe(false, "missmatch for index=4");
-                    expect(detailedColsWTuple[6].isEntityMode).toBe(false, "missmatch for index=6");
+                    [4, 6, 13, 14, 15].forEach(function (i) {
+                        expect(detailedColsWTuple[i].isEntityMode).toBe(false, "missmatch for index=" + i);
+                    });
                 });
             });
 
