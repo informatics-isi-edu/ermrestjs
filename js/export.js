@@ -171,9 +171,10 @@ var ERMrest = (function(module) {
                 } else {
                     var outputs = template.outputs;
                     var predicate = this.reference.location.ermrestCompactPath;
+                    var table = this.reference.table.name;
                     var output_path = module._sanitizeFilename(this.reference.displayname.unformatted);
 
-                    outputs.forEach(function (output) {
+                    outputs.forEach(function (output, index) {
                         var source = output.source, dest = output.destination;
                         var query = {}, queryParams = {};
 
@@ -189,7 +190,14 @@ var ERMrest = (function(module) {
 
                         query.processor = dest.type || bagOptions.table_format;
                         queryParams.output_path = dest.name || output_path;
-                        queryParams.query_path = "/" + queryFrags.join("/") + "?limit=none";
+
+                        var queryStr = queryFrags.join("/");
+                        if (queryStr.length > module.URL_PATH_LENGTH_LIMIT) {
+                            console.log("Cannot send the output index `" + index + "` for table `" + table + "` to ermrest (URL LENGTH ERROR). Generated query:", queryStr);
+                            return;
+                        }
+
+                        queryParams.query_path = "/" + queryStr + "?limit=none";
                         if (dest.impl != null) {
                             query.processor_type = dest.impl;
                         }
@@ -277,6 +285,266 @@ var ERMrest = (function(module) {
     };
 
     module.Exporter = exporter;
+
+    /**
+     * Given a reference object, will return the appropriate output object.
+     * It might use attributegroup or entity apis based on the situation.
+     *
+     * given a reference and the path from main table to it (it might be empty),
+     * will generate the appropriate output.
+     * - If addMainKey is true,
+     *    it will add the shortestkey of main table to the projection list.
+     * - If the table has foreignkeys, and the referred table has any of the
+     *  "candidate" columns, it will add those to the projection list too.
+     * - If addMainKey is false, and we're not adding any "candidate" columns
+     *   for foreignKeys, it will return an entity output, otherwise it will be attributegroup.
+     *
+     * In case of attributegroup, we will change the projection list.
+     * Assume that this is the model:
+     * main_table <- t1 <- t2
+     * the key list will be based on:
+     * - shortestkey of main_table and t2 (with alias name in `<tablename>.<shortestkey_column_name>` format)
+     * the projection list will be based on:
+     * - visible columns of t2
+     * - "candidate" columns of the foreignkeys (with alias name in `<tablename>.<candidate_column_name>` format)
+     *
+     * by "candidate" we mean columns that might make more sense to user instead of the typical "RID" or "ID".
+     * These are the same column names that we are using for row-name generation.
+     *
+     * @private
+     * @param  {ERMrest.referene} ref       the reference that we want the output for
+     * @param  {String} tableAlias          the alias that is used for projecting table (last table in path)
+     * @param  {String=} path               the string that will be prepended to the path
+     * @param  {String=} addMainKey         whether we want to add the key of the main table.
+     *                                      if this is true, the next parameter is required.
+     * @param  {ERMrest.Reference=} mainRef The main reference
+     * @return {Object}                     the output object
+     */
+    module._referenceExportOutput = function(ref, tableAlias, path, addMainKey, mainRef) {
+
+        var projectionList = [],
+            keyList = [],
+            name, i = 0,
+            consideredFks = {},
+            addedCols = {},
+            usedNames = {},
+            shortestKeyCols = {},
+            fkeys = [],
+            compositeFKs = [],
+            fk, fkAlias, candidate,
+            addedColPrefix, names = {};
+
+        var encode = module._fixedEncodeURIComponent;
+
+        var getCandidateColumn = function(table) {
+            return module._getCandidateRowNameColumn(table.columns.all().map(function(col) {
+                return col.name;
+            }));
+        };
+
+        // we have to add all the columns, so they will be used
+        ref.table.columns.all().forEach(function(col) {
+            usedNames[col.name] = true;
+        });
+
+        // shortestkey of the current reference
+        ref.table.shortestKey.forEach(function(col) {
+            keyList.push(encode(col.name));
+            addedCols[col.name] = true;
+        });
+
+        // if it's a related entity and we need to key of the main table
+        if (addMainKey) {
+            // we have to add the shortestkey of main table
+            addedColPrefix = encode(mainRef.table.name) + ".";
+            mainRef.table.shortestKey.forEach(function(col) {
+                shortestKeyCols[col.name] = true;
+                name = addedColPrefix + encode(col.name);
+                // make sure the alias doesn't exist in the table
+                while (name in usedNames) {
+                    name = addedColPrefix + encode(col.name) + "_" + (++i);
+                }
+                usedNames[name] = true;
+                keyList.push(name + ":=" + mainRef.location.mainTableAlias + ":" + encode(col.name));
+            });
+
+            //add the candidate column of main table too
+            candidate = getCandidateColumn(mainRef.table);
+            if (candidate && !(candidate in shortestKeyCols)) {
+                name = addedColPrefix + encode(candidate);
+                // make sure the alias doesn't exist in the table
+                while (name in usedNames) {
+                    name = addedColPrefix + encode(candidate) + "_" + (++i);
+                }
+                usedNames[name] = true;
+            }
+        }
+
+        // projection list (all the columns of the reference)
+        ref.table.columns.all().forEach(function(col) {
+            // add the column has not been added before
+            // if it's part of the shortestkey, it has been added
+            if (!addedCols[col.name]) {
+                projectionList.push(encode(col.name));
+            }
+
+            if (col.memberOfForeignKeys.length === 0) return;
+
+            // add the foreignkeys
+
+            // make sure they are sorted
+            var colFKs = col.memberOfForeignKeys.sort(function(a, b) {
+                return a._constraintName.localeCompare(b._constraintName);
+            });
+
+            // all the foreignkeys that this column is part of
+            colFKs.forEach(function(fk) {
+                // avoid duplicates
+                if (consideredFks[fk._constraintName]) return;
+                consideredFks[fk._constraintName] = true;
+
+                // find the candidate column
+                candidate = getCandidateColumn(fk.key.table);
+
+                // we couldn't find any candidate columns
+                if (!candidate) return;
+
+                // add the fkey
+                fkAlias = "F" + (fkeys.length + 1);
+                fkeys.push(fkAlias + ":=left" + fk.toString(true) + "/$" + tableAlias);
+
+                // add to projectionList
+                addedColPrefix = encode(fk.key.table.name) + ".";
+                name = addedColPrefix + encode(candidate);
+                i = 0;
+                while (name in usedNames) {
+                    name = addedColPrefix + encode(candidate) + "_" + (++i);
+                }
+                usedNames[name] = true;
+                name = name + ":=" + fkAlias + ":" + candidate;
+
+                // if simple add it in place, otherwise to the end of the list
+                if (fk.simple) {
+                    projectionList.push(name);
+                } else {
+                    compositeFKs.push(name);
+                }
+            });
+        });
+
+        // if we're not adding the main key or fkeys, fall back to entity
+        if (fkeys.length === 0 && !addMainKey) {
+            return module._referenceExportEntityOutput(ref, path);
+        }
+
+        // generate the path, based on given values.
+        path = (typeof path === "string") ? (path + "/") : "";
+        if (fkeys.length > 0) {
+            path += fkeys.join("/") + "/";
+        }
+        path += keyList.join(",") + ";" + projectionList.concat(compositeFKs).join(",");
+
+        if (path.length > module.URL_PATH_LENGTH_LIMIT) {
+            console.log("Cannot add the following path for table `" + ref.table.name + "` because of url limitation.", path);
+            return module._referenceExportEntityOutput(ref, path);
+        }
+
+        return {
+            destination: {
+                name: module._sanitizeFilename(ref.displayname.unformatted),
+                type: "csv"
+            },
+            source: {
+                api: "attributegroup",
+                path: path
+            }
+        };
+    };
+
+    /**
+     * Given a reference object, will return the appropriate output object using entity api
+     * @private
+     * @param  {ERMrest.Reference} ref  the reference object
+     * @param  {String} path the string that will be prepended to the path
+     * @return {Object} the output object
+     */
+    module._referenceExportEntityOutput = function(ref, path) {
+        var source = {
+            api: "entity"
+        };
+
+        if (path) {
+            source.path = path;
+        }
+
+        return {
+            destination: {
+                name: module._sanitizeFilename(ref.displayname.unformatted),
+                type: "csv"
+            },
+            source: source
+        };
+    };
+
+    /**
+     * Given a column will return the appropriate output object for asset.
+     * It will return null if annotation is not complete or column is not an asset.
+     * @private
+     * @param  {ERMrest.Column} col the column object
+     * @param  {String} destinationPath the string that will be prepended to destination path
+     * @param  {String} sourcePath      the string that will be prepended to source path
+     * @return {Object}
+     */
+    module._getAssetExportOutput = function(col, destinationPath, sourcePath) {
+        if (!col.isAsset) return null;
+
+        var path = [], key;
+        var sanitize = module._sanitizeFilename,
+            encode = module._fixedEncodeURIComponent;
+
+        // required attributes
+        var attributes = {
+            byteCountColumn: "length",
+            filenameColumn: "filename"
+        };
+
+        // at least one of these must be available
+        var checksum = {
+            md5: "md5",
+            sha256: "sha256"
+        };
+
+        // add the url
+        path.push("url:=" + encode(col.name));
+
+        // add the required attributes
+        for (key in attributes) {
+            if (col[key] == null) return null;
+            path.push(attributes[key] + ":=" + encode(col[key].name));
+        }
+
+        // at least one checksum must be available
+        var hasChecksum = false;
+        for (key in checksum) {
+            if (col[key] == null) continue;
+            hasChecksum = true;
+            path.push(checksum[key] + ":=" + encode(col[key].name));
+        }
+
+        if (!hasChecksum) return null;
+
+        return {
+            destination: {
+                name: "assets/" + (destinationPath ? sanitize(destinationPath) + "/" : "") + sanitize(col.name),
+                type: "fetch"
+            },
+            source: {
+                api: "attribute",
+                // exporter will throw an error if the url is null, so we are adding the check for not-null.
+                path: (sourcePath ? sourcePath + "/" : "") + "!(" + encode(col.name) + "::null::)/" + path.join(",")
+            }
+        };
+    };
 
     return module;
 

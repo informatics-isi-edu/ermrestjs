@@ -1016,6 +1016,31 @@
     };
 
     /**
+     * @private
+     * @param  {string[]} columnNames Array of column names
+     * @return {string|false} the column name. if couldn't find any columns will return false.
+     */
+    module._getCandidateRowNameColumn = function (columnNames) {
+        var candidates = [
+            'title', 'name', 'term', 'label', 'accessionid', 'accessionnumber'
+        ];
+
+        var removeExtra = function (str) { // remove `.`, `-`, `_`, and space
+            return str.replace(/[\.\s\_-]+/g, "").toLocaleLowerCase();
+        };
+
+        for (var i = 0; i < columnNames.length; i++) {
+            var closest = removeExtra(columnNames[i]);
+            if (candidates.indexOf(closest) !== -1) {
+                return columnNames[i];
+            }
+        }
+
+        // couldn't find any columns
+        return false;
+    };
+
+    /**
      * @function
      * @private
      * @param {ERMrest.Table} table The table that we want the row name for.
@@ -1052,22 +1077,9 @@
         if (pattern == null || pattern.trim() === '') {
 
             // no row_name annotation, use column with title, name, term
-            var result, closest;
-            var setDisplaynameForACol = function (name) {
-                closest = module._getClosest(data, name);
-                if (closest !== undefined && (typeof closest.data === 'string')) {
-                    result = formattedValues[closest.key];
-                    return true;
-                }
-                return false;
-            };
-
-            var columns = ['title', 'name', 'term', 'label', 'accession_id', 'accession_number'];
-
-            for (var i = 0; i < columns.length; i++) {
-                if (setDisplaynameForACol(columns[i])) {
-                    break;
-                }
+            var candidate = module._getCandidateRowNameColumn(Object.keys(data)), result;
+            if (candidate !== false) {
+                result = formattedValues[candidate];
             }
 
             if (!result) {
