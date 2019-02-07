@@ -515,6 +515,24 @@ PseudoColumn.prototype.formatPresentation = function(data, context, options) {
 /**
  * Returns a promise that gets resolved with list of aggregated values in the same
  * order of tuples of the page that is passed.
+ * implementation Notes:
+ * 1. This function will take care of url limitation. It might generate multiple
+ * ermrest requests based on the url length, and will resolve the promise when
+ * all the requests have been succeeded. If we cannot fit all the requests, an
+ * error will be thrown.
+ * 2. Only in case of entity scalar aggregate we are going to get all the row data.
+ * In other cases, the returned data will only include the scalar value.
+ * 3. Regarding the returned value:
+ *  3.0. Null and empty string values are treated the same way as any array column.
+ *  We are going to show the special value for them.
+ *  3.1. If it's an array aggregate:
+ *      3.1.1. array_display will dictate how we should join the values (csv, olist, ulist, raw).
+ *      3.1.2. array_options will dictate the sort and length criteria.
+ *      3.1.3. Based on entity/scalar mode:
+ *          3.1.3.1. In scalar mode, only pre_format will be applied to each value.
+ *          3.1.3.2. In entity mode, we are going to return list of row_names derived from `row_name/compact`.
+ *  3.2. Otherwise we will only apply the pre_format annotation for the column.
+ *
  * @param  {ERMrest.Page} page               the page object of main (current) refernece
  * @param {Object} contextHeaderParams the object that we want to log.
  * @return {Promise}
@@ -531,6 +549,12 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
         keyColName, keyColNameEncoded,
         baseUri, basePath, uri, i, fk, str, projection;
 
+    // this will dictates whether we should show rowname or not
+    var isRow = self.isEntityMode && module._pseudoColEntityAggregateFns.indexOf(self.sourceObject.aggregate) != -1;
+
+    // use `compact` context for entity array aggregates
+    var context = isRow ? module._contexts.COMPACT : self._context;
+
     // verify the input
     try {
         verify(this.hasAggregate, "this function should only be used when `hasAggregate` is true.");
@@ -539,6 +563,24 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
     } catch (e) {
         defer.reject(e);
         return defer.promise;
+    }
+
+    // array_options
+    var columnOrder, maxLength;
+    if (self.sourceObject.aggregate.indexOf("array") != -1 && typeof self.sourceObject.array_options === "object") {
+
+        // order
+        if (self.sourceObject.array_options.order) {
+            columnOrder = _processColumnOrderList(
+                self.sourceObject.array_options.order,
+                column.table
+            );
+        }
+
+        // max_length
+        if (Number.isInteger(self.sourceObject.array_options.max_length)) {
+            maxLength = self.sourceObject.array_options.max_length;
+        }
     }
 
     // create the header
@@ -552,9 +594,6 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
     var currTable = "T";
     var baseTable = self.hasPath ? "M": currTable;
 
-    // this will dictates whether we should show rowname or not
-    var isRow = self.isEntityMode && module._pseudoColEntityAggregateFns.indexOf(self.sourceObject.aggregate) != -1;
-
     // creates http request with the current uri
     baseUri = [location.service, "catalog", location.catalog, "attributegroup"].join("/") + "/";
     var addPromise = function () {
@@ -567,31 +606,59 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
     // will format a single value
     var getFormattedValue = function (val) {
         if (isRow) {
-            var pres = module._generateRowPresentation(self._key, val, self._context);
+            var pres = module._generateRowPresentation(self._key, val, context);
             return pres ? pres.unformatted : null;
         }
         if (val == null || val === "") {
             return val;
         }
-        return column.formatvalue(val, self._context);
+        return column.formatvalue(val, context);
     };
 
     // it will sort the array values and then format them.
     var getArrayValue = function (val) {
-
         // try to sort the values
         try {
             val.sort(function (a, b) {
-                // if isRow, a and b will be objects
-                if (isRow) {
-                    return a[column.name].localeCompare(b[column.name]);
+                // order is not defined, just sort based on the column value
+                if (!columnOrder || columnOrder.length === 0) {
+                    // if isRow, a and b will be objects
+                    if (isRow) {
+                        return column.compare(a[column.name], b[column.name]);
+                    }
+                    return column.compare(a, b);
                 }
-                return a.localeCompare(b);
+
+                // sort the values based on the defined `order`
+                for (var j = 0; j < columnOrder.length; j++) {
+                    var col = columnOrder[j].column, comp;
+
+                    // if it's not row, it will be just array of results
+                    if (!isRow) {
+                        // ignore invalid order options
+                        if (col.name !== column.name) continue;
+                        comp = col.compare(a, b);
+                    } else {
+                        comp = col.compare(a[col.name], b[col.name]);
+                    }
+
+                    // if they are equal go to the next column in `order`
+                    if (comp !== 0) {
+                        return (columnOrder[j].descending ? -1 : 1) * comp;
+                    }
+                }
+
+                // they are equal
+                return 0;
             });
         } catch(e) {
             // if sort threw any erros, we just leave it as is
         }
 
+        // limit the values
+        if (maxLength) {
+            val = val.slice(0, maxLength);
+        }
 
         // get the formatted values as an array
         var arrayRes = printUtils.printArray(
@@ -623,7 +690,6 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
         }
         return printUtils.printMarkdown(res);
     };
-
 
     // return empty list if page is empty
     if (page.tuples.length === 0) {
@@ -693,14 +759,14 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
     module._q.all(promises).then(function (response) {
         var values = [],
             result = [],
-            value, res, isHTML;
+            value, res, isHTML, arrayValues;
 
         response.forEach(function (r) {
             values = values.concat(r.data);
         });
 
         // make sure we're returning the result in the same order as input
-        page.tuples.forEach(function (t) {
+        page.tuples.forEach(function (t, index) {
             // find the corresponding value in result
             value = values.find(function (v) {
                 return v.c == t.data[keyColName];

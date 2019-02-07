@@ -2256,6 +2256,58 @@
         },
 
         /**
+         * can be used for comparing two values of the column.
+         * Will return
+         *   - 1: if a is greater than b
+         *   - -1: if b is greater than a
+         *   - 0: if a is equal to b, or cannot compare the values
+         * NOTE: null is greater than any not-null values.
+         * @param  {*} a raw value
+         * @param  {*} b raw value
+         * @return {integer} 1: a > b, -1: b > a, 0: a = b
+         */
+        compare: function (a, b) {
+            // not comparabale
+            if (module._nonSortableTypes.indexOf(this.type.name) !== -1) {
+                return 0;
+            }
+
+            // null is considered "greater" than any other value
+            if (a == null || b == null) {
+                if (a == null && b == null) return 0;
+                if (a == null) return 1;
+                return -1;
+            }
+
+            try {
+                switch (this.type.rootName) {
+                    case "date":
+                    case "timestamp":
+                    case "timestamptz":
+                        var ma = module._moment(a), mb = module._moment(b);
+                        if (ma.isAfter(mb)) {
+                            return 1;
+                        }
+                        if (ma.isBefore(mb)) {
+                            return -1;
+                        }
+                        return 0;
+                    case "text":
+                    case "longtext":
+                    case "markdown":
+                        return a.localeCompare(b);
+                    default:
+                        if (a > b) return 1;
+                        if (a < b) return -1;
+                        return 0;
+                }
+            } catch(e) {
+                // invalid data, couldn't compare
+                return 0;
+            }
+        },
+
+        /**
          * Returns the columns that this column should be sorted based on and its direction.
          * It will return an array of objects that has:
          * - `column`: The {@link ERMrest.Column} object.

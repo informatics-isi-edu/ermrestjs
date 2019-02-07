@@ -175,6 +175,7 @@ to use for ERMrest JavaScript agents.
         * [.formatPresentation(data, context, options)](#ERMrest.Column+formatPresentation) ⇒ <code>Object</code>
         * [.toString()](#ERMrest.Column+toString) ⇒ <code>string</code>
         * [.getDisplay(context)](#ERMrest.Column+getDisplay)
+        * [.compare(a, b)](#ERMrest.Column+compare) ⇒ <code>integer</code>
     * [.Annotations](#ERMrest.Annotations)
         * [new Annotations()](#new_ERMrest.Annotations_new)
         * [.all()](#ERMrest.Annotations+all) ⇒ [<code>Array.&lt;Annotation&gt;</code>](#ERMrest.Annotation)
@@ -1480,6 +1481,7 @@ Constructor for Columns.
     * [.formatPresentation(data, context, options)](#ERMrest.Column+formatPresentation) ⇒ <code>Object</code>
     * [.toString()](#ERMrest.Column+toString) ⇒ <code>string</code>
     * [.getDisplay(context)](#ERMrest.Column+getDisplay)
+    * [.compare(a, b)](#ERMrest.Column+compare) ⇒ <code>integer</code>
 
 <a name="new_ERMrest.Column_new"></a>
 
@@ -1646,6 +1648,24 @@ display object for the column
 | Param | Type | Description |
 | --- | --- | --- |
 | context | <code>String</code> | the context that we want the display for. |
+
+<a name="ERMrest.Column+compare"></a>
+
+#### column.compare(a, b) ⇒ <code>integer</code>
+can be used for comparing two values of the column.
+Will return
+  - 1: if a is greater than b
+  - -1: if b is greater than a
+  - 0: if a is equal to b, or cannot compare the values
+NOTE: null is greater than any not-null values.
+
+**Kind**: instance method of [<code>Column</code>](#ERMrest.Column)  
+**Returns**: <code>integer</code> - 1: a > b, -1: b > a, 0: a = b  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| a | <code>\*</code> | raw value |
+| b | <code>\*</code> | raw value |
 
 <a name="ERMrest.Annotations"></a>
 
@@ -3850,6 +3870,23 @@ Format the presentation value corresponding to this pseudo-column definition.
 #### pseudoColumn.getAggregatedValue(page, contextHeaderParams) ⇒ <code>Promise</code>
 Returns a promise that gets resolved with list of aggregated values in the same
 order of tuples of the page that is passed.
+implementation Notes:
+1. This function will take care of url limitation. It might generate multiple
+ermrest requests based on the url length, and will resolve the promise when
+all the requests have been succeeded. If we cannot fit all the requests, an
+error will be thrown.
+2. Only in case of entity scalar aggregate we are going to get all the row data.
+In other cases, the returned data will only include the scalar value.
+3. Regarding the returned value:
+ 3.0. Null and empty string values are treated the same way as any array column.
+ We are going to show the special value for them.
+ 3.1. If it's an array aggregate:
+     3.1.1. array_display will dictate how we should join the values (csv, olist, ulist, raw).
+     3.1.2. array_options will dictate the sort and length criteria.
+     3.1.3. Based on entity/scalar mode:
+         3.1.3.1. In scalar mode, only pre_format will be applied to each value.
+         3.1.3.2. In entity mode, we are going to return list of row_names derived from `row_name/compact`.
+ 3.2. Otherwise we will only apply the pre_format annotation for the column.
 
 **Kind**: instance method of [<code>PseudoColumn</code>](#ERMrest.PseudoColumn)  
 

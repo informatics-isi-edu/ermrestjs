@@ -21,10 +21,12 @@
  * 16: same as 8 with `array` in entity mode
  * 17: same as 8 with `array_d` in entity with array_display ulist
  * 18: same as 8 with `array_d` in entity with array_display olist
- * 19: inbound for testing long aggregate request (PseudoColumn)
- * 20: asset (AssetPseudoColumn)
- * 21: asset_filename (ReferenceColumn)
- * 22: main -> outbound_2 <- outbound_2_inbound_1 (entity mode)
+ * 19: same path as 8 ending in RID with array_d and array_options
+ * 20: same path as 8 ending in timestamp_col with array_d and array_options
+ * 21: inbound for testing long aggregate request (PseudoColumn)
+ * 22: asset (AssetPseudoColumn)
+ * 23: asset_filename (ReferenceColumn)
+ * 24: main -> outbound_2 <- outbound_2_inbound_1 (entity mode)
  *
  * Only the followin indeces are PseudoColumn:
  * 4 (outbound len 1, scalar)
@@ -38,6 +40,11 @@
  * 15 (same as 8, agg array)
  * 16 (inbound, agg cnt)
  * 17 (inbound, agg cnt, entity)
+ * 18 (same as 8, agg array_d, entity)
+ * 19 (same as 8 ending with RID, agg array_d, entity)
+ * 20 (same as 8 ending with timestamp_col, agg array_d, scalar)
+ * 21 (has lots of rows)
+ * 24 (main -> outbound_2, outbound_2_inbound_1, entity)
  *
  * For entry:
  * 0: main_table_id_col
@@ -125,19 +132,20 @@ exports.execute = function (options) {
              '0utuimdZvz8kTU4GI7tzWw', 'PEQDZ38621T5Y9J3P2Te2Q', 'plpeoINYqVjmca9rYYtFuw',
              'OpHtewN91L9_3b1Vq-jkOg', 'LHC_G9Tm_jYXQXyNNrZIGA', 'H3B-cJhnO5kI08bThBIMxw',
              'ZJll4WjE6eMk_g5e9WE1rg', 'GFBydDhuUocHxUlF894ntQ', 'vd-zzWca-ApLn2yvu7fx1w',
-             'MJVZnQ5mBRdCFPfjIOMvkA', "asset", "asset_filename", 'IKxB9JkO83__MmKlV0Nnow'
+             '8siu02fMCXJ2DfB4GLv93Q', 'OLbAesieGW5dpAhzqTSzqw', 'MJVZnQ5mBRdCFPfjIOMvkA',
+             "asset", "asset_filename", 'IKxB9JkO83__MmKlV0Nnow'
         ];
 
         var detailedPseudoColumnIndices = [
-            4, 5, 6, 9, 11,12, 13, 14, 15, 16, 17, 18, 19, 22
+            4, 5, 6, 9, 11,12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 24
         ];
 
         var detailedColumnTypes = [
             "", "", "isKey", "isForeignKey", "isPathColumn", "isPathColumn",
             "isPathColumn", "isInboundForeignKey", "isInboundForeignKey", "isPathColumn",
             "isInboundForeignKey", "isPathColumn", "isPathColumn", "isPathColumn", "isPathColumn",
-            "isPathColumn", "isPathColumn", "isPathColumn", "isPathColumn", "isPathColumn", "isAsset", "",
-            "isPathColumn"
+            "isPathColumn", "isPathColumn", "isPathColumn", "isPathColumn", "isPathColumn",
+            "isPathColumn", "isPathColumn", "isAsset", "", "isPathColumn"
         ];
 
         var mainRef, mainRefDetailed, invalidRef, mainRefEntry,
@@ -243,7 +251,7 @@ exports.execute = function (options) {
             });
 
             it ("should create the correct columns for valid list of sources.", function () {
-                expect(mainRefDetailed.columns.length).toBe(23, "length missmatch");
+                expect(mainRefDetailed.columns.length).toBe(25, "length missmatch");
                 checkReferenceColumns([{
                     "ref": mainRefDetailed,
                     "expected": [
@@ -301,6 +309,16 @@ exports.execute = function (options) {
                             {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
                             {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
                             "id"
+                        ],
+                        [
+                            {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
+                            {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
+                            "RID"
+                        ],
+                        [
+                            {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
+                            {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
+                            "timestamp_col"
                         ],
                         [{"inbound": ["pseudo_column_schema", "inbound_4_long_table_name_fk"]}, "foreign key column name to main"],
                         "asset",
@@ -470,7 +488,7 @@ exports.execute = function (options) {
                         "3": "main fk cm",
                         "7": "inbound cm",
                         "8": "association table cm",
-                        "20": "asset cm"
+                        "22": "asset cm"
                     };
 
                     for (var i in expectedComments) {
@@ -485,7 +503,7 @@ exports.execute = function (options) {
                         "3": "main fk",
                         "7": "inbound",
                         "8": "<strong>association table</strong>",
-                        "20": "<strong>asset</strong>"
+                        "22": "<strong>asset</strong>"
                     };
 
                     for (var i in expectedComments) {
@@ -572,7 +590,7 @@ exports.execute = function (options) {
                 it ("if `markdown_name` is defined, should use it.", function () {
                     checkDisplayname(detailedColsWTuple[6], "<strong>Outbound Len 2</strong>", true, "for index=6");
 
-                    checkDisplayname(detailedColsWTuple[19], "<strong>Count Agg</strong>", true, "for index=15");
+                    checkDisplayname(detailedColsWTuple[21], "<strong>Count Agg</strong>", true, "for index=15");
                 });
 
                 describe("if it has aggreagte.", function () {
@@ -598,7 +616,7 @@ exports.execute = function (options) {
             describe("comment, ", function () {
                 it ('if `comment` is defined, should use it.', function () {
                     expect(detailedColsWTuple[6].comment).toBe("outbound len 2 cm", "missmatch for index=6");
-                    expect(detailedColsWTuple[19].comment).toBe("has long values", "missmatch for index=6");
+                    expect(detailedColsWTuple[21].comment).toBe("has long values", "missmatch for index=6");
                 });
 
                 it ("if it has aggregate, should append the aggregate function to the column comment.", function () {
@@ -630,7 +648,8 @@ exports.execute = function (options) {
                         'main_inbound_2_association', 'inbound_2',
                         'inbound_2_outbound_1', 'main_inbound_2_association',
                         'main', 'inbound_2', 'inbound_2', 'inbound_2', 'inbound_2',
-                        'inbound 4 long table name', 'main', 'main', 'outbound_2_inbound_1'
+                        'inbound_2', 'inbound_2', 'inbound 4 long table name',
+                        'main', 'main', 'outbound_2_inbound_1'
                     ]);
                 });
             });
@@ -716,13 +735,20 @@ exports.execute = function (options) {
                 };
 
                 beforeAll(function () {
-                    inboundTwoValues = [
-                        '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:inbound_2/RID=' + findRID("inbound_2","id","01") + '">01, facet: N4IghgdgJiBcAEBtUBnA9gVwE4GMCmc8IAljADRE4AWax+KhiIADAIwgC6Avt0A</a>',
-                        '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:inbound_2/RID=' + findRID("inbound_2","id","02") + '">02, facet: N4IghgdgJiBcAEBtUBnA9gVwE4GMCmc8IAljADRE4AWax+KhiIADAEwgC6Avt0A</a>',
-                        '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:inbound_2/RID=' + findRID("inbound_2","id","03") + '">03, facet: N4IghgdgJiBcAEBtUBnA9gVwE4GMCmc8IAljADRE4AWax+KhiIADAMwgC6Avt0A</a>',
-                        '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:inbound_2/RID=' + findRID("inbound_2","id","04") + '">04, facet: N4IghgdgJiBcAEBtUBnA9gVwE4GMCmc8IAljADRE4AWax+KhiIADACwgC6Avt0A</a>',
-                        '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:inbound_2/RID=' + findRID("inbound_2","id","05") + '">05, facet: N4IghgdgJiBcAEBtUBnA9gVwE4GMCmc8IAljADRE4AWax+KhiIADAKwgC6Avt0A</a>'
-                    ]
+                    var facets = [
+                        "N4IghgdgJiBcAEBtUBnA9gVwE4GMCmc8IAljADRE4AWax+KhiIADAIwgC6Avt0A",
+                        "N4IghgdgJiBcAEBtUBnA9gVwE4GMCmc8IAljADRE4AWax+KhiIADAEwgC6Avt0A",
+                        "N4IghgdgJiBcAEBtUBnA9gVwE4GMCmc8IAljADRE4AWax+KhiIADAMwgC6Avt0A",
+                        "N4IghgdgJiBcAEBtUBnA9gVwE4GMCmc8IAljADRE4AWax+KhiIADACwgC6Avt0A",
+                        "N4IghgdgJiBcAEBtUBnA9gVwE4GMCmc8IAljADRE4AWax+KhiIADAKwgC6Avt0A",
+                        "N4IghgdgJiBcAEBtUBnA9gVwE4GMCmc8IAljADRE4AWax+KhiIADAGwgC6Avt0A",
+                        "N4IghgdgJiBcAEBtUBnA9gVwE4GMCmc8IAljADRE4AWax+KhiIADAOwgC6Avt0A",
+                        "N4IghgdgJiBcAEBtUBnA9gVwE4GMCmc8IAljADRE4AWax+KhiIADABwgC6Avt0A"
+                    ];
+
+                    inboundTwoValues = facets.map(function (facet, index) {
+                        return '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:inbound_2/RID=' + findRID("inbound_2","id","0" + (index+1)) + '">0' + (index+1) + ', facet: ' + facet + '</a>'
+                    });
                 })
 
                 it ("should throw an error if column doesn't have aggregate.", function (done) {
@@ -746,11 +772,11 @@ exports.execute = function (options) {
                 it ("should return a list of values the same size as the given array.", function (done) {
                     detailedColsWTuple[11].getAggregatedValue(mainPage).then(function (val) {
                         expect(val.length).toBe(1, "length missmatch.");
-                        expect(val[0].value).toEqual("5", "missmatch for column index=11");
+                        expect(val[0].value).toEqual("8", "missmatch for column index=11");
                         return detailedColsWTuple[12].getAggregatedValue(mainPage);
                     }).then(function (val) {
                         expect(val.length).toBe(1, "length missmatch.");
-                        expect(val[0].value).toEqual("5", "missmatch for column index=12");
+                        expect(val[0].value).toEqual("8", "missmatch for column index=12");
                         return detailedColsWTuple[13].getAggregatedValue(mainPage);
                     }).then(function (val) {
                         expect(val.length).toBe(1, "length missmatch.");
@@ -784,7 +810,8 @@ exports.execute = function (options) {
 
                     it ("olist should return an ordered list.", function (done) {
                         var value = [
-                            '<li>01</li>', '<li>02</li>', '<li>03</li>', '<li>04</li>', '<li>05</li>'
+                            '<li>01</li>', '<li>02</li>', '<li>03</li>', '<li>04</li>',
+                            '<li>05</li>', '<li>06</li>', '<li>07</li>', '<li>08</li>'
                         ];
                         value = "<ol>\n" + value.join("\n") + "\n</ol>\n";
 
@@ -792,7 +819,23 @@ exports.execute = function (options) {
                     });
 
                     it ("otherwise should return a comma seperated list", function (done) {
-                        testGetAggregatedValue(15, '<p>01, 02, 03, 04, 05</p>\n', true, done);
+                        testGetAggregatedValue(15, '<p>01, 02, 03, 04, 05, 06, 07, 08</p>\n', true, done);
+                    });
+                });
+
+                describe('should honor the given array_options.', function () {
+                    it ("max_length and order should be honored in array entity mode.", function (done) {
+                        /**
+                         * the order is defined in such a way to eliminate one row value at a time.
+                         * each value in the `order` will eliminate one row and in the end only the row with id=05
+                         * will be returned. These are how rows are going to be sorted:
+                         * [05, 04, 06, 03, 07, 02, 08, 01]
+                         */
+                        testGetAggregatedValue(19, "<p>" + inboundTwoValues[4] + "</p>\n", true, done);
+                    });
+
+                    it ("max_length and order should be honored in array scalar mode.", function (done) {
+                        testGetAggregatedValue(20, '<p>2001-01-01T01:01:01, 2005-05-05T05:05:05, <em>No Value</em></p>\n', true, done);
                     });
                 });
 
@@ -802,7 +845,7 @@ exports.execute = function (options) {
                         ref = response.contextualize.detailed;
                         return ref.read(3);
                     }).then(function (p) {
-                        return ref.columns[19].getAggregatedValue(p);
+                        return ref.columns[21].getAggregatedValue(p);
                     }).then(function (val) {
                         // vals must be all empty!
                         expect(val.length).toBe(3, "length missmatch");
@@ -818,7 +861,7 @@ exports.execute = function (options) {
 
                 it ("should handle big page of data.", function (done) {
                     mainRefDetailed.read(22).then(function (page) {
-                        return detailedColsWTuple[19].getAggregatedValue(page);
+                        return detailedColsWTuple[21].getAggregatedValue(page);
                     }).then(function (val) {
                         // the whole intention of test was testing the logic of url limitation,
                         // the values is not important. since all of them are just one row, it will
@@ -869,7 +912,7 @@ exports.execute = function (options) {
                     );
 
                     checkReference(
-                        detailedColsWTuple[22].reference,
+                        detailedColsWTuple[24].reference,
                         "outbound_2_inbound_1",
                         {"and": [
                             {"source": [

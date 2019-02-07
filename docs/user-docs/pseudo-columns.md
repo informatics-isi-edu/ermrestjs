@@ -8,6 +8,32 @@ ERMrestJS **pseudo columns** refer to virtual columns created from key and forei
 
 If you want to just look at some examples, go [here](#examples).
 
+
+## Table of Contents
+
+* [Where To Use](#where-to-use)
+* [Syntax](#syntax)
+  + [Simple Syntax](#simple-syntax)
+  + [General Syntax](#general-syntax)
+    - [source](#source)
+    - [entity (v.s. scalar)](#entity--vs-scalar-)
+    - [markdown_name](#markdown-name)
+    - [comment](#comment)
+    - [aggregate](#aggregate)
+    - [aggregate array_display](#aggregate-array-display)
+    - [aggregate array_options](#aggregate-array-options)
+* [Logic And Heuristics](#logic-and-heuristics)
+  - [Displayname](#displayname)
+  - [Value](#value)
+  - [Sort](#sort)
+* [Examples](#examples)
+  + [Visible Column List](#visible-column-list)
+  + [Visible ForeignKey List](#visible-foreignkey-list)
+  + [Specific Pseudo Columns](#specific-pseudo-columns)
+
+<small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>Table of contents generated with markdown-toc</a></i></small>
+
+
 ## Where To Use
 
 You can use pseudo-columns while defining list of [visible columns](annotation.md#tag-2016-visible-columns) and [visible foreign keys](annotation.md#tag-2016-visible-foreign-keys). You can use any type of pseudo-columns in your list of visible columns, but only the pseudo-columns that have a path to another table will be allowed for visible foreign keys.
@@ -77,6 +103,50 @@ If you have `"aggregate": "array"` or `"aggregate": "array_d"` in your pseudo-co
 - `olist` for ordered bullet list.
 - `ulist` for unordered bullet list.
 - `csv` for comma-seperated values (the default presentation).
+
+
+#### aggregate array_options
+
+If you have `"aggregate": "array"` or `"aggregate": "array_d"` in your pseudo-column definition, you can use `array_options` to change the array of data that client will present. It will not have any effect on the generated ERMrest query and manipulation of the array is happening on the client side. The available options are:
+
+- `order`: An alternative sort method to apply when a client wants to semantically sort by key values. Its syntax is similar to `column_order`.
+  - In scalar mode, you can only sort based on the scalar value of the column (other table columns are not available).
+  - Assuming your path ends with column `col`, the default order is `{"column": "col", "descending": false}`.
+
+
+- `max_length`: A number that defines the maximum number of elements that should be displayed. We are not going to apply any default value for this attribute. If you don't provide any `max_length`, we are going to show all the values that ERMrest returns.
+
+```
+{
+    "source": <a valid path in entity mode>,
+    "entity": true,
+    "aggregate": <array or array_d>,
+    "order": [
+        {
+            "column": <a column in the projected table>,
+            "descending": <boolean value>,
+        },
+        {
+            "column": <another column in the projected table>,
+            "descending": <boolean value>,
+        },
+        ...
+    ],
+    "max_length": <number>
+},
+{
+    "source": <a valid path in scalar mode>,
+    "entity": false,
+    "aggregate": <array or array_d>,
+    "order": [
+        {
+            "column": <the scalar projected column>,
+            "descending": <boolean value>,
+        }
+    ],
+    "max_length": <number>
+}
+```
 
 ## Logic And Heuristics
 

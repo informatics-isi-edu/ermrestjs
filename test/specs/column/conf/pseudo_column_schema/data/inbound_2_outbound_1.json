@@ -18,5 +18,17 @@
     {
         "id": "05",
         "col": "inbound_2_outbound_1 col 05"
+    },
+    {
+        "id": "06",
+        "col": "inbound_2_outbound_1 col 06"
+    },
+    {
+        "id": "07",
+        "col": "inbound_2_outbound_1 col 07"
+    },
+    {
+        "id": "08",
+        "col": "inbound_2_outbound_1 col 08"
     }
 ]
