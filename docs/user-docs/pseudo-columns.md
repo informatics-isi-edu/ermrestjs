@@ -8,29 +8,6 @@ ERMrestJS **pseudo columns** refer to virtual columns created from key and forei
 
 If you want to just look at some examples, go [here](#examples).
 
-
-## Table of Contents
-
-* [Where To Use](#where-to-use)
-* [Syntax](#syntax)
-  + [Simple Syntax](#simple-syntax)
-  + [General Syntax](#general-syntax)
-    - [source](#source)
-    - [entity (v.s. scalar)](#entity--vs-scalar-)
-    - [markdown_name](#markdown-name)
-    - [comment](#comment)
-    - [aggregate](#aggregate)
-    - [aggregate array_display](#aggregate-array-display)
-    - [aggregate array_options](#aggregate-array-options)
-* [Logic And Heuristics](#logic-and-heuristics)
-  - [Displayname](#displayname)
-  - [Value](#value)
-  - [Sort](#sort)
-* [Examples](#examples)
-  + [Visible Column List](#visible-column-list)
-  + [Visible ForeignKey List](#visible-foreignkey-list)
-  + [Specific Pseudo Columns](#specific-pseudo-columns)
-
 ## Where To Use
 
 You can use pseudo-columns while defining list of [visible columns](annotation.md#tag-2016-visible-columns) and [visible foreign keys](annotation.md#tag-2016-visible-foreign-keys). You can use any type of pseudo-columns in your list of visible columns, but only the pseudo-columns that have a path to another table will be allowed for visible foreign keys.
