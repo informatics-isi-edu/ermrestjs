@@ -2634,9 +2634,24 @@
 
     /*
      * @function
+     * @public
+     * @param {String} template The template string to transform
+     * @param {Object} keyValues The key-value pair of object to be used for template tags replacement.
+     * @param {Object} catalog The catalog object created by ermrestJS representing the current catalog from the url
+     * @param {Object} [options] Configuration options.
+     * @return {string} A string produced after templating
+     * @desc Calls the private function to return a string produced as a result of templating using `Handlebars`.
+     */
+    module.renderHandlebarsTemplate = function (template, keyValues, catalog, options) {
+        return module._renderHandlebarsTemplate(template, keyValues, catalog, options);
+    };
+
+    /*
+     * @function
      * @private
      * @param {String} template The template string to transform
      * @param {Object} keyValues The key-value pair of object to be used for template tags replacement.
+     * @param {Object} catalog The catalog object created by ermrestJS representing the current catalog from the url
      * @param {Object} [options] Configuration options.
      * @return {string} A string produced after templating
      * @desc Returns a string produced as a result of templating using `Handlebars`.

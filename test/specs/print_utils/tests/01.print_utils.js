@@ -572,5 +572,17 @@ exports.execute = function (options) {
             });
         });
 
+        describe('module.renderHandlebarsTemplate() should behave the same as module._renderHandlebarsTemplate() for', function () {
+            it('Null and Non-null values', function() {
+                expect(module.renderHandlebarsTemplate("My name is {{name}}", { name: 'Chloe' })).toBe("My name is Chloe");
+                expect(module.renderHandlebarsTemplate("My name is {{name}}", { name: null })).toBe(null);
+                expect(module.renderHandlebarsTemplate("My name is {{name}}", {})).toBe(null);
+                expect(module.renderHandlebarsTemplate("My name is {{#if name}}{{name}}{{/if}}", {})).toBe("My name is ");
+                expect(module.renderHandlebarsTemplate("My name is {{^if name}}{{name}}{{/if}}", {})).toBe("My name is ", "For inverted if with variable");
+                expect(module.renderHandlebarsTemplate("My name is {{^if name}}John{{/if}}", {})).toBe("My name is John", "For inverted if with string");
+                expect(module.renderHandlebarsTemplate("My name is {{#unless name}}Jona{{/unless}}", {})).toBe("My name is Jona", "For unless");
+            });
+        });
+
     });
 };
