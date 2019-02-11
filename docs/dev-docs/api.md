@@ -2903,12 +2903,8 @@ The default information that we want to be logged including catalog, schema_tabl
 #### reference.defaultExportTemplate : <code>string</code>
 Returns a object, that can be used as a default export template.
 It will include:
-- csv of entity API request to the main table.
--  csv of entity API requests for all the related entities that are one level away from the main.
-- csv of attributegroup API requests for all the other related entities.
-  The projection list should include all the columns of the table plus
-  the foreignkey value to the main entity.
-  The request should be grouped by the value of table's key + foreign key value.
+- csv of the main table.
+- csv of all the related entities
 - fetch all the assets. For fetch, we need to provide url, length, and md5 (or other checksum types).
   if these columns are missing from the asset annotation, they won't be added.
 - fetch all the assetes of related tables.
@@ -6141,12 +6137,8 @@ The default information that we want to be logged including catalog, schema_tabl
 #### reference.defaultExportTemplate : <code>string</code>
 Returns a object, that can be used as a default export template.
 It will include:
-- csv of entity API request to the main table.
--  csv of entity API requests for all the related entities that are one level away from the main.
-- csv of attributegroup API requests for all the other related entities.
-  The projection list should include all the columns of the table plus
-  the foreignkey value to the main entity.
-  The request should be grouped by the value of table's key + foreign key value.
+- csv of the main table.
+- csv of all the related entities
 - fetch all the assets. For fetch, we need to provide url, length, and md5 (or other checksum types).
   if these columns are missing from the asset annotation, they won't be added.
 - fetch all the assetes of related tables.
