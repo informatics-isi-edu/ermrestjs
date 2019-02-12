@@ -621,7 +621,7 @@ exports.execute = function (options) {
         describe("table with compact options.", function () {
             it ('should be able to access options in annotation.', function (done) {
                 options.ermRest.resolve(tableCompactOptionsEntityUri, {cid: "test"}).then(function (ref) {
-
+                    var ref = ref.contextualize.compact
                     expect(ref.display.collapseToc).toBeTruthy("Collapse ToC option is not defined");
                     expect(ref.display.hideColumnHeaders).toBeTruthy("Hide Column Headers option is not defined");
                     done();
