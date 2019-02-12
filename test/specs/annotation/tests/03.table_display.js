@@ -64,7 +64,7 @@ exports.execute = function (options) {
             tableNameCatalogAnnot;
 
         var tableCompactOptionsEntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" +
-            tableNameCatalogAnnot;
+            tableNameCompactOptions;
 
         var findRID = function (tableName, id) {
             return options.entities[schemaName][tableName].filter(function (e) {
