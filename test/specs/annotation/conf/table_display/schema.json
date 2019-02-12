@@ -623,6 +623,38 @@
                 }
             }
         }
+    },
+    "table_w_compact_options": {
+        "table_name": "table_w_compact_options",
+        "schema_name": "schema_table_display",
+        "kind": "table",
+        "keys": [
+            {"unique_columns": ["id"]}
+        ],
+        "foreign_keys": [],
+        "column_definitions": [
+            {
+                "name": "id",
+                "nullok": false,
+                "type": {
+                    "typename": "integer"
+                }
+            },
+            {
+                "name": "text_col",
+                "type": {
+                    "typename": "text"
+                }
+            }
+        ],
+        "annotations": {
+            "tag:isrd.isi.edu,2016:table-display": {
+                "compact": {
+                    "collapse_toc_panel": true,
+                    "hide_column_headers": true
+                }
+            }
+        }
     }
   },
   "schema_name": "schema_table_display"

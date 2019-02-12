@@ -17,7 +17,8 @@ exports.execute = function (options) {
             tableName10 = "table_w_rowname_fkeys3",
             tableName11 = "table_w_table_display_annotation_w_title",
             tableNameWoAnnot = "table_wo_annotation",
-            tableNameCatalogAnnot = "table_w_rowname_catalog_snapshot";
+            tableNameCatalogAnnot = "table_w_rowname_catalog_snapshot",
+            tableNameCompactOptions = "table_w_compact_options";
 
         var table1EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" +
             schemaName + ":" + tableName1 + "/@sort(id)";
@@ -61,6 +62,9 @@ exports.execute = function (options) {
 
         var tableCatalogAnnotEntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" +
             tableNameCatalogAnnot;
+
+        var tableCompactOptionsEntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" +
+            tableNameCompactOptions;
 
         var findRID = function (tableName, id) {
             return options.entities[schemaName][tableName].filter(function (e) {
@@ -606,6 +610,20 @@ exports.execute = function (options) {
                     var expected = "catalog_snapshot:" + catalog_id + ", catalog_id:" + catalog_id;
 
                     expect(page.tuples[0].displayname.value).toEqual(expected, "catalog snapshot displayname mismatch.");
+                    done();
+                }).catch(function (err) {
+                    console.log(err);
+                    done.fail();
+                });
+            });
+        });
+
+        describe("table with compact options.", function () {
+            it ('should be able to access options in annotation.', function (done) {
+                options.ermRest.resolve(tableCompactOptionsEntityUri, {cid: "test"}).then(function (ref) {
+                    var ref = ref.contextualize.compact
+                    expect(ref.display.collapseToc).toBeTruthy("Collapse ToC option is not defined");
+                    expect(ref.display.hideColumnHeaders).toBeTruthy("Hide Column Headers option is not defined");
                     done();
                 }).catch(function (err) {
                     console.log(err);

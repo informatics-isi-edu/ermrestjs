@@ -1842,10 +1842,19 @@
                         this._display._rowOrder = _processColumnOrderList(annotation.row_order, this._table);
                     }
 
-
                     // Set default page size value
                     if (typeof annotation.page_size === 'number') {
                         this._display.defaultPageSize = annotation.page_size;
+                    }
+
+                    // set whether the column headers should be hidden (applies to record app currently)
+                    if (annotation.hide_column_headers) {
+                        this._display.hideColumnHeaders = annotation.hide_column_headers;
+                    }
+
+                    // set whether the table of contents should be collapsed by default (applies to record app currently)
+                    if (annotation.collapse_toc_panel) {
+                        this._display.collapseToc = annotation.collapse_toc_panel;
                     }
 
                     // If module is not empty then set its associated properties
