@@ -460,8 +460,52 @@
                     ]
                 }
             ],
-            "entityCount": 0,
-            "foreign_keys": [],
+            "foreign_keys": [
+                {
+                    "names": [["columns_schema", "table_w_simple_key_fk1"]],
+                    "foreign_key_columns": [
+                      {
+                          "schema_name": "columns_schema",
+                          "table_name": "table_w_simple_key",
+                          "column_name": "fk_col_1"
+                      }
+                    ],
+                    "referenced_columns": [
+                        {
+                            "schema_name": "columns_schema",
+                            "table_name": "table_w_composite_key",
+                            "column_name": "id"
+                        }
+                    ]
+                },
+                {
+                    "names": [["columns_schema", "table_w_simple_key_fk2"]],
+                    "foreign_key_columns": [
+                      {
+                          "schema_name": "columns_schema",
+                          "table_name": "table_w_simple_key",
+                          "column_name": "fk_col_1"
+                      },
+                      {
+                          "schema_name": "columns_schema",
+                          "table_name": "table_w_simple_key",
+                          "column_name": "fk_col_2"
+                      }
+                    ],
+                    "referenced_columns": [
+                        {
+                            "schema_name": "columns_schema",
+                            "table_name": "table_w_composite_key",
+                            "column_name": "id_1"
+                        },
+                        {
+                            "schema_name": "columns_schema",
+                            "table_name": "table_w_composite_key",
+                            "column_name": "id_2"
+                        }
+                    ]
+                }
+            ],
             "table_name": "table_w_simple_key",
             "schema_name": "columns_schema",
             "column_definitions": [
@@ -483,12 +527,25 @@
                     "type": {
                         "typename": "integer"
                     }
+                },
+                {
+                    "name": "fk_col_1",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "fk_col_2",
+                    "type": {
+                        "typename": "text"
+                    }
                 }
             ],
             "annotations": {
                 "tag:isrd.isi.edu,2016:visible-columns": {
                     "detailed": ["name", "value"],
-                    "compact": ["name"]
+                    "compact": ["name"],
+                    "compact/brief": [["columns_schema", "table_w_simple_key_fk1"]]
                 },
                 "tag:isrd.isi.edu,2016:visible-foreign-keys": {}
             }

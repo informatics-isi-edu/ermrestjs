@@ -1397,7 +1397,11 @@ Object.defineProperty(ForeignKeyPseudoColumn.prototype, "displayname", {
                 isHTML = this._baseCols[0].displayname.isHTML;
                 unformatted = this._baseCols[0].displayname.unformatted;
 
-                if (this._baseCols[0].memberOfForeignKeys.length > 1) { // disambiguate
+                // disambiguate
+                var otherSimpleFks = this._baseCols[0].memberOfForeignKeys.some(function (fk) {
+                    return fk !== foreignKey && fk.simple;
+                });
+                if (otherSimpleFks) {
                     value += " ("  + foreignKey.key.table.displayname.value + ")";
                     unformatted += " (" + foreignKey.key.table.displayname.unformatted + " )";
                     if (!isHTML) {

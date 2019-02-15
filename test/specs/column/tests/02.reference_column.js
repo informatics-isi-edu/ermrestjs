@@ -9,6 +9,7 @@ exports.execute = function (options) {
             tableName = "columns_table", // the structure of this table is explained in 14.pseudo_columns.js
             tableWithAsset = "table_w_asset", // the structure of this table is exlpained in 14.pseudo_columns.js
             tableWithDiffColTypes = "table_w_diff_col_types",
+            tableWSimpleKey = "table_w_simple_key",
             entityId = 1,
             limit = 1,
             entryContext = "entry",
@@ -24,6 +25,9 @@ exports.execute = function (options) {
 
         var singleEnitityUriDiffColTypes = options.url + "/catalog/" + catalog_id + "/entity/" +
             schemaName + ":" + tableWithDiffColTypes + "/id=" + entityId;
+
+        var tableWSimpleKeyUri = options.url + "/catalog/" + catalog_id + "/entity/" +
+            schemaName + ":" + tableWSimpleKey;
 
         var chaiseURL = "https://dev.isrd.isi.edu/chaise";
         var recordURL = chaiseURL + "/record";
@@ -248,9 +252,19 @@ exports.execute = function (options) {
                             checkDisplayname(compactColumns[2].displayname, "Column 2 Name", false);
                         });
 
-                        it('should be disambiguated with Table.displayname when there are multiple foreignkeys.', function () {
+                        it('should be disambiguated with Table.displayname when there are multiple simple foreignkeys.', function () {
                             checkDisplayname(compactColumns[3].displayname, "Column 3 Name (table_w_simple_key)", false);
                             checkDisplayname(compactColumns[4].displayname, "Column 3 Name (table_w_simple_key_2)", false);
+                        });
+
+                        it ("should not add table name if the other foreignKey is composite.", function (done) {
+                            options.ermRest.resolve(tableWSimpleKeyUri,  {cid: "test"}).then(function (response) {
+                                var ref = response.contextualize.compactBrief;
+                                checkDisplayname(ref.columns[0].displayname, "fk_col_1", false);
+                                done();
+                            }).catch(function (err) {
+                                done.fail(err);
+                            });
                         });
                     });
 

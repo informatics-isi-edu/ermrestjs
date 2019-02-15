@@ -650,7 +650,6 @@ exports.execute = function (options) {
                         expect(compactColumns[9].name).toBe("col_7");
                     });
 
-
                     it('in edit or create context should not include the columns, and just create PseudoColumn for them.', function () {
                         var expectedCols = [
                             "id", ["columns_schema", "outbound_fk_1"].join("_"), ["columns_schema", "outbound_fk_2"].join("_"), ["columns_schema", "outbound_fk_3"].join("_"), ["columns_schema", "outbound_fk_4"].join("_"),
