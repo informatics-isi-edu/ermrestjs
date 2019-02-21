@@ -432,6 +432,23 @@ exports.execute = function(options) {
                     }) (notNullColumns[i]);
                 }
             });
+
+            describe('being a system column, ', function(){
+                var systemColumns = ["RID", "RCB", "RMB", "RCT", "RMT"];
+                var comments = {
+                    "RID": "Persistent, citable resource identifier",
+                    "RCB": "Record creator",
+                    "RMB": "Record last modifier",
+                    "RCT": "Record creation timestamp",
+                    "RMT": "Record last modified timestamp"
+                };
+
+                it('should have a default comment.', function(){
+                    for(var i=0;i<systemColumns.length;i++){
+                        expect(table1_schema2.columns.get(systemColumns[i]).comment).toBe(comments[systemColumns[i]], "Column "+ systemColumns[i]+ " doesn't have the correct default comment.");
+                    }
+                });
+            });
         });
     });
 };

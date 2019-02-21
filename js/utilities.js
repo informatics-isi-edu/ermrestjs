@@ -3344,3 +3344,11 @@
         NO_UPDATE: "No permissions to update.",
         DISABLED_COLUMNS: "All columns are disabled."
     });
+
+    module._defaultColumnComment = Object.freeze({
+        RID: "Persistent, citable resource identifier",
+        RCB: "Record creator",
+        RMB: "Record last modifier",
+        RCT: "Record creation timestamp",
+        RMT: "Record last modified timestamp"
+    });
