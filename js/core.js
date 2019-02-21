@@ -2030,6 +2030,11 @@
          */
         this.comment = jsonColumn.comment;
 
+        // If the comment is not defined for a system column, then it is assigned a default comment
+        if((this.comment == null || this.comment == undefined) && this.isSystemColumn){
+            this.comment = module._defaultColumnComment[this.name];
+        }
+
         /**
          *
          * @type {boolean}
