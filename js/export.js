@@ -312,7 +312,7 @@ var ERMrest = (function(module) {
      * These are the same column names that we are using for row-name generation.
      *
      * @private
-     * @param  {ERMrest.referene} ref       the reference that we want the output for
+     * @param  {ERMrest.reference} ref       the reference that we want the output for
      * @param  {String} tableAlias          the alias that is used for projecting table (last table in path)
      * @param  {String=} path               the string that will be prepended to the path
      * @param  {String=} addMainKey         whether we want to add the key of the main table.

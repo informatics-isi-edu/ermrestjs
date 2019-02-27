@@ -228,11 +228,11 @@ exports.execute = function (options) {
                 //ref_table_outbound_fks_key
                 expect(compactColumns[0].name).toBe("l-7AKq6z2IDzE63S0vQNPg", "name missmatch for compact, index=0");
                 //outbound_fk_8
-                expect(compactColumns[19].name).toBe("xJcbAuoxdRZ08TEXbbZ5VQ", "name missmatch for compact, index=13");
+                expect(compactColumns[19].name).toBe("Q5M6jdxFlTp2p682Kn-2UQ", "name missmatch for compact, index=13");
                 //inbound_related_to_columns_table_2_fkey
                 expect(detailedColumns[3].name).toBe("tKEjVbHI9RPuBFya-7_j6Q", "name missmatch for detailed, index=3");
                 //outbound_fk_7
-                expect(compactColumns[20].name).toBe("9CKS172K3jKYzR5qgRLvVw", "name missmatch for compact, index=14");
+                expect(compactColumns[20].name).toBe("kAAK8J6ar0hTrADb36nOIw", "name missmatch for compact, index=14");
             });
 
             it('for other columns should return the base column\'s name.', function () {
@@ -625,6 +625,56 @@ exports.execute = function (options) {
                 });
             });
         });
+
+        describe(".getDefaultDisplay", function () {
+            var urlPrefix = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":",
+                data = {"id": 1, "col_3": "v3", "col_4": "v4", "col 5": "v5", "col_6": "v6"};
+
+            var testDefaultDisplay = function (result, rowname, values, refUri) {
+                expect(result.rowname.value).toEqual(rowname, "rowname missmatch.");
+                expect(result.values).toEqual(values, "values missmatch.");
+                if (refUri == null) {
+                    expect(result.reference).toEqual(null, "reference missmatch.");
+                } else {
+                    expect(result.reference.uri).toEqual(refUri, "reference.uri missmatch.");
+                }
+            };
+
+            describe("for foreign key pseudo columns, ", function () {
+                it ("should return null value if the given values are not sufficient.", function () {
+                    testDefaultDisplay(
+                        compactColumns[20].getDefaultDisplay({"id": 1}),
+                        null, {}, null
+                    );
+                });
+
+                it ("should return the row-name if data is sufficient.", function () {
+                    testDefaultDisplay(
+                        compactColumns[20].getDefaultDisplay(data),
+                        "v4 , v5",
+                        {"id_1": "v4", "id_2": "v5"},
+                        urlPrefix + "table_w_composite_key/id_1=v4&id_2=v5"
+                    );
+                });
+
+                it ("should return a default col1:col2 if data is sufficient for link but not for rowname.", function () {
+                    testDefaultDisplay(
+                        compactColumns[18].getDefaultDisplay(data),
+                        "v3:v6",
+                        {"id_1": "v3", "id_2": "v6"},
+                        urlPrefix + "table_w_composite_key_2/id_1=v3&id_2=v6"
+                    );
+                });
+            });
+
+            it ("should not be available for other column types.", function () {
+                expect(compactColumns[0].getDefaultDisplay).toBe(undefined, "missmatch for index=0");
+                for (var i = 5; i < 17; i++) {
+                    expect(compactColumns[i].getDefaultDisplay).toBe(undefined, "missmatch for index=" + i);
+                }
+            });
+        });
+
 
         describe('.formatPresentation, ', function () {
             var val;
