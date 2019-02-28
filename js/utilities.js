@@ -483,7 +483,7 @@
             if (!obj.hasOwnProperty(k)) continue;
             val = obj[k];
 
-            // we don't accept custom type objects (we're not detecting circular referene)
+            // we don't accept custom type objects (we're not detecting circular reference)
             if (isObject(val) && (val.constructor && val.constructor.name !== "Object")) continue;
 
             newK = k;
@@ -801,10 +801,6 @@
 
     _generateForeignKeyName = function (fk, isInbound) {
         var eTable = isInbound ? fk._table : fk.key.table;
-
-        if (!fk.simple) {
-            return module.generatePseudoColumnHashName(fk._constraintName);
-        }
 
         if (!isInbound) {
             return module.generatePseudoColumnHashName({

@@ -1036,15 +1036,6 @@ exports.execute = function (options) {
         })).toEqual(fks, "fks missmatch" + (colStr ? (" for " + colStr) : "."));
     }
 
-    function checkRelatedReference (ref, table, facets, origFKR, origColumnName, displayname, parentDisplayname, colStr) {
-        expect(ref.origFKR.toString()).toEqual(origFKR, "origFKR missmatch" + (colStr ? (" for " + colStr) : "."));
-        expect(ref.table.name).toEqual(table, "table missmatch" + (colStr ? (" for " + colStr) : "."));
-        expect(ref.location.facets.decoded).toEqual(facets, "facets missmatch" + (colStr ? (" for " + colStr) : "."));
-        expect(ref.origColumnName).toEqual(origColumnName, "origColumnName missmatch" + (colStr ? (" for " + colStr) : "."));
-        expect(ref.displayname.value).toEqual(displayname, "displayname missmatch" + (colStr ? (" for " + colStr) : "."));
-        expect(ref.parentDisplayname.value).toEqual(parentDisplayname, "parentDisplayname missmatch" + (colStr ? (" for " + colStr) : "."));
-    }
-
     function checkReference (ref, table, facets, colStr) {
         expect(ref.table.name).toEqual(table, "table missmatch" + (colStr ? (" for " + colStr) : "."));
         if (facets) {

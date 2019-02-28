@@ -1247,49 +1247,52 @@ ForeignKeyPseudoColumn.prototype.filteredRef = function(data, linkedData) {
     // TODO we might need to check the table of location, so it is indeed this.table
     return new Reference(location, this.table.schema.catalog);
 };
-ForeignKeyPseudoColumn.prototype._determineDefaultValue = function () {
+ForeignKeyPseudoColumn.prototype.getDefaultDisplay = function (rowValues) {
     var fkColumns = this.foreignKey.colset.columns,
         keyColumns = this.foreignKey.key.colset.columns,
         mapping = this.foreignKey.mapping,
         table = this.table,
         keyPairs = [],
         keyValues = [],
-        caption,
+        rowName, caption, isHTML,
         col,
         keyCol,
         isNull = false,
         i;
 
-    var defaultStr = null, defaultValues = {}, defaultRef = null;
+    var rownameValue = null, fkValues = {}, ref = null;
 
+    //make sure we have all the values and map them to the referred table
     for (i = 0; i < fkColumns.length; i++) {
-        if (fkColumns[i].default === null || fkColumns[i].default === undefined) {
+        if (rowValues[fkColumns[i].name] == null) {
             isNull = true; //return null if one of them is null;
             break;
         }
-        defaultValues[mapping.get(fkColumns[i]).name] = fkColumns[i].default;
+        fkValues[mapping.get(fkColumns[i]).name] = rowValues[fkColumns[i].name];
     }
 
     if (!isNull) {
 
-        // get the values for using in reference creation
+        // get the fkValues for using in reference creation
         for (i = 0; i < keyColumns.length; i++) {
             col = keyColumns[i];
-            keyValues.push(col.formatvalue(defaultValues[col.name], this._context));
+            keyValues.push(col.formatvalue(fkValues[col.name], this._context));
             keyPairs.push(
-                module._fixedEncodeURIComponent(col.name) + "=" + module._fixedEncodeURIComponent(defaultValues[col.name])
+                module._fixedEncodeURIComponent(col.name) + "=" + module._fixedEncodeURIComponent(fkValues[col.name])
             );
         }
 
         // use row name as the caption
-        caption = module._generateRowName(this.table, this._context, defaultValues).value;
+        rowName = module._generateRowName(this.table, this._context, fkValues);
+        caption = rowName.value; isHTML = rowName.isHTML;
 
         // use "col_1:col_2:col_3"
         if (caption.trim() === '') {
             caption = keyValues.join(":");
+            isHTML = false;
         }
 
-        defaultStr = caption.trim() !== '' ? caption : null;
+        rownameValue = caption.trim() !== '' ? caption : null;
 
         var refURI = [
             table.schema.catalog.server.uri ,"catalog" ,
@@ -1297,12 +1300,33 @@ ForeignKeyPseudoColumn.prototype._determineDefaultValue = function () {
             [module._fixedEncodeURIComponent(table.schema.name),module._fixedEncodeURIComponent(table.name)].join(":"),
             keyPairs.join("&")
         ].join("/");
-        defaultRef = new Reference(module.parse(refURI), table.schema.catalog);
+        ref = new Reference(module.parse(refURI), table.schema.catalog);
     }
 
-    this._default = defaultStr;
-    this._defaultValues = defaultValues;
-    this._defaultReference = defaultRef;
+    return {
+        rowname: {value: rownameValue, isHTML: isHTML},
+        values: fkValues,
+        reference: ref
+    };
+};
+ForeignKeyPseudoColumn.prototype._determineDefaultValue = function () {
+    var res = {rowname: {value: null}, reference: null, values: {}};
+    var defaultValues = {};
+
+    // make sure all the foreign key columns have default
+    var allSet = this.foreignKey.colset.columns.every(function (col) {
+        defaultValues[col.name] = col.default;
+        return col.default != null;
+    });
+
+    if (allSet) {
+        res = this.getDefaultDisplay(defaultValues);
+    }
+
+    // set the attributes
+    this._default = res.rowname.value;
+    this._defaultValues = res.values;
+    this._defaultReference = res.reference;
 };
 ForeignKeyPseudoColumn.prototype.formatPresentation = function(data, context, options) {
     var nullValue = this._getNullValue(context);

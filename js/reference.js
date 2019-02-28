@@ -2853,10 +2853,8 @@
          *
          * 0. keep track of the linkage and save some attributes:
          *      0.1 origFKR: the foreign key that created this related reference (used in chaise for autofill)
-         *      0.2 origColumnName: the name of pseudocolumn that represents origFKR (used in chaise for autofill)
-         *      0.3 parentDisplayname: the displayname of parent
+         *      0.2 parentDisplayname: the displayname of parent
          *          - logic: foriengkey's to_name or this.displayname
-         *
          *
          * 1. If it's pure and binary association. (current reference: T1) <-F1-(A)-F2-> (T2)
          *      1.1 displayname: F2.to_name or T2.displayname
@@ -2902,7 +2900,7 @@
             // the foreignkey that has created this link (link from this.reference to relatedReference)
             newRef.origFKR = fkr; // it will be used to trace back the reference
 
-            // the name of pseudocolumn that represents origFKR
+            // TODO should be removed (not needed anymore)
             newRef.origColumnName = _generateForeignKeyName(fkr);
 
             // the tuple of the main table
