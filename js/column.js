@@ -286,9 +286,18 @@ ReferenceColumn.prototype = {
      *
      * @type {Object}
      */
-    get _display() {
+    get display() {
         if (this._display_cached === undefined) {
-            this._display_cached = this._simple ? this._baseCols[0].getDisplay(this._context) : null;
+            this._display_cached = this._simple ? this._baseCols[0].getDisplay(this._context) : {};
+
+            // attach display defined on the source
+            if (this.sourceObject && this.sourceObject.display) {
+                var displ = this.sourceObject.display;
+                if (typeof displ.markdown_pattern === "string") {
+                    this._display_cached.sourceMarkdownPattern = displ.markdown_pattern;
+                    this._display_cached.sourceTemplateEngine = displ.template_engine;
+                }
+            }
         }
         return this._display_cached;
     },
@@ -324,6 +333,41 @@ ReferenceColumn.prototype = {
      * @returns {Object} A key value pair containing value and isHTML that detemrines the presentation.
      */
     formatPresentation: function(data, context, options) {
+        data = data || {};
+        if (this.display.sourceMarkdownPattern) {
+            var res, keyValues = {}, cols = this._baseCols;
+
+            if (this._simple) {
+                keyValues = {
+                    "$self": cols[0].formatvalue(data[cols[0].name], context, options),
+                    "$_self": data[cols[0].name]
+                };
+            } else {
+                var values = {};
+                cols.forEach(function (col) {
+                    values[col.name] = col.formatvalue(data[col.name], context, options);
+                    values["_" + col.name] = data[col.name];
+                });
+                keyValues.$self = {values : values};
+            }
+
+            res = module._renderTemplate(
+                this.display.sourceMarkdownPattern,
+                keyValues,
+                this.table,
+                context,
+                {templateEngine: this.display.sourceTemplateEngine, formatted: true}
+            );
+
+            if (res === null || res.trim() === '') {
+                res = module._getNullValue(this.table, context, [this.table, this.table.schema]);
+                return {isHTML: true, value: res, unformatted: res};
+            }
+
+            var utils = module._formatUtils;
+            return {isHTML: true, value: utils.printMarkdown(res, options), unformatted: res};
+        }
+
         if (this._simple) {
             return this._baseCols[0].formatPresentation(data, context, options);
         }
@@ -476,6 +520,8 @@ module._extends(PseudoColumn, ReferenceColumn);
  * @returns {Object} A key value pair containing value and isHTML that detemrines the presentation.
  */
 PseudoColumn.prototype.formatPresentation = function(data, context, options) {
+    data = data || {};
+
     var nullValue = {
         isHTML: false,
         value: this._getNullValue(context),
@@ -505,6 +551,26 @@ PseudoColumn.prototype.formatPresentation = function(data, context, options) {
     // not in entity mode, just return the column value.
     if (!this.isEntityMode) {
         return PseudoColumn.super.formatPresentation.call(this, data, context, options);
+    }
+
+    if (this.display.sourceMarkdownPattern) {
+        var keyValues = module._getRowTemplateVariables(this.table, context, data);
+
+        res = module._renderTemplate(
+            this.display.sourceMarkdownPattern,
+            {$self: keyValues},
+            this.table,
+            context,
+            {templateEngine: this.display.sourceTemplateEngine, formatted: true}
+        );
+
+        if (res === null || res.trim() === '') {
+            res = module._getNullValue(this.table, context, [this.table, this.table.schema]);
+            return {isHTML: true, value: res, unformatted: res};
+        }
+
+        var utils = module._formatUtils;
+        return {isHTML: true, value: utils.printMarkdown(res, options), unformatted: res};
     }
 
     // in entity mode, return the foreignkey value
@@ -660,7 +726,7 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
             val = val.slice(0, maxLength);
         }
 
-        // get the formatted values as an array
+        // formatted array result
         var arrayRes = printUtils.printArray(
             val.map(getFormattedValue),
             {
@@ -669,24 +735,54 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
             }
         );
 
-        // print the array in a comma seperated value (list) or bullets
         var res = "";
-        switch (self.sourceObject.array_display) {
-            case "ulist":
-                arrayRes.forEach(function (arrayVal) {
-                    res += "* " + arrayVal + " \n";
-                });
-                break;
-            case "olist":
-                arrayRes.forEach(function (arrayVal, i) {
-                    res += (i+1) + ". " + arrayVal + " \n";
-                });
-                break;
-            case "raw":
-                res = arrayRes.join(" ");
-                break;
-            default: //csv
-                res = arrayRes.join(", ");
+        if (self.display.sourceMarkdownPattern) {
+            var keyValues = {};
+            if (!isRow) {
+                keyValues = {"$self": arrayRes, "$_self": val};
+            } else {
+                keyValues = {
+                    "$self": val.map(function (v) {
+                        return module._getRowTemplateVariables(column.table, context, v);
+                    })
+                };
+            }
+
+            res = module._renderTemplate(
+                self.display.sourceMarkdownPattern,
+                keyValues,
+                column.table,
+                context,
+                {templateEngine: self.display.sourceTemplateEngine, formatted: true}
+            );
+
+            if (res === null || res.trim() === '') {
+                res = module._getNullValue(column.table, context, [column.table, column.table.schema]);
+            }
+        } else {
+            var array_display = self.sourceObject.array_display;
+            if (self.sourceObject.display && typeof self.sourceObject.display.array_display === "string") {
+                array_display = self.sourceObject.display.array_display;
+            }
+
+            // print the array in a comma seperated value (list) or bullets
+            switch (array_display) {
+                case "ulist":
+                    arrayRes.forEach(function (arrayVal) {
+                        res += "* " + arrayVal + " \n";
+                    });
+                    break;
+                case "olist":
+                    arrayRes.forEach(function (arrayVal, i) {
+                        res += (i+1) + ". " + arrayVal + " \n";
+                    });
+                    break;
+                case "raw":
+                    res = arrayRes.join(" ");
+                    break;
+                default: //csv
+                    res = arrayRes.join(", ");
+            }
         }
         return printUtils.printMarkdown(res);
     };
@@ -778,23 +874,44 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
                 return;
             }
 
-            // cnt and cnt_d are special since they will generate integer always
-            if (["cnt", "cnt_d"].indexOf(self.sourceObject.aggregate) !== -1) {
-                result.push({value: module._formatUtils.printInteger(value.v), isHTML: false});
-                return;
-            }
-
             // array formatting is different
             if (self.sourceObject.aggregate.indexOf("array") === 0){
                 result.push({value: getArrayValue(value.v), isHTML: true});
                 return;
             }
 
-            var isHTML = (column.type.name === "markdown");
-            var res = getFormattedValue(value.v);
+            var formatted, isHTML;
+
+            // cnt and cnt_d are special since they will generate integer always
+            if (["cnt", "cnt_d"].indexOf(self.sourceObject.aggregate) !== -1) {
+                isHTML = false;
+                formatted = module._formatUtils.printInteger(value.v);
+            } else {
+                isHTML = (column.type.name === "markdown");
+                formatted = getFormattedValue(value.v);
+            }
+
+            var res = formatted;
+            if (self.display.sourceMarkdownPattern) {
+                isHTML = true;
+                res = module._renderTemplate(
+                    self.display.sourceMarkdownPattern,
+                    { "$self": formatted, "$_self": value.v },
+                    column.table,
+                    context,
+                    {templateEngine: self.display.sourceTemplateEngine, formatted: true}
+                );
+
+                if (res === null || res.trim() === '') {
+                    res = module._getNullValue(column.table, context, [column.table, column.table.schema]);
+                    isHTML = false;
+                }
+            }
+
             if (isHTML) {
                 res = printUtils.printMarkdown(res);
             }
+
             result.push({isHTML: isHTML, value: res});
         });
 
@@ -1329,12 +1446,33 @@ ForeignKeyPseudoColumn.prototype._determineDefaultValue = function () {
     this._defaultReference = res.reference;
 };
 ForeignKeyPseudoColumn.prototype.formatPresentation = function(data, context, options) {
+    data = data || {};
+    if (this.display.sourceMarkdownPattern) {
+        var keyValues = module._getRowTemplateVariables(this.table, context, data);
+
+        res = module._renderTemplate(
+            this.display.sourceMarkdownPattern,
+            {$self: keyValues},
+            this.table,
+            context,
+            {templateEngine: this.display.sourceTemplateEngine, formatted: true}
+        );
+
+        if (res === null || res.trim() === '') {
+            res = module._getNullValue(this.table, context, [this.table, this.table.schema]);
+            return {isHTML: true, value: res, unformatted: res};
+        }
+
+        var utils = module._formatUtils;
+        return {isHTML: true, value: utils.printMarkdown(res, options), unformatted: res};
+    }
+
     var nullValue = this._getNullValue(context);
     var pres = module._generateRowPresentation(this.foreignKey.key, data, context);
     return pres ? pres: {isHTML: false, value: nullValue, unformatted: nullValue};
 };
 ForeignKeyPseudoColumn.prototype._determineSortable = function () {
-    var display = this._display, useColumn = false, baseCol;
+    var display = this.display, useColumn = false, baseCol;
 
     this._sortColumns_cached = [];
     this._sortable = false;
@@ -1486,10 +1624,18 @@ Object.defineProperty(ForeignKeyPseudoColumn.prototype, "comment", {
         return this._comment;
     }
 });
-Object.defineProperty(ForeignKeyPseudoColumn.prototype, "_display", {
+Object.defineProperty(ForeignKeyPseudoColumn.prototype, "display", {
     get: function () {
         if (this._display_cached === undefined) {
             this._display_cached = this.foreignKey.getDisplay(this._context);
+            // attach display defined on the source
+            if (this.sourceObject && this.sourceObject.display) {
+                var displ = this.sourceObject.display;
+                if (typeof displ.markdown_pattern === "string") {
+                    this._display_cached.sourceMarkdownPattern = displ.markdown_pattern;
+                    this._display_cached.sourceTemplateEngine = displ.template_engine;
+                }
+            }
         }
         return this._display_cached;
     }
@@ -1553,12 +1699,34 @@ module._extends(KeyPseudoColumn, ReferenceColumn);
  * @return {Object} A key value pair containing value and isHTML that detemrines the presentation.
  */
 KeyPseudoColumn.prototype.formatPresentation = function(data, context, options) {
+    data = data || {};
     var nullValue = this._getNullValue(context);
+    if (this.display.sourceMarkdownPattern) {
+        // TODO could be improved, we don't need to compute this again
+        var keyValues = module._getRowTemplateVariables(this.table, context, data);
+
+        res = module._renderTemplate(
+            this.display.sourceMarkdownPattern,
+            {$self: keyValues},
+            this.table,
+            context,
+            {templateEngine: this.display.sourceTemplateEngine, formatted: true}
+        );
+
+        if (res === null || res.trim() === '') {
+            res = module._getNullValue(this.table, context, [this.table, this.table.schema]);
+            return {isHTML: true, value: res, unformatted: res};
+        }
+
+        var utils = module._formatUtils;
+        return {isHTML: true, value: utils.printMarkdown(res, options), unformatted: res};
+    }
+
     var pres = module._generateKeyPresentation(this.key, data, context, options);
     return pres ? pres : {isHTML: false, value: nullValue, unformatted: nullValue};
  };
 KeyPseudoColumn.prototype._determineSortable = function () {
-    var display = this._display, useColumn = false, baseCol;
+    var display = this.display, useColumn = false, baseCol;
 
     this._sortColumns_cached = [];
     this._sortable = false;
@@ -1629,10 +1797,18 @@ Object.defineProperty(KeyPseudoColumn.prototype, "default", {
         return undefined;
     }
 });
-Object.defineProperty(KeyPseudoColumn.prototype, "_display", {
+Object.defineProperty(KeyPseudoColumn.prototype, "display", {
     get: function () {
         if (this._display_cached === undefined) {
             this._display_cached = this.key.getDisplay(this._context);
+            // attach display defined on the source
+            if (this.sourceObject && this.sourceObject.display) {
+                var displ = this.sourceObject.display;
+                if (typeof displ.markdown_pattern === "string") {
+                    this._display_cached.sourceMarkdownPattern = displ.markdown_pattern;
+                    this._display_cached.sourceTemplateEngine = displ.template_engine;
+                }
+            }
         }
         return this._display_cached;
     }
@@ -1696,18 +1872,19 @@ AssetPseudoColumn.prototype._determineInputDisabled = function (context) {
 
 // properties to be overriden:
 AssetPseudoColumn.prototype.formatPresentation = function(data, context, options) {
+    data = data || {};
     // in edit return the original data
     if (module._isEntryContext(context)) {
         return { isHTML: false, value: data[this._baseCol.name], unformatted: data[this._baseCol.name]};
     }
 
-    // if has column-display annotation, use it
-    if (this._baseCol.getDisplay(context).isMarkdownPattern) {
-        return this._baseCol.formatPresentation(data, context, options);
+    // if column has column-display annotation, use it
+    if (this.display.sourceMarkdownPattern || this._baseCol.getDisplay(context).isMarkdownPattern) {
+        return AssetPseudoColumn.super.formatPresentation.call(this, data, context, options);
     }
 
     // if null, return null value
-    if (typeof data !== 'object' || typeof data[this._baseCol.name] === 'undefined' || data[this._baseCol.name] === null) {
+    if (typeof data[this._baseCol.name] === 'undefined' || data[this._baseCol.name] === null) {
         return { isHTML: false, value: this._getNullValue(context), unformatted: this._getNullValue(context) };
     }
 
@@ -1894,6 +2071,8 @@ function InboundForeignKeyPseudoColumn (reference, relatedReference, sourceObjec
      */
     this.reference = relatedReference;
     this.reference.session = reference._session;
+
+    this.reference.pseudoColumn = this;
 
     /**
      * The table that this pseudo-column represents

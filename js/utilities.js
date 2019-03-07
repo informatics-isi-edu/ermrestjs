@@ -996,7 +996,7 @@
                     keyValues.$fkeys[cons[0]] = {};
                 }
 
-                keyValues.$fkeys[cons[0]][cons[1]] = {
+                var fkTempVal = {
                     "values": getTableValues(linkedData[fk.name], fk.key.table),
                     "rowName": p.unformatted,
                     "uri": {
@@ -1004,7 +1004,11 @@
                     }
                 };
 
+                // the new format
+                keyValues["$fkey_" + cons[0] + "_" + cons[1]] = fkTempVal;
 
+                // the old format
+                keyValues.$fkeys[cons[0]][cons[1]] = fkTempVal;
             });
         }
 
@@ -1034,6 +1038,34 @@
 
         // couldn't find any columns
         return false;
+    };
+
+    /**
+     * returns an object with the following attributes:
+     *  - values: the formatted and unformatted values
+     *  - rowName: a rowname object.
+     *  - uri.detailed: applink to detailed for the row
+     * @private
+     * @param  {ERMrest.Table} table  the table object
+     * @param  {string} context    current context
+     * @param  {Object} data       the raw data
+     * @param  {Object} linkedData the raw data of foreignkeys
+     * @param  {ERMrest.Reference=} ref to avoid creating a new reference
+     * @return {Object}
+     */
+    module._getRowTemplateVariables = function (table, context, data, linkedData, ref) {
+        if (ref == null) {
+            var uri = _generateRowURI(table, data);
+            if (uri == null) return {};
+            ref = new Reference(module.parse(uri), table.schema.catalog);
+        }
+        return {
+            values: module._getFormattedKeyValues(table, context, data, linkedData),
+            rowName: module._generateRowName(table, context, data, linkedData).value,
+            uri: {
+                detailed: ref.contextualize.detailed.appLink
+            }
+        };
     };
 
     /**
@@ -1158,35 +1190,13 @@
             return null;
         }
 
-        // used to create key pairs in uri
-        var createKeyPair = function (cols) {
-            var keyPair = "", col;
-            for (i = 0; i < cols.length; i++) {
-                col = cols[i].name;
-                keyPair +=  module._fixedEncodeURIComponent(col) + "=" + module._fixedEncodeURIComponent(data[col]);
-                if (i != cols.length - 1) {
-                    keyPair +="&";
-                }
-            }
-         return keyPair;
-        };
-
-        // check if we have data for the given columns
-        var hasData = function (kCols) {
-            for (var i = 0; i < kCols.length; i++) {
-                if (data[kCols[i].name] === undefined ||  data[kCols[i].name] === null) {
-                    return false;
-                }
-            }
-         return true;
-        };
-
         var value, caption, unformatted, i;
         var cols = key.colset.columns,
-            addLink = true;
+            addLink = true,
+            rowURI = _generateRowURI(key.table, data, key);
 
         // if any of key columns don't have data, this link is not valid.
-        if (!hasData(cols)) {
+        if (rowURI == null) {
             return null;
         }
 
@@ -1230,7 +1240,7 @@
         }
 
         if (addLink) {
-            var keyRef = new Reference(module.parse(key.table._uri + "/" + createKeyPair(cols)), key.table.schema.catalog);
+            var keyRef = new Reference(module.parse(rowURI), key.table.schema.catalog);
             var appLink = keyRef.contextualize.detailed.appLink;
 
             value = '<a href="' + appLink +'">' + caption + '</a>';
@@ -1276,6 +1286,30 @@
     };
 
     /**
+     * Given a table object and raw data for a row, return a uri to that row with fitlers.
+     * @param  {ERMrest.Table} table the table object
+     * @param  {Object} raw data for the row
+     * @param  {ERMrest.Key=} key if we want the link based on a specific key
+     * @return {String|null} filter that represents the current row. If row data
+     * is missing, it will return null.
+     */
+    _generateRowURI = function (table, data, key) {
+        if (data == null) return null;
+
+        var cols = (key != null) ? key.colset.columns : table.shortestKey;
+        var keyPair = "", col, i;
+        for (i = 0; i < cols.length; i++) {
+            col = cols[i].name;
+            if (data[col] == null) return null;
+            keyPair +=  module._fixedEncodeURIComponent(col) + "=" + module._fixedEncodeURIComponent(data[col]);
+            if (i != cols.length - 1) {
+                keyPair += "&";
+            }
+        }
+        return table.uri + "/" + keyPair;
+    };
+
+    /**
      * @function
      * @private
      * @param  {ERMrest.Key} key     key of the table
@@ -1296,34 +1330,12 @@
             return null;
         }
 
-        // used to create key pairs in uri
-        var createKeyPair = function (cols) {
-             var keyPair = "", col;
-            for (i = 0; i < cols.length; i++) {
-                col = cols[i].name;
-                keyPair +=  module._fixedEncodeURIComponent(col) + "=" + module._fixedEncodeURIComponent(data[col]);
-                if (i != cols.length - 1) {
-                    keyPair +="&";
-                }
-            }
-            return keyPair;
-        };
-
-        // check if we have data for the given columns
-        var hasData = function (kCols) {
-            for (var i = 0; i < kCols.length; i++) {
-                if (data[kCols[i].name] === undefined ||  data[kCols[i].name] === null) {
-                    return false;
-                }
-            }
-            return true;
-        };
-
         var value, rowname, i, caption, unformatted;
         var table = key.table;
+        var rowURI = _generateRowURI(table, data, key);
 
         // if any of key columns don't have data, this link is not valid.
-        if (!hasData(key.colset.columns)) {
+        if (rowURI == null) {
             return null;
         }
 
@@ -1354,20 +1366,15 @@
         }
 
         // use the shortest key if it has data (for shorter url).
-        var uriKey = hasData(table.shortestKey) ? table.shortestKey: key.colset.columns;
-
-        // create a url that points to the current ReferenceColumn
-        var ermrestUri = [
-            table.schema.catalog.server.uri ,"catalog" ,
-            table.schema.catalog.id, "entity",
-            [module._fixedEncodeURIComponent(table.schema.name),module._fixedEncodeURIComponent(table.name)].join(":"),
-            createKeyPair(uriKey)
-        ].join("/");
+        var shortestKeyURI = _generateRowURI(table, data);
+        if (shortestKeyURI != null) {
+            rowURI = shortestKeyURI;
+        }
 
         return {
             unformatted: unformatted,
             caption: caption,
-            reference:  new Reference(module.parse(ermrestUri), table.schema.catalog)
+            reference:  new Reference(module.parse(rowURI), table.schema.catalog)
         };
     };
 
