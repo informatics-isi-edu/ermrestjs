@@ -1007,6 +1007,25 @@ exports.execute = function(options) {
             });
         });
 
+        describe("Decoding Version snapshot, ", function () {
+            var decode = options.ermRest._versionDecodeBase32;
+
+            it("should decode snapshot values to milliseconds from epoch.", function() {
+                expect(decode('0')*1000).toBe(0.0);
+                expect(decode('2')*1000).toBe(1.0);
+                expect(decode('Z-ZZZZ-ZZZZ-ZZZY')*1000).toBe(-1.0);
+                expect(decode('G-0000-0000-0000')*1000).toBe(-9.223372036854776e+18);
+                expect(decode('Z-M9DK-J8QS-NN80')*1000).toBe(-210866774822000000.0);
+            });
+
+            it("should decode to a value that we can properly convert to a datetime.", function () {
+                expect(options.ermRest._moment(decode('Z-ZZZZ-ZZZY-2YW0')).utc().format("YYYY-MM-DDTHH:mm:ss")).toBe('1969-12-31T23:59:59');
+                expect(options.ermRest._moment(decode('0')).utc().format("YYYY-MM-DDTHH:mm:ss")).toBe('1970-01-01T00:00:00');
+                expect(options.ermRest._moment(decode('1-X140')).utc().format("YYYY-MM-DDTHH:mm:ss")).toBe('1970-01-01T00:00:01');
+                expect(options.ermRest._moment(decode('2R6-QAMZ-AB8W')).utc().format("YYYY-MM-DDTHH:mm:ss.SSS")).toBe('2019-03-05T18:49:24.459');
+            });
+        });
+
         // NOTE: search test cases are in refererence/13.search.js
         // NOTE: more facet test cases are in faceting test specs
     };
