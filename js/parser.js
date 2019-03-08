@@ -544,8 +544,8 @@
         },
 
         /**
-         *  version is a 64-bit integer representing microseconds since the Unix "epoch"
-         *  The 64-bit integer is encoded using a custom base32 encoding scheme
+         * version is a 64-bit integer representing microseconds since the Unix "epoch"
+         * The 64-bit integer is encoded using a custom base32 encoding scheme
          * @returns {String} the version decoded to it's time since epoch in milliseconds
          */
         get versionAsMillis() {
