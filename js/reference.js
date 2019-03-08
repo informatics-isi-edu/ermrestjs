@@ -4448,9 +4448,7 @@
                 var column, presentation;
 
                 // key value pair of formmated values, to be used in formatPresentation
-                // TODO it might be better to make sure if there's any column with markdown_pattern and
-                // then call this, becaues the returned value of this is only used in that case.
-                var keyValues = module._getFormattedKeyValues(this._pageRef._table, this._pageRef._context, this._data, this._linkedData);
+                var keyValues = this.templateVariables.values;
 
                 // If context is entry
                 if (module._isEntryContext(this._pageRef._context)) {

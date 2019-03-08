@@ -2870,6 +2870,29 @@
         return module._validateMustacheTemplate(template, data, table.schema.catalog, ignoredColumns);
     };
 
+    /**
+     * Given a markdown_pattern template and data, will return the appropriate
+     * presentation value.
+     *
+     * @param  {String} template the handlebars/mustache template
+     * @param  {Object} data     the key-value pair of data
+     * @param  {ERMrest.Table} table    the table object
+     * @param  {String} context  context string
+     * @param  {Object} options
+     * @return {Object}          An object with `isHTML` and `value` attributes.
+     */
+    module._processMarkdownPattern = function (template, data, table, context, options) {
+        var res = module._renderTemplate(template, data, table, context, options);
+
+        if (res === null || res.trim() === '') {
+            res = module._getNullValue(table, context, [table, table.schema]);
+            return {isHTML: false, value: res, unformatted: res};
+        }
+
+        var utils = module._formatUtils;
+        return {isHTML: true, value: utils.printMarkdown(res, options), unformatted: res};
+    };
+
     // module._constraintNames[catalogId][schemaName][constraintName] will return an object.
     module._constraintNames = {};
     var consIndex = 0;

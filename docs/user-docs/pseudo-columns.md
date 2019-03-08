@@ -63,6 +63,21 @@ In Chaise, comment is displayed as tooltip associated with columns. To change th
 
     "comment": "New comment"
 
+### display
+
+By using this attribute you can customize the presented value to the users. The following is the accepted syntax:
+
+```
+{
+    "source": <any acceptable source>,
+    "display": {
+        "markdown_pattern": <markdown pattern value>,
+        "template_engine": <"handlebars" | "mustache">
+    }
+}
+```
+
+In the `markdown_pattern` you can access the current pseudo-column data with `$self` namespace. The structure of the available data is going to be different based on pseudo-column type. Please refer to the [pseudo-column display documentation](#pseudo-column-display.md) for more information.
 
 #### aggregate
 

@@ -351,21 +351,13 @@ ReferenceColumn.prototype = {
                 keyValues.$self = {values : values};
             }
 
-            res = module._renderTemplate(
+            return module._processMarkdownPattern(
                 this.display.sourceMarkdownPattern,
                 keyValues,
                 this.table,
                 context,
                 {templateEngine: this.display.sourceTemplateEngine, formatted: true}
             );
-
-            if (res === null || res.trim() === '') {
-                res = module._getNullValue(this.table, context, [this.table, this.table.schema]);
-                return {isHTML: true, value: res, unformatted: res};
-            }
-
-            var utils = module._formatUtils;
-            return {isHTML: true, value: utils.printMarkdown(res, options), unformatted: res};
         }
 
         if (this._simple) {
@@ -554,23 +546,13 @@ PseudoColumn.prototype.formatPresentation = function(data, context, options) {
     }
 
     if (this.display.sourceMarkdownPattern) {
-        var keyValues = module._getRowTemplateVariables(this.table, context, data);
-
-        res = module._renderTemplate(
+        return module._processMarkdownPattern(
             this.display.sourceMarkdownPattern,
-            {$self: keyValues},
+            {$self: module._getRowTemplateVariables(this.table, context, data)},
             this.table,
             context,
             {templateEngine: this.display.sourceTemplateEngine, formatted: true}
         );
-
-        if (res === null || res.trim() === '') {
-            res = module._getNullValue(this.table, context, [this.table, this.table.schema]);
-            return {isHTML: true, value: res, unformatted: res};
-        }
-
-        var utils = module._formatUtils;
-        return {isHTML: true, value: utils.printMarkdown(res, options), unformatted: res};
     }
 
     // in entity mode, return the foreignkey value
@@ -1448,23 +1430,13 @@ ForeignKeyPseudoColumn.prototype._determineDefaultValue = function () {
 ForeignKeyPseudoColumn.prototype.formatPresentation = function(data, context, options) {
     data = data || {};
     if (this.display.sourceMarkdownPattern) {
-        var keyValues = module._getRowTemplateVariables(this.table, context, data);
-
-        res = module._renderTemplate(
+        return module._processMarkdownPattern(
             this.display.sourceMarkdownPattern,
-            {$self: keyValues},
+            {$self: module._getRowTemplateVariables(this.table, context, data)},
             this.table,
             context,
             {templateEngine: this.display.sourceTemplateEngine, formatted: true}
         );
-
-        if (res === null || res.trim() === '') {
-            res = module._getNullValue(this.table, context, [this.table, this.table.schema]);
-            return {isHTML: true, value: res, unformatted: res};
-        }
-
-        var utils = module._formatUtils;
-        return {isHTML: true, value: utils.printMarkdown(res, options), unformatted: res};
     }
 
     var nullValue = this._getNullValue(context);
@@ -1702,24 +1674,13 @@ KeyPseudoColumn.prototype.formatPresentation = function(data, context, options) 
     data = data || {};
     var nullValue = this._getNullValue(context);
     if (this.display.sourceMarkdownPattern) {
-        // TODO could be improved, we don't need to compute this again
-        var keyValues = module._getRowTemplateVariables(this.table, context, data);
-
-        res = module._renderTemplate(
+        return module._processMarkdownPattern(
             this.display.sourceMarkdownPattern,
-            {$self: keyValues},
+            {$self: module._getRowTemplateVariables(this.table, context, data)},
             this.table,
             context,
             {templateEngine: this.display.sourceTemplateEngine, formatted: true}
         );
-
-        if (res === null || res.trim() === '') {
-            res = module._getNullValue(this.table, context, [this.table, this.table.schema]);
-            return {isHTML: true, value: res, unformatted: res};
-        }
-
-        var utils = module._formatUtils;
-        return {isHTML: true, value: utils.printMarkdown(res, options), unformatted: res};
     }
 
     var pres = module._generateKeyPresentation(this.key, data, context, options);
