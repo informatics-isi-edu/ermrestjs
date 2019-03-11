@@ -416,7 +416,7 @@
                     "annotations": {
                         "tag:isrd.isi.edu,2016:column-display" : {
                             "*" : {
-                                "markdown_pattern" : "{{columns_schema_outbound_fk_7}}"
+                                "markdown_pattern" : "[{{columns_schema_outbound_fk_7}}](http://example.com)"
                             }
                         }
                     }

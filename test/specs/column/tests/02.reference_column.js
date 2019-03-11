@@ -712,9 +712,9 @@ exports.execute = function (options) {
                         expect(val).toBe('');
                     });
 
-                    it('should use `markdown_pattern` from key display annotation.', function () {
+                    it('should use `markdown_pattern` from key display annotation with a link.', function () {
                         val = compactBriefRef.columns[1].formatPresentation({"col_1":1, "col_3":2, "col_4":"value"}, "compact/brief", {"formattedValues": {"col_4":"value"}}).value;
-                        expect(val).toEqual('<strong>value</strong>');
+                        expect(val).toEqual('<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:columns_table/col_1=1&col_3=2"><strong>value</strong></a>');
                     });
 
                     describe('otherwise, ', function () {
@@ -726,9 +726,9 @@ exports.execute = function (options) {
                             expect(val).toEqual('<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:columns_table/col_3=3&col_6=6">3:6</a>');
                         });
 
-                        it('should not add link if the key columns are html.', function () {
+                        it('should not add link if the key columns produce a link.', function () {
                             val = compactBriefRef.columns[2].formatPresentation({"columns_schema_outbound_fk_7":"value"}, "compact/brief", {"formattedValues": {"columns_schema_outbound_fk_7":"value"}}).value;
-                            expect(val).toEqual('<p>value</p>\n');
+                            expect(val).toEqual('<p><a href="http://example.com">value</a></p>\n');
                         })
                     });
                 });

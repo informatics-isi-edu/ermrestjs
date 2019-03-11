@@ -1182,8 +1182,7 @@
         };
 
         var value, caption, unformatted, i;
-        var cols = key.colset.columns,
-            addLink = true;
+        var cols = key.colset.columns;
 
         // if any of key columns don't have data, this link is not valid.
         if (!hasData(cols)) {
@@ -1202,7 +1201,6 @@
             unformatted = module._renderTemplate(display.markdownPattern, options.formattedValues, key.table, context, {formatted:true});
             unformatted = (unformatted === null || unformatted.trim() === '') ? "" : unformatted;
             caption = module._formatUtils.printMarkdown(unformatted, { inline: true });
-            addLink = false;
         } else {
             var values = [], unformattedValues = [];
 
@@ -1213,8 +1211,6 @@
                     presentation = cols[i].formatPresentation(data, context, {formattedValues: options.formattedValues});
                     values.push(presentation.value);
                     unformattedValues.push(presentation.unformatted);
-                    // if one of the values isHTMl, should not add link
-                    addLink = addLink ? !presentation.isHTML : false;
                 } catch (exception) {
                     // the value doesn't exist
                     return null;
@@ -1229,14 +1225,14 @@
             }
         }
 
-        if (addLink) {
+        if (caption.match(/<a\b.+href=/)) {
+            value = caption;
+        } else {
             var keyRef = new Reference(module.parse(key.table._uri + "/" + createKeyPair(cols)), key.table.schema.catalog);
             var appLink = keyRef.contextualize.detailed.appLink;
 
             value = '<a href="' + appLink +'">' + caption + '</a>';
             unformatted = "[" + unformatted + "](" + appLink + ")";
-        } else {
-            value = caption;
         }
 
         return {isHTML: true, value: value, unformatted: unformatted};
@@ -1263,7 +1259,7 @@
 
         // if column is hidden, or caption has a link, or  or context is EDIT: don't add the link.
         // create the link using reference.
-        if (presentation.caption.match(/<a/) || module._isEntryContext(context)) {
+        if (presentation.caption.match(/<a\b.+href=/) || module._isEntryContext(context)) {
             value = presentation.caption;
             unformatted = presentation.unformatted;
         } else {
