@@ -544,6 +544,18 @@
         },
 
         /**
+         * version is a 64-bit integer representing microseconds since the Unix "epoch"
+         * The 64-bit integer is encoded using a custom base32 encoding scheme
+         * @returns {String} the version decoded to it's time since epoch in milliseconds
+         */
+        get versionAsMillis() {
+            if (this._versionAsMillis === undefined) {
+                this._versionAsMillis = module._versionDecodeBase32(this._version);
+            }
+            return this._versionAsMillis;
+        },
+
+        /**
          *
          * @returns {String} API of the ermrest service.
          * API includes entity, attribute, aggregate, attributegroup
@@ -581,7 +593,7 @@
 
         /**
          *
-         * @type {string} the table name which the uri referres to
+         * @type {string} tablename - the table name which the uri referres to
          */
         get tableName() {
             if (this._tableName === undefined) {
