@@ -52,6 +52,9 @@ To define a pseudo column, you need an object with at least the `source` attribu
 
     "entity": false
 
+#### self-link
+If you want to show a self-link to the current row, you need to make sure the source is based on a not-null unique column and add the `"self_link": true` to the definition.
+
 #### markdown_name
 markdown_name captures the display name of the column. You can change the default display name by setting the markdown_name attribute.
 
