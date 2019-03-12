@@ -259,6 +259,7 @@
             return this.server.http.get(this._uri + "/schema").then(function (response) {
                 var jsonSchemas = response.data;
 
+                self.snaptime = jsonSchemas.snaptime;
                 self.rights = jsonSchemas.rights;
 
                 for (var s in jsonSchemas.schemas) {
