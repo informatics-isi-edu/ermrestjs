@@ -198,17 +198,6 @@ exports.execute = function(options) {
                 expect(related[3].origFKR.toString()).toBe('(id)=(reference_schema:association%20table%20with%20id:id%20from%20ref%20table)');
             });
 
-            it('.origColumnName should have the correct value', function() {
-                // reference_schema_fromname_fk_inbound_related_to_reference
-                expect(related[0].origColumnName).toBe("arrj660yVmGl_vfSb9G4QQ", "missmatch for index = 0");
-                // reference_schema_fk_inbound_related_to_reference
-                expect(related[1].origColumnName).toBe("8kRTvQE9l_TdHX86eumVqg", "missmatch for index = 1");
-                //reference_schema_toname_fk_association_related_to_reference
-                expect(related[2].origColumnName).toBe("J-dn3Y5dmuvHdyOXn8Sihw", "missmatch for index = 2");
-                //reference_schema_id_fk_association_related_to_reference
-                expect(related[3].origColumnName).toBe("yzGY61pXr0wjqRuOQfHHfw", "missmatch for index = 3");
-            });
-
             describe('for inbound foreign keys, ', function() {
                 it('should have the correct catalog, schema, and table.', function() {
                     expect(related[0]._location.catalog).toBe(catalog_id.toString());

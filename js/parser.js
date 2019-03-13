@@ -544,6 +544,18 @@
         },
 
         /**
+         * version is a 64-bit integer representing microseconds since the Unix "epoch"
+         * The 64-bit integer is encoded using a custom base32 encoding scheme
+         * @returns {String} the version decoded to it's time since epoch in milliseconds
+         */
+        get versionAsMillis() {
+            if (this._versionAsMillis === undefined) {
+                this._versionAsMillis = module._versionDecodeBase32(this._version);
+            }
+            return this._versionAsMillis;
+        },
+
+        /**
          *
          * @returns {String} API of the ermrest service.
          * API includes entity, attribute, aggregate, attributegroup
@@ -581,7 +593,7 @@
 
         /**
          *
-         * @type {string} the table name which the uri referres to
+         * @type {string} tablename - the table name which the uri referres to
          */
         get tableName() {
             if (this._tableName === undefined) {
@@ -1962,7 +1974,7 @@
                 }
 
                 // get the column name
-                col = _getFacetSourceColumnStr(term.source);
+                col = _getSourceColumnStr(term.source);
                 if (typeof col !== "string") {
                     return getErrorOutput(facetErrors.invalidSource, i);
                 }
@@ -1970,7 +1982,7 @@
                 // ---------------- parse the path ---------------- //
                 path = ""; // the source path if there are some joins
                 useRightJoin = false;
-                if (_isFacetSourcePath(term.source)) {
+                if (_sourceHasPath(term.source)) {
 
                     // if there's a null filter and source has path, we have to use right join
                     // parse the datasource
@@ -2052,12 +2064,12 @@
         return parseAnd(json[andOperator]);
     };
 
-    _isFacetSourcePath = function (source) {
+    _sourceHasPath = function (source) {
         return Array.isArray(source) && !(source.length === 1 && typeof source[0] === "string");
     };
 
     _getFacetSourcePathLength = function (source) {
-        if (!_isFacetSourcePath(source)) {
+        if (!_sourceHasPath(source)) {
             return 0;
         }
         return source.length - 1;
@@ -2076,7 +2088,7 @@
      * @private
      */
     _getFacetSourceLastForeignKey = function (source, catalogId, consNames) {
-        if (!_isFacetSourcePath(source)) {
+        if (!_sourceHasPath(source)) {
             return null;
         }
 
@@ -2111,7 +2123,7 @@
      */
     _getFacetSourceForeignKeys = function (source, catalogId, consNames) {
         var res = [];
-        if (_isFacetSourcePath(source)) {
+        if (_sourceHasPath(source)) {
             var isInbound = false, constraint;
             for (var i = 0; i < source.length - 1; i++) {
                 if ("inbound" in source[i]) {
@@ -2137,7 +2149,7 @@
      * @return {string|Object}
      * @private
      */
-    _getFacetSourceColumnStr = function (source) {
+    _getSourceColumnStr = function (source) {
         return Array.isArray(source) ? source[source.length-1] : source;
     };
 
@@ -2156,7 +2168,7 @@
      * @param  {object} consNames The constraint names (will be used for constraint lookup)
      * @return {ERMrest.Column|false}
      */
-    _getFacetSourceColumn = function (source, table, consNames) {
+    _getSourceColumn = function (source, table, consNames) {
         var colName, colTable = table;
 
         var findConsName = function (catalogId, schemaName, constraintName) {
@@ -2168,7 +2180,7 @@
         };
 
         // from 0 to source.length-1 we have paths
-        if (_isFacetSourcePath(source)) {
+        if (_sourceHasPath(source)) {
             var fk, i, isInbound, constraint, fkObj;
             for (i = 0; i < source.length - 1; i++) {
 
@@ -2207,7 +2219,7 @@
             }
             colName = source[source.length-1];
         } else {
-            colName = _getFacetSourceColumnStr(source);
+            colName = _getSourceColumnStr(source);
         }
 
         try {
@@ -2219,24 +2231,34 @@
     };
 
     /**
-     * If the column that the facetObject is representing is in entity mode
-     * @param  {Object} facetObject the facet object
+     * If the column that the sourceObject is representing is in entity mode
+     * It will return true if:
+     *  - entity is not set to false.
+     *  - source is part of a not-null unique key, and has a path.
+     *  - source is part of a not-null unique key, doesn't have path, and has self_link = true.
+     *
+     * @param  {Object} sourceObject the facet object
      * @param  {ERMrest.Column} column      the column objKey
      * @return {boolean} true if entity mode otherwise false.
      */
-    _isFacetEntityMode = function (facetObject, column) {
-        if (facetObject.entity === false) {
+    _isSourceObjectEntityMode = function (sourceObject, column) {
+        if (sourceObject.entity === false) {
             return false;
         }
 
         // column is part of simple key
-        return !column.nullok && column.memberOfKeys.filter(function (key) {
+        var hasKey = !column.nullok && column.memberOfKeys.filter(function (key) {
             return key.simple;
         }).length > 0;
+
+        if (!_sourceHasPath(sourceObject.source)){
+            return hasKey && sourceObject.self_link === true;
+        }
+        return hasKey ;
     };
 
     _sourceHasInbound = function (source) {
-        if (!_isFacetSourcePath(source)) return false;
+        if (!_sourceHasPath(source)) return false;
         return source.some(function (n, index) {
             return (index != source.length-1) && ("inbound" in n);
         });
@@ -2251,7 +2273,7 @@
             return (result === undefined) ? null : result;
         };
 
-        var invalid = !_isFacetSourcePath(sourceObject.source) || !_isFacetEntityMode(sourceObject, column) ||
+        var invalid = !_sourceHasPath(sourceObject.source) || !_isSourceObjectEntityMode(sourceObject, column) ||
                       sourceObject.aggregate || sourceObject.source.length > 3;
 
         if (invalid) {

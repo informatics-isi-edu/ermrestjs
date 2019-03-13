@@ -65,10 +65,138 @@
             "keys": [
                 {"unique_columns": ["id"]}
             ],
+            "foreign_keys": [
+                {
+                    "names": [["export_schema_annot_schema", "no_export_annot_fk_1"]],
+                    "foreign_key_columns": [{
+                        "column_name": "fk_col_1",
+                        "table_name": "no_export_annot",
+                        "schema_name": "export_schema_annot_schema"
+                    }],
+                    "referenced_columns": [{
+                        "column_name": "id",
+                        "table_name": "outbound1",
+                        "schema_name": "export_schema_annot_schema"
+                    }]
+                },
+                {
+                    "names": [["export_schema_annot_schema", "no_export_annot_fk_2"]],
+                    "foreign_key_columns": [{
+                        "column_name": "fk_col_2",
+                        "table_name": "no_export_annot",
+                        "schema_name": "export_schema_annot_schema"
+                    }],
+                    "referenced_columns": [{
+                        "column_name": "id",
+                        "table_name": "outbound2",
+                        "schema_name": "export_schema_annot_schema"
+                    }]
+                },
+                {
+                    "names": [["export_schema_annot_schema", "no_export_annot_fk_3"]],
+                    "foreign_key_columns": [{
+                        "column_name": "fk_col_3",
+                        "table_name": "no_export_annot",
+                        "schema_name": "export_schema_annot_schema"
+                    }],
+                    "referenced_columns": [{
+                        "column_name": "id",
+                        "table_name": "outbound3",
+                        "schema_name": "export_schema_annot_schema"
+                    }]
+                },
+                {
+                    "names": [["export_schema_annot_schema", "no_export_annot_fk_4"]],
+                    "foreign_key_columns": [{
+                        "column_name": "fk_col_2",
+                        "table_name": "no_export_annot",
+                        "schema_name": "export_schema_annot_schema"
+                    }, {
+                        "column_name": "fk_col_3",
+                        "table_name": "no_export_annot",
+                        "schema_name": "export_schema_annot_schema"
+                    }],
+                    "referenced_columns": [{
+                        "column_name": "id1",
+                        "table_name": "outbound1",
+                        "schema_name": "export_schema_annot_schema"
+                    }, {
+                        "column_name": "id2",
+                        "table_name": "outbound1",
+                        "schema_name": "export_schema_annot_schema"
+                    }]
+                },
+                {
+                    "names": [["export_schema_annot_schema", "no_export_annot_fk_5"]],
+                    "foreign_key_columns": [{
+                        "column_name": "fk_col_3",
+                        "table_name": "no_export_annot",
+                        "schema_name": "export_schema_annot_schema"
+                    }, {
+                        "column_name": "fk_col_4",
+                        "table_name": "no_export_annot",
+                        "schema_name": "export_schema_annot_schema"
+                    }],
+                    "referenced_columns": [{
+                        "column_name": "id1",
+                        "table_name": "outbound3",
+                        "schema_name": "export_schema_annot_schema"
+                    }, {
+                        "column_name": "id2",
+                        "table_name": "outbound3",
+                        "schema_name": "export_schema_annot_schema"
+                    }]
+                }
+            ],
             "column_definitions": [
                 {
                     "name": "id",
                     "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "fk_col_1",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+
+                {
+                    "name": "fk_col_2",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "fk_col_3",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "fk_col_4",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "name",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+
+                {
+                    "name": "outbound1.Name",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "outbound3.Accession_ID",
                     "type": {
                         "typename": "text"
                     }
@@ -86,7 +214,7 @@
                             "md5": "asset_1_md5"
                         },
                         "tag:misd.isi.edu,2015:display": {
-                          "displayname": "asset_1_displayname"
+                          "name": "asset_1_displayname"
                         }
                     }
                 },
@@ -365,7 +493,7 @@
                     "type": {"typename": "text"}
                 },
                 {
-                    "name": "no_export_annot_RID",
+                    "name": "no_export_annot.RID",
                     "type": {"typename": "text"}
                 },
                 {
@@ -408,6 +536,114 @@
                         "table_name": "f2",
                         "schema_name": "export_schema_annot_schema"
                     }]
+                }
+            ]
+        },
+        "outbound1": {
+            "schema_name": "export_schema_annot_schema",
+            "table_name": "outbound1",
+            "kind": "table",
+            "keys": [
+                {"unique_columns": ["id"]},
+                {"unique_columns": ["id1", "id2"]}
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "id1",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "id2",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "Name",
+                    "type": {
+                        "typename": "text"
+                    }
+                }
+            ]
+        },
+        "outbound2": {
+            "schema_name": "export_schema_annot_schema",
+            "table_name": "outbound2",
+            "kind": "table",
+            "keys": [
+                {"unique_columns": ["id"]},
+                {"unique_columns": ["id1", "id2"]}
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "id1",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "id2",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                }
+            ]
+        },
+        "outbound3": {
+            "schema_name": "export_schema_annot_schema",
+            "table_name": "outbound3",
+            "kind": "table",
+            "keys": [
+                {"unique_columns": ["id"]},
+                {"unique_columns": ["id1", "id2"]}
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "id1",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "id2",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "Accession_ID",
+                    "type": {
+                        "typename": "text"
+                    }
                 }
             ]
         }

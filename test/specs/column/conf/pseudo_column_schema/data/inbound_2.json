@@ -1,22 +1,69 @@
 [
     {
         "id": "01",
-        "col": "inbound_2 col 01"
+        "col": "inbound_2 col 01",
+        "int4_col": 1
     },
     {
         "id": "02",
-        "col": "inbound_2 col 02"
+        "col": "inbound_2 col 02",
+        "int4_col": 2,
+        "boolean_col": true,
+        "longtext_col": null
     },
     {
         "id": "03",
-        "col": "inbound_2 col 03"
+        "col": "inbound_2 col 03",
+        "int4_col": 2,
+        "boolean_col": true,
+        "longtext_col": "a",
+        "markdown_col": "a",
+        "date_col": "2003-03-03"
     },
     {
         "id": "04",
-        "col": "inbound_2 col 04"
+        "col": "inbound_2 col 04",
+        "int4_col": 2,
+        "boolean_col": true,
+        "longtext_col": "a",
+        "markdown_col": "a",
+        "date_col": "2001-01-01",
+        "timestamptz_col": "2001-01-01T01:01:01-08:00",
+        "timestamp_col": "2001-01-01 01:01:01"
     },
     {
         "id": "05",
-        "col": "inbound_2 col 05"
+        "col": "inbound_2 col 05",
+        "int4_col": 2,
+        "boolean_col": true,
+        "longtext_col": "a",
+        "markdown_col": "a",
+        "date_col": "2001-01-01",
+        "timestamptz_col": "2001-01-01T01:01:01-08:00",
+        "timestamp_col": "2005-05-05 05:05:05"
+    },
+    {
+        "id": "06",
+        "col": "inbound_2 col 06",
+        "int4_col": 2,
+        "boolean_col": true,
+        "longtext_col": "a",
+        "markdown_col": "a",
+        "date_col": "2001-01-01",
+        "timestamptz_col": "2006-06-06T06:06:06-08:00"
+    },
+    {
+        "id": "07",
+        "col": "inbound_2 col 07",
+        "int4_col": 2,
+        "boolean_col": true,
+        "longtext_col": "a",
+        "markdown_col": "b"
+    },
+    {
+        "id": "08",
+        "col": "inbound_2 col 08",
+        "int4_col": 2,
+        "boolean_col": false
     }
 ]

@@ -483,7 +483,7 @@
             if (!obj.hasOwnProperty(k)) continue;
             val = obj[k];
 
-            // we don't accept custom type objects (we're not detecting circular referene)
+            // we don't accept custom type objects (we're not detecting circular reference)
             if (isObject(val) && (val.constructor && val.constructor.name !== "Object")) continue;
 
             newK = k;
@@ -748,11 +748,11 @@
         if (typeof colObject === "object") {
             if (!colObject.source) return null;
 
-            if (_isFacetSourcePath(colObject.source)) {
+            if (_sourceHasPath(colObject.source)) {
                 // since it's an array, it will preserve the order
                 str += JSON.stringify(colObject.source);
             } else {
-                str += _getFacetSourceColumnStr(colObject.source);
+                str += _getSourceColumnStr(colObject.source);
             }
 
             if (typeof colObject.aggregate === "string") {
@@ -762,6 +762,10 @@
             // entity true doesn't change anything
             if (colObject.entity === false) {
                 str += colObject.entity;
+            }
+
+            if (colObject.self_link === true) {
+                str += colObject.self_link;
             }
         } else if (typeof colObject === "string"){
             str = colObject;
@@ -788,7 +792,7 @@
      * @desc generates a name for the given pseudo-column
      */
     _generatePseudoColumnName = function (colObject, column) {
-        if ((typeof colObject.aggregate === "string") || _isFacetSourcePath(colObject.source) || _isFacetEntityMode(colObject, column)) {
+        if ((typeof colObject.aggregate === "string") || _sourceHasPath(colObject.source) || _isSourceObjectEntityMode(colObject, column)) {
             return {name: module.generatePseudoColumnHashName(colObject), isHash: true};
         }
 
@@ -797,10 +801,6 @@
 
     _generateForeignKeyName = function (fk, isInbound) {
         var eTable = isInbound ? fk._table : fk.key.table;
-
-        if (!fk.simple) {
-            return module.generatePseudoColumnHashName(fk._constraintName);
-        }
 
         if (!isInbound) {
             return module.generatePseudoColumnHashName({
@@ -1012,6 +1012,31 @@
     };
 
     /**
+     * @private
+     * @param  {string[]} columnNames Array of column names
+     * @return {string|false} the column name. if couldn't find any columns will return false.
+     */
+    module._getCandidateRowNameColumn = function (columnNames) {
+        var candidates = [
+            'title', 'name', 'term', 'label', 'accessionid', 'accessionnumber'
+        ];
+
+        var removeExtra = function (str) { // remove `.`, `-`, `_`, and space
+            return str.replace(/[\.\s\_-]+/g, "").toLocaleLowerCase();
+        };
+
+        for (var i = 0; i < columnNames.length; i++) {
+            var closest = removeExtra(columnNames[i]);
+            if (candidates.indexOf(closest) !== -1) {
+                return columnNames[i];
+            }
+        }
+
+        // couldn't find any columns
+        return false;
+    };
+
+    /**
      * @function
      * @private
      * @param {ERMrest.Table} table The table that we want the row name for.
@@ -1023,7 +1048,7 @@
      * @desc Returns the row name (html) using annotation or heuristics.
      */
     module._generateRowName = function (table, context, data, linkedData, isTitle) {
-        var annotation, col, template, keyValues, unformatted, unformattedAnnotation, pattern, actualContext;
+        var annotation, col, template, keyValues, pattern, actualContext;
 
         var formattedValues = module._getFormattedKeyValues(table, context, data, linkedData);
 
@@ -1034,16 +1059,6 @@
                 [module._contexts.ROWNAME, actualContext].join("/"),
                 table.annotations.get(module._annotations.TABLE_DISPLAY).content
             );
-
-            // getting the defined unformatted value
-            unformattedAnnotation = module._getRecursiveAnnotationValue(
-                [module._contexts.ROWNAME_UNFORMATTED, actualContext].join("/"),
-                table.annotations.get(module._annotations.TABLE_DISPLAY).content
-            );
-            if (unformattedAnnotation && typeof unformattedAnnotation.row_markdown_pattern) {
-                // get templated patten after replacing the values using Mustache
-                unformatted = module._renderTemplate(unformattedAnnotation.row_markdown_pattern, formattedValues, table, context, {formatted: true, templateEngine: unformattedAnnotation.template_engine});
-            }
         }
 
         // if annotation is populated and annotation has display.rowName property
@@ -1054,27 +1069,13 @@
 
         }
 
-
         // annotation was not defined, or it's producing empty string.
         if (pattern == null || pattern.trim() === '') {
 
             // no row_name annotation, use column with title, name, term
-            var result, closest;
-            var setDisplaynameForACol = function (name) {
-                closest = module._getClosest(data, name);
-                if (closest !== undefined && (typeof closest.data === 'string')) {
-                    result = formattedValues[closest.key];
-                    return true;
-                }
-                return false;
-            };
-
-            var columns = ['title', 'name', 'term', 'label', 'accession_id', 'accession_number'];
-
-            for (var i = 0; i < columns.length; i++) {
-                if (setDisplaynameForACol(columns[i])) {
-                    break;
-                }
+            var candidate = module._getCandidateRowNameColumn(Object.keys(data)), result;
+            if (candidate !== false) {
+                result = formattedValues[candidate];
             }
 
             if (!result) {
@@ -1133,7 +1134,7 @@
 
         return {
             "value": module._formatUtils.printMarkdown(pattern, { inline: true }),
-            "unformatted": (typeof unformatted === 'undefined' || unformatted === null ) ? pattern : unformatted,
+            "unformatted": pattern,
             "isHTML": true
         };
 
@@ -1181,8 +1182,7 @@
         };
 
         var value, caption, unformatted, i;
-        var cols = key.colset.columns,
-            addLink = true;
+        var cols = key.colset.columns;
 
         // if any of key columns don't have data, this link is not valid.
         if (!hasData(cols)) {
@@ -1201,7 +1201,6 @@
             unformatted = module._renderTemplate(display.markdownPattern, options.formattedValues, key.table, context, {formatted:true});
             unformatted = (unformatted === null || unformatted.trim() === '') ? "" : unformatted;
             caption = module._formatUtils.printMarkdown(unformatted, { inline: true });
-            addLink = false;
         } else {
             var values = [], unformattedValues = [];
 
@@ -1212,8 +1211,6 @@
                     presentation = cols[i].formatPresentation(data, context, {formattedValues: options.formattedValues});
                     values.push(presentation.value);
                     unformattedValues.push(presentation.unformatted);
-                    // if one of the values isHTMl, should not add link
-                    addLink = addLink ? !presentation.isHTML : false;
                 } catch (exception) {
                     // the value doesn't exist
                     return null;
@@ -1228,14 +1225,14 @@
             }
         }
 
-        if (addLink) {
+        if (caption.match(/<a\b.+href=/)) {
+            value = caption;
+        } else {
             var keyRef = new Reference(module.parse(key.table._uri + "/" + createKeyPair(cols)), key.table.schema.catalog);
             var appLink = keyRef.contextualize.detailed.appLink;
 
             value = '<a href="' + appLink +'">' + caption + '</a>';
             unformatted = "[" + unformatted + "](" + appLink + ")";
-        } else {
-            value = caption;
         }
 
         return {isHTML: true, value: value, unformatted: unformatted};
@@ -1262,7 +1259,7 @@
 
         // if column is hidden, or caption has a link, or  or context is EDIT: don't add the link.
         // create the link using reference.
-        if (presentation.caption.match(/<a/) || module._isEntryContext(context)) {
+        if (presentation.caption.match(/<a\b.+href=/) || module._isEntryContext(context)) {
             value = presentation.caption;
             unformatted = presentation.unformatted;
         } else {
@@ -2629,14 +2626,29 @@
 
     /*
      * @function
+     * @public
+     * @param {String} template The template string to transform
+     * @param {Object} keyValues The key-value pair of object to be used for template tags replacement.
+     * @param {Object} catalog The catalog object created by ermrestJS representing the current catalog from the url
+     * @param {Object} [options] Configuration options.
+     * @return {string} A string produced after templating
+     * @desc Calls the private function to return a string produced as a result of templating using `Handlebars`.
+     */
+    module._renderHandlebarsTemplate = function (template, keyValues, catalog, options) {
+        return module.renderHandlebarsTemplate(template, keyValues, catalog, options);
+    };
+
+    /*
+     * @function
      * @private
      * @param {String} template The template string to transform
      * @param {Object} keyValues The key-value pair of object to be used for template tags replacement.
+     * @param {Object} catalog The catalog object created by ermrestJS representing the current catalog from the url
      * @param {Object} [options] Configuration options.
      * @return {string} A string produced after templating
      * @desc Returns a string produced as a result of templating using `Handlebars`.
      */
-    module._renderHandlebarsTemplate = function(template, keyValues, catalog, options) {
+    module.renderHandlebarsTemplate = function(template, keyValues, catalog, options) {
 
         options = options || {};
 
@@ -2797,7 +2809,7 @@
 
         if (options.templateEngine === module.HANDLEBARS) {
             // render the template using Handlebars
-            return module._renderHandlebarsTemplate(template, keyValues, table.schema.catalog, options);
+            return module.renderHandlebarsTemplate(template, keyValues, table.schema.catalog, options);
         }
 
         // render the template using Mustache
@@ -2930,6 +2942,55 @@
      */
     module._encodeHeaderContent = function (obj) {
         return unescape(module._fixedEncodeURIComponent(JSON.stringify(obj)));
+    };
+
+    /**
+     *  version is a 64-bit integer representing microseconds since the Unix "epoch"
+     *  The 64-bit integer is encoded using a custom base32 encoding scheme
+     *  @returns {String} the version decoded to it's time since epoch in milliseconds
+     */
+    module._versionDecodeBase32 = function (version) {
+        // use 5-bit value as index to find symbol
+        // e.g. b32_symbols[15] == 'F'
+        var b32Symbols = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
+
+        // reverse mapping symbol -> 5-bit value
+        var b32Values = {};
+        for (var i=0; i<b32Symbols.length; i++) {
+            var symbol = b32Symbols[i];
+            b32Values[symbol] = i;
+        }
+
+        // """Decode 64-bit integer as approximate float value."""
+
+        // map to canonical symbols w/o separators
+        var s = version.toUpperCase()
+            .replaceAll('-', '')
+            .replaceAll('O', '0')
+            .replaceAll('I', '1')
+            .replaceAll('L', '1');
+
+        if (s.length > 13) {
+            // throw error maybe?
+            throw new Error("Invalid Version String", s.length + " symbols exceedlimit of 13");
+            // raise ValueError('%d symbols exceeds limit of 13' % len(s))
+        } else if (s.length < 13) {
+            // normalize to full 13-symbol format as general case
+            s = '0'.repeat(13 - s.length) + s;
+        }
+
+        // interpret first symbol as 2's complement signed value
+        var accum = parseFloat(b32Values[s[0]]);
+        if (accum >= 16) accum -= 32;
+
+        // interpret remaining symbols as unsigned values
+        for (var k=1; k<s.length; k++) {
+            var char = s[k];
+            accum = accum * 32 + b32Values[char];
+        }
+
+        // remove least significant pad bit and convert to milliseconds for precision
+        return (accum / 2.0)/1000;
     };
 
     /**
@@ -3144,8 +3205,7 @@
         ENTRY: 'entry',
         FILTER: 'filter',
         DEFAULT: '*',
-        ROWNAME :'row_name',
-        ROWNAME_UNFORMATTED: "row_name/unformatted"
+        ROWNAME :'row_name'
     });
 
     module._dataFormats = Object.freeze({
@@ -3313,7 +3373,8 @@
         MULTI_SCALAR_NEED_AGG: "aggregate functions are required for scalar inbound-included paths.",
         MULTI_ENT_NEED_AGG: "aggregate functions are required for entity inbound-included paths in non-detailed contexts.",
         NO_AGG_IN_ENTRY: "aggregate functions are not allowed in entry contexts.",
-        NO_PATH_IN_ENTRY: "pseudo columns with path are not allowed in entry contexts (only single outbound path is allowed)."
+        NO_PATH_IN_ENTRY: "pseudo columns with path are not allowed in entry contexts (only single outbound path is allowed).",
+        INVALID_SELF_LINK: "given source is not a valid self-link."
     });
 
     module._permissionMessages = Object.freeze({
@@ -3323,4 +3384,12 @@
         NO_CREATE: "No permissions to create.",
         NO_UPDATE: "No permissions to update.",
         DISABLED_COLUMNS: "All columns are disabled."
+    });
+
+    module._defaultColumnComment = Object.freeze({
+        RID: "Persistent, citable resource identifier",
+        RCB: "Record creator",
+        RMB: "Record last modifier",
+        RCT: "Record creation timestamp",
+        RMT: "Record last modified timestamp"
     });

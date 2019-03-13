@@ -122,7 +122,7 @@ exports.execute = function (options) {
             '4002',
             '4003',
              '',
-             '<p>12</p>\n',
+             '<p><a href="http://example.com">12</a></p>\n',
              '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/id_1=4000&id_2=4001">4000 , 4001</a>',
              '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key_2/id_1=4000&id_2=4003">4000:4003</a>',
              '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/id_1=4000&id_2=4002">4000 , 4002</a>',
@@ -345,7 +345,7 @@ exports.execute = function (options) {
                 '4002',
                 '4003',
                 '',
-                '<p>12</p>\n',
+                '<p><a href="http://example.com">12</a></p>\n',
                 '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/RID=' + findRID("table_w_composite_key", "id", "1") + '">4000 , 4001</a>',
                 '<a href="https://dev.isrd.isi.edu/chaise/search">1</a>',
                 '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/RID=' + findRID("table_w_composite_key", "id", "2") + '">4000 , 4002</a>',
@@ -649,7 +649,6 @@ exports.execute = function (options) {
                         expect(compactColumns[9].isPseudo).toBe(false);
                         expect(compactColumns[9].name).toBe("col_7");
                     });
-
 
                     it('in edit or create context should not include the columns, and just create PseudoColumn for them.', function () {
                         var expectedCols = [
