@@ -59,7 +59,6 @@ before_install:
   - cd ..
   - git clone https://github.com/informatics-isi-edu/webauthn.git
   - cd webauthn
-  - git checkout py3
   - sudo make testvars
   - sudo make install
   - sudo make deploy
@@ -69,7 +68,6 @@ before_install:
   - cd ..
   - git clone https://github.com/informatics-isi-edu/hatrac.git
   - cd hatrac
-  - git checkout py3
   - sudo python3 ./setup.py install
   - sudo useradd -m -r hatrac
   - sudo -H -u postgres createuser -d hatrac
@@ -84,7 +82,6 @@ before_install:
   - cd ..
   - git clone https://github.com/informatics-isi-edu/ermrest.git
   - cd ermrest
-  - git checkout py3
   - sudo -H make install PLATFORM=ubuntu1604
   - sudo which ermrest-deploy
   - sudo -H make deploy PLATFORM=ubuntu1604
