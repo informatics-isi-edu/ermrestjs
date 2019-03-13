@@ -246,6 +246,16 @@
 
         },
 
+        currentSnaptime: function () {
+            var self = this;
+            return this.server.http.get(this._uri).then(function (response) {
+                return response.data.snaptime;
+            }, function (response) {
+                var error = module.responseToError(response);
+                return module._q.reject(error);
+            });
+        },
+
         /**
          *
          * @private
@@ -256,7 +266,11 @@
         _introspect: function () {
             // load all schemas
             var self = this;
-            return this.server.http.get(this._uri + "/schema").then(function (response) {
+            return this.currentSnaptime().then(function(snaptime) {
+                self.snaptime = snaptime;
+
+                return self.server.http.get(self._uri + "/schema");
+            }).then(function (response) {
                 var jsonSchemas = response.data;
 
                 self.snaptime = jsonSchemas.snaptime;
