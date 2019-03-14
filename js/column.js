@@ -327,6 +327,10 @@ ReferenceColumn.prototype = {
 
     /**
      * Formats the presentation value corresponding to this reference-column definition.
+     * It will return:
+     *  - rendered value of sourceMarkdownPattern if exists.
+     *  - rendered value of formatPresentation of underlying columns joined by ":".
+     *
      * @param {Object} data the raw data of the table.
      * @param {String} context the app context
      * @param {Object} options includes `context` and `formattedValues`
