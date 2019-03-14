@@ -505,6 +505,8 @@ exports.execute = function (options) {
 
             // row_markdown_pattern test is in the previous describe
 
+            // source markdown_pattern test is in related reference spec
+
             // page_markdown_pattern test is in related reference spec
 
             describe("when row_markdown_pattern or page_markdown_pattern are not defined for the context, ", function () {

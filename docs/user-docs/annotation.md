@@ -286,8 +286,9 @@ Supported _columnentry_ patterns:
 - _columnname_: A string literal _columnname_ identifies a constituent column of the table. The value of the column SHOULD be presented, possibly with representation guided by other annotations or heuristics.
 - `[` _schemaname_ `,` _constraintname_ `]`: A two-element list of string literal _schemaname_ and _constraintname_ identifies a constituent foreign key of the table. The value of the external entity referenced by the foreign key SHOULD be presented, possibly with representation guided by other annotations or heuristics. If the foreign key is representing an inbound relationship with the current table, it SHOULD be presented in a tabular format since it can represent multiple rows of data.
 - `[` _schemaname_ `,` _constraintname_ `]`: A two-element list of string literal _schemaname_ and _constraintname_ identifies a constituent key of the table. The defined display of the key SHOULD be presented, with a link to the current displayed row of data. It will be served as a self-link.
-- `{ "source": ` _sourceentry_ `}`:  Defines a pseudo-column based on the given _sourceentry_. For detailed explanation and examples please refer to [here](https://github.com/informatics-isi-edu/ermrestjs/wiki/Pseudo-Column-Logic-&-Heuristics#examples). Other optional attributes that this JSON document can have are:
+- `{ "source": ` _sourceentry_ `}`:  Defines a pseudo-column based on the given _sourceentry_. For detailed explanation and examples please refer to [here](pseudo-columns.md#examples). Other optional attributes that this JSON document can have are:
   - `markdown_name`: The markdown to use in place of the default heuristics for title of column.
+  - `display`: The markdown pattern to use for generating the value for this column. Please refer to [pseudo-columns display document](pseudo-column-display.md) for more information.
   - `comment`: The tooltip to be used in place of the default heuristics for the column.
   - `entity`: If the _sourceentry_ can be treated as entity (the source column is key of the table), setting this attribute to `false` will force the scalar mode.
   - `self_link`: If the defined source is one of the unique not-null keys of the table, and is in entity mode; this attribute will switch the display mode to self-link.
@@ -582,6 +583,7 @@ Supported _fkeylist_ patterns:
 - `[` `[` _schema name_`,` _constraint name_ `]` `,` ... `]`: Present foreign keys with matching _schema name_ and _constraint name_, in the order specified in the list. Ignore constraint names that do not correspond to foreign keys in the catalog. Do not present foreign keys that are not mentioned in the list. These 2-element lists use the same format as each element in the `names` property of foreign keys in the JSON model introspection output of ERMrest. The foreign keys MUST represent inbound relationships to the current table.
 - `{ "source": ` _sourceentry_ `}`:  Defines a pseudo-column based on the given _sourceentry_. For detailed explanation and examples please refer to [here](pseudo-columns.md#examples). Other optional attributes that this JSON document can have are:
   - `markdown_name`: The markdown to use in place of the default heuristics for title of column.
+  - `display`: The markdown pattern to use for generating the value for this column. Please refer to [pseudo-columns display document](pseudo-column-display.md) for more information.
 
 Supported _sourceentry_ pattern in here:
   - _path_: An array of _foreign key path_ that ends with a _columnname_ that will be projected. _foreign key path_ is in the following format:

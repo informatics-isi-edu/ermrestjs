@@ -359,6 +359,7 @@ to use for ERMrest JavaScript agents.
         * [.isHTML](#ERMrest.Tuple+isHTML) : <code>Array.&lt;boolean&gt;</code>
         * [.displayname](#ERMrest.Tuple+displayname) : <code>string</code>
         * [.uniqueId](#ERMrest.Tuple+uniqueId) : <code>string</code>
+        * [.templateVariables](#ERMrest.Tuple+templateVariables) : <code>Object</code>
         * [.update()](#ERMrest.Tuple+update) ⇒ <code>Promise</code>
         * [.delete()](#ERMrest.Tuple+delete) ⇒ <code>Promise</code>
         * [.getAssociationRef()](#ERMrest.Tuple+getAssociationRef) : [<code>Reference</code>](#ERMrest.Reference)
@@ -3369,6 +3370,7 @@ It will return:
     * [.isHTML](#ERMrest.Tuple+isHTML) : <code>Array.&lt;boolean&gt;</code>
     * [.displayname](#ERMrest.Tuple+displayname) : <code>string</code>
     * [.uniqueId](#ERMrest.Tuple+uniqueId) : <code>string</code>
+    * [.templateVariables](#ERMrest.Tuple+templateVariables) : <code>Object</code>
     * [.update()](#ERMrest.Tuple+update) ⇒ <code>Promise</code>
     * [.delete()](#ERMrest.Tuple+delete) ⇒ <code>Promise</code>
     * [.getAssociationRef()](#ERMrest.Tuple+getAssociationRef) : [<code>Reference</code>](#ERMrest.Reference)
@@ -3526,6 +3528,12 @@ console.log("This tuple has a displayable name of ", tuple.displayname.value);
 #### tuple.uniqueId : <code>string</code>
 The unique identifier for this tuple composed of the values for each
 of the shortest key columns concatenated together by an '_'
+
+**Kind**: instance property of [<code>Tuple</code>](#ERMrest.Tuple)  
+<a name="ERMrest.Tuple+templateVariables"></a>
+
+#### tuple.templateVariables : <code>Object</code>
+An object of what is available in templating environment for this tuple
 
 **Kind**: instance property of [<code>Tuple</code>](#ERMrest.Tuple)  
 <a name="ERMrest.Tuple+update"></a>

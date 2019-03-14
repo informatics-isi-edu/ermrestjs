@@ -6,6 +6,7 @@ exports.execute = function(options) {
             inboundTableName = "inbound_related_reference_table",
             associationTableWithToName = "association_table_with_toname",
             associationTableWithIDDisplayname = "association table displayname",
+            associationTableWithID = "association table with id",
             AssociationTableWithExtra = "association_table_with_extra",
             entityId = 9003,
             relatedEntityWithToNameId = 3,
@@ -437,6 +438,7 @@ exports.execute = function(options) {
         describe("integration with other APIs", function () {
             describe("Page.content", function () {
                 var testPageContent = function (ref, pageSize, content, done) {
+                    options.ermRest.appLinkFn(appLinkFn);
                     ref.read(pageSize).then(function (page) {
                         expect(page.content).toEqual(content, "page.content invalid for related");
                         done();
@@ -444,6 +446,15 @@ exports.execute = function(options) {
                         done.fail(err);
                     });
                 };
+
+                it ("should use the markdown_pattern defined on the visible-foreign-key annotation.", function (done) {
+                    var content = '<p>';
+                    content += '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:association%20table%20with%20id/RID=' + findRID(schemaName, associationTableWithID, "ID", "2") + '">2</a>';
+                    content += ', ';
+                    content += '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:association%20table%20with%20id/RID=' + findRID(schemaName, associationTableWithID, "ID", "3") + '">3</a>';
+                    content += '</p>\n';
+                    testPageContent(pathRelatedWithTuple[0], 5, content, done);
+                })
 
                 it ("should be able to use page_markdown_pattern and have access to the parent attributes.", function (done) {
                     testPageContent(relatedWithTuple[1], 1, '<p>reference_schema:reference_table, parent name=Henry, where id is one of 1</p>\n', done);
