@@ -73,6 +73,7 @@ to use for ERMrest JavaScript agents.
         * [new Catalog(server, id)](#new_ERMrest.Catalog_new)
         * [.id](#ERMrest.Catalog+id) : <code>string</code>
         * [.schemas](#ERMrest.Catalog+schemas) : [<code>Schemas</code>](#ERMrest.Schemas)
+        * [.currentSnaptime()](#ERMrest.Catalog+currentSnaptime) ⇒ <code>Promise</code>
         * [.constraintByNamePair(pair, subject)](#ERMrest.Catalog+constraintByNamePair) ⇒ <code>Object</code> \| <code>null</code>
         * [.getTable(tableName, schemaName)](#ERMrest.Catalog+getTable) ⇒ [<code>Table</code>](#ERMrest.Table)
     * [.Schemas](#ERMrest.Schemas)
@@ -741,6 +742,7 @@ Get a catalog by id. This call does catalog introspection.
     * [new Catalog(server, id)](#new_ERMrest.Catalog_new)
     * [.id](#ERMrest.Catalog+id) : <code>string</code>
     * [.schemas](#ERMrest.Catalog+schemas) : [<code>Schemas</code>](#ERMrest.Schemas)
+    * [.currentSnaptime()](#ERMrest.Catalog+currentSnaptime) ⇒ <code>Promise</code>
     * [.constraintByNamePair(pair, subject)](#ERMrest.Catalog+constraintByNamePair) ⇒ <code>Object</code> \| <code>null</code>
     * [.getTable(tableName, schemaName)](#ERMrest.Catalog+getTable) ⇒ [<code>Table</code>](#ERMrest.Table)
 
@@ -765,6 +767,12 @@ The catalog identifier.
 
 #### catalog.schemas : [<code>Schemas</code>](#ERMrest.Schemas)
 **Kind**: instance property of [<code>Catalog</code>](#ERMrest.Catalog)  
+<a name="ERMrest.Catalog+currentSnaptime"></a>
+
+#### catalog.currentSnaptime() ⇒ <code>Promise</code>
+**Kind**: instance method of [<code>Catalog</code>](#ERMrest.Catalog)  
+**Returns**: <code>Promise</code> - a promise that returns json object or snaptime if resolved or
+     [ERMrestError](#ERMrest.ERMrestError) if rejected  
 <a name="ERMrest.Catalog+constraintByNamePair"></a>
 
 #### catalog.constraintByNamePair(pair, subject) ⇒ <code>Object</code> \| <code>null</code>

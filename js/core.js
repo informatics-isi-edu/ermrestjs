@@ -246,6 +246,10 @@
 
         },
 
+        /**
+         * @return {Promise} a promise that returns json object or snaptime if resolved or
+         *      {@link ERMrest.ERMrestError} if rejected
+         */
         currentSnaptime: function () {
             var self = this;
             return this.server.http.get(this._uri).then(function (response) {
