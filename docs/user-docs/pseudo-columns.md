@@ -40,6 +40,10 @@ Note: If the `[<schema name>, <constraint name>]` is an inbound foreign key from
   "entity": <true or false>,
   "markdown_name": <display name>,
   "comment": <tooltip message>,
+  "display": {
+      "markdown_pattern": <pattern>,
+      "template_engine": <handlebars or mustache>
+  },
   "aggregate": <aggregate function>
 }
 ```
