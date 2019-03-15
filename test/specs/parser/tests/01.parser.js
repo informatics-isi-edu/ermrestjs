@@ -1008,7 +1008,7 @@ exports.execute = function(options) {
         });
 
         describe("Decoding Version snapshot, ", function () {
-            var decode = options.ermRest._versionDecodeBase32;
+            var decode = options.ermRest.versionDecodeBase32;
 
             it("should decode snapshot values to milliseconds from epoch.", function() {
                 expect(decode('0')*1000).toBe(0.0);
