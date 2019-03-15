@@ -252,12 +252,15 @@
          */
         currentSnaptime: function () {
             var self = this;
-            return this.server.http.get(this._uri).then(function (response) {
-                return response.data.snaptime;
-            }, function (response) {
-                var error = module.responseToError(response);
-                return module._q.reject(error);
+            var defer = module._q.defer();
+
+            this.server.http.get(this._uri).then(function (response) {
+                defer.resolve(response.data.snaptime);
+            }, function (error) {
+                defer.reject(module.responseToError(error));
             });
+
+            return defer.promise;
         },
 
         /**
