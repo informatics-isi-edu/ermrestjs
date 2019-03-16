@@ -257,7 +257,7 @@
             this.server.http.get(this._uri).then(function (response) {
                 defer.resolve(response.data.snaptime);
             }, function (error) {
-                defer.reject(module.responseToError(error));
+                defer.reject(error);
             });
 
             return defer.promise;
