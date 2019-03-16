@@ -169,7 +169,13 @@
                             {"outbound": ["reference_schema", "fromname_fk_inbound_related_to_reference"]},
                             "id"
                         ], "aggregate": "cnt"},
-                        {"source": [{"inbound": ["reference_schema", "id_fk_association_related_to_reference"]}, "ID"]},
+                        {
+                            "source": [{"inbound": ["reference_schema", "id_fk_association_related_to_reference"]}, "ID"],
+                            "display": {
+                                "markdown_pattern": "{{#each $self}}[{{{this.rowName}}}]({{{this.uri.detailed}}}){{#unless @last}}, {{/unless}}{{/each}}",
+                                "template_engine": "handlebars"
+                            }
+                        },
                         {"source": [
                             {"inbound": ["reference_schema", "id_fk_association_related_to_reference"]},
                             {"outbound": ["reference_schema", "fk_to_inbound_related_reference_table"]},

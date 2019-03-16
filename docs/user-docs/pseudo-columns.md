@@ -40,6 +40,10 @@ Note: If the `[<schema name>, <constraint name>]` is an inbound foreign key from
   "entity": <true or false>,
   "markdown_name": <display name>,
   "comment": <tooltip message>,
+  "display": {
+      "markdown_pattern": <pattern>,
+      "template_engine": <handlebars or mustache>
+  },
   "aggregate": <aggregate function>
 }
 ```
@@ -52,6 +56,9 @@ To define a pseudo column, you need an object with at least the `source` attribu
 
     "entity": false
 
+#### self-link
+If you want to show a self-link to the current row, you need to make sure the source is based on a not-null unique column and add the `"self_link": true` to the definition.
+
 #### markdown_name
 markdown_name captures the display name of the column. You can change the default display name by setting the markdown_name attribute.
 
@@ -63,6 +70,21 @@ In Chaise, comment is displayed as tooltip associated with columns. To change th
 
     "comment": "New comment"
 
+### display
+
+By using this attribute you can customize the presented value to the users. The following is the accepted syntax:
+
+```
+{
+    "source": <any acceptable source>,
+    "display": {
+        "markdown_pattern": <markdown pattern value>,
+        "template_engine": <"handlebars" | "mustache">
+    }
+}
+```
+
+In the `markdown_pattern` you can access the current pseudo-column data with `$self` namespace. The structure of the available data is going to be different based on pseudo-column type. Please refer to the [pseudo-column display documentation](#pseudo-column-display.md) for more information.
 
 #### aggregate
 
