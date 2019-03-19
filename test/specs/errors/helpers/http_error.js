@@ -22,6 +22,7 @@ exports.testForErrors = function(method, errorTypes, cb, message, mockUrl) {
 
     errorTypes.forEach(function(et) {
 
+        // create error object to use for mocking and expectations
         var error;
         if (typeof et == 'string') {
             if (errorCodes[et]) {
@@ -44,6 +45,7 @@ exports.testForErrors = function(method, errorTypes, cb, message, mockUrl) {
             + " on " + message, function(done) {
 
             if (mockUrl) {
+                // the url path to "mock"
                 var url = mockUrl;
                 if (typeof mockUrl == 'function') url = mockUrl();
                 server.http.max_retries = 0;
@@ -60,6 +62,8 @@ exports.testForErrors = function(method, errorTypes, cb, message, mockUrl) {
                     nockObj = nockObj[method.toLowerCase()](url, "*");
                 }
 
+                // mark what the mocked url path should return
+                // NOTE: (maybe TODO?) if path being mocked returns a success, this will not mock that response
                 nockObj.reply(error.code, error.type).persist();
             }
 
