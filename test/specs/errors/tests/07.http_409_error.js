@@ -123,7 +123,7 @@ exports.execute = function (options) {
 
         it("if it's an integrity error without deletion flag passed then we should allow the ermrest error to the client.", function (done) {
            nock(url, ops)
-               .get("/ermrest/catalog/1234/schema")
+               .get("/ermrest/catalog/1234")
                .reply(409, integrityErrorServerResponse)
                .persist();
 
@@ -139,7 +139,7 @@ exports.execute = function (options) {
 
         it("if it's a duplicate key error, we should generate a more readable message.", function (done) {
             nock(url, ops)
-                .get("/ermrest/catalog/1235/schema")
+                .get("/ermrest/catalog/1235")
                 .reply(409, duplicateErrorServerResponse)
                 .persist();
 
@@ -155,7 +155,7 @@ exports.execute = function (options) {
 
         it("otherwise it should just show the error message without the prefix and suffix.", function (done) {
             nock(url, ops)
-                .get("/ermrest/catalog/1236/schema")
+                .get("/ermrest/catalog/1236")
                 .reply(409, generalConflictServerResponse)
                 .persist();
 

@@ -2979,7 +2979,7 @@
      *  The 64-bit integer is encoded using a custom base32 encoding scheme
      *  @returns {String} the version decoded to it's time since epoch in milliseconds
      */
-    module._versionDecodeBase32 = function (version) {
+    module.versionDecodeBase32 = function (version) {
         // use 5-bit value as index to find symbol
         // e.g. b32_symbols[15] == 'F'
         var b32Symbols = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
