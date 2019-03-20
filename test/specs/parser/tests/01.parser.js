@@ -1007,6 +1007,39 @@ exports.execute = function(options) {
             });
         });
 
+        describe("createLocation, ", function () {
+            var facetObj = {
+                "and":[{"source":"*", "search": ["test"]}]
+            };
+            var parsedFacet = "*::ciregexp::test/$M";
+            var service = "test.com/ermrest";
+            var location;
+
+            it('should throw error if parameters are invalid.', function() {
+                expect(function () {
+                    options.ermRest.createLocation(service, 2, null, "table");
+                }).toThrow("catalogId must be an string.");
+                expect(function () {
+                    options.ermRest.createLocation(service, "2", null);
+                }).toThrow("tableName must be an string.");
+            });
+
+            it("should handle not passing any schemaName", function() {
+                location = options.ermRest.createLocation(service, "1", null, "table", facetObj);
+                expect(location.ermrestCompactUri).toEqual(service + "/catalog/1/entity/M:=table/" + parsedFacet);
+            });
+
+            it("should handle passing an empty object for facets", function() {
+                location = options.ermRest.createLocation(service, "1", "schema", "table", {});
+                expect(location.ermrestCompactUri).toEqual(service + "/catalog/1/entity/M:=schema:table");
+            });
+
+            it("should return a valid path, given valid parameters.", function() {
+                location = options.ermRest.createLocation(service + "/", "1", "schema", "table", facetObj);
+                expect(location.ermrestCompactUri).toEqual(service + "/catalog/1/entity/M:=schema:table/" + parsedFacet);
+            });
+        });
+
         describe("Decoding Version snapshot, ", function () {
             var decode = options.ermRest.versionDecodeBase32;
 

@@ -57,6 +57,39 @@
         return compactPath;
     };
 
+
+    /**
+     * Given tableName, schemaName, and facets will return a location object
+     * @param  {string} service    the service url
+     * @param  {string} schemaName Name of schema, can be null
+     * @param  {string} tableName  Name of table
+     * @param  {object} facets     an object
+     * @param  {object} cfacets    an object
+     * @return {string}            a path that ERMrestJS understands and can parse, can be undefined
+     */
+    module.createLocation = function (service, catalogId, schemaName, tableName, facets, cfacets) {
+        verify(typeof service === "string" && service.length > 0, "service must be an string.");
+        verify(typeof catalogId === "string" && catalogId.length > 0, "catalogId must be an string.");
+        verify(typeof tableName === "string" && tableName.length > 0, "tableName must be an string.");
+
+        var compactPath = "";
+        if (schemaName) {
+            compactPath += module._fixedEncodeURIComponent(schemaName) + ":";
+        }
+        compactPath += module._fixedEncodeURIComponent(tableName);
+
+        if (facets && typeof facets === "object" && Object.keys(facets).length !== 0) {
+            compactPath += "/*::facets::" + module.encodeFacet(facets);
+        }
+
+        if (cfacets && typeof cfacets === "object" && Object.keys(cfacets).length !== 0) {
+            compactPath += "/*::cfacets::" + module.encodeFacet(cfacets);
+        }
+
+        if (service.endsWith("/")) service = service.slice(0, -1);
+        return module.parse(service + "/catalog/" + catalogId + "/entity/" + compactPath);
+    };
+
     var MAIN_TABLE_ALIAS = "M";
     var JOIN_TABLE_ALIAS_PREFIX = "T";
 
