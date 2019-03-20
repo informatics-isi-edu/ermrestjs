@@ -261,6 +261,12 @@
 
                 self.rights = jsonSchemas.rights;
 
+                self.annotations = new Annotations();
+                for (var uri in jsonSchemas.annotations) {
+                    var jsonAnnotation = jsonSchemas.annotations[uri];
+                    self.annotations._push(new Annotation("schema", uri, jsonAnnotation));
+                }
+
                 for (var s in jsonSchemas.schemas) {
                     self.schemas._push(new Schema(self, jsonSchemas.schemas[s]));
                 }

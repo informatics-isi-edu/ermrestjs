@@ -3728,6 +3728,9 @@ Formats a value corresponding to this reference-column definition.
 
 #### referenceColumn.formatPresentation(data, context, options) ⇒ <code>Object</code>
 Formats the presentation value corresponding to this reference-column definition.
+It will return:
+ - rendered value of sourceMarkdownPattern if exists.
+ - rendered value of formatPresentation of underlying columns joined by ":".
 
 **Kind**: instance method of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
 **Returns**: <code>Object</code> - A key value pair containing value and isHTML that detemrines the presentation.  
