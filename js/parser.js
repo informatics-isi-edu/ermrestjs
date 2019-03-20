@@ -544,13 +544,14 @@
         },
 
         /**
-         * version is a 64-bit integer representing microseconds since the Unix "epoch"
-         * The 64-bit integer is encoded using a custom base32 encoding scheme
-         * @returns {String} the version decoded to it's time since epoch in milliseconds
-         */
+        * version is a 64-bit integer representing microseconds since the Unix "epoch"
+        * The 64-bit integer is encoded using a custom base32 encoding scheme
+        * @param {String} version - optional, include this param if no version in uri
+        * @returns {String} the version decoded to it's time since epoch in milliseconds
+        */
         get versionAsMillis() {
             if (this._versionAsMillis === undefined) {
-                this._versionAsMillis = module._versionDecodeBase32(this._version);
+                this._versionAsMillis = module.versionDecodeBase32(this._version);
             }
             return this._versionAsMillis;
         },

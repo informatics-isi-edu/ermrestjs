@@ -33,7 +33,7 @@ exports.execute = function (options) {
         	delay += server.http.initial_delay;
 
 	        nock(url, ops)
-	          .get("/ermrest/catalog/" + id + "/schema")
+	          .get("/ermrest/catalog/" + id)
 	          .reply(503, 'Service Unavailable')
 	          .persist();
 
@@ -63,7 +63,7 @@ exports.execute = function (options) {
         	delay += server.http.initial_delay;
 
 	        nock(url, ops)
-	          .get("/ermrest/catalog/" + id + "/schema")
+	          .get("/ermrest/catalog/" + id)
 	          .reply(500, 'Internal Server Error')
 	          .persist();
 
