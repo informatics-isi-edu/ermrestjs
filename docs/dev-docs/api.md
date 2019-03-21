@@ -73,6 +73,7 @@ to use for ERMrest JavaScript agents.
         * [new Catalog(server, id)](#new_ERMrest.Catalog_new)
         * [.id](#ERMrest.Catalog+id) : <code>string</code>
         * [.schemas](#ERMrest.Catalog+schemas) : [<code>Schemas</code>](#ERMrest.Schemas)
+        * [.currentSnaptime()](#ERMrest.Catalog+currentSnaptime) ⇒ <code>Promise</code>
         * [.constraintByNamePair(pair, subject)](#ERMrest.Catalog+constraintByNamePair) ⇒ <code>Object</code> \| <code>null</code>
         * [.getTable(tableName, schemaName)](#ERMrest.Catalog+getTable) ⇒ [<code>Table</code>](#ERMrest.Table)
     * [.Schemas](#ERMrest.Schemas)
@@ -359,6 +360,7 @@ to use for ERMrest JavaScript agents.
         * [.isHTML](#ERMrest.Tuple+isHTML) : <code>Array.&lt;boolean&gt;</code>
         * [.displayname](#ERMrest.Tuple+displayname) : <code>string</code>
         * [.uniqueId](#ERMrest.Tuple+uniqueId) : <code>string</code>
+        * [.templateVariables](#ERMrest.Tuple+templateVariables) : <code>Object</code>
         * [.update()](#ERMrest.Tuple+update) ⇒ <code>Promise</code>
         * [.delete()](#ERMrest.Tuple+delete) ⇒ <code>Promise</code>
         * [.getAssociationRef()](#ERMrest.Tuple+getAssociationRef) : [<code>Reference</code>](#ERMrest.Reference)
@@ -743,6 +745,7 @@ Get a catalog by id. This call does catalog introspection.
     * [new Catalog(server, id)](#new_ERMrest.Catalog_new)
     * [.id](#ERMrest.Catalog+id) : <code>string</code>
     * [.schemas](#ERMrest.Catalog+schemas) : [<code>Schemas</code>](#ERMrest.Schemas)
+    * [.currentSnaptime()](#ERMrest.Catalog+currentSnaptime) ⇒ <code>Promise</code>
     * [.constraintByNamePair(pair, subject)](#ERMrest.Catalog+constraintByNamePair) ⇒ <code>Object</code> \| <code>null</code>
     * [.getTable(tableName, schemaName)](#ERMrest.Catalog+getTable) ⇒ [<code>Table</code>](#ERMrest.Table)
 
@@ -767,6 +770,12 @@ The catalog identifier.
 
 #### catalog.schemas : [<code>Schemas</code>](#ERMrest.Schemas)
 **Kind**: instance property of [<code>Catalog</code>](#ERMrest.Catalog)  
+<a name="ERMrest.Catalog+currentSnaptime"></a>
+
+#### catalog.currentSnaptime() ⇒ <code>Promise</code>
+**Kind**: instance method of [<code>Catalog</code>](#ERMrest.Catalog)  
+**Returns**: <code>Promise</code> - a promise that returns json object or snaptime if resolved or
+     [ERMrestError](#ERMrest.ERMrestError) if rejected  
 <a name="ERMrest.Catalog+constraintByNamePair"></a>
 
 #### catalog.constraintByNamePair(pair, subject) ⇒ <code>Object</code> \| <code>null</code>
@@ -3371,6 +3380,7 @@ It will return:
     * [.isHTML](#ERMrest.Tuple+isHTML) : <code>Array.&lt;boolean&gt;</code>
     * [.displayname](#ERMrest.Tuple+displayname) : <code>string</code>
     * [.uniqueId](#ERMrest.Tuple+uniqueId) : <code>string</code>
+    * [.templateVariables](#ERMrest.Tuple+templateVariables) : <code>Object</code>
     * [.update()](#ERMrest.Tuple+update) ⇒ <code>Promise</code>
     * [.delete()](#ERMrest.Tuple+delete) ⇒ <code>Promise</code>
     * [.getAssociationRef()](#ERMrest.Tuple+getAssociationRef) : [<code>Reference</code>](#ERMrest.Reference)
@@ -3528,6 +3538,12 @@ console.log("This tuple has a displayable name of ", tuple.displayname.value);
 #### tuple.uniqueId : <code>string</code>
 The unique identifier for this tuple composed of the values for each
 of the shortest key columns concatenated together by an '_'
+
+**Kind**: instance property of [<code>Tuple</code>](#ERMrest.Tuple)  
+<a name="ERMrest.Tuple+templateVariables"></a>
+
+#### tuple.templateVariables : <code>Object</code>
+An object of what is available in templating environment for this tuple
 
 **Kind**: instance property of [<code>Tuple</code>](#ERMrest.Tuple)  
 <a name="ERMrest.Tuple+update"></a>
@@ -3722,6 +3738,9 @@ Formats a value corresponding to this reference-column definition.
 
 #### referenceColumn.formatPresentation(data, context, options) ⇒ <code>Object</code>
 Formats the presentation value corresponding to this reference-column definition.
+It will return:
+ - rendered value of sourceMarkdownPattern if exists.
+ - rendered value of formatPresentation of underlying columns joined by ":".
 
 **Kind**: instance method of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
 **Returns**: <code>Object</code> - A key value pair containing value and isHTML that detemrines the presentation.  

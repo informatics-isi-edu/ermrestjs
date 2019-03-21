@@ -247,6 +247,23 @@
         },
 
         /**
+         * @return {Promise} a promise that returns json object or snaptime if resolved or
+         *      {@link ERMrest.ERMrestError} if rejected
+         */
+        currentSnaptime: function () {
+            var self = this;
+            var defer = module._q.defer();
+
+            this.server.http.get(this._uri).then(function (response) {
+                defer.resolve(response.data.snaptime);
+            }, function (error) {
+                defer.reject(error);
+            });
+
+            return defer.promise;
+        },
+
+        /**
          *
          * @private
          * @return {Promise} a promise that returns json object or catalog schema if resolved or
@@ -256,9 +273,14 @@
         _introspect: function () {
             // load all schemas
             var self = this;
-            return this.server.http.get(this._uri + "/schema").then(function (response) {
+            return this.currentSnaptime().then(function(snaptime) {
+                self.snaptime = snaptime;
+
+                return self.server.http.get(self._uri + "/schema");
+            }).then(function (response) {
                 var jsonSchemas = response.data;
 
+                self.snaptime = jsonSchemas.snaptime;
                 self.rights = jsonSchemas.rights;
 
                 for (var s in jsonSchemas.schemas) {

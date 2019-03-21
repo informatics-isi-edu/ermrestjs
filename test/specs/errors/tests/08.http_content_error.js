@@ -30,7 +30,7 @@ exports.execute = function (options) {
 
         it("should be returned as a 500 error.", function (done) {
             nock(url, ops)
-                .get("/ermrest/catalog/" + id + "/schema")
+                .get("/ermrest/catalog/" + id)
                 .reply(404, htmlResponseMessage, {"Content-Type": "text/html"});
 
             server.catalogs.get(id).then(null, function(err) {

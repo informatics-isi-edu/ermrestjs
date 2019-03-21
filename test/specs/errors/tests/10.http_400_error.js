@@ -18,7 +18,7 @@ exports.execute = function (options) {
             var queryTimeoutResponse = '400 Bad Request\nQuery run time limit exceeded.';
 
             nock(url, ops)
-                .get("/ermrest/catalog/1235/schema")
+                .get("/ermrest/catalog/1235")
                 .reply(400, queryTimeoutResponse)
                 .persist();
 

@@ -652,7 +652,7 @@
                     // all the realted in detailed context
                     detailedRef.related().forEach(function (relRef) {
                         var fcObj;
-                        if (relRef.pseudoColumn) {
+                        if (relRef.pseudoColumn && !relRef.pseudoColumn.isInboundForeignKey) {
                             fcObj = {"obj": relRef.pseudoColumn.sourceObject, "column": relRef.pseudoColumn.baseColumn};
                         } else {
                             fcObj = checkRefColumn(new InboundForeignKeyPseudoColumn(self, relRef));
@@ -1890,6 +1890,12 @@
                     }
                 }
 
+                // attach the display settings defined on the source definition
+                if (this.pseudoColumn && this.pseudoColumn.display.sourceMarkdownPattern) {
+                    this._display.type = module._displayTypes.MARKDOWN;
+                    this._display._sourceMarkdownPattern = this.pseudoColumn.display.sourceMarkdownPattern;
+                    this._display._sourceTemplateEngine = this.pseudoColumn.display.sourceTemplateEngine;
+                }
             }
 
             return this._display;
@@ -2123,7 +2129,7 @@
                      var destinationPath = rel.displayname.unformatted;
                      // this will be used for source path
                      var sourcePath;
-                     if (rel.pseudoColumn) {
+                     if (rel.pseudoColumn && !rel.pseudoColumn.isInboundForeignKey) {
                          // path from main to the related reference
                          sourcePath = rel.pseudoColumn.foreignKeys.map(function(fk, i, allFks) {
                              return ((i == allFks.length - 1) ? (relatedTableAlias + ":=") : "") + fk.obj.toString(!fk.isInbound, false);
@@ -4066,6 +4072,25 @@
                     if (!self._data || !self._data.length) return null;
 
                     var i, value, pattern, values = [], keyValues;
+                    var display = ref.display;
+
+                    // markdown_pattern in the source object
+                    if (typeof display._sourceMarkdownPattern === "string") {
+                        var $self = self.tuples.map(function (t) {
+                            return t.templateVariables;
+                        });
+                        pattern = module._renderTemplate(
+                            display._sourceMarkdownPattern,
+                            {$self: $self}, ref.table, ref._context,
+                            { templateEngine: display._sourceTemplateEngine, formatted: true }
+                        );
+
+                        if (pattern === null || pattern.trim() === '') {
+                            pattern = module._getNullValue(ref.table, ref._context, [ref.table, ref.table.schema]);
+                        }
+
+                        return module._formatUtils.printMarkdown(pattern);
+                    }
 
                     // page_markdown_pattern
                     /*
@@ -4079,7 +4104,7 @@
                             }
                         }
                      */
-                    if (typeof ref.display._pageMarkdownPattern === 'string') {
+                    if (typeof display._pageMarkdownPattern === 'string') {
                         var $page = {
                             values: self._data.map(function (d, i) {
                                 return module._getFormattedKeyValues(ref.table, ref._context, d, self._linkedData[i]);
@@ -4109,7 +4134,7 @@
                     }
 
                     // row_markdown_pattern
-                    if (typeof ref.display._rowMarkdownPattern === 'string') {
+                    if (typeof display._rowMarkdownPattern === 'string') {
                         // Iterate over all data rows to compute the row values depending on the row_markdown_pattern.
                         for (i = 0; i < self._data.length; i++) {
 
@@ -4424,9 +4449,7 @@
                 var column, presentation;
 
                 // key value pair of formmated values, to be used in formatPresentation
-                // TODO it might be better to make sure if there's any column with markdown_pattern and
-                // then call this, becaues the returned value of this is only used in that case.
-                var keyValues = module._getFormattedKeyValues(this._pageRef._table, this._pageRef._context, this._data, this._linkedData);
+                var keyValues = this.templateVariables.values;
 
                 // If context is entry
                 if (module._isEntryContext(this._pageRef._context)) {
@@ -4601,6 +4624,22 @@
                 }
             }
             return this._citation;
+        },
+
+        /**
+         * An object of what is available in templating environment for this tuple
+         * @type {Object}
+         */
+        get templateVariables() {
+            if (this._templateVariables === undefined) {
+                this._templateVariables = module._getRowTemplateVariables(
+                    this._pageRef._table,
+                    this._pageRef._context,
+                    this._data,
+                    this._linkedData
+                );
+            }
+            return this._templateVariables;
         },
 
         /**

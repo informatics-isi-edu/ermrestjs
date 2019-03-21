@@ -57,6 +57,39 @@
         return compactPath;
     };
 
+
+    /**
+     * Given tableName, schemaName, and facets will return a location object
+     * @param  {string} service    the service url
+     * @param  {string} schemaName Name of schema, can be null
+     * @param  {string} tableName  Name of table
+     * @param  {object} facets     an object
+     * @param  {object} cfacets    an object
+     * @return {string}            a path that ERMrestJS understands and can parse, can be undefined
+     */
+    module.createLocation = function (service, catalogId, schemaName, tableName, facets, cfacets) {
+        verify(typeof service === "string" && service.length > 0, "service must be an string.");
+        verify(typeof catalogId === "string" && catalogId.length > 0, "catalogId must be an string.");
+        verify(typeof tableName === "string" && tableName.length > 0, "tableName must be an string.");
+
+        var compactPath = "";
+        if (schemaName) {
+            compactPath += module._fixedEncodeURIComponent(schemaName) + ":";
+        }
+        compactPath += module._fixedEncodeURIComponent(tableName);
+
+        if (facets && typeof facets === "object" && Object.keys(facets).length !== 0) {
+            compactPath += "/*::facets::" + module.encodeFacet(facets);
+        }
+
+        if (cfacets && typeof cfacets === "object" && Object.keys(cfacets).length !== 0) {
+            compactPath += "/*::cfacets::" + module.encodeFacet(cfacets);
+        }
+
+        if (service.endsWith("/")) service = service.slice(0, -1);
+        return module.parse(service + "/catalog/" + catalogId + "/entity/" + compactPath);
+    };
+
     var MAIN_TABLE_ALIAS = "M";
     var JOIN_TABLE_ALIAS_PREFIX = "T";
 
@@ -544,13 +577,14 @@
         },
 
         /**
-         * version is a 64-bit integer representing microseconds since the Unix "epoch"
-         * The 64-bit integer is encoded using a custom base32 encoding scheme
-         * @returns {String} the version decoded to it's time since epoch in milliseconds
-         */
+        * version is a 64-bit integer representing microseconds since the Unix "epoch"
+        * The 64-bit integer is encoded using a custom base32 encoding scheme
+        * @param {String} version - optional, include this param if no version in uri
+        * @returns {String} the version decoded to it's time since epoch in milliseconds
+        */
         get versionAsMillis() {
             if (this._versionAsMillis === undefined) {
-                this._versionAsMillis = module._versionDecodeBase32(this._version);
+                this._versionAsMillis = module.versionDecodeBase32(this._version);
             }
             return this._versionAsMillis;
         },
