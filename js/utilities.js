@@ -3000,6 +3000,7 @@
      * - pid
      * - wid
      * - schema_table: schema:table
+     * - catalog
      * - filter
      * - facet
      * - referrer: for related entities the main entity, for recordset facets: the main entity
@@ -3025,6 +3026,7 @@
             wid: header.wid,
             pid: header.pid,
             action: header.action,
+            catalog: header.catalog,
             schema_table: header.schema_table,
             t: 1 // indicates that this request has been truncated
         };

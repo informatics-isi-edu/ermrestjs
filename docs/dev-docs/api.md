@@ -506,6 +506,7 @@ to use for ERMrest JavaScript agents.
         * [.uri](#ERMrest.AttributeGroupReference+uri) : <code>string</code>
         * [.unfilteredReference](#ERMrest.AttributeGroupReference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
         * [.ermrestPath](#ERMrest.AttributeGroupReference+ermrestPath) : <code>string</code>
+        * [.defaultLogInfo](#ERMrest.AttributeGroupReference+defaultLogInfo) : <code>Object</code>
         * [.read([limit], contextHeaderParams)](#ERMrest.AttributeGroupReference+read) ⇒ <code>ERMRest.AttributeGroupPage</code>
         * [.getColumnByName(name)](#ERMrest.AttributeGroupReference+getColumnByName) ⇒ <code>ERMrest.AttributeGroupColumn</code>
     * [.AttributeGroupPage](#ERMrest.AttributeGroupPage)
@@ -638,6 +639,7 @@ to use for ERMrest JavaScript agents.
         * [.uri](#ERMrest.AttributeGroupReference+uri) : <code>string</code>
         * [.unfilteredReference](#ERMrest.AttributeGroupReference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
         * [.ermrestPath](#ERMrest.AttributeGroupReference+ermrestPath) : <code>string</code>
+        * [.defaultLogInfo](#ERMrest.AttributeGroupReference+defaultLogInfo) : <code>Object</code>
         * [.read([limit], contextHeaderParams)](#ERMrest.AttributeGroupReference+read) ⇒ <code>ERMRest.AttributeGroupPage</code>
         * [.getColumnByName(name)](#ERMrest.AttributeGroupReference+getColumnByName) ⇒ <code>ERMrest.AttributeGroupColumn</code>
     * [.AttributeGroupPage](#ERMrest.AttributeGroupPage) : <code>object</code>
@@ -4928,6 +4930,7 @@ parent table (not the end table).
     * [.uri](#ERMrest.AttributeGroupReference+uri) : <code>string</code>
     * [.unfilteredReference](#ERMrest.AttributeGroupReference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
     * [.ermrestPath](#ERMrest.AttributeGroupReference+ermrestPath) : <code>string</code>
+    * [.defaultLogInfo](#ERMrest.AttributeGroupReference+defaultLogInfo) : <code>Object</code>
     * [.read([limit], contextHeaderParams)](#ERMrest.AttributeGroupReference+read) ⇒ <code>ERMRest.AttributeGroupPage</code>
     * [.getColumnByName(name)](#ERMrest.AttributeGroupReference+getColumnByName) ⇒ <code>ERMrest.AttributeGroupColumn</code>
 
@@ -5020,6 +5023,12 @@ NOTE:
 - Since this is the object that has knowledge of columns, this should be here.
   (we might want to relocate it to the AttributeGroupLocation object.)
 - ermrest can processs this uri.
+
+**Kind**: instance property of [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)  
+<a name="ERMrest.AttributeGroupReference+defaultLogInfo"></a>
+
+#### attributeGroupReference.defaultLogInfo : <code>Object</code>
+The default information that we want to be logged including catalog, schema_table, and facet (filter).
 
 **Kind**: instance property of [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)  
 <a name="ERMrest.AttributeGroupReference+read"></a>
@@ -6472,6 +6481,7 @@ Check the sort object. Does not change the `this._location` object.
     * [.uri](#ERMrest.AttributeGroupReference+uri) : <code>string</code>
     * [.unfilteredReference](#ERMrest.AttributeGroupReference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
     * [.ermrestPath](#ERMrest.AttributeGroupReference+ermrestPath) : <code>string</code>
+    * [.defaultLogInfo](#ERMrest.AttributeGroupReference+defaultLogInfo) : <code>Object</code>
     * [.read([limit], contextHeaderParams)](#ERMrest.AttributeGroupReference+read) ⇒ <code>ERMRest.AttributeGroupPage</code>
     * [.getColumnByName(name)](#ERMrest.AttributeGroupReference+getColumnByName) ⇒ <code>ERMrest.AttributeGroupColumn</code>
 
@@ -6564,6 +6574,12 @@ NOTE:
 - Since this is the object that has knowledge of columns, this should be here.
   (we might want to relocate it to the AttributeGroupLocation object.)
 - ermrest can processs this uri.
+
+**Kind**: instance property of [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)  
+<a name="ERMrest.AttributeGroupReference+defaultLogInfo"></a>
+
+#### attributeGroupReference.defaultLogInfo : <code>Object</code>
+The default information that we want to be logged including catalog, schema_table, and facet (filter).
 
 **Kind**: instance property of [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)  
 <a name="ERMrest.AttributeGroupReference+read"></a>

@@ -2044,6 +2044,7 @@
          */
         get defaultLogInfo() {
             var obj = {};
+            obj.catalog = this.table.schema.catalog.id;
             obj.schema_table = this.table.schema.name + ":" + this.table.name;
 
             if (this.location.facets) {
