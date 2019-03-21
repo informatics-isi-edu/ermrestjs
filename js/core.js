@@ -251,10 +251,12 @@
          *      {@link ERMrest.ERMrestError} if rejected
          */
         currentSnaptime: function () {
-            var self = this;
-            var defer = module._q.defer();
-
-            this.server.http.get(this._uri).then(function (response) {
+            var self = this, defer = module._q.defer(), headers = {};
+            headers[module.contextHeaderName] = {
+                action: "model/catalog",
+                catalog: this.id
+            };
+            this.server.http.get(this._uri, headers).then(function (response) {
                 defer.resolve(response.data.snaptime);
             }, function (error) {
                 defer.reject(error);
@@ -275,8 +277,12 @@
             var self = this;
             return this.currentSnaptime().then(function(snaptime) {
                 self.snaptime = snaptime;
-
-                return self.server.http.get(self._uri + "/schema");
+                var headers = {};
+                headers[module.contextHeaderName] = {
+                    action: "model/schema",
+                    catalog: this.id
+                };
+                return self.server.http.get(self._uri + "/schema", {headers: headers});
             }).then(function (response) {
                 var jsonSchemas = response.data;
 

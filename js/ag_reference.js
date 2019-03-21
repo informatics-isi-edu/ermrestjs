@@ -354,13 +354,8 @@ AttributeGroupReference.prototype = {
             if (!contextHeaderParams || !isObject(contextHeaderParams)) {
                 contextHeaderParams = {"action": "read"};
             }
-
-            contextHeaderParams.page_size = limit;
-
-            var headers = {};
-            headers[module.contextHeaderName] = contextHeaderParams;
             var config = {
-                headers: headers
+                headers: this._generateContextHeader(contextHeaderParams, limit)
             };
             this._server.http.get(uri, config).then(function (response) {
 
@@ -433,9 +428,8 @@ AttributeGroupReference.prototype = {
             contextHeaderParams = {"action": "aggregate"};
         }
         var config = {
-            headers: this._generateContextHeader(contextHeaderParams, limit)
+            headers: this._generateContextHeader(contextHeaderParams)
         };
-
         var baseUri = loc.path;
         if (typeof loc.searchFilter === "string" && loc.searchFilter.length > 0) {
             baseUri += "/" + loc.searchFilter;
