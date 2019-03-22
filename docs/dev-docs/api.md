@@ -120,8 +120,8 @@ to use for ERMrest JavaScript agents.
             * [.shortestKey](#ERMrest.Table+shortestKey)
             * [.displayKey](#ERMrest.Table+displayKey) : [<code>Array.&lt;Column&gt;</code>](#ERMrest.Column)
             * [.uri](#ERMrest.Table+uri) : <code>string</code>
-            * [.exportTemplates](#ERMrest.Table+exportTemplates) : <code>Array</code> \| <code>null</code>
             * [._getRowDisplayKey(context)](#ERMrest.Table+_getRowDisplayKey)
+            * [.getExportTemplates()](#ERMrest.Table+getExportTemplates) : <code>Array</code> \| <code>null</code>
         * _static_
             * [.Entity](#ERMrest.Table.Entity)
                 * [new Entity(server, table)](#new_ERMrest.Table.Entity_new)
@@ -1021,8 +1021,8 @@ get table by table name
         * [.shortestKey](#ERMrest.Table+shortestKey)
         * [.displayKey](#ERMrest.Table+displayKey) : [<code>Array.&lt;Column&gt;</code>](#ERMrest.Column)
         * [.uri](#ERMrest.Table+uri) : <code>string</code>
-        * [.exportTemplates](#ERMrest.Table+exportTemplates) : <code>Array</code> \| <code>null</code>
         * [._getRowDisplayKey(context)](#ERMrest.Table+_getRowDisplayKey)
+        * [.getExportTemplates()](#ERMrest.Table+getExportTemplates) : <code>Array</code> \| <code>null</code>
     * _static_
         * [.Entity](#ERMrest.Table.Entity)
             * [new Entity(server, table)](#new_ERMrest.Table.Entity_new)
@@ -1133,14 +1133,6 @@ The columns that create the shortest key that can be used for display purposes.
 uri to the table in ermrest with entity api
 
 **Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
-<a name="ERMrest.Table+exportTemplates"></a>
-
-#### table.exportTemplates : <code>Array</code> \| <code>null</code>
-Returns the export templates that are defined on this table.
-NOTE If this returns `null`, then the exportTemplates is not defined on the table or schema
-NOTE The returned template might not have `outputs` attribute.
-
-**Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
 <a name="ERMrest.Table+_getRowDisplayKey"></a>
 
 #### table.\_getRowDisplayKey(context)
@@ -1154,6 +1146,14 @@ It's the same as displaykey but with extra restrictions. It might return undefin
 | --- | --- | --- |
 | context | <code>string</code> | used to figure out if the column has markdown_pattern annoation or not. |
 
+<a name="ERMrest.Table+getExportTemplates"></a>
+
+#### table.getExportTemplates() : <code>Array</code> \| <code>null</code>
+Returns the export templates that are defined on this table.
+NOTE If this returns `null`, then the exportTemplates is not defined on the table or schema
+NOTE The returned template might not have `outputs` attribute.
+
+**Kind**: instance method of [<code>Table</code>](#ERMrest.Table)  
 <a name="ERMrest.Table.Entity"></a>
 
 #### Table.Entity
