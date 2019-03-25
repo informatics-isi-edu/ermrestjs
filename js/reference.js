@@ -2560,7 +2560,7 @@
             }
 
              // annotation
-            if (columns !== -1) {
+            if (columns !== -1 && Array.isArray(columns)) {
                 for (i = 0; i < columns.length; i++) {
                     col = columns[i];
                     // foreignKey or key

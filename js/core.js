@@ -2942,7 +2942,7 @@
                 orders = module._getRecursiveAnnotationValue(context, this._table.annotations.get(module._annotations.VISIBLE_FOREIGN_KEYS).content);
             }
 
-            if (orders == -1) {
+            if (orders == -1 || !Array.isArray(orders)) {
                 this._contextualize_cached[context] = -1;
                 return -1;
             }
