@@ -2797,9 +2797,10 @@ FacetColumn.prototype = {
      *
      * NOTE This function will not return the null filter.
      *
+     * @param {Object} contextHeaderParams object that we want to be logged with the request
      * @return {Promise} A promise resolved with list of objects that have `uniqueId`, and `displayname`.
      */
-    getChoiceDisplaynames: function () {
+    getChoiceDisplaynames: function (contextHeaderParams) {
         var defer = module._q.defer();
         var filters =  [];
 
@@ -2853,7 +2854,7 @@ FacetColumn.prototype = {
 
             ref = ref.sort([{"column": columnName, "descending": false}]);
 
-            ref.read(this.choiceFilters.length).then(function (page) {
+            ref.read(this.choiceFilters.length, contextHeaderParams, true).then(function (page) {
                 page.tuples.forEach(function (t) {
 
                     // create the response

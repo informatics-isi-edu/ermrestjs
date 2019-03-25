@@ -254,9 +254,9 @@
             var self = this, defer = module._q.defer(), headers = {};
             headers[module.contextHeaderName] = {
                 action: "model/catalog",
-                catalog: this.id
+                catalog: self.id
             };
-            this.server.http.get(this._uri, headers).then(function (response) {
+            this.server.http.get(this._uri, {headers: headers}).then(function (response) {
                 defer.resolve(response.data.snaptime);
             }, function (error) {
                 defer.reject(error);
@@ -280,7 +280,7 @@
                 var headers = {};
                 headers[module.contextHeaderName] = {
                     action: "model/schema",
-                    catalog: this.id
+                    catalog: self.id
                 };
                 return self.server.http.get(self._uri + "/schema", {headers: headers});
             }).then(function (response) {

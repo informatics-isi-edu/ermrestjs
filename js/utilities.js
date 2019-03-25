@@ -3031,6 +3031,7 @@
      * - wid
      * - schema_table: schema:table
      * - catalog
+     * - column
      * - filter
      * - facet
      * - referrer: for related entities the main entity, for recordset facets: the main entity
@@ -3166,6 +3167,15 @@
         // .source
         if (header.source) {
             obj.source = header.source;
+            res = encode(obj);
+            if (res.length >= MAX_LENGTH) {
+                return prevRes;
+            }
+        }
+
+        // .column
+        if (header.column) {
+            obj.column = header.column;
             res = encode(obj);
             if (res.length >= MAX_LENGTH) {
                 return prevRes;

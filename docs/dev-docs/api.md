@@ -460,7 +460,7 @@ to use for ERMrest JavaScript agents.
         * [.searchFilters](#ERMrest.FacetColumn+searchFilters) : <code>Array.&lt;ERMREst.SearchFacetFilter&gt;</code>
         * [.choiceFilters](#ERMrest.FacetColumn+choiceFilters) : <code>Array.&lt;ERMREst.ChoiceFacetFilter&gt;</code>
         * [.rangeFilters](#ERMrest.FacetColumn+rangeFilters) : <code>Array.&lt;ERMREst.RangeFacetFilter&gt;</code>
-        * [.getChoiceDisplaynames()](#ERMrest.FacetColumn+getChoiceDisplaynames) ⇒ <code>Promise</code>
+        * [.getChoiceDisplaynames(contextHeaderParams)](#ERMrest.FacetColumn+getChoiceDisplaynames) ⇒ <code>Promise</code>
         * [.toJSON()](#ERMrest.FacetColumn+toJSON) ⇒ <code>Object</code>
         * [._setFilters(json)](#ERMrest.FacetColumn+_setFilters)
         * [.addSearchFilter(term)](#ERMrest.FacetColumn+addSearchFilter) ⇒ [<code>Reference</code>](#ERMrest.Reference)
@@ -4246,7 +4246,7 @@ Indicates that this ReferenceColumn is an inbound foreign key.
     * [.searchFilters](#ERMrest.FacetColumn+searchFilters) : <code>Array.&lt;ERMREst.SearchFacetFilter&gt;</code>
     * [.choiceFilters](#ERMrest.FacetColumn+choiceFilters) : <code>Array.&lt;ERMREst.ChoiceFacetFilter&gt;</code>
     * [.rangeFilters](#ERMrest.FacetColumn+rangeFilters) : <code>Array.&lt;ERMREst.RangeFacetFilter&gt;</code>
-    * [.getChoiceDisplaynames()](#ERMrest.FacetColumn+getChoiceDisplaynames) ⇒ <code>Promise</code>
+    * [.getChoiceDisplaynames(contextHeaderParams)](#ERMrest.FacetColumn+getChoiceDisplaynames) ⇒ <code>Promise</code>
     * [.toJSON()](#ERMrest.FacetColumn+toJSON) ⇒ <code>Object</code>
     * [._setFilters(json)](#ERMrest.FacetColumn+_setFilters)
     * [.addSearchFilter(term)](#ERMrest.FacetColumn+addSearchFilter) ⇒ [<code>Reference</code>](#ERMrest.Reference)
@@ -4543,7 +4543,7 @@ NOTE ASSUMES that filters is immutable
 **Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
 <a name="ERMrest.FacetColumn+getChoiceDisplaynames"></a>
 
-#### facetColumn.getChoiceDisplaynames() ⇒ <code>Promise</code>
+#### facetColumn.getChoiceDisplaynames(contextHeaderParams) ⇒ <code>Promise</code>
 When presenting the applied choice filters, the displayname might be differnt from the value.
 This only happens in case of entity-picker. Othercases we can just return the list of fitleres as is.
 In case of entity-picker, we should get the displayname of the choices.
@@ -4556,6 +4556,11 @@ NOTE This function will not return the null filter.
 
 **Kind**: instance method of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
 **Returns**: <code>Promise</code> - A promise resolved with list of objects that have `uniqueId`, and `displayname`.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| contextHeaderParams | <code>Object</code> | object that we want to be logged with the request |
+
 <a name="ERMrest.FacetColumn+toJSON"></a>
 
 #### facetColumn.toJSON() ⇒ <code>Object</code>

@@ -526,7 +526,7 @@ AttributeGroupReference.prototype = {
      */
     get defaultLogInfo() {
         var obj = {};
-        obj.catalog = this.catalog.id;
+        obj.catalog = this._catalog.id;
         if (this.table) {
             obj.schema_table = this.table.schema.name + ":" + this.table.name;
         }
@@ -1322,7 +1322,13 @@ BucketAttributeGroupReference.prototype.read = function (contextHeaderParams) {
         var uri = this.uri;
 
         var currRef = this;
-        this._server.http.get(uri).then(function (response) {
+        if (!contextHeaderParams || !isObject(contextHeaderParams)) {
+            contextHeaderParams = {"action": "read"};
+        }
+        var config = {
+            headers: this._generateContextHeader(contextHeaderParams)
+        };
+        this._server.http.get(uri, config).then(function (response) {
             var data = {
                 x: [],
                 y: []
