@@ -833,6 +833,8 @@
         if (this.annotations.contains(module._annotations.APP_LINKS)) {
             this._appLinksAnnotation = this.annotations.get(module._annotations.APP_LINKS).content;
         }
+
+        this._exportTemplates = {};
     }
 
     Table.prototype = {
@@ -1042,34 +1044,75 @@
          * NOTE The returned template might not have `outputs` attribute.
          * @type {Array|null}
          */
-        get exportTemplates() {
-            if (this._exportTemplates === undefined) {
-                var self = this, exp = module._annotations.EXPORT, annot;
+        getExportTemplates: function (context) {
+            context = context || "*";
+            if (!(context in this._exportTemplates)) {
+                this._exportTemplates[context] = this._getExportTemplates(context);
+            }
+            return this._exportTemplates[context];
+        },
 
-                var getValidTemplates = function (templates) {
-                    // make sure it's an array
-                    if (!Array.isArray(templates) || templates.length === 0) {
-                        return [];
-                    }
+        // the logic for getExportTemplates function
+        _getExportTemplates: function (context) {
+            var self = this,
+                exp = module._annotations.EXPORT,
+                expCtx = module._annotations.EXPORT_CONTEXTED,
+                annotDefinition = {}, hasAnnot = false,
+                chosenAnnot, annotTemplates;
 
-                    // filter only templates that are valid
-                    return templates.filter(function (temp) {
-                        return module.validateExportTemplate(temp);
-                    });
-                };
+            var getValidTemplates = function (templates) {
+                // make sure it's an array
+                if (!Array.isArray(templates) || templates.length === 0) {
+                    return [];
+                }
 
-                self._exportTemplates = [];
-                if (self.annotations.contains(exp) || self.schema.annotations.contains(exp)) {
-                    annot = self.annotations.contains(exp) ? self.annotations : self.schema.annotations;
-                    self._exportTemplates = getValidTemplates(annot.get(exp).content.templates);
-                } else {
-                    // annotation is not defined
-                    self._exportTemplates = null;
+                // filter only templates that are valid
+                return templates.filter(function (temp) {
+                    return module.validateExportTemplate(temp);
+                });
+            };
+
+            // get from table annotation
+            if (self.annotations.contains(exp)) {
+                annotDefinition = {"*": self.annotations.get(exp).content};
+                hasAnnot = true;
+            }
+
+            // get from table contextualized annotation
+            if (self.annotations.contains(expCtx)) {
+                annotDefinition = Object.assign({}, annotDefinition, self.annotations.get(expCtx).content);
+                hasAnnot = true;
+            }
+
+            if (hasAnnot) {
+                chosenAnnot = module._getAnnotationValueByContext(context, annotDefinition);
+                if (chosenAnnot !== -1 && typeof chosenAnnot === "object") {
+                    return getValidTemplates(chosenAnnot.templates);
                 }
             }
 
-            return this._exportTemplates;
-         },
+            //get from schema annoation
+            if (self.schema.annotations.contains(exp)) {
+                hasAnnot = true;
+                annotDefinition = {"*": self.schema.annotations.get(exp).content};
+            }
+
+            // get from schema contextualized annotation
+            if (self.schema.annotations.contains(expCtx)) {
+                annotDefinition = Object.assign({}, annotDefinition, self.schema.annotations.get(expCtx).content);
+                hasAnnot = true;
+            }
+
+            // annotation is not defined on schema and table
+            if (!hasAnnot) {
+                return null;
+            }
+
+            chosenAnnot = module._getAnnotationValueByContext(context, annotDefinition);
+            if (chosenAnnot !== -1 && typeof chosenAnnot === "object") {
+                return getValidTemplates(chosenAnnot.templates);
+            }
+        },
 
         // build foreignKeys of this table and referredBy of corresponding tables.
         _buildForeignKeys: function () {
@@ -2948,7 +2991,7 @@
                 orders = module._getRecursiveAnnotationValue(context, this._table.annotations.get(module._annotations.VISIBLE_FOREIGN_KEYS).content);
             }
 
-            if (orders == -1) {
+            if (orders == -1 || !Array.isArray(orders)) {
                 this._contextualize_cached[context] = -1;
                 return -1;
             }

@@ -2078,7 +2078,7 @@
             var self = this;
 
             // either null or array
-            var res = self.table.exportTemplates;
+            var res = self.table.getExportTemplates(self._context);
 
             // annotation is missing
             if (res === null) {
@@ -2561,7 +2561,7 @@
             }
 
              // annotation
-            if (columns !== -1) {
+            if (columns !== -1 && Array.isArray(columns)) {
                 for (i = 0; i < columns.length; i++) {
                     col = columns[i];
                     // foreignKey or key

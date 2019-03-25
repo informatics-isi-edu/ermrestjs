@@ -1,6 +1,6 @@
 # Export Annotation
 
-Using the [export annotation](annotation.md#tag-2016-export) you can define expor templates that will be used for `ioboxd` service integration with the client tools. For detailed information please refer to [the ioboxd documentation](https://github.com/informatics-isi-edu/ioboxd/blob/master/doc/integration.md).
+Using the [export annotation](annotation.md#tag-2019-export) you can define export templates that will be used for `ioboxd` service integration with the client tools. For detailed information please refer to [the ioboxd documentation](https://github.com/informatics-isi-edu/ioboxd/blob/master/doc/integration.md).
 
 
 ## Structure
@@ -8,20 +8,20 @@ Using the [export annotation](annotation.md#tag-2016-export) you can define expo
 The following is how ERMrestJS and Chaise leverage the different values defined in the export annotation:
 
 ```js
-templates: [
+"templates": [
   {
-    displayname: <chaise-display-name>, // name displayed in dropdown menu in the client
-    type: <FILE or BAG>,
-    outputs: [
+    "displayname": <chaise-display-name>, // name displayed in dropdown menu in the client
+    "type": <FILE or BAG>,
+    "outputs": [
       {
-        source: {
-          api: <ermrest-query-type>, // entity, attribute, attribute-group
-          path: <optional-ermrest-predicate> // used to represent more complex queries
+        "source": {
+          "api": <ermrest-query-type>, // entity, attribute, attribute-group
+          "path": <optional-ermrest-predicate> // used to represent more complex queries
         },
         destination: {
-          name: <output-file-base-name>,
-          type: <output-format-suffix>, // FILE supports csv, json; BAG supports csv, json, fetch(?), download(?)
-          params: <not-sure> // conditionally optional
+          "name": <output-file-base-name>,
+          "type": <output-format-suffix>, // FILE supports csv, json; BAG supports csv, json, fetch(?), download(?)
+          "params": <not-sure> // conditionally optional
         }
       }, ...
     ]

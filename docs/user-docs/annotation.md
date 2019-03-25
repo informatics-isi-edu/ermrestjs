@@ -56,14 +56,15 @@ here is a quick matrix to locate them.
 | [2017 Key Display](#tag-2017-key-display) | - | - | - | X | - | Key augmentation |
 | [2016 Foreign Key](#tag-2016-foreign-key) | - | - | - | - | X | Foreign key augmentation |
 | [2016 Generated](#tag-2016-generated) | X | X | X | - | - | Generated model element |
-| [2016 Ignore](#tag-2016-ignore) | X | X | X | - | - | Ignore model element |
+| [2016 Ignore](#tag-2016-ignore) (_deprecated_) | X | X | X | - | - | Ignore model element |
 | [2016 Immutable](#tag-2016-immutable) | X | X | X | - | - | Immutable model element |
 | [2016 Non Deletable](#tag-2016-non-deletable) | X | X | - | - | - | Non-deletable model element |
 | [2016 App Links](#tag-2016-app-links) | X | X | - | - | - | Intra-Chaise app links |
 | [2016 Table Display](#tag-2016-table-display) | - | X | - | - | - | Table-specific display options |
 | [2016 Visible Columns](#tag-2016-visible-columns) | - | X | - | - | - | Column visibility and presentation order |
 | [2016 Visible Foreign Keys](#tag-2016-visible-foreign-keys) | - | X | - | - | - | Foreign key visibility and presentation order |
-| [2016 Export](#tag-2016-export) | X | X | - | - | - | Describes export templates |
+| [2019 Export](#tag-2019-export) | X | X | - | - | - | Describes export templates |
+| [2016 Export](#tag-2016-export) (_deprecated_) | X | X | - | - | - | Describes export templates |
 | [2017 Asset](#tag-2017-asset) | - | - | X | - | - | Describes assets |
 | [2018 Citation](#tag-2018-citation) | - | X | - | - | - | Describes citation |
 | [2018 Required](#tag-2018-required) | - | X | - | - | - | Required model column |
@@ -178,7 +179,7 @@ often used in prose, long-form presentations, tool tips, or other
 scenarios where a user may need more natural language understanding of
 the concept.
 
-### Tag: 2016 Ignore
+### Tag: 2016 Ignore (_Deprecated_)
 
 `tag:isrd.isi.edu,2016:ignore`
 
@@ -606,15 +607,16 @@ A alternative table or view which abstracts another table _SHOULD_ have a non-nu
 
 See [Context Names](#context-names) section for the list of supported _context_ names. It is assumed that any application context that is performing mutation (record creation, deletion, or editing) MUST use a base entity storage table that is not an abstraction over another table. However, the use of the `detailed` or `compact` context MAY offer an abstraction that augments the presentation of an existing record. An application offering mutation options while displaying an existing entity record might then present the data from the `detailed` or `compact` abstraction but only offer editing or data-entry controls on the fields available from the base storage table.
 
-### Tag: 2016 Export
+### Tag: 2019 Export
 
-`tag:isrd.isi.edu,2016:export`
+`tag:isrd.isi.edu,2019:export`
 
 This key can be used to define export templates that will be used for `ioboxd` service integration with the client tools. For more information about the annotation payload please visit [the iobodx integration document](https://github.com/informatics-isi-edu/ioboxd/blob/master/doc/integration.md).
 
 Supported JSON payload patterns:
 
-- `{` `"templates":` `[`_template_`]` `}`: An array of _template_ objects to export.
+- `{` ... _context_ `:` `{` `"templates":` `[`_template_`]` `}` `,` ... `}`: An array of template objects to export.
+- `{` ... _context1_ `:` _context2_ ... `}`: Short-hand to allow _context1_ to use the same templates configured for _context2_.
 
 Supported _template_ patterns:
 - `{` ... `"displayname:"` _displayname_ ... `}`: The display name that will be used to populate the Chaise export drop-down for this _template_.
@@ -637,6 +639,20 @@ Supported _destinationentry_ patterns:
 #### Export Annotation Hierarchy
 
 This annotation only applies to table but MAY be annotated at the schema level to set a schema-wide default. If the annotation is missing on the table, we will get the export definition from the schema.
+
+### Tag: 2016 Export (_Deprecated_)
+
+`tag:isrd.isi.edu,2016:export`
+
+> This tag is the old version of [2019 Export](#tag-2019-export) tag. The new tag supports contextualization and is preferred. Templates defined under this tag will be interpreted as `"*"` context of `tag:isrd.isi.edu,2019:export`. If both `tag:isrd.isi.edu,2016:export` and `tag:isrd.isi.edu,2019:export` for `"*"` context are defined, the `tag:isrd.isi.edu,2016:export` will be ignored.
+
+This key can be used to define export templates that will be used for `ioboxd` service integration with the client tools. For more information about the annotation payload please visit [the iobodx integration document](https://github.com/informatics-isi-edu/ioboxd/blob/master/doc/integration.md).
+
+Supported JSON payload pattern:
+
+- `{` `"templates":` `[`_template_`]` `}`: An array of _template_ objects to export.
+
+Please refer to [2019 Export](#tag-2019-export) for more information about the supported _template_ patterns.
 
 ### Tag: 2017 Asset
 
