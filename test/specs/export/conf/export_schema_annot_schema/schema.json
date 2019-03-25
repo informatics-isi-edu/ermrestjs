@@ -646,6 +646,49 @@
                     }
                 }
             ]
+        },
+        "table_w_contextualized_export": {
+            "kind": "table",
+            "table_name": "table_w_contextualized_export",
+            "schema_name": "export_schema_annot_schema",
+            "keys": [
+                {"unique_columns": ["id"]}
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "col",
+                    "type": {
+                        "typename": "text"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2019:export": {
+                    "compact": {
+                        "templates": [
+                            {
+                                "displayname": "contextualized table template",
+                                "type": "BAG"
+                            }
+                        ]
+                    }
+                },
+                "tag:isrd.isi.edu,2016:export": {
+                    "templates": [
+                        {
+                            "displayname": "default table template",
+                            "type": "BAG"
+                        }
+                    ]
+                }
+            }
         }
     },
     "schema_name": "export_schema_annot_schema",
@@ -658,6 +701,16 @@
                     "post_processors": "someFn"
                 }
             ]
+        },
+        "tag:isrd.isi.edu,2019:export": {
+            "compact": {
+                "templates": [
+                    {
+                        "displayname": "contextualized schema template",
+                        "type": "BAG"
+                    }
+                ]
+            }
         }
     }
 }

@@ -2077,7 +2077,7 @@
             var self = this;
 
             // either null or array
-            var res = self.table.exportTemplates;
+            var res = self.table.getExportTemplates(self._context);
 
             // annotation is missing
             if (res === null) {
