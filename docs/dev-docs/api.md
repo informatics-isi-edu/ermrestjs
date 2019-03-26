@@ -2906,7 +2906,8 @@ NOTE It will not have the same sort and paging as the reference.
 <a name="ERMrest.Reference+defaultLogInfo"></a>
 
 #### reference.defaultLogInfo : <code>Object</code>
-The default information that we want to be logged including catalog, schema_table, and facet (filter).
+The default information that we want to be logged. This includes:
+ - catalog, schema_table, cfacet, cfacet_str, cfacet_path, facets
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+defaultExportTemplate"></a>
@@ -6162,7 +6163,8 @@ NOTE It will not have the same sort and paging as the reference.
 <a name="ERMrest.Reference+defaultLogInfo"></a>
 
 #### reference.defaultLogInfo : <code>Object</code>
-The default information that we want to be logged including catalog, schema_table, and facet (filter).
+The default information that we want to be logged. This includes:
+ - catalog, schema_table, cfacet, cfacet_str, cfacet_path, facets
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+defaultExportTemplate"></a>

@@ -3025,6 +3025,7 @@
 
     /**
      * Given a header value, will encode and truncate if its length is more than the allowed length.
+     * If the output has `"t":1`, then it has been truncated.
      * These are the allowed and expected values in a header:
      * - cid
      * - pid
@@ -3039,6 +3040,21 @@
      *    - facet
      *    - schema_table
      * - source: the source object of facet
+     *
+     * The truncation logic is as follows:
+     *  1. if the encoded string is not more than the limit, don't truncate.
+     *  2. otherwise,
+     *      2.1. create the bare minimum log object with the following attributes:
+     *        - t: 1
+     *        - cid, wid, pid, action, catalog, schema_table
+     *        - if cfacet exists: cfacet
+     *     2.2. Add other attributes step by step and check the limit. The following
+     *          is the priority list:
+     *        - referrer.schema_table, referrer.cfacet, referrer.filter, referrer.facet
+     *        - source
+     *        - column
+     *        - filter, facet, cfacet
+     *
      * @param  {object} header The header content
      * @return {object}
      */
@@ -3062,12 +3078,17 @@
             t: 1 // indicates that this request has been truncated
         };
 
+        // special case for cfacet
+        if (header.cfacet) {
+            obj.cfacet = header.cfacet;
+        }
+
         prevRes = res = encode(obj);
         if (res.length >= MAX_LENGTH) {
             return {};
         }
 
-        // truncate facet or filter
+        // truncate cfacet, facet, or filter
         // if it's a facet that has `and` in the first level,
         // it will remove only the array element that is needed. otherwise
         // the whole facet/filter will be removed.
@@ -3075,16 +3096,34 @@
             var prevRes = encode(obj);
             var h = key ? header[key] : header;
 
-            if (h.filter) {
-                // add the filter
+            var setObjAndEncode = function (attr) {
                 if (key) {
-                    obj[key].filter = h.filter;
+                    obj[key][attr] = h[attr];
                 } else {
-                    obj.filter = h.filter;
+                    obj[attr] = h[attr];
                 }
+                return encode(obj);
+            };
 
-                // encode and test the length
-                res = encode(obj);
+            if (h.cfacet_str) {
+                res = setObjAndEncode("cfacet_str");
+                if (res.length >= MAX_LENGTH) {
+                    return {truncated: true, res: prevRes};
+                }
+                prevRes = res;
+            }
+
+            if (h.cfacet_path) {
+                res = setObjAndEncode("cfacet_str");
+                if (res.length >= MAX_LENGTH) {
+                    return {truncated: true, res: prevRes};
+                }
+                prevRes = res;
+            }
+
+            if (h.filter) {
+                // add filter
+                res = setObjAndEncode("filter");
                 if (res.length >= MAX_LENGTH) {
                     // it was lengthy so just return the obj without filter
                     return {truncated: true, res: prevRes};
@@ -3094,7 +3133,7 @@
                 return {truncated: false, res: res};
             }
 
-            // this function only expects facet and filter. it will ignore other variables
+            // this function only expects cfacet, facet, and filter. it will ignore other variables
             if (!h.facet) {
                 return {truncated: false, res: prevRes};
             }
@@ -3104,14 +3143,7 @@
             if (!Array.isArray(h.facet.and)) {
 
                 // add the facet
-                if (key) {
-                    obj[key].facet = h.facet;
-                } else {
-                    obj.facet = h.facet;
-                }
-
-                // encode and test the length
-                res = encode(obj);
+                res = setObjAndEncode("filter");
                 if (res.length >= MAX_LENGTH) {
                     return {truncated: true, res: prevRes};
                 }
