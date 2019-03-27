@@ -45,7 +45,7 @@ exports.setCatalogAcls = function (ERMrest, done, uri, catalogId, acls, cb, user
 };
 
 exports.removeCachedCatalog = function (ERMrest, catalogId) {
-    var server = ERMrest.ermrestFactory.getServer(process.env.ERMREST_URL);
+    var server = ERMrest.ermrestFactory.getServer(process.env.ERMREST_URL, {cid: "test"});
     delete server.catalogs._catalogs[catalogId];
 };
 

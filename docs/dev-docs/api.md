@@ -61,8 +61,9 @@ to use for ERMrest JavaScript agents.
 
 * [ERMrest](#ERMrest) : <code>object</code>
     * [.Server](#ERMrest.Server)
-        * [new Server(uri)](#new_ERMrest.Server_new)
+        * [new Server(uri, contextHeaderParams)](#new_ERMrest.Server_new)
         * [.uri](#ERMrest.Server+uri) : <code>string</code>
+        * [.cid](#ERMrest.Server+cid) : <code>string</code>
         * [.catalogs](#ERMrest.Server+catalogs) : [<code>Catalogs</code>](#ERMrest.Catalogs)
     * [.Catalogs](#ERMrest.Catalogs)
         * [new Catalogs(server)](#new_ERMrest.Catalogs_new)
@@ -669,22 +670,30 @@ to use for ERMrest JavaScript agents.
 **Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
 
 * [.Server](#ERMrest.Server)
-    * [new Server(uri)](#new_ERMrest.Server_new)
+    * [new Server(uri, contextHeaderParams)](#new_ERMrest.Server_new)
     * [.uri](#ERMrest.Server+uri) : <code>string</code>
+    * [.cid](#ERMrest.Server+cid) : <code>string</code>
     * [.catalogs](#ERMrest.Server+catalogs) : [<code>Catalogs</code>](#ERMrest.Catalogs)
 
 <a name="new_ERMrest.Server_new"></a>
 
-#### new Server(uri)
+#### new Server(uri, contextHeaderParams)
 
 | Param | Type | Description |
 | --- | --- | --- |
 | uri | <code>string</code> | URI of the ERMrest service. |
+| contextHeaderParams | <code>Object</code> | an object with at least `cid` |
 
 <a name="ERMrest.Server+uri"></a>
 
 #### server.uri : <code>string</code>
 The URI of the ERMrest service
+
+**Kind**: instance property of [<code>Server</code>](#ERMrest.Server)  
+<a name="ERMrest.Server+cid"></a>
+
+#### server.cid : <code>string</code>
+context-id: shows the id of app that this server is being used for
 
 **Kind**: instance property of [<code>Server</code>](#ERMrest.Server)  
 <a name="ERMrest.Server+catalogs"></a>

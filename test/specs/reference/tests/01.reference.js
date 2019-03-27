@@ -109,7 +109,7 @@ exports.execute = function (options) {
                 expect(reference.create()).toBeDefined();
                 expect(reference.read()).toBeDefined();
                 var expectedCSVLink = options.url + "/catalog/" + catalog_id + "/entity/M:=" +
-                    schemaName + ":" + tableName + "/id=" + entityId + "?limit=none&accept=csv&uinit=1&download=" + reference.displayname.unformatted;
+                    schemaName + ":" + tableName + "/id=" + entityId + "?limit=none&accept=csv&uinit=1&cid=test&download=" + reference.displayname.unformatted;
                 expect(reference.csvDownloadLink).toBe(expectedCSVLink);
             });
 

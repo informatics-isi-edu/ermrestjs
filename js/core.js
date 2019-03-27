@@ -82,7 +82,7 @@
         if (uri === undefined || uri === null)
             throw new module.InvalidInputError("URI undefined or null");
 
-        if (typeof contextHeaderParams === 'undefined' || contextHeaderParams === null) {
+        if (contextHeaderParams == null || typeof contextHeaderParams !== 'object') {
             // Set default cid to a truthy string because a true null will not
             // appear as a query parameter but we want to track cid even when cid
             // isn't provided
@@ -104,6 +104,7 @@
     /**
      * @memberof ERMrest
      * @param {string} uri URI of the ERMrest service.
+     * @param {Object} contextHeaderParams an object with at least `cid`
      * @constructor
      */
     function Server(uri, contextHeaderParams) {
@@ -120,8 +121,14 @@
          * @type {Object}
          */
         this.http = module._wrap_http(module._http);
-        this.http.contextHeaderParams = contextHeaderParams || {};
-        this.http.contextHeaderParams.cid = this.http.contextHeaderParams.cid || null;
+        this.http.contextHeaderParams = contextHeaderParams;
+        this.http.contextHeaderParams.cid = this.http.contextHeaderParams.cid;
+
+        /**
+         * context-id: shows the id of app that this server is being used for
+         * @type {string}
+         */
+        this.cid = this.http.contextHeaderParams.cid;
 
         /**
          *

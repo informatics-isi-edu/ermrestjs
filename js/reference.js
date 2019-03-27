@@ -2041,7 +2041,9 @@
          * @returns {String} A string representing the url for direct csv download
          **/
         get csvDownloadLink() {
-            return this.location.ermrestCompactUri + "?limit=none&accept=csv&uinit=1&download=" + module._fixedEncodeURIComponent(this.displayname.unformatted);
+            var cid = this.table.schema.catalog.server.cid;
+            cid = cid ? ("&cid=" + cid) : "";
+            return this.location.ermrestCompactUri + "?limit=none&accept=csv&uinit=1" + cid + "&download=" + module._fixedEncodeURIComponent(this.displayname.unformatted);
         },
 
         /**

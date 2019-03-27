@@ -1882,6 +1882,11 @@ AssetPseudoColumn.prototype.formatPresentation = function(data, context, options
 
     // add the uinit=1 query params
     url += ( url.indexOf("?") !== -1 ? "&": "?") + "uinit=1";
+
+    // add cid query param
+    var cid = this.table.schema.catalog.server.cid;
+    if (cid) url += "&cid=" + cid;
+
     var keyValues = {
         "caption": caption,
         "url": url
