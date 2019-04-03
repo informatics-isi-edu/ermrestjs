@@ -237,7 +237,7 @@ var ERMrest = (function(module) {
 
         this.PART_SIZE = otherInfo.chunkSize || 5 * 1024 * 1024; //minimum part size defined by hatrac 5MB
 
-        this.CHUNK_QUEUE_SIZE = otherInfo.chunkQueueSize || 10;
+        this.CHUNK_QUEUE_SIZE = otherInfo.chunkQueueSize || 4;
 
         this.file = file;
 
@@ -408,6 +408,10 @@ var ERMrest = (function(module) {
 
         var deferred = module._q.defer();
 
+        if (this.completed && this.jobDone) {
+            deferred.resolve(this.chunkUrl);
+            return deferred.promise;
+        }
 
         // Check whether an existing upload job is available for current file
         this._getExistingJobStatus().then(function(response) {
@@ -832,7 +836,7 @@ var ERMrest = (function(module) {
      * In addition if the upload has been combleted then it will call onUploadCompleted for regular upload
      * and completeUpload to complete the chunk upload
      */
-    upload.prototype._updateProgressBar = function(xhr) {
+    upload.prototype._updateProgressBar = function() {
         var length = this.chunks.length;
         var progressDone = 0;
         var chunksComplete = 0;
@@ -843,7 +847,7 @@ var ERMrest = (function(module) {
 
         if (this.uploadPromise) this.uploadPromise.notify(this.completed ? this.file.size : progressDone, this.file.size);
 
-        if (chunksComplete === length && !this.completed && (!xhr || (xhr && (xhr.status >= 200 && xhr.status < 300)))) {
+        if (chunksComplete === length && !this.completed) {
             this.completed = true;
             if (this.uploadPromise) this.uploadPromise.resolve(this.url);
         }
@@ -978,7 +982,7 @@ var ERMrest = (function(module) {
                         // To track progress on upload
                         if (e.lengthComputable) {
                             self.progress = e.loaded;
-                            upload._updateProgressBar(self.xhr);
+                            upload._updateProgressBar();
                         }
                     }
                 },
@@ -1010,10 +1014,10 @@ var ERMrest = (function(module) {
             // and the status code is in range of 500 then there is a server error, keep retrying for 5 times
             // else the error is in 400 series which is some client error
             if (!upload.isPaused) {
-                upload._updateProgressBar(self.xhr);
+                upload._updateProgressBar();
                 upload._onUploadError(response);
             } else {
-                upload._updateProgressBar(self.xhr);
+                upload._updateProgressBar();
             }
         });
 
