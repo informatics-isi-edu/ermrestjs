@@ -380,6 +380,7 @@ var ERMrest = (function(module) {
             self.isPaused = false;
             self.completed = true;
             self.jobDone = true;
+            self.versionedUrl = response.headers("content-location");
             deferred.resolve(self.url);
         }, function(response) {
             // 403 - file exists but user can't read it -> create a new one
@@ -550,7 +551,7 @@ var ERMrest = (function(module) {
         var deferred = module._q.defer();
 
         if (this.completed && this.jobDone) {
-            deferred.resolve(this.url);
+            deferred.resolve(this.versionedUrl ? this.versionedUrl : this.url);
             return deferred.promise;
         }
 
@@ -572,7 +573,9 @@ var ERMrest = (function(module) {
             self.jobDone = true;
 
             if (response.headers('location')) {
-                deferred.resolve(response.headers('location'));
+                var versionedUrl = response.headers('location');
+                self.versionedUrl = versionedUrl;
+                deferred.resolve(versionedUrl);
             } else {
                 deferred.reject(module.responseToError(response));
             }
