@@ -286,7 +286,7 @@
                 self.annotations = new Annotations();
                 for (var uri in jsonSchemas.annotations) {
                     var jsonAnnotation = jsonSchemas.annotations[uri];
-                    self.annotations._push(new Annotation("schema", uri, jsonAnnotation));
+                    self.annotations._push(new Annotation("catalog", uri, jsonAnnotation));
                 }
 
                 for (var s in jsonSchemas.schemas) {
@@ -478,6 +478,15 @@
             }
 
             return schema.tables.get(tableName);
+        },
+
+        chaiseConfig: function () {
+            if (!this._chaiseConfig) {
+                if (this.annotations.contains(module._annotations.CHAISE_CONFIG)) {
+                    this._chaiseConfig = this.annotations.get(module._annotations.CHAISE_CONFIG).content;
+                }
+            }
+            return this._chaiseConfig;
         }
     };
 

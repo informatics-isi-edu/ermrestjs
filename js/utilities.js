@@ -3202,7 +3202,7 @@
     module._annotations = Object.freeze({
         APP_LINKS: "tag:isrd.isi.edu,2016:app-links",
         ASSET: "tag:isrd.isi.edu,2017:asset",
-        CATALOG: "tag:isrd.isi.edu,2019:chaise-config",
+        CHAISE_CONFIG: "tag:isrd.isi.edu,2019:chaise-config",
         CITATION: "tag:isrd.isi.edu,2018:citation",
         COLUMN_DISPLAY: "tag:isrd.isi.edu,2016:column-display",
         DISPLAY: "tag:misd.isi.edu,2015:display",
