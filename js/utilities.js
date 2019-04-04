@@ -653,7 +653,7 @@
 
     /**
     * @param {string} context the context that we want the value of.
-    * @param {ERMrest.Annotation} annotation the annotation object.
+    * @param {Object} annotation the annotation object.
     * @desc returns the annotation value based on the given context.
     */
     module._getAnnotationValueByContext = function (context, annotation) {
@@ -3207,6 +3207,7 @@
         COLUMN_DISPLAY: "tag:isrd.isi.edu,2016:column-display",
         DISPLAY: "tag:misd.isi.edu,2015:display",
         EXPORT: "tag:isrd.isi.edu,2016:export",
+        EXPORT_CONTEXTED: "tag:isrd.isi.edu,2019:export",
         FOREIGN_KEY: "tag:isrd.isi.edu,2016:foreign-key",
         GENERATED: "tag:isrd.isi.edu,2016:generated",
         HIDDEN: "tag:misd.isi.edu,2015:hidden", //TODO deprecated and should be deleted.

@@ -19,7 +19,8 @@ exports.execute = function (options) {
             tableNameInvalidTemplate2 = "invalid_temp2",
             tableNameNoExport = "no_export_annot",
             tableWithLongDefaultExport = "table_with_long_default_export",
-            table, ermRest, reference, noAnnotReference, noExportoutputReference, tableWithLongDefaultReference, exportObj;
+            tableWithContextualizedExport = "table_w_contextualized_export",
+            table, ermRest, reference, noAnnotReference, noExportoutputReference, tableWithLongDefaultReference, tableWithContextExportReference, exportObj;
 
         var baseUri = options.url + "/catalog/" + process.env.DEFAULT_CATALOG + "/entity/" + schemaName1 + ":" + tableName;
 
@@ -30,6 +31,8 @@ exports.execute = function (options) {
         var noExportOutputUri = options.url + "/catalog/" + process.env.DEFAULT_CATALOG + "/entity/" + schemaName2 + ":" + tableNameNoExport;
 
         var noExportOutputWithLongPathUri = options.url + "/catalog/" + process.env.DEFAULT_CATALOG + "/entity/" + schemaName1 + ":" + tableWithLongDefaultExport;
+
+        var contextualizedExportUri = options.url + "/catalog/" + process.env.DEFAULT_CATALOG + "/entity/" + schemaName2 + ":" + tableWithContextualizedExport;
 
         /*
          * no_export_annot is identical in both export_schema_annot_schema and export_table_annot_schema,
@@ -136,6 +139,9 @@ exports.execute = function (options) {
                 return ermRest.resolve(noExportOutputWithLongPathUri, {cid: "test"});
             }).then(function (ref3) {
                 tableWithLongDefaultReference = ref3;
+                return ermRest.resolve(contextualizedExportUri, {cid: "test"});
+            }).then(function (ref4) {
+                tableWithContextExportReference = ref4;
                 done();
             }, function (err) {
                 console.dir(err);
@@ -145,46 +151,72 @@ exports.execute = function (options) {
 
         describe("For exporter ," , function() {
 
-            describe("table.exportTemplates, ", function () {
-                var t;
+            describe("table.getExportTemplates(), ", function () {
+                var checkFirstTemplateDisplayname = function (schema_name, table_name, context, expected) {
+                    var t = options.catalog.schemas.get(schema_name).tables.get(table_name);
+                    var templates = t.getExportTemplates(context);
+                    expect(templates.length).toBe(1, "length missmatch");
+                    expect(templates[0].displayname).toEqual(expected, "displayname missmatch.");
+                };
 
-                describe("if annotation is defined on the table, ", function () {
-                    it ("should return empty array, if it's not well defined.", function () {
-                        t = options.catalog.schemas.get(schemaName1).tables.get(tableNameInvalidTemplate);
-                        expect(t.exportTemplates).toEqual([], "length missmatch for invalid templates");
+                describe("regarding 2016:export annotation, ", function () {
+                    describe("if annotation is defined on the table, ", function () {
+                        it ("should return empty array, if it's not well defined.", function () {
+                            var t = options.catalog.schemas.get(schemaName1).tables.get(tableNameInvalidTemplate);
+                            expect(t.getExportTemplates()).toEqual([], "length missmatch for invalid templates");
+                        });
+
+                        it ("should ignore invalid templates", function () {
+                            checkFirstTemplateDisplayname(schemaName1, tableNameInvalidTemplate2, null, "valid_temp");
+                        });
+
+                        it ("should return all the templates that are valid.", function () {
+                            table = options.catalog.schemas.get(schemaName1).tables.get(tableName);
+                            expect(table.getExportTemplates().length).toBe(3);
+                        });
                     });
 
-                    it ("should ignore invalid templates", function () {
-                        t = options.catalog.schemas.get(schemaName1).tables.get(tableNameInvalidTemplate2);
-                        expect(t.exportTemplates.length).toBe(1, "length missmatch");
-                        expect(t.exportTemplates[0].displayname).toEqual("valid_temp", "displayname missmatch.");
-                    });
-
-                    it ("should return all the templates that are valid.", function () {
-                        table = options.catalog.schemas.get(schemaName1).tables.get(tableName);
-
-                        expect(table.exportTemplates.length).toBe(3);
+                    it ("otherwise if annotation is defined on the schema, should return it.", function () {
+                        checkFirstTemplateDisplayname(schemaName2, tableNameNoExport, null, "default schema template");
                     });
                 });
 
-                it ("otherwise if annotation is defined on the schema, should return it.", function () {
-                    t = options.catalog.schemas.get(schemaName2).tables.get(tableNameNoExport);
-                    expect(t.exportTemplates.length).toBe(1, "length missmatch");
-                    expect(t.exportTemplates[0].displayname).toEqual("default schema template", "displayname missmatch");
+                describe("regarding context-based export annotation, ", function () {
+                    it ("should return the template defined for the given context in table.", function () {
+                        checkFirstTemplateDisplayname(schemaName2, tableWithContextualizedExport, "compact", "contextualized table template");
+                    });
+
+                    it ("otherwise, should return the 2016:export result.", function () {
+                        checkFirstTemplateDisplayname(schemaName2, tableWithContextualizedExport, "detailed", "default table template");
+                    });
+
+                    it("otherwise, should the 2019:export defined on the schema for the context.", function () {
+                        checkFirstTemplateDisplayname(schemaName2, tableNameNoExport, "compact", "contextualized schema template");
+                    });
+
+                    it ("otherwise, should return the 2016:export defined on the table for the context.", function () {
+                        checkFirstTemplateDisplayname(schemaName2, tableNameNoExport, "detailed", "default schema template");
+                    });
                 });
 
-                it ("otherwise should return `null`.", function () {
+                it ("otherwise (no 2016:export or 2019:export annotations) should return `null`.", function () {
                     t = options.catalog.schemas.get(schemaName1).tables.get(tableNameNoExport);
-                    expect(t.exportTemplates).toBe(null, "length missmatch for no annoation");
+                    expect(t.getExportTemplates()).toBe(null, "length missmatch for no annoation");
                 });
             });
 
             describe("reference.getExportTemplates, ", function () {
                 var templates;
-                it ("if valid templates are defined on the table, should return them.", function () {
+                it ("if valid templates are defined, should return them.", function () {
                     templates = reference.getExportTemplates();
                     expect(templates.length).toBe(3, "length missmatch");
-                    expect(templates).toEqual(table.exportTemplates, "templates missmatch");
+                    expect(templates).toEqual(table.getExportTemplates(), "templates missmatch");
+                });
+
+                it ("should get the templates from the correct context.", function () {
+                    templates = tableWithContextExportReference.contextualize.compact.getExportTemplates();
+                    expect(templates.length).toBe(1, "length missmatch");
+                    expect(templates[0].displayname).toEqual("contextualized table template", "displayname missmatch");
                 });
 
                 describe('when useDefault is true,', function () {
@@ -255,10 +287,10 @@ exports.execute = function (options) {
 
             describe("for BDBag template", function () {
                 it("should create an exporter object", function() {
-                    exportObj = new ermRest.Exporter(reference, "bag-name", reference.table.exportTemplates[0], "/deriva/export/");
+                    exportObj = new ermRest.Exporter(reference, "bag-name", reference.table.getExportTemplates()[0], "/deriva/export/");
 
                     expect(exportObj instanceof ermRest.Exporter).toBe(true);
-                    expect(exportObj.template).toEqual(reference.table.exportTemplates[0]);
+                    expect(exportObj.template).toEqual(reference.table.getExportTemplates()[0]);
                 });
 
                 it("exporter.exportParameters should return the expected object", function () {
@@ -305,10 +337,10 @@ exports.execute = function (options) {
 
             describe("for BDBag CSV template", function () {
                 it("should create an exporter object", function() {
-                    exportObj = new ermRest.Exporter(reference, "bag-name", reference.table.exportTemplates[1], "deriva/export/");
+                    exportObj = new ermRest.Exporter(reference, "bag-name", reference.table.getExportTemplates()[1], "deriva/export/");
 
                     expect(exportObj instanceof ermRest.Exporter).toBe(true);
-                    expect(exportObj.template).toEqual(reference.table.exportTemplates[1]);
+                    expect(exportObj.template).toEqual(reference.table.getExportTemplates()[1]);
                 });
 
                 it("exporter.exportParameters should return the expected object", function () {
@@ -355,10 +387,10 @@ exports.execute = function (options) {
 
             describe("for BDBag JSON template", function () {
                 it("should create an exporter object", function() {
-                    exportObj = new ermRest.Exporter(reference, "bag-name", reference.table.exportTemplates[2], "/deriva/export/");
+                    exportObj = new ermRest.Exporter(reference, "bag-name", reference.table.getExportTemplates()[2], "/deriva/export/");
 
                     expect(exportObj instanceof ermRest.Exporter).toBe(true);
-                    expect(exportObj.template).toEqual(reference.table.exportTemplates[2]);
+                    expect(exportObj.template).toEqual(reference.table.getExportTemplates()[2]);
                 });
 
                 it("exporter.exportParameters should return the expected object", function () {
