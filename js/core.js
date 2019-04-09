@@ -369,6 +369,15 @@
             }
 
             return schema.tables.get(tableName);
+        },
+
+        get chaiseConfig () {
+            if (!this._chaiseConfig) {
+                if (this.annotations.contains(module._annotations.CHAISE_CONFIG)) {
+                    this._chaiseConfig = this.annotations.get(module._annotations.CHAISE_CONFIG).content;
+                }
+            }
+            return this._chaiseConfig;
         }
     };
 
@@ -478,15 +487,6 @@
             }
 
             return schema.tables.get(tableName);
-        },
-
-        chaiseConfig: function () {
-            if (!this._chaiseConfig) {
-                if (this.annotations.contains(module._annotations.CHAISE_CONFIG)) {
-                    this._chaiseConfig = this.annotations.get(module._annotations.CHAISE_CONFIG).content;
-                }
-            }
-            return this._chaiseConfig;
         }
     };
 
