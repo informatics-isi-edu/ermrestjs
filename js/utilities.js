@@ -484,7 +484,7 @@
             val = obj[k];
 
             // we don't accept custom type objects (we're not detecting circular reference)
-            if (isObject(val) && (val.constructor && val.constructor.name !== "Object")) continue;
+            if (isObject(val) && (val.constructor && val.constructor != Object)) continue;
 
             newK = k;
             if (k.includes(".")) {
