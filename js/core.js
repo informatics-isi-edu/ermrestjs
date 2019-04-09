@@ -131,6 +131,12 @@
         this.cid = this.http.contextHeaderParams.cid;
 
         /**
+         * page-id: shows the id of the page that this server is being used for
+         * @type {string=}
+         */
+        this.pid = this.http.contextHeaderParams.pid;
+
+        /**
          *
          * @type {ERMrest.Catalogs}
          */

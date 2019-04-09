@@ -64,6 +64,7 @@ to use for ERMrest JavaScript agents.
         * [new Server(uri, contextHeaderParams)](#new_ERMrest.Server_new)
         * [.uri](#ERMrest.Server+uri) : <code>string</code>
         * [.cid](#ERMrest.Server+cid) : <code>string</code>
+        * [.pid](#ERMrest.Server+pid) : <code>string</code>
         * [.catalogs](#ERMrest.Server+catalogs) : [<code>Catalogs</code>](#ERMrest.Catalogs)
     * [.Catalogs](#ERMrest.Catalogs)
         * [new Catalogs(server)](#new_ERMrest.Catalogs_new)
@@ -673,6 +674,7 @@ to use for ERMrest JavaScript agents.
     * [new Server(uri, contextHeaderParams)](#new_ERMrest.Server_new)
     * [.uri](#ERMrest.Server+uri) : <code>string</code>
     * [.cid](#ERMrest.Server+cid) : <code>string</code>
+    * [.pid](#ERMrest.Server+pid) : <code>string</code>
     * [.catalogs](#ERMrest.Server+catalogs) : [<code>Catalogs</code>](#ERMrest.Catalogs)
 
 <a name="new_ERMrest.Server_new"></a>
@@ -694,6 +696,12 @@ The URI of the ERMrest service
 
 #### server.cid : <code>string</code>
 context-id: shows the id of app that this server is being used for
+
+**Kind**: instance property of [<code>Server</code>](#ERMrest.Server)  
+<a name="ERMrest.Server+pid"></a>
+
+#### server.pid : <code>string</code>
+page-id: shows the id of the page that this server is being used for
 
 **Kind**: instance property of [<code>Server</code>](#ERMrest.Server)  
 <a name="ERMrest.Server+catalogs"></a>

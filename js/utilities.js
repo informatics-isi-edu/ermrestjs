@@ -2484,9 +2484,20 @@
      * so that they can be accessed in the template
      */
     module._addErmrestVarsToTemplate = function(obj, catalog) {
+
+        // date object
         obj.$moment = module._currDate;
 
         if (catalog) {
+
+            if (catalog.server) {
+                // deriva-client-context
+                obj.$dcctx = {
+                    cid: catalog.server.cid,
+                    pid: catalog.server.pid
+                };
+            }
+
             var catalogSnapshot = catalog.id.split('@');
             obj.$catalog = {
                 snapshot: catalog.id,
@@ -3026,20 +3037,27 @@
     /**
      * Given a header value, will encode and truncate if its length is more than the allowed length.
      * If the output has `"t":1`, then it has been truncated.
-     * These are the allowed and expected values in a header:
+     * These are the allowed and expected values in a header (in order or priority):
      * - cid
      * - pid
      * - wid
      * - schema_table: schema:table
      * - catalog
-     * - column
-     * - filter
-     * - facet
+     * - cfacet: 1
+     * - ppid, pcid
+     * - template
      * - referrer: for related entities the main entity, for recordset facets: the main entity
+     *    - schema_table
+     *    - cfacet_str
+     *    - cfacet_path
      *    - filter
      *    - facet
-     *    - schema_table
      * - source: the source object of facet
+     * - column
+     * - cfacet_str
+     * - cfacet_path
+     * - filter
+     * - facet
      *
      * The truncation logic is as follows:
      *  1. if the encoded string is not more than the limit, don't truncate.
@@ -3177,6 +3195,15 @@
             // which is getting truncated
             return {truncated: true, res: res};
         };
+
+        // template
+        if (header.template) {
+            obj.template = header.template;
+            res = encode(obj);
+            if (res.length >= MAX_LENGTH) {
+                return prevRes;
+            }
+        }
 
         // referrer: schema_table, facet (filter)
         if (header.referrer) {
