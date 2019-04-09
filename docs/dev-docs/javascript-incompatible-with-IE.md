@@ -1,4 +1,4 @@
-# JavaScript constructs incompatible with IE-11
+## JavaScript constructs incompatible with IE-11
 
 Following are some of the coding constructs that are incompatible with Internet Explorer: 
 
@@ -56,4 +56,4 @@ Replace the above code with:
 
 4. window.origin: Instead of using `window.origin` use `window.location.origin` for IE compatibility.
 
-5. Function.prototype.name: This read-only property indicating the function's name is not supported by IE. 
+5. Function.prototype.name: This read-only property indicating the function's name is not supported by IE (https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/name#Browser_compatibility). 
