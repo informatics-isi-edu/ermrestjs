@@ -178,7 +178,7 @@ Assume the following is the ERD and we're writing these annotations for the tabl
       - A list of comma-seperated clickable row-names.
         ```
         {{#each $self}}
-          [{{{$this.rowName}}}]({{{$this.uri.detailed}}})
+          [{{{this.rowName}}}]({{{this.uri.detailed}}})
           {{#unless @last}}, {{/unless}}
         {{/each}}
         ```
@@ -186,7 +186,7 @@ Assume the following is the ERD and we're writing these annotations for the tabl
         ```
         {{#if ($self.$fkey_s_f4_cons.values.f4_id 13)}}
             {{#each $self}}
-              [{{{$this.rowName}}}]({{{$this.uri.detailed}}})
+              [{{{this.rowName}}}]({{{this.uri.detailed}}})
               {{#unless @last}}, {{/unless}}
             {{/each}}
         {{/if}}
@@ -217,7 +217,7 @@ Assume the following is the ERD and we're writing these annotations for the tabl
     - A list of comma-seperated clickable row-names.
       ```
       {{#each $self}}
-        [{{{$this.rowName}}}]({{{$this.uri.detailed}}})
+        [{{{this.rowName}}}]({{{this.uri.detailed}}})
         {{#unless @last}}, {{/unless}}
       {{/each}}
       ```
