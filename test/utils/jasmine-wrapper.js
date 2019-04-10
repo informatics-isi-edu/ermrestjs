@@ -3,6 +3,7 @@ var jasmineUtils = require('./jasmine-runner-utils.js');
 // function to run all test specs
 var runSpecs = function(config) {
 	// Load the configuration file
+    console.log("before utils run");
 	jasmineUtils.run(config);
 };
 
@@ -35,9 +36,9 @@ exports.run = function(config) {
 
 		var exec = require('child_process').exec;
 		exec('hostname', function (error, stdout, stderr) {
-	    	
+
 	    	process.env.ERMREST_URL = 'http://' + stdout.trim() + '/ermrest';
-	    	
+
 	    	console.log(process.env.ERMREST_URL);
 
 	    	var setCookie = function(username, password, authCookieEnvName, cb) {
@@ -75,6 +76,7 @@ exports.run = function(config) {
 	    	setCookie('test2', 'dummypassword', 'RESTRICTED_AUTH_COOKIE', success);
 	    });
 	} else {
+        console.log("in wrapper run")
 	    setRestrictedUserId(config);
 	}
 };

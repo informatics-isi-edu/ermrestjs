@@ -371,6 +371,9 @@
             return schema.tables.get(tableName);
         },
 
+        /**
+         * @return {Object} the chaise config object from the catalog annotation
+         */
         get chaiseConfig () {
             if (!this._chaiseConfig) {
                 if (this.annotations.contains(module._annotations.CHAISE_CONFIG)) {

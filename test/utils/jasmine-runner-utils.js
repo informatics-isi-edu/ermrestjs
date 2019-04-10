@@ -10,12 +10,14 @@ var ermrestUtils = require(process.env.PWD + "/../ErmrestDataUtils/import.js");
 var createCatalog = function() {
 	var defer = q.defer();
 
+    console.log("before catalog create");
 	// make http request to create a catalog to be used across all specs
 	ermrestUtils.importData({
         setup: { catalog: { acls: { 'enumerate': ['*'] } } },
         url: process.env.ERMREST_URL,
         authCookie: process.env.AUTH_COOKIE
     }).then(function (data) {
+        console.log("right after catalog creation");
     	process.env.DEFAULT_CATALOG = data.catalogId;
 	    defer.resolve(data.catalogId);
     }, function (err) {
@@ -58,6 +60,8 @@ exports.deleteCatalog = deleteCatalog
 // Deletes the created catalog once all specs have been executed
 exports.run = function(config) {
 
+    console.log("in utils run");
+    console.log(config);
 	// Load the configuration
 	jrunner.loadConfig(config);
 
@@ -80,6 +84,7 @@ exports.run = function(config) {
 	// Create a catalog and then
 	// Execute the specs mentioned in the config file jasmine.json in /support folder
 	createCatalog().then(function() {
+        console.log("after catalog creation resolved");
 		jrunner.execute();
 	}, function(err) {
 		console.log(err ? err.message : "Some Catalog error");
