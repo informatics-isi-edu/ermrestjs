@@ -30,6 +30,7 @@ SOURCE=$(HEADER) \
 	   $(JS)/filters.js \
 	   $(JS)/utilities.js \
 	   $(JS)/handlebar_helpers.js \
+	   $(JS)/handlebar_math_helpers.js \
 	   $(JS)/errors.js \
 	   $(JS)/parser.js \
 	   $(JS)/http.js \
