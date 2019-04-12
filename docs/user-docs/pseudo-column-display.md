@@ -12,7 +12,7 @@ By using `display` attribute in the [source-syntax](pseudo-columns.md), you can 
 }
 ```
 
-In the `markdown_pattern` you can access the current pseudo-column data with `$self` namespace. The structure of the available data is going to be different based on pseudo-column type. In the following, we summarized the structure of object that you have access to. If you want to just look at some examples, go to the [examples](#examples) section.
+In the `markdown_pattern` you can access the current pseudo-column data with `$self` namespace. The structure of the available data is going to be different based on pseudo-column type. In the following, we summarized the structure of object that you have access to. If you want to just look at some examples, go to the [examples](#examples) section. The examples follow the rules defined for handlebars templates, mostly the [Each Helper](handlebars.md#each-helper).
 
 ## $self Data Structure
 
