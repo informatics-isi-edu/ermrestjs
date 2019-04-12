@@ -13,6 +13,5 @@ var config = {
 // to execute specific test cases only
 config["spec_files"] = ["support/*.spec.js"];
 
-console.log("before calling wrapper run");
 // function to run all test specs
 jasmineWrapper.run(config);

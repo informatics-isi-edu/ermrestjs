@@ -5,12 +5,6 @@ var includes = require(__dirname + '/../utils/ermrest-init.js').init();
 console.log("after init in ermrest import");
 var ermrestUtils = require(process.env.PWD + "/../ErmrestDataUtils/import.js");
 
-{{#each $self}}
-    [! [{{{this.RID}}}] ({{{this.Thumbnail_URL}}}) {height=75} ]
-    ({{{this.uri.detailed}}})
-    [! [{{{this.RID}}}] ({{{this.Thumbnail_URL}}}) {height=75} ]
-{{/each}}
-
 /**
  * This function will import all the given schemas.
  * It's using the bulk ermrest API. We didn't want to change all the config files,
