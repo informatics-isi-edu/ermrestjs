@@ -1106,6 +1106,9 @@
             if (chosenAnnot !== -1 && typeof chosenAnnot === "object") {
                 return getValidTemplates(chosenAnnot.templates);
             }
+
+            // we have an annotation, but it doesn't match our current context, so no templates are returned
+            return null;
         },
 
         // build foreignKeys of this table and referredBy of corresponding tables.
