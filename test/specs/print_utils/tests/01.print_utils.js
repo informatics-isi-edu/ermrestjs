@@ -402,6 +402,18 @@ exports.execute = function (options) {
                 expect(module.renderHandlebarsTemplate("{{#encodeFacet}}" + facet + "{{/encodeFacet}}")).toBe('N4IghgdgJiBcAEBtUBnA9gVwE4GMCmc8IAljADRE4AWax+KhiIAjCALoC+nQA');
             });
 
+            it('add helper', function () {
+                expect(module.renderHandlebarsTemplate("{{add a b}}", { a: 1, b: 2 })).toBe("3");
+                expect(module.renderHandlebarsTemplate("{{add a b}}", { a: "4", b: "2" })).toBe("6");
+                expect(module.renderHandlebarsTemplate("{{add a b}}", { a: 1, b: "2" })).toBe("3");
+            });
+
+            it('subtract helper', function () {
+                expect(module.renderHandlebarsTemplate("{{subtract a b}}", { a: 2, b: 1 })).toBe("1");
+                expect(module.renderHandlebarsTemplate("{{subtract a b}}", { a: "4", b: "2" })).toBe("2");
+                expect(module.renderHandlebarsTemplate("{{subtract a b}}", { a: 2, b: "1" })).toBe("1");
+            });
+
             it('if eq (equals) helper', function () {
                 expect(module.renderHandlebarsTemplate("Name {{#if (eq name 'Chloe')}}{{name}} is equal to Chloe{{else}}{{name}} is not equal to Chloe{{/if}}", { name: 'Chloe' })).toBe("Name Chloe is equal to Chloe");
                 expect(module.renderHandlebarsTemplate("Name {{#if (eq name 'Chloe')}}{{name}} is equal to Chloe{{else}}{{name}} is not equal to Chloe{{/if}}", { name: 'John' })).toBe("Name John is not equal to Chloe");

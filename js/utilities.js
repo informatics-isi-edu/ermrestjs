@@ -2428,7 +2428,8 @@
             return module._escapeMarkdownCharacters(text);
         });
 
-        module._injectExternalHandlerbarHelper(module._handlebars);
+        module._injectHandlerbarCompareHelpers(module._handlebars);
+        module._injectHandlerbarMathHelpers(module._handlebars);
 
         // loop through handlebars defined list of helpers and check against the enum in ermrestJs
         // if not in enum, set helper to false
@@ -3328,7 +3329,9 @@
         "blockHelperMissing", "each", "if", "helperMissing", "unless", "with",
         // ermrestJS helpers
         "eq", "ne", "lt", "gt", "lte", "gte", "and", "or", "ifCond",
-        "escape", "encode", "formatDate", "encodeFacet"
+        "escape", "encode", "formatDate", "encodeFacet",
+        // math helpers
+        "add", "subtract"
     ];
 
     module._operationsFlag = Object.freeze({

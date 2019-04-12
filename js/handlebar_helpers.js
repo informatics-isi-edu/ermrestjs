@@ -1,5 +1,5 @@
 	(function() {
-		module._injectExternalHandlerbarHelper = function(Handlebars) {
+		module._injectHandlerbarCompareHelpers = function(Handlebars) {
 
 			Handlebars.registerHelper({
                 /**
