@@ -1,5 +1,4 @@
 exports.execute = function() {
-    console.log("execute jasmine matchers");
 
     beforeAll(function() {
         'use strict';

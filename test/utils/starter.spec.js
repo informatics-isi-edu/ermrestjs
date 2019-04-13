@@ -1,13 +1,10 @@
 exports.runTests = function (options) {
-    console.log("in start spec run tests");
     var description = options.description;
     var schemaConfs = options.schemaConfigurations || [];
     var testCases = options.testCases || [];
 
 
-    console.log("before init");
     var includes = require('./ermrest-init.js').init();
-    console.log("after init in starter spec");
     var server = includes.server;
     var importUtils = includes.importUtils;
     var testOptions = {
@@ -21,15 +18,12 @@ exports.runTests = function (options) {
         authCookie: includes.authCookie
     };
 
-    console.log("before describe");
     describe(description, function () {
 
-        console.log("inside describe but not before ALL");
         require('./jasmine-matchers.js').execute();
 
         // Import the schemas
         beforeAll(function (done) {
-            console.log("before import schemas");
             importUtils.importSchemas(schemaConfs, process.env.DEFAULT_CATALOG)
                 .then(function (res) {
                     console.log("Data imported with catalogId " + res.catalogId);

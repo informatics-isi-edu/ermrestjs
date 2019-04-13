@@ -1,8 +1,6 @@
-console.log("ermrest import included");
 var q = require('q');
 var requireReload = require('./require-reload.js').reload;
 var includes = require(__dirname + '/../utils/ermrest-init.js').init();
-console.log("after init in ermrest import");
 var ermrestUtils = require(process.env.PWD + "/../ErmrestDataUtils/import.js");
 
 /**
@@ -14,7 +12,6 @@ var ermrestUtils = require(process.env.PWD + "/../ErmrestDataUtils/import.js");
  * @param  {string} catalogId         the catalog id (might be undefined)
  */
 exports.importSchemas = function (configFilePaths, catalogId) {
-    console.log("in import schemas");
   var defer = q.defer(), entities = {}, schemas = {}, catalog = {};
   var config, schema, schemaName;
 
