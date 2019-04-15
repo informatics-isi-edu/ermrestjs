@@ -40,6 +40,7 @@ Handlebars supports more complicated expression syntax and allow the comparison 
 * [Additional Helpers for Comparison](#additional-helpers-for-comparision)
   * [Comparison](#comparison-helper)
   * [Ifcond](#ifcond-helper)
+* [Math Helpers](#math-helpers)
 
 
 ## Handlebars Paths
@@ -349,7 +350,7 @@ As you can see in this example I am escaping all the `"`s. This is because you a
 
 ## Using Arrays
 
-You can use the [Each Helper](each-helper) to iterate over its data. You can also use the `{{array.INDEX}}` pattern if you want to access array data by index; where index starts from zero and it is the position of element that you want to access.
+You can use the [Each Helper](#each-helper) to iterate over its data. You can also use the `{{array.INDEX}}` pattern if you want to access array data by index; where index starts from zero and it is the position of element that you want to access.
 
 Template:
 ```
