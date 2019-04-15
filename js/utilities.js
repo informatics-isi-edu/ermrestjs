@@ -3044,8 +3044,7 @@
      * - wid
      * - schema_table: schema:table
      * - catalog
-     * - cfacet: 1
-     * - ppid, pcid
+     * - indexed: 1, cfacet: 1, ppid, pcid
      * - template
      * - referrer: for related entities the main entity, for recordset facets: the main entity
      *    - schema_table
@@ -3097,10 +3096,13 @@
             t: 1 // indicates that this request has been truncated
         };
 
-        // special case for cfacet
-        if (header.cfacet) {
-            obj.cfacet = header.cfacet;
-        }
+        // these attributes might not be available on the header, but if they
+        // are, we must include them in the minimal header content
+        ['indexed', 'cfacet', 'ppid', 'pcid'].forEach(function (attr) {
+            if (header[attr]) {
+                obj[attr] = header[attr];
+            }
+        });
 
         prevRes = res = encode(obj);
         if (res.length >= MAX_LENGTH) {
