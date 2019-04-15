@@ -40,6 +40,7 @@ Handlebars supports more complicated expression syntax and allow the comparison 
 * [Additional Helpers for Comparison](#additional-helpers-for-comparision)
   * [Comparison](#comparison-helper)
   * [Ifcond](#ifcond-helper)
+* [Math Helpers](#math-helpers)
 
 
 ## Handlebars Paths
@@ -216,6 +217,14 @@ Additionally for object iteration, `{{@key}}` references the current key name:
 
 The first and last steps of iteration are noted via the `@first` and `@last` variables when iterating over an array. When iterating over an object only the `@first` is available.
 
+When looping throw items in `each`, you can reference the iterable object usin `../` syntax. The following will allow you to access the array and calculate it's length:
+```
+{{#each array}}
+  {{../array.length}}
+{{/each}}
+```
+
+
 Nested `each` blocks may access the iteration variables via depth based paths. To access the parent index, for example, `{{@../index}}` can be used.
 
 The each helper also supports block parameters, allowing for named references anywhere in the block.
@@ -341,7 +350,7 @@ As you can see in this example I am escaping all the `"`s. This is because you a
 
 ## Using Arrays
 
-You can use the [Each Helper](each-helper) to iterate over its data. You can also use the `{{array.INDEX}}` pattern if you want to access array data by index; where index starts from zero and it is the position of element that you want to access.
+You can use the [Each Helper](#each-helper) to iterate over its data. You can also use the `{{array.INDEX}}` pattern if you want to access array data by index; where index starts from zero and it is the position of element that you want to access.
 
 Template:
 ```
@@ -455,4 +464,19 @@ It accepts 2 arguments. First one and last one are the values and second one is 
 {{else}}
     Values are different!
 {{/ifCond}}
+```
+
+### Math Helpers
+
+We have basic math functionality support available in handlebars templating. The following are the currently available math helpers.
+
+#### add
+The `add` helper can be used to add 2 numbers together. It will always add the `value2` to `value1`. If the provided value is a string, we will try to convert it to a number before doing the calculation to avoid string concatenation. Note: This may behave oddly with float values.
+```
+{{add value1 value2}}
+```
+#### subtract
+The `subtract` helper can be used to subtract 2 numbers. It will always subtract `value2` from `value1`. If the provided value is a string, we will try to convert it to a number before doing the calculation to avoid string subtraction. Note: This may behave oddly with float values.
+```
+{{subtract value1 value2}}
 ```
