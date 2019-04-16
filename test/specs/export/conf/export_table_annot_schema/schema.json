@@ -878,6 +878,41 @@
                     }
                 }
             ]
+        },
+        "table_w_contextualized_export": {
+            "kind": "table",
+            "table_name": "table_w_contextualized_export",
+            "schema_name": "export_table_annot_schema",
+            "keys": [
+                {"unique_columns": ["id"]}
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "col",
+                    "type": {
+                        "typename": "text"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2019:export": {
+                    "compact": {
+                        "templates": [
+                            {
+                                "displayname": "contextualized table template",
+                                "type": "BAG"
+                            }
+                        ]
+                    }
+                }
+            }
         }
     },
     "schema_name": "export_table_annot_schema"

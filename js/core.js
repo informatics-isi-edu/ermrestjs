@@ -1078,7 +1078,9 @@
                 hasAnnot = true;
             }
 
+            // annotation was defined on table
             if (hasAnnot) {
+                // find the annotation defined for the context
                 chosenAnnot = module._getAnnotationValueByContext(context, annotDefinition);
                 if (chosenAnnot !== -1 && typeof chosenAnnot === "object") {
                     return getValidTemplates(chosenAnnot.templates);
@@ -1087,8 +1089,8 @@
 
             //get from schema annoation
             if (self.schema.annotations.contains(exp)) {
-                hasAnnot = true;
                 annotDefinition = {"*": self.schema.annotations.get(exp).content};
+                hasAnnot = true;
             }
 
             // get from schema contextualized annotation
@@ -1097,17 +1099,16 @@
                 hasAnnot = true;
             }
 
-            // annotation is not defined on schema and table
-            if (!hasAnnot) {
-                return null;
+            // annotation was defined on the table
+            if (hasAnnot) {
+                // find the annotation defined for the context
+                chosenAnnot = module._getAnnotationValueByContext(context, annotDefinition);
+                if (chosenAnnot !== -1 && typeof chosenAnnot === "object") {
+                    return getValidTemplates(chosenAnnot.templates);
+                }
             }
 
-            chosenAnnot = module._getAnnotationValueByContext(context, annotDefinition);
-            if (chosenAnnot !== -1 && typeof chosenAnnot === "object") {
-                return getValidTemplates(chosenAnnot.templates);
-            }
-
-            // we have an annotation, but it doesn't match our current context, so no templates are returned
+            // annotation is not defined for the given context
             return null;
         },
 
