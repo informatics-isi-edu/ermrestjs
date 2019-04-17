@@ -751,18 +751,22 @@ This annotation is a hint to ERMrest during table or column creation, when index
 
 ### Tag: 2019 Chaise Config
 
-This key indicates that the annotated catalog has a specific [chaise configuration](https://github.com/informatics-isi-edu/chaise/blob/master/docs/user-docs/chaise-config.md) that should override the default chaise-config properties and any properties defined in `chasie-config.js`. 
+`tag:isrd.isi.edu,2019:chaise-config`
+
+This key indicates that the annotated catalog has a specific [chaise configuration](https://github.com/informatics-isi-edu/chaise/blob/master/docs/user-docs/chaise-config.md) that should override the default chaise-config properties and any properties defined in `chasie-config.js`.
 
 Supported JSON payload patterns:
 The json object follows the same rules as [chaise-config.js](https://github.com/informatics-isi-edu/chaise/blob/master/chaise-config-sample.js). All properties can be defined at the root of the annotation, i.e:
   - `{`... `"<chaise-config-property>"`: _value_ ...`}`
 
-The `chaise-config` property `configRules`, behaves the same way on the annotation that it does with the server wide config (`chaise-config.js`). The `configRules` will be checked for a match and apply and use those `chaise-config` properties over any other values defined for that same property. The order that the properties will be applied are as follows:
+The `chaise-config` property `configRules`, behaves the same way on the annotation that it does with the server wide config (`chaise-config.js`). The `configRules` will be checked for a match and apply and use those `chaise-config` properties over any other values defined for that same property. The order that the properties will be checked and then applied are as follows:
   1. default values defined in [chaise-config.md](https://github.com/informatics-isi-edu/chaise/blob/master/docs/user-docs/chaise-config.md)
   2. Any properties defined at the root of the object returned from [chaise-config.js](https://github.com/informatics-isi-edu/chaise/blob/master/chaise-config-sample.js).
   3. Any matching `configRules` in the order they appear in the `configRules` array. Properties in the last matching rule will take precedence
   4. Any properties defined at the root of the object returned from this annotation.
   5. Step 3 from above, but with the `configRules` from this annotation.
+
+This means that as the `configRules` are checked, properties set in step 1 will be overridden by properties defined in step 2 that have the same name. This allows the server wide configuration to be a base configuration for the chaise apps and allows for further configuration based on a combination of hostname and catalog id.
 
 Note: Some properties might not make sense to be used in this annotation. The `defaultCatalog`, for instance, would be ignored if defined it this annotation because we already fetched a matching catalog to then fetch this annotation.
 
@@ -781,7 +785,7 @@ List of _context_ names that are used in ERMrest:
 - `"filter"`: Any data-filtering control context, i.e. when prompting the user for column constraints or facets.
 - `"row_name"`: Any abbreviated title-like presentation context.
   - `"row_name/title"`: A sub-context of `row_name` that only applies to title of page.
-  - `"row_name/compact"`: A sub-context of `row_name` that only applies to compact, tabluar presentation of a row (When a foreignkey value is displayed in a tabular presentation. Or when displaying an entity array aggregate pseudo-column).
+  - `"row_name/compact"`: A sub-context of `row_name` that only applies to compact, tabular presentation of a row (When a foreignkey value is displayed in a tabular presentation. Or when displaying an entity array aggregate pseudo-column).
   - `"row_name/detailed"`: A sub-context of `row_name` that only applies to entity-level presentation of a row (When a foreignkey value is displayed in the entity-level page).
 - `"*"`: A default to apply for any context not matched by a more specific context name.
 
