@@ -453,11 +453,29 @@ exports.execute = function (options) {
             it('if and (conjunction) helper', function () {
                 expect(module.renderHandlebarsTemplate("{{#if (and bool1 bool2)}}both booleans are true{{else}}one or more booleans are false{{/if}}", { bool1: true, bool2: true })).toBe("both booleans are true");
                 expect(module.renderHandlebarsTemplate("{{#if (and bool1 bool2)}}both booleans are true{{else}}one or more booleans are false{{/if}}", { bool1: true, bool2: false })).toBe("one or more booleans are false");
+                expect(module.renderHandlebarsTemplate("{{#if (and bool1 bool2 bool3)}}both booleans are true{{else}}one or more booleans are false{{/if}}", { bool1: true, bool2: false, bool3: true })).toBe("one or more booleans are false", "three arguments");
             });
 
             it('if or (disjunction) helper', function () {
                 expect(module.renderHandlebarsTemplate("{{#if (or bool1 bool2)}}one or more booleans are true{{else}}both booleans are false{{/if}}", { bool1: false, bool2: true })).toBe("one or more booleans are true");
                 expect(module.renderHandlebarsTemplate("{{#if (or bool1 bool2)}}one or more booleans are true{{else}}both booleans are false{{/if}}", { bool1: false, bool2: false })).toBe("both booleans are false");
+                expect(module.renderHandlebarsTemplate("{{#if (or bool1 bool2 bool3)}}one or more booleans are true{{else}}both booleans are false{{/if}}", { bool1: false, bool2: false, bool3: true })).toBe("one or more booleans are true", "three arguments");
+            });
+
+            it ('if nested or (disjunction) / and (conjunction) helper', function () {
+                var template = '{{#if (or (eq type "jpg") (eq type "png") )}}image{{else}}other{{/if}}';
+                expect(module.renderHandlebarsTemplate(template, {"type": "jpg"})).toBe("image", "missmatch for 01");
+                expect(module.renderHandlebarsTemplate(template, {"type": "txt"})).toBe("other", "missmatch for 02");
+
+                template = '{{#if (or (and (gt v 1) (lt v 5) ) (and (gt v 10) (lt v 15) ) ) }}1-5 or 10-15{{else}}outside the range{{/if}}';
+                expect(module.renderHandlebarsTemplate(template, {"v": 4})).toBe("1-5 or 10-15", "missmatch for 03");
+                expect(module.renderHandlebarsTemplate(template, {"v": -1})).toBe("outside the range", "missmatch for 04");
+            });
+
+            it ('regexMatch helper', function () {
+                var template = '{{#if (regexMatch type "jpg|png")}}image{{else}}other{{/if}}';
+                expect(module.renderHandlebarsTemplate(template, {"type": "jpg"})).toBe("image", "missmatch for 01");
+                expect(module.renderHandlebarsTemplate(template, {"type": "txt"})).toBe("other", "missmatch for 02");
             });
 
             it('suppressed default helper log', function () {

@@ -24,7 +24,8 @@ FOOTER=$(JS)/footer.js
 HEADER_FOOTER= $(HEADER) \
 			   $(FOOTER)
 
-SOURCE=$(HEADER) \
+SOURCE=$(JS)/polyfills.js \
+	   $(HEADER) \
 	   $(JS)/core.js \
 	   $(JS)/datapath.js \
 	   $(JS)/filters.js \
