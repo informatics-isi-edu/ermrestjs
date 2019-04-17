@@ -933,6 +933,13 @@ exports.execute = function (options) {
                 });
             });
 
+            describe(".templateEngine", function () {
+                it ("should return the defined template_engine", function () {
+                    expect(assetRefCompactCols[9].templateEngine).toBe("", "missmatch for index=9");
+                    expect(assetRefCompactCols[10].templateEngine).toBe("handlebars", "missmatch for index=10");
+                });
+            });
+
             describe('.filenameColumn', function() {
 
                 it('should return null if column is not valid or not present.', function () {

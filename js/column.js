@@ -1891,6 +1891,20 @@ AssetPseudoColumn.prototype.formatPresentation = function(data, context, options
 };
 
 /**
+ * Returns the template_engine defined in the annotation
+ * @member {ERMrest.Refernece} template_engine
+ * @memberof ERMrest.AssetPseudoColumn#
+ */
+Object.defineProperty(AssetPseudoColumn.prototype, "templateEngine", {
+    get: function () {
+        if (this._templateEngine === undefined) {
+            this._templateEngine = this._annotation.template_engine || "";
+        }
+        return this._templateEngine;
+    }
+});
+
+/**
  * Returns the url_pattern defined in the annotation (the raw value and not computed).
  * @member {ERMrest.Refernece} urlPattern
  * @memberof ERMrest.AssetPseudoColumn#
