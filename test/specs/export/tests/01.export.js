@@ -20,7 +20,7 @@ exports.execute = function (options) {
             tableNameNoExport = "no_export_annot",
             tableWithLongDefaultExport = "table_with_long_default_export",
             tableWithContextualizedExport = "table_w_contextualized_export",
-            table, ermRest, reference, noAnnotReference, noExportoutputReference, tableWithLongDefaultReference, tableWithContextExportReference, exportObj;
+            table, ermRest, reference, noAnnotReference, noExportoutputReference, tableWithLongDefaultReference, tableWithContextExportReference, tableAndSchemaWithContextExportReference, exportObj;
 
         var baseUri = options.url + "/catalog/" + process.env.DEFAULT_CATALOG + "/entity/" + schemaName1 + ":" + tableName;
 
@@ -32,7 +32,9 @@ exports.execute = function (options) {
 
         var noExportOutputWithLongPathUri = options.url + "/catalog/" + process.env.DEFAULT_CATALOG + "/entity/" + schemaName1 + ":" + tableWithLongDefaultExport;
 
-        var contextualizedExportUri = options.url + "/catalog/" + process.env.DEFAULT_CATALOG + "/entity/" + schemaName2 + ":" + tableWithContextualizedExport;
+        var contextualizedTableExportUri = options.url + "/catalog/" + process.env.DEFAULT_CATALOG + "/entity/" + schemaName1 + ":" + tableWithContextualizedExport;
+
+        var contextualizedTableAndSchemaExportUri = options.url + "/catalog/" + process.env.DEFAULT_CATALOG + "/entity/" + schemaName2 + ":" + tableWithContextualizedExport;
 
         /*
          * no_export_annot is identical in both export_schema_annot_schema and export_table_annot_schema,
@@ -139,9 +141,12 @@ exports.execute = function (options) {
                 return ermRest.resolve(noExportOutputWithLongPathUri, {cid: "test"});
             }).then(function (ref3) {
                 tableWithLongDefaultReference = ref3;
-                return ermRest.resolve(contextualizedExportUri, {cid: "test"});
+                return ermRest.resolve(contextualizedTableAndSchemaExportUri, {cid: "test"});
             }).then(function (ref4) {
-                tableWithContextExportReference = ref4;
+                tableAndSchemaWithContextExportReference = ref4;
+                return ermRest.resolve(contextualizedTableExportUri, {cid: "test"});
+            }).then(function (ref5) {
+                tableWithContextExportReference = ref5;
                 done();
             }, function (err) {
                 console.dir(err);
@@ -214,7 +219,7 @@ exports.execute = function (options) {
                 });
 
                 it ("should get the templates from the correct context.", function () {
-                    templates = tableWithContextExportReference.contextualize.compact.getExportTemplates();
+                    templates = tableAndSchemaWithContextExportReference.contextualize.compact.getExportTemplates();
                     expect(templates.length).toBe(1, "length missmatch");
                     expect(templates[0].displayname).toEqual("contextualized table template", "displayname missmatch");
                 });
@@ -280,7 +285,10 @@ exports.execute = function (options) {
 
                 it ("otherwise should return empty.", function () {
                     var templates = noAnnotReference.contextualize.detailed.getExportTemplates(false);
-                    expect(templates.length).toBe(0);
+                    expect(templates.length).toBe(0, "missmatch for when annot is not defined at all");
+
+                    templates = tableWithContextExportReference.contextualize.detailed.getExportTemplates();
+                    expect(templates.length).toBe(0, "missmatch for when annot is not defined for the given context.");
                 });
 
             });

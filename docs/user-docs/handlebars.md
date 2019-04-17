@@ -26,6 +26,7 @@ Handlebars supports more complicated expression syntax and allow the comparison 
 * [Handlebar Paths](#handlebars-paths)
 * [Helpers](#helpers)
    * [FormatDate](#formatdate-helper)
+   * [Math Helpers](#math-helpers)
 * [Block Helpers](#block-helpers)
    * [If](#if-helper)
    * [Unless](#unless-helper)
@@ -37,9 +38,10 @@ Handlebars supports more complicated expression syntax and allow the comparison 
 * [Using Arrays](#using-arrays)
 * [Accessing keys with spaces and special characters](#accessing-keys-with-spaces-and-special-characters)
 * [Subexpressions](#subexpressions)
-* [Additional Helpers for Comparison](#additional-helpers-for-comparision)
-  * [Comparison](#comparison-helper)
-  * [Ifcond](#ifcond-helper)
+* [Boolean Helpers](#boolean-helpers)
+  * [Comparison Helpers](#comparison-helpers)
+  * [Logical Helpers](#Logical-helpers)
+  * [Regular Expression Match](#regular-expression-match)
 * [Math Helpers](#math-helpers)
 
 
@@ -125,6 +127,21 @@ Example:
 {{formatDate '30-08-2018' 'YYYY'}} ==> '2018'
 ```
 
+### Math Helpers
+
+We have basic math functionality support available in handlebars templating. The following are the currently available math helpers.
+
+#### add
+The `add` helper can be used to add 2 numbers together. It will always add the `value2` to `value1`. If the provided value is a string, we will try to convert it to a number before doing the calculation to avoid string concatenation. Note: This may behave oddly with float values.
+```
+{{add value1 value2}}
+```
+#### subtract
+The `subtract` helper can be used to subtract 2 numbers. It will always subtract `value2` from `value1`. If the provided value is a string, we will try to convert it to a number before doing the calculation to avoid string subtraction. Note: This may behave oddly with float values.
+```
+{{subtract value1 value2}}
+```
+
 ## Block Helpers
 
 Block helpers make it possible to define custom iterators and other functionality that can invoke the passed block with a new context. These helpers are very similar to functions that we have in mustache.
@@ -137,7 +154,7 @@ Block helpers make it possible to define custom iterators and other functionalit
 
 ### If helper
 
-You can use the `if` helper to conditionally render a block. If its argument returns `false`, `undefined`, `null`, `""`, `0`, or `[]`, Handlebars will not render the block.
+You can use the `if` helper to conditionally render a block. If its argument returns `false`, `undefined`, `null`, `""`, `0`, or `[]`, Handlebars will not render the block. You can use this helper in combination with any of the [Boolean Helpers](#boolean-helpers) to do more complicated logical operations.
 
 ```
 {{#if author}} {{firstName}} {{lastName}}</h1>{{/if}}
@@ -400,17 +417,21 @@ Handlebars offers support for `subexpressions`, which allows you to invoke multi
 
 In this case, `encode` will get invoked with the string argument `arg1`, and whatever the encode function returns will get passed in as the first argument to escape (and `arg2` will get passed in as the second argument to escape).
 
-## Additional Helpers
 
-### Comparison helper
+## Boolean Helpers
 
 You can use following helper to check for specific equality checks using the default `if` helper
 
+### Comparison Helpers
+
+- Equality (`eq`)
 ```
 {{#if (eq var1 var2)}}
 	.. content
 {{/if}}
 ```
+
+- Inequality (`ne`)
 
 ```
 {{#if (ne var1 var2)}}
@@ -418,11 +439,15 @@ You can use following helper to check for specific equality checks using the def
 {{/if}}
 ```
 
+- Lower than (`lt`)
+
 ```
 {{#if (lt var1 var2)}}
 	.. content
 {{/if}}
 ```
+
+- Greater than (`gt`)
 
 ```
 {{#if (gt var1 var2)}}
@@ -430,11 +455,15 @@ You can use following helper to check for specific equality checks using the def
 {{/if}}
 ```
 
+- Lower than equal (`lte`)
+
 ```
 {{#if (lte var1 var2)}}
 	.. content
 {{/if}}
 ```
+
+- Greater than equal (`gte`)
 
 ```
 {{#if (gte var1 var2)}}
@@ -442,41 +471,53 @@ You can use following helper to check for specific equality checks using the def
 {{/if}}
 ```
 
+
+### Regular Expression Match
+
+Using the `regexMatch` function you can check whether a given value matches the given regular expression.
+
+```
+{{#if (regexMatch value "jpg|png" )}}
+.. content
+{{/if}}
+```
+
+### Logical Helpers
+
+- And (`and`)
+
 ```
 {{#if (and var1 var2)}}
   .. content
 {{/if}}
 ```
 
+- Or (`or`)
+
 ```
-{{#if (and var1 var2)}}
+{{#if (or var1 var2)}}
   .. content
 {{/if}}
 ```
 
-### IfCond Helper
-
-It accepts 2 arguments. First one and last one are the values and second one is the comparison operator..
+Logical operators can be applied recursively. This will allow for more complicated logical statements.
 
 ```
-{{#ifCond value "===" value2}}
-    Values are equal!
+{{#if (or (eq filename "foo.png") (regexMatch type "jpg|png") )}}
+.. content
+{{/if}}
+
+{{#if (or (and (gt value 1) (lt value 5) ) (and (gt value 10) (lt value 15) ) )}}
+1-5 or 10-15
 {{else}}
-    Values are different!
-{{/ifCond}}
+outside the range
+{{/if}}
 ```
 
-### Math Helpers
+You can also have more than two operators inside the `or`/`and` statement.
 
-We have basic math functionality support available in handlebars templating. The following are the currently available math helpers.
-
-#### add
-The `add` helper can be used to add 2 numbers together. It will always add the `value2` to `value1`. If the provided value is a string, we will try to convert it to a number before doing the calculation to avoid string concatenation. Note: This may behave oddly with float values.
 ```
-{{add value1 value2}}
-```
-#### subtract
-The `subtract` helper can be used to subtract 2 numbers. It will always subtract `value2` from `value1`. If the provided value is a string, we will try to convert it to a number before doing the calculation to avoid string subtraction. Note: This may behave oddly with float values.
-```
-{{subtract value1 value2}}
+{{#if (or cond1 cond2 cond3)}}
+.. content
+{{/if}}
 ```
