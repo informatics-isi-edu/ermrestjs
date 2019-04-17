@@ -424,6 +424,7 @@ to use for ERMrest JavaScript agents.
         * [.sha256](#ERMrest.AssetPseudoColumn+sha256) : [<code>Column</code>](#ERMrest.Column)
         * [.filenameExtFilter](#ERMrest.AssetPseudoColumn+filenameExtFilter) : [<code>Column</code>](#ERMrest.Column)
         * [._determineInputDisabled(context)](#ERMrest.AssetPseudoColumn+_determineInputDisabled) ⇒ <code>boolean</code> \| <code>object</code>
+        * [.getMetadata()](#ERMrest.AssetPseudoColumn+getMetadata)
     * [.InboundForeignKeyPseudoColumn](#ERMrest.InboundForeignKeyPseudoColumn)
         * [new InboundForeignKeyPseudoColumn(reference, fk)](#new_ERMrest.InboundForeignKeyPseudoColumn_new)
         * [.reference](#ERMrest.InboundForeignKeyPseudoColumn+reference) : [<code>Reference</code>](#ERMrest.Reference)
@@ -4079,6 +4080,7 @@ The following is the logic:
     * [.sha256](#ERMrest.AssetPseudoColumn+sha256) : [<code>Column</code>](#ERMrest.Column)
     * [.filenameExtFilter](#ERMrest.AssetPseudoColumn+filenameExtFilter) : [<code>Column</code>](#ERMrest.Column)
     * [._determineInputDisabled(context)](#ERMrest.AssetPseudoColumn+_determineInputDisabled) ⇒ <code>boolean</code> \| <code>object</code>
+    * [.getMetadata()](#ERMrest.AssetPseudoColumn+getMetadata)
 
 <a name="new_ERMrest.AssetPseudoColumn_new"></a>
 
@@ -4152,6 +4154,12 @@ If url_pattern is invalid or browser_upload=false the input will be disabled.
 | --- | --- | --- |
 | context | <code>string</code> | the context |
 
+<a name="ERMrest.AssetPseudoColumn+getMetadata"></a>
+
+#### assetPseudoColumn.getMetadata()
+Given the data, return the appropriate filename that should be used for the asset
+
+**Kind**: instance method of [<code>AssetPseudoColumn</code>](#ERMrest.AssetPseudoColumn)  
 <a name="ERMrest.InboundForeignKeyPseudoColumn"></a>
 
 ### ERMrest.InboundForeignKeyPseudoColumn
