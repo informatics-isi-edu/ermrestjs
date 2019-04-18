@@ -1923,6 +1923,11 @@ AssetPseudoColumn.prototype.formatPresentation = function(data, context, options
 
     // add the uinit=1 query params
     url += ( url.indexOf("?") !== -1 ? "&": "?") + "uinit=1";
+
+    // add cid query param
+    var cid = this.table.schema.catalog.server.cid;
+    if (cid) url += "&cid=" + cid;
+
     var keyValues = {
         "caption": caption,
         "url": url
@@ -1930,6 +1935,20 @@ AssetPseudoColumn.prototype.formatPresentation = function(data, context, options
     var unformatted = module._renderTemplate(template, keyValues, this.table, this._context, {formatted: true});
     return {isHTML: true, value: module._formatUtils.printMarkdown(unformatted, {inline:true}), unformatted: unformatted};
 };
+
+/**
+ * Returns the template_engine defined in the annotation
+ * @member {ERMrest.Refernece} template_engine
+ * @memberof ERMrest.AssetPseudoColumn#
+ */
+Object.defineProperty(AssetPseudoColumn.prototype, "templateEngine", {
+    get: function () {
+        if (this._templateEngine === undefined) {
+            this._templateEngine = this._annotation.template_engine || "";
+        }
+        return this._templateEngine;
+    }
+});
 
 /**
  * Returns the url_pattern defined in the annotation (the raw value and not computed).
@@ -2838,9 +2857,10 @@ FacetColumn.prototype = {
      *
      * NOTE This function will not return the null filter.
      *
+     * @param {Object} contextHeaderParams object that we want to be logged with the request
      * @return {Promise} A promise resolved with list of objects that have `uniqueId`, and `displayname`.
      */
-    getChoiceDisplaynames: function () {
+    getChoiceDisplaynames: function (contextHeaderParams) {
         var defer = module._q.defer();
         var filters =  [];
 
@@ -2894,7 +2914,7 @@ FacetColumn.prototype = {
 
             ref = ref.sort([{"column": columnName, "descending": false}]);
 
-            ref.read(this.choiceFilters.length).then(function (page) {
+            ref.read(this.choiceFilters.length, contextHeaderParams, true).then(function (page) {
                 page.tuples.forEach(function (t) {
 
                     // create the response

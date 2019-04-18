@@ -2311,9 +2311,20 @@
      * so that they can be accessed in the template
      */
     module._addErmrestVarsToTemplate = function(obj, catalog) {
+
+        // date object
         obj.$moment = module._currDate;
 
         if (catalog) {
+
+            if (catalog.server) {
+                // deriva-client-context
+                obj.$dcctx = {
+                    cid: catalog.server.cid,
+                    pid: catalog.server.pid
+                };
+            }
+
             var catalogSnapshot = catalog.id.split('@');
             obj.$catalog = {
                 snapshot: catalog.id,
@@ -2852,18 +2863,42 @@
 
     /**
      * Given a header value, will encode and truncate if its length is more than the allowed length.
-     * These are the allowed and expected values in a header:
+     * If the output has `"t":1`, then it has been truncated.
+     * These are the allowed and expected values in a header (in order or priority):
      * - cid
      * - pid
      * - wid
      * - schema_table: schema:table
-     * - filter
-     * - facet
+     * - catalog
+     * - cqp (chaise query parameter): 1, cfacet: 1, ppid, pcid
+     * - template
      * - referrer: for related entities the main entity, for recordset facets: the main entity
+     *    - schema_table
+     *    - cfacet_str
+     *    - cfacet_path
      *    - filter
      *    - facet
-     *    - schema_table
      * - source: the source object of facet
+     * - column
+     * - cfacet_str
+     * - cfacet_path
+     * - filter
+     * - facet
+     *
+     * The truncation logic is as follows:
+     *  1. if the encoded string is not more than the limit, don't truncate.
+     *  2. otherwise,
+     *      2.1. create the bare minimum log object with the following attributes:
+     *        - t: 1
+     *        - cid, wid, pid, action, catalog, schema_table
+     *        - if cfacet exists: cfacet
+     *     2.2. Add other attributes step by step and check the limit. The following
+     *          is the priority list:
+     *        - referrer.schema_table, referrer.cfacet, referrer.filter, referrer.facet
+     *        - source
+     *        - column
+     *        - filter, facet, cfacet
+     *
      * @param  {object} header The header content
      * @return {object}
      */
@@ -2882,16 +2917,25 @@
             wid: header.wid,
             pid: header.pid,
             action: header.action,
+            catalog: header.catalog,
             schema_table: header.schema_table,
             t: 1 // indicates that this request has been truncated
         };
+
+        // these attributes might not be available on the header, but if they
+        // are, we must include them in the minimal header content
+        ['cqp', 'cfacet', 'ppid', 'pcid'].forEach(function (attr) {
+            if (header[attr]) {
+                obj[attr] = header[attr];
+            }
+        });
 
         prevRes = res = encode(obj);
         if (res.length >= MAX_LENGTH) {
             return {};
         }
 
-        // truncate facet or filter
+        // truncate cfacet, facet, or filter
         // if it's a facet that has `and` in the first level,
         // it will remove only the array element that is needed. otherwise
         // the whole facet/filter will be removed.
@@ -2899,16 +2943,34 @@
             var prevRes = encode(obj);
             var h = key ? header[key] : header;
 
-            if (h.filter) {
-                // add the filter
+            var setObjAndEncode = function (attr) {
                 if (key) {
-                    obj[key].filter = h.filter;
+                    obj[key][attr] = h[attr];
                 } else {
-                    obj.filter = h.filter;
+                    obj[attr] = h[attr];
                 }
+                return encode(obj);
+            };
 
-                // encode and test the length
-                res = encode(obj);
+            if (h.cfacet_str) {
+                res = setObjAndEncode("cfacet_str");
+                if (res.length >= MAX_LENGTH) {
+                    return {truncated: true, res: prevRes};
+                }
+                prevRes = res;
+            }
+
+            if (h.cfacet_path) {
+                res = setObjAndEncode("cfacet_str");
+                if (res.length >= MAX_LENGTH) {
+                    return {truncated: true, res: prevRes};
+                }
+                prevRes = res;
+            }
+
+            if (h.filter) {
+                // add filter
+                res = setObjAndEncode("filter");
                 if (res.length >= MAX_LENGTH) {
                     // it was lengthy so just return the obj without filter
                     return {truncated: true, res: prevRes};
@@ -2918,7 +2980,7 @@
                 return {truncated: false, res: res};
             }
 
-            // this function only expects facet and filter. it will ignore other variables
+            // this function only expects cfacet, facet, and filter. it will ignore other variables
             if (!h.facet) {
                 return {truncated: false, res: prevRes};
             }
@@ -2928,14 +2990,7 @@
             if (!Array.isArray(h.facet.and)) {
 
                 // add the facet
-                if (key) {
-                    obj[key].facet = h.facet;
-                } else {
-                    obj.facet = h.facet;
-                }
-
-                // encode and test the length
-                res = encode(obj);
+                res = setObjAndEncode("filter");
                 if (res.length >= MAX_LENGTH) {
                     return {truncated: true, res: prevRes};
                 }
@@ -2970,6 +3025,15 @@
             return {truncated: true, res: res};
         };
 
+        // template
+        if (header.template) {
+            obj.template = header.template;
+            res = encode(obj);
+            if (res.length >= MAX_LENGTH) {
+                return prevRes;
+            }
+        }
+
         // referrer: schema_table, facet (filter)
         if (header.referrer) {
             obj.referrer = {
@@ -2991,6 +3055,15 @@
         // .source
         if (header.source) {
             obj.source = header.source;
+            res = encode(obj);
+            if (res.length >= MAX_LENGTH) {
+                return prevRes;
+            }
+        }
+
+        // .column
+        if (header.column) {
+            obj.column = header.column;
             res = encode(obj);
             if (res.length >= MAX_LENGTH) {
                 return prevRes;

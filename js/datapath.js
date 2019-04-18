@@ -1,7 +1,7 @@
 /**
  * @namespace ERMrest.Datapath
  */
-    
+
     module.DataPath = DataPath;
 
     /**
@@ -38,6 +38,8 @@
         this._pathtables = [this.context]; // in order
 
         this._filter = null;
+
+        this.server = this.catalog.server;
 
     }
 
@@ -113,15 +115,20 @@
              *     {@link ERMrest.Errors.TimedOutError}, {@link ERMrest.Errors.InternalServerError}, {@link ERMrest.Errors.ServiceUnavailableError},
              *     {@link ERMrest.Errors.ConflictError}, {@link ERMrest.Errors.ForbiddenError} or {@link ERMrest.Errors.UnauthorizedError} if rejected
              */
-            get: function () {
-                var baseUri = this.scope.catalog.server.uri;
+            get: function (contextHeaderParams) {
+                var baseUri = this.scope.server.uri;
                 var catId = this.scope.catalog.id;
                 var uri = baseUri +            // base
                     "/catalog/" + catId +      // catalog
                     "/entity/" +               // interface
                     this.scope._getUri();      // datapath
 
-                return module._http.get(uri).then(function(response){
+                if (!contextHeaderParams || !isObject(contextHeaderParams)) {
+                    contextHeaderParams = {"action": "get"};
+                }
+                var headers = {};
+                headers[module.contextHeaderName] = contextHeaderParams;
+                return this.scope.server.http.get(uri, {headers: headers}).then(function(response){
                     return response.data; // TODO rowset?
                 }, function(response){
                     var error = module.responseToError(response);
@@ -138,7 +145,7 @@
              *     {@link ERMrest.Errors.ConflictError}, {@link ERMrest.Errors.ForbiddenError} or {@link ERMrest.Errors.UnauthorizedError} if rejected
              */
             delete: function (filter) {
-                var baseUri = this.scope.catalog.server.uri;
+                var baseUri = this.scope.server.uri;
                 var catId = this.scope.catalog.id;
                 var uri = baseUri +
                     "/catalog/" + catId +
@@ -147,7 +154,7 @@
 
                 uri = uri + "/" + filter.toUri();
 
-                return module._http.delete(uri).then(function(response) {
+                return this.scope.server.http.delete(uri).then(function(response) {
                     return response.data;
                 }, function(response) {
                     var error = module.responseToError(response);

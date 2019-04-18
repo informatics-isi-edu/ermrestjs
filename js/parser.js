@@ -1707,6 +1707,7 @@
      * An object that will have the follwoing attributes:
      *  - displayname: "a markdown displayname",
      *  - facets: "the facet object"
+     *  - ermrest_path: "ermrest path string"
      *
      *
      * @param       {String|Object} str Can be blob or json (object).

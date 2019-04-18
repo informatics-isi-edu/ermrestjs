@@ -246,3 +246,13 @@ ISO datetime is {{$moment.ISOString}}
   version: version
 }
 ```
+
+
+#### $dcctx Usage
+`$dcctx` is an object that gives you access to the current `pid` and `cid` of the app. You may use this attribute to genarate links with `ppid` and `pcid` as query parameters.
+```
+{
+    pid: "the page id",
+    cid: "the context id(name of the app)"
+}
+```
