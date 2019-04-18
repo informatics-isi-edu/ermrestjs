@@ -2870,7 +2870,7 @@
      * - wid
      * - schema_table: schema:table
      * - catalog
-     * - indexed: 1, cfacet: 1, ppid, pcid
+     * - cqp (chaise query parameter): 1, cfacet: 1, ppid, pcid
      * - template
      * - referrer: for related entities the main entity, for recordset facets: the main entity
      *    - schema_table
@@ -2924,7 +2924,7 @@
 
         // these attributes might not be available on the header, but if they
         // are, we must include them in the minimal header content
-        ['indexed', 'cfacet', 'ppid', 'pcid'].forEach(function (attr) {
+        ['cqp', 'cfacet', 'ppid', 'pcid'].forEach(function (attr) {
             if (header[attr]) {
                 obj[attr] = header[attr];
             }
