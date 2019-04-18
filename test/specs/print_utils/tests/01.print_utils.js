@@ -283,6 +283,10 @@ exports.execute = function (options) {
             expect(module._validateMustacheTemplate("Local time string is {{$moment.localeTimeString}}", {})).toBe(true);
         });
 
+        it ("_renderMustacheTemplate() should inject $dcctx obj", function () {
+            expect(module._renderMustacheTemplate("cid: {{$dcctx.cid}}", {}, options.catalog)).toBe("cid: test");
+        });
+
         it('module._renderMustacheTemplate() should inject $catalog obj', function() {
             expect(module._renderMustacheTemplate("catalog snapshot: {{$catalog.snapshot}}, catalog id: {{$catalog.id}}", {}, options.catalog)).toBe("catalog snapshot: " + process.env.DEFAULT_CATALOG + ", catalog id: " + process.env.DEFAULT_CATALOG);
         });

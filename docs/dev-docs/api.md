@@ -61,8 +61,10 @@ to use for ERMrest JavaScript agents.
 
 * [ERMrest](#ERMrest) : <code>object</code>
     * [.Server](#ERMrest.Server)
-        * [new Server(uri)](#new_ERMrest.Server_new)
+        * [new Server(uri, contextHeaderParams)](#new_ERMrest.Server_new)
         * [.uri](#ERMrest.Server+uri) : <code>string</code>
+        * [.cid](#ERMrest.Server+cid) : <code>string</code>
+        * [.pid](#ERMrest.Server+pid) : <code>string</code>
         * [.catalogs](#ERMrest.Server+catalogs) : [<code>Catalogs</code>](#ERMrest.Catalogs)
     * [.Catalogs](#ERMrest.Catalogs)
         * [new Catalogs(server)](#new_ERMrest.Catalogs_new)
@@ -461,7 +463,7 @@ to use for ERMrest JavaScript agents.
         * [.searchFilters](#ERMrest.FacetColumn+searchFilters) : <code>Array.&lt;ERMREst.SearchFacetFilter&gt;</code>
         * [.choiceFilters](#ERMrest.FacetColumn+choiceFilters) : <code>Array.&lt;ERMREst.ChoiceFacetFilter&gt;</code>
         * [.rangeFilters](#ERMrest.FacetColumn+rangeFilters) : <code>Array.&lt;ERMREst.RangeFacetFilter&gt;</code>
-        * [.getChoiceDisplaynames()](#ERMrest.FacetColumn+getChoiceDisplaynames) ⇒ <code>Promise</code>
+        * [.getChoiceDisplaynames(contextHeaderParams)](#ERMrest.FacetColumn+getChoiceDisplaynames) ⇒ <code>Promise</code>
         * [.toJSON()](#ERMrest.FacetColumn+toJSON) ⇒ <code>Object</code>
         * [._setFilters(json)](#ERMrest.FacetColumn+_setFilters)
         * [.addSearchFilter(term)](#ERMrest.FacetColumn+addSearchFilter) ⇒ [<code>Reference</code>](#ERMrest.Reference)
@@ -509,6 +511,7 @@ to use for ERMrest JavaScript agents.
         * [.uri](#ERMrest.AttributeGroupReference+uri) : <code>string</code>
         * [.unfilteredReference](#ERMrest.AttributeGroupReference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
         * [.ermrestPath](#ERMrest.AttributeGroupReference+ermrestPath) : <code>string</code>
+        * [.defaultLogInfo](#ERMrest.AttributeGroupReference+defaultLogInfo) : <code>Object</code>
         * [.read([limit], contextHeaderParams)](#ERMrest.AttributeGroupReference+read) ⇒ <code>ERMRest.AttributeGroupPage</code>
         * [.getColumnByName(name)](#ERMrest.AttributeGroupReference+getColumnByName) ⇒ <code>ERMrest.AttributeGroupColumn</code>
     * [.AttributeGroupPage](#ERMrest.AttributeGroupPage)
@@ -641,6 +644,7 @@ to use for ERMrest JavaScript agents.
         * [.uri](#ERMrest.AttributeGroupReference+uri) : <code>string</code>
         * [.unfilteredReference](#ERMrest.AttributeGroupReference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
         * [.ermrestPath](#ERMrest.AttributeGroupReference+ermrestPath) : <code>string</code>
+        * [.defaultLogInfo](#ERMrest.AttributeGroupReference+defaultLogInfo) : <code>Object</code>
         * [.read([limit], contextHeaderParams)](#ERMrest.AttributeGroupReference+read) ⇒ <code>ERMRest.AttributeGroupPage</code>
         * [.getColumnByName(name)](#ERMrest.AttributeGroupReference+getColumnByName) ⇒ <code>ERMrest.AttributeGroupColumn</code>
     * [.AttributeGroupPage](#ERMrest.AttributeGroupPage) : <code>object</code>
@@ -668,22 +672,37 @@ to use for ERMrest JavaScript agents.
 **Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
 
 * [.Server](#ERMrest.Server)
-    * [new Server(uri)](#new_ERMrest.Server_new)
+    * [new Server(uri, contextHeaderParams)](#new_ERMrest.Server_new)
     * [.uri](#ERMrest.Server+uri) : <code>string</code>
+    * [.cid](#ERMrest.Server+cid) : <code>string</code>
+    * [.pid](#ERMrest.Server+pid) : <code>string</code>
     * [.catalogs](#ERMrest.Server+catalogs) : [<code>Catalogs</code>](#ERMrest.Catalogs)
 
 <a name="new_ERMrest.Server_new"></a>
 
-#### new Server(uri)
+#### new Server(uri, contextHeaderParams)
 
 | Param | Type | Description |
 | --- | --- | --- |
 | uri | <code>string</code> | URI of the ERMrest service. |
+| contextHeaderParams | <code>Object</code> | an object with at least `cid` |
 
 <a name="ERMrest.Server+uri"></a>
 
 #### server.uri : <code>string</code>
 The URI of the ERMrest service
+
+**Kind**: instance property of [<code>Server</code>](#ERMrest.Server)  
+<a name="ERMrest.Server+cid"></a>
+
+#### server.cid : <code>string</code>
+context-id: shows the id of app that this server is being used for
+
+**Kind**: instance property of [<code>Server</code>](#ERMrest.Server)  
+<a name="ERMrest.Server+pid"></a>
+
+#### server.pid : <code>string</code>
+page-id: shows the id of the page that this server is being used for
 
 **Kind**: instance property of [<code>Server</code>](#ERMrest.Server)  
 <a name="ERMrest.Server+catalogs"></a>
@@ -2905,7 +2924,8 @@ NOTE It will not have the same sort and paging as the reference.
 <a name="ERMrest.Reference+defaultLogInfo"></a>
 
 #### reference.defaultLogInfo : <code>Object</code>
-The default information that we want to be logged including catalog, schema_table, and facet (filter).
+The default information that we want to be logged. This includes:
+ - catalog, schema_table, cfacet, cfacet_str, cfacet_path, facets
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+defaultExportTemplate"></a>
@@ -4252,7 +4272,7 @@ Indicates that this ReferenceColumn is an inbound foreign key.
     * [.searchFilters](#ERMrest.FacetColumn+searchFilters) : <code>Array.&lt;ERMREst.SearchFacetFilter&gt;</code>
     * [.choiceFilters](#ERMrest.FacetColumn+choiceFilters) : <code>Array.&lt;ERMREst.ChoiceFacetFilter&gt;</code>
     * [.rangeFilters](#ERMrest.FacetColumn+rangeFilters) : <code>Array.&lt;ERMREst.RangeFacetFilter&gt;</code>
-    * [.getChoiceDisplaynames()](#ERMrest.FacetColumn+getChoiceDisplaynames) ⇒ <code>Promise</code>
+    * [.getChoiceDisplaynames(contextHeaderParams)](#ERMrest.FacetColumn+getChoiceDisplaynames) ⇒ <code>Promise</code>
     * [.toJSON()](#ERMrest.FacetColumn+toJSON) ⇒ <code>Object</code>
     * [._setFilters(json)](#ERMrest.FacetColumn+_setFilters)
     * [.addSearchFilter(term)](#ERMrest.FacetColumn+addSearchFilter) ⇒ [<code>Reference</code>](#ERMrest.Reference)
@@ -4549,7 +4569,7 @@ NOTE ASSUMES that filters is immutable
 **Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
 <a name="ERMrest.FacetColumn+getChoiceDisplaynames"></a>
 
-#### facetColumn.getChoiceDisplaynames() ⇒ <code>Promise</code>
+#### facetColumn.getChoiceDisplaynames(contextHeaderParams) ⇒ <code>Promise</code>
 When presenting the applied choice filters, the displayname might be differnt from the value.
 This only happens in case of entity-picker. Othercases we can just return the list of fitleres as is.
 In case of entity-picker, we should get the displayname of the choices.
@@ -4562,6 +4582,11 @@ NOTE This function will not return the null filter.
 
 **Kind**: instance method of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
 **Returns**: <code>Promise</code> - A promise resolved with list of objects that have `uniqueId`, and `displayname`.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| contextHeaderParams | <code>Object</code> | object that we want to be logged with the request |
+
 <a name="ERMrest.FacetColumn+toJSON"></a>
 
 #### facetColumn.toJSON() ⇒ <code>Object</code>
@@ -4955,6 +4980,7 @@ parent table (not the end table).
     * [.uri](#ERMrest.AttributeGroupReference+uri) : <code>string</code>
     * [.unfilteredReference](#ERMrest.AttributeGroupReference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
     * [.ermrestPath](#ERMrest.AttributeGroupReference+ermrestPath) : <code>string</code>
+    * [.defaultLogInfo](#ERMrest.AttributeGroupReference+defaultLogInfo) : <code>Object</code>
     * [.read([limit], contextHeaderParams)](#ERMrest.AttributeGroupReference+read) ⇒ <code>ERMRest.AttributeGroupPage</code>
     * [.getColumnByName(name)](#ERMrest.AttributeGroupReference+getColumnByName) ⇒ <code>ERMrest.AttributeGroupColumn</code>
 
@@ -5047,6 +5073,12 @@ NOTE:
 - Since this is the object that has knowledge of columns, this should be here.
   (we might want to relocate it to the AttributeGroupLocation object.)
 - ermrest can processs this uri.
+
+**Kind**: instance property of [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)  
+<a name="ERMrest.AttributeGroupReference+defaultLogInfo"></a>
+
+#### attributeGroupReference.defaultLogInfo : <code>Object</code>
+The default information that we want to be logged including catalog, schema_table, and facet (filter).
 
 **Kind**: instance property of [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)  
 <a name="ERMrest.AttributeGroupReference+read"></a>
@@ -6156,7 +6188,8 @@ NOTE It will not have the same sort and paging as the reference.
 <a name="ERMrest.Reference+defaultLogInfo"></a>
 
 #### reference.defaultLogInfo : <code>Object</code>
-The default information that we want to be logged including catalog, schema_table, and facet (filter).
+The default information that we want to be logged. This includes:
+ - catalog, schema_table, cfacet, cfacet_str, cfacet_path, facets
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+defaultExportTemplate"></a>
@@ -6499,6 +6532,7 @@ Check the sort object. Does not change the `this._location` object.
     * [.uri](#ERMrest.AttributeGroupReference+uri) : <code>string</code>
     * [.unfilteredReference](#ERMrest.AttributeGroupReference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
     * [.ermrestPath](#ERMrest.AttributeGroupReference+ermrestPath) : <code>string</code>
+    * [.defaultLogInfo](#ERMrest.AttributeGroupReference+defaultLogInfo) : <code>Object</code>
     * [.read([limit], contextHeaderParams)](#ERMrest.AttributeGroupReference+read) ⇒ <code>ERMRest.AttributeGroupPage</code>
     * [.getColumnByName(name)](#ERMrest.AttributeGroupReference+getColumnByName) ⇒ <code>ERMrest.AttributeGroupColumn</code>
 
@@ -6591,6 +6625,12 @@ NOTE:
 - Since this is the object that has knowledge of columns, this should be here.
   (we might want to relocate it to the AttributeGroupLocation object.)
 - ermrest can processs this uri.
+
+**Kind**: instance property of [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)  
+<a name="ERMrest.AttributeGroupReference+defaultLogInfo"></a>
+
+#### attributeGroupReference.defaultLogInfo : <code>Object</code>
+The default information that we want to be logged including catalog, schema_table, and facet (filter).
 
 **Kind**: instance property of [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)  
 <a name="ERMrest.AttributeGroupReference+read"></a>

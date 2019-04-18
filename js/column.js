@@ -1882,6 +1882,11 @@ AssetPseudoColumn.prototype.formatPresentation = function(data, context, options
 
     // add the uinit=1 query params
     url += ( url.indexOf("?") !== -1 ? "&": "?") + "uinit=1";
+
+    // add cid query param
+    var cid = this.table.schema.catalog.server.cid;
+    if (cid) url += "&cid=" + cid;
+
     var keyValues = {
         "caption": caption,
         "url": url
@@ -2811,9 +2816,10 @@ FacetColumn.prototype = {
      *
      * NOTE This function will not return the null filter.
      *
+     * @param {Object} contextHeaderParams object that we want to be logged with the request
      * @return {Promise} A promise resolved with list of objects that have `uniqueId`, and `displayname`.
      */
-    getChoiceDisplaynames: function () {
+    getChoiceDisplaynames: function (contextHeaderParams) {
         var defer = module._q.defer();
         var filters =  [];
 
@@ -2867,7 +2873,7 @@ FacetColumn.prototype = {
 
             ref = ref.sort([{"column": columnName, "descending": false}]);
 
-            ref.read(this.choiceFilters.length).then(function (page) {
+            ref.read(this.choiceFilters.length, contextHeaderParams, true).then(function (page) {
                 page.tuples.forEach(function (t) {
 
                     // create the response
