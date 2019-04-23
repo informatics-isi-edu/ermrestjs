@@ -101,6 +101,13 @@
           }
         },
         {
+            "name": "accessionid",
+            "comment": "since title exists, this should not be used for row-name",
+            "type": {
+                "typename": "text"
+            }
+        },
+        {
           "name": "title",
           "type": {
             "typename": "text"

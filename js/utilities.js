@@ -855,14 +855,15 @@
             return str.replace(/[\.\s\_-]+/g, "").toLocaleLowerCase();
         };
 
-        for (var i = 0; i < columnNames.length; i++) {
-            var closest = removeExtra(columnNames[i]);
-            if (candidates.indexOf(closest) !== -1) {
-                return columnNames[i];
+        for (var i = 0; i < candidates.length; i++) {
+            for (var j = 0; j < columnNames.length; j++) {
+                if (candidates[i] === removeExtra(columnNames[j])) {
+                    return columnNames[j];
+                }
             }
         }
 
-        // couldn't find any columns
+        // no candidate columns found
         return false;
     };
 
