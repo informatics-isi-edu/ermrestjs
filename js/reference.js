@@ -2041,16 +2041,31 @@
          * @returns {String} A string representing the url for direct csv download
          **/
         get csvDownloadLink() {
-            return this.location.ermrestCompactUri + "?limit=none&accept=csv&uinit=1&download=" + module._fixedEncodeURIComponent(this.displayname.unformatted);
+            var cid = this.table.schema.catalog.server.cid;
+            cid = cid ? ("&cid=" + cid) : "";
+            return this.location.ermrestCompactUri + "?limit=none&accept=csv&uinit=1" + cid + "&download=" + module._fixedEncodeURIComponent(this.displayname.unformatted);
         },
 
         /**
-         * The default information that we want to be logged including catalog, schema_table, and facet (filter).
+         * The default information that we want to be logged. This includes:
+         *  - catalog, schema_table, cfacet, cfacet_str, cfacet_path, facets
          * @type {Object}
          */
         get defaultLogInfo() {
             var obj = {};
+            obj.catalog = this.table.schema.catalog.id;
             obj.schema_table = this.table.schema.name + ":" + this.table.name;
+
+            // custom facet
+            if (this.location.customFacets) {
+                var cf = this.location.customFacets;
+                obj.cfacet = 1;
+                if (cf.displayname) {
+                    obj.cfacet_str = cf.displayname;
+                } else if (cf.ermrestPath){
+                    obj.cfacet_path = cf.ermrestPath;
+                }
+            }
 
             if (this.location.facets) {
                 obj.facet = this.location.facets.decoded;

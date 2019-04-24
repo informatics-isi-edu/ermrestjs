@@ -354,13 +354,8 @@ AttributeGroupReference.prototype = {
             if (!contextHeaderParams || !isObject(contextHeaderParams)) {
                 contextHeaderParams = {"action": "read"};
             }
-
-            contextHeaderParams.page_size = limit;
-
-            var headers = {};
-            headers[module.contextHeaderName] = contextHeaderParams;
             var config = {
-                headers: headers
+                headers: this._generateContextHeader(contextHeaderParams, limit)
             };
             this._server.http.get(uri, config).then(function (response) {
 
@@ -422,12 +417,19 @@ AttributeGroupReference.prototype = {
 
     },
 
-    getAggregates: function (aggregateList) {
+    getAggregates: function (aggregateList, contextHeaderParams) {
         var defer = module._q.defer();
         var url;
         var urlSet = [];
         var loc = this.location;
 
+        // create the context header params for log
+        if (!contextHeaderParams || !isObject(contextHeaderParams)) {
+            contextHeaderParams = {"action": "aggregate"};
+        }
+        var config = {
+            headers: this._generateContextHeader(contextHeaderParams)
+        };
         var baseUri = loc.path;
         if (typeof loc.searchFilter === "string" && loc.searchFilter.length > 0) {
             baseUri += "/" + loc.searchFilter;
@@ -467,7 +469,7 @@ AttributeGroupReference.prototype = {
         var aggregatePromises = [];
         var http = this._server.http;
         for (var j = 0; j < urlSet.length; j++) {
-            aggregatePromises.push(http.get(loc.service + "/catalog/" + loc.catalogId + "/aggregate/" + urlSet[j]));
+            aggregatePromises.push(http.get(loc.service + "/catalog/" + loc.catalogId + "/aggregate/" + urlSet[j], config));
         }
 
         module._q.all(aggregatePromises).then(function getAggregates(response) {
@@ -516,6 +518,39 @@ AttributeGroupReference.prototype = {
             return c;
         }
         throw new module.NotFoundError("", "Column " + name + " not found.");
+    },
+
+    /**
+     * The default information that we want to be logged including catalog, schema_table, and facet (filter).
+     * @type {Object}
+     */
+    get defaultLogInfo() {
+        var obj = {};
+        obj.catalog = this._catalog.id;
+        if (this.table) {
+            obj.schema_table = this.table.schema.name + ":" + this.table.name;
+        }
+        return obj;
+    },
+
+    _generateContextHeader: function (contextHeaderParams, page_size) {
+        if (!contextHeaderParams || !isObject(contextHeaderParams)) {
+            contextHeaderParams = {};
+        }
+
+        for (var key in this.defaultLogInfo) {
+            // only add the values that are not defined.
+            if (key in contextHeaderParams) continue;
+            contextHeaderParams[key] = this.defaultLogInfo[key];
+        }
+
+        if (isInteger(page_size)) {
+            contextHeaderParams.page_size = page_size;
+        }
+
+        var headers = {};
+        headers[module.contextHeaderName] = contextHeaderParams;
+        return headers;
     },
 };
 
@@ -1261,9 +1296,10 @@ BucketAttributeGroupReference.prototype.search = function (term) {
  * for the max values of each bucket. Together, labels.min[x] and labels.min[y],
  * represent the range for each bucket (bar in the histogram) at that particular index.
  *
+ * @param {Object} contextHeaderParams the object that we want to log.
  * @return {Object} data object that contains 2 arrays and another object with 2 arrays
  */
-BucketAttributeGroupReference.prototype.read = function () {
+BucketAttributeGroupReference.prototype.read = function (contextHeaderParams) {
     var moment = module._moment;
 
     // uses the current known min value and adds the binWidth to it to generate the max label
@@ -1286,7 +1322,13 @@ BucketAttributeGroupReference.prototype.read = function () {
         var uri = this.uri;
 
         var currRef = this;
-        this._server.http.get(uri).then(function (response) {
+        if (!contextHeaderParams || !isObject(contextHeaderParams)) {
+            contextHeaderParams = {"action": "read"};
+        }
+        var config = {
+            headers: this._generateContextHeader(contextHeaderParams)
+        };
+        this._server.http.get(uri, config).then(function (response) {
             var data = {
                 x: [],
                 y: []

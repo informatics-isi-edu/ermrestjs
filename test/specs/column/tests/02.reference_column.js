@@ -752,16 +752,16 @@ exports.execute = function (options) {
                         describe("if asset column has filenameColumn, ", function () {
                             it ("if its value is empty, use the url for caption.", function () {
                                 val = assetRefCompactCols[10].formatPresentation({"col_asset_3": "https://example.com", "col_filename": null}).value;
-                                expect(val).toEqual('<a href="https://example.com?uinit=1" download="" class="download">https://example.com</a>', "value missmatch.");
+                                expect(val).toEqual('<a href="https://example.com?uinit=1&amp;cid=test" download="" class="download">https://example.com</a>', "value missmatch.");
                             });
 
                             it ("otherwise use the given caption.", function () {
                                 val = assetRefCompactCols[10].formatPresentation({"col_asset_3": "https://example.com", "col_filename": "filename"}).value;
-                                expect(val).toEqual('<a href="https://example.com?uinit=1" download="" class="download">filename</a>', "value missmatch.");
+                                expect(val).toEqual('<a href="https://example.com?uinit=1&amp;cid=test" download="" class="download">filename</a>', "value missmatch.");
 
                                 val = assetRefCompactCols[10].formatPresentation({"col_asset_3": "https://example.com?query=1&v=1", "col_filename": "filename"}).value;
                                 //NOTE this is the output but it will be displayed correctly.
-                                expect(val).toEqual('<a href="https://example.com?query=1&amp;v=1&amp;uinit=1" download="" class="download">filename</a>', "couldn't handle having query params in the url.");
+                                expect(val).toEqual('<a href="https://example.com?query=1&amp;v=1&amp;uinit=1&amp;cid=test" download="" class="download">filename</a>', "couldn't handle having query params in the url.");
                             });
                         });
 
@@ -769,31 +769,31 @@ exports.execute = function (options) {
                             it ("if value matches the expected format, just return the filename.", function () {
                                 var hatracSampleURL = "/hatrac/Zf/ZfDsy20170915D/file-test.csv:2J7IIX63WQRUDIALUGYDKDO36A";
                                 val = assetRefCompactCols[8].formatPresentation({"col_asset_1": hatracSampleURL}).value;
-                                expect(val).toEqual('<a href="' + hatracSampleURL +'?uinit=1" download="" class="download">file-test.csv</a>', "value missmatch.");
+                                expect(val).toEqual('<a href="' + hatracSampleURL +'?uinit=1&amp;cid=test" download="" class="download">file-test.csv</a>', "value missmatch.");
                             });
 
                             it ("in compact contexts, return the last part of url.", function () {
                                 var url = "http://example.com/folder/next/folder/image.png";
                                 val = assetRefCompactCols[8].formatPresentation({"col_asset_1": url}, "compact").value;
-                                expect(val).toEqual('<a href="' + url +'?uinit=1" download="" class="download">image.png</a>', "value missmatch for compact");
+                                expect(val).toEqual('<a href="' + url +'?uinit=1&amp;cid=test" download="" class="download">image.png</a>', "value missmatch for compact");
 
                                 val = assetRefCompactCols[8].formatPresentation({"col_asset_1": url}, "compact/brief").value;
-                                expect(val).toEqual('<a href="' + url +'?uinit=1" download="" class="download">image.png</a>', "value missmatch for compact/brief");
+                                expect(val).toEqual('<a href="' + url +'?uinit=1&amp;cid=test" download="" class="download">image.png</a>', "value missmatch for compact/brief");
                             });
 
                             it ("otherwise return the whole url.", function () {
                                 var url = "http://example.com/folder/next/folder/image.png";
                                 val = assetRefCompactCols[8].formatPresentation({"col_asset_1": url}, "detailed").value;
-                                expect(val).toEqual('<a href="' + url +'?uinit=1" download="" class="download">' + url + '</a>', "value missmatch for detailed");
+                                expect(val).toEqual('<a href="' + url +'?uinit=1&amp;cid=test" download="" class="download">' + url + '</a>', "value missmatch for detailed");
 
-                                val = assetRefCompactCols[8].formatPresentation({"col_asset_1": "https://example.com"}).value;
-                                expect(val).toEqual('<a href="https://example.com?uinit=1" download="" class="download">https://example.com</a>', "value missmatch for unknown context");
+                                val = assetRefCompactCols[8].formatPresentation({"col_asset_1": "https://example.com"}, "detailed").value;
+                                expect(val).toEqual('<a href="https://example.com?uinit=1&amp;cid=test" download="" class="download">https://example.com</a>', "value missmatch for unknown context");
                             });
                         });
 
                         it ('if url has invalid characets in it and markdown cannot be parsed, it should return the produced markdown string.', function () {
-                            val = assetRefCompactCols[8].formatPresentation({"col_asset_1": "https://exam\nple.com"}).value;
-                            expect(val).toEqual('[https://exam\nple.com](https://exam\nple.com?uinit=1){download .download}', "value missmatch.");
+                            val = assetRefCompactCols[8].formatPresentation({"col_asset_1": "https://exam\nple.com"}, "detailed").value;
+                            expect(val).toEqual('[https://exam\nple.com](https://exam\nple.com?uinit=1&cid=test){download .download}', "value missmatch.");
                         });
                     });
                  });
@@ -933,6 +933,13 @@ exports.execute = function (options) {
                 });
             });
 
+            describe(".templateEngine", function () {
+                it ("should return the defined template_engine", function () {
+                    expect(assetRefCompactCols[9].templateEngine).toBe("", "missmatch for index=9");
+                    expect(assetRefCompactCols[10].templateEngine).toBe("handlebars", "missmatch for index=10");
+                });
+            });
+
             describe('.filenameColumn', function() {
 
                 it('should return null if column is not valid or not present.', function () {
@@ -975,6 +982,69 @@ exports.execute = function (options) {
 
                 it('otherwise should return the defined array of file name extensions.', function () {
                     expect(assetRefCompactCols[10].filenameExtFilter).toEqual(["*.jpg"]);
+                });
+            });
+
+            describe(".getMetadata", function () {
+                var testMetadata = function (col, data, message, expectedFilename, expectedByte, expectedMd5, expectedSha256) {
+                    var m = col.getMetadata(data);
+                    if (expectedFilename != null) {
+                        expect(m.filename).toBe(expectedFilename, "title missmatch for " + message);
+                    }
+
+                    if (expectedByte != null) {
+                        expect(m.byteCount).toEqual(expectedByte, "byteCount missmatch for " + message);
+                    }
+
+                    if (expectedMd5 != null) {
+                        expect(m.md5).toBe(expectedMd5, "md5 missmatch for " + message);
+                    }
+
+                    if (expectedSha256 != null) {
+                        expect(m.sha256).toBe(expectedSha256, "sha256 missmatch for " + message);
+                    }
+                };
+
+                var assetMetadataTestData = {
+                    col_asset_3: "/hatrac/testurl",
+                    col_filename: "filenamevalue.png",
+                    col_byte: 12400000,
+                    col_md5: "md5value",
+                    col_sha256: "sha256value"
+                };
+
+                it ("should return empty values if the asset is null.", function () {
+                    testMetadata(assetRefCompactCols[9], {}, "empty asset index=9.", "", "", "", "");
+
+                    testMetadata(assetRefCompactCols[10], {}, "empty asset index=10.", "", "", "", "");
+                });
+
+                describe("regarding byteCount, md5, sha256.", function () {
+                    it ("if annotation has metadata columns, should return their values.", function () {
+                        testMetadata(assetRefCompactCols[10], assetMetadataTestData, "empty asset index=10.", null, 12400000, "md5value", "sha256value");
+                    });
+
+                    it ("otherwise should return empty string.", function () {
+                        testMetadata(assetRefCompactCols[9], {"col_asset_2": "/hatrac/testurl"}, "empty asset index=10.", null, "", "", "");
+                    });
+                });
+
+                describe("regarding filename, ", function () {
+                    it ("if asset column has filename column and its value is not empty, should return it.", function () {
+                        testMetadata(assetRefCompactCols[10], assetMetadataTestData, "asset with filename value", "filenamevalue.png");
+                    });
+
+                    it ("otherwise, if the url value matches the format, should extract the filename.", function () {
+                        testMetadata(assetRefCompactCols[8], {col_asset_1: "/hatrac/Zf/ZfDsy20170915D/file-test.csv:2J7IIX63WQRUDIALUGYDKDO36A"}, "hatrac file", "file-test.csv");
+                    });
+
+                    it ("otherwise, in compact context should return the last part of url.", function () {
+                        testMetadata(assetRefCompactCols[8], {col_asset_1: "http://example.com/folder/next/folder/image.png"}, "non-hatrac compact file", "image.png");
+                    });
+
+                    it ("otherwise, should return the whole url.", function () {
+                        testMetadata(assetRefEntryCols[4], {col_asset_1: "http://example.com/folder/next/folder/image.png"}, "non-hatrac entry file", "http://example.com/folder/next/folder/image.png");
+                    });
                 });
             });
         })

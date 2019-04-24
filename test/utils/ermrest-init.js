@@ -11,7 +11,7 @@ exports.init = function (options) {
 
 	ermRest.setUserCookie(authCookie);
 
-	var server = ermRest.ermrestFactory.getServer(url);
+	var server = ermRest.ermrestFactory.getServer(url, {cid: "test"});
 
 	return {
 		ermrestUtils: require(process.env.PWD + "/../ErmrestDataUtils/import.js"),

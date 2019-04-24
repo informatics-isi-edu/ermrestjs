@@ -1835,6 +1835,69 @@ AssetPseudoColumn.prototype._determineInputDisabled = function (context) {
     return AssetPseudoColumn.super._determineInputDisabled.call(this, context);
 };
 
+/**
+ * Given the data, return the appropriate filename that should be used for the asset
+ */
+AssetPseudoColumn.prototype.getMetadata = function (data, context, options) {
+    data = data || {};
+    if (!context) {
+        context = this._context;
+    }
+
+    var self = this;
+
+    var result = {
+        url: "", filename: "", byteCount: "", md5: "", sha256: ""
+    };
+
+    // if null, return null value
+    if (typeof data[this._baseCol.name] === 'undefined' || data[this._baseCol.name] === null) {
+        return result;
+    }
+
+    result.url = data[this._baseCol.name];
+
+    // get the filename
+    var col = this.filenameColumn ? this.filenameColumn : this._baseCol;
+    var filename = col.formatvalue(data[col.name], context, options);
+
+    // if we got the filename from column and it resulted in empty, try with the data
+    if (this.filenameColumn && (!filename || !data[this.filenameColumn.name])) {
+        filename = col.formatvalue(data[this._baseCol.name], context, options);
+    }
+
+    // if filenameColumn doesn't exists, then we want to show that value
+    if (!this.filenameColumn) {
+        // if value matches the expected format, just show the file name
+        var parts = filename.match(/^\/hatrac\/([^\/]+\/)*([^\/:]+)(:[^:]+)?$/);
+        if (parts && parts.length === 4) {
+            filename = parts[2];
+        }
+        // in compact contexts, just return the last part of url (filename)
+        else if (typeof context === "string" && context.indexOf("compact") === 0) {
+            var newCaption = filename.split("/").pop();
+            if (newCaption.length !== 0) {
+                filename = newCaption;
+            }
+        }
+    }
+
+    result.filename = filename;
+
+    if (this.byteCountColumn && data[this.byteCountColumn.name] && data[this.byteCountColumn.name] != null) {
+        result.byteCount = data[this.byteCountColumn.name];
+    }
+
+    if (this.md5 && data[this.md5.name] && data[this.md5.name] != null) {
+        result.md5 = data[this.md5.name];
+    }
+
+    if (this.sha256 && data[this.sha256.name] && data[this.sha256.name] != null) {
+        result.sha256 = data[this.sha256.name];
+    }
+    return result;
+};
+
 // properties to be overriden:
 AssetPseudoColumn.prototype.formatPresentation = function(data, context, options) {
     data = data || {};
@@ -1855,33 +1918,16 @@ AssetPseudoColumn.prototype.formatPresentation = function(data, context, options
 
     // otherwise return a download link
     var template = "[{{{caption}}}]({{{url}}}){download .download}";
-    var col = this.filenameColumn ? this.filenameColumn : this._baseCol;
     var url = data[this._baseCol.name];
-    var caption = col.formatvalue(data[col.name], context, options);
-
-    // if we got the caption from filename and it resulted in empty, try with the data
-    if (this.filenameColumn && (!caption || !data[this.filenameColumn.name])) {
-        caption = col.formatvalue(data[this._baseCol.name], context, options);
-    }
-
-    // if filenameColumn exists, then we want to show that value
-    if (!this.filenameColumn) {
-        // if value matches the expected format, just show the file name
-        var parts = caption.match(/^\/hatrac\/([^\/]+\/)*([^\/:]+)(:[^:]+)?$/);
-        if (parts && parts.length === 4) {
-            caption = parts[2];
-        }
-        // in compact contexts, just return the last part of url (filename)
-        else if (typeof context === "string" && context.indexOf("compact") === 0) {
-            var newCaption = caption.split("/").pop();
-            if (newCaption.length !== 0) {
-                caption = newCaption;
-            }
-        }
-    }
+    var caption = this.getMetadata(data, context, options).filename;
 
     // add the uinit=1 query params
     url += ( url.indexOf("?") !== -1 ? "&": "?") + "uinit=1";
+
+    // add cid query param
+    var cid = this.table.schema.catalog.server.cid;
+    if (cid) url += "&cid=" + cid;
+
     var keyValues = {
         "caption": caption,
         "url": url
@@ -1889,6 +1935,20 @@ AssetPseudoColumn.prototype.formatPresentation = function(data, context, options
     var unformatted = module._renderTemplate(template, keyValues, this.table, this._context, {formatted: true});
     return {isHTML: true, value: module._formatUtils.printMarkdown(unformatted, {inline:true}), unformatted: unformatted};
 };
+
+/**
+ * Returns the template_engine defined in the annotation
+ * @member {ERMrest.Refernece} template_engine
+ * @memberof ERMrest.AssetPseudoColumn#
+ */
+Object.defineProperty(AssetPseudoColumn.prototype, "templateEngine", {
+    get: function () {
+        if (this._templateEngine === undefined) {
+            this._templateEngine = this._annotation.template_engine || "";
+        }
+        return this._templateEngine;
+    }
+});
 
 /**
  * Returns the url_pattern defined in the annotation (the raw value and not computed).
@@ -2797,9 +2857,10 @@ FacetColumn.prototype = {
      *
      * NOTE This function will not return the null filter.
      *
+     * @param {Object} contextHeaderParams object that we want to be logged with the request
      * @return {Promise} A promise resolved with list of objects that have `uniqueId`, and `displayname`.
      */
-    getChoiceDisplaynames: function () {
+    getChoiceDisplaynames: function (contextHeaderParams) {
         var defer = module._q.defer();
         var filters =  [];
 
@@ -2853,7 +2914,7 @@ FacetColumn.prototype = {
 
             ref = ref.sort([{"column": columnName, "descending": false}]);
 
-            ref.read(this.choiceFilters.length).then(function (page) {
+            ref.read(this.choiceFilters.length, contextHeaderParams, true).then(function (page) {
                 page.tuples.forEach(function (t) {
 
                     // create the response

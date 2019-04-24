@@ -82,7 +82,7 @@
         if (uri === undefined || uri === null)
             throw new module.InvalidInputError("URI undefined or null");
 
-        if (typeof contextHeaderParams === 'undefined' || contextHeaderParams === null) {
+        if (contextHeaderParams == null || typeof contextHeaderParams !== 'object') {
             // Set default cid to a truthy string because a true null will not
             // appear as a query parameter but we want to track cid even when cid
             // isn't provided
@@ -104,6 +104,7 @@
     /**
      * @memberof ERMrest
      * @param {string} uri URI of the ERMrest service.
+     * @param {Object} contextHeaderParams an object with at least `cid`
      * @constructor
      */
     function Server(uri, contextHeaderParams) {
@@ -120,8 +121,20 @@
          * @type {Object}
          */
         this.http = module._wrap_http(module._http);
-        this.http.contextHeaderParams = contextHeaderParams || {};
-        this.http.contextHeaderParams.cid = this.http.contextHeaderParams.cid || null;
+        this.http.contextHeaderParams = contextHeaderParams;
+        this.http.contextHeaderParams.cid = this.http.contextHeaderParams.cid;
+
+        /**
+         * context-id: shows the id of app that this server is being used for
+         * @type {string}
+         */
+        this.cid = this.http.contextHeaderParams.cid;
+
+        /**
+         * page-id: shows the id of the page that this server is being used for
+         * @type {string=}
+         */
+        this.pid = this.http.contextHeaderParams.pid;
 
         /**
          *
@@ -251,10 +264,12 @@
          *      {@link ERMrest.ERMrestError} if rejected
          */
         currentSnaptime: function () {
-            var self = this;
-            var defer = module._q.defer();
-
-            this.server.http.get(this._uri).then(function (response) {
+            var self = this, defer = module._q.defer(), headers = {};
+            headers[module.contextHeaderName] = {
+                action: "model/catalog",
+                catalog: self.id
+            };
+            this.server.http.get(this._uri, {headers: headers}).then(function (response) {
                 defer.resolve(response.data.snaptime);
             }, function (error) {
                 defer.reject(error);
@@ -275,8 +290,12 @@
             var self = this;
             return this.currentSnaptime().then(function(snaptime) {
                 self.snaptime = snaptime;
-
-                return self.server.http.get(self._uri + "/schema");
+                var headers = {};
+                headers[module.contextHeaderName] = {
+                    action: "model/schema",
+                    catalog: self.id
+                };
+                return self.server.http.get(self._uri + "/schema", {headers: headers});
             }).then(function (response) {
                 var jsonSchemas = response.data;
 

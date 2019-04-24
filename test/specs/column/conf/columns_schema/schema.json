@@ -983,6 +983,7 @@
                     "annotations": {
                         "tag:isrd.isi.edu,2017:asset": {
                             "url_pattern": "/hatrac/{{col_asset_3}}",
+                            "template_engine": "handlebars",
                             "filename_column": "col_filename",
                             "byte_count_column": "col_byte",
                             "md5": "col_md5",
