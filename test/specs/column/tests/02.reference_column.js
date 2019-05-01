@@ -986,10 +986,14 @@ exports.execute = function (options) {
             });
 
             describe(".getMetadata", function () {
-                var testMetadata = function (col, data, message, expectedFilename, expectedByte, expectedMd5, expectedSha256) {
+                var testMetadata = function (col, data, message, expectedCaption, expectedFilename, expectedByte, expectedMd5, expectedSha256) {
                     var m = col.getMetadata(data);
+                    if (expectedCaption != null) {
+                        expect(m.caption).toBe(expectedCaption, "caption missmatch for " + message);
+                    }
+
                     if (expectedFilename != null) {
-                        expect(m.filename).toBe(expectedFilename, "title missmatch for " + message);
+                        expect(m.filename).toBe(expectedFilename, "filename missmatch for " + message);
                     }
 
                     if (expectedByte != null) {
@@ -1014,22 +1018,22 @@ exports.execute = function (options) {
                 };
 
                 it ("should return empty values if the asset is null.", function () {
-                    testMetadata(assetRefCompactCols[9], {}, "empty asset index=9.", "", "", "", "");
+                    testMetadata(assetRefCompactCols[9], {}, "empty asset index=9.", "", "", "", "", "");
 
-                    testMetadata(assetRefCompactCols[10], {}, "empty asset index=10.", "", "", "", "");
+                    testMetadata(assetRefCompactCols[10], {}, "empty asset index=10.", "", "", "", "", "");
                 });
 
                 describe("regarding byteCount, md5, sha256.", function () {
                     it ("if annotation has metadata columns, should return their values.", function () {
-                        testMetadata(assetRefCompactCols[10], assetMetadataTestData, "empty asset index=10.", null, 12400000, "md5value", "sha256value");
+                        testMetadata(assetRefCompactCols[10], assetMetadataTestData, "empty asset index=10.", null, "filenamevalue.png",12400000, "md5value", "sha256value");
                     });
 
                     it ("otherwise should return empty string.", function () {
-                        testMetadata(assetRefCompactCols[9], {"col_asset_2": "/hatrac/testurl"}, "empty asset index=10.", null, "", "", "");
+                        testMetadata(assetRefCompactCols[9], {"col_asset_2": "/hatrac/testurl"}, "empty asset index=10.", null, "", "", "", "");
                     });
                 });
 
-                describe("regarding filename, ", function () {
+                describe("regarding caption, ", function () {
                     it ("if asset column has filename column and its value is not empty, should return it.", function () {
                         testMetadata(assetRefCompactCols[10], assetMetadataTestData, "asset with filename value", "filenamevalue.png");
                     });

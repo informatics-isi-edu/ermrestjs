@@ -1836,7 +1836,17 @@ AssetPseudoColumn.prototype._determineInputDisabled = function (context) {
 };
 
 /**
- * Given the data, return the appropriate filename that should be used for the asset
+ * Given the data, will return the appropriate metadata values. The returned object
+ * will have the following attributes:
+ * - caption: the string that can be used for showing the selected file.
+ * - filename
+ * - byteCount
+ * - md5
+ * - sha256
+ * @param  {Object} data    key-value pair of data
+ * @param  {String} context context string
+ * @param  {Object} options
+ * @return {Object} metadata object with `caption`, `filename`, `byteCount`, `md5`, and `sha256` attributes.
  */
 AssetPseudoColumn.prototype.getMetadata = function (data, context, options) {
     data = data || {};
@@ -1847,7 +1857,7 @@ AssetPseudoColumn.prototype.getMetadata = function (data, context, options) {
     var self = this;
 
     var result = {
-        url: "", filename: "", byteCount: "", md5: "", sha256: ""
+        url: "", caption: "", filename: "", byteCount: "", md5: "", sha256: ""
     };
 
     // if null, return null value
@@ -1857,32 +1867,36 @@ AssetPseudoColumn.prototype.getMetadata = function (data, context, options) {
 
     result.url = data[this._baseCol.name];
 
-    // get the filename
+    // get the caption
     var col = this.filenameColumn ? this.filenameColumn : this._baseCol;
-    var filename = col.formatvalue(data[col.name], context, options);
+    var caption = col.formatvalue(data[col.name], context, options);
 
-    // if we got the filename from column and it resulted in empty, try with the data
-    if (this.filenameColumn && (!filename || !data[this.filenameColumn.name])) {
-        filename = col.formatvalue(data[this._baseCol.name], context, options);
+    // if we got the caption from column and it resulted in empty, return the url
+    if (this.filenameColumn && (!caption || !data[this.filenameColumn.name])) {
+        caption = col.formatvalue(data[this._baseCol.name], context, options);
     }
 
-    // if filenameColumn doesn't exists, then we want to show that value
+    // if filenameColumn doesn't exists, return the last part of url
     if (!this.filenameColumn) {
-        // if value matches the expected format, just show the file name
-        var parts = filename.match(/^\/hatrac\/([^\/]+\/)*([^\/:]+)(:[^:]+)?$/);
+        // if caption matches the expected format, just show the file name
+        var parts = caption.match(/^\/hatrac\/([^\/]+\/)*([^\/:]+)(:[^:]+)?$/);
         if (parts && parts.length === 4) {
-            filename = parts[2];
+            caption = parts[2];
         }
         // in compact contexts, just return the last part of url (filename)
         else if (typeof context === "string" && context.indexOf("compact") === 0) {
-            var newCaption = filename.split("/").pop();
+            var newCaption = caption.split("/").pop();
             if (newCaption.length !== 0) {
-                filename = newCaption;
+                caption = newCaption;
             }
         }
     }
 
-    result.filename = filename;
+    result.caption = caption;
+
+    if (this.filenameColumn && data[this.filenameColumn.name] && data[this.filenameColumn.name] != null) {
+        result.filename = data[this.filenameColumn.name];
+    }
 
     if (this.byteCountColumn && data[this.byteCountColumn.name] && data[this.byteCountColumn.name] != null) {
         result.byteCount = data[this.byteCountColumn.name];
@@ -1919,7 +1933,7 @@ AssetPseudoColumn.prototype.formatPresentation = function(data, context, options
     // otherwise return a download link
     var template = "[{{{caption}}}]({{{url}}}){download .download}";
     var url = data[this._baseCol.name];
-    var caption = this.getMetadata(data, context, options).filename;
+    var caption = this.getMetadata(data, context, options).caption;
 
     // add the uinit=1 query params
     url += ( url.indexOf("?") !== -1 ? "&": "?") + "uinit=1";
@@ -2915,11 +2929,13 @@ FacetColumn.prototype = {
             ref = ref.sort([{"column": columnName, "descending": false}]);
 
             ref.read(this.choiceFilters.length, contextHeaderParams, true).then(function (page) {
+                // create the response
                 page.tuples.forEach(function (t) {
-
-                    // create the response
                     filters.push({uniqueId: t.data[columnName], displayname: t.displayname, tuple: t});
                 });
+                // if there are any filters that didn't match any rows, just return the value.
+
+
                 defer.resolve(filters);
             }).catch(function (err) {
                 defer.reject(module.responseToError(err));
