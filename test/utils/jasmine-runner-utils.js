@@ -57,7 +57,6 @@ exports.deleteCatalog = deleteCatalog
 // Creates a catalog and then runs the specs as mentioned in the config file
 // Deletes the created catalog once all specs have been executed
 exports.run = function(config) {
-
 	// Load the configuration
 	jrunner.loadConfig(config);
 

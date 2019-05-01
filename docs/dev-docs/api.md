@@ -75,6 +75,7 @@ to use for ERMrest JavaScript agents.
         * [new Catalog(server, id)](#new_ERMrest.Catalog_new)
         * [.id](#ERMrest.Catalog+id) : <code>string</code>
         * [.schemas](#ERMrest.Catalog+schemas) : [<code>Schemas</code>](#ERMrest.Schemas)
+        * [.chaiseConfig](#ERMrest.Catalog+chaiseConfig) ⇒ <code>Object</code>
         * [.currentSnaptime()](#ERMrest.Catalog+currentSnaptime) ⇒ <code>Promise</code>
         * [.constraintByNamePair(pair, subject)](#ERMrest.Catalog+constraintByNamePair) ⇒ <code>Object</code> \| <code>null</code>
         * [.getTable(tableName, schemaName)](#ERMrest.Catalog+getTable) ⇒ [<code>Table</code>](#ERMrest.Table)
@@ -764,6 +765,7 @@ Get a catalog by id. This call does catalog introspection.
     * [new Catalog(server, id)](#new_ERMrest.Catalog_new)
     * [.id](#ERMrest.Catalog+id) : <code>string</code>
     * [.schemas](#ERMrest.Catalog+schemas) : [<code>Schemas</code>](#ERMrest.Schemas)
+    * [.chaiseConfig](#ERMrest.Catalog+chaiseConfig) ⇒ <code>Object</code>
     * [.currentSnaptime()](#ERMrest.Catalog+currentSnaptime) ⇒ <code>Promise</code>
     * [.constraintByNamePair(pair, subject)](#ERMrest.Catalog+constraintByNamePair) ⇒ <code>Object</code> \| <code>null</code>
     * [.getTable(tableName, schemaName)](#ERMrest.Catalog+getTable) ⇒ [<code>Table</code>](#ERMrest.Table)
@@ -789,6 +791,11 @@ The catalog identifier.
 
 #### catalog.schemas : [<code>Schemas</code>](#ERMrest.Schemas)
 **Kind**: instance property of [<code>Catalog</code>](#ERMrest.Catalog)  
+<a name="ERMrest.Catalog+chaiseConfig"></a>
+
+#### catalog.chaiseConfig ⇒ <code>Object</code>
+**Kind**: instance property of [<code>Catalog</code>](#ERMrest.Catalog)  
+**Returns**: <code>Object</code> - the chaise config object from the catalog annotation  
 <a name="ERMrest.Catalog+currentSnaptime"></a>
 
 #### catalog.currentSnaptime() ⇒ <code>Promise</code>

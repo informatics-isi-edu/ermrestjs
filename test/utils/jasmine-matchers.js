@@ -101,8 +101,8 @@ exports.execute = function() {
             toBeAnyOf: function(util, customEqualityTesters) {
                 function craftMessage(actual, expected){
                     if (Array.isArray(expected)) {
-                        return "Expected '" + actual + "' to be any one of these:\n" + expected.join(" | "); 
-                    } else{ 
+                        return "Expected '" + actual + "' to be any one of these:\n" + expected.join(" | ");
+                    } else{
                         return "Expected value must be an array.";
                     }
                 };
@@ -126,7 +126,7 @@ exports.execute = function() {
             },
 
             toThrow: function(util, customEqualityTesters) {
-                return { 
+                return {
                     compare: function(actual, expected) {
                         var result = false;
                         var exception;
@@ -143,7 +143,7 @@ exports.execute = function() {
                         }
 
                         var message;
-                       
+
                         if (exception && (expected === jasmine.undefined || !util.equals(exception.message || exception, expected.message || expected, customEqualityTesters))) {
                           message = ["Expected function not to throw", expected ? expected.message || expected : "an exception", ", but it threw", exception.message || exception].join(' ');
                         } else {

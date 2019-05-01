@@ -12,7 +12,7 @@ var ermrestUtils = require(process.env.PWD + "/../ErmrestDataUtils/import.js");
  * @param  {string} catalogId         the catalog id (might be undefined)
  */
 exports.importSchemas = function (configFilePaths, catalogId) {
-  var defer = q.defer(), entities = {}, schemas = {};
+  var defer = q.defer(), entities = {}, schemas = {}, catalog = {};
   var config, schema, schemaName;
 
   if (!configFilePaths || configFilePaths.length === 0) {
@@ -27,6 +27,7 @@ exports.importSchemas = function (configFilePaths, catalogId) {
 
   configFilePaths.forEach(function (filePath) {
     config = requireReload(process.env.PWD + "/test/specs" + filePath);
+    catalog = config.catalog;
     schemas[config.schema.name] = {
       path: config.schema.path
     };
@@ -39,7 +40,10 @@ exports.importSchemas = function (configFilePaths, catalogId) {
   //NOTE we're not honoring the catalog object that is passed in each config
   //     so if you add any acls there, it will be ignored.
   //     if we want to add a default acl, it should be added here.
-  settings.setup = {catalog: {}, schemas: schemas};
+  // honoring the catalog object now, anything defined in it will be passed to ErmrestDataUtils
+  // NOTE: the catalog is not created here, so we will continue to ignore the catalog object.
+  //     Default ACLs are being set in jasmine-runner-utils.js
+  settings.setup = {catalog: catalog, schemas: schemas};
   if (catalogId) {
     settings.setup.catalog.id =  catalogId;
   }
