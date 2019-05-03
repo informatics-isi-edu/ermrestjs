@@ -45,7 +45,7 @@ The current implementation of `$fkeys` has the following limitations:
 
   ![$fkeys example](https://dev.isrd.isi.edu/~ashafaei/wiki-images/fkeys_1.png)
 
-  And you have defined the `row_markdown_pattern` of table A as `{{$fkeys.schema.fk1.values.term}}`. If you navigate to record app for any records of A, the rowname will be displayed as you expect it. But if you go to the table C, the rowname of A won't be as you expected since we don't have access to the table B's data.
+  And you have defined the `row_markdown_pattern` of table A as `{{{$fkeys.schema.fk1.values.term}}}`. If you navigate to record app for any records of A, the rowname will be displayed as you expect it. But if you go to the table C, the rowname of A won't be as you expected since we don't have access to the table B's data.
    Therefore it's advised to use `$fkeys` only for the `column-display` annotation (or any other annotation that is controlling data for the same table).
 
 
@@ -107,66 +107,68 @@ These special characters are as follows:
 
 ### 1. Normal replacement - "{{{name}}}"
 
-```sh
-
-- This is some value in COLUMN **{{{name}}}**
-
-# MUSTACHE OUTPUT: Mustache formatted String - 'This is some value in COLUMN **BiomassProdBatch for Virus=7782 Target=5HT1B site=USC**'
-# MARKDOWN OUTPUT: <p>This is some value in COLUMN <strong>BiomassProdBatch for Virus=7782 Target=5HT1B site=USC</strong></p>
 ```
-> <p>This is some value in COLUMN <strong>BiomassProdBatch for Virus=7782 Target=5HT1B site=USC</strong></p>
+
+This is some value in COLUMN **{{{name}}}**
+
+# MUSTACHE OUTPUT: "This is some value in COLUMN **BiomassProdBatch for Virus=7782 Target=5HT1B site=USC**""
+# MARKDOWN OUTPUT: "<p>This is some value in COLUMN <strong>BiomassProdBatch for Virus=7782 Target=5HT1B site=USC</strong></p>"
+```
+> 'This is some value in COLUMN **BiomassProdBatch for Virus=7782 Target=5HT1B site=USC**'
 
 ### 2. Replacement with URL encoding - "{{#encode}}{{{name}}}{{/encode}}"
 
-```sh
-
-[{{name}}](https://dev.isrd.isi.edu/chaise/search?name={{#encode}}{{name}}{{/encode}})
-
-# MUSTACHE OUTPUT: [BiomassProdBatch for Virus&#x3D;7782 Target&#x3D;5HT1B site&#x3D;USC](https://dev.isrd.isi.edu/chaise/search?name=BiomassProdBatch%20for%20Virus%3D7782%20Target%3D5HT1B%20site%3DUSC)
-# MARKDOWN OUTPUT: <p><a href="https://dev.isrd.isi.edu/chaise/search?name=BiomassProdBatch%20for%20Virus%3D7782%20Target%3D5HT1B%20site%3DUSC">BiomassProdBatch for Virus=7782 Target=5HT1B site=USC</a></p>
 ```
-> <p><a href="https://dev.isrd.isi.edu/chaise/search?name=BiomassProdBatch%20for%20Virus%3D7782%20Target%3D5HT1B%20site%3DUSC">BiomassProdBatch for Virus=7782 Target=5HT1B site=USC</a></p>
 
-### 3. Replacement with escaping - "{{date}}"
+[{{name}}](https://dev.isrd.isi.edu/chaise/search?name={{#encode}}{{{name}}}{{/encode}})
 
-```sh
-# name="BiomassProdBatch for Virus=7782 Target=5HT1B site=USC and date=2013-02-11 11:27:20"
+# MUSTACHE OUTPUT: "[BiomassProdBatch for Virus&#x3D;7782 Target&#x3D;5HT1B site&#x3D;USC](https://dev.isrd.isi.edu/chaise/search?name=BiomassProdBatch%20for%20Virus%3D7782%20Target%3D5HT1B%20site%3DUSC)"
+# MARKDOWN OUTPUT: "<p><a href="https://dev.isrd.isi.edu/chaise/search?name=BiomassProdBatch%20for%20Virus%3D7782%20Target%3D5HT1B%20site%3DUSC">BiomassProdBatch for Virus=7782 Target=5HT1B site=USC</a></p>"
+```
+> [BiomassProdBatch for Virus&#x3D;7782 Target&#x3D;5HT1B site&#x3D;USC](https://dev.isrd.isi.edu/chaise/search?name=BiomassProdBatch%20for%20Virus%3D7782%20Target%3D5HT1B%20site%3DUSC)
+
+### 3. Replacement with HTML escaping - "{{name}}"
+
+```
 
 Research **{{name}}** was conducted on {{{date}}}
 
-# MUSTACHE OUTPUT: Research **BiomassProdBatch for Virus&#x3D;7782 Target&#x3D;5HT1B site&#x3D;USC** was conducted on 08/25/2016
-# MARKDOWN OUTPUT: <p>Research <strong>BiomassProdBatch for Virus=7782 Target=5HT1B site=USC</strong> was conducted on 08/25/2016</p>
+# MUSTACHE OUTPUT: "Research **BiomassProdBatch for Virus&#x3D;7782 Target&#x3D;5HT1B site&#x3D;USC** was conducted on 08/25/2016"
+# MARKDOWN OUTPUT: "<p>Research <strong>BiomassProdBatch for Virus=7782 Target=5HT1B site=USC</strong> was conducted on 08/25/2016</p>"
 ```
-> <p>Research <strong>BiomassProdBatch for Virus=7782 Target=5HT1B site=USC</strong> was conducted on 08/25/2016</p>
+> Research **BiomassProdBatch for Virus&#x3D;7782 Target&#x3D;5HT1B site&#x3D;USC** was conducted on 08/25/2016
 
 ### 4. Replacement with null check, disabled escaping and url encoding - "{{#name}}...{{/name}}"
 
 With null value for title
-```sh
-#title = null;
+
+```
+# title = null
 
 Research on date {{{date}}} : {{#title}}[{{{title}}}](https://dev.isrd.isi.edu/chaise/search?name={{#encode}}{{{name}}}{{/encode}}){{/title}}
 
 # MUSTACHE OUTPUT: "Research on date 08/25/2016 : "
 # MARKDOWN OUTPUT: "<p>Research on date 08/25/2016 :</p>\n"
 ```
-> <p>Research on date 08/25/2016 :</p>
+> Research on date 08/25/2016 :
 
 With non-null value for title and null value for name
-```sh
+
+```
 # title = "BiomassProdBatch for Virus=7782 Target=5HT1B site=USC"
 
 Research on date {{{date}}} : {{#title}}[{{{title}}}](https://dev.isrd.isi.edu/chaise/search?name={{#encode}}{{{name}}}{{/encode}}){{/title}}
 
-# MUSTACHE OUTPUT: Research on date 08/25/2016 : [BiomassProdBatch for Virus=7782 Target=5HT1B site=USC](https://dev.isrd.isi.edu/chaise/search?name=BiomassProdBatch%20for%20Virus%3D7782%20Target%3D5HT1B%20site%3DUSC)
-# MARKDOWN OUTPUT: <p>Research on date 08/25/2016 : <a href="https://dev.isrd.isi.edu/chaise/search?name=BiomassProdBatch%20for%20Virus%3D7782%20Target%3D5HT1B%20site%3DUSC">BiomassProdBatch for Virus=7782 Target=5HT1B site=USC</a></p>
+# MUSTACHE OUTPUT: "Research on date 08/25/2016 : [BiomassProdBatch for Virus=7782 Target=5HT1B site=USC](https://dev.isrd.isi.edu/chaise/search?name=BiomassProdBatch%20for%20Virus%3D7782%20Target%3D5HT1B%20site%3DUSC)"
+# MARKDOWN OUTPUT: "<p>Research on date 08/25/2016 : <a href="https://dev.isrd.isi.edu/chaise/search?name=BiomassProdBatch%20for%20Virus%3D7782%20Target%3D5HT1B%20site%3DUSCBiomassProdBatch for Virus=7782 Target=5HT1B site=USC</a></p>"
 ```
-> <p>Research on date 08/25/2016 : <a href="https://dev.isrd.isi.edu/chaise/search?name=BiomassProdBatch%20for%20Virus%3D7782%20Target%3D5HT1B%20site%3DUSC">BiomassProdBatch for Virus=7782 Target=5HT1B site=USC</a></p>
+> Research on date 08/25/2016 : [BiomassProdBatch for Virus=7782 Target=5HT1B site=USC](https://dev.isrd.isi.edu/chaise/search?name=BiomassProdBatch%20for%20Virus%3D7782%20Target%3D5HT1B%20site%3DUSC)
 
 ### 5. Replacement with negated-null check - "{{^name}}...{{/name}}"
 
 In cases where you need to check whether a value is null, then use this string, you can use this syntax.
-```sh
+
+```
 #title = null;
 
 Research on date {{{date}}} : {{^title}}[This is some title](https://dev.isrd.isi.edu/chaise/search?name={{#encode}}{{{name}}}{{/encode}}){{/title}}
@@ -174,7 +176,9 @@ Research on date {{{date}}} : {{^title}}[This is some title](https://dev.isrd.is
 # MUSTACHE OUTPUT: "Research on date 08/25/2016 : [This is some title](https://dev.isrd.isi.edu/chaise/search?name=BiomassProdBatch%20for%20Virus%3D7782%20Target%3D5HT1B%20site%3DUSC)"
 # MARKDOWN OUTPUT: "<p>Research on date 08/25/2016 : <a href="https://dev.isrd.isi.edu/chaise/search?name=BiomassProdBatch%20for%20Virus%3D7782%20Target%3D5HT1B%20site%3DUSC">This is some title</a></p>"
 ```
-> <p>Research on date 08/25/2016 : <a href="https://dev.isrd.isi.edu/chaise/search?name=BiomassProdBatch%20for%20Virus%3D7782%20Target%3D5HT1B%20site%3DUSC">This is some title</a></p>
+> Research on date 08/25/2016 : [This is some title](https://dev.isrd.isi.edu/chaise/search?name=BiomassProdBatch%20for%20Virus%3D7782%20Target%3D5HT1B%20site%3DUSC)
+
+
 
 ### 6. Null Handling
 
@@ -222,19 +226,19 @@ The `$moment` object can be referred directly in the Mustache environment
 
 **Examples**
 ```js
-Todays date is {{$moment.month}}/{{$moment.date}}/{{$moment.year}}
+Todays date is {{{$moment.month}}}/{{{$moment.date}}}/{{{$moment.year}}}
 ```
 ```js
-Current time is {{$moment.hours}}:{{$moment.minutes}}:{{$moment.seconds}}:{{$moment.milliseconds}}
+Current time is {{{$moment.hours}}}:{{{$moment.minutes}}}:{{{$moment.seconds}}}:{{{$moment.milliseconds}}}
 ```
 ```js
-UTC datetime is {{$moment.UTCString}}
+UTC datetime is {{{$moment.UTCString}}}
 ```
 ```js
-Locale datetime is {{$moment.LocaleString}}
+Locale datetime is {{{$moment.LocaleString}}}
 ```
 ```js
-ISO datetime is {{$moment.ISOString}}
+ISO datetime is {{{$moment.ISOString}}}
 ```
 
 #### $catalog Usage
