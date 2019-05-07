@@ -1519,6 +1519,19 @@ Object.defineProperty(ForeignKeyPseudoColumn.prototype, "name", {
         return this._name;
     }
 });
+
+/**
+ * 1. If `to_name` in `foreign key` annotation is available, use it as the displayname.
+ * 2. Otherwise,
+ *   2.1. If foreign key is simple, use columns' displayname.
+ *     - If constituent column of foreign key is part of other foreign keys,
+ *       use column's displayname disambiguated with table's displayname, i.e. `table_1 (col_1)`.
+ *   2.2. Otherwise, use table's displayname.
+ *     - If there are multiple composite foreign keys without `to_name` to the table,
+ *       use table's displayname disambiguated with columns' displayname, i.e. `table_1 (col_1, col_2)`.
+ * @member {Object} displayname
+ * @memberof ERMrest.ForeignKeyPseudoColumn#
+ */
 Object.defineProperty(ForeignKeyPseudoColumn.prototype, "displayname", {
     get: function () {
         if (this._displayname === undefined) {
@@ -1540,8 +1553,8 @@ Object.defineProperty(ForeignKeyPseudoColumn.prototype, "displayname", {
                     return fk !== foreignKey && fk.simple;
                 });
                 if (otherSimpleFks) {
-                    value += " ("  + foreignKey.key.table.displayname.value + ")";
-                    unformatted += " (" + foreignKey.key.table.displayname.unformatted + " )";
+                    value = foreignKey.key.table.displayname.value + " ("  + value + ")";
+                    unformatted = foreignKey.key.table.displayname.unformatted + " (" + unformatted + " )";
                     if (!isHTML) {
                         isHTML = foreignKey.key.table.displayname.isHTML;
                     }

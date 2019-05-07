@@ -253,8 +253,8 @@ exports.execute = function (options) {
                         });
 
                         it('should be disambiguated with Table.displayname when there are multiple simple foreignkeys.', function () {
-                            checkDisplayname(compactColumns[3].displayname, "Column 3 Name (table_w_simple_key)", false);
-                            checkDisplayname(compactColumns[4].displayname, "Column 3 Name (table_w_simple_key_2)", false);
+                            checkDisplayname(compactColumns[3].displayname, "table_w_simple_key (Column 3 Name)", false);
+                            checkDisplayname(compactColumns[4].displayname, "table_w_simple_key_2 (Column 3 Name)", false);
                         });
 
                         it ("should not add table name if the other foreignKey is composite.", function (done) {

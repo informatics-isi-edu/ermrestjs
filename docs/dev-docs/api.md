@@ -409,6 +409,7 @@ to use for ERMrest JavaScript agents.
         * [.foreignKey](#ERMrest.ForeignKeyPseudoColumn+foreignKey) : [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)
         * [.defaultValues](#ERMrest.ForeignKeyPseudoColumn+defaultValues) : <code>Object</code>
         * [.defaultReference](#ERMrest.ForeignKeyPseudoColumn+defaultReference) : <code>ERMrest.Refernece</code>
+        * [.displayname](#ERMrest.ForeignKeyPseudoColumn+displayname) : <code>Object</code>
         * [.filteredRef(column, data)](#ERMrest.ForeignKeyPseudoColumn+filteredRef) ⇒ [<code>Reference</code>](#ERMrest.Reference)
     * [.KeyPseudoColumn](#ERMrest.KeyPseudoColumn)
         * [new KeyPseudoColumn(reference, key)](#new_ERMrest.KeyPseudoColumn_new)
@@ -428,7 +429,7 @@ to use for ERMrest JavaScript agents.
         * [.sha256](#ERMrest.AssetPseudoColumn+sha256) : [<code>Column</code>](#ERMrest.Column)
         * [.filenameExtFilter](#ERMrest.AssetPseudoColumn+filenameExtFilter) : [<code>Column</code>](#ERMrest.Column)
         * [._determineInputDisabled(context)](#ERMrest.AssetPseudoColumn+_determineInputDisabled) ⇒ <code>boolean</code> \| <code>object</code>
-        * [.getMetadata()](#ERMrest.AssetPseudoColumn+getMetadata)
+        * [.getMetadata(data, context, options)](#ERMrest.AssetPseudoColumn+getMetadata) ⇒ <code>Object</code>
     * [.InboundForeignKeyPseudoColumn](#ERMrest.InboundForeignKeyPseudoColumn)
         * [new InboundForeignKeyPseudoColumn(reference, fk)](#new_ERMrest.InboundForeignKeyPseudoColumn_new)
         * [.reference](#ERMrest.InboundForeignKeyPseudoColumn+reference) : [<code>Reference</code>](#ERMrest.Reference)
@@ -3952,6 +3953,7 @@ In other cases, the returned data will only include the scalar value.
     * [.foreignKey](#ERMrest.ForeignKeyPseudoColumn+foreignKey) : [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)
     * [.defaultValues](#ERMrest.ForeignKeyPseudoColumn+defaultValues) : <code>Object</code>
     * [.defaultReference](#ERMrest.ForeignKeyPseudoColumn+defaultReference) : <code>ERMrest.Refernece</code>
+    * [.displayname](#ERMrest.ForeignKeyPseudoColumn+displayname) : <code>Object</code>
     * [.filteredRef(column, data)](#ERMrest.ForeignKeyPseudoColumn+filteredRef) ⇒ [<code>Reference</code>](#ERMrest.Reference)
 
 <a name="new_ERMrest.ForeignKeyPseudoColumn_new"></a>
@@ -4000,6 +4002,19 @@ returns the raw default values of the constituent columns.
 
 #### foreignKeyPseudoColumn.defaultReference : <code>ERMrest.Refernece</code>
 returns a reference using raw default values of the constituent columns.
+
+**Kind**: instance property of [<code>ForeignKeyPseudoColumn</code>](#ERMrest.ForeignKeyPseudoColumn)  
+<a name="ERMrest.ForeignKeyPseudoColumn+displayname"></a>
+
+#### foreignKeyPseudoColumn.displayname : <code>Object</code>
+1. If `to_name` in `foreign key` annotation is available, use it as the displayname.
+2. Otherwise,
+  2.1. If foreign key is simple, use columns' displayname.
+    - If constituent column of foreign key is part of other foreign keys,
+      use column's displayname disambiguated with table's displayname, i.e. `table_1 (col_1)`.
+  2.2. Otherwise, use table's displayname.
+    - If there are multiple composite foreign keys without `to_name` to the table,
+      use table's displayname disambiguated with columns' displayname, i.e. `table_1 (col_1, col_2)`.
 
 **Kind**: instance property of [<code>ForeignKeyPseudoColumn</code>](#ERMrest.ForeignKeyPseudoColumn)  
 <a name="ERMrest.ForeignKeyPseudoColumn+filteredRef"></a>
@@ -4109,7 +4124,7 @@ The following is the logic:
     * [.sha256](#ERMrest.AssetPseudoColumn+sha256) : [<code>Column</code>](#ERMrest.Column)
     * [.filenameExtFilter](#ERMrest.AssetPseudoColumn+filenameExtFilter) : [<code>Column</code>](#ERMrest.Column)
     * [._determineInputDisabled(context)](#ERMrest.AssetPseudoColumn+_determineInputDisabled) ⇒ <code>boolean</code> \| <code>object</code>
-    * [.getMetadata()](#ERMrest.AssetPseudoColumn+getMetadata)
+    * [.getMetadata(data, context, options)](#ERMrest.AssetPseudoColumn+getMetadata) ⇒ <code>Object</code>
 
 <a name="new_ERMrest.AssetPseudoColumn_new"></a>
 
@@ -4191,10 +4206,24 @@ If url_pattern is invalid or browser_upload=false the input will be disabled.
 
 <a name="ERMrest.AssetPseudoColumn+getMetadata"></a>
 
-#### assetPseudoColumn.getMetadata()
-Given the data, return the appropriate filename that should be used for the asset
+#### assetPseudoColumn.getMetadata(data, context, options) ⇒ <code>Object</code>
+Given the data, will return the appropriate metadata values. The returned object
+will have the following attributes:
+- caption: the string that can be used for showing the selected file.
+- filename
+- byteCount
+- md5
+- sha256
 
 **Kind**: instance method of [<code>AssetPseudoColumn</code>](#ERMrest.AssetPseudoColumn)  
+**Returns**: <code>Object</code> - metadata object with `caption`, `filename`, `byteCount`, `md5`, and `sha256` attributes.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| data | <code>Object</code> | key-value pair of data |
+| context | <code>String</code> | context string |
+| options | <code>Object</code> |  |
+
 <a name="ERMrest.InboundForeignKeyPseudoColumn"></a>
 
 ### ERMrest.InboundForeignKeyPseudoColumn
