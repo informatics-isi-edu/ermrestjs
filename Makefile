@@ -17,21 +17,24 @@ BIN=$(MODULES)/.bin
 
 # JavaScript source and test specs
 JS=js
+SETUP=js/setup
+UTIL=js/utils
+
 
 # Project source files
-HEADER=$(JS)/header.js
-FOOTER=$(JS)/footer.js
+HEADER=$(SETUP)/header.js
+FOOTER=$(SETUP)/footer.js
 HEADER_FOOTER= $(HEADER) \
 			   $(FOOTER)
 
-SOURCE=$(JS)/polyfills.js \
+SOURCE=$(UTIL)/polyfills.js \
 	   $(HEADER) \
 	   $(JS)/core.js \
 	   $(JS)/datapath.js \
 	   $(JS)/filters.js \
-	   $(JS)/utilities.js \
-	   $(JS)/handlebar_helpers.js \
-	   $(JS)/handlebar_math_helpers.js \
+	   $(UTIL)/constants.js \
+	   $(UTIL)/helpers.js \
+	   $(UTIL)/handlebar_helpers.js \
 	   $(JS)/errors.js \
 	   $(JS)/parser.js \
 	   $(JS)/http.js \
@@ -42,8 +45,8 @@ SOURCE=$(JS)/polyfills.js \
 	   $(JS)/export.js \
 	   $(JS)/hatrac.js \
 	   $(JS)/format.js \
-	   $(JS)/node.js \
-	   $(JS)/ng.js \
+	   $(SETUP)/node.js \
+	   $(SETUP)/ng.js \
 
 # Vendor libs
 VENDOR=vendor
