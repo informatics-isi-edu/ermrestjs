@@ -465,11 +465,10 @@ exports.execute = function(options) {
                 });
 
                 it ("if none of the markdown_patterns are not defined, should return a list of rownames.", function (done) {
-                    content = '<ul>\n<li>\n';
-                    content += '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table/RID=' + findRID(schemaName, tableName, "id", "9002") + '">Heather</a></p>\n';
-                    content += '</li>\n<li>\n';
-                    content += '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table/RID=' + findRID(schemaName, tableName, "id", "9003") + '">Henry</a></p>\n';
-                    content += '</li>\n</ul>\n';
+                    content = '<ul>\n';
+                    content += '<li><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table/RID=' + findRID(schemaName, tableName, "id", "9002") + '">Heather</a></li>\n';
+                    content += '<li><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table/RID=' + findRID(schemaName, tableName, "id", "9003") + '">Henry</a></li>\n';
+                    content += '</ul>\n';
 
                     testPageContent(pathRelatedWithTuple[1], 5, content, done);
                 });

@@ -512,16 +512,16 @@ exports.execute = function (options) {
             describe("when row_markdown_pattern or page_markdown_pattern are not defined for the context, ", function () {
                 it ("should return an unordered list of clickable row-names.", function (done) {
                     var expected = '<ul>\n' +
-                                   '<li>\n<p><a href="https://dev.isrd.isi.edu/chaise/record/schema_table_display:table_wo_title_wo_annotation/RID=' + findRID(tableName1, "20001") + '">20001</a></p>\n</li>\n' +
-                                   '<li>\n<p><a href="https://dev.isrd.isi.edu/chaise/record/schema_table_display:table_wo_title_wo_annotation/RID=' + findRID(tableName1, "20002") + '">20002</a></p>\n</li>\n' +
+                                   '<li><a href="https://dev.isrd.isi.edu/chaise/record/schema_table_display:table_wo_title_wo_annotation/RID=' + findRID(tableName1, "20001") + '">20001</a></li>\n' +
+                                   '<li><a href="https://dev.isrd.isi.edu/chaise/record/schema_table_display:table_wo_title_wo_annotation/RID=' + findRID(tableName1, "20002") + '">20002</a></li>\n' +
                                    '</ul>\n';
                     testPageContent(table1EntityUri, 2, expected, done);
                 });
 
                 it ("row-names should be using the row_name/<context> context format.", function (done) {
                     var expected = '<ul>\n' +
-                                   '<li>\n<p><a href="https://dev.isrd.isi.edu/chaise/record/schema_table_display:table_w_table_display_annotation_w_row_name_context/RID=' + findRID(tableName6, "10001") + '"><strong>Shakespeare</strong></a></p>\n</li>\n' +
-                                   '<li>\n<p><a href="https://dev.isrd.isi.edu/chaise/record/schema_table_display:table_w_table_display_annotation_w_row_name_context/RID=' + findRID(tableName6, "10002") + '"><strong>Twain</strong></a></p>\n</li>\n' +
+                                   '<li><a href="https://dev.isrd.isi.edu/chaise/record/schema_table_display:table_w_table_display_annotation_w_row_name_context/RID=' + findRID(tableName6, "10001") + '"><strong>Shakespeare</strong></a></li>\n' +
+                                   '<li><a href="https://dev.isrd.isi.edu/chaise/record/schema_table_display:table_w_table_display_annotation_w_row_name_context/RID=' + findRID(tableName6, "10002") + '"><strong>Twain</strong></a></li>\n' +
                                    '</ul>\n';
                     testPageContent(table6EntityUri, 2, expected, done);
                 });

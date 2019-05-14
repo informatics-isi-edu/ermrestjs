@@ -4180,7 +4180,7 @@
 
                         values.push("* ["+ rowName.unformatted +"](" + url + ") " + ref.display._separator);
                     }
-                    pattern = ref.display._prefix + values.join(" \n") + ref.display._suffix;
+                    pattern = ref.display._prefix + values.join(" ") + ref.display._suffix;
                     return module._formatUtils.printMarkdown(pattern);
                 };
 
