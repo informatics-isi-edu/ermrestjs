@@ -964,6 +964,18 @@ Object.defineProperty(PseudoColumn.prototype, "name", {
     }
 });
 
+/**
+ * The tooltip that should be used for this column.
+ * It will return the first applicable rule:
+ * 1. comment that is defined on the sourceObject, use it.
+ * 2. if aggregate and scalar use the "<function> <col_displayname>"
+ * 3. if aggregate and entity use the "<function> <table_displayname>"
+ * 3. In entity mode, return the table's displayname.
+ * 4. In scalar return the column's displayname.
+ *
+ * @member {Object} comment
+ * @memberof ERMrest.PseudoColumn#
+ */
 Object.defineProperty(PseudoColumn.prototype, "comment", {
     get: function () {
         if (this._comment === undefined) {
@@ -974,7 +986,12 @@ Object.defineProperty(PseudoColumn.prototype, "comment", {
 
                 if (self.hasAggregate) {
                     var agIndex = module._pseudoColAggregateFns.indexOf(self.sourceObject.aggregate);
-                    return [module._pseudoColAggregateExplicitName[agIndex], self._baseCols[0].displayname.value].join(" ");
+                    var dname = self._baseCols[0].displayname.unformatted;
+                    if (self.isEntityMode) {
+                        dname = self._baseCols[0].table.displayname.unformatted;
+                    }
+
+                    return [module._pseudoColAggregateExplicitName[agIndex], dname].join(" ");
                 }
 
                 if (!self.isEntityMode) {
@@ -991,10 +1008,11 @@ Object.defineProperty(PseudoColumn.prototype, "comment", {
 });
 
 /**
- * The displayname that should be used for this column.
+ * The tooltip that should be used for this column.
  * It will return the first applicable rule:
- * 1. markdown_name that is defined on the sourceObject.
- * 2. if aggregate use the {function} col_displayname.
+ * 1. comment that is defined on the sourceObject, use it.
+ * 2. if aggregate and scalar use the "<function> <col_displayname>"
+ * 3. if aggregate and entity use the "<function> <table_displayname>"
  * 3. In entity mode, return the table's displayname.
  * 4. In scalar return the column's displayname.
  *
@@ -1015,14 +1033,18 @@ Object.defineProperty(PseudoColumn.prototype, "displayname", {
                 }
 
                 if (self.hasAggregate) {
+                    // actual displayname
                     Object.getOwnPropertyDescriptor(PseudoColumn.super, "displayname").get.call(self);
+                    var displayname = self.isEntityMode ? self._baseCols[0].table.displayname : self._displayname;
+
+                    // prefix
                     var agIndex = module._pseudoColAggregateFns.indexOf(self.sourceObject.aggregate);
                     var name = module._pseudoColAggregateNames[agIndex];
 
                     self._displayname =  {
-                        value: (name ? [name, self._displayname.value].join(" ") : self._displayname.value),
-                        unformatted: (name ? [name, self._displayname.unformatted].join(" ") : self._displayname.unformatted),
-                        isHTML: self._displayname.isHTML
+                        value: (name ? [name, displayname.value].join(" ") : displayname.value),
+                        unformatted: (name ? [name, displayname.unformatted].join(" ") : displayname.unformatted),
+                        isHTML: displayname.isHTML
                     };
                     return;
                 }

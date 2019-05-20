@@ -596,7 +596,7 @@ exports.execute = function (options) {
                 describe("if it has aggreagte.", function () {
                     it ('should append the aggregate function to the displayname.', function () {
                         var aggregateDisplaynames = [
-                            '# id', '# id', 'Min id', 'Max col name', 'id', 'id', 'id'
+                            '# inbound_2', '# inbound_2_outbound_1', 'Min id', 'Max col name', 'id', 'inbound_2', 'inbound_2'
                         ];
                         for (var i = 11; i <= 17; i++) {
                             expect(detailedColsWTuple[i].displayname.value).toBe(aggregateDisplaynames[i-11], "missmatch for index =" + i);
@@ -621,7 +621,7 @@ exports.execute = function (options) {
 
                 it ("if it has aggregate, should append the aggregate function to the column comment.", function () {
                     var aggregateComments = [
-                        'Number of id', 'Number of distinct id', 'Minimum id', 'Maximum col name', "List of id", "List of id", "List of distinct id"
+                        'Number of inbound_2', 'Number of distinct inbound_2_outbound_1', 'Minimum id', 'Maximum col name', "List of id", "List of inbound_2", "List of distinct inbound_2"
                     ];
                     for (var i = 11; i <= 17; i++) {
                         expect(detailedColsWTuple[i].comment).toBe(aggregateComments[i-11], "missmatch for index =" + i);
