@@ -1124,10 +1124,9 @@
                       "failed": null
                     });
                 }, function error(response) {
-                    var error = module.responseToError(response);
-                    return defer.reject(error);
+                    return defer.reject(module.responseToError(response, self));
                 }).catch(function (error) {
-                    return defer.reject(error);
+                    return defer.reject(module.responseToError(error, self));
                 });
 
                 return defer.promise;
@@ -1713,10 +1712,9 @@
                         "failed": failedPage
                     });
                 }, function error(response) {
-                    var error = module.responseToError(response);
-                    return defer.reject(error);
+                    return defer.reject(module.responseToError(response, self));
                 }).catch(function (error) {
-                    return defer.reject(error);
+                    return defer.reject(module.responseToError(error, self));
                 });
 
                 return defer.promise;

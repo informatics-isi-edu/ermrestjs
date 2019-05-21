@@ -1252,14 +1252,17 @@
           // NOTE we cannot make any assumptions abou tthe table name. for now we just show the table name that database sends us.
           mappedErrMessage = "This entry cannot be deleted as it is still referenced from " + referenceTable +" table. \n All dependent entries must be removed before this item can be deleted." + siteAdminMsg;
           return new module.IntegrityConflictError(errorStatusText, mappedErrMessage, generatedErrMessage);
-      }
-      else if (generatedErrMessage.indexOf("violates unique constraint") > -1){
-          var regExp = /\(([^)]+)\)/,
-              matches = regExp.exec(generatedErrMessage), msgTail;
+      } else if (generatedErrMessage.indexOf("violates unique constraint") > -1) {
+          var msgTail, primaryColumns, conflictValues;
+
+          var columnRegExp = /\(([^)]+)\)/,
+              valueRegExp = /=\(([^)]+)\)/,
+              matches = columnRegExp.exec(generatedErrMessage),
+              values = valueRegExp.exec(generatedErrMessage);
 
           if (matches && matches.length > 1) {
-              var primaryColumns =  matches[1].split(','),
-                  numberOfKeys = primaryColumns.length;
+              primaryColumns =  matches[1].split(',');
+              var numberOfKeys = primaryColumns.length;
 
               if (numberOfKeys > 1){
                 msgTail = " combination of " + primaryColumns;
@@ -1268,6 +1271,9 @@
               }
           }
 
+          if (values && values.length > 1) {
+              conflictValues = values[1].split(',');
+          }
 
           mappedErrMessage = "The entry cannot be created/updated. ";
           if (msgTail) {
@@ -1275,9 +1281,20 @@
           } else {
               mappedErrMessage += "Input data violates unique constraint.";
           }
-          return new module.DuplicateConflictError(errorStatusText, mappedErrMessage, generatedErrMessage);
-      }
-      else{
+
+          // parse out column names and values from generatedErrMessage
+          var conflictKeyValues = [];
+          primaryColumns.forEach(function (colName, idx) {
+              // strip off " character, if present
+              if (colName.indexOf('"') != -1) colName = colName.split('"')[1];
+              conflictKeyValues.push(colName.trim() + "=" + conflictValues[idx].trim());
+          });
+
+          var uri = reference.unfilteredReference.uri + '/' + conflictKeyValues.join('&');
+          var error = new module.DuplicateConflictError(errorStatusText, mappedErrMessage, generatedErrMessage);
+          error.uri = uri;
+          return error;
+      } else {
           mappedErrMessage = generatedErrMessage;
 
           // remove the previx if exists

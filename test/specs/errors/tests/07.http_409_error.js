@@ -12,7 +12,8 @@ exports.execute = function (options) {
             tableNameWithoutDisplayName = "parent_document_table_for_without_displayname",
             agreement_table = "child_agreement_table",
             document_table_for_fromname = "parent_document_table_for_fromname",
-            reference1, reference2, reference3, reference4;
+            duplicate_key_table = "duplicate_key_conflict",
+            reference1, reference2, reference3, reference4, duplicateReference, duplicateReferenceUpdate;
 
         var integrityErrorServerResponse = '409 Conflict\nThe request conflicts with the state of the server. ' +
             'The request conflicts with the state of the server. update or delete on table "dataset" violates foreign key constraint "dataset_human_age_dataset_id_fkey" on table "dataset_human_age" DETAIL:  Key (id)=(269) is still referenced from table "dataset_human_age".';
@@ -29,14 +30,16 @@ exports.execute = function (options) {
             integrityErrorMappedPureBinaryMessage = "This entry cannot be deleted as it is still referenced from the <code>to_name_value</code> table. \n All dependent entries must be removed before this item can be deleted.",
             integrityErrorMappedFromnameMessage = "This entry cannot be deleted as it is still referenced from the <code>from_name_value</code> table. \n All dependent entries must be removed before this item can be deleted.",
             integrityErrorMappedSiteAdminMessage = "This entry cannot be deleted as it is still referenced from the <code>1dataset_human_age</code> table. \n All dependent entries must be removed before this item can be deleted.\nIf you have trouble removing dependencies please contact the site administrator.",
-            duplicateErrorMappedMessage = "The entry cannot be created/updated. Please use a different id for this record.",
+            duplicateErrorMappedMessage = "The entry cannot be created/updated. Please use a different duplicate_id for this record.",
             generalConflictMappedMessage = "ERROR: the provided site_name is not consistent with your login profile. Please enter an appropriate site",
             integrityErrorWithoutDelMessage = 'The request conflicts with the state of the server. update or delete on table "dataset" violates foreign key constraint "dataset_human_age_dataset_id_fkey" on table "dataset_human_age" DETAIL:  Key (id)=(269) is still referenced from table "dataset_human_age".';
 
         var multipleEntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + document_table,
           multipleEntityUriWithoutDisplayname = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + tableNameWithoutDisplayName,
           pureBinaryUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + agreement_table,
-          fromNameUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + document_table_for_fromname;
+          fromNameUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + document_table_for_fromname,
+          duplicateCreateUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + duplicate_key_table,
+          duplicateUpdateUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + duplicate_key_table + "/duplicate_id=1";
 
         beforeAll(function (done) {
             server = options.server;
@@ -54,6 +57,12 @@ exports.execute = function (options) {
                 return options.ermRest.resolve(fromNameUri, {cid:"test"});
             }).then(function(response4) {
                 reference4 = response4;
+                return options.ermRest.resolve(duplicateCreateUri, {cid:"test"})
+            }).then(function (response5) {
+                duplicateReference = response5;
+                return options.ermRest.resolve(duplicateUpdateUri, {cid:"test"})
+            }).then(function (response6) {
+                duplicateReferenceUpdate = response6.contextualize.entryEdit;
                 done();
             }).catch(function(err) {
                 console.log(err);
@@ -137,13 +146,26 @@ exports.execute = function (options) {
            });
        });
 
-        it("if it's a duplicate key error, we should generate a more readable message.", function (done) {
-            nock(url, ops)
-                .get("/ermrest/catalog/1235")
-                .reply(409, duplicateErrorServerResponse)
-                .persist();
+        it("on create, if it's a duplicate key error, we should generate a more readable message.", function (done) {
+            duplicateReference.contextualize.entryCreate.create([{duplicate_id: 1}]).then(null, function (err) {
+                expect(err.code).toBe(409, "invalid error code");
+                expect(err.message).toBe(duplicateErrorMappedMessage, "invalid error message");
+                done();
+            }).catch(function(err) {
+                console.log(err);
+                done.fail();
+            });
+        });
 
-            server.catalogs.get("1235").then(null, function(err) {
+        it("on update, if it's a duplicate key error, we should generate a more readable message.", function (done) {
+            duplicateReferenceUpdate.read(1).then(function (response) {
+                var data = response.tuples[0].data;
+
+                // updateData = { "duplicate_id": 2 }
+                data.duplicate_id = 2
+
+                return duplicateReferenceUpdate.update(response.tuples);
+            }).then(null, function (err) {
                 expect(err.code).toBe(409, "invalid error code");
                 expect(err.message).toBe(duplicateErrorMappedMessage, "invalid error message");
                 done();
