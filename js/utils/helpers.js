@@ -2176,6 +2176,30 @@
                 }
             }
         });
+
+        // Injects `a` tag with RID as the link
+        md.use(mdContainer, 'rid', {
+
+            /*
+             * Checks whetehr string matches format ":::rid <RID> \n:::"
+             */
+            validate: function (params) {
+                return params.trim().match(/rid(.*)$/i);
+            },
+
+            render: function (tokens, idx) {
+                var m = tokens[idx].info.trim().match(/rid(.*)$/i);
+
+                // opening tag
+                if (tokens[idx].nesting === 1) {
+                    return '<a href="/id/' + m[1].trim() +'">' + m[1].trim();
+                }
+                // the closing tag
+                else {
+                    return "</a>\n";
+                }
+            }
+        });
     };
 
     // Characters to replace Markdown special characters

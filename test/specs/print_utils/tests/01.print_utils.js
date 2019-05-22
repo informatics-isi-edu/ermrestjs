@@ -197,6 +197,14 @@ exports.execute = function (options) {
                 // NOTE currently these are the only two use cases of this.
             });
 
+            it ("should support :::rid", function () {
+                testPrintMarkdown(
+                    ":::rid 1-HBO4 \n:::",
+                    '<a href="/id/1-HBO4">1-HBO4</a>\n',
+                    "invalid string"
+                );
+            });
+
             it ("should support superscript and subscript.", function () {
                 expect(printMarkdown('H~2~0')).toBe('<p>H<sub>2</sub>0</p>\n', "invalid sub");
                 expect(printMarkdown('H~2~{.test}0')).toBe('<p>H<sub class="test">2</sub>0</p>\n', "invalid sub with attrs");
