@@ -98,16 +98,17 @@
     /**
      * @function
      * @private
+     * @param {Boolean} allowUnauthorized whether we should check for the _ermrestAuthorizationFailureFlag or not
      * @returns {Promise} A promise for {@link ERMrest} scripts loaded,
      * This function is used by http. It resolves promises by calling this function
      * to make sure _ermrestAuthorizationFailureFlag is false.
      */
-    module._onHttpAuthFlowFn = function() {
+    module._onHttpAuthFlowFn = function(allowUnauthorized) {
         var defer = module._q.defer();
 
         // If _ermrestAuthorizationFailureFlag is true then push the defer to _authorizationDefers
         // else just resolve it directly
-        if (_ermrestAuthorizationFailureFlag) _authorizationDefers.push(defer);
+        if (!allowUnauthorized && _ermrestAuthorizationFailureFlag) _authorizationDefers.push(defer);
         else defer.resolve();
 
         return defer.promise;
@@ -220,6 +221,12 @@
                             });
                         } else if (response.status == _http_status_codes.unauthorized) {
 
+                            // skip the 401 handling
+                            if (config.allowUnauthorized) {
+                                deferred.reject(response);
+                                return;
+                            }
+
                             // If _ermrestAuthorizationFailureFlag is not set then
                             if (_ermrestAuthorizationFailureFlag === false) {
 
@@ -255,7 +262,7 @@
                                     deferred.reject(response);
                                 }
                             } else {
-                                 // Push the current call to _authroizationDefers by calling _onHttpAuthFlowFn
+                                // Push the current call to _authroizationDefers by calling _onHttpAuthFlowFn
                                 module._onHttpAuthFlowFn().then(function() {
                                     asyncfn();
                                 });
@@ -279,7 +286,7 @@
                 // Push the current call to _authorizationDefers by calling _onHttpAuthFlowFn
                 // If the _ermrestAuthorizationFailureFlag is false then asyncfn will be called immediately
                 // else it will be queued
-                module._onHttpAuthFlowFn().then(function() {
+                module._onHttpAuthFlowFn(config.allowUnauthorized).then(function() {
                     asyncfn();
                 });
 
