@@ -549,4 +549,4 @@ Takes an RID of an existing record and generates a resolvable link for that reco
 # OUTPUT:
 <a href="/id/1-3X0H">1-3X0H</a>\n
 ```
-> <a href="/id/1-3X0H">1-3X0H</a>\n
+> <a href="/id/1-3X0H">1-3X0H</a>
