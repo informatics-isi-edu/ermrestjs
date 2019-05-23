@@ -1123,8 +1123,6 @@
                       "successful": page,
                       "failed": null
                     });
-                }, function error(response) {
-                    return defer.reject(module.responseToError(response, self));
                 }).catch(function (error) {
                     return defer.reject(module.responseToError(error, self));
                 });
@@ -1711,8 +1709,6 @@
                         "successful": successfulPage,
                         "failed": failedPage
                     });
-                }, function error(response) {
-                    return defer.reject(module.responseToError(response, self));
                 }).catch(function (error) {
                     return defer.reject(module.responseToError(error, self));
                 });

@@ -1265,9 +1265,21 @@
               var numberOfKeys = primaryColumns.length;
 
               if (numberOfKeys > 1){
-                msgTail = " combination of " + primaryColumns;
+                  // trim first because sort will put strings with whitespace in front of them before other strings, i.e. " id"
+                  primaryColumns.forEach(function (col, index) {
+                      primaryColumns[index] = col.trim();
+                  });
+
+                  var columnString = "";
+                  // sort the keys because ermrest returns them in a random order every time
+                  primaryColumns.sort();
+                  primaryColumns.forEach(function (col, index) {
+                      columnString += (index != 0 ? ', ' : "") + col;
+                  });
+
+                  msgTail = "combination of " + columnString;
               } else {
-                msgTail = primaryColumns;
+                  msgTail = primaryColumns;
               }
           }
 
@@ -1291,9 +1303,9 @@
           });
 
           var uri = reference.unfilteredReference.uri + '/' + conflictKeyValues.join('&');
-          var error = new module.DuplicateConflictError(errorStatusText, mappedErrMessage, generatedErrMessage);
-          error.uri = uri;
-          return error;
+          // Reference for the conflicting row that already exists with the unique constraints
+          var duplicateReference = new Reference(module.parse(uri),  reference.table.schema.catalog);
+          return new module.DuplicateConflictError(errorStatusText, mappedErrMessage, generatedErrMessage, duplicateReference);
       } else {
           mappedErrMessage = generatedErrMessage;
 
