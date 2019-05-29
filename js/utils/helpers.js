@@ -1255,21 +1255,30 @@
       } else if (generatedErrMessage.indexOf("violates unique constraint") > -1) {
           var msgTail, primaryColumns, conflictValues;
 
-          var columnRegExp = /\(([^)]+)\)/,
+          var keyValueMap = {},
+              duplicateReference = null,
+              columnRegExp = /\(([^)]+)\)/,
               valueRegExp = /=\(([^)]+)\)/,
               matches = columnRegExp.exec(generatedErrMessage),
               values = valueRegExp.exec(generatedErrMessage);
 
+          // parse out column names and values from generatedErrMessage
+          primaryColumns =  matches[1].split(',');
+          conflictValues = values[1].split(',');
+
+          // trim first because sort will put strings with whitespace in front of them before other strings, i.e. " id"
+          primaryColumns.forEach(function (col, index) {
+              var trimmedName = col.trim();
+              // strip off " character, if present
+              if (trimmedName.indexOf('"') != -1) trimmedName = trimmedName.split('"')[1];
+              primaryColumns[index] = trimmedName;
+              keyValueMap[trimmedName] = conflictValues[index].trim();
+          });
+
           if (matches && matches.length > 1) {
-              primaryColumns =  matches[1].split(',');
               var numberOfKeys = primaryColumns.length;
 
               if (numberOfKeys > 1){
-                  // trim first because sort will put strings with whitespace in front of them before other strings, i.e. " id"
-                  primaryColumns.forEach(function (col, index) {
-                      primaryColumns[index] = col.trim();
-                  });
-
                   var columnString = "";
                   // sort the keys because ermrest returns them in a random order every time
                   primaryColumns.sort();
@@ -1283,10 +1292,6 @@
               }
           }
 
-          if (values && values.length > 1) {
-              conflictValues = values[1].split(',');
-          }
-
           mappedErrMessage = "The entry cannot be created/updated. ";
           if (msgTail) {
               mappedErrMessage += "Please use a different "+ msgTail +" for this record.";
@@ -1294,17 +1299,16 @@
               mappedErrMessage += "Input data violates unique constraint.";
           }
 
-          // parse out column names and values from generatedErrMessage
           var conflictKeyValues = [];
           primaryColumns.forEach(function (colName, idx) {
-              // strip off " character, if present
-              if (colName.indexOf('"') != -1) colName = colName.split('"')[1];
-              conflictKeyValues.push(colName.trim() + "=" + conflictValues[idx].trim());
+              conflictKeyValues.push(module._fixedEncodeURIComponent(colName) + "=" + module._fixedEncodeURIComponent(keyValueMap[colName]));
           });
 
-          var uri = reference.unfilteredReference.uri + '/' + conflictKeyValues.join('&');
-          // Reference for the conflicting row that already exists with the unique constraints
-          var duplicateReference = new Reference(module.parse(uri),  reference.table.schema.catalog);
+          if (reference) {
+              var uri = reference.unfilteredReference.uri + '/' + conflictKeyValues.join('&');
+              // Reference for the conflicting row that already exists with the unique constraints
+              duplicateReference = new Reference(module.parse(uri), reference.table.schema.catalog);
+          }
           return new module.DuplicateConflictError(errorStatusText, mappedErrMessage, generatedErrMessage, duplicateReference);
       } else {
           mappedErrMessage = generatedErrMessage;

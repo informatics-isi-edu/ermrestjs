@@ -32,18 +32,14 @@
      * @param  {string} redirectPath path that would be added to the host to create full redirect link in Chaise
      * @constructor
      */
-    function ERMrestError(code, status, message, subMessage, redirectPath, reference) {
+    function ERMrestError(code, status, message, subMessage, redirectPath) {
         this.errorData = {};
         this.code = code;
         this.status = status;
         this.message = message;
         this.subMessage = subMessage;
         if(redirectPath !== undefined && redirectPath !== null) {
-           this.errorData.redirectPath = redirectPath;
-        }
-
-        if(reference !== undefined && reference !== null) {
-           this.errorData.reference = reference;
+            this.errorData.redirectPath = redirectPath;
         }
     }
 
@@ -140,8 +136,8 @@
      * @param  {type} subMessage technical message returned by http request
      * @constructor
      */
-    function ConflictError(status, message, subMessage, reference) {
-        ERMrestError.call(this, module._HTTPErrorCodes.CONFLICT, status, message, subMessage, null, reference);
+    function ConflictError(status, message, subMessage) {
+        ERMrestError.call(this, module._HTTPErrorCodes.CONFLICT, status, message, subMessage);
     }
 
     ConflictError.prototype = Object.create(ERMrestError.prototype);
@@ -173,7 +169,8 @@
      * @constructor
      */
     function DuplicateConflictError(status, message, subMessage, duplicateReference) {
-        ConflictError.call(this, status, message, subMessage, duplicateReference);
+        ConflictError.call(this, status, message, subMessage);
+        this.duplicateReference = duplicateReference;
     }
 
     DuplicateConflictError.prototype = Object.create(ConflictError.prototype);

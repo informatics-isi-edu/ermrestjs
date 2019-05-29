@@ -422,11 +422,11 @@
            "table_name": "duplicate_key_conflict",
            "schema_name": "error_schema",
            "keys": [{
-               "unique_columns": ["duplicate_id"]
+               "unique_columns": ["duplicate id"]
            }],
            "column_definitions": [
                {
-                   "name": "duplicate_id",
+                   "name": "duplicate id",
                    "nullok": false,
                    "type": {"typename":"int4"}
                }

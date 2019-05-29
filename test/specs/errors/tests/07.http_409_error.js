@@ -31,7 +31,7 @@ exports.execute = function (options) {
             integrityErrorMappedPureBinaryMessage = "This entry cannot be deleted as it is still referenced from the <code>to_name_value</code> table. \n All dependent entries must be removed before this item can be deleted.",
             integrityErrorMappedFromnameMessage = "This entry cannot be deleted as it is still referenced from the <code>from_name_value</code> table. \n All dependent entries must be removed before this item can be deleted.",
             integrityErrorMappedSiteAdminMessage = "This entry cannot be deleted as it is still referenced from the <code>1dataset_human_age</code> table. \n All dependent entries must be removed before this item can be deleted.\nIf you have trouble removing dependencies please contact the site administrator.",
-            duplicateErrorMappedMessage = "The entry cannot be created/updated. Please use a different duplicate_id for this record.",
+            duplicateErrorMappedMessage = "The entry cannot be created/updated. Please use a different duplicate id for this record.",
             duplicateCompositeKeyErrorMappedMessage = "The entry cannot be created/updated. Please use a different combination of another_id, duplicate_id for this record.",
             generalConflictMappedMessage = "ERROR: the provided site_name is not consistent with your login profile. Please enter an appropriate site",
             integrityErrorWithoutDelMessage = 'The request conflicts with the state of the server. update or delete on table "dataset" violates foreign key constraint "dataset_human_age_dataset_id_fkey" on table "dataset_human_age" DETAIL:  Key (id)=(269) is still referenced from table "dataset_human_age".';
@@ -41,7 +41,7 @@ exports.execute = function (options) {
           pureBinaryUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + agreement_table,
           fromNameUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + document_table_for_fromname,
           duplicateCreateUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + duplicate_key_table,
-          duplicateUpdateUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + duplicate_key_table + "/duplicate_id=1",
+          duplicateUpdateUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + duplicate_key_table + "/duplicate%20id=1",
           duplicateCompositeKeyCreateUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + duplicate_composite_key_table;
 
         beforeAll(function (done) {
@@ -153,10 +153,13 @@ exports.execute = function (options) {
        });
 
         it("on create, if it's a duplicate key error, we should generate a more readable message.", function (done) {
-            duplicateReference.create([{duplicate_id: 1}]).then(null, function (err) {
+            duplicateReference.create([{"duplicate id": 1}]).then(null, function (err) {
                 expect(err.code).toBe(409, "invalid error code");
                 expect(err.message).toBe(duplicateErrorMappedMessage, "invalid error message");
-                expect(err.errorData.reference).toBeDefined();
+
+                var referencePath = schemaName + ":" + duplicate_key_table + "/duplicate%20id=1";
+                expect(err.duplicateReference).toBeDefined();
+                expect(err.duplicateReference.location.compactPath).toBe(referencePath, "path for duplicate reference is incorrect");
                 done();
             }).catch(function(err) {
                 console.log(err);
@@ -168,14 +171,17 @@ exports.execute = function (options) {
             duplicateReferenceUpdate.read(1).then(function (response) {
                 var data = response.tuples[0].data;
 
-                // updateData = { "duplicate_id": 2 }
-                data.duplicate_id = 2
+                // updateData = { "duplicate id": 2 }
+                data["duplicate id"] = 2;
 
                 return duplicateReferenceUpdate.update(response.tuples);
             }).then(null, function (err) {
                 expect(err.code).toBe(409, "invalid error code");
                 expect(err.message).toBe(duplicateErrorMappedMessage, "invalid error message");
-                expect(err.errorData.reference).toBeDefined();
+
+                var referencePath = schemaName + ":" + duplicate_key_table + "/duplicate%20id=2";
+                expect(err.duplicateReference).toBeDefined();
+                expect(err.duplicateReference.location.compactPath).toBe(referencePath, "path for duplicate reference is incorrect");
                 done();
             }).catch(function(err) {
                 console.log(err);
@@ -187,7 +193,10 @@ exports.execute = function (options) {
             duplicateCompositeKeyReference.create([{duplicate_id: 1, another_id: 2}]).then(null, function (err) {
                 expect(err.code).toBe(409, "invalid error code");
                 expect(err.message).toBe(duplicateCompositeKeyErrorMappedMessage, "invalid error message");
-                expect(err.errorData.reference).toBeDefined();
+
+                var referencePath = schemaName + ":" + duplicate_composite_key_table + "/another_id=2&duplicate_id=1";
+                expect(err.duplicateReference).toBeDefined();
+                expect(err.duplicateReference.location.compactPath).toBe(referencePath, "path for duplicate reference is incorrect");
                 done();
             }).catch(function(err) {
                 console.log(err);
