@@ -33,13 +33,13 @@
      * @constructor
      */
     function ERMrestError(code, status, message, subMessage, redirectPath) {
+        this.errorData = {};
         this.code = code;
         this.status = status;
         this.message = message;
         this.subMessage = subMessage;
-        if(redirectPath !== undefined && redirectPath !== null){
-           this.errorData = {};
-           this.errorData.redirectPath = redirectPath;
+        if(redirectPath !== undefined && redirectPath !== null) {
+            this.errorData.redirectPath = redirectPath;
         }
     }
 
@@ -168,8 +168,9 @@
      * @param  {type} subMessage  technical message returned by http request
      * @constructor
      */
-    function DuplicateConflictError(status, message, subMessage) {
+    function DuplicateConflictError(status, message, subMessage, duplicateReference) {
         ConflictError.call(this, status, message, subMessage);
+        this.duplicateReference = duplicateReference;
     }
 
     DuplicateConflictError.prototype = Object.create(ConflictError.prototype);
