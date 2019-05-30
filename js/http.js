@@ -62,17 +62,17 @@
 
     /**
      * function that is called when a HTTP 401 Error occurs
-     * @type {httpUnauthorizedFn}: Should return a promise
+     * @type {function}: Should return a promise
      * @private
      */
-    module._httpUnauthorizedFn = null;
+    module._http401Handler = null;
 
     /**
      * set callback function which will be called when a HTTP 401 Error occurs
      * @param {httpUnauthorizedFn} fn callback function
      */
-    module.setHttpUnauthorizedFn = function(fn) {
-        module._httpUnauthorizedFn = fn;
+    module.setHTTP401Handler = function(fn) {
+        module._http401Handler = fn;
     };
 
 
@@ -85,30 +85,30 @@
     /*
      * A flag to determine whether emrest authorization error has occured
      * as well as to determine the login flow is currently in progress to avoid
-     * calling the _httpUnauthorizedFn callback again
+     * calling the _http401Handler callback again
      */
-    var _ermrestAuthorizationFailureFlag = false;
+    var _encountered401Error = false;
 
     /*
      * All the calls that were paused because of 401 error are added to this array
-     *  Once the _ermrestAuthorizationFailureFlag is false, all of them will be resolved/restarted
+     *  Once the _encountered401Error is false, all of them will be resolved/restarted
     */
     var _authorizationDefers = [];
 
     /**
      * @function
      * @private
-     * @param {Boolean} allowUnauthorized whether we should check for the _ermrestAuthorizationFailureFlag or not
+     * @param {Boolean} skipHTTP401Handling whether we should check for the _encountered401Error or not
      * @returns {Promise} A promise for {@link ERMrest} scripts loaded,
      * This function is used by http. It resolves promises by calling this function
-     * to make sure _ermrestAuthorizationFailureFlag is false.
+     * to make sure _encountered401Error is false.
      */
-    module._onHttpAuthFlowFn = function(allowUnauthorized) {
+    module._onHttpAuthFlowFn = function(skipHTTP401Handling) {
         var defer = module._q.defer();
 
-        // If _ermrestAuthorizationFailureFlag is true then push the defer to _authorizationDefers
+        // If _encountered401Error is true then push the defer to _authorizationDefers
         // else just resolve it directly
-        if (!allowUnauthorized && _ermrestAuthorizationFailureFlag) _authorizationDefers.push(defer);
+        if (!skipHTTP401Handling && _encountered401Error) _authorizationDefers.push(defer);
         else defer.resolve();
 
         return defer.promise;
@@ -222,19 +222,19 @@
                         } else if (response.status == _http_status_codes.unauthorized) {
 
                             // skip the 401 handling
-                            if (config.allowUnauthorized) {
+                            if (config.skipHTTP401Handling) {
                                 deferred.reject(response);
                                 return;
                             }
 
-                            // If _ermrestAuthorizationFailureFlag is not set then
-                            if (_ermrestAuthorizationFailureFlag === false) {
+                            // If _encountered401Error is not set then
+                            if (_encountered401Error === false) {
 
-                                // If callback has been registered in _httpUnauthorizedFn
-                                if (typeof module._httpUnauthorizedFn == 'function') {
+                                // If callback has been registered in _http401Handler
+                                if (typeof module._http401Handler == 'function') {
 
-                                    // Set _ermrestAuthorizationFailureFlag to avoid the handler from being called again
-                                    _ermrestAuthorizationFailureFlag = true;
+                                    // Set _encountered401Error to avoid the handler from being called again
+                                    _encountered401Error = true;
 
                                     // Push the current call to _authroizationDefers by calling _onHttpAuthFlowFn
                                     module._onHttpAuthFlowFn().then(function() {
@@ -245,16 +245,16 @@
                                     // On success set the flag as false and resolve all the authorizationDefers
                                     // So that other calls which failed due to 401 or were trigerred after the 401
                                     // are reexecuted
-                                    module._httpUnauthorizedFn().then(function() {
+                                    module._http401Handler().then(function() {
 
-                                        _ermrestAuthorizationFailureFlag = false;
+                                        _encountered401Error = false;
 
                                         _authorizationDefers.forEach(function(defer) {
                                             defer.resolve();
                                         });
 
                                     }, function () {
-                                        _ermrestAuthorizationFailureFlag = false;
+                                        _encountered401Error = false;
                                     });
 
                                 } else {
@@ -284,9 +284,9 @@
                 }
 
                 // Push the current call to _authorizationDefers by calling _onHttpAuthFlowFn
-                // If the _ermrestAuthorizationFailureFlag is false then asyncfn will be called immediately
+                // If the _encountered401Error is false then asyncfn will be called immediately
                 // else it will be queued
-                module._onHttpAuthFlowFn(config.allowUnauthorized).then(function() {
+                module._onHttpAuthFlowFn(config.skipHTTP401Handling).then(function() {
                     asyncfn();
                 });
 

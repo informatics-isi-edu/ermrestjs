@@ -46,7 +46,7 @@ exports.execute = function (options) {
               .get("/ermrest/catalog/" + id)
               .reply(401, 'Unauthorized Error');
 
-            ermRest.setHttpUnauthorizedFn(function() {
+            ermRest.setHTTP401Handler(function() {
                 var defer = ermRest._q.defer();
 
                 nock(url, ops)
@@ -75,7 +75,7 @@ exports.execute = function (options) {
               .reply(401, 'Unauthorized Error')
               .persist();
 
-            ermRest.setHttpUnauthorizedFn(function() {
+            ermRest.setHTTP401Handler(function() {
                 var defer = ermRest._q.defer();
 
                 nock(url, ops)
@@ -86,7 +86,7 @@ exports.execute = function (options) {
                 return defer.promise;
             });
 
-            server.http.get(url + "ermrest/catalog/" + id, {allowUnauthorized: true}).then(function (response) {
+            server.http.get(url + "ermrest/catalog/" + id, {skipHTTP401Handling: true}).then(function (response) {
                 done.fail("didn't throw any errors");
             }, function(err) {
                 // since the error is coming directly from the http module, it won't be any of the ERMrestError objects
@@ -100,12 +100,12 @@ exports.execute = function (options) {
 
     afterEach(function() {
         nock.cleanAll();
-        ermRest.setHttpUnauthorizedFn(null);
+        ermRest.setHTTP401Handler(null);
     })
 
     afterAll(function() {
         enableNet();
-        ermRest.setHttpUnauthorizedFn(null);
+        ermRest.setHTTP401Handler(null);
     });
 
   });
