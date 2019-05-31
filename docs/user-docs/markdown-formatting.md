@@ -107,7 +107,9 @@ You can attach attributes to the link.
 
 ### 2. Download Button
 
-Download button is a link with some predefined attributes. You can use these attributes to ensure consistent display for the download buttons.`download` and `target="_blank"` which will allow it to open in a new tab with classes `.btn` and `.btn-primary` for CSS styling.
+Download button is a link with some predefined attributes. You can use these attributes to ensure consistent display for the download buttons.`download` and `target="_blank"` which will allow it to open in a new tab with classes `.btn` and `.btn-primary` for CSS styling. There are 2 more classes that can be applied to add some more styling and functionality. `.download` will apply styling to make the link more button like without needing to add `.btn` or `.btn-primary`. `.derival-url-validate` can be added to validate whether the user can download the asset or not before it is downloaded.
+
+Example 1:
 ```html
 [Jquery Download](https://code.jquery.com/jquery-3.1.0.js){download .btn .btn-primary target=_blank}
 
@@ -118,7 +120,19 @@ Download button is a link with some predefined attributes. You can use these att
 ```
 > <p><a href="https://code.jquery.com/jquery-3.1.0.js" download="" class="btn btn-primary" target="_blank">Jquery Download</a></p>
 
-**NOTE:** please stick to the above format only to generate a download link.
+
+Example 2:
+```html
+[Jquery Download](https://code.jquery.com/jquery-3.1.0.js){download .download .deriva-url-validate}
+
+# OUTPUT:
+<p>
+	<a href="https://code.jquery.com/jquery-3.1.0.js" download="" class="download deriva-url-validate">Jquery Download</a>
+</p>
+```
+> <p><a href="https://code.jquery.com/jquery-3.1.0.js" download="" class="download deriva-url-validate">Jquery Download</a></p>
+
+**NOTE:** please stick to the above formats only to generate a download link.
 
 ### 3. Image
 
