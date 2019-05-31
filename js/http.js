@@ -246,8 +246,9 @@
                                             defer.resolve();
                                         });
 
-                                    }, function () {
+                                    }, function (response) {
                                         _ermrestAuthorizationFailureFlag = false;
+                                        deferred.reject(response);
                                     });
 
                                 } else {
