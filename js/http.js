@@ -253,8 +253,9 @@
                                             defer.resolve();
                                         });
 
-                                    }, function () {
+                                    }, function (response) {
                                         _encountered401Error = false;
+                                        deferred.reject(response);
                                     });
 
                                 } else {
