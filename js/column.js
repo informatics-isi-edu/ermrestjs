@@ -2016,7 +2016,7 @@ AssetPseudoColumn.prototype.formatPresentation = function(data, context, options
     }
 
     // otherwise return a download link
-    var template = "[{{{caption}}}]({{{url}}}){download .download}";
+    var template = "[{{{caption}}}]({{{url}}}){download .download .deriva-url-validate}";
     var url = data[this._baseCol.name];
     var caption = this.getMetadata(data, context, options).caption;
 

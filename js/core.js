@@ -299,7 +299,6 @@
             }).then(function (response) {
                 var jsonSchemas = response.data;
 
-                self.snaptime = jsonSchemas.snaptime;
                 self.rights = jsonSchemas.rights;
 
                 self.annotations = new Annotations();
