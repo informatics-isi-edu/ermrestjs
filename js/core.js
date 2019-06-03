@@ -1070,6 +1070,84 @@
         },
 
         /**
+         * Returns an object with
+         * - fkeys: array of ForeignKeyRef objects
+         * - columns: Array of columns
+         * - sources: hash-map of name to an object that has
+         *   - sourceObject
+         *   - column
+         *   - hasPath
+         *   - hasInbound
+         * @type {Object}
+         */
+        get sourceDefinitions() {
+            if (this._sourceDefinitions === undefined) {
+                this._sourceDefinitions = _getSourceDefinitions(this);
+            }
+            return this._sourceDefinitions;
+         },
+
+         _getSourceDefinitions: function (self) {
+             var sd = module._annotations.SOURCE_DEFINITIONS;
+             var hasAnnot = self.annotations.contains(sd);
+             var res = {columns: [], fkeys: [], sources: {}};
+
+             var allColumnNames = self.columns.all().map(function (col) {
+                 return col.name;
+             });
+
+             var allForeignKeyConstraints = self.foreignkeys.all().map(function (fk) {
+                 return fk._constraintName;
+             });
+
+             var processSourceDefinitionList = function (val, isFkey) {
+                 var allList = isFkey ? allForeignKeyConstraints : allColumnNames;
+                 if (val === true) {
+                     return allList;
+                 }
+                 if (Array.isArray(val)) {
+                     return val.filter(function (cname, index) {
+                         var elExists = allList.indexOf(cname) !== -1;
+                         console.log("invalid source definition, ", (isFkey ? "fkeys" : "columns"), ", index=" + index);
+                         return elExists;
+                     });
+                 }
+                 return [];
+             };
+
+             if (!hasAnnot) {
+                 res.columns = allColumnNames;
+                 res.fkeys = allForeignKeyConstraints;
+                 return res;
+             }
+
+             var annot = self.annotations.get(sd).content;
+
+             // columns
+             if (annot.columns) {
+                 annot.columns = processSourceDefinitionList(val, false);
+             }
+
+             // fkeys
+             if (annot.fkeys) {
+                 annot.fkeys = processSourceDefinitionList(val, true);
+             }
+
+             // sources
+             if (annot.sources && typeof annot.sources === "object") {
+                 for (var key in annot.sources) {
+                     if (!annot.sources.hasOwnProperty(key)) continue;
+
+                     var pSource = _processSourceObject(annot.source[key]);
+                     if (pSource.error) continue;
+                     res.sources[key] = pSource;
+                 }
+             }
+
+             return res;
+         },
+
+        /**
          * Returns the export templates that are defined on this table.
          * NOTE If this returns `null`, then the exportTemplates is not defined on the table or schema
          * NOTE The returned template might not have `outputs` attribute.
@@ -3032,8 +3110,7 @@
             }
 
             var self = this, fkNames = {}, col, colName, invalid, fk, i;
-
-            var wm = module._warningMessages;
+            var definitions = this._table.sourceDefinitions, wm = module._warningMessages;
             var logErr = function (bool, message, i) {
                 if (bool) {
                     console.log("inbound foreignkeys list for table: " + self._table.name + ", context: " + context + ", fk index:" + i);
@@ -3066,16 +3143,36 @@
                     }
                 }
                 // path
-                else if (typeof orders[i] === "object" && orders[i].source) {
-                    col = _getSourceColumn(orders[i].source, this._table, module._constraintNames);
+                else if (typeof orders[i] === "object") {
+                    if (orders[i].source || orders[i].sourcekey) {
+                        if (orders[i].source) {
+                            col = _getSourceColumn(orders[i].source, this._table, module._constraintNames);
+                        } else {
+                            def = definitions.sources[orders[i].sourcekey];
+                            col = null;
+                            if (def) {
+                                col = def.column;
+                                // copy all the elements that are defined in here.
+                                for (var defKey in def.sourceObject) {
+                                    if (def.sourceObject.hasOwnProperty(defKey)) {
+                                        orders[i][defKey] = sd[defKey];
+                                    }
+                                }
+                            }
+                        }
 
-                    // invalid if:
-                    // 1. invalid source and not a path.
-                    // 2. not entity mode
-                    // 3. has aggregate
-                    invalid = logErr(!col || !_sourceHasPath(orders[i].source), wm.INVALID_FK, i) ||
-                              logErr(!_isSourceObjectEntityMode(orders[i], col), wm.SCALAR_NOT_ALLOWED) ||
-                              logErr(orders[i].aggregate, wm.AGG_NOT_ALLOWED);
+                        // invalid if:
+                        // 1. invalid source and not a path.
+                        // 2. not entity mode
+                        // 3. has aggregate
+                        invalid = logErr(!col || !_sourceHasPath(orders[i].source), wm.INVALID_FK, i) ||
+                                  logErr(!_isSourceObjectEntityMode(orders[i], col), wm.SCALAR_NOT_ALLOWED) ||
+                                  logErr(orders[i].aggregate, wm.AGG_NOT_ALLOWED);
+
+                    } else {
+                        invalid = true;
+                        logErr(true, wm.INVALID_SOURCE, i);
+                    }
 
                     if (!invalid) {
                         colName = _generatePseudoColumnName(orders[i], col).name;
@@ -3434,3 +3531,8 @@
             return this._rootName;
         }
     };
+
+    function SourceDefinition(key, obj) {
+        this.key = key;
+        this.sourceObject = obj;
+    }

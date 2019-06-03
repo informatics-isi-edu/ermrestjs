@@ -18,12 +18,12 @@
  * @param  {ERMrest.Reference}  reference    the parent reference
  * @param  {ERMrest.Column}  column       the underlying column object
  * @param  {Object}  sourceObject the column definition
- * @param  {String}  name         the name to avoid computing it again.
- * @param  {ERMrest.Tuple}  mainTuple    the main tuple
- * @param  {Boolean} isEntity     whether it's entity mode or not (to avoid computing it again)
+ * @param  {ERMrest.Tuple=}  mainTuple    the main tuple
+ * @param  {String=}  name         the name to avoid computing it again.
+ * @param  {Boolean=} isEntity     whether it's entity mode or not (to avoid computing it again)
  * @return {ERMrest.ReferenceColumn}
  */
-module._createPseudoColumn = function (reference, column, sourceObject, name, mainTuple, isEntity) {
+module._createPseudoColumn = function (reference, column, sourceObject, mainTuple, name, isEntity) {
     var generalPseudo = function () {
         return new PseudoColumn(reference, column, sourceObject, name, mainTuple);
     };
@@ -35,6 +35,14 @@ module._createPseudoColumn = function (reference, column, sourceObject, name, ma
     var source = sourceObject.source,
         context = reference._context,
         relatedRef, fk;
+
+    // if name is not passed, genarate it
+    if (typeof name !== "string") {
+        name = _generatePseudoColumnName(sourceObject, column);
+    }
+    if (typeof isEntity !== "boolean") {
+        isEntity = _isSourceObjectEntityMode(sourceObject, column);
+    }
 
     // has aggregate
     if (sourceObject.aggregate) {
@@ -56,7 +64,7 @@ module._createPseudoColumn = function (reference, column, sourceObject, name, ma
         }
 
         // no path, scalar
-        return new ReferenceColumn(reference, [column], sourceObject);
+        return new ReferenceColumn(reference, [column], sourceObject, name, mainTuple);
     }
 
     // path, entity, outbound length 1,
@@ -90,10 +98,13 @@ module._createPseudoColumn = function (reference, column, sourceObject, name, ma
  * @constructor
  * @param {ERMrest.Reference} reference column's reference
  * @param {ERMrest.Column[]} baseCols List of columns that this reference-column will be created based on.
+ * @param {object} sourceObject the whole column object
+ * @param {string} name        to avoid processing the name again, this might be undefined.
+ * @param {ERMrest.Tuple} mainTuple   if the reference is referring to just one tuple, this is defined.
  * @desc
  * Constructor for ReferenceColumn. This class is a wrapper for {@link ERMrest.Column}.
  */
-function ReferenceColumn(reference, cols, sourceObject, name) {
+function ReferenceColumn(reference, cols, sourceObject, name, mainTuple) {
     this._baseReference = reference;
     this._context = reference._context;
     this._baseCols = cols;
@@ -111,6 +122,8 @@ function ReferenceColumn(reference, cols, sourceObject, name) {
     this.table = this._baseCols[0].table;
 
     this._name = name;
+
+    this._mainTuple = mainTuple;
 }
 
 ReferenceColumn.prototype = {
@@ -458,6 +471,43 @@ ReferenceColumn.prototype = {
             return this._baseCols[0]._getNullValue(context);
         }
         return module._getNullValue(this.table, context, [this.table, this.table.schema]);
+    },
+
+    /**
+     * Array of sourcekeys
+     * This should take care of the callbacks and stuff too..
+     * TODO should we allow fkeys here too???? or just the defined sources??
+     * @type {ERMrest.ReferenceColumn[]}
+     */
+    get waitFor() {
+        if (this._waitFor === undefined) {
+            var self = this, res = [];
+            if (self.sourceObject && Array.isArray(self.sourceObject.waitfor)) {
+                self.sourceObject.waitfor.forEach(function (wf) {
+                    if (typeof wf !== "string" && !(wf in self.table.sourceDefinitions.sources)) return;
+                    var sd = self.table.sourceDefinitions.sources[wf];
+                    // TODO this should be in the table.sourceDefinitions
+                    // the only issue is that in there we don't have the mainTuple...
+                    res.push(module._createPseudoColumn(self._reference, sd.col, sd.sourceObject, self._mainTuple));
+                });
+            }
+
+            this._waitFor = res;
+        }
+        return this._waitFor;
+    },
+
+    //TODO
+    sourceFormatPresentation: function (keyValues) {
+        var context = this._context, self = this;
+        var nullValue = {
+            isHTML: false,
+            value: this._getNullValue(context),
+            unformatted: this._getNullValue(context)
+        };
+        var hasAllTheKeys = function () {
+
+        };
     }
 };
 
@@ -473,14 +523,14 @@ ReferenceColumn.prototype = {
  * @memberof ERMrest
  * @param {ERMrest.Reference} reference  column's reference
  * @param {ERMrest.Column} column      the column that this pseudo-column is representing
- * @param {object} facetObject the whole column object
+ * @param {object} sourceObject the whole column object
  * @param {string} name        to avoid processing the name again, this might be undefined.
  * @param {ERMrest.Tuple} mainTuple   if the reference is referring to just one tuple, this is defined.
  * @constructor
  * @class
  */
 function PseudoColumn (reference, column, sourceObject, name, mainTuple) {
-    PseudoColumn.superClass.call(this, reference, [column], sourceObject);
+    PseudoColumn.superClass.call(this, reference, [column], sourceObject, name, mainTuple);
 
     /**
      * @type {boolean}
@@ -495,8 +545,6 @@ function PseudoColumn (reference, column, sourceObject, name, mainTuple) {
     this._name = name;
 
     this._currentTable = reference.table;
-
-    this._mainTuple = mainTuple;
 
     this.table = column.table;
 }
@@ -856,7 +904,7 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
 
             // if given page is not valid (the key doesn't exist), or it returned empty result
             if (!value || !value.v){
-                result.push({isHTML: false, value: ""});
+                result.push({isHTML: false, value: "", data: {}});
                 return;
             }
 
@@ -898,7 +946,7 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
                 res = printUtils.printMarkdown(res);
             }
 
-            result.push({isHTML: isHTML, value: res});
+            result.push({isHTML: isHTML, value: res, data: value.v});
         });
 
         defer.resolve(result);
@@ -1183,7 +1231,7 @@ Object.defineProperty(PseudoColumn.prototype, "hasAggregate", {
  * 1. If pseudo-column has no path, it will return the base reference.
  * 3. if mainTuple is available, create the reference based on this path:
  *      <pseudoColumnSchema:PseudoColumnTable>/<path from pseudo-column to main table>/<facets based on value of shortestkey of main table>
- * 4. Otherwise return the reference without any facet or filters (TODO needs to change eventually)
+ * 4. Otherwise create the path by traversing the path
  * @member {ERMrest.Reference} reference
  * @memberof ERMrest.PseudoColumn#
  */
@@ -1239,7 +1287,9 @@ Object.defineProperty(PseudoColumn.prototype, "reference", {
                 }
 
                 // if data didn't exist, we should traverse the path
-                if ((noData || filters.length == 0) && !self._baseReference.hasJoin) {
+                // TODO I removed && !self._baseReference.hasJoin
+                // TODO test this!!!!!!!
+                if ((noData || filters.length == 0)) {
                     uri = self._baseReference.location.compactUri + "/" + this.foreignKeys.map(function (fk) {
                         return fk.obj.toString(!fk.isInbound, false);
                     }).join("/");

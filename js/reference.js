@@ -619,6 +619,19 @@
                             return;
                         }
 
+                        var sd;
+                        if (obj.sourcekey) {
+                            sd = self.table.sourceDefinitions.sources[obj.sourcekey];
+                            if (!sd) return;
+
+                            // copy all the elements that are defined in here.
+                            for (var defKey in sd.sourceObject) {
+                                if (sd.sourceObject.hasOwnProperty(defKey)) {
+                                    obj[defKey] = sd[defKey];
+                                }
+                            }
+                        }
+
                         var col = checkFacetObject(obj);
                         if (!col) return;
 
@@ -1969,7 +1982,7 @@
                     if (fkr.isPath) {
                         // since we're sure that the pseudoColumn either going to be
                         // general pseudoColumn or InboundForeignKeyPseudoColumn then it will have reference
-                        this._related.push(module._createPseudoColumn(this, fkr.column, fkr.object, fkr.name, tuple, true).reference);
+                        this._related.push(module._createPseudoColumn(this, fkr.column, fkr.object, tuple, fkr.name, true).reference);
                     } else {
                         fkr = fkr.foreignKey;
 
@@ -2638,22 +2651,42 @@
                     // pseudo-column
                     else if (typeof col === "object") {
                         // invalid source
-                        if (logCol(!col.source, wm.INVALID_SOURCE, i)) continue;
+                        if (logCol(!col.source && !col.sourcekey, wm.INVALID_SOURCE, i)) continue;
 
-                        // check the path and get the column object
-                        sourceCol = _getSourceColumn(col.source, this._table, module._constraintNames);
+                        var sd;
+                        if (col.sourcekey) {
+                            sd = self.table.sourceDefinitions.sources[col.sourcekey];
+                            if (logCol(!sd, wm.INVALID_SOURCEKEY, i)) {
+                                continue;
+                            }
 
-                        // invalid source
-                        if (logCol(!sourceCol, wm.INVALID_SOURCE, i)) {
-                            continue;
+                            sourceCol = sd.column;
+                            hasPath = sd.hasPath;
+                            hasInbound = sd.hasInbound;
+
+                            // copy all the elements that are defined in here.
+                            for (var defKey in sd.sourceObject) {
+                                if (sd.sourceObject.hasOwnProperty(defKey)) {
+                                    col[defKey] = sd[defKey];
+                                }
+                            }
+
+                        } else {
+                            sourceCol = _getSourceColumn(col.source, this._table, module._constraintNames);
+
+                            // invalid source
+                            if (logCol(!sourceCol, wm.INVALID_SOURCE, i)) {
+                                continue;
+                            }
+
+                            hasPath = _sourceHasPath(col.source);
+                            hasInbound = _sourceHasInbound(col.source);
                         }
 
                         // generate appropriate name for the given object
                         pseudoNameObj = _generatePseudoColumnName(col, sourceCol);
                         pseudoName = pseudoNameObj.name;
                         isHash = pseudoNameObj.isHash; // whether its the actual name of column, or generated hash
-                        hasPath = _sourceHasPath(col.source);
-                        hasInbound = _sourceHasInbound(col.source);
                         isEntity = _isSourceObjectEntityMode(col, sourceCol);
 
                         // invalid/hidden pseudo-column:
@@ -2676,7 +2709,7 @@
                         // avoid duplciates and hide the column
                         if (!ignore) {
                             consideredColumns[pseudoName] = true;
-                            refCol = module._createPseudoColumn(this, sourceCol, col, pseudoName, tuple, isEntity);
+                            refCol = module._createPseudoColumn(this, sourceCol, col, tuple, pseudoName, isEntity);
 
                             // to make sure we're removing asset related (filename, size, etc.) column in entry
                             if (refCol.isAsset) {
@@ -2868,6 +2901,102 @@
         },
 
         /**
+         * Generate the list of extra reads that we should do.
+         * this should incldue
+         * - aggreagtes: ERMrest.ReferenceColumn[]
+         * - entitySets: ERMrest.Reference[]
+         * - allOutBounds: ERMrest.ReferenceColumn[]
+         *
+         * TODO I might want to add a new inlinEntitySets to distinguish between inline vs related
+         * @param  {ERMrest.Tuple} tuple
+         * @param  {Boolean} useRelated
+         * @return {Object}
+         */
+        generateActiveList: function (tuple, useRelated) {
+            var columns = [], entitySets = [], allOutBounds = [], aggregates = [];
+            var consideredSets = {}, consideredOutbounds = {}, consideredAggregates = {};
+
+            var self = this;
+            var sds = self.table.sourceDefinitions;
+
+            var addColumn = function (col) {
+                // aggregates
+                if (col.isPathColumn && col.hasAggregate) {
+                    if (col.name in consideredAggregates) return;
+                    consideredAggregates[col.name] = true;
+                    aggregates.push(col);
+                }
+
+                //entitysets
+                else if (col.isInboundForeignKey || (col.isPathColumn && col.hasPath && !col.isUnique && !col.hasAggregate)) {
+                    if (col.name in consideredSets) return;
+                    consideredSets[col.name] = true;
+                    entitySets.push(col.reference);
+                }
+
+                // all outbounds
+                else if (col.isForeignKey || (col.isPathColumn && col.hasPath && col.isUnique && !col.hasAggregate)) {
+                    if (col.name in consideredOutbounds) return;
+                    consideredOutbounds[col.name] = true;
+                    allOutBounds.push(col);
+                }
+            };
+
+            columns = self.generateColumnsList(tuple);
+
+            // columns
+            columns.forEach(function (col) {
+                addColumn(col);
+
+                col.waitFor.forEach(function (wf) {
+                    addColumn(wf);
+                });
+            });
+
+            //fkeys
+            sds.fkeys.forEach(function (fk) {
+                if (fk.name in consideredOutbounds) return;
+                consideredOutbounds[fk.name] = true;
+                allOutBounds.push(new ForeignKeyPseudoColumn(self, fk));
+            });
+
+            if (useRelated) {
+                self.related(tuple).forEach(function (rel) {
+                    // TODO must be improved
+                    var addSet = true;
+                    if (rel.pseudoColumn && (rel.pseudoColumn.name in consideredSets)) {
+                        addSet = false;
+                    } else if (_generateForeignKeyName(rel.origFKR, true) in consideredSets) {
+                        addSet = false;
+                    }
+                    if (addSet) {
+                        entitySets.push(rel);
+                    }
+
+                    if (rel.pseudoColumn) {
+                        rel.pseudoColumn.waitfor.forEach(function (wf) {
+                            addColumn(wf);
+                        });
+                    }
+                });
+            }
+            this._activeList = {
+                aggregates: aggregates,
+                entitySets: entitySets,
+                allOutBounds: allOutBounds
+            };
+
+            return this._activeList;
+        },
+
+        get activeList() {
+            if (this._activeList === undefined) {
+                this.generateActiveList();
+            }
+            return this._activeList;
+        },
+
+        /**
          * Generate a related reference given a foreign key and tuple.
          *
          * This is the logic:
@@ -2962,12 +3091,12 @@
                 // uri and location
                 if (!useFaceting) {
                     newRef._location = module.parse(this._location.compactUri + "/" + fkr.toString() + "/" + otherFK.toString(true));
-                } else {
-                    // build source
-                    source = [
-                        {"inbound": otherFK.constraint_names[0]}
-                    ];
                 }
+
+                // build source
+                source = [
+                    {"inbound": otherFK.constraint_names[0]}
+                ];
 
                 // additional values for sorting related references
                 newRef._related_key_column_positions = fkr.key.colset._getColumnPositions();
@@ -2993,9 +3122,9 @@
                 // uri and location
                 if (!useFaceting) {
                     newRef._location = module.parse(this._location.compactUri + "/" + fkr.toString());
-                } else {
-                    source = [];
                 }
+                // build source
+                source = [];
 
                 // additional values for sorting related references
                 newRef._related_key_column_positions = fkr.key.colset._getColumnPositions();
@@ -3011,6 +3140,10 @@
                 };
             }
 
+            source.push({"outbound": fkr.constraint_names[0]});
+            // TODO should we do something with the source?
+            // it could be use for generating the name and stuff...
+
             if (useFaceting) {
                 var table = newRef._table;
                 newRef._location = module.parse([
@@ -3021,7 +3154,6 @@
 
                 //filters
                 var filters = [], filter;
-                source.push({"outbound": fkr.constraint_names[0]});
                 fkr.key.table.shortestKey.forEach(function (col) {
                     filter = {
                         source: source.concat(col.name)
@@ -3071,9 +3203,7 @@
             // the pseudo-columns that their path is all outbound and Therefore
             // creates a one-to-one relation between source and destination, hence
             // we can just add them to the projection list to get the single value.
-            var oneToOnePseudos = this.columns.filter(function (c) {
-                return c.isPseudo && c.isPathColumn && c.hasPath && c.isUnique && c.foreignKeys.length > 1;
-            });
+            var oneToOnePseudos = this.activeList.allOutBounds;
 
             var hasSort = Array.isArray(this._location.sortObject) && (this._location.sortObject.length !== 0),
                 locationPath = this.location.path,
@@ -3815,9 +3945,7 @@
         this._linkedData = [];
         this._data = [];
 
-        var oneToOnePseudos = reference.columns.filter(function (c) {
-            return c.isPseudo && c.isPathColumn && c.hasPath && c.isUnique  && c.foreignKeys.length > 1;
-        });
+        var oneToOnePseudos = reference.activeList.allOutBounds;
 
         var singleFKPaths = reference.columns.filter(function (c) {
             return (c.isPathColumn && c.isUnique && c.foreignKeys.length === 1) || (c.isForeignKey);

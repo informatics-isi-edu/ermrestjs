@@ -34,6 +34,7 @@ SOURCE=$(UTIL)/polyfills.js \
 	   $(JS)/filters.js \
 	   $(UTIL)/constants.js \
 	   $(UTIL)/helpers.js \
+	   $(UTIL)/pseudocolumn_helpers.js \
 	   $(UTIL)/handlebar_helpers.js \
 	   $(JS)/errors.js \
 	   $(JS)/parser.js \
