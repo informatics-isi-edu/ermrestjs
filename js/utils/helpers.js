@@ -1252,22 +1252,45 @@
           // NOTE we cannot make any assumptions abou tthe table name. for now we just show the table name that database sends us.
           mappedErrMessage = "This entry cannot be deleted as it is still referenced from " + referenceTable +" table. \n All dependent entries must be removed before this item can be deleted." + siteAdminMsg;
           return new module.IntegrityConflictError(errorStatusText, mappedErrMessage, generatedErrMessage);
-      }
-      else if (generatedErrMessage.indexOf("violates unique constraint") > -1){
-          var regExp = /\(([^)]+)\)/,
-              matches = regExp.exec(generatedErrMessage), msgTail;
+      } else if (generatedErrMessage.indexOf("violates unique constraint") > -1) {
+          var msgTail, primaryColumns, conflictValues;
+
+          var keyValueMap = {},
+              duplicateReference = null,
+              columnRegExp = /\(([^)]+)\)/,
+              valueRegExp = /=\(([^)]+)\)/,
+              matches = columnRegExp.exec(generatedErrMessage),
+              values = valueRegExp.exec(generatedErrMessage);
+
+          // parse out column names and values from generatedErrMessage
+          primaryColumns =  matches[1].split(',');
+          conflictValues = values[1].split(',');
+
+          // trim first because sort will put strings with whitespace in front of them before other strings, i.e. " id"
+          primaryColumns.forEach(function (col, index) {
+              var trimmedName = col.trim();
+              // strip off " character, if present
+              if (trimmedName.indexOf('"') != -1) trimmedName = trimmedName.split('"')[1];
+              primaryColumns[index] = trimmedName;
+              keyValueMap[trimmedName] = conflictValues[index].trim();
+          });
 
           if (matches && matches.length > 1) {
-              var primaryColumns =  matches[1].split(','),
-                  numberOfKeys = primaryColumns.length;
+              var numberOfKeys = primaryColumns.length;
 
               if (numberOfKeys > 1){
-                msgTail = " combination of " + primaryColumns;
+                  var columnString = "";
+                  // sort the keys because ermrest returns them in a random order every time
+                  primaryColumns.sort();
+                  primaryColumns.forEach(function (col, index) {
+                      columnString += (index != 0 ? ', ' : "") + col;
+                  });
+
+                  msgTail = "combination of " + columnString;
               } else {
-                msgTail = primaryColumns;
+                  msgTail = primaryColumns;
               }
           }
-
 
           mappedErrMessage = "The entry cannot be created/updated. ";
           if (msgTail) {
@@ -1275,9 +1298,19 @@
           } else {
               mappedErrMessage += "Input data violates unique constraint.";
           }
-          return new module.DuplicateConflictError(errorStatusText, mappedErrMessage, generatedErrMessage);
-      }
-      else{
+
+          var conflictKeyValues = [];
+          primaryColumns.forEach(function (colName, idx) {
+              conflictKeyValues.push(module._fixedEncodeURIComponent(colName) + "=" + module._fixedEncodeURIComponent(keyValueMap[colName]));
+          });
+
+          if (reference) {
+              var uri = reference.unfilteredReference.uri + '/' + conflictKeyValues.join('&');
+              // Reference for the conflicting row that already exists with the unique constraints
+              duplicateReference = new Reference(module.parse(uri), reference.table.schema.catalog);
+          }
+          return new module.DuplicateConflictError(errorStatusText, mappedErrMessage, generatedErrMessage, duplicateReference);
+      } else {
           mappedErrMessage = generatedErrMessage;
 
           // remove the previx if exists
