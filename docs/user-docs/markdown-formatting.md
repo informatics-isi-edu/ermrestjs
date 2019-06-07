@@ -103,7 +103,7 @@ You can attach attributes to the link.
 	<a href="https://dev.isrd.isi.edu/chaise/search" target="_blank">ChaiseLink</a>
 </p>
 ```
-> <p><a href="https://dev.isrd.isi.edu/chaise/search" target="_blank">ChaiseLink</a></p>
+> <p><a href="https://dev.isrd.isi.edu/chaise/search" target="\_blank">ChaiseLink</a></p>
 
 ### 2. Download Button
 
@@ -118,7 +118,7 @@ Example 1:
 	<a href="https://code.jquery.com/jquery-3.1.0.js" download="" class="btn btn-primary" target="_blank">Jquery Download</a>
 </p>
 ```
-> <p><a href="https://code.jquery.com/jquery-3.1.0.js" download="" class="btn btn-primary" target="_blank">Jquery Download</a></p>
+> <p><a href="https://code.jquery.com/jquery-3.1.0.js" download="" class="btn btn-primary" target="\_blank">Jquery Download</a></p>
 
 
 Example 2:
@@ -179,7 +179,7 @@ You can also add extra styles to the image to ensure it is displayed correctly.
 
 ### 4. Thumbnail Image With Aspect Ratio and Height
 
-With attributes height=400 and target=_blank is to open it in new tab
+With attributes height=400 and target=\_blank is to open it in new tab
 ```html
 # [![alt text](thumbnail-URL){height=400}](destination-URL){target=_blank}
 
@@ -193,11 +193,11 @@ With attributes height=400 and target=_blank is to open it in new tab
 </p>
 ```
 
-> <p><a href="https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg" target="_blank"><img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" alt="Image" height="400"></a></p>
+> <p><a href="https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg" target="\_blank"><img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" alt="Image" height="400"></a></p>
 
 #### Multiple Adjacent Images
 
-With attributes height=200 and target=_blank is to open it in new tab
+With attributes height=200 and target=\_blank is to open it in new tab
 ```html
 # [![alt text](thumbnail-URL){height=200}](destination-URL){target=_blank}
 
@@ -214,7 +214,7 @@ With attributes height=200 and target=_blank is to open it in new tab
 </p>
 ```
 
-> <p><a href="https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg" target="_blank"><img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" alt="Image" height="200"></a> <a href="https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg" target="_blank"><img src="https://c.fastcompany.net/multisite_files/fastcompany/imagecache/1280/poster/2015/06/3046722-poster-p-1-the-psychology-of-living-in-skyscrapers.jpg" alt="Image" height="200"></a></p>
+> <p><a href="https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg" target="\_blank"><img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" alt="Image" height="200"></a> <a href="https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg" target="\_blank"><img src="https://c.fastcompany.net/multisite_files/fastcompany/imagecache/1280/poster/2015/06/3046722-poster-p-1-the-psychology-of-living-in-skyscrapers.jpg" alt="Image" height="200"></a></p>
 
 ### 5. Thumbnail With Link To Original Image And A caption
 
@@ -236,7 +236,7 @@ With attributes width=500, height=400 and a linkable caption to open it in new t
 
 ```
 
-> <figure class="embed-block" style="display:inline-block;"><a href="https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg" target="_blank"><figcaption class="embed-caption">Skyscrapers</figcaption><img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" height="200"  /></a></figure>
+> <figure class="embed-block" style="display:inline-block;"><a href="https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg" target="\_blank"><figcaption class="embed-caption">Skyscrapers</figcaption><img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" height="200"  /></a></figure>
 
 ### 6. Iframe
 
@@ -543,3 +543,22 @@ You can also have empty span. You can use this to display glyphicons.
 </p>
 ```
 > <p><span class="glyphicon glyphicon-download-alt"></span></p>
+
+### 13. RID link
+
+Takes an RID of an existing record and generates a resolvable link for that record. This is not part of commonMark specification. It will result in an [inline](#inline-vs-block) element. You have to follow the syntax completely.
+
+```md
+[[<RID>]]
+```
+
+- **RID**: A valid RID to an existing record
+
+**Example**
+```html
+[[1-3X0H]]
+
+# OUTPUT:
+<a href="/id/1-3X0H">1-3X0H</a>
+```
+> <a href="/id/1-3X0H">1-3X0H</a>
