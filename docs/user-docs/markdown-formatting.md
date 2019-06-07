@@ -546,21 +546,19 @@ You can also have empty span. You can use this to display glyphicons.
 
 ### 13. RID link
 
-Takes an RID of an existing record and generates a resolvable link for that record. This is not part of commonMark specification. It will result in an [inline](#inline-vs-block) element. You have to follow the syntax completely (notice the newline in the closing tag).
+Takes an RID of an existing record and generates a resolvable link for that record. This is not part of commonMark specification. It will result in an [inline](#inline-vs-block) element. You have to follow the syntax completely.
 
 ```md
-:::rid <RID> \n:::
+[[<RID>]]
 ```
-
-**There must be a space before `\n:::`**.
 
 - **RID**: A valid RID to an existing record
 
 **Example**
 ```html
-:::rid 1-3X0H \n:::
+[[1-3X0H]]
 
 # OUTPUT:
-<a href="/id/1-3X0H">1-3X0H</a>\n
+<a href="/id/1-3X0H">1-3X0H</a>
 ```
 > <a href="/id/1-3X0H">1-3X0H</a>

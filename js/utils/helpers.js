@@ -2178,7 +2178,7 @@
         md.use(mdContainer, 'div', {
 
             /*
-             * Checks whetehr string matches format ":::div CONTENT \n:::"
+             * Checks whether string matches format ":::div CONTENT \n:::"
              * string inside `{}` is optional, specifies attributes to be applied to element
              */
             validate: function (params) {
@@ -2210,28 +2210,76 @@
             }
         });
 
-        // Injects `a` tag with RID as the link
-        md.use(mdContainer, 'rid', {
+        // Note: Following how this was done in markdown-it-sub and markdown-it-span
+        md.use(function rid_plugin(md) {
+            // same as UNESCAPE_MD_RE plus a space
+            var UNESCAPE_RE = /\\([ \\!"#$%&'()*+,.\/:;<=>?@[\]^_`{|}~-])/g;
 
-            /*
-             * Checks whetehr string matches format ":::rid <RID> \n:::"
-             */
-            validate: function (params) {
-                return params.trim().match(/rid(.*)$/i);
-            },
+            // we want the link rule to take precedence over this added rule
+            // [[rid]]() should be -> <a href="">[rid]</a> which preserves the inner brackets
+            md.inline.ruler.after('link', 'rid', function rid(state, silent) {
+                var found,
+                    content,
+                    token,
+                    max = state.posMax,
+                    start = state.pos;
 
-            render: function (tokens, idx) {
-                var m = tokens[idx].info.trim().match(/rid(.*)$/i);
+                if (silent) { return false; } // don't run any pairs in validation mode
+                if (start + 9 >= max) { return false; } // string isn't long enough to be proper, this assumes RID is always 6 characters
+                // if (start + 5 >= max) { return false; } // string isn't long enough to be proper, this assumes RID has to be larger than 1 character
 
-                // opening tag
-                if (tokens[idx].nesting === 1) {
-                    return '<a href="/id/' + m[1].trim() +'">' + m[1].trim();
+                // check the current and next character to make sure they are both `[`.
+                // If not, iterate to the next character (state.pos)
+                // 0x5B -> `[`
+                if (state.src.charCodeAt(start) !== 0x5B || state.src.charCodeAt(start + 1) !== 0x5B) { return false; }
+
+                // move to the first character after `[[`
+                state.pos = start + 2;
+
+                // find the end
+                while (state.pos < max) {
+                    if (state.src.charCodeAt(state.pos) === 0x5D && state.src.charCodeAt(state.pos + 1) === 0x5D) {
+                        found = true;
+                        break;
+                    }
+
+                    state.md.inline.skipToken(state);
                 }
-                // the closing tag
-                else {
-                    return "</a>\n";
+
+                // NOTE: still not sure what the latter condition does
+                if (!found || start + 1 === state.pos) {
+                    state.pos = start;
+                    return false;
                 }
-            }
+
+                // state.pos is the first end character. Slice the string to the char right before it
+                content = state.src.slice(start + 2, state.pos);
+
+                // don't allow unescaped newlines inside (space is allowed)
+                if (content.match(/(^|[^\\])(\\\\)*[\n]/)) {
+                    state.pos = start;
+                    return false;
+                }
+
+                // found!
+                state.posMax = state.pos;
+                state.pos = start + 2;
+
+                // Earlier we checked !silent, but this implementation does not need it
+                token         = state.push('a_open', 'a', 1);
+                token.attrPush([ 'href', '/id/' + content.replace(UNESCAPE_RE, '$1') ]);
+                token.markup  = '[[';
+
+                token         = state.push('text', '', 0);
+                token.content = content.replace(UNESCAPE_RE, '$1');
+
+                token         = state.push('a_close', 'a', -1);
+                token.markup  = ']]';
+
+                state.pos = state.posMax + 2;
+                state.posMax = max;
+                return true;
+            });
         });
     };
 
