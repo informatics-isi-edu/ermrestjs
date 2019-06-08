@@ -2225,7 +2225,7 @@
                     start = state.pos;
 
                 if (silent) { return false; } // don't run any pairs in validation mode
-                if (start + 9 >= max) { return false; } // string isn't long enough to be proper, this assumes RID is always 6 characters
+                if (start + 4 >= max) { return false; } // this assumes the template is at least [[x]]
                 // if (start + 5 >= max) { return false; } // string isn't long enough to be proper, this assumes RID has to be larger than 1 character
 
                 // check the current and next character to make sure they are both `[`.
