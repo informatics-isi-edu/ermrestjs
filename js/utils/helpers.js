@@ -780,30 +780,27 @@
     module._getFormattedKeyValues = function(table, context, data, linkedData) {
         var keyValues, k, fkData, col, cons, rowname, v;
 
-        var findCol = function (colName, currTable) {
-            if (Array.isArray(currTable)) {
-                return currTable.filter(function (col) {return col.name === colName;})[0];
-            }
-            return currTable.columns.get(k);
-        };
-
         var getTableValues = function (d, currTable) {
             var res = {};
-            for (k in d) {
-                try {
-                    col = findCol(k, currTable);
-                    v = col.formatvalue(d[k], context);
-                    if (col.type.isArray) {
-                        res[k] = module._formatUtils.printArray(v, {isMarkdown: true});
-                    } else {
-                        res[k] = v;
-                    }
-                } catch(e) {
-                    res[k] = d[k];
+            currTable.sourceDefinitions.columns.forEach(function (col) {
+                if (!(col.name in d)) return;
+                k = col.name;
+                v = col.formatvalue(d[k], context);
+                if (col.type.isArray) {
+                    v = module._formatUtils.printArray(v, {isMarkdown: true});
                 }
-                // Inject raw data in the keyvalues object prefixed with an '_'
+
+                res[k] = v;
                 res["_" + k] = d[k];
-            }
+
+                // alternative names
+                if (Array.isArray(currTable.sourceDefinitions.sourceMapping[k]) ){
+                    currTable.sourceDefinitions.sourceMapping[k].forEach(function (altKey) {
+                        res[altKey] = v;
+                        res["_" + altKey] = d[k];
+                    });
+                }
+            });
             return res;
         };
 
@@ -811,9 +808,9 @@
         keyValues = getTableValues(data, table);
 
         //get foreignkey data if available
-        if (linkedData && typeof linkedData === "object" && table.foreignKeys.length() > 0) {
+        if (linkedData && typeof linkedData === "object" && table.sourceDefinitions.fkeys.length > 0) {
             keyValues.$fkeys = {};
-            table.foreignKeys.all().forEach(function (fk) {
+            table.sourceDefinitions.fkeys.forEach(function (fk) {
                 var p = module._generateRowLinkProperties(fk.key, linkedData[fk.name], context);
                 if (!p) return;
 
@@ -924,7 +921,7 @@
         if (annotation && typeof annotation.row_markdown_pattern === 'string') {
             template = annotation.row_markdown_pattern;
 
-            pattern = module._renderTemplate(template, formattedValues, table, context, {formatted: true, templateEngine: annotation.template_engine});
+            pattern = module._renderTemplate(template, formattedValues, table.schema.catalog, {templateEngine: annotation.template_engine});
 
         }
 
@@ -983,7 +980,7 @@
             keyValues = {"name": result};
 
             // get templated patten after replacing the values using Mustache
-            pattern = module._renderTemplate(template, keyValues, table, context, {formatted: true});
+            pattern = module._renderTemplate(template, keyValues, table.schema.catalog);
         }
 
         // Render markdown content for the pattern
@@ -1035,7 +1032,12 @@
         // use the markdown_pattern that is defiend in key-display annotation
         var display = key.getDisplay(context);
         if (display.isMarkdownPattern) {
-            unformatted = module._renderTemplate(display.markdownPattern, options.formattedValues, key.table, context, {formatted:true});
+            unformatted = module._renderTemplate(
+                display.markdownPattern,
+                options.formattedValues,
+                key.table.schema.catalog,
+                {templateEngine: display.templateEngine}
+            );
             unformatted = (unformatted === null || unformatted.trim() === '') ? "" : unformatted;
             caption = module._formatUtils.printMarkdown(unformatted, { inline: true });
         } else {
@@ -2660,39 +2662,31 @@
 
     /**
      * A wrapper for {ERMrest._renderMustacheTemplate}
-     * This function will generate formmatted values from the given data,
-     * if you don't want the funciton to format the data, make sure to have
-     * options.formatted = true
-     * options.templateEngine: "mustache" or "handlbars"
+     * acceptable options:
+     * - templateEngine: "mustache" or "handlbars"
+     * - avoidValidation: to avoid validation of the template
      *
      * @param  {string} template - template to be rendered
      * @param  {object} keyValues - formatted key value pairs needed for the template
-     * @param  {ERMrest.Table} table - the table representing the keyValues data
-     * @param  {string} context -
+     * @param  {ERMrest.Catalog} catalog - the catalog that this value is for
      * @param  {Array.<Object>=} options optioanl parameters
      * @return {string} Returns a string produced as a result of templating using options.templateEngine or `Mustache` by default.
      */
-    module._renderTemplate = function (template, keyValues, table, context, options) {
+    module._renderTemplate = function (template, keyValues, catalog, options) {
 
         var obj = {};
 
         if (typeof template !== 'string') return null;
 
-        // to avoid computing keyValues mutliple times, or if we don't want the formatted values
-        // TODO: remove this from render template and enforce keyValues be formatted, also remove context param
-        if (table && (options === undefined || !options.formatted)) {
-            keyValues = module._getFormattedKeyValues(table, context, keyValues);
-        }
-
         options = options || {};
 
         if (options.templateEngine === module.HANDLEBARS) {
             // render the template using Handlebars
-            return module.renderHandlebarsTemplate(template, keyValues, table.schema.catalog, options);
+            return module.renderHandlebarsTemplate(template, keyValues, catalog, options);
         }
 
         // render the template using Mustache
-        return module._renderMustacheTemplate(template, keyValues, table.schema.catalog, options);
+        return module._renderMustacheTemplate(template, keyValues, catalog, options);
     };
 
     /**
@@ -2750,7 +2744,7 @@
      * @return {Object}          An object with `isHTML` and `value` attributes.
      */
     module._processMarkdownPattern = function (template, data, table, context, options) {
-        var res = module._renderTemplate(template, data, table, context, options);
+        var res = module._renderTemplate(template, data, table.schema.catalog, options);
 
         if (res === null || res.trim() === '') {
             res = module._getNullValue(table, context, [table, table.schema]);

@@ -2399,6 +2399,7 @@
             this._shortestKey = table.shortestKey;
             this._displayname = table.displayname;
             delete this._referenceColumns;
+            delete this._activeList;
             delete this._related;
             delete this._canCreate;
             delete this._canRead;
@@ -2897,35 +2898,72 @@
         /**
          * Generate the list of extra reads that we should do.
          * this should incldue
-         * - aggreagtes: ERMrest.ReferenceColumn[]
-         * - entitySets: ERMrest.Reference[]
+         * - aggreagtes: [{column: ERMrest.ReferenceColumn, objects: [{index: integer, column: boolean, related: boolean}]]
+         * - entitySets: [{reference: ERMrest.Reference,}]
          * - allOutBounds: ERMrest.ReferenceColumn[]
          *
-         * TODO I might want to add a new inlinEntitySets to distinguish between inline vs related
-         * @param  {ERMrest.Tuple} tuple
-         * @param  {Boolean} useRelated
+         * TODO we might want to detect duplciates in allOutBounds better?
+         * currently it's done based on name, but based on the path should be enough..
+         * as long as it's entity the last column is useless...
+         * the old code was kinda handling this by just adding the multi ones,
+         * so if the fk definition is based on fkcolum and and not the RID, it would handle it.
+         *
+         * TODO don't allow entitysets in detailed context
+         *
+         *
+         * @param  {ERMrest.Tuple=} tuple
+         * @param  {Boolean=} useRelated
          * @return {Object}
          */
         generateActiveList: function (tuple, useRelated) {
-            var columns = [], entitySets = [], allOutBounds = [], aggregates = [];
-            var consideredSets = {}, consideredOutbounds = {}, consideredAggregates = {};
+            var columns = [], entitySets = [], relatedEntitySets = [], allOutBounds = [], aggregates = [];
+            var consideredSets = {}, consideredRelatedSets = {}, consideredOutbounds = {}, consideredAggregates = {};
 
             var self = this;
             var sds = self.table.sourceDefinitions;
 
-            var addColumn = function (col) {
+            var addColumn = function (col, index, isWaitFor, isRelated) {
+                var obj = { index: index, isWaitFor: isWaitFor};
+                if (isRelated) {
+                    obj.related = true;
+                } else {
+                    obj.column = true;
+                }
+
                 // aggregates
                 if (col.isPathColumn && col.hasAggregate) {
-                    if (col.name in consideredAggregates) return;
-                    consideredAggregates[col.name] = true;
-                    aggregates.push(col);
+                    // duplciate
+                    if (col.name in consideredAggregates) {
+                        aggregates[consideredAggregates[col.name]].objects.push(obj);
+                        return;
+                    }
+
+                    // new
+                    consideredAggregates[col.name] = aggregates.length;
+                    aggregates.push({column: col, objects: [obj]});
                 }
 
                 //entitysets
                 else if (col.isInboundForeignKey || (col.isPathColumn && col.hasPath && !col.isUnique && !col.hasAggregate)) {
-                    if (col.name in consideredSets) return;
-                    consideredSets[col.name] = true;
-                    entitySets.push(col.reference);
+                    // duplciate
+                    if (col.name in consideredSets) {
+                        entitySets[consideredSets[col.name]].objects.push(obj);
+                        return;
+                    } else if (useRelated && col.name in consideredRelatedSets) {
+                        relatedEntitySets[consideredRelatedSets[col.name]].objects.push(obj);
+                        return;
+                    }
+
+                    // new
+                    if (useRelated) {
+                        consideredRelatedSets[col.name] = relatedEntitySets.length;
+                        relatedEntitySets.push({reference: col.reference, objects: [obj]});
+                    } else {
+                        consideredSets[col.name] = entitySets.length;
+                        entitySets.push({reference: col.reference, objects: [obj]});
+                    }
+
+
                 }
 
                 // all outbounds
@@ -2939,11 +2977,11 @@
             columns = self.generateColumnsList(tuple);
 
             // columns
-            columns.forEach(function (col) {
-                addColumn(col);
+            columns.forEach(function (col, i) {
+                addColumn(col, i, false, false);
 
                 col.waitFor.forEach(function (wf) {
-                    addColumn(wf);
+                    addColumn(wf, i, true, false);
                 });
             });
 
@@ -2955,21 +2993,25 @@
             });
 
             if (useRelated) {
-                self.related(tuple).forEach(function (rel) {
+                self.related(tuple).forEach(function (rel, i) {
                     // TODO must be improved
-                    var addSet = true;
-                    if (rel.pseudoColumn && (rel.pseudoColumn.name in consideredSets)) {
-                        addSet = false;
+                    var addSet = true,
+                        relObj = {index: i, related: true};
+                    if (rel.pseudoColumn) {
+                        if ((rel.pseudoColumn.name in consideredSets)) {
+                            entitySets[consideredSets[rel.pseudoColumn.name]].objects.push(relObj);
+                            addSet = false;
+                        }
                     } else if (_generateForeignKeyName(rel.origFKR, true) in consideredSets) {
                         addSet = false;
                     }
                     if (addSet) {
-                        entitySets.push(rel);
+                        relatedEntitySets.push({reference: rel, objects: [relObj]});
                     }
 
                     if (rel.pseudoColumn) {
-                        rel.pseudoColumn.waitfor.forEach(function (wf) {
-                            addColumn(wf);
+                        rel.pseudoColumn.waitFor.forEach(function (wf) {
+                            addColumn(wf, i, true, true);
                         });
                     }
                 });
@@ -2977,6 +3019,7 @@
             this._activeList = {
                 aggregates: aggregates,
                 entitySets: entitySets,
+                relatedEntitySets: relatedEntitySets,
                 allOutBounds: allOutBounds
             };
 
@@ -3031,6 +3074,7 @@
             delete newRef._context; // NOTE: related reference is not contextualized
             delete newRef._related;
             delete newRef._referenceColumns;
+            delete newRef._activeList;
             delete newRef._facetColumns;
             delete newRef.derivedAssociationReference;
             delete newRef._display;
@@ -3183,7 +3227,6 @@
             return headers;
         },
 
-
         /**
          * The actual path that will be used for read request.
          *  It will return an object that will have:
@@ -3194,11 +3237,12 @@
          * @type {Object}
          */
          _getReadPath: function(useEntity) {
-            // the pseudo-columns that their path is all outbound and Therefore
-            // creates a one-to-one relation between source and destination, hence
-            // we can just add them to the projection list to get the single value.
-            var oneToOnePseudos = this.activeList.allOutBounds;
-
+            var allOutBounds = this.activeList.allOutBounds;
+            var findAllOutBoundIndex = function (name) {
+                return allOutBounds.findIndex(function (aob) {
+                    return aob.name === name;
+                });
+            };
             var hasSort = Array.isArray(this._location.sortObject) && (this._location.sortObject.length !== 0),
                 locationPath = this.location.path,
                 _modifiedSortObject = [], // the sort object that is used for url creation (if location has sort).
@@ -3237,7 +3281,7 @@
                     colName,
                     fkIndex, fk, desc;
 
-                for (i = 0, k = 1, l = 1; i < sortObject.length; i++) {
+                for (i = 0, k = 1; i < sortObject.length; i++) {
                     // find the column in ReferenceColumns
                     try {
                         col = self.getColumnByName(sortObject[i].column);
@@ -3262,19 +3306,13 @@
 
                     // use the sort columns instead of the actual column.
                     for (j = 0; j < sortCols.length; j++) {
-                        if (col.isForeignKey || (col.isPathColumn && col.isUnique && col.foreignKeys.length === 1)) {
+                        if (col.isForeignKey || (col.isPathColumn && col.isUnique)) {
                             if (useEntity) addSort = false;
 
-                            fkIndex = foreignKeys.all().indexOf(col.isForeignKey ? col.foreignKey : col.foreignKeys[0].obj);
-                            colName = "F" + (foreignKeys.length() + k++);
+                            // the column must be part of outbounds, so we don't need to check for it
+                            fkIndex = findAllOutBoundIndex(col.name);
+                            colName = "F" + (allOutBounds.length + k++);
                             sortMap[colName] = ["F" + (fkIndex+1), module._fixedEncodeURIComponent(sortCols[j].column.name)].join(":");
-                        } else if (col.isPathColumn && col.hasPath && col.isUnique && col.foreignKeys.length > 0) {
-                            if (useEntity) addSort = false;
-
-                            // we have added it to the projection list
-                            fkIndex = oneToOnePseudos.indexOf(col);
-                            colName = "P" + (oneToOnePseudos.length + l++);
-                            sortMap[colName] = ["P" + (fkIndex+1), module._fixedEncodeURIComponent(sortCols[j].column.name)].join(":");
                         } else {
                             colName = sortCols[j].column.name;
                             if (colName in sortColNames) {
@@ -3342,7 +3380,7 @@
             this._location.sortObject = sortObject;
 
             var uri = this._location.ermrestCompactPath; // used for the http request
-            var isAttributeGroup = !useEntity && (this._table.foreignKeys.length() > 0 || oneToOnePseudos.length > 0);
+            var isAttributeGroup = !useEntity && (this._table.foreignKeys.length() > 0 || allOutBounds.length > 0);
 
             /** Change api to attributegroup for retrieving extra information
              * These information include:
@@ -3370,8 +3408,8 @@
                 // generate the projection for given pseudo column
                 var getPseudoPath = function (l) {
                     var pseudoPath = [];
-                    oneToOnePseudos[l].foreignKeys.forEach(function (f, index, arr) {
-                        pseudoPath.push(((index === arr.length-1) ? ("P" + (k+1) + ":=") : "") + f.obj.toString(!f.isInbound,true));
+                    allOutBounds[l].foreignKeys.forEach(function (f, index, arr) {
+                        pseudoPath.push(((index === arr.length-1) ? ("F" + (k+1) + ":=") : "") + f.obj.toString(!f.isInbound,true));
                     });
                     return pseudoPath.join("/");
                 };
@@ -3379,20 +3417,13 @@
                 // create the uri with attributegroup and alias
                 uri = compactPath + "/";
 
-                // add joins for foreign keys
-                for (k = this._table.foreignKeys.length() - 1;k >= 0 ; k--) {
-                    // /F2:=left(id)=(s:t:c)/$M/F1:=left(id2)=(s1:t1:c1)/
-                    uri += "F" + (k+1) + ":=left" + this._table.foreignKeys.all()[k].toString(true) + "/$" + mainTableAlias + "/";
-
-                    // F2:array_d(F2:*),F1:array_d(F1:*)
-                    aggList.push("F" + (k+1) + ":=" + aggFn +"(F" + (k+1) + ":*)");
-                }
-
-                // add pseudo paths
-                for (k = oneToOnePseudos.length - 1; k >= 0; k--) {
+                // add all the allOutBounds
+                for (k = allOutBounds.length - 1; k >= 0; k--) {
+                    //F2:=left(id)=(s:t:c)/$M/F1:=left(id2)=(s1:t1:c1)/
                     uri += getPseudoPath(k) + "/$" + mainTableAlias + "/";
 
-                    aggList.push("P" + (k+1) + ":=" + aggFn + "(P" + (k+1) + ":*)");
+                    // F2:array_d(F2:*),F1:array_d(F1:*)
+                    aggList.push("F" + (k+1) + ":=" + aggFn + "(F" + (k+1) + ":*)");
                 }
 
                 // add sort columns (it will include the key)
@@ -3939,24 +3970,10 @@
         this._linkedData = [];
         this._data = [];
 
-        var oneToOnePseudos = reference.activeList.allOutBounds;
-
-        var singleFKPaths = reference.columns.filter(function (c) {
-            return (c.isPathColumn && c.isUnique && c.foreignKeys.length === 1) || (c.isForeignKey);
-        });
-
-        // the foriegnkey name might be different from the column name because the last column can be different.
-        // the source definition in the column could be based on another key column.
-        var attachSingleFKs = function (selfPage, fk, data, i) {
-            singleFKPaths.filter(function (c) {
-                return (c.isPathColumn && c.foreignKeys[0].obj === fk) || (c.isForeignKey && c.foreignKey === fk);
-            }).forEach(function (c) {
-                selfPage._linkedData[i][c.name] = data;
-            });
-        };
+        var allOutBounds = reference.activeList.allOutBounds;
 
         // linkedData will include foreign key data
-        if (this._ref._table.foreignKeys.length() > 0 || oneToOnePseudos.length > 0) {
+        if (allOutBounds.length > 0) {
 
             var fks = reference._table.foreignKeys.all(), i, j, colFKs;
             var mTableAlias = this._ref.location.mainTableAlias;
@@ -3967,15 +3984,8 @@
                     this._data.push(data[i][mTableAlias][0]);
 
                     this._linkedData.push({});
-                    for (j = fks.length - 1; j >= 0 ; j--) {
-                        this._linkedData[i][fks[j].name] = data[i]["F"+(j+1)][0];
-
-                        // we're not adding these to projection list, so we have to map them.
-                        attachSingleFKs(this, fks[j], data[i]["F"+(j+1)][0], i);
-                    }
-
-                    for (j = oneToOnePseudos.length - 1; j >= 0; j--) {
-                        this._linkedData[i][oneToOnePseudos[j].name] = data[i]["P"+ (j+1)][0];
+                    for (j = allOutBounds.length - 1; j >= 0; j--) {
+                        this._linkedData[i][allOutBounds[j].name] = data[i]["F"+ (j+1)][0];
                     }
                 }
 
@@ -3983,12 +3993,8 @@
                 if (hasExtraData) {
                     this._extraData = extraData[mTableAlias][0];
                     this._extraLinkedData = {};
-                    for (j = fks.length - 1; j >= 0 ; j--) {
-                        this._extraLinkedData[fks[j].name] = extraData["F"+(j+1)][0];
-                    }
-
-                    for (j = oneToOnePseudos.length - 1; j >= 0; j--) {
-                        this._extraLinkedData[oneToOnePseudos[j].name] = extraData["P"+ (j+1)][0];
+                    for (j = allOutBounds.length - 1; j >= 0; j--) {
+                        this._extraLinkedData[allOutBounds[j].name] = extraData["F"+ (j+1)][0];
                     }
                 }
 
@@ -4181,6 +4187,114 @@
             return newReference;
         },
 
+        getContent: function (templateVariables) {
+            var self = this, ref = this._ref;
+            if (!self._data || !self._data.length) return null;
+
+            var i, value, pattern, values = [], keyValues;
+            var display = ref.display;
+
+            // TODO take care of waitfor
+
+            // markdown_pattern in the source object
+            if (typeof display._sourceMarkdownPattern === "string") {
+                var $self = self.tuples.map(function (t) {
+                    return t.templateVariables;
+                });
+                //TODO test this
+                keyValues = Object.assign({$self: $self}, templateVariables);
+
+                pattern = module._renderTemplate(
+                    display._sourceMarkdownPattern,
+                    keyValues, ref.table.schema.catalog,
+                    { templateEngine: display._sourceTemplateEngine}
+                );
+
+                if (pattern === null || pattern.trim() === '') {
+                    pattern = module._getNullValue(ref.table, ref._context, [ref.table, ref.table.schema]);
+                }
+
+                return module._formatUtils.printMarkdown(pattern);
+            }
+
+            // page_markdown_pattern
+            /*
+             the object structure that is available on the annotation:
+               $page = {
+                    values: [],
+                    parent: {
+                        values: [],
+                        table: "",
+                        schema: ""
+                    }
+                }
+             */
+            if (typeof display._pageMarkdownPattern === 'string') {
+                var $page = {
+                    values: self.tuples.map(function (t, i) {
+                        return t.templateVariables.values;
+                    })
+                };
+
+                if (ref.mainTable) {
+                    parent = {
+                        schema: ref.mainTable.schema.name,
+                        table: ref.mainTable.name,
+                    };
+
+                    if (ref.mainTuple) {
+                        parent.values = module._getFormattedKeyValues(ref.mainTable, ref._context, ref.mainTuple._data, ref.mainTuple._linkedData);
+                    }
+
+                    $page.parent = parent;
+                }
+
+                pattern = module._renderTemplate(ref.display._pageMarkdownPattern, {$page: $page}, ref.table.schema.catalog, { templateEngine: ref.display.templateEngine});
+
+                if (pattern === null || pattern.trim() === '') {
+                    pattern = module._getNullValue(ref.table, ref._context, [ref.table, ref.table.schema]);
+                }
+
+                return module._formatUtils.printMarkdown(pattern);
+            }
+
+            // row_markdown_pattern
+            if (typeof display._rowMarkdownPattern === 'string') {
+                // Iterate over all data rows to compute the row values depending on the row_markdown_pattern.
+                for (i = 0; i < self.tuples.length; i++) {
+
+                    // make sure we have the formatted key values
+                    keyValues = self.tuples[i].templateVariables.values;
+
+                    // render template
+                    value = module._renderTemplate(ref.display._rowMarkdownPattern, keyValues, ref.table.schema.catalog, { templateEngine: ref.display.templateEngine});
+
+                    // If value is null or empty, return value on basis of `show_nulls`
+                    if (value === null || value.trim() === '') {
+                        value = module._getNullValue(ref.table, ref._context, [ref.table, ref.table.schema]);
+                    }
+                    // If final value is not null then push it in values array
+                    if (value !== null) {
+                        values.push(value);
+                    }
+                }
+                // Join the values array using the separator and prepend it with the prefix and append suffix to it.
+                pattern = ref.display._prefix + values.join(ref.display._separator) + ref.display._suffix;
+                return module._formatUtils.printMarkdown(pattern);
+            }
+
+            // no markdown_pattern, just return the list of row-names in this context (row_name/<context>)
+            for ( i = 0; i < self.tuples.length; i++) {
+                var tuple = self.tuples[i];
+                var url = tuple.reference.contextualize.detailed.appLink;
+                var rowName = module._generateRowName(ref.table, ref._context, tuple._data, tuple._linkedData);
+
+                values.push("* ["+ rowName.unformatted +"](" + url + ") " + ref.display._separator);
+            }
+            pattern = ref.display._prefix + values.join(" ") + ref.display._suffix;
+            return module._formatUtils.printMarkdown(pattern);
+        },
+
         /**
          * HTML representation of the whole page which uses table-display annotation.
          * If markdownPattern is defined then renderTemplate is called to get the correct display.
@@ -4205,108 +4319,10 @@
         get content() {
             if (this._content === undefined) {
                 var getContent = function (self, ref) {
-                    if (!self._data || !self._data.length) return null;
 
-                    var i, value, pattern, values = [], keyValues;
-                    var display = ref.display;
-
-                    // markdown_pattern in the source object
-                    if (typeof display._sourceMarkdownPattern === "string") {
-                        var $self = self.tuples.map(function (t) {
-                            return t.templateVariables;
-                        });
-                        pattern = module._renderTemplate(
-                            display._sourceMarkdownPattern,
-                            {$self: $self}, ref.table, ref._context,
-                            { templateEngine: display._sourceTemplateEngine, formatted: true }
-                        );
-
-                        if (pattern === null || pattern.trim() === '') {
-                            pattern = module._getNullValue(ref.table, ref._context, [ref.table, ref.table.schema]);
-                        }
-
-                        return module._formatUtils.printMarkdown(pattern);
-                    }
-
-                    // page_markdown_pattern
-                    /*
-                     the object structure that is available on the annotation:
-                       $page = {
-                            values: [],
-                            parent: {
-                                values: [],
-                                table: "",
-                                schema: ""
-                            }
-                        }
-                     */
-                    if (typeof display._pageMarkdownPattern === 'string') {
-                        var $page = {
-                            values: self._data.map(function (d, i) {
-                                return module._getFormattedKeyValues(ref.table, ref._context, d, self._linkedData[i]);
-                            })
-                        };
-
-                        if (ref.mainTable) {
-                            parent = {
-                                schema: ref.mainTable.schema.name,
-                                table: ref.mainTable.name,
-                            };
-
-                            if (ref.mainTuple) {
-                                parent.values = module._getFormattedKeyValues(ref.mainTable, ref._context, ref.mainTuple._data, ref.mainTuple._linkedData);
-                            }
-
-                            $page.parent = parent;
-                        }
-
-                        pattern = module._renderTemplate(ref.display._pageMarkdownPattern, {$page: $page}, ref.table, ref._context, { templateEngine: ref.display.templateEngine, formatted: true });
-
-                        if (pattern === null || pattern.trim() === '') {
-                            pattern = module._getNullValue(ref.table, ref._context, [ref.table, ref.table.schema]);
-                        }
-
-                        return module._formatUtils.printMarkdown(pattern);
-                    }
-
-                    // row_markdown_pattern
-                    if (typeof display._rowMarkdownPattern === 'string') {
-                        // Iterate over all data rows to compute the row values depending on the row_markdown_pattern.
-                        for (i = 0; i < self._data.length; i++) {
-
-                            // make sure we have the formatted key values
-                            keyValues = module._getFormattedKeyValues(ref.table, ref._context, self._data[i], self._linkedData[i]);
-
-                            // render template
-                            value = module._renderTemplate(ref.display._rowMarkdownPattern, keyValues, ref.table, ref._context, { templateEngine: ref.display.templateEngine, formatted: true });
-
-                            // If value is null or empty, return value on basis of `show_nulls`
-                            if (value === null || value.trim() === '') {
-                                value = module._getNullValue(ref.table, ref._context, [ref.table, ref.table.schema]);
-                            }
-                            // If final value is not null then push it in values array
-                            if (value !== null) {
-                                values.push(value);
-                            }
-                        }
-                        // Join the values array using the separator and prepend it with the prefix and append suffix to it.
-                        pattern = ref.display._prefix + values.join(ref.display._separator) + ref.display._suffix;
-                        return module._formatUtils.printMarkdown(pattern);
-                    }
-
-                    // no markdown_pattern, just return the list of row-names in this context (row_name/<context>)
-                    for ( i = 0; i < self.tuples.length; i++) {
-                        var tuple = self.tuples[i];
-                        var url = tuple.reference.contextualize.detailed.appLink;
-                        var rowName = module._generateRowName(ref.table, ref._context, tuple._data, tuple._linkedData);
-
-                        values.push("* ["+ rowName.unformatted +"](" + url + ") " + ref.display._separator);
-                    }
-                    pattern = ref.display._prefix + values.join(" ") + ref.display._suffix;
-                    return module._formatUtils.printMarkdown(pattern);
                 };
 
-                this._content = getContent(this, this._ref);
+                this._content = this.getContent();
             }
             return this._content;
        }
@@ -4737,15 +4753,15 @@
                     // if required fields are present, render each template and set that value on the citation object
                     if (citationAnno.journal_pattern && citationAnno.year_pattern && citationAnno.url_pattern) {
                         var options = {
-                            templateEngine: citationAnno.template_engine // if undefined, _renderTemplate defaults to Mustache
+                            templateEngine: citationAnno.template_engine
                         };
-                        var keyValues = module._getFormattedKeyValues(table, this._pageRef._context, this._data, this._linkedData);
+                        var keyValues = this.templateVariables.values;
 
                         this._citation = {};
                         var self = this;
                         // author, title, id set to null if not defined
                         ["author", "title", "journal", "year", "url", "id"].forEach(function (key) {
-                            self._citation[key] = module._renderTemplate(citationAnno[key+"_pattern"], keyValues, table, null, options);
+                            self._citation[key] = module._renderTemplate(citationAnno[key+"_pattern"], keyValues, table.schema.catalog, options);
                         });
 
                         // if after processing the templates, any of the required fields are null, template is invalid
@@ -4764,16 +4780,44 @@
 
         /**
          * An object of what is available in templating environment for this tuple
+         * it has the following attributes:
+         * - values
+         * - rowName
+         * - uri
          * @type {Object}
          */
         get templateVariables() {
             if (this._templateVariables === undefined) {
-                this._templateVariables = module._getRowTemplateVariables(
-                    this._pageRef._table,
-                    this._pageRef._context,
-                    this._data,
-                    this._linkedData
+                var self = this;
+                var keyValues = module._getRowTemplateVariables(
+                    self._pageRef._table,
+                    self._pageRef._context,
+                    self._data,
+                    self._linkedData
                 );
+
+                // the multi-fk all-outbounds
+                var sm = this._pageRef.table.sourceDefinitions.sourceMapping;
+                self._pageRef.activeList.allOutBounds.forEach(function (col) {
+                    // data is null, so we don't need to add it
+                    if (!self._linkedData[col.name]) return;
+
+                    // see if it exists in the mapping
+                    if (Array.isArray(sm[col.name])) {
+                        // TODO could be impoved. doing it multiple times...
+                        var fkTempVal = module._getRowTemplateVariables(
+                            col.table,
+                            self._pageRef._context,
+                            self._linkedData[col.name]
+                        );
+
+                        sm[col.name].forEach(function (key) {
+                            keyValues.values[key] = fkTempVal;
+                        });
+                    }
+                });
+
+                this._templateVariables = keyValues;
             }
             return this._templateVariables;
         },

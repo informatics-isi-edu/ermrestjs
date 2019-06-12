@@ -1077,46 +1077,48 @@
          *   - column
          *   - hasPath
          *   - hasInbound
+         * - sourceMapping: hashname to all the names
          * @type {Object}
          */
         get sourceDefinitions() {
             if (this._sourceDefinitions === undefined) {
-                this._sourceDefinitions = _getSourceDefinitions(this);
+                this._sourceDefinitions = this._getSourceDefinitions();
             }
             return this._sourceDefinitions;
          },
 
-         _getSourceDefinitions: function (self) {
+         _getSourceDefinitions: function () {
+             var self = this;
              var sd = module._annotations.SOURCE_DEFINITIONS;
              var hasAnnot = self.annotations.contains(sd);
-             var res = {columns: [], fkeys: [], sources: {}};
+             var res = {columns: [], fkeys: [], sources: {}, sourceMapping: {}};
 
-             var allColumnNames = self.columns.all().map(function (col) {
-                 return col.name;
-             });
-
-             var allForeignKeyConstraints = self.foreignkeys.all().map(function (fk) {
-                 return fk._constraintName;
-             });
+             var allColumns = self.columns.all(),
+                 allForeignKeys = self.foreignKeys.all();
 
              var processSourceDefinitionList = function (val, isFkey) {
-                 var allList = isFkey ? allForeignKeyConstraints : allColumnNames;
                  if (val === true) {
-                     return allList;
+                     return isFkey ? allForeignKeys : allColumns;
                  }
+
+                 var resultList = [], mapName = function (item) {return item.name;};
+                 var allListNames = isFkey ? allForeignKeys.map(mapName) : allColumns.map(mapName);
                  if (Array.isArray(val)) {
-                     return val.filter(function (cname, index) {
-                         var elExists = allList.indexOf(cname) !== -1;
-                         console.log("invalid source definition, ", (isFkey ? "fkeys" : "columns"), ", index=" + index);
-                         return elExists;
+                     val.forEach(function (cname, index) {
+                         var elIndex = allListNames.indexOf(cname);
+                         if (elIndex === -1) {
+                             console.log("invalid source definition, ", (isFkey ? "fkeys" : "columns"), ", index=" + index);
+                             return;
+                         }
+                         resultList.push(isFkey ? allForeignKeys[allIndex] : allColumns[elIndex]);
                      });
                  }
-                 return [];
+                 return resultList;
              };
 
              if (!hasAnnot) {
-                 res.columns = allColumnNames;
-                 res.fkeys = allForeignKeyConstraints;
+                 res.columns = allColumns;
+                 res.fkeys = allForeignKeys;
                  return res;
              }
 
@@ -1139,7 +1141,15 @@
 
                      var pSource = _processSourceObject(annot.source[key]);
                      if (pSource.error) continue;
+
+                     // attach to sources
                      res.sources[key] = pSource;
+
+                     // attach to sourceMapping
+                     if (!(pSource.name in sourceMapping)) {
+                         res.sourceMapping[pSource.name] = [];
+                     }
+                     res.sourceMapping[pSource.name].push(key);
                  }
              }
 
@@ -2139,9 +2149,8 @@
                     options.formattedValues = module._getFormattedKeyValues(this.table, context, data);
                 }
 
-                options.formatted = true; // to avoid creating formattedValues again
                 options.templateEngine = display.templateEngine;
-                unformatted = module._renderTemplate(template, options.formattedValues, this.table, context, options);
+                unformatted = module._renderTemplate(template, options.formattedValues, this.table.schema.catalog, options);
             }
 
 

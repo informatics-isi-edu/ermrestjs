@@ -47,29 +47,30 @@ TBD changes to propose for ERMrest:
 Some annotations are supported on multiple types of model element, so
 here is a quick matrix to locate them.
 
-| Annotation | Catalog | Schema | Table | Column | Key | FKR | Summary |
-|------------|---------|--------|-------|--------|-----|-----|---------|
-| [2015 Display](#tag-2015-display) | - | X | X | X | X | - | Display options |
-| [2015 Vocabulary](#tag-2015-vocabulary) | - | - | X | - | - | - | Table as a vocabulary list |
-| [2016 Table Alternatives](#tag-2016-table-alternatives) | - | - | X | - | _ | _ | Table abstracts another table |
-| [2016 Column Display](#tag-2016-column-display) | - | - | - | X | - | - | Column-specific display options |
-| [2017 Key Display](#tag-2017-key-display) | - | - | - | - | X | - | Key augmentation |
-| [2016 Foreign Key](#tag-2016-foreign-key) | - | - | - | - | - | X | Foreign key augmentation |
-| [2016 Generated](#tag-2016-generated) | - | X | X | X | - | - | Generated model element |
-| [2016 Ignore](#tag-2016-ignore) (_deprecated_) | - | X | X | X | - | - | Ignore model element |
-| [2016 Immutable](#tag-2016-immutable) | - | X | X | X | - | - | Immutable model element |
-| [2016 Non Deletable](#tag-2016-non-deletable) | - | X | X | - | - | - | Non-deletable model element |
-| [2016 App Links](#tag-2016-app-links) | - | X | X | - | - | - | Intra-Chaise app links |
-| [2016 Table Display](#tag-2016-table-display) | - | - | X | - | - | - | Table-specific display options |
-| [2016 Visible Columns](#tag-2016-visible-columns) | - | - | X | - | - | - | Column visibility and presentation order |
-| [2016 Visible Foreign Keys](#tag-2016-visible-foreign-keys) | - | - | X | - | - | - | Foreign key visibility and presentation order |
-| [2019 Export](#tag-2019-export) | - | X | X | - | - | - | Describes export templates |
-| [2016 Export](#tag-2016-export) (_deprecated_) | - | X | X | - | - | - | Describes export templates |
-| [2017 Asset](#tag-2017-asset) | - | - | - | X | - | - | Describes assets |
-| [2018 Citation](#tag-2018-citation) | - | - | X | - | - | - | Describes citation |
-| [2018 Required](#tag-2018-required) | - | - | X | - | - | - | Required model column |
-| [2018 Indexing Preferences](#tag-2018-indexing-preferences) | - | - | X | X | - | - | Specify database indexing preferences |
-| [2019 Chaise Config](#tag-2019-chaise-config) | X | - | - | - | - | - | Properties to configure chaise app UX |
+| Annotation                                                  | Catalog | Schema | Table | Column | Key | FKR | Summary                                       |
+|-------------------------------------------------------------|---------|--------|-------|--------|-----|-----|-----------------------------------------------|
+| [2015 Display](#tag-2015-display)                           | -       | X      | X     | X      | X   | -   | Display options                               |
+| [2015 Vocabulary](#tag-2015-vocabulary)                     | -       | -      | X     | -      | -   | -   | Table as a vocabulary list                    |
+| [2016 Table Alternatives](#tag-2016-table-alternatives)     | -       | -      | X     | -      | _   | _   | Table abstracts another table                 |
+| [2016 Column Display](#tag-2016-column-display)             | -       | -      | -     | X      | -   | -   | Column-specific display options               |
+| [2017 Key Display](#tag-2017-key-display)                   | -       | -      | -     | -      | X   | -   | Key augmentation                              |
+| [2016 Foreign Key](#tag-2016-foreign-key)                   | -       | -      | -     | -      | -   | X   | Foreign key augmentation                      |
+| [2016 Generated](#tag-2016-generated)                       | -       | X      | X     | X      | -   | -   | Generated model element                       |
+| [2016 Ignore](#tag-2016-ignore) (_deprecated_)              | -       | X      | X     | X      | -   | -   | Ignore model element                          |
+| [2016 Immutable](#tag-2016-immutable)                       | -       | X      | X     | X      | -   | -   | Immutable model element                       |
+| [2016 Non Deletable](#tag-2016-non-deletable)               | -       | X      | X     | -      | -   | -   | Non-deletable model element                   |
+| [2016 App Links](#tag-2016-app-links)                       | -       | X      | X     | -      | -   | -   | Intra-Chaise app links                        |
+| [2016 Table Display](#tag-2016-table-display)               | -       | -      | X     | -      | -   | -   | Table-specific display options                |
+| [2016 Visible Columns](#tag-2016-visible-columns)           | -       | -      | X     | -      | -   | -   | Column visibility and presentation order      |
+| [2016 Visible Foreign Keys](#tag-2016-visible-foreign-keys) | -       | -      | X     | -      | -   | -   | Foreign key visibility and presentation order |
+| [2019 Export](#tag-2019-export)                             | -       | X      | X     | -      | -   | -   | Describes export templates                    |
+| [2016 Export](#tag-2016-export) (_deprecated_)              | -       | X      | X     | -      | -   | -   | Describes export templates                    |
+| [2017 Asset](#tag-2017-asset)                               | -       | -      | -     | X      | -   | -   | Describes assets                              |
+| [2018 Citation](#tag-2018-citation)                         | -       | -      | X     | -      | -   | -   | Describes citation                            |
+| [2018 Required](#tag-2018-required)                         | -       | -      | X     | -      | -   | -   | Required model column                         |
+| [2018 Indexing Preferences](#tag-2018-indexing-preferences) | -       | -      | X     | X      | -   | -   | Specify database indexing preferences         |
+| [2019 Chaise Config](#tag-2019-chaise-config)               | X       | -      | -     | -      | -   | -   | Properties to configure chaise app UX         |
+| [2019 Source Definitions](#tag-2019-source-definitions)     | -       | -      | X     | -      | -   | -   | Describe source definitions                   |
 
 For brevity, the annotation keys are listed above by their section
 name within this documentation. The actual key URI follows the form
@@ -328,7 +329,7 @@ Constraint attributes (optional):
 You can use these attributes to define default preselected facets (Combination of these attributes are not supported yet, you cannot have both `choices` and `ranges` specified on a facet).
 - `choices`: Discrete choice e.g. maps to a checklist or similar UX. Its value MUST be an array of values.
 - `ranges`: Half-open or closed intervals, e.g. maps to a slider or similar UX. Its value MUST be an array of JSON payload, with `min` and `max` attributes. The `min` and `max` values will translate into inclusive range filters. In order to force exclusive range, you can use `min_exclusive: true`, or `max_exclusive: true`.
-- `not_null`: Match any record that has a value other than `null`. Its value MUST be `true`. If you have this constraint defined in your annotation, other constraints will be ignored (other than `"choice"`: [null]`. In this case both of the filters will be ignored).
+- `not_null`: Match any record that has a value other than `null`. Its value MUST be `true`. If you have this constraint defined in your annotation, other constraints will be ignored (other than `"choice": [null]`. In this case both of the filters will be ignored).
 <!-- - `search`: Substring search, e.g. maps to a search box UX. -->
 
 
@@ -769,6 +770,12 @@ The `chaise-config` property `configRules`, behaves the same way on the annotati
 This means that as the `configRules` are checked, properties set in step 1 will be overridden by properties defined in step 2 that have the same name. This allows the server wide configuration to be a base configuration for the chaise apps and allows for further configuration based on a combination of hostname and catalog id.
 
 Note: Some properties might not make sense to be used in this annotation. The `defaultCatalog`, for instance, would be ignored if defined it this annotation because we already fetched a matching catalog to then fetch this annotation.
+
+### Tag: 2019 Source Definitions
+
+`tag:isrd.isi.edu,2019:source-defnitions`
+
+<!-- TODO -->
 
 ### Context Names
 

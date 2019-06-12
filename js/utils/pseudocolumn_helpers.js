@@ -573,6 +573,12 @@
             return (result === undefined) ? null : result;
         };
 
+        var returnError = function (test, message) {
+            if (!test) {
+                return {error: true, message: message};
+            }
+        };
+
         // from 0 to source.length-1 we have paths
         if (_sourceHasPath(source)) {
             hasPath = true;
@@ -587,14 +593,14 @@
                     isInbound = false;
                 } else {
                     // given object was invalid
-                    return {error: true, message: "Invalid object in source element index=" + i};
+                    return returnError(true, "Invalid object in source element index=" + i);
                 }
 
                 fkObj = findConsName(colTable.schema.catalog.id, constraint[0], constraint[1]);
 
                 // constraint name was not valid
                 if (fkObj === null || fkObj.subject !== module._constraintTypes.FOREIGN_KEY) {
-                    return {errror: true, message: "Invalid constraint name in source element index=" + i};
+                    return returnError(true, "Invalid constraint name in source element index=" + i);
                 }
 
                 fk = fkObj.object;
@@ -610,7 +616,7 @@
                 }
                 else {
                     // the given object was not valid
-                    return {errror: true, message: "Invalid constraint name in source element index=" + i};
+                    return returnError(true, "Invalid constraint name in source element index=" + i);
                 }
             }
             colName = source[source.length-1];
@@ -620,9 +626,17 @@
 
         try {
             var col = colTable.columns.get(colName);
+            if (source.aggregate && module._pseudoColAggregateFns.indexOf(col.aggregate) === -1) {
+                return returnError(true, wm.INVALID_AGG);
+            }
+            // TODO validate the aggregate fn and stuff
+
+            var hashname = _generatePseudoColumnName(source, col);
+            //TODO should we throw error if the hashname is one of table column names?
 
             //TODO this could be a prototype
             return {
+                name: hashname,
                 sourceObject: sourceObject,
                 column: col,
                 hasPath: hasPath,

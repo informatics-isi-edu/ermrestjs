@@ -340,7 +340,7 @@ to use for ERMrest JavaScript agents.
         * [.setSamePaging(page)](#ERMrest.Reference+setSamePaging) ⇒ [<code>Reference</code>](#ERMrest.Reference)
         * [.getColumnByName(name)](#ERMrest.Reference+getColumnByName) ⇒ [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)
         * [.generateColumnsList(tuple)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
-        * [.generateActiveList(tuple, useRelated)](#ERMrest.Reference+generateActiveList) ⇒ <code>Object</code>
+        * [.generateActiveList([tuple], [useRelated])](#ERMrest.Reference+generateActiveList) ⇒ <code>Object</code>
         * [._getReadPath()](#ERMrest.Reference+_getReadPath) : <code>Object</code>
             * [~processSortObject()](#ERMrest.Reference+_getReadPath..processSortObject)
     * [.Page](#ERMrest.Page)
@@ -391,6 +391,7 @@ to use for ERMrest JavaScript agents.
         * [.formatvalue(data, context)](#ERMrest.ReferenceColumn+formatvalue) ⇒ <code>string</code>
         * [.formatPresentation(data, context, options)](#ERMrest.ReferenceColumn+formatPresentation) ⇒ <code>Object</code>
         * [.getInputDisabled()](#ERMrest.ReferenceColumn+getInputDisabled) : <code>boolean</code> \| <code>object</code>
+        * [.sourceFormatPresentation(templateVariables, columnValue, mainTuple)](#ERMrest.ReferenceColumn+sourceFormatPresentation) ⇒ <code>Object</code>
     * [.PseudoColumn](#ERMrest.PseudoColumn)
         * [new PseudoColumn(reference, column, sourceObject, name, mainTuple)](#new_ERMrest.PseudoColumn_new)
         * [.isPseudo](#ERMrest.PseudoColumn+isPseudo) : <code>boolean</code>
@@ -638,7 +639,7 @@ to use for ERMrest JavaScript agents.
         * [.setSamePaging(page)](#ERMrest.Reference+setSamePaging) ⇒ [<code>Reference</code>](#ERMrest.Reference)
         * [.getColumnByName(name)](#ERMrest.Reference+getColumnByName) ⇒ [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)
         * [.generateColumnsList(tuple)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
-        * [.generateActiveList(tuple, useRelated)](#ERMrest.Reference+generateActiveList) ⇒ <code>Object</code>
+        * [.generateActiveList([tuple], [useRelated])](#ERMrest.Reference+generateActiveList) ⇒ <code>Object</code>
         * [._getReadPath()](#ERMrest.Reference+_getReadPath) : <code>Object</code>
             * [~processSortObject()](#ERMrest.Reference+_getReadPath..processSortObject)
     * [.AttributeGroupReference](#ERMrest.AttributeGroupReference) : <code>object</code>
@@ -1179,6 +1180,7 @@ Returns an object with
   - column
   - hasPath
   - hasInbound
+- sourceMapping: hashname to all the names
 
 **Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
 <a name="ERMrest.Table+_getRowDisplayKey"></a>
@@ -2686,7 +2688,7 @@ Constructor for a ParsedFilter.
     * [.setSamePaging(page)](#ERMrest.Reference+setSamePaging) ⇒ [<code>Reference</code>](#ERMrest.Reference)
     * [.getColumnByName(name)](#ERMrest.Reference+getColumnByName) ⇒ [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)
     * [.generateColumnsList(tuple)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
-    * [.generateActiveList(tuple, useRelated)](#ERMrest.Reference+generateActiveList) ⇒ <code>Object</code>
+    * [.generateActiveList([tuple], [useRelated])](#ERMrest.Reference+generateActiveList) ⇒ <code>Object</code>
     * [._getReadPath()](#ERMrest.Reference+_getReadPath) : <code>Object</code>
         * [~processSortObject()](#ERMrest.Reference+_getReadPath..processSortObject)
 
@@ -3260,21 +3262,27 @@ NOTE:
 
 <a name="ERMrest.Reference+generateActiveList"></a>
 
-#### reference.generateActiveList(tuple, useRelated) ⇒ <code>Object</code>
+#### reference.generateActiveList([tuple], [useRelated]) ⇒ <code>Object</code>
 Generate the list of extra reads that we should do.
 this should incldue
-- aggreagtes: ERMrest.ReferenceColumn[]
-- entitySets: ERMrest.Reference[]
+- aggreagtes: [{column: ERMrest.ReferenceColumn, objects: [{index: integer, column: boolean, related: boolean}]]
+- entitySets: [{reference: ERMrest.Reference,}]
 - allOutBounds: ERMrest.ReferenceColumn[]
 
-TODO I might want to add a new inlinEntitySets to distinguish between inline vs related
+TODO we might want to detect duplciates in allOutBounds better?
+currently it's done based on name, but based on the path should be enough..
+as long as it's entity the last column is useless...
+the old code was kinda handling this by just adding the multi ones,
+so if the fk definition is based on fkcolum and and not the RID, it would handle it.
+
+TODO don't allow entitysets in detailed context
 
 **Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
 
 | Param | Type |
 | --- | --- |
-| tuple | [<code>Tuple</code>](#ERMrest.Tuple) | 
-| useRelated | <code>Boolean</code> | 
+| [tuple] | [<code>Tuple</code>](#ERMrest.Tuple) | 
+| [useRelated] | <code>Boolean</code> | 
 
 <a name="ERMrest.Reference+_getReadPath"></a>
 
@@ -3610,6 +3618,10 @@ of the shortest key columns concatenated together by an '_'
 
 #### tuple.templateVariables : <code>Object</code>
 An object of what is available in templating environment for this tuple
+it has the following attributes:
+- values
+- rowName
+- uri
 
 **Kind**: instance property of [<code>Tuple</code>](#ERMrest.Tuple)  
 <a name="ERMrest.Tuple+update"></a>
@@ -3701,6 +3713,7 @@ count aggregate representation
     * [.formatvalue(data, context)](#ERMrest.ReferenceColumn+formatvalue) ⇒ <code>string</code>
     * [.formatPresentation(data, context, options)](#ERMrest.ReferenceColumn+formatPresentation) ⇒ <code>Object</code>
     * [.getInputDisabled()](#ERMrest.ReferenceColumn+getInputDisabled) : <code>boolean</code> \| <code>object</code>
+    * [.sourceFormatPresentation(templateVariables, columnValue, mainTuple)](#ERMrest.ReferenceColumn+sourceFormatPresentation) ⇒ <code>Object</code>
 
 <a name="new_ERMrest.ReferenceColumn_new"></a>
 
@@ -3796,7 +3809,7 @@ Heuristics are as follows:
 #### referenceColumn.waitFor : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
 Array of sourcekeys
 This should take care of the callbacks and stuff too..
-TODO should we allow fkeys here too???? or just the defined sources??
+TODO we should allow all outbounds here too.....
 
 **Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
 <a name="ERMrest.ReferenceColumn+formatvalue"></a>
@@ -3839,6 +3852,22 @@ object: input msut be disabled (show .message to user)
 TODO should be removed in favor of inputDisabled
 
 **Kind**: instance method of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
+<a name="ERMrest.ReferenceColumn+sourceFormatPresentation"></a>
+
+#### referenceColumn.sourceFormatPresentation(templateVariables, columnValue, mainTuple) ⇒ <code>Object</code>
+This function should not be used in entry context
+TODO looks like something that can be moved down to different column types.
+Should be called once every value is retrieved
+
+**Kind**: instance method of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
+**Returns**: <code>Object</code> - [description]  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| templateVariables | <code>Object</code> | [description] |
+| columnValue | <code>Object</code> | the value of aggregate column (if it's aggregate) |
+| mainTuple | [<code>Tuple</code>](#ERMrest.Tuple) | [description] |
+
 <a name="ERMrest.PseudoColumn"></a>
 
 ### ERMrest.PseudoColumn
@@ -6030,7 +6059,7 @@ get PathColumn object by column name
     * [.setSamePaging(page)](#ERMrest.Reference+setSamePaging) ⇒ [<code>Reference</code>](#ERMrest.Reference)
     * [.getColumnByName(name)](#ERMrest.Reference+getColumnByName) ⇒ [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)
     * [.generateColumnsList(tuple)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
-    * [.generateActiveList(tuple, useRelated)](#ERMrest.Reference+generateActiveList) ⇒ <code>Object</code>
+    * [.generateActiveList([tuple], [useRelated])](#ERMrest.Reference+generateActiveList) ⇒ <code>Object</code>
     * [._getReadPath()](#ERMrest.Reference+_getReadPath) : <code>Object</code>
         * [~processSortObject()](#ERMrest.Reference+_getReadPath..processSortObject)
 
@@ -6604,21 +6633,27 @@ NOTE:
 
 <a name="ERMrest.Reference+generateActiveList"></a>
 
-#### reference.generateActiveList(tuple, useRelated) ⇒ <code>Object</code>
+#### reference.generateActiveList([tuple], [useRelated]) ⇒ <code>Object</code>
 Generate the list of extra reads that we should do.
 this should incldue
-- aggreagtes: ERMrest.ReferenceColumn[]
-- entitySets: ERMrest.Reference[]
+- aggreagtes: [{column: ERMrest.ReferenceColumn, objects: [{index: integer, column: boolean, related: boolean}]]
+- entitySets: [{reference: ERMrest.Reference,}]
 - allOutBounds: ERMrest.ReferenceColumn[]
 
-TODO I might want to add a new inlinEntitySets to distinguish between inline vs related
+TODO we might want to detect duplciates in allOutBounds better?
+currently it's done based on name, but based on the path should be enough..
+as long as it's entity the last column is useless...
+the old code was kinda handling this by just adding the multi ones,
+so if the fk definition is based on fkcolum and and not the RID, it would handle it.
+
+TODO don't allow entitysets in detailed context
 
 **Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
 
 | Param | Type |
 | --- | --- |
-| tuple | [<code>Tuple</code>](#ERMrest.Tuple) | 
-| useRelated | <code>Boolean</code> | 
+| [tuple] | [<code>Tuple</code>](#ERMrest.Tuple) | 
+| [useRelated] | <code>Boolean</code> | 
 
 <a name="ERMrest.Reference+_getReadPath"></a>
 
