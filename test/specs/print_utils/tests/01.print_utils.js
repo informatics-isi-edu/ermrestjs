@@ -197,6 +197,13 @@ exports.execute = function (options) {
                 // NOTE currently these are the only two use cases of this.
             });
 
+            it ("should support [[rid]]", function () {
+                expect(printMarkdown("[[1-HBO4]]")).toBe('<p><a href="/id/1-HBO4">1-HBO4</a></p>\n', "invalid rid template");
+                expect(printMarkdown("[[1-HBO4]]", {inline: true})).toBe('<a href="/id/1-HBO4">1-HBO4</a>', "invalid rid template");
+                expect(printMarkdown("[[1-HBO4]]()")).toBe('<p><a href="">[1-HBO4]</a></p>\n', "link md syntax should take precedence");
+
+            });
+
             it ("should support superscript and subscript.", function () {
                 expect(printMarkdown('H~2~0')).toBe('<p>H<sub>2</sub>0</p>\n', "invalid sub");
                 expect(printMarkdown('H~2~{.test}0')).toBe('<p>H<sub class="test">2</sub>0</p>\n', "invalid sub with attrs");
