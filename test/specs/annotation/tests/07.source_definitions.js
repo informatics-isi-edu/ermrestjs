@@ -15,11 +15,10 @@ exports.execute = function (options) {
     }
 
     var testForeignKeys = function (fkeys, expectedNames) {
-        expect(fkeys.length).toBe(expectedNames.length, "length missmatch");
-        for (var i = 0; i < fkeys.length; i++) {
-            var cn = expectedNames[i][0] + "_" + expectedNames[i][1];
-            expect(fkeys[i]._constraintName).toEqual(cn, "element index=" + i + " missmatch.");
-        }
+        expect(fkeys.length).toBe(expectedNames.length, "fkeys length missmatch.");
+        expect(fkeys.map(function (fk) {
+            return fk.constraint_names[0];
+        })).toEqual(jasmine.arrayContaining(expectedNames), "fkeys elements missmatch.");
     }
 
     beforeAll(function (done) {
