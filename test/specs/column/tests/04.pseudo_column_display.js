@@ -61,7 +61,7 @@ exports.execute = function (options) {
     };
 
     describe("display setting in pseudo-columns, ", function () {
-        var detailedExpectedValues;
+        var detailedExpectedValues, templateVariables;
 
         var mainRef, mainRefDetailed, mainPageDetailed;
 
@@ -76,7 +76,7 @@ exports.execute = function (options) {
             detailedExpectedValues = [
                 {
                     title: 'self-link',
-                    value: '<p><a href="' + getRecordURL('main', 'main_id', '01') + '">main one(1234501, 1,234,501)</a></p>\n'
+                    value: '<p><a href="' + recordURL + '/pseudo_column_display_schema:main/main_id=01">main one(1234501, 1,234,501)</a></p>\n'
                 },
                 {
                     title: 'normal column',
@@ -99,7 +99,10 @@ exports.execute = function (options) {
                     value: '<p>12,345,111, 12345111</p>\n'
                 },
                 null, null, null, null, null, null
+                // TODO add the columns with waitfor here to return null
             ];
+
+            templateVariables = {};
         });
 
         it("Tuple.values should return the expected values.", function (done) {
@@ -195,27 +198,166 @@ exports.execute = function (options) {
             });
         });
 
-        it ("page.content for related entity", function (done) {
-            var related = mainRefDetailed.related();
-            expect(related.length).toEqual(1, "related length missmatch");
+        describe("page.content and page.getContent, ", function () {
+            it ("page.content for related entity with $self", function (done) {
+                var related = mainRefDetailed.related();
+                expect(related.length).toEqual(1, "related length missmatch");
 
-            var content = "<p>";
-            var rowValues = [
-                {id: "i01", caption: "inbound2 one(1,234,501, main one)"},
-                {id: "i02", caption: "inbound2 two(1,234,501, main one)"},
-                {id: "i03", caption: "inbound2 three(1,234,501, main one)"},
-                {id: "i04", caption: "inbound2 four(1,234,501, main one)"},
-                {id: "i05", caption: "inbound2 five(1,234,501, main one)"}
-            ];
-            rowValues.forEach(function (r, index, arr) {
-                content += '<a href="' + getRecordURL('inbound2', 'inbound2_id', r.id) + '">' + r.caption + '</a>';
-                if (index !== arr.length - 1) content += ", ";
+                var content = "<p>";
+                var rowValues = [
+                    {id: "i01", caption: "inbound2 one(1,234,501, main one)"},
+                    {id: "i02", caption: "inbound2 two(1,234,501, main one)"},
+                    {id: "i03", caption: "inbound2 three(1,234,501, main one)"},
+                    {id: "i04", caption: "inbound2 four(1,234,501, main one)"},
+                    {id: "i05", caption: "inbound2 five(1,234,501, main one)"}
+                ];
+                rowValues.forEach(function (r, index, arr) {
+                    content += '<a href="' + getRecordURL('inbound2', 'inbound2_id', r.id) + '">' + r.caption + '</a>';
+                    if (index !== arr.length - 1) content += ", ";
+                });
+                content += "</p>\n";
+                related[0].read(5).then(function (page) {
+                    expect(page.content).toEqual(content);
+                    done();
+                }).catch(catchError(done));
             });
-            content += "</p>\n";
-            related[0].read(5).then(function (page) {
-                expect(page.content).toEqual(content);
-                done();
-            }).catch(catchError(done));
+
+            it ("page.getContent for related entity with passing templateVariables, ", function () {
+                //TODO
+            });
+        });
+
+        // TODO
+        describe("column.sourceMarkdownPattern, ", function () {
+            describe("for normal columns, ", function () {
+                it ("should handle without display.", function () {
+
+                });
+
+                it ("should handle with display.", function () {
+
+                });
+            });
+
+            describe("for self link columns, ", function () {
+                it ("should handle without display.", function () {
+
+                });
+
+                it ("should handle with display.", function () {
+
+                });
+            });
+
+            describe("for outbound entity, ", function () {
+                it ("should handle without display.", function () {
+
+                });
+
+                it ("should handle with display.", function () {
+
+                });
+            });
+
+            describe("for outbound scalar, ", function () {
+                it ("should handle without display.", function () {
+
+                });
+
+                it ("should handle with display.", function () {
+
+                });
+            });
+
+            describe("for all-outbound entity, ", function () {
+                it ("should handle without display.", function () {
+
+                });
+
+                it ("should handle with display.", function () {
+
+                });
+            });
+
+            describe("for all-outbound scalar, ", function () {
+                it ("should handle without display.", function () {
+
+                });
+
+                it ("should handle with display.", function () {
+
+                });
+            });
+
+            describe("for array_d entity, ", function () {
+                it ("should handle without display.", function () {
+
+                });
+
+                it ("should handle with display.", function () {
+
+                });
+            });
+
+            describe("for array_d scalar, ", function () {
+                it ("should handle without display.", function () {
+
+                });
+
+                it ("should handle with display.", function () {
+
+                });
+            });
+
+            describe("for array scalar, ", function () {
+                it ("should handle without display.", function () {
+
+                });
+
+                it ("should handle with display.", function () {
+
+                });
+            });
+
+            describe("for cnt_d scalar, ", function () {
+                it ("should handle without display.", function () {
+
+                });
+
+                it ("should handle with display.", function () {
+
+                });
+            });
+
+            describe("for cnt scalar, ", function () {
+                it ("should handle without display.", function () {
+
+                });
+
+                it ("should handle with display.", function () {
+
+                });
+            });
+
+            describe("for min scalar, ", function () {
+                it ("should handle without display.", function () {
+
+                });
+
+                it ("should handle with display.", function () {
+
+                });
+            });
+
+            describe("for max scalar, ", function () {
+                it ("should handle without display.", function () {
+
+                });
+
+                it ("should handle with display.", function () {
+
+                });
+            });
         });
     });
 };

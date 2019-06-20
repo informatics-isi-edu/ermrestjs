@@ -58,6 +58,7 @@ module._createPseudoColumn = function (reference, column, sourceObject, mainTupl
             return new KeyPseudoColumn(reference, key, sourceObject, name);
         }
 
+
         // no path, scalar, asset
         if (column.type.name === "text" && column.annotations.contains(module._annotations.ASSET)) {
             return new AssetPseudoColumn(reference, column, sourceObject);
@@ -354,7 +355,7 @@ ReferenceColumn.prototype = {
         options = options || {};
 
         // if there's waitfor, this should return null.
-        if (this.waitFor.length > 0 && !options.skipWaitFor) {
+        if (this.hasWaitFor && !options.skipWaitFor) {
             return {
                 isHTML: false,
                 value: this._getNullValue(context),
@@ -485,39 +486,81 @@ ReferenceColumn.prototype = {
     },
 
     /**
-     * Array of sourcekeys
-     * This should take care of the callbacks and stuff too..
-     * TODO we should allow all outbounds here too.....
+     * Whether the value of the column comes from a secondary source, based on
+     * its active list
+     * @return {Boolean} [description]
+     */
+    get hasWaitFor() {
+        if (this._hasWaitFor === undefined) {
+            // will generate the _hasWaitFor
+            var waitFor = this.waitFor;
+        }
+        return this._hasWaitFor;
+    },
+
+    /**
+     * Array of columns
      * @type {ERMrest.ReferenceColumn[]}
      */
     get waitFor() {
         if (this._waitFor === undefined) {
-            var self = this, res = [];
+            var self = this, res = [], hasWaitFor = false;
             if (self.sourceObject && Array.isArray(self.sourceObject.waitfor)) {
                 var hasSelf = false;
-                self.sourceObject.waitfor.forEach(function (wf) {
-                    if (typeof wf !== "string" && !(wf in self.table.sourceDefinitions.sources)) return;
-                    var sd = self.table.sourceDefinitions.sources[wf];
+                self.sourceObject.waitfor.forEach(function (wf, index) {
+                    var message = "waitfor defined on table=`" + self._currentTable.name + "`, pseudo-column=`" + self.displayname.value + "`, index=" + index + ", ";
+                    if (typeof wf !== "string") {
+                        console.log(message + "must be an string");
+                        return;
+                    }
 
-                    // TODO don't allow entitysets in detailed context
+                    // column names
+                    if (wf in self._currentTable.sourceDefinitions.columns) {
+                        // there's no reason to add normal columns.
+                        return;
+                    }
 
-                    if (name === self.name) {
-                        hasSelf = true;
-                    } else {
+                    // sources
+                    if ((wf in self._currentTable.sourceDefinitions.sources)) {
+                        var sd = self._currentTable.sourceDefinitions.sources[wf];
+
+                        // entitysets are only allowed in detailed
+                        if (sd.hasInbound && !sd.sourceObject.aggregate && self._context !== module._contexts.DETAILED) {
+                            console.log(messge + ", waitfor element index=", index, " is not valid (entity sets are not allowed in detailed).");
+                            return;
+                        }
+
+                        if (sd.name === self.name) {
+                            // don't add itself
+                            return;
+                        }
+
+                        // there's at least one secondary request
+                        if (sd.hasInbound || sd.sourceObject.aggregate) {
+                            hasWaitFor = true;
+                        }
+
                         // TODO this should be in the table.sourceDefinitions
                         // the only issue is that in there we don't have the mainTuple...
-                        res.push(module._createPseudoColumn(self._reference, sd.col, sd.sourceObject, self._mainTuple));
+                        var pc = module._createPseudoColumn(self._baseReference, sd.column, sd.sourceObject, self._mainTuple, sd.name, sd.isEntity);
+                        if (!pc.isPseudo || pc.isAsset) return;
+
+                        res.push(pc);
+
+                        return;
                     }
 
                 });
 
                 // source/sourcekey implies waitfor
-                if (!hasSelf && (sd.isPathColumn && !sd.isUnique)) {
-                    res.unshift(self);
-                }
+                // if (!hasSelf) {
+                //     // TODO what about hasWaitFor????
+                //     res.unshift(self);
+                // }
             }
 
             this._waitFor = res;
+            this._hasWaitFor = hasWaitFor;
         }
         return this._waitFor;
     },
@@ -572,6 +615,10 @@ ReferenceColumn.prototype = {
             );
         }
 
+        // TODO supporting waitfor on column display/key display is simple,
+        // just change waitfor to look at those too,
+        // and also pass the templateVariables instead of page.templateVariables
+
         // when there's waifor but no sourceMarkdownPattern
         // NOTE: why not just return the value from the templateVariables?
         //  - this column might not be part of the templateVariables
@@ -595,27 +642,6 @@ ReferenceColumn.prototype = {
 
     }
 };
-
-
-/**
- * A column that is not based on any database column and is just for presentaiton
- * TODO what should we name these columns? the problem is everywhere we're using names...
- */
-function VirtualColumn(reference, sourceObject, name, mainTuple, markdownName, markdownPattern) {
-    var table = reference.table;
-
-    PseudoColumn.superClass.call(this, reference, [column], sourceObject, name, mainTuple);
-
-    this.isVirtual = true;
-
-    this._markdownName = markdownName;
-
-    this._markdownPattern = markdownPattern;
-}
-
-// extend the prototype
-module._extends(VirtualColumn, ReferenceColumn);
-
 
 /**
  * If you want to create an object of this type, use the `module._createPseudoColumn` method.
@@ -671,6 +697,7 @@ module._extends(PseudoColumn, ReferenceColumn);
  */
 PseudoColumn.prototype.formatPresentation = function(data, context, options) {
     data = data || {};
+    options = options || {};
 
     var nullValue = {
         isHTML: false,
@@ -682,7 +709,7 @@ PseudoColumn.prototype.formatPresentation = function(data, context, options) {
         return nullValue;
     }
 
-    if (this.waitFor.length > 0 && !options.skipWaitFor) {
+    if (this.hasWaitFor && !options.skipWaitFor) {
         return nullValue;
     }
 
@@ -1013,7 +1040,7 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
 
             // if given page is not valid (the key doesn't exist), or it returned empty result
             if (!value || !value.v){
-                result.push({isHTML: false, value: "", data: {}});
+                result.push({isHTML: false, value: "", templateVariables: {}});
                 return;
             }
 
@@ -1517,8 +1544,13 @@ ForeignKeyPseudoColumn.prototype.filteredRef = function(data, linkedData) {
     if (this.foreignKey.annotations.contains(module._annotations.FOREIGN_KEY)){
 
         var keyValues = module._getFormattedKeyValues(this._baseReference.table, this._context, data, linkedData);
-        var template = this.foreignKey.annotations.get(module._annotations.FOREIGN_KEY).content.domain_filter_pattern;
-        var uriFilter = module._renderTemplate(template, keyValues, this._baseReference.table.schema.catalog);
+        var content = this.foreignKey.annotations.get(module._annotations.FOREIGN_KEY).content;
+        var uriFilter = module._renderTemplate(
+            content.domain_filter_pattern,
+            keyValues,
+            this._baseReference.table.schema.catalog,
+            {templateEngine: content.template_engine}
+        );
 
         // should ignore the annotation if it's invalid
         if (typeof uriFilter === "string" && uriFilter.trim() !== '') {
@@ -1626,7 +1658,7 @@ ForeignKeyPseudoColumn.prototype.formatPresentation = function(data, context, op
     };
 
     // if there's waitfor, this should return null.
-    if (this.waitFor.length > 0 && !options.skipWaitFor) {
+    if (this.hasWaitFor && !options.skipWaitFor) {
         return nullValue;
     }
 
@@ -1892,14 +1924,13 @@ KeyPseudoColumn.prototype.formatPresentation = function(data, context, options) 
         unformatted: this._getNullValue(context)
     };
 
-    if (this.waitFor.length > 0 && !options.skipWaitFor) {
+    if (this.hasWaitFor && !options.skipWaitFor) {
         return nullValue;
     }
-
     if (this.display.sourceMarkdownPattern) {
         return module._processMarkdownPattern(
             this.display.sourceMarkdownPattern,
-            {$self: module._getRowTemplateVariables(this.table, context, data)},
+            {$self: module._getRowTemplateVariables(this.table, context, data, null, this.key)},
             this.table,
             context,
             {templateEngine: this.display.sourceTemplateEngine}
@@ -2146,7 +2177,7 @@ AssetPseudoColumn.prototype.formatPresentation = function(data, context, options
         return { isHTML: false, value: data[this._baseCol.name], unformatted: data[this._baseCol.name]};
     }
 
-    if (this.waitFor.length > 0 && !options.skipWaitFor) {
+    if (this.hasWaitFor && !options.skipWaitFor) {
         return nullValue;
     }
 

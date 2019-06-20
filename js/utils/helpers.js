@@ -551,108 +551,6 @@
         return value;
     };
 
-    /**
-     * @param {string|object} colObject if the foreignkey/key is compund, this should be the constraint name. otherwise the source syntax for pseudo-column.
-     * @desc return the name that should be used for pseudoColumn. This function makes sure that the returned name is unique.
-     * This function can be used to get the name that we're using for :
-     *
-     * - Composite key/foreignkeys:
-     *   In this case, if the constraint name is [`s`, `c`], you should pass `s_c` to this function.
-     * - Simple foiregnkey/key:
-     *   Pass the equivalent pseudo-column definition of them. It must at least have `source` as an attribute.
-     * - Pseudo-Columns:
-     *   Just pass the object that defines the pseudo-column. It must at least have `source` as an attribute.
-     *
-     */
-    module.generatePseudoColumnHashName = function (colObject) {
-
-        //we cannot create an object and stringify it, since its order can be different
-        //instead will create a string of `source + aggregate + entity`
-        var str = "";
-
-        // it should have source
-        if (typeof colObject === "object") {
-            if (!colObject.source) return null;
-
-            if (_sourceHasPath(colObject.source)) {
-                // since it's an array, it will preserve the order
-                str += JSON.stringify(colObject.source);
-            } else {
-                str += _getSourceColumnStr(colObject.source);
-            }
-
-            if (typeof colObject.aggregate === "string") {
-                str += colObject.aggregate;
-            }
-
-            // entity true doesn't change anything
-            if (colObject.entity === false) {
-                str += colObject.entity;
-            }
-
-            if (colObject.self_link === true) {
-                str += colObject.self_link;
-            }
-        } else if (typeof colObject === "string"){
-            str = colObject;
-        } else {
-            return null;
-        }
-
-        // md5
-        str = ERMrest._SparkMD5.hash(str);
-
-        // base64
-        str = _hexToBase64(str);
-
-        // url safe
-        return _urlEncodeBase64(str);
-    };
-
-
-    /**
-     * @private
-     * @param  {Object} colObject the column definition
-     * @param  {ERMrest.Column} column
-     * @return {Object} the returned object has `name` and `isHash` attributes.
-     * @desc generates a name for the given pseudo-column
-     */
-    _generatePseudoColumnName = function (colObject, column) {
-        if ((typeof colObject.aggregate === "string") || _sourceHasPath(colObject.source) || _isSourceObjectEntityMode(colObject, column)) {
-            return {name: module.generatePseudoColumnHashName(colObject), isHash: true};
-        }
-
-        return {name: column.name, isHash: false};
-    };
-
-    _generateForeignKeyName = function (fk, isInbound) {
-        var eTable = isInbound ? fk._table : fk.key.table;
-
-        if (!isInbound) {
-            return module.generatePseudoColumnHashName({
-                source: [{outbound: fk.constraint_names[0]}, eTable.shortestKey[0].name]
-            });
-        }
-
-        var source = [{inbound: fk.constraint_names[0]}];
-        if (eTable._isPureBinaryAssociation()) {
-            var otherFK;
-            for (j = 0; j < eTable.foreignKeys.length(); j++) {
-                if(eTable.foreignKeys.all()[j] !== fk) {
-                    otherFK = eTable.foreignKeys.all()[j];
-                    break;
-                }
-            }
-
-            source.push({outbound: otherFK.constraint_names[0]});
-            source.push(otherFK.key.table.shortestKey[0].name);
-        } else {
-            source.push(eTable.shortestKey[0].name);
-        }
-
-        return module.generatePseudoColumnHashName({source: source});
-    };
-
     // given a reference and associated data to it, will return a list of Values
     // corresponding to its sort object
     _getPagingValues = function (ref, rowData, rowLinkedData) {
@@ -877,15 +775,13 @@
      * @param  {ERMrest.Reference=} ref to avoid creating a new reference
      * @return {Object}
      */
-    module._getRowTemplateVariables = function (table, context, data, linkedData, ref) {
-        if (ref == null) {
-            var uri = _generateRowURI(table, data);
-            if (uri == null) return {};
-            ref = new Reference(module.parse(uri), table.schema.catalog);
-        }
+    module._getRowTemplateVariables = function (table, context, data, linkedData, key) {
+        var uri = _generateRowURI(table, data, key);
+        if (uri == null) return {};
+        var ref = new Reference(module.parse(uri), table.schema.catalog);
         return {
             values: module._getFormattedKeyValues(table, context, data, linkedData),
-            rowName: module._generateRowName(table, context, data, linkedData).value,
+            rowName: module._generateRowName(table, context, data, linkedData).unformatted,
             uri: {
                 detailed: ref.contextualize.detailed.appLink
             }

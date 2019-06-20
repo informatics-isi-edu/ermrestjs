@@ -365,6 +365,7 @@ to use for ERMrest JavaScript agents.
         * [.isHTML](#ERMrest.Tuple+isHTML) : <code>Array.&lt;boolean&gt;</code>
         * [.displayname](#ERMrest.Tuple+displayname) : <code>string</code>
         * [.uniqueId](#ERMrest.Tuple+uniqueId) : <code>string</code>
+        * [.citation](#ERMrest.Tuple+citation) : <code>Object</code>
         * [.templateVariables](#ERMrest.Tuple+templateVariables) : <code>Object</code>
         * [.update()](#ERMrest.Tuple+update) ⇒ <code>Promise</code>
         * [.delete()](#ERMrest.Tuple+delete) ⇒ <code>Promise</code>
@@ -387,6 +388,7 @@ to use for ERMrest JavaScript agents.
         * [.comment](#ERMrest.ReferenceColumn+comment) : <code>string</code>
         * [.inputDisabled](#ERMrest.ReferenceColumn+inputDisabled) : <code>boolean</code> \| <code>object</code>
         * [.sortable](#ERMrest.ReferenceColumn+sortable) : <code>boolean</code>
+        * [.hasWaitFor](#ERMrest.ReferenceColumn+hasWaitFor) ⇒ <code>Boolean</code>
         * [.waitFor](#ERMrest.ReferenceColumn+waitFor) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
         * [.formatvalue(data, context)](#ERMrest.ReferenceColumn+formatvalue) ⇒ <code>string</code>
         * [.formatPresentation(data, context, options)](#ERMrest.ReferenceColumn+formatPresentation) ⇒ <code>Object</code>
@@ -3454,6 +3456,7 @@ It will return:
     * [.isHTML](#ERMrest.Tuple+isHTML) : <code>Array.&lt;boolean&gt;</code>
     * [.displayname](#ERMrest.Tuple+displayname) : <code>string</code>
     * [.uniqueId](#ERMrest.Tuple+uniqueId) : <code>string</code>
+    * [.citation](#ERMrest.Tuple+citation) : <code>Object</code>
     * [.templateVariables](#ERMrest.Tuple+templateVariables) : <code>Object</code>
     * [.update()](#ERMrest.Tuple+update) ⇒ <code>Promise</code>
     * [.delete()](#ERMrest.Tuple+delete) ⇒ <code>Promise</code>
@@ -3614,6 +3617,21 @@ The unique identifier for this tuple composed of the values for each
 of the shortest key columns concatenated together by an '_'
 
 **Kind**: instance property of [<code>Tuple</code>](#ERMrest.Tuple)  
+<a name="ERMrest.Tuple+citation"></a>
+
+#### tuple.citation : <code>Object</code>
+The citation that should be used for this tuple.
+- if citation has wait-for, it will return false.
+- If the annoation is missing or is invalid, it will return null.
+otherwise it will return an object with the following attributes:
+- journal (required)
+- year (required)
+- url (required)
+- author
+- title
+- id
+
+**Kind**: instance property of [<code>Tuple</code>](#ERMrest.Tuple)  
 <a name="ERMrest.Tuple+templateVariables"></a>
 
 #### tuple.templateVariables : <code>Object</code>
@@ -3709,6 +3727,7 @@ count aggregate representation
     * [.comment](#ERMrest.ReferenceColumn+comment) : <code>string</code>
     * [.inputDisabled](#ERMrest.ReferenceColumn+inputDisabled) : <code>boolean</code> \| <code>object</code>
     * [.sortable](#ERMrest.ReferenceColumn+sortable) : <code>boolean</code>
+    * [.hasWaitFor](#ERMrest.ReferenceColumn+hasWaitFor) ⇒ <code>Boolean</code>
     * [.waitFor](#ERMrest.ReferenceColumn+waitFor) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
     * [.formatvalue(data, context)](#ERMrest.ReferenceColumn+formatvalue) ⇒ <code>string</code>
     * [.formatPresentation(data, context, options)](#ERMrest.ReferenceColumn+formatPresentation) ⇒ <code>Object</code>
@@ -3804,12 +3823,18 @@ Heuristics are as follows:
  - use column actual value.
 
 **Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
+<a name="ERMrest.ReferenceColumn+hasWaitFor"></a>
+
+#### referenceColumn.hasWaitFor ⇒ <code>Boolean</code>
+Whether the value of the column comes from a secondary source, based on
+its active list
+
+**Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
+**Returns**: <code>Boolean</code> - [description]  
 <a name="ERMrest.ReferenceColumn+waitFor"></a>
 
 #### referenceColumn.waitFor : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
-Array of sourcekeys
-This should take care of the callbacks and stuff too..
-TODO we should allow all outbounds here too.....
+Array of columns
 
 **Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
 <a name="ERMrest.ReferenceColumn+formatvalue"></a>

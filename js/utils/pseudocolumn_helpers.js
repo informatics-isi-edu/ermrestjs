@@ -527,6 +527,109 @@
         });
     };
 
+    /**
+     * @param {string|object} colObject if the foreignkey/key is compund, this should be the constraint name. otherwise the source syntax for pseudo-column.
+     * @desc return the name that should be used for pseudoColumn. This function makes sure that the returned name is unique.
+     * This function can be used to get the name that we're using for :
+     *
+     * - Composite key/foreignkeys:
+     *   In this case, if the constraint name is [`s`, `c`], you should pass `s_c` to this function.
+     * - Simple foiregnkey/key:
+     *   Pass the equivalent pseudo-column definition of them. It must at least have `source` as an attribute.
+     * - Pseudo-Columns:
+     *   Just pass the object that defines the pseudo-column. It must at least have `source` as an attribute.
+     *
+     */
+    module.generatePseudoColumnHashName = function (colObject) {
+
+        //we cannot create an object and stringify it, since its order can be different
+        //instead will create a string of `source + aggregate + entity`
+        var str = "";
+
+        // it should have source
+        if (typeof colObject === "object") {
+            if (!colObject.source) return null;
+
+            if (_sourceHasPath(colObject.source)) {
+                // since it's an array, it will preserve the order
+                str += JSON.stringify(colObject.source);
+            } else {
+                str += _getSourceColumnStr(colObject.source);
+            }
+
+            if (typeof colObject.aggregate === "string") {
+                str += colObject.aggregate;
+            }
+
+            // entity true doesn't change anything
+            if (colObject.entity === false) {
+                str += colObject.entity;
+            }
+
+            if (colObject.self_link === true) {
+                str += colObject.self_link;
+            }
+        } else if (typeof colObject === "string"){
+            str = colObject;
+        } else {
+            return null;
+        }
+
+        // md5
+        str = ERMrest._SparkMD5.hash(str);
+
+        // base64
+        str = _hexToBase64(str);
+
+        // url safe
+        return _urlEncodeBase64(str);
+    };
+
+
+    /**
+     * @private
+     * @param  {Object} colObject the column definition
+     * @param  {ERMrest.Column} column
+     * @return {Object} the returned object has `name` and `isHash` attributes.
+     * @desc generates a name for the given pseudo-column
+     */
+    _generatePseudoColumnName = function (colObject, column) {
+        if (colObject && (typeof colObject.aggregate === "string") || _sourceHasPath(colObject.source) || _isSourceObjectEntityMode(colObject, column)) {
+            return {name: module.generatePseudoColumnHashName(colObject), isHash: true};
+        }
+
+        return {name: column.name, isHash: false};
+    };
+
+    _generateForeignKeyName = function (fk, isInbound) {
+        var eTable = isInbound ? fk._table : fk.key.table;
+
+        if (!isInbound) {
+            return module.generatePseudoColumnHashName({
+                source: [{outbound: fk.constraint_names[0]}, eTable.shortestKey[0].name]
+            });
+        }
+
+        var source = [{inbound: fk.constraint_names[0]}];
+        if (eTable._isPureBinaryAssociation()) {
+            var otherFK;
+            for (j = 0; j < eTable.foreignKeys.length(); j++) {
+                if(eTable.foreignKeys.all()[j] !== fk) {
+                    otherFK = eTable.foreignKeys.all()[j];
+                    break;
+                }
+            }
+
+            source.push({outbound: otherFK.constraint_names[0]});
+            source.push(otherFK.key.table.shortestKey[0].name);
+        } else {
+            source.push(eTable.shortestKey[0].name);
+        }
+
+        return module.generatePseudoColumnHashName({source: source});
+    };
+
+    // TODO not used, could be removed
     _sourceIsInboundForeignKey = function (sourceObject, column, consNames) {
         var findConsName = function (catalogId, schemaName, constraintName) {
             var result;
@@ -555,16 +658,9 @@
         return fks[0].isInbound;
     };
 
-    _processSourceObject = function (sourceObject, table, consNames) {
+    // TODO could be used in other places too (generateColumnsList)
+    _processSourceObject = function (sourceObject, table, consNames, prePendMessage) {
         var wm = module._warningMessages;
-
-        if (typeof sourceObject !== "object" || !sourceObject.source) {
-            return {error: true, message: wm.INVALID_SOURCE};
-        }
-
-        var colName, colTable = table, source = sourceObject.source;
-        var hasPath = false, hasInbound = false;
-
         var findConsName = function (catalogId, schemaName, constraintName) {
             var result;
             if ((catalogId in consNames) && (schemaName in consNames[catalogId])){
@@ -573,11 +669,17 @@
             return (result === undefined) ? null : result;
         };
 
-        var returnError = function (test, message) {
-            if (!test) {
-                return {error: true, message: message};
-            }
+        var returnError = function (message) {
+            return {error: true, message: prePendMessage + ": " + message};
         };
+
+        if (typeof sourceObject !== "object" || !sourceObject.source) {
+            return returnError(wm.INVALID_SOURCE);
+        }
+
+        var colName, colTable = table, source = sourceObject.source;
+        var hasPath = false, hasInbound = false;
+
 
         // from 0 to source.length-1 we have paths
         if (_sourceHasPath(source)) {
@@ -593,14 +695,14 @@
                     isInbound = false;
                 } else {
                     // given object was invalid
-                    return returnError(true, "Invalid object in source element index=" + i);
+                    return returnError("Invalid object in source element index=" + i);
                 }
 
                 fkObj = findConsName(colTable.schema.catalog.id, constraint[0], constraint[1]);
 
                 // constraint name was not valid
                 if (fkObj === null || fkObj.subject !== module._constraintTypes.FOREIGN_KEY) {
-                    return returnError(true, "Invalid constraint name in source element index=" + i);
+                    return returnError("Invalid constraint name in source element index=" + i);
                 }
 
                 fk = fkObj.object;
@@ -616,7 +718,7 @@
                 }
                 else {
                     // the given object was not valid
-                    return returnError(true, "Invalid constraint name in source element index=" + i);
+                    return returnError("Invalid constraint name in source element index=" + i);
                 }
             }
             colName = source[source.length-1];
@@ -626,23 +728,35 @@
 
         try {
             var col = colTable.columns.get(colName);
-            if (source.aggregate && module._pseudoColAggregateFns.indexOf(col.aggregate) === -1) {
-                return returnError(true, wm.INVALID_AGG);
-            }
-            // TODO validate the aggregate fn and stuff
+            var isEntity = _isSourceObjectEntityMode(sourceObject, col);
 
-            var hashname = _generatePseudoColumnName(source, col);
-            //TODO should we throw error if the hashname is one of table column names?
+            // validate aggregate fn
+            if (sourceObject.aggregate && module._pseudoColAggregateFns.indexOf(sourceObject.aggregate) === -1) {
+                return returnError(wm.INVALID_AGG);
+            }
+
+            // has inbound and not aggregate, must be entity
+            if (!sourceObject.aggregate && hasInbound && !isEntity) {
+                return returnError(wm.MULTI_SCALAR_NEED_AGG);
+            }
+
+            var hashname = _generatePseudoColumnName(sourceObject, col);
+            if (hashname.isHash && table.columns.has(hashname.name)) {
+                var m = "Generated Hash `" + hashname.name + "` for pseudo-column exists in table `" + table.name +"`.";
+                return returnError(m);
+            }
 
             //TODO this could be a prototype
             return {
-                name: hashname,
+                name: hashname.name,
+                isHash: hashname.isHash,
                 sourceObject: sourceObject,
                 column: col,
                 hasPath: hasPath,
-                hasInbound: hasInbound
+                hasInbound: hasInbound,
+                isEntity: isEntity
             };
         } catch (exp) {
-            return {error: false, messsage: "Invalid column name in source"};
+            return returnError("Invalid column name in source");
         }
     };

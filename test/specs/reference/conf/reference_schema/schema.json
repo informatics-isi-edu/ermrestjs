@@ -157,18 +157,8 @@
                     "compact/select": [
                         {"invalid": true},
                         {"source": "id"},
-                        {"source": [
-                            {"inbound": ["reference_schema", "id_fk_association_related_to_reference"]},
-                            {"outbound": ["reference_schema", "fk_to_inbound_related_reference_table"]},
-                            {"outbound": ["reference_schema", "fromname_fk_inbound_related_to_reference"]},
-                            "id"
-                        ], "entity": false},
-                        {"source": [
-                            {"inbound": ["reference_schema", "id_fk_association_related_to_reference"]},
-                            {"outbound": ["reference_schema", "fk_to_inbound_related_reference_table"]},
-                            {"outbound": ["reference_schema", "fromname_fk_inbound_related_to_reference"]},
-                            "id"
-                        ], "aggregate": "cnt"},
+                        {"sourcekey": "path_w_length_three", "entity": false},
+                        {"sourcekey": "path_w_length_three","aggregate": "cnt"},
                         {
                             "source": [{"inbound": ["reference_schema", "id_fk_association_related_to_reference"]}, "ID"],
                             "display": {
@@ -176,12 +166,7 @@
                                 "template_engine": "handlebars"
                             }
                         },
-                        {"source": [
-                            {"inbound": ["reference_schema", "id_fk_association_related_to_reference"]},
-                            {"outbound": ["reference_schema", "fk_to_inbound_related_reference_table"]},
-                            {"outbound": ["reference_schema", "fromname_fk_inbound_related_to_reference"]},
-                            "id"
-                        ]},
+                        {"sourcekey": "path_w_length_three"},
                         {"source": [
                             {"outbound": ["reference_schema", "reference_table_fk1"]},
                             {"inbound": ["reference_schema", "reference_outbound_1_inbound_1_fk1"]},
@@ -192,6 +177,20 @@
                 "tag:isrd.isi.edu,2016:table-display": {
                     "*": {
                         "row_order": [{"column":"id"}]
+                    }
+                },
+                "tag:isrd.isi.edu,2019:source_definitions": {
+                    "columns": true,
+                    "fkeys": true,
+                    "sources": {
+                        "path_w_length_three": {
+                            "source": [
+                                {"inbound": ["reference_schema", "id_fk_association_related_to_reference"]},
+                                {"outbound": ["reference_schema", "fk_to_inbound_related_reference_table"]},
+                                {"outbound": ["reference_schema", "fromname_fk_inbound_related_to_reference"]},
+                                "id"
+                            ]
+                        }
                     }
                 }
             }

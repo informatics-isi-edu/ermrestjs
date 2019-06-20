@@ -156,16 +156,8 @@
                             {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
                             "id"
                         ], "aggregate": "array", "entity": false},
-                        {"source": [
-                            {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
-                            {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
-                            "id"
-                        ], "aggregate": "array", "array_display": "csv"},
-                        {"source": [
-                            {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
-                            {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
-                            "id"
-                        ], "aggregate": "array_d", "array_display": "ulist", "array_options": {"invalid values": true}},
+                        {"sourcekey": "main_inbound_2_association_fk1_fk2_path_id", "aggregate": "array", "array_display": "csv"},
+                        {"sourcekey": "main_inbound_2_association_fk1_fk2_path_id", "aggregate": "array_d", "array_display": "ulist", "array_options": {"invalid values": true}},
                         {"source": [
                             {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
                             {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
@@ -255,6 +247,19 @@
                             "id"
                         ], "markdown_name": "**length 3 inbound**"}
                     ]
+                },
+                "tag:isrd.isi.edu,2019:source_definitions": {
+                    "columns": true,
+                    "fkeys": true,
+                    "sources": {
+                        "main_inbound_2_association_fk1_fk2_path_id": {
+                            "source": [
+                                {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
+                                {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
+                                "id"
+                            ]
+                        }
+                    }
                 }
             }
         },

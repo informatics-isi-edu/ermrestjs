@@ -1092,10 +1092,20 @@
              var sd = module._annotations.SOURCE_DEFINITIONS;
              var hasAnnot = self.annotations.contains(sd);
              var res = {columns: [], fkeys: [], sources: {}, sourceMapping: {}};
-
+             var addedCols = {}, addedFks = {};
              var allColumns = self.columns.all(),
                  allForeignKeys = self.foreignKeys.all();
+             var consNames = module._constraintNames;
 
+             var findConsName = function (catalogId, schemaName, constraintName) {
+                 var result;
+                 if ((catalogId in consNames) && (schemaName in consNames[catalogId])){
+                     result = consNames[catalogId][schemaName][constraintName];
+                 }
+                 return (result === undefined) ? null : result;
+             };
+
+             // TODO this is way too ugly, rewrite this!
              var processSourceDefinitionList = function (val, isFkey) {
                  if (val === true) {
                      return isFkey ? allForeignKeys : allColumns;
@@ -1105,12 +1115,31 @@
                  var allListNames = isFkey ? allForeignKeys.map(mapName) : allColumns.map(mapName);
                  if (Array.isArray(val)) {
                      val.forEach(function (cname, index) {
+                         if (isFkey) {
+                             if (!Array.isArray(cname) || cname.length !== 2) {
+                                 // TODO log the error
+                                 return;
+                             }
+                             var fkObj = findConsName(self.schema.catalog.id, cname[0], cname[1]);
+                             if (fkObj === null || fkObj.subject !== module._constraintTypes.FOREIGN_KEY) {
+                                 return;
+                             }
+                             cname = fkObj.object.name;
+                         }
+
                          var elIndex = allListNames.indexOf(cname);
+                         if (isFkey) {
+                             if (addedFks[elIndex]) return;
+                             addedFks[elIndex] = true;
+                         } else {
+                             if (addedCols[elIndex]) return;
+                             addedCols[elIndex] = true;
+                         }
                          if (elIndex === -1) {
                              console.log("invalid source definition, ", (isFkey ? "fkeys" : "columns"), ", index=" + index);
                              return;
                          }
-                         resultList.push(isFkey ? allForeignKeys[allIndex] : allColumns[elIndex]);
+                         resultList.push(isFkey ? allForeignKeys[elIndex] : allColumns[elIndex]);
                      });
                  }
                  return resultList;
@@ -1126,27 +1155,43 @@
 
              // columns
              if (annot.columns) {
-                 annot.columns = processSourceDefinitionList(val, false);
+                 res.columns = processSourceDefinitionList(annot.columns, false);
              }
 
              // fkeys
              if (annot.fkeys) {
-                 annot.fkeys = processSourceDefinitionList(val, true);
+                 res.fkeys = processSourceDefinitionList(annot.fkeys, true);
              }
 
              // sources
              if (annot.sources && typeof annot.sources === "object") {
                  for (var key in annot.sources) {
                      if (!annot.sources.hasOwnProperty(key)) continue;
+                     var message = "source definition, table =" + self.name + ", name=" + key;
 
-                     var pSource = _processSourceObject(annot.source[key]);
-                     if (pSource.error) continue;
+                     // TODO why? make sure key is not the same as table columns
+                     if (self.columns.has(key)) {
+                         console.log(message +  ": cannot use the table column names.");
+                         continue;
+                     }
+
+                     // TODO why? make sure key doesn't start with $
+                     if (key.startsWith("$")) {
+                         console.log(message + ": key name cannot start with $");
+                         continue;
+                     }
+
+                     var pSource = _processSourceObject(annot.sources[key], self, consNames, message);
+                     if (pSource.error) {
+                         console.log(pSource.message);
+                         continue;
+                     }
 
                      // attach to sources
                      res.sources[key] = pSource;
 
                      // attach to sourceMapping
-                     if (!(pSource.name in sourceMapping)) {
+                     if (!(pSource.name in res.sourceMapping)) {
                          res.sourceMapping[pSource.name] = [];
                      }
                      res.sourceMapping[pSource.name].push(key);
@@ -3160,10 +3205,10 @@
                             col = null;
                             if (def) {
                                 col = def.column;
-                                // copy all the elements that are defined in here.
+                                // copy the elements that are defined in the source def but not the one already defined
                                 for (var defKey in def.sourceObject) {
-                                    if (def.sourceObject.hasOwnProperty(defKey)) {
-                                        orders[i][defKey] = sd[defKey];
+                                    if (def.sourceObject.hasOwnProperty(defKey) && !orders[i].hasOwnProperty(defKey)) {
+                                        orders[i][defKey] = def.sourceObject[defKey];
                                     }
                                 }
                             }

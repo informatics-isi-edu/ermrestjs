@@ -624,10 +624,10 @@
                             sd = self.table.sourceDefinitions.sources[obj.sourcekey];
                             if (!sd) return;
 
-                            // copy all the elements that are defined in here.
+                            // copy the elements that are defined in the source def but not the one already defined
                             for (var defKey in sd.sourceObject) {
-                                if (sd.sourceObject.hasOwnProperty(defKey)) {
-                                    obj[defKey] = sd[defKey];
+                                if (sd.sourceObject.hasOwnProperty(defKey) && !obj.hasOwnProperty(defKey)) {
+                                    obj[defKey] = sd.sourceObject[defKey];
                                 }
                             }
                         }
@@ -2659,10 +2659,10 @@
                             hasPath = sd.hasPath;
                             hasInbound = sd.hasInbound;
 
-                            // copy all the elements that are defined in here.
+                            // copy the elements that are defined in the source def but not the one already defined
                             for (var defKey in sd.sourceObject) {
-                                if (sd.sourceObject.hasOwnProperty(defKey)) {
-                                    col[defKey] = sd[defKey];
+                                if (sd.sourceObject.hasOwnProperty(defKey) && !col.hasOwnProperty(defKey)) {
+                                    col[defKey] = sd.sourceObject[defKey];
                                 }
                             }
 
@@ -2910,14 +2910,13 @@
          *
          * TODO don't allow entitysets in detailed context
          *
-         *
          * @param  {ERMrest.Tuple=} tuple
          * @param  {Boolean=} useRelated
          * @return {Object}
          */
         generateActiveList: function (tuple, useRelated) {
-            var columns = [], entitySets = [], relatedEntitySets = [], allOutBounds = [], aggregates = [];
-            var consideredSets = {}, consideredRelatedSets = {}, consideredOutbounds = {}, consideredAggregates = {};
+            var columns = [], entitySets = [], relatedEntitySets = [], allOutBounds = [], aggregates = [], selfLinks = [];
+            var consideredSets = {}, consideredRelatedSets = {}, consideredOutbounds = {}, consideredAggregates = {}, consideredSelfLinks = {};
 
             var self = this;
             var sds = self.table.sourceDefinitions;
@@ -2932,7 +2931,7 @@
 
                 // aggregates
                 if (col.isPathColumn && col.hasAggregate) {
-                    // duplciate
+                    // duplicate
                     if (col.name in consideredAggregates) {
                         aggregates[consideredAggregates[col.name]].objects.push(obj);
                         return;
@@ -2941,10 +2940,14 @@
                     // new
                     consideredAggregates[col.name] = aggregates.length;
                     aggregates.push({column: col, objects: [obj]});
+                    return;
                 }
 
                 //entitysets
-                else if (col.isInboundForeignKey || (col.isPathColumn && col.hasPath && !col.isUnique && !col.hasAggregate)) {
+                if (col.isInboundForeignKey || (col.isPathColumn && col.hasPath && !col.isUnique && !col.hasAggregate)) {
+                    if (self._context !== module._contexts.DETAILED) {
+                        return;
+                    }
                     // duplciate
                     if (col.name in consideredSets) {
                         entitySets[consideredSets[col.name]].objects.push(obj);
@@ -2963,14 +2966,21 @@
                         entitySets.push({reference: col.reference, objects: [obj]});
                     }
 
-
+                    return;
                 }
 
                 // all outbounds
-                else if (col.isForeignKey || (col.isPathColumn && col.hasPath && col.isUnique && !col.hasAggregate)) {
+                if (col.isForeignKey || (col.isPathColumn && col.hasPath && col.isUnique && !col.hasAggregate)) {
                     if (col.name in consideredOutbounds) return;
                     consideredOutbounds[col.name] = true;
                     allOutBounds.push(col);
+                }
+
+                // self-links
+                if (col.isKey) {
+                    if (col.name in consideredSelfLinks) return;
+                    consideredSelfLinks[col.name] = true;
+                    selfLinks.push(col);
                 }
             };
 
@@ -3020,7 +3030,8 @@
                 aggregates: aggregates,
                 entitySets: entitySets,
                 relatedEntitySets: relatedEntitySets,
-                allOutBounds: allOutBounds
+                allOutBounds: allOutBounds,
+                selfLinks: selfLinks
             };
 
             return this._activeList;
@@ -4194,8 +4205,6 @@
             var i, value, pattern, values = [], keyValues;
             var display = ref.display;
 
-            // TODO take care of waitfor
-
             // markdown_pattern in the source object
             if (typeof display._sourceMarkdownPattern === "string") {
                 var $self = self.tuples.map(function (t) {
@@ -4325,7 +4334,18 @@
                 this._content = this.getContent();
             }
             return this._content;
-       }
+       },
+
+        get templateVariables() {
+            if (this._templateVariables === undefined) {
+                var res = [];
+                this.tuples.forEach(function (t) {
+                    res.push(t.templateVariables.values);
+                });
+                this._templateVariables = res;
+            }
+            return this._templateVariables;
+        }
     };
 
 
@@ -4733,21 +4753,23 @@
             return this._uniqueId;
         },
 
+        /**
+         * The citation that should be used for this tuple.
+         * - if citation has wait-for, it will return false.
+         * - If the annoation is missing or is invalid, it will return null.
+         * otherwise it will return an object with the following attributes:
+         * - journal (required)
+         * - year (required)
+         * - url (required)
+         * - author
+         * - title
+         * - id
+         * @type {Object}
+         */
         get citation() {
             if (this._citation === undefined) {
                 var table = this._pageRef.table;
                 if (table.annotations.contains(module._annotations.CITATION)) {
-                    /**
-                     * citation specific properties include:
-                     *   - journal*
-                     *   - author
-                     *   - title
-                     *   - year*
-                     *   - url*
-                     *   - id
-                     * other properties:
-                     *   - template_engine
-                     */
                     var citationAnno = table.annotations.get(module._annotations.CITATION).content;
 
                     // if required fields are present, render each template and set that value on the citation object
@@ -4796,6 +4818,7 @@
                     self._linkedData
                 );
 
+                // TODO should we move these to the _getFormattedKeyValues?
                 // the multi-fk all-outbounds
                 var sm = this._pageRef.table.sourceDefinitions.sourceMapping;
                 self._pageRef.activeList.allOutBounds.forEach(function (col) {
@@ -4812,7 +4835,28 @@
                         );
 
                         sm[col.name].forEach(function (key) {
-                            keyValues.values[key] = fkTempVal;
+                            keyValues[key] = fkTempVal;
+                        });
+                    }
+                });
+
+                // the self_links
+                var selfLinkValue = {};
+                self._pageRef.activeList.selfLinks.forEach(function (col) {
+                    if (Array.isArray(sm[col.name])) {
+                        // compute it once and use it for all the self-links.
+                        if (!selfLinkValue) {
+                            selfLinkValue = module._getRowTemplateVariables(
+                                col.table,
+                                self._pageRef._context,
+                                self._data,
+                                self._linkedData,
+                                col.key
+                            );
+                        }
+
+                        sm[col.name].forEach(function (key) {
+                            keyValues[key] = selfLinkValue;
                         });
                     }
                 });
@@ -4902,6 +4946,14 @@
              return newTuple;
          }
 
+
+    };
+
+    function Citation () {
+
+    }
+
+    Citation.prototype = {
 
     };
 
