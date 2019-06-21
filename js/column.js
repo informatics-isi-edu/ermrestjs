@@ -288,16 +288,21 @@ ReferenceColumn.prototype = {
      */
     get display() {
         if (this._display_cached === undefined) {
-            this._display_cached = this._simple ? this._baseCols[0].getDisplay(this._context) : {};
+            var res = {};
+            if (res._simple) {
+                res = this._baseCols[0].getDisplay(this._context);
+            }
 
             // attach display defined on the source
             if (this.sourceObject && this.sourceObject.display) {
                 var displ = this.sourceObject.display;
                 if (typeof displ.markdown_pattern === "string") {
-                    this._display_cached.sourceMarkdownPattern = displ.markdown_pattern;
-                    this._display_cached.sourceTemplateEngine = displ.template_engine;
+                    res.sourceMarkdownPattern = displ.markdown_pattern;
+                    res.sourceTemplateEngine = displ.template_engine;
                 }
             }
+
+            this._display_cached = res;
         }
         return this._display_cached;
     },
@@ -1638,15 +1643,16 @@ Object.defineProperty(ForeignKeyPseudoColumn.prototype, "comment", {
 Object.defineProperty(ForeignKeyPseudoColumn.prototype, "display", {
     get: function () {
         if (this._display_cached === undefined) {
-            this._display_cached = this.foreignKey.getDisplay(this._context);
+            var res = this.foreignKey.getDisplay(this._context);
             // attach display defined on the source
             if (this.sourceObject && this.sourceObject.display) {
                 var displ = this.sourceObject.display;
                 if (typeof displ.markdown_pattern === "string") {
-                    this._display_cached.sourceMarkdownPattern = displ.markdown_pattern;
-                    this._display_cached.sourceTemplateEngine = displ.template_engine;
+                    res.sourceMarkdownPattern = displ.markdown_pattern;
+                    res.sourceTemplateEngine = displ.template_engine;
                 }
             }
+            this._display_cached = res;
         }
         return this._display_cached;
     }
@@ -1800,15 +1806,16 @@ Object.defineProperty(KeyPseudoColumn.prototype, "default", {
 Object.defineProperty(KeyPseudoColumn.prototype, "display", {
     get: function () {
         if (this._display_cached === undefined) {
-            this._display_cached = this.key.getDisplay(this._context);
+            var res = this.key.getDisplay(this._context);
             // attach display defined on the source
             if (this.sourceObject && this.sourceObject.display) {
                 var displ = this.sourceObject.display;
                 if (typeof displ.markdown_pattern === "string") {
-                    this._display_cached.sourceMarkdownPattern = displ.markdown_pattern;
-                    this._display_cached.sourceTemplateEngine = displ.template_engine;
+                    res.sourceMarkdownPattern = displ.markdown_pattern;
+                    res.sourceTemplateEngine = displ.template_engine;
                 }
             }
+            this._display_cached = res;
         }
         return this._display_cached;
     }

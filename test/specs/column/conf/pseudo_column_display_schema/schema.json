@@ -79,14 +79,14 @@
                         {
                             "source": "main_id", "entity": true, "self_link": true,
                             "display": {
-                                "markdown_pattern": "[{{{$self.rowName}}}({{{$self.values._int_col}}}, {{{$self.values.int_col}}})]({{{$self.uri.detailed}}})",
+                                "markdown_pattern": "self_link [{{{$self.rowName}}}({{{$self.values._int_col}}}, {{{$self.values.int_col}}})]({{{$self.uri.detailed}}})",
                                 "template_engine": "handlebars"
                             }
                         },
                         {
                             "source": "int_col",
                             "display": {
-                                "markdown_pattern": "{{{$self}}}, {{{$_self}}}",
+                                "markdown_pattern": "int_col: {{{$self}}}, {{{$_self}}}",
                                 "template_engine": "handlebars"
                             }
                         },
@@ -94,7 +94,7 @@
                             "source": [{"outbound": ["pseudo_column_display_schema", "display_main_fk1"]}, "outbound1_id"],
                             "entity": true,
                             "display": {
-                                "markdown_pattern": "[{{{$self.rowName}}}({{{$self.values._int_col}}}, {{{$self.values.int_col}}})]({{{$self.uri.detailed}}})",
+                                "markdown_pattern": "outbound: [{{{$self.rowName}}}({{{$self.values._int_col}}}, {{{$self.values.int_col}}})]({{{$self.uri.detailed}}})",
                                 "template_engine": "handlebars"
                             }
                         },
@@ -102,7 +102,7 @@
                             "source": [{"outbound": ["pseudo_column_display_schema", "display_main_fk1"]}, "int_col"],
                             "entity": false,
                             "display": {
-                                "markdown_pattern": "{{{$self}}}, {{{$_self}}}",
+                                "markdown_pattern": "outbound scalar: {{{$self}}}, {{{$_self}}}",
                                 "template_engine": "handlebars"
                             }
                         },
@@ -114,7 +114,7 @@
                             ],
                             "entity": true,
                             "display": {
-                                "markdown_pattern": "[{{{$self.rowName}}}({{{$self.values._int_col}}}, {{{$self.values.int_col}}})]({{{$self.uri.detailed}}})",
+                                "markdown_pattern": "all_outbound entity: [{{{$self.rowName}}}({{{$self.values._int_col}}}, {{{$self.values.int_col}}})]({{{$self.uri.detailed}}})",
                                 "template_engine": "handlebars"
                             }
                         },
@@ -126,7 +126,7 @@
                             ],
                             "entity": false,
                             "display": {
-                                "markdown_pattern": "{{{$self}}}, {{{$_self}}}",
+                                "markdown_pattern": "all_outbound scalar: {{{$self}}}, {{{$_self}}}",
                                 "template_engine": "handlebars"
                             }
                         },
@@ -135,7 +135,7 @@
                             "entity": true,
                             "aggregate": "array_d",
                             "display": {
-                                "markdown_pattern": "{{#each $self}}[{{{this.rowName}}}({{{this.values._int_col}}}, {{{this.values.int_col}}})]({{{this.uri.detailed}}}){{#unless @last}}, {{/unless}}{{/each}}",
+                                "markdown_pattern": "array_d entity: {{#each $self}}[{{{this.rowName}}}({{{this.values._int_col}}}, {{{this.values.int_col}}})]({{{this.uri.detailed}}}){{#unless @last}}, {{/unless}}{{/each}}",
                                 "template_engine": "handlebars"
                             }
                         },
@@ -144,7 +144,7 @@
                             "entity": false,
                             "aggregate": "array_d",
                             "display": {
-                                "markdown_pattern": "{{{$self}}} - {{#each $_self}}{{#unless @first}}| {{/unless}}{{{this}}}{{/each}}",
+                                "markdown_pattern": "array_d scalar: {{{$self}}} - {{#each $_self}}{{#unless @first}}| {{/unless}}{{{this}}}{{/each}}",
                                 "template_engine": "handlebars"
                             }
                         },
@@ -152,7 +152,7 @@
                             "source": [{"inbound": ["pseudo_column_display_schema", "display_inbound1_fk1"]}, "inbound1_id"],
                             "aggregate": "cnt",
                             "display": {
-                                "markdown_pattern": "{{{$self}}}, {{{$_self}}}",
+                                "markdown_pattern": "cnt: {{{$self}}}, {{{$_self}}}",
                                 "template_engine": "handlebars"
                             }
                         },
@@ -160,7 +160,7 @@
                             "source": [{"inbound": ["pseudo_column_display_schema", "display_inbound1_fk1"]}, "inbound1_id"],
                             "aggregate": "cnt_d",
                             "display": {
-                                "markdown_pattern": "{{{$self}}}, {{{$_self}}}",
+                                "markdown_pattern": "cnt_d: {{{$self}}}, {{{$_self}}}",
                                 "template_engine": "handlebars"
                             }
                         },
@@ -168,7 +168,7 @@
                             "source": [{"inbound": ["pseudo_column_display_schema", "display_inbound1_fk1"]}, "int_col"],
                             "aggregate": "min",
                             "display": {
-                                "markdown_pattern": "{{{$self}}}, {{{$_self}}}",
+                                "markdown_pattern": "min: {{{$self}}}, {{{$_self}}}",
                                 "template_engine": "handlebars"
                             }
                         },
@@ -176,7 +176,7 @@
                             "source": [{"inbound": ["pseudo_column_display_schema", "display_inbound1_fk1"]}, "int_col"],
                             "aggregate": "max",
                             "display": {
-                                "markdown_pattern": "{{{$self}}}, {{{$_self}}}",
+                                "markdown_pattern": "max: {{{$self}}}, {{{$_self}}}",
                                 "template_engine": "handlebars"
                             }
                         }
