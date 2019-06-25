@@ -1182,6 +1182,7 @@ Returns an object with
   - column
   - hasPath
   - hasInbound
+  - isEntity
 - sourceMapping: hashname to all the names
 
 **Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
@@ -3266,10 +3267,11 @@ NOTE:
 
 #### reference.generateActiveList([tuple], [useRelated]) ⇒ <code>Object</code>
 Generate the list of extra reads that we should do.
-this should incldue
+this should include
 - aggreagtes: [{column: ERMrest.ReferenceColumn, objects: [{index: integer, column: boolean, related: boolean}]]
 - entitySets: [{reference: ERMrest.Reference,}]
 - allOutBounds: ERMrest.ReferenceColumn[]
+- (TODO) selfLinks: ERMrest.KeyPseudoColumn[]
 
 TODO we might want to detect duplciates in allOutBounds better?
 currently it's done based on name, but based on the path should be enough..
@@ -6660,10 +6662,11 @@ NOTE:
 
 #### reference.generateActiveList([tuple], [useRelated]) ⇒ <code>Object</code>
 Generate the list of extra reads that we should do.
-this should incldue
+this should include
 - aggreagtes: [{column: ERMrest.ReferenceColumn, objects: [{index: integer, column: boolean, related: boolean}]]
 - entitySets: [{reference: ERMrest.Reference,}]
 - allOutBounds: ERMrest.ReferenceColumn[]
+- (TODO) selfLinks: ERMrest.KeyPseudoColumn[]
 
 TODO we might want to detect duplciates in allOutBounds better?
 currently it's done based on name, but based on the path should be enough..

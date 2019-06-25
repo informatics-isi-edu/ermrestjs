@@ -195,6 +195,22 @@
     };
 
     /**
+     * This private utility function copies the attributes of one object into another if,
+     *  - the attribute is missing from the original, or
+     *  - the attribute is part of enforcedList.
+     * @param  {Object} copyTo       The object to copy values to.
+     * @param  {Object} copyFrom     The object to copy values from.
+     * @param  {String[]} enforcedList the list of attributes that must be copied.
+     */
+    module._shallowCopyExtras = function (copyTo, copyFrom, enforcedList) {
+        for (var key in copyFrom) {
+            if (copyFrom.hasOwnProperty(key) && (!copyTo.hasOwnProperty(key) || enforcedList.indexOf(key) !== -1)) {
+                copyTo[key] = copyFrom[key];
+            }
+        }
+    };
+
+    /**
      * @private
      * @function
      * @param  {Object} source the object that you want to be copied

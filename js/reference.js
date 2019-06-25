@@ -625,11 +625,7 @@
                             if (!sd) return;
 
                             // copy the elements that are defined in the source def but not the one already defined
-                            for (var defKey in sd.sourceObject) {
-                                if (sd.sourceObject.hasOwnProperty(defKey) && !obj.hasOwnProperty(defKey)) {
-                                    obj[defKey] = sd.sourceObject[defKey];
-                                }
-                            }
+                            module._shallowCopyExtras(obj, sd.sourceObject, ["source", "aggregate", "entity"]);
                         }
 
                         var col = checkFacetObject(obj);
@@ -2660,11 +2656,7 @@
                             hasInbound = sd.hasInbound;
 
                             // copy the elements that are defined in the source def but not the one already defined
-                            for (var defKey in sd.sourceObject) {
-                                if (sd.sourceObject.hasOwnProperty(defKey) && !col.hasOwnProperty(defKey)) {
-                                    col[defKey] = sd.sourceObject[defKey];
-                                }
-                            }
+                            module._shallowCopyExtras(col, sd.sourceObject, ["source", "aggregate", "entity"]);
 
                         } else {
                             sourceCol = _getSourceColumn(col.source, this._table, module._constraintNames);
@@ -2897,10 +2889,11 @@
 
         /**
          * Generate the list of extra reads that we should do.
-         * this should incldue
+         * this should include
          * - aggreagtes: [{column: ERMrest.ReferenceColumn, objects: [{index: integer, column: boolean, related: boolean}]]
          * - entitySets: [{reference: ERMrest.Reference,}]
          * - allOutBounds: ERMrest.ReferenceColumn[]
+         * - (TODO) selfLinks: ERMrest.KeyPseudoColumn[]
          *
          * TODO we might want to detect duplciates in allOutBounds better?
          * currently it's done based on name, but based on the path should be enough..
@@ -2939,7 +2932,7 @@
 
                     // new
                     consideredAggregates[col.name] = aggregates.length;
-                    aggregates.push({column: col, objects: [obj]});
+                    aggregates.push({column: col, columnName: col.name, objects: [obj]});
                     return;
                 }
 
@@ -2960,10 +2953,10 @@
                     // new
                     if (useRelated) {
                         consideredRelatedSets[col.name] = relatedEntitySets.length;
-                        relatedEntitySets.push({reference: col.reference, objects: [obj]});
+                        relatedEntitySets.push({reference: col.reference, columnName: col.name, objects: [obj]});
                     } else {
                         consideredSets[col.name] = entitySets.length;
-                        entitySets.push({reference: col.reference, objects: [obj]});
+                        entitySets.push({reference: col.reference, columnName: col.name, objects: [obj]});
                     }
 
                     return;
@@ -4327,10 +4320,6 @@
          */
         get content() {
             if (this._content === undefined) {
-                var getContent = function (self, ref) {
-
-                };
-
                 this._content = this.getContent();
             }
             return this._content;
@@ -4828,11 +4817,14 @@
                     // see if it exists in the mapping
                     if (Array.isArray(sm[col.name])) {
                         // TODO could be impoved. doing it multiple times...
-                        var fkTempVal = module._getRowTemplateVariables(
-                            col.table,
-                            self._pageRef._context,
-                            self._linkedData[col.name]
-                        );
+                        var fkTempVal = {};
+                        if (!fkTempVal) {
+                            fkTempVal = module._getRowTemplateVariables(
+                                col.table,
+                                self._pageRef._context,
+                                self._linkedData[col.name]
+                            );
+                        }
 
                         sm[col.name].forEach(function (key) {
                             keyValues[key] = fkTempVal;
@@ -4850,7 +4842,7 @@
                                 col.table,
                                 self._pageRef._context,
                                 self._data,
-                                self._linkedData,
+                                null,
                                 col.key
                             );
                         }

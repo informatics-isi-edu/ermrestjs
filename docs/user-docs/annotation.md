@@ -775,7 +775,17 @@ Note: Some properties might not make sense to be used in this annotation. The `d
 
 `tag:isrd.isi.edu,2019:source-defnitions`
 
-<!-- TODO -->
+This key allows specification of sources that can be used in `visible-columns` and `visible-foreignKeys` annotations. It will also allow defining the list of column names and outbound foriengkeys that should be available in the templating environments.
+
+Supported JSON payload patterns:
+
+- `{ }`
+- `{` ... `"sources":` _sourcedefinitions_ `}`: The _sourcedefinitions_ will
+
+Supported _sourcedefinitions_ patterns:
+
+- `{"` _sourcekey_ `":` _sourcedefinition_ `}`
+
 
 ### Context Names
 

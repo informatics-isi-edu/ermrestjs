@@ -1077,6 +1077,7 @@
          *   - column
          *   - hasPath
          *   - hasInbound
+         *   - isEntity
          * - sourceMapping: hashname to all the names
          * @type {Object}
          */
@@ -3206,11 +3207,7 @@
                             if (def) {
                                 col = def.column;
                                 // copy the elements that are defined in the source def but not the one already defined
-                                for (var defKey in def.sourceObject) {
-                                    if (def.sourceObject.hasOwnProperty(defKey) && !orders[i].hasOwnProperty(defKey)) {
-                                        orders[i][defKey] = def.sourceObject[defKey];
-                                    }
-                                }
+                                module._shallowCopyExtras(orders[i], def.sourceObject, ["source", "aggregate", "entity"]);
                             }
                         }
 

@@ -196,8 +196,15 @@
                                 {"inbound": ["faceting_schema", "secondpath_2_fk1"]},
                                 "id"
                             ], "hide_null_choice": true},
-                            {"sourcekey": "second_path_source_defnition"},
                             {"sourcekey": "second_path_source_defnition", "entity": false},
+                            {
+                                "source": [
+                                    {"inbound": ["faceting_schema", "secondpath_1_fk1"]},
+                                    {"inbound": ["faceting_schema", "secondpath_2_fk1"]},
+                                    "RID"
+                                ],
+                                "entity": false
+                            },
                             {"source": [{"inbound": ["faceting_schema", "main_f3_assoc_fk1"]}, {"outbound": ["faceting_schema", "main_f3_assoc_fk2"]}, "id"]},
                             {"source": "numeric_col"}
                         ]

@@ -122,6 +122,8 @@ function ReferenceColumn(reference, cols, sourceObject, name, mainTuple) {
      */
     this.table = this._baseCols[0].table;
 
+    this._currentTable = this._baseCols[0].table;
+
     this._name = name;
 
     this._mainTuple = mainTuple;
@@ -302,16 +304,21 @@ ReferenceColumn.prototype = {
      */
     get display() {
         if (this._display_cached === undefined) {
-            this._display_cached = this._simple ? this._baseCols[0].getDisplay(this._context) : {};
+            var res = {};
+            if (res._simple) {
+                res = this._baseCols[0].getDisplay(this._context);
+            }
 
             // attach display defined on the source
             if (this.sourceObject && this.sourceObject.display) {
                 var displ = this.sourceObject.display;
                 if (typeof displ.markdown_pattern === "string") {
-                    this._display_cached.sourceMarkdownPattern = displ.markdown_pattern;
-                    this._display_cached.sourceTemplateEngine = displ.template_engine;
+                    res.sourceMarkdownPattern = displ.markdown_pattern;
+                    res.sourceTemplateEngine = displ.template_engine;
                 }
             }
+
+            this._display_cached = res;
         }
         return this._display_cached;
     },
@@ -324,6 +331,13 @@ ReferenceColumn.prototype = {
      */
     get _simple() {
         return this._baseCols.length == 1;
+    },
+
+    get isUnique() {
+        if (this._isUnique === undefined) {
+            this._isUnique = this._simple;
+        }
+        return this._isUnique;
     },
 
     /**
@@ -504,60 +518,64 @@ ReferenceColumn.prototype = {
      */
     get waitFor() {
         if (this._waitFor === undefined) {
-            var self = this, res = [], hasWaitFor = false;
-            if (self.sourceObject && Array.isArray(self.sourceObject.waitfor)) {
-                var hasSelf = false;
-                self.sourceObject.waitfor.forEach(function (wf, index) {
-                    var message = "waitfor defined on table=`" + self._currentTable.name + "`, pseudo-column=`" + self.displayname.value + "`, index=" + index + ", ";
-                    if (typeof wf !== "string") {
-                        console.log(message + "must be an string");
-                        return;
-                    }
-
-                    // column names
-                    if (wf in self._currentTable.sourceDefinitions.columns) {
-                        // there's no reason to add normal columns.
-                        return;
-                    }
-
-                    // sources
-                    if ((wf in self._currentTable.sourceDefinitions.sources)) {
-                        var sd = self._currentTable.sourceDefinitions.sources[wf];
-
-                        // entitysets are only allowed in detailed
-                        if (sd.hasInbound && !sd.sourceObject.aggregate && self._context !== module._contexts.DETAILED) {
-                            console.log(messge + ", waitfor element index=", index, " is not valid (entity sets are not allowed in detailed).");
-                            return;
-                        }
-
-                        if (sd.name === self.name) {
-                            // don't add itself
-                            return;
-                        }
-
-                        // there's at least one secondary request
-                        if (sd.hasInbound || sd.sourceObject.aggregate) {
-                            hasWaitFor = true;
-                        }
-
-                        // TODO this should be in the table.sourceDefinitions
-                        // the only issue is that in there we don't have the mainTuple...
-                        var pc = module._createPseudoColumn(self._baseReference, sd.column, sd.sourceObject, self._mainTuple, sd.name, sd.isEntity);
-                        if (!pc.isPseudo || pc.isAsset) return;
-
-                        res.push(pc);
-
-                        return;
-                    }
-
-                });
-
-                // source/sourcekey implies waitfor
-                // if (!hasSelf) {
-                //     // TODO what about hasWaitFor????
-                //     res.unshift(self);
-                // }
+            var self = this, res = [], hasWaitFor = false, waitFors = [];
+            if (self.sourceObject && self.sourceObject.display) {
+                if (Array.isArray(self.sourceObject.display.waitfor)) {
+                    waitFors = self.sourceObject.display.waitfor;
+                } else if (typeof self.sourceObject.display.waitfor === "string") {
+                    waitFors = [self.sourceObject.display.waitfor];
+                }
             }
+
+            waitFors.forEach(function (wf, index) {
+                var message = "waitfor defined on table=`" + self._currentTable.name + "`, pseudo-column=`" + self.displayname.value + "`, index=" + index + ", ";
+                if (typeof wf !== "string") {
+                    console.log(message + "must be an string");
+                    return;
+                }
+
+                // column names
+                if (wf in self._currentTable.sourceDefinitions.columns) {
+                    // there's no reason to add normal columns.
+                    return;
+                }
+
+                // TODO all-outbounds, aggregate, entity-sets
+                // TODO should it include the self?
+
+                // sources
+                if ((wf in self._currentTable.sourceDefinitions.sources)) {
+                    var sd = self._currentTable.sourceDefinitions.sources[wf];
+
+                    // entitysets are only allowed in detailed
+                    if (sd.hasInbound && !sd.sourceObject.aggregate && self._context !== module._contexts.DETAILED) {
+                        console.log(messge + ", waitfor element index=", index, " is not valid (entity sets are not allowed in detailed).");
+                        return;
+                    }
+
+                    // TODO why not?
+                    if (sd.name === self.name) {
+                        // don't add itself
+                        return;
+                    }
+
+                    // there's at least one secondary request
+                    if (sd.hasInbound || sd.sourceObject.aggregate) {
+                        hasWaitFor = true;
+                    }
+
+                    // TODO this should be in the table.sourceDefinitions
+                    // the only issue is that in there we don't have the mainTuple...
+                    var pc = module._createPseudoColumn(self._baseReference, sd.column, sd.sourceObject, self._mainTuple, sd.name, sd.isEntity);
+                    if (!pc.isPseudo || pc.isAsset) return;
+
+                    res.push(pc);
+
+                    return;
+                }
+
+            });
+
 
             this._waitFor = res;
             this._hasWaitFor = hasWaitFor;
@@ -584,6 +602,7 @@ ReferenceColumn.prototype = {
             unformatted: this._getNullValue(context)
         };
 
+        console.log("column ", self.displayname.value);
         if (self.display.sourceMarkdownPattern) {
             var keyValues = {}, selfTemplateVariables = {}, baseCol = self._baseCols[0];
 
@@ -787,6 +806,9 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
         keyColName, keyColNameEncoded,
         baseUri, basePath, uri, i, fk, str, projection;
 
+    var sourceMarkdownPattern = this.display.sourceMarkdownPattern;
+    var sourceTemplateEngine = this.display.sourceTemplateEngine;
+
     // this will dictates whether we should show rowname or not
     var isRow = self.isEntityMode && module._pseudoColEntityAggregateFns.indexOf(self.sourceObject.aggregate) != -1;
 
@@ -918,12 +940,12 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
         }
 
         var res = "";
-        if (self.display.sourceMarkdownPattern) {
+        if (sourceMarkdownPattern) {
             res = module._renderTemplate(
-                self.display.sourceMarkdownPattern,
+                sourceMarkdownPattern,
                 templateVariables,
                 column.table.schema.catalog,
-                {templateEngine: self.display.sourceTemplateEngine}
+                {templateEngine: sourceTemplateEngine}
             );
 
             if (res === null || res.trim() === '') {
@@ -1047,7 +1069,7 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
             // array formatting is different
             if (self.sourceObject.aggregate.indexOf("array") === 0){
                 var arrValue = getArrayValue(value.v);
-                result.push({value: arrValue.value, isHTML: true, templateVariables: templateVariables});
+                result.push({value: arrValue.value, isHTML: true, templateVariables: arrValue.templateVariables});
                 return;
             }
 
@@ -1064,13 +1086,13 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
 
             var res = formatted;
             var templateVariables = { "$self": formatted, "$_self": value.v };
-            if (self.display.sourceMarkdownPattern) {
+            if (sourceMarkdownPattern) {
                 isHTML = true;
                 res = module._renderTemplate(
-                    self.display.sourceMarkdownPattern,
+                    sourceMarkdownPattern,
                     templateVariables,
                     column.table.schema.catalog,
-                    {templateEngine: self.display.sourceTemplateEngine}
+                    {templateEngine: sourceTemplateEngine}
                 );
 
                 if (res === null || res.trim() === '') {
@@ -1668,7 +1690,7 @@ ForeignKeyPseudoColumn.prototype.formatPresentation = function(data, context, op
             {$self: module._getRowTemplateVariables(this.table, context, data)},
             this.table,
             context,
-            {templateEngine: this.display.sourceTemplateEngine, formatted: true}
+            {templateEngine: this.display.sourceTemplateEngine}
         );
     }
 
@@ -1844,15 +1866,16 @@ Object.defineProperty(ForeignKeyPseudoColumn.prototype, "comment", {
 Object.defineProperty(ForeignKeyPseudoColumn.prototype, "display", {
     get: function () {
         if (this._display_cached === undefined) {
-            this._display_cached = this.foreignKey.getDisplay(this._context);
+            var res = this.foreignKey.getDisplay(this._context);
             // attach display defined on the source
             if (this.sourceObject && this.sourceObject.display) {
                 var displ = this.sourceObject.display;
                 if (typeof displ.markdown_pattern === "string") {
-                    this._display_cached.sourceMarkdownPattern = displ.markdown_pattern;
-                    this._display_cached.sourceTemplateEngine = displ.template_engine;
+                    res.sourceMarkdownPattern = displ.markdown_pattern;
+                    res.sourceTemplateEngine = displ.template_engine;
                 }
             }
+            this._display_cached = res;
         }
         return this._display_cached;
     }
@@ -2015,15 +2038,16 @@ Object.defineProperty(KeyPseudoColumn.prototype, "default", {
 Object.defineProperty(KeyPseudoColumn.prototype, "display", {
     get: function () {
         if (this._display_cached === undefined) {
-            this._display_cached = this.key.getDisplay(this._context);
+            var res = this.key.getDisplay(this._context);
             // attach display defined on the source
             if (this.sourceObject && this.sourceObject.display) {
                 var displ = this.sourceObject.display;
                 if (typeof displ.markdown_pattern === "string") {
-                    this._display_cached.sourceMarkdownPattern = displ.markdown_pattern;
-                    this._display_cached.sourceTemplateEngine = displ.template_engine;
+                    res.sourceMarkdownPattern = displ.markdown_pattern;
+                    res.sourceTemplateEngine = displ.template_engine;
                 }
             }
+            this._display_cached = res;
         }
         return this._display_cached;
     }
