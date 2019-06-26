@@ -4816,24 +4816,20 @@
 
                     // see if it exists in the mapping
                     if (Array.isArray(sm[col.name])) {
-                        // TODO could be impoved. doing it multiple times...
-                        var fkTempVal = {};
-                        if (!fkTempVal) {
-                            fkTempVal = module._getRowTemplateVariables(
-                                col.table,
-                                self._pageRef._context,
-                                self._linkedData[col.name]
-                            );
-                        }
+                        var fkTempVal = module._getRowTemplateVariables(
+                            col.table,
+                            self._pageRef._context,
+                            self._linkedData[col.name]
+                        );
 
                         sm[col.name].forEach(function (key) {
-                            keyValues[key] = fkTempVal;
+                            keyValues.values[key] = fkTempVal;
                         });
                     }
                 });
 
                 // the self_links
-                var selfLinkValue = {};
+                var selfLinkValue;
                 self._pageRef.activeList.selfLinks.forEach(function (col) {
                     if (Array.isArray(sm[col.name])) {
                         // compute it once and use it for all the self-links.
@@ -4848,7 +4844,7 @@
                         }
 
                         sm[col.name].forEach(function (key) {
-                            keyValues[key] = selfLinkValue;
+                            keyValues.values[key] = selfLinkValue;
                         });
                     }
                 });
