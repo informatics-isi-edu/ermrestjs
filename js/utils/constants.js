@@ -73,6 +73,7 @@
     module._contextArray = ["compact", "compact/brief", "compact/select", "entry/create", "detailed", "entry/edit", "entry", "filter", "*", "row_name", "compact/brief/inline"];
 
     module._entryContexts = [module._contexts.CREATE, module._contexts.EDIT, module._contexts.ENTRY];
+    module._compactContexts = [module._contexts.COMPACT, module._contexts.COMPACT_BRIEF, module._contexts.COMPACT_BRIEF_INLINE, module._contexts.COMPACT_SELECT];
 
     module._tableKinds = Object.freeze({
         TABLE: "table",

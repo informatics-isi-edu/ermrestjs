@@ -16,6 +16,14 @@
     };
 
     /**
+     * set callback function that returns the property defined in chaise config for system column order
+     * @param {systemColumnsHeuristicsMode} fn callback function
+     */
+    module.systemColumnsHeuristicsMode = function(fn) {
+        module._systemColumnsHeuristicsMode = fn;
+    };
+
+    /**
      * This function resolves a URI reference to a {@link ERMrest.Reference}
      * object. It validates the syntax of the URI and validates that the
      * references to model elements in it are correct. This function makes a
@@ -2716,18 +2724,60 @@
             }
             // heuristics
             else {
+                // fetch config option for system columns heuristics (true|false|Array)
+                // if true, add all system columns
+                // if false, add none
+                // if array, add the ones defined
+
+                // order of system columns will always be the same
+                // RID will always be first in the visible columns list
+                // the rest will always be at the end ('RCB', 'RMB', 'RCT', 'RMT')
+
+                var systemColumnsMode = null;
+                // if compact or detailed, check for system column config option
+                if (module._isCompactContext(this._context)) {
+                    systemColumnsMode = module._systemColumnsHeuristicsMode("compact");
+                } else if (this._context == module._contexts.DETAILED) {
+                    systemColumnsMode = module._systemColumnsHeuristicsMode("detailed");
+                }
+
+                // if array or true, add RID to the list of columns
+                if (systemColumnsMode) {
+                    if ((typeof systemColumnsMode == "object" && systemColumnsMode.indexOf("RID")) || systemColumnsMode == true) {
+                        var ridKey = null;
+                        this._table.keys.all().forEach(function (key) {
+                            var match = key.colset.columns.filter(function (col) {
+                                 return col.name == "RID";
+                            });
+                            if (match.length > 0) ridKey = key;
+                        });
+
+                        // TODO: this throws an error if ridKey is still null (cases when there aren't system columns yet)
+                        this._referenceColumns.push(new KeyPseudoColumn(this, ridKey));
+                        // should only ever be 1 column for RID key colset
+                        consideredColumns[ridKey.colset.columns[0].name] = true;
+                    }
+                }
 
                 //add the key
                 if (!isEntry && this._context != module._contexts.DETAILED ) {
                     var key = this._table._getRowDisplayKey(this._context);
                     if (key !== undefined && !nameExistsInTable(key.name, "display key")) {
-                        consideredColumns[key.name] = true;
-                        this._referenceColumns.push(new KeyPseudoColumn(this, key));
 
-                        // make sure key columns won't be added
                         columns = key.colset.columns;
-                        for (i = 0; i < columns.length; i++) {
-                            consideredColumns[columns[i].name] = true;
+
+                        // make sure key columns won't be added twice
+                        var addedKey = false;
+                        columns.forEach(function (col) {
+                            if (col.name in consideredColumns) addedKey = true;
+                        });
+
+                        if (!addedKey) {
+                            for (i = 0; i < columns.length; i++) {
+                                consideredColumns[columns[i].name] = true;
+                            }
+
+                            this._referenceColumns.push(new KeyPseudoColumn(this, key));
                         }
                     }
                 }
@@ -2750,6 +2800,9 @@
                     // add the column if it's not part of any foreign keys
                     // or if the column type is array (currently ermrest doesn't suppor this either)
                     if (col.memberOfForeignKeys.length === 0) {
+                        if (systemColumnsMode && module._systemColumns.indexOf(col.name) !== -1) {
+                            continue; // we want system columns at the end if property is defined
+                        }
                         addColumn(col);
                     } else {
                         // sort foreign keys of a column
@@ -2796,6 +2849,35 @@
                 // append composite FKRs
                 for (i = 0; i < compositeFKs.length; i++) {
                     this._referenceColumns.push(compositeFKs[i]);
+                }
+
+                // if array or true, add the remaining system columns
+                if (systemColumnsMode) {
+                    // array of column names to add
+                    var columnsToAdd = [];
+                    if (systemColumnsMode == true) {
+                        // add all, includes RID which will be skipped because of consideredColumns
+                        columnsToAdd = module._systemColumns;
+                    } else {
+                        // add the ones defined in array of config property
+                        // preserves order defined in `_systemColumns`
+                        columnsToAdd = module._systemColumns.filter(function (col) {
+                            return systemColumnsMode.indexOf(col) !== -1;
+                        });
+                    }
+
+                    for (i=0; i < columnsToAdd.length; i++) {
+                        var colName = columnsToAdd[i];
+                        if (colName in consideredColumns) {
+                            continue;
+                        }
+
+                        if (this._table.columns.has(colName)) {
+                            var column = this._table.columns.get(colName);
+                            addColumn(column);
+                            consideredColumns[colName] = true;
+                        }
+                    }
                 }
             }
 

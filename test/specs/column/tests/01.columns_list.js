@@ -13,6 +13,7 @@ exports.execute = function (options) {
             tableWithSlash = "table_w_slash",
             tableWithAsset = "table_w_asset",
             tableWithInvalidUrlPattern = "table_with_invalid_url_pattern",
+            tableWithNoVisibleColumns = "system_columns_heuristic_table",
             entityId = 1,
             limit = 1,
             entryContext = "entry",
@@ -44,6 +45,9 @@ exports.execute = function (options) {
 
         var tableWithInvalidUrlPatternURI = options.url + "/catalog/" + catalog_id + "/entity/"
             + schemaName + ':' + tableWithInvalidUrlPattern;
+
+        var singleEnitityUriSystemColumnsHeuristics = options.url + "/catalog/" + catalog_id + "/entity/" +
+            schemaName + ":" + tableWithNoVisibleColumns + "/id=" + entityId;
 
         var chaiseURL = "https://dev.isrd.isi.edu/chaise";
         var recordURL = chaiseURL + "/record";
@@ -298,7 +302,6 @@ exports.execute = function (options) {
             options.ermRest.resolve(singleEnitityUri, {
                 cid: "test"
             }).then(function (response) {
-
                 compactRef = response.contextualize.compact;
                 compactBriefRef = response.contextualize.compactBrief;
                 compactSelectRef = response.contextualize.compactSelect;
@@ -756,6 +759,85 @@ exports.execute = function (options) {
             it('should return the same columns list as .columns', function () {
                 areSameColumnList(compactRef.generateColumnsList(), compactColumns);
                 areSameColumnList(entryEditRef.generateColumnsList(), entryEditRef.columns);
+            });
+
+            describe('with system columns heuristic config options defined,', function () {
+                function systemColumnsHeuristicsMode(context) {
+                    var mode = null;
+                    if (context == 'compact') {
+                        mode = true;
+                    } else if (context == 'detailed') {
+                        mode = ['RMB', 'RCT'];
+                    }
+
+                    return mode;
+                }
+
+                var compactSystemColumnsModeRef, compactBriefSystemColumnsModeRef, compactBriefInlineSystemColumnsModeRef,
+                    compactSelectSystemColumnsModeRef, compactSystemColumnsModeColumns, compactBriefSystemColumnsModeColumns,
+                    compactBriefInlineSystemColumnsModeColumns, compactSelectSystemColumnsModeColumns;
+
+                var detailedSystemColumnsModeRef, detailedSystemColumnsModeColumns;
+                beforeAll(function (done) {
+                    // set this here so it doesn't affect above columns list tests
+                    // no more tests in this spec check the columns lists (no new references are generated and no new columns lists are tested)
+                    options.ermRest.systemColumnsHeuristicsMode(systemColumnsHeuristicsMode);
+                    options.ermRest.resolve(singleEnitityUriSystemColumnsHeuristics, {
+                        cid: "test"
+                    }).then(function (response) {
+                        compactSystemColumnsModeRef = response.contextualize.compact;
+                        compactBriefSystemColumnsModeRef = response.contextualize.compactBrief;
+                        compactBriefInlineSystemColumnsModeRef = response.contextualize.compactBriefInline;
+                        compactSelectSystemColumnsModeRef = response.contextualize.compactSelect;
+                        detailedSystemColumnsModeRef = response.contextualize.detailed;
+
+                        compactSystemColumnsModeColumns = compactSystemColumnsModeRef.columns;
+                        compactBriefSystemColumnsModeColumns = compactBriefSystemColumnsModeRef.columns;
+                        compactBriefInlineSystemColumnsModeColumns = compactBriefInlineSystemColumnsModeRef.columns;
+                        compactSelectSystemColumnsModeColumns = compactSelectSystemColumnsModeRef.columns;
+                        detailedSystemColumnsModeColumns = detailedSystemColumnsModeRef.columns;
+
+                        done();
+                    }).catch(function (err) {
+                        console.dir(err);
+                        done.fail();
+                    });
+                });
+
+                it('with config option: `SystemColumnsDisplayCompact=true`, RID should be first, RCB, RMB, RCT, RMT at the end', function () {
+                    areSameColumnList(compactSystemColumnsModeRef.generateColumnsList(), compactSystemColumnsModeColumns);
+                    //verify RID is first
+                    expect(compactSystemColumnsModeColumns[0]._baseCols[0].name).toBe('RID');
+                    expect(compactSystemColumnsModeColumns.length).toBe(8);
+                    //verify RMB, RCB, RMT, RCT are last
+                    expect(compactSystemColumnsModeColumns[4].name).toBe('RCB');
+                    expect(compactSystemColumnsModeColumns[5].name).toBe('RMB');
+                    expect(compactSystemColumnsModeColumns[6].name).toBe('RCT');
+                    expect(compactSystemColumnsModeColumns[7].name).toBe('RMT');
+                });
+
+                it('each compact subcontext should be changed as well.', function () {
+                    areSameColumnList(compactBriefSystemColumnsModeRef.generateColumnsList(), compactBriefSystemColumnsModeColumns);
+                    areSameColumnList(compactBriefInlineSystemColumnsModeRef.generateColumnsList(), compactBriefInlineSystemColumnsModeColumns);
+                    areSameColumnList(compactSelectSystemColumnsModeRef.generateColumnsList(), compactSelectSystemColumnsModeColumns);
+
+                    expect(compactBriefSystemColumnsModeColumns[0]._baseCols[0].name).toBe('RID');
+                    expect(compactBriefInlineSystemColumnsModeColumns[0]._baseCols[0].name).toBe('RID');
+                    expect(compactSelectSystemColumnsModeColumns[0]._baseCols[0].name).toBe('RID');
+
+                    expect(compactBriefSystemColumnsModeColumns[7].name).toBe('RMT');
+                    expect(compactBriefInlineSystemColumnsModeColumns[7].name).toBe('RMT');
+                    expect(compactSelectSystemColumnsModeColumns[7].name).toBe('RMT');
+                });
+
+                it('with config option: `SystemColumnsDisplayDetailed=["RMB", "RCT"]`, RID should be first, RMB, RCT at the end', function () {
+                    areSameColumnList(detailedSystemColumnsModeRef.generateColumnsList(), detailedSystemColumnsModeColumns);
+
+                    expect(detailedSystemColumnsModeColumns[0]._baseCols[0].name).toBe('RID');
+
+                    expect(detailedSystemColumnsModeColumns[4].name).toBe('RMB');
+                    expect(detailedSystemColumnsModeColumns[5].name).toBe('RCT');
+                });
             });
         });
 
