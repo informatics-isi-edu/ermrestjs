@@ -63,6 +63,33 @@
                             "schema_name": "active_list_schema"
                         }
                     ]
+                },
+                {
+                    "names": [["active_list_schema", "main_fk3"]],
+                    "foreign_key_columns": [
+                        {
+                            "column_name": "fk3_col1",
+                            "table_name": "main",
+                            "schema_name": "active_list_schema"
+                        },
+                        {
+                            "column_name": "fk3_col2",
+                            "table_name": "main",
+                            "schema_name": "active_list_schema"
+                        }
+                    ],
+                    "referenced_columns": [
+                        {
+                            "column_name": "outbound2_id1",
+                            "table_name": "outbound2",
+                            "schema_name": "active_list_schema"
+                        },
+                        {
+                            "column_name": "outbound2_id2",
+                            "table_name": "outbound2",
+                            "schema_name": "active_list_schema"
+                        }
+                    ]
                 }
             ],
             "column_definitions": [
@@ -112,6 +139,18 @@
                 },
                 {
                     "name": "fk2_col2",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "fk3_col1",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "fk3_col2",
                     "type": {
                         "typename": "text"
                     }
@@ -312,11 +351,11 @@
                             "source": "int_col_2"
                         },
                         "outbound_entity_o1": {
-                            "source": [{"outbound": ["active_list_schema", "main_fk1"]}, "outbound1_id"],
+                            "source": [{"outbound": ["active_list_schema", "main_fk1"]}, "RID"],
                             "entity": true
                         },
                         "outbound_entity_o2": {
-                            "source": [{"outbound": ["active_list_schema", "main_fk2"]}, "outbound2_id"],
+                            "source": [{"outbound": ["active_list_schema", "main_fk2"]}, "RID"],
                             "entity": true
                         },
                         "outbound_scalar_o1": {

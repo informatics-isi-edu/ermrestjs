@@ -65,8 +65,8 @@ exports.execute = function (options) {
         "self_link_id": "lOGv1uEUiOj6Z8tDhF-fwA",
         "normal_col_int_col": "int_col",
         "normal_col_int_col_2": "int_col_2",
-        "outbound_entity_o1": "NGh1rJEP_i0U_sRZztxtPg",
-        "outbound_entity_o2": "TtklaEYKZxjwJKy1gwGtkw",
+        "outbound_entity_o1": "y6R-m2ymr0EhgNSKV6Qe7A",
+        "outbound_entity_o2": "b4ZrDs2fzRyG3-ILA7Pi0g",
         "outbound_scalar_o1": "Wu1nyG6bGPP6IBYJDLwNWA",
         "outbound_scalar_o2": "tOa196qFq98xeJivYVyTbQ",
         "all_outbound_entity_o1_o1": "IOJPnQD8kuh8cvHyD-0fEw",
@@ -90,7 +90,7 @@ exports.execute = function (options) {
         "all_outbound_entity_o1_o1_o1": "nTVhVgmnwDAdAScCUP5qwA"
     };
 
-    var expectedColumns;
+    var expectedColumns, expectedActiveList;
 
     beforeAll(function (done) {
         options.ermRest.appLinkFn(appLinkFn);
@@ -248,6 +248,119 @@ exports.execute = function (options) {
                 "value": ""
             }
         ];
+
+        expectedActiveList = {
+            aggregates: [
+                {
+                    "column": "array_d_scalar_i1",
+                    "objects": [
+                        {"index": 1, "isWaitFor": true, "column": true},
+                        { "index": 14, "isWaitFor": false, "column": true}
+                    ]
+                },
+                {
+                    "column": "cnt_i1",
+                    "objects": [
+                        {"index": 3, "isWaitFor": true, "column": true},
+                        {"index": 5, "isWaitFor": true, "column": true},
+                        {"index": 16, "isWaitFor": false, "column": true},
+                        {"index": 17, "isWaitFor": true, "column": true},
+                        {"index": 19, "isWaitFor": true, "column": true}
+                    ]
+                },
+                {
+                    "column": "array_d_entity_i1",
+                    "objects": [
+                        {"index": 7, "isWaitFor": true, "column": true},
+                        {"index": 12, "isWaitFor": false, "column": true},
+                        {"index": 23, "isWaitFor": true, "column": true}
+                    ]
+                },
+                {
+                    "column": "max_i1",
+                    "objects": [
+                        {"index": 7, "isWaitFor": true, "column": true},
+                        {"index": 22, "isWaitFor": false, "column": true}
+                    ]
+                },
+                {
+                    "column": "array_d_scalar_i2",
+                    "objects": [
+                        {"index": 9, "isWaitFor": true, "column": true},
+                        {"index": 15, "isWaitFor": false, "column": true}
+                    ]
+                },
+                {
+                    "column": "array_d_entity_i2",
+                    "objects": [
+                        {"index": 13, "isWaitFor": false, "column": true}
+                    ]
+                },
+                {
+                    "column": "cnt_d_i2",
+                    "objects": [
+                        {"index": 13, "isWaitFor": true, "column": true},
+                        {"index": 19, "isWaitFor": false, "column": true}
+                    ]
+                },
+                {
+                    "column": "max_i2",
+                    "objects": [
+                        {"index": 15, "isWaitFor": true, "column": true},
+                        {"index": 23, "isWaitFor": false, "column": true}
+                    ]
+                },
+                {
+                    "column": "cnt_i2",
+                    "objects": [
+                        {"index": 17, "isWaitFor": false,"column": true},
+                        {"index": 19, "isWaitFor": true, "column": true},
+                        {"index": 21, "isWaitFor": true, "column": true}
+                    ]
+                },
+                {
+                    "column": "array_d_entity_i3",
+                    "objects": [
+                        {"index": 17, "isWaitFor": true, "column": true}
+                    ]
+                },
+                {
+                    "column": "cnt_d_i1",
+                    "objects": [
+                        {"index": 18, "isWaitFor": false, "column": true}
+                    ]
+                },
+                {
+                    "column": "array_d_scalar_i4",
+                    "objects": [
+                        {"index": 19, "isWaitFor": true, "column": true},
+                        {"index": 23, "isWaitFor": true, "column": true}
+                    ]
+                },
+                {
+                    "column": "min_i1",
+                    "objects": [
+                        {"index": 20, "isWaitFor": false,"column": true}
+                    ]
+                },
+                {
+                    "column": "min_i2",
+                    "objects": [
+                        {"index": 21, "isWaitFor": false, "column": true}
+                    ]
+                }
+            ],
+            allOutBounds: [
+                "outbound_entity_o1", "outbound_entity_o2", "outbound_scalar_o1",
+                "outbound_scalar_o2", "all_outbound_entity_o1_o1", "all_outbound_entity_o2_o1",
+                "all_outbound_scalar_o1_o1", "all_outbound_scalar_o2_o1", "all_outbound_entity_o1_o1_o1",
+                "tLQ8i6ghoS6sodD7G8V7kQ" // not defined, so it's the fk.name
+            ],
+            selfLinks: [
+                "self_link_rowname", "self_link_id"
+            ],
+            entitySets: []
+        }
     });
 
     it ("tuple.values should return empty result for the columns with secondary request waitfor.", function (done) {
@@ -255,7 +368,11 @@ exports.execute = function (options) {
             mainPageCompact = response;
             expect(mainPageCompact.tuples[0].values.length).toEqual(expectedColumns.length, "length missmatch");
             mainPageCompact.tuples[0].values.forEach(function (v, i) {
-                expect(v).toEqual(expectedColumns[i].value, "value missmatch for `" + expectedColumns[i].title + "`");
+                var expectedVal = expectedColumns[i].value;
+                if (expectedColumns[i].hasWaitFor) {
+                    expectedVal = "";
+                }
+                expect(v).toEqual(expectedVal, "value missmatch for `" + expectedColumns[i].title + "`");
             });
             done();
         }).catch(catchError(done));
@@ -413,30 +530,58 @@ exports.execute = function (options) {
         });
     });
 
-/*TODO
+
     describe("Reference.activeList, ", function () {
         var activeList;
-        it ("should return the aggregate list properly.", function () {
-            // activeList = mainRefCompact.activeList;
-            // expect(activeList.aggregates.length).toBe(20, "length missmatch.");
+        var testNameList = function (list, expected) {
+            expect(list.length).toBe(expected.length, "length missmatch");
+            list.forEach(function (el, index) {
+                var expectedVal = columnMapping[expected[index]] ? columnMapping[expected[index]] : expected[index];
+                expect(el.name).toBe(expectedVal, "value missmatch in index=" + index);
+            });
+        };
 
+        beforeAll(function () {
+            activeList = mainRefCompact.activeList;
+        });
+
+        it ("should return the aggregate list properly.", function () {
+            expect(activeList.aggregates.length).toBe(expectedActiveList.aggregates.length, "length missmatch.");
+            activeList.aggregates.forEach(function (ag, agIndex) {
+                var expAgg = expectedActiveList.aggregates[agIndex];
+                var message = " for index= " + agIndex + "(expected column= `"+ columnMapping[expAgg.column] +"`)";
+
+                expect(ag.column.name).toBe(columnMapping[expAgg.column], "column missmatch" + message);
+                expect(ag.objects.length).toBe(expAgg.objects.length, "objects length missmatch" + message);
+                ag.objects.forEach(function (obj, objIndex) {
+                    var expObj = expAgg.objects[objIndex];
+                    expect(obj.index).toBe(expObj.index, "index missmatch" + message + " obj index=" + objIndex);
+                    expect(obj.isWaitFor).toBe(expObj.isWaitFor, "isWaitFor missmatch" + message + " obj index=" + objIndex);
+                    expect(obj.column).toBe(expObj.column, "column missmatch" + message + " obj index=" + objIndex);
+                });
+            });
         });
 
         it ("should return the allOutBounds properly.", function () {
-            // expect(activeList.allOutBounds.length).toBe();
+            testNameList(activeList.allOutBounds, expectedActiveList.allOutBounds);
         });
 
         it ("should return the selfLinks properly.", function () {
+            testNameList(activeList.selfLinks, expectedActiveList.selfLinks);
+        });
 
+        it ("should return the entitySets properly.", function () {
+            testNameList(activeList.entitySets, expectedActiveList.entitySets);
         });
     });
+
 
     describe("Page.templateVariables, ", function () {
         it ("should include all-outbounds and honor source mappings.", function () {
 
         });
     });
-*/
+
 
 // ----------------------- helpers
     function checkForeignKeys (col, fks, colStr) {
