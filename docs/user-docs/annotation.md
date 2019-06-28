@@ -291,7 +291,15 @@ Supported _columnentry_ patterns:
 - `[` _schemaname_ `,` _constraintname_ `]`: A two-element list of string literal _schemaname_ and _constraintname_ identifies a constituent key of the table. The defined display of the key SHOULD be presented, with a link to the current displayed row of data. It will be served as a self-link.
 - `{ "source": ` _sourceentry_ `}`:  Defines a pseudo-column based on the given _sourceentry_. For detailed explanation and examples please refer to [here](pseudo-columns.md#examples). Other optional attributes that this JSON document can have are:
   - `markdown_name`: The markdown to use in place of the default heuristics for title of column.
-  - `display`: The markdown pattern to use for generating the value for this column. Please refer to [pseudo-columns display document](pseudo-column-display.md) for more information.
+  - `display`: The display settings for generating the column presentation value. The available options are:
+    - `markdown_pattern`: Markdown pattern that will be used for generating the value.
+    - `template_engine`: The template engine that should be used for the `markdown_pattern`.
+    - `waitfor`: List of secondary pseudo-columns that the current column will use in the defined `markdown_pattern`. Please refer to [pseudo-columns display document](pseudo-column-display.md) for more information.
+    - `array_ux_mode`: If you have `"aggregate": "array"` or `"aggregate": "array_d"` in the pseudo-column definition, a comma-seperated value will be presented to the user. You can use `array_display` attribute to change that. The available options are,
+      - `olist` for ordered bullet list.
+      - `ulist` for unordered bullet list.
+      - `csv` for comma-seperated values.
+      - `raw` for space-seperated values.
   - `comment`: The tooltip to be used in place of the default heuristics for the column.
   - `entity`: If the _sourceentry_ can be treated as entity (the source column is key of the table), setting this attribute to `false` will force the scalar mode.
   - `self_link`: If the defined source is one of the unique not-null keys of the table, and is in entity mode; this attribute will switch the display mode to self-link.
@@ -299,12 +307,8 @@ Supported _columnentry_ patterns:
     - `array` will return ALL the values including duplicates associated with the specified columns. For data types that are sortable (e.g integer, text), the values will be sorted alphabetically or numerically. Otherwise, it displays values in the order that it receives from ERMrest. There is no paging mechanism to limit what's shown in the aggregate column, therefore please USE WITH CARE as it can incur performance overhead and ugly presentation.
     - `array_d` will return distinct values. It has the same performance overhead as `array`, so pleas USE WITH CARE.
     - Using `array` or `array_d` aggregate in entity mode will provide an array of row-names instead of just the value of the column. Row-names will be derived from the `row_name/compact` context.
-  - `array_display`: If you have `"aggregate": "array"` or `"aggregate": "array_d"` in the pseudo-column definition, a comma-seperated value will be presented to the user. You can use `array_display` attribute to change that. The available options are,
-    - `olist` for ordered bullet list.
-    - `ulist` for unordered bullet list.
-    - `csv` for comma-seperated values.
-    - `raw` for space-seperated values.
-  - `array_options`: This attribute is meant to be an object of properties that control the display of `array` or `array_d` aggregate column. These options will only affect the display and have no effect on the generated ERMrest query. The available options are:
+  - `array_display`: This attribute is _deprecated_. It is the same as `array_ux_mode` that is defined above.
+  - `array_options`: This attribute is meant to be an object of properties that control the display of `array` or `array_d` aggregate column. These options will only affect the display (and templating environment) and have no effect on the generated ERMrest query. The available options are:
     - `order`: An alternative sort method to apply when a client wants to semantically sort by key values. It follows the same syntax as `column_order`. In scalar array aggregate, you cannot sort based on other columns values, you can only sort based on the scalar value of the column.
     - `max_length`: `<number>` A number that defines the maximum number of elements that should be displayed.
 

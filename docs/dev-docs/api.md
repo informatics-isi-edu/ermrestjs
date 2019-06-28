@@ -3837,6 +3837,10 @@ its active list
 
 #### referenceColumn.waitFor : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
 Array of columns
+It will
+- ignore entitysets for non-detailed contexts.
+- will ignore normal columns.
+Will also se the `hasWaitFor` if there's at least a seconadry request.
 
 **Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
 <a name="ERMrest.ReferenceColumn+formatvalue"></a>
@@ -4035,6 +4039,11 @@ Format the presentation value corresponding to this pseudo-column definition.
 #### pseudoColumn.getAggregatedValue(page, contextHeaderParams) ⇒ <code>Promise</code>
 Returns a promise that gets resolved with list of aggregated values in the same
 order of tuples of the page that is passed.
+Each returned value has the following attributes:
+ - value
+ - isHTML
+ - templateVariables (TODO)
+
 implementation Notes:
 1. This function will take care of url limitation. It might generate multiple
 ermrest requests based on the url length, and will resolve the promise when

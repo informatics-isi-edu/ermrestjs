@@ -127,6 +127,8 @@ function ReferenceColumn(reference, cols, sourceObject, name, mainTuple) {
     this._name = name;
 
     this._mainTuple = mainTuple;
+
+    this.isUnique = true;
 }
 
 ReferenceColumn.prototype = {
@@ -333,13 +335,6 @@ ReferenceColumn.prototype = {
         return this._baseCols.length == 1;
     },
 
-    get isUnique() {
-        if (this._isUnique === undefined) {
-            this._isUnique = this._simple;
-        }
-        return this._isUnique;
-    },
-
     /**
      * Formats a value corresponding to this reference-column definition.
      * @param {Object} data The 'raw' data value.
@@ -514,6 +509,11 @@ ReferenceColumn.prototype = {
 
     /**
      * Array of columns
+     * It will
+     * - ignore entitysets for non-detailed contexts.
+     * - will ignore normal columns.
+     * Will also se the `hasWaitFor` if there's at least a seconadry request.
+     *
      * @type {ERMrest.ReferenceColumn[]}
      */
     get waitFor() {
@@ -527,6 +527,7 @@ ReferenceColumn.prototype = {
                 }
             }
 
+            var consideredWaitFors = {};
             waitFors.forEach(function (wf, index) {
                 var message = "waitfor defined on table=`" + self._currentTable.name + "`, pseudo-column=`" + self.displayname.value + "`, index=" + index + ", ";
                 if (typeof wf !== "string") {
@@ -534,14 +535,17 @@ ReferenceColumn.prototype = {
                     return;
                 }
 
+                // duplicate
+                if (consideredWaitFors[wf]) {
+                    return;
+                }
+                consideredWaitFors[wf] = true;
+
                 // column names
                 if (wf in self._currentTable.sourceDefinitions.columns) {
                     // there's no reason to add normal columns.
                     return;
                 }
-
-                // TODO all-outbounds, aggregate, entity-sets
-                // TODO should it include the self?
 
                 // sources
                 if ((wf in self._currentTable.sourceDefinitions.sources)) {
@@ -553,7 +557,7 @@ ReferenceColumn.prototype = {
                         return;
                     }
 
-                    // TODO why not?
+                    // NOTE because it's redundant
                     if (sd.name === self.name) {
                         // don't add itself
                         return;
@@ -564,9 +568,11 @@ ReferenceColumn.prototype = {
                         hasWaitFor = true;
                     }
 
-                    // TODO this should be in the table.sourceDefinitions
+                    // NOTE this coukd be in the table.sourceDefinitions
                     // the only issue is that in there we don't have the mainTuple...
                     var pc = module._createPseudoColumn(self._baseReference, sd.column, sd.sourceObject, self._mainTuple, sd.name, sd.isEntity);
+
+                    // ignore normal columns
                     if (!pc.isPseudo || pc.isAsset) return;
 
                     res.push(pc);
@@ -602,17 +608,26 @@ ReferenceColumn.prototype = {
             unformatted: this._getNullValue(context)
         };
 
-        console.log("column ", self.displayname.value);
         if (self.display.sourceMarkdownPattern) {
-            var keyValues = {}, selfTemplateVariables = {}, baseCol = self._baseCols[0];
+            var keyValues = {}, selfTemplateVariables = {};
+            var baseCol = self._baseCols[0];
 
             // create the $self object
             if (self.isPathColumn && self.hasAggregate && columnValue) {
                 selfTemplateVariables = columnValue.templateVariables;
             } else if (self.isForeignKey || (self.isPathColumn && self.hasPath && self.isUnique)) {
-                selfTemplateVariables = {
-                    "$self": module._getRowTemplateVariables(self.table, context, mainTuple._linkedData[column.name])
-                };
+                if (!mainTuple._linkedData[self.name]) {
+                    selfTemplateVariables = {};
+                } else if (!self.isForeignKey && !self.isEntityMode) {
+                    selfTemplateVariables = {
+                        "$self": baseCol.formatvalue(mainTuple._linkedData[self.name][baseCol.name], context),
+                        "$_self": mainTuple._linkedData[self.name][baseCol.name]
+                    };
+                } else {
+                    selfTemplateVariables = {
+                        "$self": module._getRowTemplateVariables(self.table, context, mainTuple._linkedData[self.name])
+                    };
+                }
             } else if (self.isKey) {
                 selfTemplateVariables = {
                     "$self": module._getRowTemplateVariables(self.table, context, mainTuple._data)
@@ -772,6 +787,11 @@ PseudoColumn.prototype.formatPresentation = function(data, context, options) {
 /**
  * Returns a promise that gets resolved with list of aggregated values in the same
  * order of tuples of the page that is passed.
+ * Each returned value has the following attributes:
+ *  - value
+ *  - isHTML
+ *  - templateVariables (TODO)
+ *
  * implementation Notes:
  * 1. This function will take care of url limitation. It might generate multiple
  * ermrest requests based on the url length, and will resolve the promise when
@@ -928,9 +948,37 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
                 returnArray: true
             }
         );
+
+        var res = "";
+        // find array display
+        var array_display = self.sourceObject.array_display;
+        if (self.sourceObject.display && typeof self.sourceObject.display.array_ux_mode === "string") {
+            array_display = self.sourceObject.display.array_ux_mode;
+        }
+
+        // print the array in a comma seperated value (list) or bullets
+        switch (array_display) {
+            case "ulist":
+                arrayRes.forEach(function (arrayVal) {
+                    res += "* " + arrayVal + " \n";
+                });
+                break;
+            case "olist":
+                arrayRes.forEach(function (arrayVal, i) {
+                    res += (i+1) + ". " + arrayVal + " \n";
+                });
+                break;
+            case "raw":
+                res = arrayRes.join(" ");
+                break;
+            default: //csv
+                res = arrayRes.join(", ");
+        }
+
+        // populate templateVariables
         var templateVariables = {};
         if (!isRow) {
-            templateVariables = {"$self": arrayRes, "$_self": val};
+            templateVariables = {"$self": res, "$_self": val};
         } else {
             templateVariables = {
                 "$self": val.map(function (v) {
@@ -939,7 +987,6 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
             };
         }
 
-        var res = "";
         if (sourceMarkdownPattern) {
             res = module._renderTemplate(
                 sourceMarkdownPattern,
@@ -950,30 +997,6 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
 
             if (res === null || res.trim() === '') {
                 res = module._getNullValue(column.table, context, [column.table, column.table.schema]);
-            }
-        } else {
-            var array_display = self.sourceObject.array_display;
-            if (self.sourceObject.display && typeof self.sourceObject.display.array_display === "string") {
-                array_display = self.sourceObject.display.array_display;
-            }
-
-            // print the array in a comma seperated value (list) or bullets
-            switch (array_display) {
-                case "ulist":
-                    arrayRes.forEach(function (arrayVal) {
-                        res += "* " + arrayVal + " \n";
-                    });
-                    break;
-                case "olist":
-                    arrayRes.forEach(function (arrayVal, i) {
-                        res += (i+1) + ". " + arrayVal + " \n";
-                    });
-                    break;
-                case "raw":
-                    res = arrayRes.join(" ");
-                    break;
-                default: //csv
-                    res = arrayRes.join(", ");
             }
         }
         return {value: printUtils.printMarkdown(res), templateVariables: templateVariables};

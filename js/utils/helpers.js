@@ -708,6 +708,7 @@
                 res["_" + k] = d[k];
 
                 // alternative names
+                // TODO this should change to allow usage of table column names.
                 if (Array.isArray(currTable.sourceDefinitions.sourceMapping[k]) ){
                     currTable.sourceDefinitions.sourceMapping[k].forEach(function (altKey) {
                         res[altKey] = v;

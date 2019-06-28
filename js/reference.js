@@ -4800,9 +4800,10 @@
         get templateVariables() {
             if (this._templateVariables === undefined) {
                 var self = this;
+                var context = self._pageRef._context;
                 var keyValues = module._getRowTemplateVariables(
                     self._pageRef._table,
-                    self._pageRef._context,
+                    context,
                     self._data,
                     self._linkedData
                 );
@@ -4816,15 +4817,21 @@
 
                     // see if it exists in the mapping
                     if (Array.isArray(sm[col.name])) {
-                        var fkTempVal = module._getRowTemplateVariables(
-                            col.table,
-                            self._pageRef._context,
-                            self._linkedData[col.name]
-                        );
+                        if (col.isForeignKey || col.isEntityMode) {
+                            // alloutbound entity
+                            var fkTempVal = module._getRowTemplateVariables(col.table, context, self._linkedData[col.name]);
 
-                        sm[col.name].forEach(function (key) {
-                            keyValues.values[key] = fkTempVal;
-                        });
+                            sm[col.name].forEach(function (key) {
+                                keyValues.values[key] = fkTempVal;
+                            });
+                        } else {
+                            // alloutbound scalar
+                            sm[col.name].forEach(function (key) {
+                                var rawVal = self._linkedData[col.name][col.baseColumn.name];
+                                keyValues.values[key] = col.baseColumn.formatvalue(rawVal, context);
+                                keyValues.values["_" + key] = rawVal;
+                            });
+                        }
                     }
                 });
 
@@ -4834,13 +4841,7 @@
                     if (Array.isArray(sm[col.name])) {
                         // compute it once and use it for all the self-links.
                         if (!selfLinkValue) {
-                            selfLinkValue = module._getRowTemplateVariables(
-                                col.table,
-                                self._pageRef._context,
-                                self._data,
-                                null,
-                                col.key
-                            );
+                            selfLinkValue = module._getRowTemplateVariables(col.table, context, self._data, null, col.key);
                         }
 
                         sm[col.name].forEach(function (key) {

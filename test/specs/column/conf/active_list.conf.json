@@ -1,0 +1,15 @@
+{
+    "catalog": {},
+    "schema": {
+        "name": "active_list_schema",
+        "createNew": true,
+        "path": "test/specs/column/conf/active_list_schema/schema.json"
+    },
+    "tables": {
+        "createNew": true
+    },
+    "entities": {
+        "createNew": true,
+        "path": "test/specs/column/conf/active_list_schema/data"
+    }
+}
