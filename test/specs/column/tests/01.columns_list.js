@@ -780,7 +780,6 @@ exports.execute = function (options) {
                 var detailedSystemColumnsModeRef, detailedSystemColumnsModeColumns;
                 beforeAll(function (done) {
                     // set this here so it doesn't affect above columns list tests
-                    // no more tests in this spec check the columns lists (no new references are generated and no new columns lists are tested)
                     options.ermRest.systemColumnsHeuristicsMode(systemColumnsHeuristicsMode);
                     options.ermRest.resolve(singleEnitityUriSystemColumnsHeuristics, {
                         cid: "test"
@@ -837,6 +836,10 @@ exports.execute = function (options) {
 
                     expect(detailedSystemColumnsModeColumns[4].name).toBe('RMB');
                     expect(detailedSystemColumnsModeColumns[5].name).toBe('RCT');
+                });
+
+                afterAll(function () {
+                    options.ermRest.systemColumnsHeuristicsMode(function () {});
                 });
             });
         });
