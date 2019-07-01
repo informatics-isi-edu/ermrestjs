@@ -76,30 +76,29 @@ exports.execute = function (options) {
             detailedExpectedValues = [
                 {
                     title: 'self-link',
-                    value: '<p><a href="' + recordURL + '/pseudo_column_display_self_schema:main/main_id=01">main one(1234501, 1,234,501)</a></p>\n'
+                    value: '<p>self_link <a href="' + recordURL + '/pseudo_column_display_self_schema:main/main_id=01">main one(1234501, 1,234,501)</a></p>\n'
                 },
                 {
                     title: 'normal column',
-                    value: '<p>1,234,501, 1234501</p>\n'
+                    value: '<p>int_col: 1,234,501, 1234501</p>\n'
                 },
                 {
                     title: 'outbound entity',
-                    value: '<p><a href="' + getRecordURL('outbound1', 'outbound1_id', 'o01') + '">outbound1 one(1234511, 1,234,511)</a></p>\n'
+                    value: '<p>outbound: <a href="' + getRecordURL('outbound1', 'outbound1_id', 'o01') + '">outbound1 one(1234511, 1,234,511)</a></p>\n'
                 },
                 {
                     title: 'outbound scalar',
-                    value: '<p>1,234,511, 1234511</p>\n'
+                    value: '<p>outbound scalar: 1,234,511, 1234511</p>\n'
                 },
                 {
                     title: 'all-outbound entity',
-                    value: '<p><a href="' + getRecordURL('outbound1_outbound1', 'outbound1_outbound1_id', 'oo01') + '">outbound1_outbound1 one(12345111, 12,345,111)</a></p>\n'
+                    value: '<p>all_outbound entity: <a href="' + getRecordURL('outbound1_outbound1', 'outbound1_outbound1_id', 'oo01') + '">outbound1_outbound1 one(12345111, 12,345,111)</a></p>\n'
                 },
                 {
                     title: 'all-otubound scalar',
-                    value: '<p>12,345,111, 12345111</p>\n'
+                    value: '<p>all_outbound scalar: 12,345,111, 12345111</p>\n'
                 },
                 null, null, null, null, null, null
-                // TODO add the columns with waitfor here to return null
             ];
 
             templateVariables = {};
@@ -136,7 +135,7 @@ exports.execute = function (options) {
             };
 
             it ("should return the expected value for array_d entity", function (done) {
-                var expectedValue = "<p>";
+                var expectedValue = "<p>array_d entity: ";
                 var rowValues = [
                     {id: "i01", caption: "inbound1 one(1234521, 1,234,521)", rowName: "inbound1 one", int_col: "1,234,521", _int_col: 1234521},
                     {id: "i02", caption: "inbound1 two(1234522, 1,234,522)", rowName: "inbound1 two", int_col: "1,234,522", _int_col: 1234522},
@@ -175,7 +174,7 @@ exports.execute = function (options) {
             });
 
             it ("should return the expected value for array_d scalar", function (done) {
-                var expectedValue = "<p>1,234,521, 1,234,522, 1,234,523, 1,234,524, 1,234,525 - 1234521| 1234522| 1234523| 1234524| 1234525</p>\n";
+                var expectedValue = "<p>array_d scalar: 1,234,521, 1,234,522, 1,234,523, 1,234,524, 1,234,525 - 1234521| 1234522| 1234523| 1234524| 1234525</p>\n";
                 testGetAggregatedValue(
                     mainRefDetailed.columns[7],
                     [{isHTML: true, value: expectedValue},{ isHTML: false, value: ""}],
@@ -200,7 +199,7 @@ exports.execute = function (options) {
             it ("should return the expected value for cnt scalar", function (done) {
                 testGetAggregatedValue(
                     mainRefDetailed.columns[8],
-                    [{isHTML: true, value: "<p>5, 5</p>\n"},{ isHTML: false, value: ""}],
+                    [{isHTML: true, value: "<p>cnt: 5, 5</p>\n"},{ isHTML: false, value: ""}],
                     function (value, index) {
                         if (index === 0) {
                             expect(value.templateVariables).toBeDefined("templateVariables was not defined for index=" + index);
@@ -218,7 +217,7 @@ exports.execute = function (options) {
             it ("should return the expected value for cnt_d scalar", function (done) {
                 testGetAggregatedValue(
                     mainRefDetailed.columns[9],
-                    [{isHTML: true, value: "<p>5, 5</p>\n"},{ isHTML: false, value: ""}],
+                    [{isHTML: true, value: "<p>cnt_d: 5, 5</p>\n"},{ isHTML: false, value: ""}],
                     function (value, index) {
                         if (index === 0) {
                             expect(value.templateVariables).toBeDefined("templateVariables was not defined for index=" + index);
@@ -236,7 +235,7 @@ exports.execute = function (options) {
             it ("should return the expected value for min scalar", function (done) {
                 testGetAggregatedValue(
                     mainRefDetailed.columns[10],
-                    [{isHTML: true, value: "<p>1,234,521, 1234521</p>\n"},{ isHTML: false, value: ""}],
+                    [{isHTML: true, value: "<p>min: 1,234,521, 1234521</p>\n"},{ isHTML: false, value: ""}],
                     function (value, index) {
                         if (index === 0) {
                             expect(value.templateVariables).toBeDefined("templateVariables was not defined for index=" + index);
@@ -254,7 +253,7 @@ exports.execute = function (options) {
             it ("should return the expected value for max scalar", function (done) {
                 testGetAggregatedValue(
                     mainRefDetailed.columns[11],
-                    [{isHTML: true, value: "<p>1,234,525, 1234525</p>\n"},{ isHTML: false, value: ""}],
+                    [{isHTML: true, value: "<p>max: 1,234,525, 1234525</p>\n"},{ isHTML: false, value: ""}],
                     function (value, index) {
                         if (index === 0) {
                             expect(value.templateVariables).toBeDefined("templateVariables was not defined for index=" + index);
