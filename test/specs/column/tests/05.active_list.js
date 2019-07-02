@@ -364,7 +364,7 @@ exports.execute = function (options) {
             }
         });
 
-        it ("tuple.values should return empty result for the columns with secondary request waitfor.", function (done) {
+        it ("tuple.values should return empty result for the columns with secondary request wait_for.", function (done) {
             mainRefCompact.read(pageLen).then(function (response) {
                 mainPageCompact = response;
                 expect(mainPageCompact.tuples[0].values.length).toEqual(expectedColumns.length, "length missmatch");
@@ -515,7 +515,7 @@ exports.execute = function (options) {
                 expect(compactColumns[2].hasWaitFor).toBe(expectedColumns[2].hasWaitFor, "hasWaitFor missmatch.");
             });
 
-            it ("should return the proper waitfors.", function () {
+            it ("should return the proper wait_fors.", function () {
                 expectedColumns.forEach(function (col, index) {
                     var message = " for `" + col.title + "`.";
                     expect(compactColumns[index].waitFor.length).toBe(col.waitFor.length, "length missmatch" + message);
@@ -524,7 +524,7 @@ exports.execute = function (options) {
                             return wf.name;
                         })).toEqual(jasmine.arrayContaining(col.waitFor.map(function (c) {
                             return columnMapping[c];
-                        })), "waitfor missmatch" + message);
+                        })), "wait_for missmatch" + message);
                     }
                     expect(compactColumns[index].hasWaitFor).toBe(col.hasWaitFor, "hasWaitFor missmatch" + message);
                 })

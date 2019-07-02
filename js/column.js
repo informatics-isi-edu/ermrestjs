@@ -363,7 +363,7 @@ ReferenceColumn.prototype = {
         data = data || {};
         options = options || {};
 
-        // if there's waitfor, this should return null.
+        // if there's wait_for, this should return null.
         if (this.hasWaitFor && !options.skipWaitFor) {
             return {
                 isHTML: false,
@@ -373,13 +373,11 @@ ReferenceColumn.prototype = {
         }
 
         if (this.display.sourceMarkdownPattern) {
-            var res, keyValues = {}, cols = this._baseCols;
+            var res, keyValues = options.templateVariables || {}, cols = this._baseCols;
 
             if (this._simple) {
-                keyValues = {
-                    "$self": cols[0].formatvalue(data[cols[0].name], context, options),
-                    "$_self": data[cols[0].name]
-                };
+                keyValues.$self = cols[0].formatvalue(data[cols[0].name], context, options);
+                keyValues.$_self = data[cols[0].name];
             } else {
                 var values = {};
                 cols.forEach(function (col) {
@@ -520,16 +518,16 @@ ReferenceColumn.prototype = {
         if (this._waitFor === undefined) {
             var self = this, res = [], hasWaitFor = false, waitFors = [];
             if (self.sourceObject && self.sourceObject.display) {
-                if (Array.isArray(self.sourceObject.display.waitfor)) {
-                    waitFors = self.sourceObject.display.waitfor;
-                } else if (typeof self.sourceObject.display.waitfor === "string") {
-                    waitFors = [self.sourceObject.display.waitfor];
+                if (Array.isArray(self.sourceObject.display.wait_for)) {
+                    waitFors = self.sourceObject.display.wait_for;
+                } else if (typeof self.sourceObject.display.wait_for === "string") {
+                    waitFors = [self.sourceObject.display.wait_for];
                 }
             }
 
             var consideredWaitFors = {};
             waitFors.forEach(function (wf, index) {
-                var message = "waitfor defined on table=`" + self._currentTable.name + "`, pseudo-column=`" + self.displayname.value + "`, index=" + index + ", ";
+                var message = "wait_for defined on table=`" + self._currentTable.name + "`, pseudo-column=`" + self.displayname.value + "`, index=" + index + ", ";
                 if (typeof wf !== "string") {
                     console.log(message + "must be an string");
                     return;
@@ -553,7 +551,7 @@ ReferenceColumn.prototype = {
 
                     // entitysets are only allowed in detailed
                     if (sd.hasInbound && !sd.sourceObject.aggregate && self._context !== module._contexts.DETAILED) {
-                        console.log(messge + ", waitfor element index=", index, " is not valid (entity sets are not allowed in detailed).");
+                        console.log(messge + ", wait_for element index=", index, " is not valid (entity sets are not allowed in detailed).");
                         return;
                     }
 
@@ -649,8 +647,8 @@ ReferenceColumn.prototype = {
             );
         }
 
-        // TODO supporting waitfor on column display/key display is simple,
-        // just change waitfor to look at those too,
+        // TODO supporting wait_for on column display/key display is simple,
+        // just change wait_for to look at those too,
         // and also pass the templateVariables instead of page.templateVariables
 
         // when there's waifor but no sourceMarkdownPattern
@@ -770,9 +768,11 @@ PseudoColumn.prototype.formatPresentation = function(data, context, options) {
     }
 
     if (this.display.sourceMarkdownPattern) {
+        var keyValues = options.templateVariables || {};
+        keyValues.$self = module._getRowTemplateVariables(this.table, context, data);
         return module._processMarkdownPattern(
             this.display.sourceMarkdownPattern,
-            {$self: module._getRowTemplateVariables(this.table, context, data)},
+            keyValues,
             this.table,
             context,
             {templateEngine: this.display.sourceTemplateEngine}
@@ -1702,15 +1702,17 @@ ForeignKeyPseudoColumn.prototype.formatPresentation = function(data, context, op
         unformatted: this._getNullValue(context)
     };
 
-    // if there's waitfor, this should return null.
+    // if there's wait_for, this should return null.
     if (this.hasWaitFor && !options.skipWaitFor) {
         return nullValue;
     }
 
     if (this.display.sourceMarkdownPattern) {
+        var keyValues = options.templateVariables || {};
+        keyValues.$self = module._getRowTemplateVariables(this.table, context, data);
         return module._processMarkdownPattern(
             this.display.sourceMarkdownPattern,
-            {$self: module._getRowTemplateVariables(this.table, context, data)},
+            keyValues,
             this.table,
             context,
             {templateEngine: this.display.sourceTemplateEngine}
@@ -1974,9 +1976,11 @@ KeyPseudoColumn.prototype.formatPresentation = function(data, context, options) 
         return nullValue;
     }
     if (this.display.sourceMarkdownPattern) {
+        var keyValues = options.templateVariables || {};
+        keyValues.$self = module._getRowTemplateVariables(this.table, context, data, null, this.key);
         return module._processMarkdownPattern(
             this.display.sourceMarkdownPattern,
-            {$self: module._getRowTemplateVariables(this.table, context, data, null, this.key)},
+            keyValues,
             this.table,
             context,
             {templateEngine: this.display.sourceTemplateEngine}

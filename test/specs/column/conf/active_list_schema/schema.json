@@ -168,14 +168,14 @@
                             "display": {
                                 "markdown_pattern": "[{{{$self.rowName}}}({{{$self.values._int_col}}}, {{{$self.values.int_col}}})]({{{$self.uri.detailed}}})",
                                 "template_engine": "handlebars",
-                                "waitfor": ["array_d_scalar_i1"]
+                                "wait_for": ["array_d_scalar_i1"]
                             },
                             "markdown_name": "self_link_id"
                         },
                         {
                             "sourcekey": "normal_col_int_col",
                             "display": {
-                                "waitfor": ["invalid", "entity_set_i2"]
+                                "wait_for": ["invalid", "entity_set_i2"]
                             },
                             "markdown_name": "normal_col_int_col"
                         },
@@ -184,14 +184,14 @@
                             "display": {
                                 "markdown_pattern": "cnt: {{{_cnt_i1}}} - {{{$self}}}, {{{$_self}}}",
                                 "template_engine": "handlebars",
-                                "waitfor": "cnt_i1"
+                                "wait_for": "cnt_i1"
                             },
                             "markdown_name": "normal_col_int_col_2"
                         },
                         {
                             "sourcekey": "outbound_entity_o1",
                             "display": {
-                                "waitfor": ["outbound_entity_o2"]
+                                "wait_for": ["outbound_entity_o2"]
                             },
                             "markdown_name": "outbound_entity_o1"
                         },
@@ -200,7 +200,7 @@
                             "display": {
                                 "markdown_pattern": "[{{{$self.rowName}}}({{{$self.values._int_col}}}, {{{$self.values.int_col}}})]({{{$self.uri.detailed}}})",
                                 "template_engine": "handlebars",
-                                "waitfor": ["cnt_i1", "self_link_rowname"]
+                                "wait_for": ["cnt_i1", "self_link_rowname"]
                             },
                             "markdown_name": "outbound_entity_o2"
                         },
@@ -208,7 +208,7 @@
                             "sourcekey": "outbound_scalar_o1",
                             "markdown_name": "outbound_scalar_o1",
                             "display": {
-                                "waitfor": ["outbound_scalar_o1"]
+                                "wait_for": ["outbound_scalar_o1"]
                             }
                         },
                         {
@@ -216,7 +216,7 @@
                             "display": {
                                 "markdown_pattern": "{{{$self}}}, {{{$_self}}}",
                                 "template_engine": "handlebars",
-                                "waitfor": ["array_d_entity_i1", "max_i1"]
+                                "wait_for": ["array_d_entity_i1", "max_i1"]
                             },
                             "markdown_name": "outbound_scalar_o2"
                         },
@@ -224,7 +224,7 @@
                             "sourcekey": "all_outbound_entity_o1_o1",
                             "markdown_name": "all_outbound_entity_o1_o1",
                             "display": {
-                                "waitfor": ["all_outbound_entity_o2_o1"]
+                                "wait_for": ["all_outbound_entity_o2_o1"]
                             }
                         },
                         {
@@ -232,7 +232,7 @@
                             "display": {
                                 "markdown_pattern": "[{{{$self.rowName}}}({{{$self.values._int_col}}}, {{{$self.values.int_col}}})]({{{$self.uri.detailed}}})",
                                 "template_engine": "handlebars",
-                                "waitfor": ["array_d_scalar_i2"]
+                                "wait_for": ["array_d_scalar_i2"]
                             },
                             "markdown_name": "all_outbound_entity_o2_o1"
                         },
@@ -245,7 +245,7 @@
                             "display": {
                                 "markdown_pattern": "{{{$self}}}, {{{$_self}}} | [{{{all_outbound_entity_o1_o1_o1.rowName}}}]({{{all_outbound_entity_o1_o1_o1.uri.detailed}}})",
                                 "template_engine": "handlebars",
-                                "waitfor": ["all_outbound_entity_o1_o1_o1", "all_outbound_scalar_o2_o1"]
+                                "wait_for": ["all_outbound_entity_o1_o1_o1", "all_outbound_scalar_o2_o1"]
                             },
                             "markdown_name": "all_outbound_scalar_o2_o1"
                         },
@@ -258,7 +258,7 @@
                             "display": {
                                 "markdown_pattern": "{{#each $self}}[{{{this.rowName}}}({{{this.values._int_col}}}, {{{this.values.int_col}}})]({{{this.uri.detailed}}}){{#unless @last}}, {{/unless}}{{/each}}",
                                 "template_engine": "handlebars",
-                                "waitfor": ["array_d_entity_i2", "cnt_d_i2", "cnt_d_i2"]
+                                "wait_for": ["array_d_entity_i2", "cnt_d_i2", "cnt_d_i2"]
                             },
                             "markdown_name": "array_d_entity_i2"
                         },
@@ -271,7 +271,7 @@
                             "display": {
                                 "markdown_pattern": "{{{$self}}} - {{#each $_self}}{{#unless @first}}| {{/unless}}{{{this}}}{{/each}}",
                                 "template_engine": "handlebars",
-                                "waitfor": ["max_i2"]
+                                "wait_for": ["max_i2"]
                             },
                             "markdown_name": "array_d_scalar_i2"
                         },
@@ -284,7 +284,7 @@
                             "display": {
                                 "markdown_pattern": "{{{$self}}}, {{{$_self}}}",
                                 "template_engine": "handlebars",
-                                "waitfor": ["array_d_entity_i3", "cnt_i1"]
+                                "wait_for": ["array_d_entity_i3", "cnt_i1"]
                             },
                             "markdown_name": "cnt_i2"
                         },
@@ -297,7 +297,7 @@
                             "display": {
                                 "markdown_pattern": "{{{$self}}}, {{{$_self}}}",
                                 "template_engine": "handlebars",
-                                "waitfor": ["array_d_scalar_i4", "cnt_i1", "cnt_i2"]
+                                "wait_for": ["array_d_scalar_i4", "cnt_i1", "cnt_i2"]
                             },
                             "markdown_name": "cnt_d_i2"
                         },
@@ -310,7 +310,7 @@
                             "display": {
                                 "markdown_pattern": "{{{$self}}}, {{{$_self}}}",
                                 "template_engine": "handlebars",
-                                "waitfor": ["id", "all_outbound_entity_o2_o1", "cnt_i2"]
+                                "wait_for": ["id", "all_outbound_entity_o2_o1", "cnt_i2"]
                             },
                             "markdown_name": "min_i2"
                         },
@@ -323,7 +323,7 @@
                             "display": {
                                 "markdown_pattern": "{{{$self}}}, {{{$_self}}}",
                                 "template_engine": "handlebars",
-                                "waitfor": ["array_d_entity_i1", "array_d_scalar_i4"]
+                                "wait_for": ["array_d_entity_i1", "array_d_scalar_i4"]
                             },
                             "markdown_name": "max_i2"
                         }
