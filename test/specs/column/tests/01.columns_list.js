@@ -764,20 +764,18 @@ exports.execute = function (options) {
             describe('with system columns heuristic config options defined,', function () {
                 function systemColumnsHeuristicsMode(context) {
                     var mode = null;
-                    if (context == 'compact') {
+                    if (context.indexOf('compact') != -1) {
                         mode = true;
                     } else if (context == 'detailed') {
-                        mode = ['RMB', 'RCT'];
+                        mode = ['RCT', 'RMB', 'not_a_col', 'RID', 'col_1'];
                     }
 
                     return mode;
                 }
 
-                var compactSystemColumnsModeRef, compactBriefSystemColumnsModeRef, compactBriefInlineSystemColumnsModeRef,
-                    compactSelectSystemColumnsModeRef, compactSystemColumnsModeColumns, compactBriefSystemColumnsModeColumns,
-                    compactBriefInlineSystemColumnsModeColumns, compactSelectSystemColumnsModeColumns;
+                var compactSystemColumnsModeRef, compactSystemColumnsModeColumns,
+                    detailedSystemColumnsModeRef, detailedSystemColumnsModeColumns;
 
-                var detailedSystemColumnsModeRef, detailedSystemColumnsModeColumns;
                 beforeAll(function (done) {
                     // set this here so it doesn't affect above columns list tests
                     options.ermRest.systemColumnsHeuristicsMode(systemColumnsHeuristicsMode);
@@ -785,15 +783,9 @@ exports.execute = function (options) {
                         cid: "test"
                     }).then(function (response) {
                         compactSystemColumnsModeRef = response.contextualize.compact;
-                        compactBriefSystemColumnsModeRef = response.contextualize.compactBrief;
-                        compactBriefInlineSystemColumnsModeRef = response.contextualize.compactBriefInline;
-                        compactSelectSystemColumnsModeRef = response.contextualize.compactSelect;
                         detailedSystemColumnsModeRef = response.contextualize.detailed;
 
                         compactSystemColumnsModeColumns = compactSystemColumnsModeRef.columns;
-                        compactBriefSystemColumnsModeColumns = compactBriefSystemColumnsModeRef.columns;
-                        compactBriefInlineSystemColumnsModeColumns = compactBriefInlineSystemColumnsModeRef.columns;
-                        compactSelectSystemColumnsModeColumns = compactSelectSystemColumnsModeRef.columns;
                         detailedSystemColumnsModeColumns = detailedSystemColumnsModeRef.columns;
 
                         done();
@@ -815,27 +807,30 @@ exports.execute = function (options) {
                     expect(compactSystemColumnsModeColumns[7].name).toBe('RMT');
                 });
 
-                it('each compact subcontext should be changed as well.', function () {
-                    areSameColumnList(compactBriefSystemColumnsModeRef.generateColumnsList(), compactBriefSystemColumnsModeColumns);
-                    areSameColumnList(compactBriefInlineSystemColumnsModeRef.generateColumnsList(), compactBriefInlineSystemColumnsModeColumns);
-                    areSameColumnList(compactSelectSystemColumnsModeRef.generateColumnsList(), compactSelectSystemColumnsModeColumns);
-
-                    expect(compactBriefSystemColumnsModeColumns[0]._baseCols[0].name).toBe('RID');
-                    expect(compactBriefInlineSystemColumnsModeColumns[0]._baseCols[0].name).toBe('RID');
-                    expect(compactSelectSystemColumnsModeColumns[0]._baseCols[0].name).toBe('RID');
-
-                    expect(compactBriefSystemColumnsModeColumns[7].name).toBe('RMT');
-                    expect(compactBriefInlineSystemColumnsModeColumns[7].name).toBe('RMT');
-                    expect(compactSelectSystemColumnsModeColumns[7].name).toBe('RMT');
-                });
-
-                it('with config option: `SystemColumnsDisplayDetailed=["RMB", "RCT"]`, RID should be first, RMB, RCT at the end', function () {
+                it("with config option: `SystemColumnsDisplayDetailed=['RCT', 'RMB', 'not_a_col', 'RID', 'col_1']`, RID should be first, RMB, RCT at the end.", function () {
+                    var columnNames = []
+                    detailedSystemColumnsModeColumns.forEach(function (col) {
+                        columnNames.push(col.name);
+                    });
+                    // order for system columns is always in the order of module._systemColumns
+                    // i.e. ['RID', 'RCB', 'RMB', 'RCT', 'RMT']
                     areSameColumnList(detailedSystemColumnsModeRef.generateColumnsList(), detailedSystemColumnsModeColumns);
+                    expect(columnNames.length).toBe(6);
 
                     expect(detailedSystemColumnsModeColumns[0]._baseCols[0].name).toBe('RID');
 
-                    expect(detailedSystemColumnsModeColumns[4].name).toBe('RMB');
-                    expect(detailedSystemColumnsModeColumns[5].name).toBe('RCT');
+                    // col_1 shouldn't be moved out of default order (defined before col_2 in table definition)
+                    expect(columnNames.indexOf('col_1') < columnNames.indexOf('col_2')).toBeTruthy("col_1 is not before col_2");
+
+                    // the only system columns, and should be at the end
+                    expect(columnNames[4]).toBe('RMB');
+                    expect(columnNames[5]).toBe('RCT');
+
+                    // other system columns should not be present
+                    expect(columnNames.indexOf('RCB')).toBe(-1, 'RCB in column list');
+                    expect(columnNames.indexOf('RMT')).toBe(-1, 'RMT in column list');
+                    // not_a_col is not in the table definition, and should be ignored
+                    expect(columnNames.indexOf('not_a_col')).toBe(-1, 'not_a_col in column list');
                 });
 
                 afterAll(function () {
