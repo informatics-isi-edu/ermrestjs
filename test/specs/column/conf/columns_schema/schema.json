@@ -1753,6 +1753,52 @@
                 }
             ],
             "annotations" : {}
+        },
+        "system_columns_heuristic_table" : {
+            "comment": "reference table with multiple outbound FKRs",
+            "kind": "table",
+            "table_name": "system_columns_heuristic_table",
+            "schema_name": "columns_schema",
+            "keys": [{
+                "unique_columns": ["id"],
+                "names": [["columns_schema", "system_columns_ref_table_outbound_fks_key"]],
+                "comment": "system_columns_heuristic_table comment"
+            }],
+            "foreign_keys": [
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type" :{
+                        "typename": "text"
+                    },
+                    "comment": "not part of any FKRs."
+                },
+                {
+                    "name": "col_1",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:generated": {}
+                    }
+                },
+                {
+                    "name": "col_2",
+                    "type": {
+                        "typename": "text"
+                    },
+                    "annotations": {
+                        "tag:misd.isi.edu,2015:display": {
+                            "name": "Column 2 Name"
+                        },
+                        "tag:isrd.isi.edu,2016:immutable": {}
+                    }
+                }
+            ],
+            "annotations": {}
         }
     }
 }

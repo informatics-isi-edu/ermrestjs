@@ -52,6 +52,8 @@
      * @callback onHTTPSuccess
      */
 
+     module._systemColumnsHeuristicsMode = function () {};
+
     /**
      * @memberof ERMrest
      * @function
