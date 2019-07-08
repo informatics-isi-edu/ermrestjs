@@ -13,6 +13,7 @@ exports.execute = function (options) {
             tableWithSlash = "table_w_slash",
             tableWithAsset = "table_w_asset",
             tableWithInvalidUrlPattern = "table_with_invalid_url_pattern",
+            tableWithNoVisibleColumns = "system_columns_heuristic_table",
             entityId = 1,
             limit = 1,
             entryContext = "entry",
@@ -44,6 +45,9 @@ exports.execute = function (options) {
 
         var tableWithInvalidUrlPatternURI = options.url + "/catalog/" + catalog_id + "/entity/"
             + schemaName + ':' + tableWithInvalidUrlPattern;
+
+        var singleEnitityUriSystemColumnsHeuristics = options.url + "/catalog/" + catalog_id + "/entity/" +
+            schemaName + ":" + tableWithNoVisibleColumns + "/id=" + entityId;
 
         var chaiseURL = "https://dev.isrd.isi.edu/chaise";
         var recordURL = chaiseURL + "/record";
@@ -298,7 +302,6 @@ exports.execute = function (options) {
             options.ermRest.resolve(singleEnitityUri, {
                 cid: "test"
             }).then(function (response) {
-
                 compactRef = response.contextualize.compact;
                 compactBriefRef = response.contextualize.compactBrief;
                 compactSelectRef = response.contextualize.compactSelect;
@@ -756,6 +759,83 @@ exports.execute = function (options) {
             it('should return the same columns list as .columns', function () {
                 areSameColumnList(compactRef.generateColumnsList(), compactColumns);
                 areSameColumnList(entryEditRef.generateColumnsList(), entryEditRef.columns);
+            });
+
+            describe('with system columns heuristic config options defined,', function () {
+                function systemColumnsHeuristicsMode(context) {
+                    var mode = null;
+                    if (context.indexOf('compact') != -1) {
+                        mode = true;
+                    } else if (context == 'detailed') {
+                        mode = ['RCT', 'RMB', 'not_a_col', 'RID', 'col_1'];
+                    }
+
+                    return mode;
+                }
+
+                var compactSystemColumnsModeRef, compactSystemColumnsModeColumns,
+                    detailedSystemColumnsModeRef, detailedSystemColumnsModeColumns;
+
+                beforeAll(function (done) {
+                    // set this here so it doesn't affect above columns list tests
+                    options.ermRest.systemColumnsHeuristicsMode(systemColumnsHeuristicsMode);
+                    options.ermRest.resolve(singleEnitityUriSystemColumnsHeuristics, {
+                        cid: "test"
+                    }).then(function (response) {
+                        compactSystemColumnsModeRef = response.contextualize.compact;
+                        detailedSystemColumnsModeRef = response.contextualize.detailed;
+
+                        compactSystemColumnsModeColumns = compactSystemColumnsModeRef.columns;
+                        detailedSystemColumnsModeColumns = detailedSystemColumnsModeRef.columns;
+
+                        done();
+                    }).catch(function (err) {
+                        console.dir(err);
+                        done.fail();
+                    });
+                });
+
+                it('with config option: `SystemColumnsDisplayCompact=true`, RID should be first, RCB, RMB, RCT, RMT at the end', function () {
+                    areSameColumnList(compactSystemColumnsModeRef.generateColumnsList(), compactSystemColumnsModeColumns);
+                    //verify RID is first
+                    expect(compactSystemColumnsModeColumns[0]._baseCols[0].name).toBe('RID');
+                    expect(compactSystemColumnsModeColumns.length).toBe(8);
+                    //verify RMB, RCB, RMT, RCT are last
+                    expect(compactSystemColumnsModeColumns[4].name).toBe('RCB');
+                    expect(compactSystemColumnsModeColumns[5].name).toBe('RMB');
+                    expect(compactSystemColumnsModeColumns[6].name).toBe('RCT');
+                    expect(compactSystemColumnsModeColumns[7].name).toBe('RMT');
+                });
+
+                it("with config option: `SystemColumnsDisplayDetailed=['RCT', 'RMB', 'not_a_col', 'RID', 'col_1']`, RID should be first, RMB, RCT at the end.", function () {
+                    var columnNames = []
+                    detailedSystemColumnsModeColumns.forEach(function (col) {
+                        columnNames.push(col.name);
+                    });
+                    // order for system columns is always in the order of module._systemColumns
+                    // i.e. ['RID', 'RCB', 'RMB', 'RCT', 'RMT']
+                    areSameColumnList(detailedSystemColumnsModeRef.generateColumnsList(), detailedSystemColumnsModeColumns);
+                    expect(columnNames.length).toBe(6);
+
+                    expect(detailedSystemColumnsModeColumns[0]._baseCols[0].name).toBe('RID');
+
+                    // col_1 shouldn't be moved out of default order (defined before col_2 in table definition)
+                    expect(columnNames.indexOf('col_1') < columnNames.indexOf('col_2')).toBeTruthy("col_1 is not before col_2");
+
+                    // the only system columns, and should be at the end
+                    expect(columnNames[4]).toBe('RMB');
+                    expect(columnNames[5]).toBe('RCT');
+
+                    // other system columns should not be present
+                    expect(columnNames.indexOf('RCB')).toBe(-1, 'RCB in column list');
+                    expect(columnNames.indexOf('RMT')).toBe(-1, 'RMT in column list');
+                    // not_a_col is not in the table definition, and should be ignored
+                    expect(columnNames.indexOf('not_a_col')).toBe(-1, 'not_a_col in column list');
+                });
+
+                afterAll(function () {
+                    options.ermRest.systemColumnsHeuristicsMode(function () {});
+                });
             });
         });
 

@@ -16,6 +16,14 @@
     };
 
     /**
+     * set callback function that returns the property defined in chaise config for system column order
+     * @param {systemColumnsHeuristicsMode} fn callback function
+     */
+    module.systemColumnsHeuristicsMode = function(fn) {
+        module._systemColumnsHeuristicsMode = fn;
+    };
+
+    /**
      * This function resolves a URI reference to a {@link ERMrest.Reference}
      * object. It validates the syntax of the URI and validates that the
      * references to model elements in it are correct. This function makes a
@@ -2464,16 +2472,20 @@
          *          apply *addColumn* heuristics explained below.
          *
          * 2.otherwise go through list of table columns
-         *      2.0 create a pseudo-column for key if context is not detailed, entry, entry/create, or entry/edit and we have key that is notnull and notHTML
-         *      2.1 check if column has not been processed before.
-         *      2.2 hide the columns that are part of origFKR.
-         *      2.3 if column is serial and part of a simple key hide it.
-         *      2.4 if it's not part of any foreign keys
+         *      2.0 fetch config option for system columns heuristics (true|false|Array)
+         *          2.0.1 add RID to the beginning of the list if true or Array.includes("RID")
+         *      2.1 create a pseudo-column for key if context is not detailed, entry, entry/create, or entry/edit and we have key that is notnull and notHTML
+         *      2.2 check if column has not been processed before.
+         *      2.3 hide the columns that are part of origFKR.
+         *      2.4 if column is serial and part of a simple key hide it.
+         *      2.5 if it's not part of any foreign keys
          *          apply *addColumn* heuristics explained below.
-         *      2.5 go through all of the foreign keys that this column is part of.
-         *          2.5.1 make sure it is not hidden(+).
-         *          2.5.2 if it's simple fk, just create PseudoColumn
-         *          2.5.3 otherwise add the column just once and append just one PseudoColumn (avoid duplicate)
+         *      2.6 go through all of the foreign keys that this column is part of.
+         *          2.6.1 make sure it is not hidden(+).
+         *          2.6.2 if it's simple fk, just create PseudoColumn
+         *          2.6.3 otherwise add the column just once and append just one PseudoColumn (avoid duplicate)
+         *      2.7 based on config option for ssytem columns heuristics, add other 4 system columns
+         *          2.7.1 add ('RCB', 'RMB', 'RCT', 'RMT') if true, or only those present in Array. Will always be added in this order
          *
          * *addColumn* heuristics:
          *  + If column doesn't have asset annotation or its type is not `text`, add a normal ReferenceColumn.
@@ -2742,18 +2754,52 @@
             }
             // heuristics
             else {
+                // fetch config option for system columns heuristics (true|false|Array)
+                // if true, add all system columns
+                // if false, don't move system columns definitions within the list
+                // if array, add the ones defined
+
+                // order of system columns will always be the same
+                // RID will always be first in the visible columns list
+                // the rest will always be at the end in this order ('RCB', 'RMB', 'RCT', 'RMT')
+
+                // if compact or detailed, check for system column config option
+                var systemColumnsMode = module._systemColumnsHeuristicsMode(this._context);
+
+                // if (array and RID exists) or true, add RID to the list of columns
+                if (systemColumnsMode) {
+                    if ((Array.isArray(systemColumnsMode) && systemColumnsMode.indexOf("RID") != -1) || systemColumnsMode == true) {
+                        var ridKey = this._table.keys.all().find(function (key) {
+                            // should only ever be 1 column for RID key colset
+                            return key.simple && key.colset.columns[0].name === "RID";
+                        });
+
+                        if (ridKey) {
+                            this._referenceColumns.push(new KeyPseudoColumn(this, ridKey));
+                            consideredColumns[ridKey.colset.columns[0].name] = true;
+                        }
+                    }
+                }
 
                 //add the key
                 if (!isEntry && this._context != module._contexts.DETAILED ) {
                     var key = this._table._getRowDisplayKey(this._context);
                     if (key !== undefined && !nameExistsInTable(key.name, "display key")) {
-                        consideredColumns[key.name] = true;
-                        this._referenceColumns.push(new KeyPseudoColumn(this, key));
 
-                        // make sure key columns won't be added
                         columns = key.colset.columns;
-                        for (i = 0; i < columns.length; i++) {
-                            consideredColumns[columns[i].name] = true;
+
+                        // make sure key columns won't be added twice
+                        var addedKey = false;
+                        columns.forEach(function (col) {
+                            if (col.name in consideredColumns) addedKey = true;
+                        });
+
+                        if (!addedKey) {
+                            for (i = 0; i < columns.length; i++) {
+                                consideredColumns[columns[i].name] = true;
+                            }
+
+                            this._referenceColumns.push(new KeyPseudoColumn(this, key));
                         }
                     }
                 }
@@ -2776,6 +2822,9 @@
                     // add the column if it's not part of any foreign keys
                     // or if the column type is array (currently ermrest doesn't suppor this either)
                     if (col.memberOfForeignKeys.length === 0) {
+                        if (systemColumnsMode && module._systemColumns.indexOf(col.name) !== -1) {
+                            continue; // we want system columns at the end if property is defined
+                        }
                         addColumn(col);
                     } else {
                         // sort foreign keys of a column
@@ -2822,6 +2871,35 @@
                 // append composite FKRs
                 for (i = 0; i < compositeFKs.length; i++) {
                     this._referenceColumns.push(compositeFKs[i]);
+                }
+
+                // if array or true, add the remaining system columns
+                if (systemColumnsMode) {
+                    // array of column names to add
+                    var columnsToAdd = [];
+                    if (systemColumnsMode == true) {
+                        // add all, includes RID which will be skipped because of consideredColumns
+                        columnsToAdd = module._systemColumns;
+                    } else {
+                        // add the ones defined in array of config property
+                        // preserves order defined in `_systemColumns`
+                        columnsToAdd = module._systemColumns.filter(function (col) {
+                            return systemColumnsMode.indexOf(col) !== -1;
+                        });
+                    }
+
+                    for (i=0; i < columnsToAdd.length; i++) {
+                        var colName = columnsToAdd[i];
+                        if (colName in consideredColumns) {
+                            continue;
+                        }
+
+                        consideredColumns[colName] = true;
+                        try {
+                            var column = this._table.columns.get(colName);
+                            addColumn(column);
+                        } catch (err) {}
+                    }
                 }
             }
 

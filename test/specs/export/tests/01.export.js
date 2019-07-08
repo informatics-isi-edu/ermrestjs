@@ -51,7 +51,7 @@ exports.execute = function (options) {
                     source: {
                         api: "attributegroup",
                         path: "F1:=left(fk_col_1)=(" + schema + ":outbound1:id)/$M/F2:=left(fk_col_2,fk_col_3)=(" + schema + ":outbound1:id1,id2)/$M/F3:=left(fk_col_3)=(" + schema + ":outbound3:id)/$M/F4:=left(fk_col_3,fk_col_4)=(" + schema + ":outbound3:id1,id2)/$M" +
-                              "/RID;id,fk_col_1,outbound1.Name_1:=F1:Name,fk_col_2,fk_col_3,outbound3.Accession_ID_1:=F3:Accession_ID,fk_col_4,name,outbound1.Name,outbound3.Accession_ID,asset_1,asset_1_filename,asset_1_bytes,asset_1_md5,asset_2,asset_2_filename,asset_2_bytes,asset_2_sha256,asset_3,asset_3_filename,asset_4,asset_4_bytes,asset_5,RCT,RMT,RCB,RMB,outbound1.Name_2:=F2:Name,outbound3.Accession_ID_2:=F4:Accession_ID"
+                              "/RID;id,fk_col_1,outbound1.Name_1:=F1:Name,fk_col_2,fk_col_3,outbound3.Accession_ID_1:=F3:Accession_ID,fk_col_4,fk_col_5,name,outbound1.Name,outbound3.Accession_ID,asset_1,asset_1_filename,asset_1_bytes,asset_1_md5,asset_2,asset_2_filename,asset_2_bytes,asset_2_sha256,asset_3,asset_3_filename,asset_4,asset_4_bytes,asset_5,RCT,RMT,RCB,RMB,outbound1.Name_2:=F2:Name,outbound3.Accession_ID_2:=F4:Accession_ID"
                     }
                 },
                 {

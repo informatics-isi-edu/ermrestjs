@@ -3090,3 +3090,7 @@
     module._isEntryContext = function(context) {
         return module._entryContexts.indexOf(context) !== -1;
     };
+
+    module._isCompactContext = function(context) {
+        return module._compactContexts.indexOf(context) !== -1;
+    };

@@ -271,6 +271,7 @@
             "foreign_keys": [
                 {
                     "names": [["export_table_annot_schema", "no_export_annot_fk_1"]],
+                    "comment": "fk to a table with candidate column",
                     "foreign_key_columns": [{
                         "column_name": "fk_col_1",
                         "table_name": "no_export_annot",
@@ -284,6 +285,7 @@
                 },
                 {
                     "names": [["export_table_annot_schema", "no_export_annot_fk_2"]],
+                    "comment": "fk to a table without candidate columns.",
                     "foreign_key_columns": [{
                         "column_name": "fk_col_2",
                         "table_name": "no_export_annot",
@@ -349,6 +351,20 @@
                         "table_name": "outbound3",
                         "schema_name": "export_table_annot_schema"
                     }]
+                },
+                {
+                    "names": [["export_table_annot_schema", "no_export_annot_fk_6"]],
+                    "comment": "fk to a table with candidate column based on candidate column",
+                    "foreign_key_columns": [{
+                        "column_name": "fk_col_5",
+                        "table_name": "no_export_annot",
+                        "schema_name": "export_table_annot_schema"
+                    }],
+                    "referenced_columns": [{
+                        "column_name": "Name",
+                        "table_name": "outbound1",
+                        "schema_name": "export_table_annot_schema"
+                    }]
                 }
             ],
             "column_definitions": [
@@ -380,6 +396,12 @@
                 },
                 {
                     "name": "fk_col_4",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "fk_col_5",
                     "type": {
                         "typename": "text"
                     }
@@ -748,6 +770,7 @@
             "kind": "table",
             "keys": [
                 {"unique_columns": ["id"]},
+                {"unique_columns": ["Name"]},
                 {"unique_columns": ["id1", "id2"]}
             ],
             "column_definitions": [

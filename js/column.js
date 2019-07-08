@@ -3236,7 +3236,7 @@ FacetColumn.prototype = {
                 filterStr.join(";")
             ].join("/");
 
-            var ref = new Reference(module.parse(uri), table.schema.catalog);
+            var ref = new Reference(module.parse(uri), table.schema.catalog).contextualize.compactSelect;
 
             ref = ref.sort([{"column": columnName, "descending": false}]);
 

@@ -339,10 +339,16 @@ var ERMrest = (function(module) {
 
         var encode = module._fixedEncodeURIComponent;
 
+        // find the candidate column of the table
         var getCandidateColumn = function(table) {
             return module._getCandidateRowNameColumn(table.columns.all().map(function(col) {
                 return col.name;
             }));
+        };
+
+        // check whether the given column is a candidate column
+        var isCandidateColumn = function (column) {
+            return module._getCandidateRowNameColumn([column.name]) !== false;
         };
 
         // we have to add all the columns, so they will be used
@@ -405,6 +411,11 @@ var ERMrest = (function(module) {
                 // avoid duplicates
                 if (consideredFks[fk._constraintName]) return;
                 consideredFks[fk._constraintName] = true;
+
+
+                // if the column that this current column maps to is a candidate column,
+                // don't add any extra columns since we have added the column before
+                if (isCandidateColumn(fk.mapping.get(col))) return;
 
                 // find the candidate column
                 candidate = getCandidateColumn(fk.key.table);
