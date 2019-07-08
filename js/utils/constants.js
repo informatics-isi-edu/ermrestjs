@@ -257,3 +257,5 @@
     module._FacetsLogicalOperators = Object.freeze({
         AND: "and"
     });
+
+    module._sourceDefinitionAttributes = ["source", "aggregate", "entity", "self_link"];

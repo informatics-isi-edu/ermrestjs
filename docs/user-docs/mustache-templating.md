@@ -22,31 +22,31 @@ By default ermrestJS returns formatted values for a column. If you need to acces
 
 ### Foreign Key Values
 
-You can access table's outbound foreign key data using `$fkeys` variable. To do so, you can use the constraint name of the foreign key. For instance having `["schema", "constraint"]` as schema-constraint pair for the foreign key, you can use `$fkeys.schema.constraint` to access its attributes. The following are available attributes for foreign keys:
+You can access table's outbound foreign key data using `$fkeys` variable. To do so, you can use the constraint name of the foreign key. For instance having `["schema", "constraint"]` as schema-constraint pair for the foreign key, you can use `$fkey_schema_constraint` (`$fkeys.schema.constraint` syntax is still supported but it's deprecated) to access its attributes. The following are available attributes for foreign keys:
 
-1. `values`: An object containing values of the table that the foreign key refers to. Both formatted and unformatted column values will be available here. For instance `$fkeys.schema.const.values.col1` will give you the formatted value for the `col1` and `$fkeys.schema.const.values._col1` the unformatted.
+1. `values`: An object containing values of the table that the foreign key refers to. Both formatted and unformatted column values will be available here. For instance `$fkey_schema_const.values.col1` will give you the formatted value for the `col1` and `$fkey_schema_const.values._col1` the unformatted.
 2. `rowName`: Row-name of the foreign key.
 3. `uri.detailed`: a uri to the foreign key in `detailed` context (record app).
 
 ```
 # Create a link to Foreign key:
 
-{{#$fkeys.schema.constraint}}
+{{#$fkey_schema_constraint}}
   [{{rowName}}]({{{uri.detailed}}})
-{{/$fkeys.schema.constraint}}
+{{/$fkey_schema_constraint}}
 
 # Access column values of a foreign key:
 
-{{{$fkeys.schema.constraint.values.col1}}} - {{{$fkeys.schema.constraint.values.col2}}}
+{{{$fkey_schema_constraint.values.col1}}} - {{{$fkey_schema_constraint.values.col2}}}
 ```
 The current implementation of `$fkeys` has the following limitations:
 
 - Using $fkeys you can only access data from tables that are one level away from the current table. This can cause problem when you are using $fkeys in your `row_markdown_pattern` annotation. Let's say the following is the ERD of your database.
 
-  ![$fkeys example](https://dev.isrd.isi.edu/~ashafaei/wiki-images/fkeys_1.png)
+  ![$fkey example](https://dev.isrd.isi.edu/~ashafaei/wiki-images/fkeys_1.png)
 
-  And you have defined the `row_markdown_pattern` of table A as `{{{$fkeys.schema.fk1.values.term}}}`. If you navigate to record app for any records of A, the rowname will be displayed as you expect it. But if you go to the table C, the rowname of A won't be as you expected since we don't have access to the table B's data.
-   Therefore it's advised to use `$fkeys` only for the `column-display` annotation (or any other annotation that is controlling data for the same table).
+  And you have defined the `row_markdown_pattern` of table A as `{{{$fkey_schema_fk1.values.term}}}`. If you navigate to record app for any records of A, the rowname will be displayed as you expect it. But if you go to the table C, the rowname of A won't be as you expected since we don't have access to the table B's data.
+   Therefore it's advised to use `$fkey` only for the `column-display` annotation (or any other annotation that is controlling data for the same table).
 
 
 #### JSON

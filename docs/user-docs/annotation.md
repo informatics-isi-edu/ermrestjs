@@ -1,4 +1,4 @@
-# Base Model Annotation
+pseudo-column-template.md# Base Model Annotation
 
 This document defines a set of annotations we suggest may be useful in
 combination with ERMrest. We define a set of _annotation keys_, any
@@ -289,12 +289,13 @@ Supported _columnentry_ patterns:
 - _columnname_: A string literal _columnname_ identifies a constituent column of the table. The value of the column SHOULD be presented, possibly with representation guided by other annotations or heuristics.
 - `[` _schemaname_ `,` _constraintname_ `]`: A two-element list of string literal _schemaname_ and _constraintname_ identifies a constituent foreign key of the table. The value of the external entity referenced by the foreign key SHOULD be presented, possibly with representation guided by other annotations or heuristics. If the foreign key is representing an inbound relationship with the current table, it SHOULD be presented in a tabular format since it can represent multiple rows of data.
 - `[` _schemaname_ `,` _constraintname_ `]`: A two-element list of string literal _schemaname_ and _constraintname_ identifies a constituent key of the table. The defined display of the key SHOULD be presented, with a link to the current displayed row of data. It will be served as a self-link.
+- `{ "sourcekey": ` _sourcekey_ `}`: Defines a pseudo-column based on the given _sourcekey_. For more information please refer to [pseudo-column document](pseudo-columns.md).
 - `{ "source": ` _sourceentry_ `}`:  Defines a pseudo-column based on the given _sourceentry_. For detailed explanation and examples please refer to [here](pseudo-columns.md#examples). Other optional attributes that this JSON document can have are:
   - `markdown_name`: The markdown to use in place of the default heuristics for title of column.
-  - `display`: The display settings for generating the column presentation value. The available options are:
+  - `display`: The display settings for generating the column presentation value. Please refer to [pseudo-columns display document](pseudo-column-display.md) for more information. The available options are:
     - `markdown_pattern`: Markdown pattern that will be used for generating the value.
     - `template_engine`: The template engine that should be used for the `markdown_pattern`.
-    - `waitfor`: List of secondary pseudo-columns that the current column will use in the defined `markdown_pattern`. Please refer to [pseudo-columns display document](pseudo-column-display.md) for more information.
+    - `wait_for`: List of pseudo-column sourcekeys that the current column will use in the defined `markdown_pattern`.
     - `array_ux_mode`: If you have `"aggregate": "array"` or `"aggregate": "array_d"` in the pseudo-column definition, a comma-seperated value will be presented to the user. You can use `array_display` attribute to change that. The available options are,
       - `olist` for ordered bullet list.
       - `ulist` for unordered bullet list.
@@ -319,6 +320,9 @@ Supported _sourceentry_ pattern:
         "`{` _direction_ `:[` *schema name*`,` *constraint name* `]}` "
     Where _direction_ is either `inbound`, or `outbound`.
 
+Supported _sourcekey_ pattern in here:
+  - A string literal that refers to any of the defined sources in [`source-definitions` annotations](#tag-2019-source-definitions).
+
 Supported _facetlist_ pattern:
 
 - `[` ... _facetentry_ `,` ... `]`: Present content corresponding to each _facetentry_, in the order specified in the list. Ignore invalid listed _facetentry_. Do not present other facets that are not specified in the list.
@@ -326,7 +330,12 @@ Supported _facetlist_ pattern:
 _facetentry_ must be a JSON payload with the following attributes:
 
 Required attributes:
+
+You need to define one of these attributes which will refer to the source of the facet column.
+
 - `source`: Source of the filter. If it is not specified or is invalid the _facetentry_ will be ignored. It has the same pattern as _sourceentry_ defined above.
+
+- `sourcekey`: A string literal that refers to any of the defined sources in [`source-definitions` annotations](#tag-2019-source-definitions). You MUST avoid defining both `source` and `sourcekey` as the client will ignore the `source` and just uses the `sourcekey`.
 
 Constraint attributes (optional):
 
@@ -356,7 +365,8 @@ The following is an example of visible-columns annotation payload for defining f
     "and" : [
         {"source": "column", "ranges": [{"min": 1}, {"min":5, "max":10}] ,"markdown_name": "**col**"},
         {"source": [{"outbound": ["S", "FK2"]}, "id"], "choices": [1, 2]},
-        {"source": [{"inbound": ["S", "FK1"]}, {"outbound": ["S", "FK2"]}, "term"], "entity": false}
+        {"source": [{"inbound": ["S", "FK1"]}, {"outbound": ["S", "FK2"]}, "term"], "entity": false},
+        {"sourcekey": "some-defined-source", "ux_mode": "choices"}
     ]
 }
 ```
@@ -590,13 +600,18 @@ Supported _fkeylist_ patterns:
 - `[` `[` _schema name_`,` _constraint name_ `]` `,` ... `]`: Present foreign keys with matching _schema name_ and _constraint name_, in the order specified in the list. Ignore constraint names that do not correspond to foreign keys in the catalog. Do not present foreign keys that are not mentioned in the list. These 2-element lists use the same format as each element in the `names` property of foreign keys in the JSON model introspection output of ERMrest. The foreign keys MUST represent inbound relationships to the current table.
 - `{ "source": ` _sourceentry_ `}`:  Defines a pseudo-column based on the given _sourceentry_. For detailed explanation and examples please refer to [here](pseudo-columns.md#examples). Other optional attributes that this JSON document can have are:
   - `markdown_name`: The markdown to use in place of the default heuristics for title of column.
-  - `display`: The markdown pattern to use for generating the value for this column. Please refer to [pseudo-columns display document](pseudo-column-display.md) for more information.
+  - `display`: The display settings to use for generating the value for this column. Please refer to [pseudo-columns display document](pseudo-column-display.md) for more information.
+- `{ "sourcekey": ` _sourcekey_ `}`: Defines a pseudo-column based on the given _sourcekey_.
 
 Supported _sourceentry_ pattern in here:
   - _path_: An array of _foreign key path_ that ends with a _columnname_ that will be projected. _foreign key path_ is in the following format:
 
           "`{` _direction_ `:[` *schema name*`,` *constraint name* `]}` "
       Where _direction_ is either `inbound`, or `outbound`.
+
+Supported _sourcekey_ pattern in here:
+  - A string literal that refers to any of the defined sources in [`source-definitions` annotations](#tag-2019-source-definitions).
+
 
 ### Tag: 2016 Table Alternatives
 
@@ -779,17 +794,57 @@ Note: Some properties might not make sense to be used in this annotation. The `d
 
 `tag:isrd.isi.edu,2019:source-defnitions`
 
-This key allows specification of sources that can be used in `visible-columns` and `visible-foreignKeys` annotations. It will also allow defining the list of column names and outbound foriengkeys that should be available in the templating environments.
+This key allows specification of sources that can be used in `visible-columns` and `visible-foreignKeys` annotations. It will also allow defining the list of column names and outbound forieng keys that should be available in the templating environments. Please refer to [this document](pseudo-column-template.md) for more information about how to use this annotation.
+
+Example:
+
+```json
+"tag:isrd.isi.edu,2019:source-defnitions": {
+    "columns": true,
+    "fkeys": true,
+    "sources": {
+        "source-1": {
+            "source": [{"inbound": ["schema", "fk1"]}, "RID"],
+            "entity": true,
+            "aggregate": "array_d"
+        }
+    }
+}
+```
+
+> If you define this annotation, you have to define all three attributes. If you do not providing any values for `columns` and `fkeys`, chaise will not provide data for any columns or outbound foreign keys in templating environments.
 
 Supported JSON payload patterns:
 
-- `{ }`
-- `{` ... `"sources":` _sourcedefinitions_ `}`: The _sourcedefinitions_ will
+- `{` ... `"sources":` _sourcedefinitions_ `,` ... `}`: The _sourcedefinitions_ will
+- `{` ... `"fkeys":` _fkeylist_  `,` ... `}`: Array of foreign key constraints that will be mapped into `$fkey_schema_contraint` key in templating environments.
+- `{` ... `"columns":` _columns_  `,` ... `}`: Array of column names that their data will be available in templating environments.
+
 
 Supported _sourcedefinitions_ patterns:
 
-- `{"` _sourcekey_ `":` _sourcedefinition_ `}`
+- `{"` _sourcekey_ `":` _sourceentry_ ... `}`: where _sourcekey_ is a name that will be used to refer to the defined _sourceentry_. _sourcekey_,
+  - Cannot start with `$`.
+  - Should not be any of the table's column names.
 
+Supported _sourceentry_ pattern:
+  - _columnname_: : A string literal. _columnname_ identifies a constituent column of the table.
+  - _path_: An array of _foreign key path_ that ends with a _columnname_ that will be projected. _foreign key path_ is in the following format:
+
+          "`{` _direction_ `:[` *schema name*`,` *constraint name* `]}` "
+      Where _direction_ is either `inbound`, or `outbound`.
+
+Supported _fkeylist_ patterns:
+
+- `[` `[` _schema name_`,` _constraint name_ `]` `,` ... `]`: Present foreign keys with matching _schema name_ and _constraint name_, in the order specified in the list. Ignore constraint names that do not correspond to foreign keys in the catalog. Do not present foreign keys that are not mentioned in the list. These 2-element lists use the same format as each element in the `names` property of foreign keys in the JSON model introspection output of ERMrest. The foreign keys MUST represent inbound relationships to the current table.
+- `true`: By setting the value of `"fkeys"` to `true`, chaise will provide the data for all the outbound foreign keys fo the table in templating environments.
+- _Any other values_ : In this case chaise will not provide any foreign key data in templating environments.
+
+Supported _columns_ patterns:
+
+- `[` _columname_ `,` ... `]`: A string literal _columnname_ identifies a constituent column of the table.
+- `true`: By setting the value of `"columns"` to `true`, chaise will provide the data for all the outbound foreign keys fo the table in templating environments.
+- _Any other values_ : In this case chaise will not provide any foreign key data in templating environments.
 
 ### Context Names
 

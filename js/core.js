@@ -3207,7 +3207,7 @@
                             if (def) {
                                 col = def.column;
                                 // copy the elements that are defined in the source def but not the one already defined
-                                module._shallowCopyExtras(orders[i], def.sourceObject, ["source", "aggregate", "entity"]);
+                                module._shallowCopyExtras(orders[i], def.sourceObject, module._sourceDefinitionAttributes);
                             }
                         }
 

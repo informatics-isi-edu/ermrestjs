@@ -625,7 +625,7 @@
                             if (!sd) return;
 
                             // copy the elements that are defined in the source def but not the one already defined
-                            module._shallowCopyExtras(obj, sd.sourceObject, ["source", "aggregate", "entity"]);
+                            module._shallowCopyExtras(obj, sd.sourceObject, module._sourceDefinitionAttributes);
                         }
 
                         var col = checkFacetObject(obj);
@@ -2656,7 +2656,7 @@
                             hasInbound = sd.hasInbound;
 
                             // copy the elements that are defined in the source def but not the one already defined
-                            module._shallowCopyExtras(col, sd.sourceObject, ["source", "aggregate", "entity"]);
+                            module._shallowCopyExtras(col, sd.sourceObject, module._sourceDefinitionAttributes);
 
                         } else {
                             sourceCol = _getSourceColumn(col.source, this._table, module._constraintNames);
