@@ -719,7 +719,7 @@
                     }
                 } catch (e) {
                     // if the value is invalid (for example hatrac TODO can be imporved)
-                    res[k] = d[kg];
+                    res[k] = d[k];
                     res["_" + k] = d[k];
                 }
             });
