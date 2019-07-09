@@ -30,8 +30,8 @@ First you need to define your source definitions. To do this, you have to define
   - if field is boolean `true` instead of list, it implies all the outbound foreign keys.
 - `"sources"`: Access the pseudo-column data by the given _sourcekey_. Which will allow you to refer to pseudo-columns just by using their _sourcekey_. The available data will be [different based on the pseudo-column type](#Pseudo-Column-Templating-Variable-Data-Structure). Please make sure to follow these rules while specifying the sourcekey:
 
- - sourcekey cannot start with `$`.
- - sourcekey should not be any of the table's column names.
+   - sourcekey cannot start with `$`.
+   - sourcekey should not be any of the table's column names.
 
 > If you define this annotation, you have to define all three attributes. If you do not providing any values for `columns` and `fkeys`, chaise will not provide data for any columns or outbound foreign keys in templating environments.
 
