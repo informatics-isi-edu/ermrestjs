@@ -13,5 +13,6 @@ JavaScript Client Libraries (ERMrestJS)
    user-docs/facet-examples.md
    user-docs/pseudo-columns.md
    user-docs/pseudo-column-display.md
+   user-docs/pseudo-column-template.md
    user-docs/table-alternatives.md
    user-docs/export.md
