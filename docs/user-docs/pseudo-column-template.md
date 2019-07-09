@@ -6,15 +6,37 @@ Let's assume the following is the ERD of our database. In all the examples we're
 
 ![erd_01](../resources/pseudo_columns_erd_01.png)
 
-## 1. Defining Source Definitions
+## 1. Defining Sources
 
-First you need to define your source definitions. To do this, you have to define the [source_definitions](annotation.md#tag-2019-source-definitions).
+First you need to define your source definitions. To do this, you have to define the [source_definitions](annotation.md#tag-2019-source-definitions) annotation.
+
+```
+"tag:isrd.isi.edu,2019:source_definitions": {
+   "columns": [ cname, ... ],
+   "fkeys": [  [ schema, constraint ], ... ],
+   "sources": {
+      <sourcekey>: {
+          "source": <some valid path>,
+          // the rest of attributes
+      },
+      ...
+   }
+}
+```
 
 - `"columns"`: Map implicitly to keys `cname` (formatted value) and `_cname` (raw value).
   - if field is boolean `true` instead of list, it implies all the columns.
 - `"fkeys"`: map implicitly into the `$fkey_<schema_name>_<constraint_name>` namespace.
   - if field is boolean `true` instead of list, it implies all the outbound foreign keys.
-- `"sources"`: Access the pseudo-column data by the given _sourcekey_. Which will allow you to refer to pseudo-columns just by using their _sourcekey_.
+- `"sources"`: Access the pseudo-column data by the given _sourcekey_. Which will allow you to refer to pseudo-columns just by using their _sourcekey_. The available data will be [different based on the pseudo-column type](#Pseudo-Column-Templating-Variable-Data-Structure). Please make sure to follow these rules while specifying the sourcekey:
+
+ - sourcekey cannot start with `$`.
+ - sourcekey should not be any of the table's column names.
+
+> If you define this annotation, you have to define all three attributes. If you do not providing any values for `columns` and `fkeys`, chaise will not provide data for any columns or outbound foreign keys in templating environments.
+
+
+The following is the source definitions that we are going to use:
 
 ```javascript
 {
@@ -146,7 +168,7 @@ formatted: {{{int_col}}}, raw: {{{_int_col}}}
 
 ### Accessing Sources (Wait For)
 
-If you want to access any extra `"sources"` you need to list them in the `wait_for`. This will delay the processing of the pseudo-column value until the data for all the pseudo-columns defined in the `wait_for` list are available.
+If you want to access any extra `"sources"`, you need to list them in the `wait_for` of the pseudo-column. This will delay the processing of the pseudo-column value until the data for all the pseudo-columns defined in the `wait_for` list are available.
 
 ```javascript
 {
@@ -159,6 +181,8 @@ If you want to access any extra `"sources"` you need to list them in the `wait_f
 
 }
 ```
+
+#### Pseudo-Column Templating Variable Data Structure
 
 The data structure that you have access to by using the given sourcekey is different based on its types. The data-structure is aligned with the $self structure which is as follows.
 
@@ -229,6 +253,8 @@ The data structure that you have access to by using the given sourcekey is diffe
     {
       "min_aggregate-custom-name":  "1,234", // formatted
       "_min_aggregate-custom-name":  1234 // raw
+      "cnt_d_aggregate-custom-name":  "2", // formatted
+      "_cnt_d_aggregate-custom-name":  2 // raw
     }
     ```
     Example: `{{{min_aggregate-custom-name}}} cm`
@@ -248,5 +274,66 @@ The data structure that you have access to by using the given sourcekey is diffe
           "detailed": "" // link to record page
         }
       }
+    }
+    ```
+
+## Examples
+
+In this section you can find some examples of how you can use this feature. These examples are based on the ERD and `source-definitions` that are explained in the previous sections.
+
+1. min and max in one column:
+
+    ```javascript
+    "tag:isrd.isi.edu,2016:visible-columns": {
+        "compact": [
+            {
+                "sourcekey": "min_aggregate-custom-name",
+                "markdown_name": "Range",
+                "comment": "Range of values",
+                "display": {
+                    "markdown_pattern": "{{{min_aggregate-custom-name}}} - max_aggregate-custom-name",
+                    "template_engine": "handlebars",
+                    "wait_for": ["min_aggregate-custom-name"]
+                }
+            }
+        ]
+    }
+    ```
+
+2. aggregate column values in a normal column value:
+
+    ```javascript
+    "tag:isrd.isi.edu,2016:visible-columns": {
+        "compact": [
+            {
+                "source": "int_col",
+                "markdown_name": "Integer Col + Array aggregate",
+                "comment": "value",
+                "display": {
+                    "markdown_pattern": "current: {{{$self}}}, related values: {{#each entity_array_d_aggregate-custom-name}}[{{{this.rowName}}}]({{{this.uri.detailed}}}){{/each}}",
+                    "template_engine": "handlebars",
+                    "wait_for": ["entity_array_d_aggregate-custom-name"]
+                }
+            }
+        ]
+    }
+    ```
+
+3. Summary of multiple pseudo-columns:
+
+    ```javascript
+    "tag:isrd.isi.edu,2016:visible-columns": {
+        "compact": [
+            {
+                "source": "int_col",
+                "markdown_name": "Integer Col + Array aggregate",
+                "comment": "value",
+                "display": {
+                    "markdown_pattern": "min: {{{min_aggregate-custom-name}}}, alloutbound: {{{ll-outbound-entity-custom-name.rowName}}}, related values: {{#each entity_array_d_aggregate-custom-name}}[{{{this.rowName}}}]({{{this.uri.detailed}}}){{/each}}",
+                    "template_engine": "handlebars",
+                    "wait_for": ["min_aggregate-custom-name", "all-outbound-entity-custom-name", "entity_array_d_aggregate-custom-name"]
+                }
+            }
+        ]
     }
     ```
