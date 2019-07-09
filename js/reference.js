@@ -2323,11 +2323,11 @@
 
 
         /**
-         * Given a page, will change the reference paging options (before, and after)
+         * Given a page, will return a reference that has
+         * - the sorting and paging of the given page.
+         * - the merged facets of the based reference and given page's facet.
          * to match the page.
-         * NOTE: Limitations:
-         * - Current reference's table and page's table must be the same.
-         * - page's reference cannot have any facets (apart from search).
+         * NOTE: The given page must be based on the same table that this current table is based on.
          * @param  {ERMrest.Page} page
          * @return {ERMrest.Reference} reference with new page settings.
          */
@@ -2346,14 +2346,12 @@
             var newRef = _referenceCopy(this);
             newRef._location = this._location._clone();
 
-            // same search
-            // TODO this should be eventually facets and not just search
-            // Current requirement only needs search.
-            // If we change it to facet, we have to merge the facets
-            if (typeof pageRef.location.searchTerm === "string") {
-                newRef._location.search(pageRef.location.searchTerm);
+            // same facets
+            if (pageRef.location.facets) {
+                var andFilters = newRef.location.facets ? newRef.location.facets.andFilters : [];
+                Array.prototype.push.apply(andFilters, pageRef.location.facets.andFilters);
+                newRef._location.facets = {"and": andFilters};
             }
-
 
             /*
              * This case is not possible in the current implementation,
