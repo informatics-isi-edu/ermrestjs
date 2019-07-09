@@ -698,22 +698,29 @@
             var res = {};
             currTable.sourceDefinitions.columns.forEach(function (col) {
                 if (!(col.name in d)) return;
-                k = col.name;
-                v = col.formatvalue(d[k], context);
-                if (col.type.isArray) {
-                    v = module._formatUtils.printArray(v, {isMarkdown: true});
-                }
 
-                res[k] = v;
-                res["_" + k] = d[k];
+                try {
+                    k = col.name;
+                    v = col.formatvalue(d[k], context);
+                    if (col.type.isArray) {
+                        v = module._formatUtils.printArray(v, {isMarkdown: true});
+                    }
 
-                // alternative names
-                // TODO this should change to allow usage of table column names.
-                if (Array.isArray(currTable.sourceDefinitions.sourceMapping[k]) ){
-                    currTable.sourceDefinitions.sourceMapping[k].forEach(function (altKey) {
-                        res[altKey] = v;
-                        res["_" + altKey] = d[k];
-                    });
+                    res[k] = v;
+                    res["_" + k] = d[k];
+
+                    // alternative names
+                    // TODO this should change to allow usage of table column names.
+                    if (Array.isArray(currTable.sourceDefinitions.sourceMapping[k]) ){
+                        currTable.sourceDefinitions.sourceMapping[k].forEach(function (altKey) {
+                            res[altKey] = v;
+                            res["_" + altKey] = d[k];
+                        });
+                    }
+                } catch (e) {
+                    // if the value is invalid (for example hatrac TODO can be imporved)
+                    res[k] = d[kg];
+                    res["_" + k] = d[k];
                 }
             });
             return res;
