@@ -314,7 +314,7 @@ exports.execute = function (options) {
                         return fc._column.name;
                     })).toEqual(
                         ['id', 'int_col', 'float_col', 'date_col', 'timestamp_col', 'text_col', 'longtext_col',
-                         'markdown_col', 'boolean_col', 'jsonb_col', 'id', 'id', 'term', 'id', 'col', 'id', 'RID', 'id', 'id', 'numeric_col']
+                         'markdown_col', 'boolean_col', 'jsonb_col', 'id', 'id', 'term', 'id', 'col', 'id', 'RID', 'RID', 'id', 'numeric_col']
                     );
                 });
 

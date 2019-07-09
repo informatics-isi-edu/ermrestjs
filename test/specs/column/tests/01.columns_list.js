@@ -897,8 +897,7 @@ exports.execute = function (options) {
                         expect(tuples[0].values).toEqual(jasmine.arrayContaining(assetEntryExpectedValue));
                         done();
                     }, function (err) {
-                        console.dir(err);
-                        done.fail();
+                        done.fail(err);
                     });
                 });
 

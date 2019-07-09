@@ -297,6 +297,7 @@ var ERMrest = (function(module) {
             ignoredColumns.push(this.column.name + ".size");
             ignoredColumns.push(this.column.name + ".mimetype");
 
+            // TODO we can improve this (should not rely on _validateTemplate to format them)
             return module._validateTemplate(template, row, this.reference.table, this.reference._context, { ignoredColumns: ignoredColumns, templateEngine: this.column.templateEngine });
         }
 
@@ -743,7 +744,12 @@ var ERMrest = (function(module) {
         row[this.column.name].sha256 = this.hash.sha256;
 
         // Generate url
-        var url = module._renderTemplate(template, row, this.reference.table, this.reference._context, { avoidValidation: true, templateEngine: this.column.templateEngine });
+
+        // TODO should use the tuple.templateVariables
+        // the hatrac value in row is an object, which can be improved
+        var keyValues = module._getFormattedKeyValues(this.reference.table, this.reference._context, row);
+
+        var url = module._renderTemplate(template, keyValues, this.reference.table.schema.catalog, { avoidValidation: true, templateEngine: this.column.templateEngine });
 
         // check for having hatrac
         if ((module._parseUrl(url).pathname.indexOf('/hatrac/') !== 0)) {

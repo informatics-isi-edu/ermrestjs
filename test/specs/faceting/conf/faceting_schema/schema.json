@@ -168,12 +168,12 @@
                     "filter": {
                         "and": [
                             {"source": "*", "choices": ["test"]},
-                            {"source": "id", "ux_mode": "ranges", "choices": ["1"], "hide_num_occurrences": false},
+                            {"sourcekey": "id_source_definition", "choices": ["1"], "hide_num_occurrences": false},
                             {"source": "int_col", "ux_mode": "choices", "ranges": [{"min": -2}], "order": [{"column": "id", "descending": true}], "hide_num_occurrences": true, "hide_not_null_choice": true},
                             {"source": ["float_col"], "ux_mode": "invalid mode", "order": [{"column": "id"}, {"column": "float_col", "descending": true}], "hide_not_null_choice": true},
                             {"source": "date_col"},
                             {"source": "timestamp_col"},
-                            {"source": "text_col", "ux_mode": "invalid mode", "order": [{"column": "date_col"}, {"num_occurrences": true}]},
+                            {"sourcekey": "text_col_source_definition", "ux_mode": "invalid mode", "order": [{"column": "date_col"}, {"num_occurrences": true}]},
                             {"source": "longtext_col", "comment": "long text comment in facet", "order": false},
                             {"source": "markdown_col", "order": [{"column": "invalid!!"}], "hide_num_occurrences": true, "hide_not_null_choice": false},
                             {"source": "boolean_col", "ux_mode": "ranges"},
@@ -196,19 +196,40 @@
                                 {"inbound": ["faceting_schema", "secondpath_2_fk1"]},
                                 "id"
                             ], "hide_null_choice": true},
-                            {"source": [
-                                {"inbound": ["faceting_schema", "secondpath_1_fk1"]},
-                                {"inbound": ["faceting_schema", "secondpath_2_fk1"]},
-                                "RID"
-                            ]},
-                            {"source": [
-                                {"inbound": ["faceting_schema", "secondpath_1_fk1"]},
-                                {"inbound": ["faceting_schema", "secondpath_2_fk1"]},
-                                "id"
-                            ], "entity": false},
+                            {"sourcekey": "second_path_source_defnition", "entity": false},
+                            {
+                                "source": [
+                                    {"inbound": ["faceting_schema", "secondpath_1_fk1"]},
+                                    {"inbound": ["faceting_schema", "secondpath_2_fk1"]},
+                                    "RID"
+                                ],
+                                "entity": false
+                            },
                             {"source": [{"inbound": ["faceting_schema", "main_f3_assoc_fk1"]}, {"outbound": ["faceting_schema", "main_f3_assoc_fk2"]}, "id"]},
                             {"source": "numeric_col"}
                         ]
+                    }
+                },
+                "tag:isrd.isi.edu,2019:source_definitions": {
+                    "columns": true,
+                    "fkeys": true,
+                    "sources": {
+                        "id_source_definition": {
+                            "source": "id",
+                            "ux_mode": "ranges"
+                        },
+                        "text_col_source_definition": {
+                            "source": "text_col",
+                            "ux_mode": "choices"
+                        },
+                        "second_path_source_defnition": {
+                            "source": [
+                                {"inbound": ["faceting_schema", "secondpath_1_fk1"]},
+                                {"inbound": ["faceting_schema", "secondpath_2_fk1"]},
+                                "RID"
+                            ],
+                            "entity": true
+                        }
                     }
                 }
             }

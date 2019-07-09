@@ -1,7 +1,7 @@
 # Pseudo-Columns Logic And Heuristics
 
 ERMrestJS **pseudo columns** refer to virtual columns created from key and foreign key constraints in the model, as well as aggregation function of those entities/columns. ERMrestJS supports the following categories of pseudo columns:
-* Key
+* Key (self link)
 * Outbound ForeignKey (single- and multi-hops)
 * Inbound ForeignKey (single- and multi-hops)
 * Aggregate columns
@@ -42,11 +42,31 @@ Note: If the `[<schema name>, <constraint name>]` is an inbound foreign key from
   "comment": <tooltip message>,
   "display": {
       "markdown_pattern": <pattern>,
-      "template_engine": <handlebars or mustache>
+      "template_engine": <handlebars or mustache>,
+      "wait_for": <wait_for list>,
   },
   "aggregate": <aggregate function>
 }
 ```
+
+or
+
+```
+{
+  "sourcekey" : <source key>,
+  "markdown_name": <display name>,
+  "comment": <tooltip message>,
+  "display": {
+      "markdown_pattern": <pattern>,
+      "template_engine": <handlebars or mustache>,
+      "wait_for": <wait_for list>,
+  }
+}
+```
+
+### Source Definition Attributes
+
+These sets of attributes are used to define a pseudo-column. To detect duplicate pseudo-columns we only look for these attributes.
 
 #### source
 To define a pseudo column, you need an object with at least the `source` attribute. Please refer to [facet `data source` syntax](facet-json-structure.md#data-source) for more information on how to define `<data source>`.
@@ -56,11 +76,26 @@ To define a pseudo column, you need an object with at least the `source` attribu
 
     "entity": false
 
+#### aggregate
+
+This is only applicable in visible columns definition (Not applicable in Facet definition). You can use this attribute to get aggregate values instead of a table. The available functions are `cnt`, `cnt_d`, `max`, `min`, `array`, and `array_d`.
+- `min` and `max` are only applicable in scalar mode.
+- `array` will return ALL the values including duplicates associated with the specified columns. For data types that are sortable (e.g integer, text), the values will be sorted alphabetically or numerically. Otherwise, it displays values in the order that it receives from ERMrest. There is no paging mechanism to limit what's shown in the aggregate column, therefore please USE WITH CARE as it can incur performance overhead and ugly presentation.
+- `array_d` will return the distinct values. It has the same performance overhead as `array`, so pleas USE WITH CARE.
+
 #### self-link
 If you want to show a self-link to the current row, you need to make sure the source is based on a not-null unique column and add the `"self_link": true` to the definition.
 
+#### sourcekey
+Instead of defining a pseudo-column in place, you can define them in the [`source-definitions` annotations](annotation.md#tag-2019-source-definitions), and refer to those definitions using `sourcekey`. If `sourcekey` is defined on a pseudo-column, the rest of source definition attributes defined on the pseudo-column will be ignored.
+
+
+### Display Attributes
+
+The following attributes can be used to manipulate the display settings of the column.
+
 #### markdown_name
-markdown_name captures the display name of the column. You can change the default display name by setting the markdown_name attribute.
+`markdown_name` captures the display name of the column. You can change the default display name by setting the markdown_name attribute.
 
     "markdown_name": "**new name**"
 
@@ -79,19 +114,13 @@ By using this attribute you can customize the presented value to the users. The 
     "source": <any acceptable source>,
     "display": {
         "markdown_pattern": <markdown pattern value>,
-        "template_engine": <"handlebars" | "mustache">
+        "template_engine": <"handlebars" | "mustache">,
+        "wait_for": <wait_for list>
     }
 }
 ```
 
-In the `markdown_pattern` you can access the current pseudo-column data with `$self` namespace. The structure of the available data is going to be different based on pseudo-column type. Please refer to the [pseudo-column display documentation](#pseudo-column-display.md) for more information.
-
-#### aggregate
-
-This is only applicable in visible columns definition (Not applicable in Facet definition). You can use this attribute to get aggregate values instead of a table. The available functions are `cnt`, `cnt_d`, `max`, `min`, `array`, and `array_d`.
-- `min` and `max` are only applicable in scalar mode.
-- `array` will return ALL the values including duplicates associated with the specified columns. For data types that are sortable (e.g integer, text), the values will be sorted alphabetically or numerically. Otherwise, it displays values in the order that it receives from ERMrest. There is no paging mechanism to limit what's shown in the aggregate column, therefore please USE WITH CARE as it can incur performance overhead and ugly presentation.
-- `array_d` will return the distinct values. It has the same performance overhead as `array`, so pleas USE WITH CARE.
+In the `markdown_pattern` you can access the current pseudo-column data with `$self` namespace alongside the defined source definitions. Please refer to the [pseudo-column display documentation](#pseudo-column-display.md) for more information.
 
 #### aggregate array_display
 
@@ -172,10 +201,12 @@ cnt_d -> #
 
 #### Value
 
-1. Return null in entry mode, the paths that are not all-outbound (It's not applicable in these cases), and when aggregate is defined.
-2. If the given data-path is defining a more specific pseudo-column type (Key, ForeignKey, or Inbound-Foreignkey) then the value that is returned will be based on that type.
-3. In scalar mode, return the column's value.
-4. In entity mode, return the end foreign key value.
+1. Return null in entry mode.
+2. If the `display` is defined, return the value based on the given `display`. If the `display` has `wait_for`, the client will wait until all the data is avaialble before showing the value.
+3. If the pseudo-column is aggregate, get the result based on the defined (or default) array_options.
+4. If the given data-path is defining a more specific pseudo-column type (Key, ForeignKey, or Inbound-Foreignkey) then the value that is returned will be based on that type.
+5. In scalar mode, return the column's value.
+6. In entity mode, return the end foreign key value.
 
 #### Sort
 1. If the given data-path is defining a more specific pseudo-column type (Key, ForeignKey, or Inbound-Foreignkey), use the logic of the more specific pseudo-column.
@@ -188,8 +219,7 @@ cnt_d -> #
 
 Let's assume the following is the ERD of our database. In all the examples we're defining column list for the `Main` table (assuming `S` is the schema name).
 
-![ERD](https://dev.isrd.isi.edu/~ashafaei/wiki-images/pseudo_col_erd.png)
-
+![erd_01](../resources/pseudo_columns_erd_01.png)
 
 ### Visible Column List
 
@@ -205,7 +235,7 @@ The following summarizes the different types of columns and syntaxes that are ac
 | Associative Inbound ForeignKey Columns   | `["s", "fk3_cons"]`                                                    | `{"source": [{"inbound": ["s", "fk3_cons"]}, {"outbound": ["s", "main_f3_cons"]}, "f3_id"], "entity": true}` | detailed            | Inline Table                                       |
 | Pseudo Column (entity mode with inbound) | N.A.                                                                   | `{"source": <any acceptable source with inbound in path and in entity mode>, "entity": true}`                | detailed            | Inline Table                                       |
 | Pseudo Column (Aggregate)                | N.A.                                                                   | `{"source": <any acceptable source>, "aggregate": <any acceptable aggregate function>}`                      | read-only           | Aggregated value                                   |
-| Pseudo Column (All outbound)             | N.A.                                                                   | `{"source": <any acceptable source with only outbound>, "entity": true}                                      | read-only           | entity mode: link to row scalar mode: scalar value |
+| Pseudo Column (All outbound)             | N.A.                                                                   | `{"source": <any acceptable source with only outbound>, "entity": true}`                                      | read-only           | entity mode: link to row scalar mode: scalar value |
 
 Other examples:
 1. To show scalar values of a foreignkey column in the main table:
@@ -233,30 +263,35 @@ Other examples:
 
 ### Visible ForeignKey List
 
-```
-{"source": [{"inbound": ["S", "fk3_cons"]}, "main_f3_id"]}
-{"source": [{"inbound": ["S", "fk3_cons"]}, {"outbound": ["S", "main_f3_cons"]}, "f3_id"]}
-{"source": [{"inbound": ["S", "fk3_cons"]}, {"outbound": ["S", "main_f3_cons"]}, {"inbound": ["S", "f4_cons"]}, "f4_id"]}
-```
+  ```
+  {"source": [{"inbound": ["S", "fk3_cons"]}, "main_f3_id"]}
+  {"source": [{"inbound": ["S", "fk3_cons"]}, {"outbound": ["S", "main_f3_cons"]}, "f3_id"]}
+  {"source": [{"inbound": ["S", "fk3_cons"]}, {"outbound": ["S", "main_f3_cons"]}, {"inbound": ["S", "f4_cons"]}, "f4_id"]}
+  ```
 
 ### Specific Pseudo Columns
 As we mentioned, you can define the specific pseudo columns using the general syntax for pseudo-columns. If you use the both syntax, one of them will be ignored (the one that comes first in the column list will be used. The only implication currently is that you cannot use the general pseudo columns in entry contexts). The following are alternative syntaxes for specific and general pseudo column definition:
 
 1. ForeignKey Pseudo Column:
-```
-["S", "fk1_cons"]   ==   {"source":[ {"outbound": ["S", "fk1_cons"]}, "f1_id" ]}
-["S", "fk1_cons"]   =/=  {"source":[ {"outbound": ["S", "fk1_cons"]}, "f1_id" ], "entity": false}
-["S", "fk1_cons"]   =/=  {"source":[ {"outbound": ["S", "fk1_cons"]}, "f1_text" ]}  
-```
-2. Inbound ForeignKey Pseudo Column:
-```
-["S", "fk2_cons"]   ==   {"source":[ {"inbound": ["S", "fk2_cons"]}, "f2_id"]}
 
-["S", "fk3_cons"]   ==   {"source":[ {"inbound": ["S", "fk3_cons"]}, {"outbound": ["S", "main_f3_cons"]}, "f3_id"}
-["S", "fk3_cons"]   =/=   {"source":[ {"inbound": ["S", "fk3_cons"]}, "main_f3_id"}
-```
+  ```
+  ["S", "fk1_cons"]   ==   {"source":[ {"outbound": ["S", "fk1_cons"]}, "f1_id" ]}
+  ["S", "fk1_cons"]   =/=  {"source":[ {"outbound": ["S", "fk1_cons"]}, "f1_id" ], "entity": false}
+  ["S", "fk1_cons"]   =/=  {"source":[ {"outbound": ["S", "fk1_cons"]}, "f1_text" ]}  
+  ```
+
+2. Inbound ForeignKey Pseudo Column:
+
+  ```
+  ["S", "fk2_cons"]   ==   {"source":[ {"inbound": ["S", "fk2_cons"]}, "f2_id"]}
+
+  ["S", "fk3_cons"]   ==   {"source":[ {"inbound": ["S", "fk3_cons"]}, {"outbound": ["S", "main_f3_cons"]}, "f3_id"}
+  ["S", "fk3_cons"]   =/=   {"source":[ {"inbound": ["S", "fk3_cons"]}, "main_f3_id"}
+  ```
+
 3. Key Pseudo Column:
-```
-["S", "main_key_constraint"] ==  {"source": "id"}
-["S", "main_key_constraint"] =/= {"source": "id", "entity": false}
-```
+
+  ```
+  ["S", "main_key_constraint"] ==  {"source": "id"}
+  ["S", "main_key_constraint"] =/= {"source": "id", "entity": false}
+  ```

@@ -195,6 +195,22 @@
     };
 
     /**
+     * This private utility function copies the attributes of one object into another if,
+     *  - the attribute is missing from the original, or
+     *  - the attribute is part of enforcedList.
+     * @param  {Object} copyTo       The object to copy values to.
+     * @param  {Object} copyFrom     The object to copy values from.
+     * @param  {String[]} enforcedList the list of attributes that must be copied.
+     */
+    module._shallowCopyExtras = function (copyTo, copyFrom, enforcedList) {
+        for (var key in copyFrom) {
+            if (copyFrom.hasOwnProperty(key) && (!copyTo.hasOwnProperty(key) || enforcedList.indexOf(key) !== -1)) {
+                copyTo[key] = copyFrom[key];
+            }
+        }
+    };
+
+    /**
      * @private
      * @function
      * @param  {Object} source the object that you want to be copied
@@ -551,108 +567,6 @@
         return value;
     };
 
-    /**
-     * @param {string|object} colObject if the foreignkey/key is compund, this should be the constraint name. otherwise the source syntax for pseudo-column.
-     * @desc return the name that should be used for pseudoColumn. This function makes sure that the returned name is unique.
-     * This function can be used to get the name that we're using for :
-     *
-     * - Composite key/foreignkeys:
-     *   In this case, if the constraint name is [`s`, `c`], you should pass `s_c` to this function.
-     * - Simple foiregnkey/key:
-     *   Pass the equivalent pseudo-column definition of them. It must at least have `source` as an attribute.
-     * - Pseudo-Columns:
-     *   Just pass the object that defines the pseudo-column. It must at least have `source` as an attribute.
-     *
-     */
-    module.generatePseudoColumnHashName = function (colObject) {
-
-        //we cannot create an object and stringify it, since its order can be different
-        //instead will create a string of `source + aggregate + entity`
-        var str = "";
-
-        // it should have source
-        if (typeof colObject === "object") {
-            if (!colObject.source) return null;
-
-            if (_sourceHasPath(colObject.source)) {
-                // since it's an array, it will preserve the order
-                str += JSON.stringify(colObject.source);
-            } else {
-                str += _getSourceColumnStr(colObject.source);
-            }
-
-            if (typeof colObject.aggregate === "string") {
-                str += colObject.aggregate;
-            }
-
-            // entity true doesn't change anything
-            if (colObject.entity === false) {
-                str += colObject.entity;
-            }
-
-            if (colObject.self_link === true) {
-                str += colObject.self_link;
-            }
-        } else if (typeof colObject === "string"){
-            str = colObject;
-        } else {
-            return null;
-        }
-
-        // md5
-        str = ERMrest._SparkMD5.hash(str);
-
-        // base64
-        str = _hexToBase64(str);
-
-        // url safe
-        return _urlEncodeBase64(str);
-    };
-
-
-    /**
-     * @private
-     * @param  {Object} colObject the column definition
-     * @param  {ERMrest.Column} column
-     * @return {Object} the returned object has `name` and `isHash` attributes.
-     * @desc generates a name for the given pseudo-column
-     */
-    _generatePseudoColumnName = function (colObject, column) {
-        if ((typeof colObject.aggregate === "string") || _sourceHasPath(colObject.source) || _isSourceObjectEntityMode(colObject, column)) {
-            return {name: module.generatePseudoColumnHashName(colObject), isHash: true};
-        }
-
-        return {name: column.name, isHash: false};
-    };
-
-    _generateForeignKeyName = function (fk, isInbound) {
-        var eTable = isInbound ? fk._table : fk.key.table;
-
-        if (!isInbound) {
-            return module.generatePseudoColumnHashName({
-                source: [{outbound: fk.constraint_names[0]}, eTable.shortestKey[0].name]
-            });
-        }
-
-        var source = [{inbound: fk.constraint_names[0]}];
-        if (eTable._isPureBinaryAssociation()) {
-            var otherFK;
-            for (j = 0; j < eTable.foreignKeys.length(); j++) {
-                if(eTable.foreignKeys.all()[j] !== fk) {
-                    otherFK = eTable.foreignKeys.all()[j];
-                    break;
-                }
-            }
-
-            source.push({outbound: otherFK.constraint_names[0]});
-            source.push(otherFK.key.table.shortestKey[0].name);
-        } else {
-            source.push(eTable.shortestKey[0].name);
-        }
-
-        return module.generatePseudoColumnHashName({source: source});
-    };
-
     // given a reference and associated data to it, will return a list of Values
     // corresponding to its sort object
     _getPagingValues = function (ref, rowData, rowLinkedData) {
@@ -780,30 +694,35 @@
     module._getFormattedKeyValues = function(table, context, data, linkedData) {
         var keyValues, k, fkData, col, cons, rowname, v;
 
-        var findCol = function (colName, currTable) {
-            if (Array.isArray(currTable)) {
-                return currTable.filter(function (col) {return col.name === colName;})[0];
-            }
-            return currTable.columns.get(k);
-        };
-
         var getTableValues = function (d, currTable) {
             var res = {};
-            for (k in d) {
+            currTable.sourceDefinitions.columns.forEach(function (col) {
+                if (!(col.name in d)) return;
+
                 try {
-                    col = findCol(k, currTable);
+                    k = col.name;
                     v = col.formatvalue(d[k], context);
                     if (col.type.isArray) {
-                        res[k] = module._formatUtils.printArray(v, {isMarkdown: true});
-                    } else {
-                        res[k] = v;
+                        v = module._formatUtils.printArray(v, {isMarkdown: true});
                     }
-                } catch(e) {
+
+                    res[k] = v;
+                    res["_" + k] = d[k];
+
+                    // alternative names
+                    // TODO this should change to allow usage of table column names.
+                    if (Array.isArray(currTable.sourceDefinitions.sourceMapping[k]) ){
+                        currTable.sourceDefinitions.sourceMapping[k].forEach(function (altKey) {
+                            res[altKey] = v;
+                            res["_" + altKey] = d[k];
+                        });
+                    }
+                } catch (e) {
+                    // if the value is invalid (for example hatrac TODO can be imporved)
                     res[k] = d[k];
+                    res["_" + k] = d[k];
                 }
-                // Inject raw data in the keyvalues object prefixed with an '_'
-                res["_" + k] = d[k];
-            }
+            });
             return res;
         };
 
@@ -811,9 +730,9 @@
         keyValues = getTableValues(data, table);
 
         //get foreignkey data if available
-        if (linkedData && typeof linkedData === "object" && table.foreignKeys.length() > 0) {
+        if (linkedData && typeof linkedData === "object" && table.sourceDefinitions.fkeys.length > 0) {
             keyValues.$fkeys = {};
-            table.foreignKeys.all().forEach(function (fk) {
+            table.sourceDefinitions.fkeys.forEach(function (fk) {
                 var p = module._generateRowLinkProperties(fk.key, linkedData[fk.name], context);
                 if (!p) return;
 
@@ -880,15 +799,13 @@
      * @param  {ERMrest.Reference=} ref to avoid creating a new reference
      * @return {Object}
      */
-    module._getRowTemplateVariables = function (table, context, data, linkedData, ref) {
-        if (ref == null) {
-            var uri = _generateRowURI(table, data);
-            if (uri == null) return {};
-            ref = new Reference(module.parse(uri), table.schema.catalog);
-        }
+    module._getRowTemplateVariables = function (table, context, data, linkedData, key) {
+        var uri = _generateRowURI(table, data, key);
+        if (uri == null) return {};
+        var ref = new Reference(module.parse(uri), table.schema.catalog);
         return {
             values: module._getFormattedKeyValues(table, context, data, linkedData),
-            rowName: module._generateRowName(table, context, data, linkedData).value,
+            rowName: module._generateRowName(table, context, data, linkedData).unformatted,
             uri: {
                 detailed: ref.contextualize.detailed.appLink
             }
@@ -924,7 +841,7 @@
         if (annotation && typeof annotation.row_markdown_pattern === 'string') {
             template = annotation.row_markdown_pattern;
 
-            pattern = module._renderTemplate(template, formattedValues, table, context, {formatted: true, templateEngine: annotation.template_engine});
+            pattern = module._renderTemplate(template, formattedValues, table.schema.catalog, {templateEngine: annotation.template_engine});
 
         }
 
@@ -983,7 +900,7 @@
             keyValues = {"name": result};
 
             // get templated patten after replacing the values using Mustache
-            pattern = module._renderTemplate(template, keyValues, table, context, {formatted: true});
+            pattern = module._renderTemplate(template, keyValues, table.schema.catalog);
         }
 
         // Render markdown content for the pattern
@@ -1035,7 +952,12 @@
         // use the markdown_pattern that is defiend in key-display annotation
         var display = key.getDisplay(context);
         if (display.isMarkdownPattern) {
-            unformatted = module._renderTemplate(display.markdownPattern, options.formattedValues, key.table, context, {formatted:true});
+            unformatted = module._renderTemplate(
+                display.markdownPattern,
+                options.formattedValues,
+                key.table.schema.catalog,
+                {templateEngine: display.templateEngine}
+            );
             unformatted = (unformatted === null || unformatted.trim() === '') ? "" : unformatted;
             caption = module._formatUtils.printMarkdown(unformatted, { inline: true });
         } else {
@@ -2732,39 +2654,31 @@
 
     /**
      * A wrapper for {ERMrest._renderMustacheTemplate}
-     * This function will generate formmatted values from the given data,
-     * if you don't want the funciton to format the data, make sure to have
-     * options.formatted = true
-     * options.templateEngine: "mustache" or "handlbars"
+     * acceptable options:
+     * - templateEngine: "mustache" or "handlbars"
+     * - avoidValidation: to avoid validation of the template
      *
      * @param  {string} template - template to be rendered
      * @param  {object} keyValues - formatted key value pairs needed for the template
-     * @param  {ERMrest.Table} table - the table representing the keyValues data
-     * @param  {string} context -
+     * @param  {ERMrest.Catalog} catalog - the catalog that this value is for
      * @param  {Array.<Object>=} options optioanl parameters
      * @return {string} Returns a string produced as a result of templating using options.templateEngine or `Mustache` by default.
      */
-    module._renderTemplate = function (template, keyValues, table, context, options) {
+    module._renderTemplate = function (template, keyValues, catalog, options) {
 
         var obj = {};
 
         if (typeof template !== 'string') return null;
 
-        // to avoid computing keyValues mutliple times, or if we don't want the formatted values
-        // TODO: remove this from render template and enforce keyValues be formatted, also remove context param
-        if (table && (options === undefined || !options.formatted)) {
-            keyValues = module._getFormattedKeyValues(table, context, keyValues);
-        }
-
         options = options || {};
 
         if (options.templateEngine === module.HANDLEBARS) {
             // render the template using Handlebars
-            return module.renderHandlebarsTemplate(template, keyValues, table.schema.catalog, options);
+            return module.renderHandlebarsTemplate(template, keyValues, catalog, options);
         }
 
         // render the template using Mustache
-        return module._renderMustacheTemplate(template, keyValues, table.schema.catalog, options);
+        return module._renderMustacheTemplate(template, keyValues, catalog, options);
     };
 
     /**
@@ -2822,7 +2736,7 @@
      * @return {Object}          An object with `isHTML` and `value` attributes.
      */
     module._processMarkdownPattern = function (template, data, table, context, options) {
-        var res = module._renderTemplate(template, data, table, context, options);
+        var res = module._renderTemplate(template, data, table.schema.catalog, options);
 
         if (res === null || res.trim() === '') {
             res = module._getNullValue(table, context, [table, table.schema]);

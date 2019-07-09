@@ -751,10 +751,17 @@ AttributeGroupTuple.prototype = {
             this._values = [];
             this._isHTML = [];
 
-            var self = this;
-            var columns = self._page.reference.columns,
-                context = self._page.reference._context;
-            var formattedValues = module._getFormattedKeyValues(columns, context, self._data);
+            var columns = this._page.reference.columns,
+                context = this._page.reference._context,
+                self = this, formattedValues = {}, k, v;
+            columns.forEach(function (col) {
+                if (!(col.name in self._data)) return;
+                k = col.name;
+                v = col.formatvalue(self._data[k], context);
+                formattedValues[k] = v;
+                formattedValues["_" + k] = self._data[k];
+            });
+
             var presentation;
 
             columns.forEach(function (col) {

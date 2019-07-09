@@ -18,12 +18,12 @@
  * @param  {ERMrest.Reference}  reference    the parent reference
  * @param  {ERMrest.Column}  column       the underlying column object
  * @param  {Object}  sourceObject the column definition
- * @param  {String}  name         the name to avoid computing it again.
- * @param  {ERMrest.Tuple}  mainTuple    the main tuple
- * @param  {Boolean} isEntity     whether it's entity mode or not (to avoid computing it again)
+ * @param  {ERMrest.Tuple=}  mainTuple    the main tuple
+ * @param  {String=}  name         the name to avoid computing it again.
+ * @param  {Boolean=} isEntity     whether it's entity mode or not (to avoid computing it again)
  * @return {ERMrest.ReferenceColumn}
  */
-module._createPseudoColumn = function (reference, column, sourceObject, name, mainTuple, isEntity) {
+module._createPseudoColumn = function (reference, column, sourceObject, mainTuple, name, isEntity) {
     var generalPseudo = function () {
         return new PseudoColumn(reference, column, sourceObject, name, mainTuple);
     };
@@ -35,6 +35,14 @@ module._createPseudoColumn = function (reference, column, sourceObject, name, ma
     var source = sourceObject.source,
         context = reference._context,
         relatedRef, fk;
+
+    // if name is not passed, genarate it
+    if (typeof name !== "string") {
+        name = _generatePseudoColumnName(sourceObject, column);
+    }
+    if (typeof isEntity !== "boolean") {
+        isEntity = _isSourceObjectEntityMode(sourceObject, column);
+    }
 
     // has aggregate
     if (sourceObject.aggregate) {
@@ -50,13 +58,14 @@ module._createPseudoColumn = function (reference, column, sourceObject, name, ma
             return new KeyPseudoColumn(reference, key, sourceObject, name);
         }
 
+
         // no path, scalar, asset
         if (column.type.name === "text" && column.annotations.contains(module._annotations.ASSET)) {
             return new AssetPseudoColumn(reference, column, sourceObject);
         }
 
         // no path, scalar
-        return new ReferenceColumn(reference, [column], sourceObject);
+        return new ReferenceColumn(reference, [column], sourceObject, name, mainTuple);
     }
 
     // path, entity, outbound length 1,
@@ -90,10 +99,13 @@ module._createPseudoColumn = function (reference, column, sourceObject, name, ma
  * @constructor
  * @param {ERMrest.Reference} reference column's reference
  * @param {ERMrest.Column[]} baseCols List of columns that this reference-column will be created based on.
+ * @param {object} sourceObject the whole column object
+ * @param {string} name        to avoid processing the name again, this might be undefined.
+ * @param {ERMrest.Tuple} mainTuple   if the reference is referring to just one tuple, this is defined.
  * @desc
  * Constructor for ReferenceColumn. This class is a wrapper for {@link ERMrest.Column}.
  */
-function ReferenceColumn(reference, cols, sourceObject, name) {
+function ReferenceColumn(reference, cols, sourceObject, name, mainTuple) {
     this._baseReference = reference;
     this._context = reference._context;
     this._baseCols = cols;
@@ -110,7 +122,13 @@ function ReferenceColumn(reference, cols, sourceObject, name) {
      */
     this.table = this._baseCols[0].table;
 
+    this._currentTable = this._baseCols[0].table;
+
     this._name = name;
+
+    this._mainTuple = mainTuple;
+
+    this.isUnique = true;
 }
 
 ReferenceColumn.prototype = {
@@ -343,14 +361,23 @@ ReferenceColumn.prototype = {
      */
     formatPresentation: function(data, context, options) {
         data = data || {};
+        options = options || {};
+
+        // if there's wait_for, this should return null.
+        if (this.hasWaitFor && !options.skipWaitFor) {
+            return {
+                isHTML: false,
+                value: this._getNullValue(context),
+                unformatted: this._getNullValue(context)
+            };
+        }
+
         if (this.display.sourceMarkdownPattern) {
-            var res, keyValues = {}, cols = this._baseCols;
+            var res, keyValues = options.templateVariables || {}, cols = this._baseCols;
 
             if (this._simple) {
-                keyValues = {
-                    "$self": cols[0].formatvalue(data[cols[0].name], context, options),
-                    "$_self": data[cols[0].name]
-                };
+                keyValues.$self = cols[0].formatvalue(data[cols[0].name], context, options);
+                keyValues.$_self = data[cols[0].name];
             } else {
                 var values = {};
                 cols.forEach(function (col) {
@@ -365,7 +392,7 @@ ReferenceColumn.prototype = {
                 keyValues,
                 this.table,
                 context,
-                {templateEngine: this.display.sourceTemplateEngine, formatted: true}
+                {templateEngine: this.display.sourceTemplateEngine}
             );
         }
 
@@ -463,6 +490,188 @@ ReferenceColumn.prototype = {
             return this._baseCols[0]._getNullValue(context);
         }
         return module._getNullValue(this.table, context, [this.table, this.table.schema]);
+    },
+
+    /**
+     * Whether the value of the column comes from a secondary source, based on
+     * its active list
+     * @return {Boolean} [description]
+     */
+    get hasWaitFor() {
+        if (this._hasWaitFor === undefined) {
+            // will generate the _hasWaitFor
+            var waitFor = this.waitFor;
+        }
+        return this._hasWaitFor;
+    },
+
+    /**
+     * Array of columns
+     * It will
+     * - ignore entitysets for non-detailed contexts.
+     * - will ignore normal columns.
+     * Will also se the `hasWaitFor` if there's at least a seconadry request.
+     *
+     * @type {ERMrest.ReferenceColumn[]}
+     */
+    get waitFor() {
+        if (this._waitFor === undefined) {
+            var self = this, res = [], hasWaitFor = false, waitFors = [];
+            if (self.sourceObject && self.sourceObject.display) {
+                if (Array.isArray(self.sourceObject.display.wait_for)) {
+                    waitFors = self.sourceObject.display.wait_for;
+                } else if (typeof self.sourceObject.display.wait_for === "string") {
+                    waitFors = [self.sourceObject.display.wait_for];
+                }
+            }
+
+            var consideredWaitFors = {};
+            waitFors.forEach(function (wf, index) {
+                var message = "wait_for defined on table=`" + self._currentTable.name + "`, pseudo-column=`" + self.displayname.value + "`, index=" + index + ", ";
+                if (typeof wf !== "string") {
+                    console.log(message + "must be an string");
+                    return;
+                }
+
+                // duplicate
+                if (consideredWaitFors[wf]) {
+                    return;
+                }
+                consideredWaitFors[wf] = true;
+
+                // column names
+                if (wf in self._currentTable.sourceDefinitions.columns) {
+                    // there's no reason to add normal columns.
+                    return;
+                }
+
+                // sources
+                if ((wf in self._currentTable.sourceDefinitions.sources)) {
+                    var sd = self._currentTable.sourceDefinitions.sources[wf];
+
+                    // entitysets are only allowed in detailed
+                    if (sd.hasInbound && !sd.sourceObject.aggregate && self._context !== module._contexts.DETAILED) {
+                        console.log(messge + ", wait_for element index=", index, " is not valid (entity sets are not allowed in detailed).");
+                        return;
+                    }
+
+                    // NOTE because it's redundant
+                    if (sd.name === self.name) {
+                        // don't add itself
+                        return;
+                    }
+
+                    // there's at least one secondary request
+                    if (sd.hasInbound || sd.sourceObject.aggregate) {
+                        hasWaitFor = true;
+                    }
+
+                    // NOTE this coukd be in the table.sourceDefinitions
+                    // the only issue is that in there we don't have the mainTuple...
+                    var pc = module._createPseudoColumn(self._baseReference, sd.column, sd.sourceObject, self._mainTuple, sd.name, sd.isEntity);
+
+                    // ignore normal columns
+                    if (!pc.isPseudo || pc.isAsset) return;
+
+                    res.push(pc);
+
+                    return;
+                }
+
+            });
+
+
+            this._waitFor = res;
+            this._hasWaitFor = hasWaitFor;
+        }
+        return this._waitFor;
+    },
+
+    /**
+     * This function should not be used in entry context
+     * TODO looks like something that can be moved down to different column types.
+     * Should be called once every value is retrieved
+     * @param  {Object} templateVariables     [description]
+     * @param  {Object} columnValue the value of aggregate column (if it's aggregate)
+     * @param  {ERMrest.Tuple} mainTuple             [description]
+     * @return {Object}                       [description]
+     */
+    sourceFormatPresentation: function (templateVariables, columnValue, mainTuple) {
+        // go through the wait for to make sure all is done
+        var context = this._context, self = this;
+
+        var nullValue = {
+            isHTML: false,
+            value: this._getNullValue(context),
+            unformatted: this._getNullValue(context)
+        };
+
+        if (self.display.sourceMarkdownPattern) {
+            var keyValues = {}, selfTemplateVariables = {};
+            var baseCol = self._baseCols[0];
+
+            // create the $self object
+            if (self.isPathColumn && self.hasAggregate && columnValue) {
+                selfTemplateVariables = columnValue.templateVariables;
+            } else if (self.isForeignKey || (self.isPathColumn && self.hasPath && self.isUnique)) {
+                if (!mainTuple._linkedData[self.name]) {
+                    selfTemplateVariables = {};
+                } else if (!self.isForeignKey && !self.isEntityMode) {
+                    selfTemplateVariables = {
+                        "$self": baseCol.formatvalue(mainTuple._linkedData[self.name][baseCol.name], context),
+                        "$_self": mainTuple._linkedData[self.name][baseCol.name]
+                    };
+                } else {
+                    selfTemplateVariables = {
+                        "$self": module._getRowTemplateVariables(self.table, context, mainTuple._linkedData[self.name])
+                    };
+                }
+            } else if (self.isKey) {
+                selfTemplateVariables = {
+                    "$self": module._getRowTemplateVariables(self.table, context, mainTuple._data)
+                };
+            } else {
+                selfTemplateVariables = {
+                    "$self": baseCol.formatvalue(mainTuple.data[baseCol.name], context),
+                    "$_self": mainTuple.data[baseCol.name]
+                };
+            }
+
+            Object.assign(keyValues, templateVariables, selfTemplateVariables);
+            return module._processMarkdownPattern(
+                self.display.sourceMarkdownPattern,
+                keyValues,
+                self.table,
+                context,
+                {templateEngine: self.display.sourceTemplateEngine}
+            );
+        }
+
+        // TODO supporting wait_for on column display/key display is simple,
+        // just change wait_for to look at those too,
+        // and also pass the templateVariables instead of page.templateVariables
+
+        // when there's waifor but no sourceMarkdownPattern
+        // NOTE: why not just return the value from the templateVariables?
+        //  - this column might not be part of the templateVariables
+
+        // aggregate
+        if (self.isPathColumn && self.hasAggregate) {
+            return columnValue ? columnValue : nullValue;
+        }
+
+        // all outbound
+        if (self.isForeignKey || (self.isPathColumn && self.hasPath && self.isUnique)) {
+            return self.formatPresentation(mainTuple._linkedData[self.name], mainTuple._pageRef._context, {skipWaitFor: true});
+        }
+
+        // rest of the cases
+        var pres = self.formatPresentation(mainTuple._data, mainTuple._pageRef._context, { formattedValues: mainTuple.templateVariables.values, skipWaitFor: true});
+        if (self.type.name === "gene_sequence") {
+            pres.isHTML = true;
+        }
+        return pres;
+
     }
 };
 
@@ -478,14 +687,14 @@ ReferenceColumn.prototype = {
  * @memberof ERMrest
  * @param {ERMrest.Reference} reference  column's reference
  * @param {ERMrest.Column} column      the column that this pseudo-column is representing
- * @param {object} facetObject the whole column object
+ * @param {object} sourceObject the whole column object
  * @param {string} name        to avoid processing the name again, this might be undefined.
  * @param {ERMrest.Tuple} mainTuple   if the reference is referring to just one tuple, this is defined.
  * @constructor
  * @class
  */
 function PseudoColumn (reference, column, sourceObject, name, mainTuple) {
-    PseudoColumn.superClass.call(this, reference, [column], sourceObject);
+    PseudoColumn.superClass.call(this, reference, [column], sourceObject, name, mainTuple);
 
     /**
      * @type {boolean}
@@ -500,8 +709,6 @@ function PseudoColumn (reference, column, sourceObject, name, mainTuple) {
     this._name = name;
 
     this._currentTable = reference.table;
-
-    this._mainTuple = mainTuple;
 
     this.table = column.table;
 }
@@ -522,6 +729,7 @@ module._extends(PseudoColumn, ReferenceColumn);
  */
 PseudoColumn.prototype.formatPresentation = function(data, context, options) {
     data = data || {};
+    options = options || {};
 
     var nullValue = {
         isHTML: false,
@@ -530,6 +738,10 @@ PseudoColumn.prototype.formatPresentation = function(data, context, options) {
     };
 
     if (module._isEntryContext(context)) {
+        return nullValue;
+    }
+
+    if (this.hasWaitFor && !options.skipWaitFor) {
         return nullValue;
     }
 
@@ -545,6 +757,7 @@ PseudoColumn.prototype.formatPresentation = function(data, context, options) {
 
     // make sure formattedValues is valid
     if (!options) options = {};
+
     if (options.formattedValues === undefined) {
         options.formattedValues = module._getFormattedKeyValues(this.table, context, data);
     }
@@ -555,12 +768,14 @@ PseudoColumn.prototype.formatPresentation = function(data, context, options) {
     }
 
     if (this.display.sourceMarkdownPattern) {
+        var keyValues = options.templateVariables || {};
+        keyValues.$self = module._getRowTemplateVariables(this.table, context, data);
         return module._processMarkdownPattern(
             this.display.sourceMarkdownPattern,
-            {$self: module._getRowTemplateVariables(this.table, context, data)},
+            keyValues,
             this.table,
             context,
-            {templateEngine: this.display.sourceTemplateEngine, formatted: true}
+            {templateEngine: this.display.sourceTemplateEngine}
         );
     }
 
@@ -572,6 +787,11 @@ PseudoColumn.prototype.formatPresentation = function(data, context, options) {
 /**
  * Returns a promise that gets resolved with list of aggregated values in the same
  * order of tuples of the page that is passed.
+ * Each returned value has the following attributes:
+ *  - value
+ *  - isHTML
+ *  - templateVariables (TODO)
+ *
  * implementation Notes:
  * 1. This function will take care of url limitation. It might generate multiple
  * ermrest requests based on the url length, and will resolve the promise when
@@ -605,6 +825,9 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
         printUtils = module._formatUtils,
         keyColName, keyColNameEncoded,
         baseUri, basePath, uri, i, fk, str, projection;
+
+    var sourceMarkdownPattern = this.display.sourceMarkdownPattern;
+    var sourceTemplateEngine = this.display.sourceTemplateEngine;
 
     // this will dictates whether we should show rowname or not
     var isRow = self.isEntityMode && module._pseudoColEntityAggregateFns.indexOf(self.sourceObject.aggregate) != -1;
@@ -727,55 +950,56 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
         );
 
         var res = "";
-        if (self.display.sourceMarkdownPattern) {
-            var keyValues = {};
-            if (!isRow) {
-                keyValues = {"$self": arrayRes, "$_self": val};
-            } else {
-                keyValues = {
-                    "$self": val.map(function (v) {
-                        return module._getRowTemplateVariables(column.table, context, v);
-                    })
-                };
-            }
+        // find array display
+        var array_display = self.sourceObject.array_display;
+        if (self.sourceObject.display && typeof self.sourceObject.display.array_ux_mode === "string") {
+            array_display = self.sourceObject.display.array_ux_mode;
+        }
 
+        // print the array in a comma seperated value (list) or bullets
+        switch (array_display) {
+            case "ulist":
+                arrayRes.forEach(function (arrayVal) {
+                    res += "* " + arrayVal + " \n";
+                });
+                break;
+            case "olist":
+                arrayRes.forEach(function (arrayVal, i) {
+                    res += (i+1) + ". " + arrayVal + " \n";
+                });
+                break;
+            case "raw":
+                res = arrayRes.join(" ");
+                break;
+            default: //csv
+                res = arrayRes.join(", ");
+        }
+
+        // populate templateVariables
+        var templateVariables = {};
+        if (!isRow) {
+            templateVariables = {"$self": res, "$_self": val};
+        } else {
+            templateVariables = {
+                "$self": val.map(function (v) {
+                    return module._getRowTemplateVariables(column.table, context, v);
+                })
+            };
+        }
+
+        if (sourceMarkdownPattern) {
             res = module._renderTemplate(
-                self.display.sourceMarkdownPattern,
-                keyValues,
-                column.table,
-                context,
-                {templateEngine: self.display.sourceTemplateEngine, formatted: true}
+                sourceMarkdownPattern,
+                templateVariables,
+                column.table.schema.catalog,
+                {templateEngine: sourceTemplateEngine}
             );
 
             if (res === null || res.trim() === '') {
                 res = module._getNullValue(column.table, context, [column.table, column.table.schema]);
             }
-        } else {
-            var array_display = self.sourceObject.array_display;
-            if (self.sourceObject.display && typeof self.sourceObject.display.array_display === "string") {
-                array_display = self.sourceObject.display.array_display;
-            }
-
-            // print the array in a comma seperated value (list) or bullets
-            switch (array_display) {
-                case "ulist":
-                    arrayRes.forEach(function (arrayVal) {
-                        res += "* " + arrayVal + " \n";
-                    });
-                    break;
-                case "olist":
-                    arrayRes.forEach(function (arrayVal, i) {
-                        res += (i+1) + ". " + arrayVal + " \n";
-                    });
-                    break;
-                case "raw":
-                    res = arrayRes.join(" ");
-                    break;
-                default: //csv
-                    res = arrayRes.join(", ");
-            }
         }
-        return printUtils.printMarkdown(res);
+        return {value: printUtils.printMarkdown(res), templateVariables: templateVariables};
     };
 
     // return empty list if page is empty
@@ -861,13 +1085,14 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
 
             // if given page is not valid (the key doesn't exist), or it returned empty result
             if (!value || !value.v){
-                result.push({isHTML: false, value: ""});
+                result.push({isHTML: false, value: "", templateVariables: {}});
                 return;
             }
 
             // array formatting is different
             if (self.sourceObject.aggregate.indexOf("array") === 0){
-                result.push({value: getArrayValue(value.v), isHTML: true});
+                var arrValue = getArrayValue(value.v);
+                result.push({value: arrValue.value, isHTML: true, templateVariables: arrValue.templateVariables});
                 return;
             }
 
@@ -883,14 +1108,14 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
             }
 
             var res = formatted;
-            if (self.display.sourceMarkdownPattern) {
+            var templateVariables = { "$self": formatted, "$_self": value.v };
+            if (sourceMarkdownPattern) {
                 isHTML = true;
                 res = module._renderTemplate(
-                    self.display.sourceMarkdownPattern,
-                    { "$self": formatted, "$_self": value.v },
-                    column.table,
-                    context,
-                    {templateEngine: self.display.sourceTemplateEngine, formatted: true}
+                    sourceMarkdownPattern,
+                    templateVariables,
+                    column.table.schema.catalog,
+                    {templateEngine: sourceTemplateEngine}
                 );
 
                 if (res === null || res.trim() === '') {
@@ -903,7 +1128,7 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
                 res = printUtils.printMarkdown(res);
             }
 
-            result.push({isHTML: isHTML, value: res});
+            result.push({isHTML: isHTML, value: res, templateVariables: templateVariables});
         });
 
         defer.resolve(result);
@@ -1188,7 +1413,7 @@ Object.defineProperty(PseudoColumn.prototype, "hasAggregate", {
  * 1. If pseudo-column has no path, it will return the base reference.
  * 3. if mainTuple is available, create the reference based on this path:
  *      <pseudoColumnSchema:PseudoColumnTable>/<path from pseudo-column to main table>/<facets based on value of shortestkey of main table>
- * 4. Otherwise return the reference without any facet or filters (TODO needs to change eventually)
+ * 4. Otherwise create the path by traversing the path
  * @member {ERMrest.Reference} reference
  * @memberof ERMrest.PseudoColumn#
  */
@@ -1244,7 +1469,9 @@ Object.defineProperty(PseudoColumn.prototype, "reference", {
                 }
 
                 // if data didn't exist, we should traverse the path
-                if ((noData || filters.length == 0) && !self._baseReference.hasJoin) {
+                // TODO I removed && !self._baseReference.hasJoin
+                // TODO test this!!!!!!!
+                if ((noData || filters.length == 0)) {
                     uri = self._baseReference.location.compactUri + "/" + this.foreignKeys.map(function (fk) {
                         return fk.obj.toString(!fk.isInbound, false);
                     }).join("/");
@@ -1333,6 +1560,9 @@ function ForeignKeyPseudoColumn (reference, fk, sourceObject, name) {
      */
     this.foreignKey = fk;
 
+    // TODO for compatibility
+    this.foreignKeys = [{obj: fk, isInbound: false}];
+
     this._constraintName = this.foreignKey._constraintName;
 
     this.table = this.foreignKey.key.table;
@@ -1359,8 +1589,13 @@ ForeignKeyPseudoColumn.prototype.filteredRef = function(data, linkedData) {
     if (this.foreignKey.annotations.contains(module._annotations.FOREIGN_KEY)){
 
         var keyValues = module._getFormattedKeyValues(this._baseReference.table, this._context, data, linkedData);
-        var template = this.foreignKey.annotations.get(module._annotations.FOREIGN_KEY).content.domain_filter_pattern;
-        var uriFilter = module._renderTemplate(template, keyValues, this._baseReference.table);
+        var content = this.foreignKey.annotations.get(module._annotations.FOREIGN_KEY).content;
+        var uriFilter = module._renderTemplate(
+            content.domain_filter_pattern,
+            keyValues,
+            this._baseReference.table.schema.catalog,
+            {templateEngine: content.template_engine}
+        );
 
         // should ignore the annotation if it's invalid
         if (typeof uriFilter === "string" && uriFilter.trim() !== '') {
@@ -1460,19 +1695,32 @@ ForeignKeyPseudoColumn.prototype._determineDefaultValue = function () {
 };
 ForeignKeyPseudoColumn.prototype.formatPresentation = function(data, context, options) {
     data = data || {};
+    options = options || {};
+    var nullValue = {
+        isHTML: false,
+        value: this._getNullValue(context),
+        unformatted: this._getNullValue(context)
+    };
+
+    // if there's wait_for, this should return null.
+    if (this.hasWaitFor && !options.skipWaitFor) {
+        return nullValue;
+    }
+
     if (this.display.sourceMarkdownPattern) {
+        var keyValues = options.templateVariables || {};
+        keyValues.$self = module._getRowTemplateVariables(this.table, context, data);
         return module._processMarkdownPattern(
             this.display.sourceMarkdownPattern,
-            {$self: module._getRowTemplateVariables(this.table, context, data)},
+            keyValues,
             this.table,
             context,
-            {templateEngine: this.display.sourceTemplateEngine, formatted: true}
+            {templateEngine: this.display.sourceTemplateEngine}
         );
     }
 
-    var nullValue = this._getNullValue(context);
     var pres = module._generateRowPresentation(this.foreignKey.key, data, context);
-    return pres ? pres: {isHTML: false, value: nullValue, unformatted: nullValue};
+    return pres ? pres: nullValue;
 };
 ForeignKeyPseudoColumn.prototype._determineSortable = function () {
     var display = this.display, useColumn = false, baseCol;
@@ -1717,19 +1965,30 @@ module._extends(KeyPseudoColumn, ReferenceColumn);
  */
 KeyPseudoColumn.prototype.formatPresentation = function(data, context, options) {
     data = data || {};
-    var nullValue = this._getNullValue(context);
+    options = options || {};
+    var nullValue = {
+        isHTML: false,
+        value: this._getNullValue(context),
+        unformatted: this._getNullValue(context)
+    };
+
+    if (this.hasWaitFor && !options.skipWaitFor) {
+        return nullValue;
+    }
     if (this.display.sourceMarkdownPattern) {
+        var keyValues = options.templateVariables || {};
+        keyValues.$self = module._getRowTemplateVariables(this.table, context, data, null, this.key);
         return module._processMarkdownPattern(
             this.display.sourceMarkdownPattern,
-            {$self: module._getRowTemplateVariables(this.table, context, data)},
+            keyValues,
             this.table,
             context,
-            {templateEngine: this.display.sourceTemplateEngine, formatted: true}
+            {templateEngine: this.display.sourceTemplateEngine}
         );
     }
 
     var pres = module._generateKeyPresentation(this.key, data, context, options);
-    return pres ? pres : {isHTML: false, value: nullValue, unformatted: nullValue};
+    return pres ? pres : nullValue;
  };
 KeyPseudoColumn.prototype._determineSortable = function () {
     var display = this.display, useColumn = false, baseCol;
@@ -1957,9 +2216,20 @@ AssetPseudoColumn.prototype.getMetadata = function (data, context, options) {
 // properties to be overriden:
 AssetPseudoColumn.prototype.formatPresentation = function(data, context, options) {
     data = data || {};
+    options = options || {};
+    var nullValue = {
+        isHTML: false,
+        value: this._getNullValue(context),
+        unformatted: this._getNullValue(context)
+    };
+
     // in edit return the original data
     if (module._isEntryContext(context)) {
         return { isHTML: false, value: data[this._baseCol.name], unformatted: data[this._baseCol.name]};
+    }
+
+    if (this.hasWaitFor && !options.skipWaitFor) {
+        return nullValue;
     }
 
     // if column has column-display annotation, use it
@@ -1969,7 +2239,7 @@ AssetPseudoColumn.prototype.formatPresentation = function(data, context, options
 
     // if null, return null value
     if (typeof data[this._baseCol.name] === 'undefined' || data[this._baseCol.name] === null) {
-        return { isHTML: false, value: this._getNullValue(context), unformatted: this._getNullValue(context) };
+        return nullValue;
     }
 
     // otherwise return a download link
@@ -1988,7 +2258,7 @@ AssetPseudoColumn.prototype.formatPresentation = function(data, context, options
         "caption": caption,
         "url": url
     };
-    var unformatted = module._renderTemplate(template, keyValues, this.table, this._context, {formatted: true});
+    var unformatted = module._renderTemplate(template, keyValues, this.table.schema.catalog);
     return {isHTML: true, value: module._formatUtils.printMarkdown(unformatted, {inline:true}), unformatted: unformatted};
 };
 

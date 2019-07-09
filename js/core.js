@@ -1071,6 +1071,140 @@
         },
 
         /**
+         * Returns an object with
+         * - fkeys: array of ForeignKeyRef objects
+         * - columns: Array of columns
+         * - sources: hash-map of name to an object that has
+         *   - sourceObject
+         *   - column
+         *   - hasPath
+         *   - hasInbound
+         *   - isEntity
+         * - sourceMapping: hashname to all the names
+         * @type {Object}
+         */
+        get sourceDefinitions() {
+            if (this._sourceDefinitions === undefined) {
+                this._sourceDefinitions = this._getSourceDefinitions();
+            }
+            return this._sourceDefinitions;
+         },
+
+         _getSourceDefinitions: function () {
+             var self = this;
+             var sd = module._annotations.SOURCE_DEFINITIONS;
+             var hasAnnot = self.annotations.contains(sd);
+             var res = {columns: [], fkeys: [], sources: {}, sourceMapping: {}};
+             var addedCols = {}, addedFks = {};
+             var allColumns = self.columns.all(),
+                 allForeignKeys = self.foreignKeys.all();
+             var consNames = module._constraintNames;
+
+             var findConsName = function (catalogId, schemaName, constraintName) {
+                 var result;
+                 if ((catalogId in consNames) && (schemaName in consNames[catalogId])){
+                     result = consNames[catalogId][schemaName][constraintName];
+                 }
+                 return (result === undefined) ? null : result;
+             };
+
+             // TODO this is way too ugly, rewrite this!
+             var processSourceDefinitionList = function (val, isFkey) {
+                 if (val === true) {
+                     return isFkey ? allForeignKeys : allColumns;
+                 }
+
+                 var resultList = [], mapName = function (item) {return item.name;};
+                 var allListNames = isFkey ? allForeignKeys.map(mapName) : allColumns.map(mapName);
+                 if (Array.isArray(val)) {
+                     val.forEach(function (cname, index) {
+                         if (isFkey) {
+                             if (!Array.isArray(cname) || cname.length !== 2) {
+                                 // TODO log the error
+                                 return;
+                             }
+                             var fkObj = findConsName(self.schema.catalog.id, cname[0], cname[1]);
+                             if (fkObj === null || fkObj.subject !== module._constraintTypes.FOREIGN_KEY) {
+                                 return;
+                             }
+                             cname = fkObj.object.name;
+                         }
+
+                         var elIndex = allListNames.indexOf(cname);
+                         if (isFkey) {
+                             if (addedFks[elIndex]) return;
+                             addedFks[elIndex] = true;
+                         } else {
+                             if (addedCols[elIndex]) return;
+                             addedCols[elIndex] = true;
+                         }
+                         if (elIndex === -1) {
+                             console.log("invalid source definition, ", (isFkey ? "fkeys" : "columns"), ", index=" + index);
+                             return;
+                         }
+                         resultList.push(isFkey ? allForeignKeys[elIndex] : allColumns[elIndex]);
+                     });
+                 }
+                 return resultList;
+             };
+
+             if (!hasAnnot) {
+                 res.columns = allColumns;
+                 res.fkeys = allForeignKeys;
+                 return res;
+             }
+
+             var annot = self.annotations.get(sd).content;
+
+             // columns
+             if (annot.columns) {
+                 res.columns = processSourceDefinitionList(annot.columns, false);
+             }
+
+             // fkeys
+             if (annot.fkeys) {
+                 res.fkeys = processSourceDefinitionList(annot.fkeys, true);
+             }
+
+             // sources
+             if (annot.sources && typeof annot.sources === "object") {
+                 for (var key in annot.sources) {
+                     if (!annot.sources.hasOwnProperty(key)) continue;
+                     var message = "source definition, table =" + self.name + ", name=" + key;
+
+                     // TODO why? make sure key is not the same as table columns
+                     if (self.columns.has(key)) {
+                         console.log(message +  ": cannot use the table column names.");
+                         continue;
+                     }
+
+                     // TODO why? make sure key doesn't start with $
+                     if (key.startsWith("$")) {
+                         console.log(message + ": key name cannot start with $");
+                         continue;
+                     }
+
+                     var pSource = _processSourceObject(annot.sources[key], self, consNames, message);
+                     if (pSource.error) {
+                         console.log(pSource.message);
+                         continue;
+                     }
+
+                     // attach to sources
+                     res.sources[key] = pSource;
+
+                     // attach to sourceMapping
+                     if (!(pSource.name in res.sourceMapping)) {
+                         res.sourceMapping[pSource.name] = [];
+                     }
+                     res.sourceMapping[pSource.name].push(key);
+                 }
+             }
+
+             return res;
+         },
+
+        /**
          * Returns the export templates that are defined on this table.
          * NOTE If this returns `null`, then the exportTemplates is not defined on the table or schema
          * NOTE The returned template might not have `outputs` attribute.
@@ -2063,9 +2197,8 @@
                     options.formattedValues = module._getFormattedKeyValues(this.table, context, data);
                 }
 
-                options.formatted = true; // to avoid creating formattedValues again
                 options.templateEngine = display.templateEngine;
-                unformatted = module._renderTemplate(template, options.formattedValues, this.table, context, options);
+                unformatted = module._renderTemplate(template, options.formattedValues, this.table.schema.catalog, options);
             }
 
 
@@ -3033,8 +3166,7 @@
             }
 
             var self = this, fkNames = {}, col, colName, invalid, fk, i;
-
-            var wm = module._warningMessages;
+            var definitions = this._table.sourceDefinitions, wm = module._warningMessages;
             var logErr = function (bool, message, i) {
                 if (bool) {
                     console.log("inbound foreignkeys list for table: " + self._table.name + ", context: " + context + ", fk index:" + i);
@@ -3067,16 +3199,32 @@
                     }
                 }
                 // path
-                else if (typeof orders[i] === "object" && orders[i].source) {
-                    col = _getSourceColumn(orders[i].source, this._table, module._constraintNames);
+                else if (typeof orders[i] === "object") {
+                    if (orders[i].source || orders[i].sourcekey) {
+                        if (orders[i].source) {
+                            col = _getSourceColumn(orders[i].source, this._table, module._constraintNames);
+                        } else {
+                            def = definitions.sources[orders[i].sourcekey];
+                            col = null;
+                            if (def) {
+                                col = def.column;
+                                // copy the elements that are defined in the source def but not the one already defined
+                                module._shallowCopyExtras(orders[i], def.sourceObject, module._sourceDefinitionAttributes);
+                            }
+                        }
 
-                    // invalid if:
-                    // 1. invalid source and not a path.
-                    // 2. not entity mode
-                    // 3. has aggregate
-                    invalid = logErr(!col || !_sourceHasPath(orders[i].source), wm.INVALID_FK, i) ||
-                              logErr(!_isSourceObjectEntityMode(orders[i], col), wm.SCALAR_NOT_ALLOWED) ||
-                              logErr(orders[i].aggregate, wm.AGG_NOT_ALLOWED);
+                        // invalid if:
+                        // 1. invalid source and not a path.
+                        // 2. not entity mode
+                        // 3. has aggregate
+                        invalid = logErr(!col || !_sourceHasPath(orders[i].source), wm.INVALID_FK, i) ||
+                                  logErr(!_isSourceObjectEntityMode(orders[i], col), wm.SCALAR_NOT_ALLOWED) ||
+                                  logErr(orders[i].aggregate, wm.AGG_NOT_ALLOWED);
+
+                    } else {
+                        invalid = true;
+                        logErr(true, wm.INVALID_SOURCE, i);
+                    }
 
                     if (!invalid) {
                         colName = _generatePseudoColumnName(orders[i], col).name;
@@ -3435,3 +3583,8 @@
             return this._rootName;
         }
     };
+
+    function SourceDefinition(key, obj) {
+        this.key = key;
+        this.sourceObject = obj;
+    }
