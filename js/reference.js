@@ -5016,14 +5016,6 @@
 
     };
 
-    function Citation () {
-
-    }
-
-    Citation.prototype = {
-
-    };
-
     /**
      * Constructs an Aggregate Funciton object
      *
