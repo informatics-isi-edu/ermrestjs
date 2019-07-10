@@ -4,7 +4,7 @@ This document will explain which annotations you need to use and how to use them
 
 Let's assume the following is the ERD of our database. In all the examples we're defining column list for the `Main` table (assuming `S` is the schema name).
 
-![erd_01](../resources/pseudo_columns_erd_01.png)
+![erd_01](https://raw.githubusercontent.com/informatics-isi-edu/ermrestjs/master/docs/resources/pseudo_columns_erd_01.png)
 
 ## 1. Defining Sources
 

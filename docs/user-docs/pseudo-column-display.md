@@ -15,7 +15,7 @@ By using `display` attribute in the [source-syntax](pseudo-columns.md), you can 
 
 ## Accessing Pseudo-Column Values Using By Utilizing Source Definitions
 
-In the `markdown_pattern`  you have access to the columns, fkeys, and sources that are defined on the source definitions annotation. For more information please refer to [this document](pseudo-column-template.md)
+In the `markdown_pattern`  you have access to the columns, fkeys, and sources that are defined on the source definitions annotation. For more information please refer to [this document](pseudo-column-template.md).
 
 ## Accessing Current Pseudo-Column Data
 
@@ -141,9 +141,9 @@ Apart from accessing the source definitions, you can access the current pseudo-c
 
 Assume the following is the ERD and we're writing these annotations for the table `main`.
 
-![erd_01](../resources/pseudo_columns_erd_01.png)
+![erd_01](https://raw.githubusercontent.com/informatics-isi-edu/ermrestjs/master/docs/resources/pseudo_columns_erd_01.png)
 
-> CAUTION The newlines and extra space has been added for readability. You should remove them if you want to use the exact same value
+> CAUTION The newlines and extra space has been added for readability. You should remove them if you want to use the exact same value.
 
 
 1. **Inline table in record page**:
