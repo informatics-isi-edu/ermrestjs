@@ -3186,11 +3186,11 @@ c) use space for conjunction of terms
 <a name="ERMrest.Reference+setSamePaging"></a>
 
 #### reference.setSamePaging(page) ⇒ [<code>Reference</code>](#ERMrest.Reference)
-Given a page, will change the reference paging options (before, and after)
+Given a page, will return a reference that has
+- the sorting and paging of the given page.
+- the merged facets of the based reference and given page's facet.
 to match the page.
-NOTE: Limitations:
-- Current reference's table and page's table must be the same.
-- page's reference cannot have any facets (apart from search).
+NOTE: The given page must be based on the same table that this current table is based on.
 
 **Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
 **Returns**: [<code>Reference</code>](#ERMrest.Reference) - reference with new page settings.  
@@ -6594,11 +6594,11 @@ c) use space for conjunction of terms
 <a name="ERMrest.Reference+setSamePaging"></a>
 
 #### reference.setSamePaging(page) ⇒ [<code>Reference</code>](#ERMrest.Reference)
-Given a page, will change the reference paging options (before, and after)
+Given a page, will return a reference that has
+- the sorting and paging of the given page.
+- the merged facets of the based reference and given page's facet.
 to match the page.
-NOTE: Limitations:
-- Current reference's table and page's table must be the same.
-- page's reference cannot have any facets (apart from search).
+NOTE: The given page must be based on the same table that this current table is based on.
 
 **Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
 **Returns**: [<code>Reference</code>](#ERMrest.Reference) - reference with new page settings.  

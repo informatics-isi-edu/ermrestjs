@@ -21,6 +21,14 @@ exports.execute = function (options) {
         var tableNoSortUri = options.url + "/catalog/" + catalog_id + "/entity/" +
                       schemaName + ":" + tableNameNoSort;
 
+        var createURL = function (tableName, facet) {
+            var res =  options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + tableName;
+            if (facet) {
+                res += "/*::facets::" + options.ermRest.encodeFacet(facet);
+            }
+            return res;
+        }
+
         describe("Paging table with no sort", function() {
             var uri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
                 + tableNameNoSort;
@@ -868,6 +876,61 @@ exports.execute = function (options) {
                 }).catch(function (err) {
                     done.fail();
                     console.log(err);
+                });
+            });
+
+            describe("regarding facets, ", function () {
+                var refWFacet1, refWFacet2, refWOFacet, pageWFacet1, pageWFacet2, pageWOFacet;
+                var facet1 = {
+                    "and": [
+                        {"source": "*", "search": ["9"]},
+                        {"source": [{"outbound": ["reference_schema", "hidden_fk_inbound_related_to_reference"]}, "id"], "choices": ["9006"]},
+                        {"source": [{"outbound": ["reference_schema", "fromname_fk_inbound_related_to_reference"]}, "id"], "choices": ["9005"]}
+                    ]
+                };
+                var facet2 = {
+                    "and": [
+                        {"source": [{"outbound": ["reference_schema", "fromname_fk_inbound_related_to_reference"]}, "id"], "choices": ["9004"]}
+                    ]
+                };
+
+                beforeAll(function (done) {
+                    options.ermRest.resolve(createURL(tableNameInboundRelated) + "@sort(id)").then(function (ref1) {
+                        refWOFacet = ref1;
+                        return refWOFacet.read(40);
+                    }).then (function (page1) {
+                        pageWOFacet = page1;
+                        return options.ermRest.resolve(createURL(tableNameInboundRelated, facet1) + "@sort(id)");
+                    }).then(function (ref2) {
+                        refWFacet1 = ref2;
+                        return refWFacet1.read(40);
+                    }).then(function (page2) {
+                        pageWFacet1 = page2;
+                        return options.ermRest.resolve(createURL(tableNameInboundRelated, facet2) + "@sort(id)");
+                    }).then(function (ref3) {
+                        refWFacet2 = ref3;
+                        return refWFacet2.read(40);
+                    }).then (function (page3) {
+                        pageWFacet2 = page3;
+                        done();
+                    }).catch(function (err) {
+                        done.fail(err);
+                    });
+                });
+
+                it ("if the main reference has a facet, the returned reference must have it too.", function () {
+                    var ref = refWFacet1.setSamePaging(pageWOFacet);
+                    expect(ref.location.ermrestCompactPath).toEqual("M:=reference_schema:inbound_related_reference_table/*::ciregexp::%5E%28.%2A%5B%5E0-9.%5D%29%3F0%2A9%28%5B%5E0-9%5D.%2A%7C%24%29/$M/fk_to_reference_hidden=9006/$M/fk_to_reference_with_fromname=9005/$M");
+                });
+
+                it ("if the main reference doesn't have facet, but the page has, the returned reference must have it too.", function () {
+                    var ref = refWOFacet.setSamePaging(pageWFacet2);
+                    expect(ref.location.ermrestCompactPath).toEqual("M:=reference_schema:inbound_related_reference_table/fk_to_reference_with_fromname=9004/$M");
+                });
+
+                it ("if both the main reference and page have facets, the retuerned reference must have all the facets.", function () {
+                    var ref = refWFacet1.setSamePaging(pageWFacet2);
+                    expect(ref.location.ermrestCompactPath).toEqual("M:=reference_schema:inbound_related_reference_table/*::ciregexp::%5E%28.%2A%5B%5E0-9.%5D%29%3F0%2A9%28%5B%5E0-9%5D.%2A%7C%24%29/$M/fk_to_reference_hidden=9006/$M/fk_to_reference_with_fromname=9005/$M/fk_to_reference_with_fromname=9004/$M");
                 });
             });
 
