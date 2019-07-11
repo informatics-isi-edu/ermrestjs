@@ -401,12 +401,12 @@ Assuming that `https://www.youtube.com/watch?v=YOUTUBE_VIDEO_ID` is the link to 
  - Video thumbnail is `https://img.youtube.com/vi/YOUTUBE_VIDEO_ID/0.jpg`
  - Embed link is `https://www.youtube.com/embed/YOUTUBE_VIDEO_ID`. You can also pass different query parameters to customize the way the video looks like. Please refer to the [Youtube API document](https://developers.google.com/youtube/player_parameters) for more information.
 
-Therefore you have to options for showing a youtube video in your markdown templates:
+Therefore you have two options for showing a youtube video in your markdown templates:
 
 - Use an iframe
 
-```sh
-# ::: iframe [Video Caption](https://www.youtube.com/embed/YOUTUBE_VIDEO_ID){width=800 height=300} \n:::
+```html
+::: iframe [Video Caption](https://www.youtube.com/embed/YOUTUBE_VIDEO_ID){width=800 height=300} \n:::
 
 # OUTPUT:
 <figure class="embed-block">
@@ -417,18 +417,15 @@ Therefore you have to options for showing a youtube video in your markdown templ
 
 - Show the video thumbnail that is linked to the youtube video
 
-```sh
-
-# [![](https://img.youtube.com/vi/YOUTUBE_VIDEO_ID/0.jpg){width=800 height=300}](https://www.youtube.com/watch?v=YOUTUBE_VIDEO_ID)
+```html
+[![](https://img.youtube.com/vi/YOUTUBE_VIDEO_ID/0.jpg){width=800 height=300}](https://www.youtube.com/watch?v=YOUTUBE_VIDEO_ID)
 
 # OUTPUT:
-
 <p>
     <a href="https://www.youtube.com/watch?v=YOUTUBE_VIDEO_ID">
         <img src="https://img.youtube.com/vi/YOUTUBE_VIDEO_ID/0.jpg" alt="">
     </a>
 </p>
-
 ```
 
 
