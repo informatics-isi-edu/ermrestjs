@@ -2139,11 +2139,16 @@ AssetPseudoColumn.prototype._determineInputDisabled = function (context) {
 /**
  * Given the data, will return the appropriate metadata values. The returned object
  * will have the following attributes:
- * - caption: the string that can be used for showing the selected file.
  * - filename
  * - byteCount
  * - md5
  * - sha256
+ * - origin
+ * - caption: the string that can be used for showing the selected file.
+ * The heuristics for origin and caption:
+ *   1. if filenameColumn is defined and its value is not null, use it as caption.
+ *   2. otherwise, if the url is from hatrac, extract the filename and use it as caption.
+ *   3. otherwise, use the last part of url as caption. in detailed context, if url is absolute find the origin.
  * @param  {Object} data    key-value pair of data
  * @param  {String} context context string
  * @param  {Object} options
@@ -2158,7 +2163,7 @@ AssetPseudoColumn.prototype.getMetadata = function (data, context, options) {
     var self = this;
 
     var result = {
-        url: "", caption: "", filename: "", byteCount: "", md5: "", sha256: ""
+        url: "", caption: "", filename: "", byteCount: "", md5: "", sha256: "", origin: ""
     };
 
     // if null, return null value
@@ -2170,22 +2175,38 @@ AssetPseudoColumn.prototype.getMetadata = function (data, context, options) {
 
     // get the caption
     var col = this.filenameColumn ? this.filenameColumn : this._baseCol;
+    var urlCaption = this.filenameColumn === null;
     var caption = col.formatvalue(data[col.name], context, options);
 
     // if we got the caption from column and it resulted in empty, return the url
     if (this.filenameColumn && (!caption || !data[this.filenameColumn.name])) {
         caption = col.formatvalue(data[this._baseCol.name], context, options);
+        urlCaption = true;
     }
 
-    // if filenameColumn doesn't exists, return the last part of url
-    if (!this.filenameColumn) {
+    // if we're using the url as caption
+    if (urlCaption) {
         // if caption matches the expected format, just show the file name
         var parts = caption.match(/^\/hatrac\/([^\/]+\/)*([^\/:]+)(:[^:]+)?$/);
         if (parts && parts.length === 4) {
             caption = parts[2];
         }
-        // in compact contexts, just return the last part of url (filename)
-        else if (typeof context === "string" && context.indexOf("compact") === 0) {
+        // otherwise return the last part of url
+        else {
+            // in detailed, we want to show the origin
+            if (typeof context === "string" && context === module._contexts.DETAILED) {
+
+                // only match absolute paths that start with https:// or http://
+                // so when we split by /, the third element will be the origin
+                var r = new RegExp('^(?:[a-z]+:)?//', 'i');
+                if (r.test(caption)) {
+                     var temp = caption.split("/");
+                     if (temp.length > 0 && temp.length >= 3) {
+                         result.origin = temp[2];
+                     }
+                }
+            }
+
             var newCaption = caption.split("/").pop();
             if (newCaption.length !== 0) {
                 caption = newCaption;
@@ -2214,6 +2235,20 @@ AssetPseudoColumn.prototype.getMetadata = function (data, context, options) {
 };
 
 // properties to be overriden:
+
+/**
+ * Format the presentation value corresponding to this asset definition.
+ * 1. return the raw data in entry contexts.
+ * 2. otherwise if it has wait-for return empty.
+ * 3. otherwise if column-display is defined, use it.
+ * 4. otherwise if value is null, return null.
+ * 5. otherwise use getMetadata to genarate caption and origin and return a download button.
+ * 
+ * @param {Object} data the raw data of the table
+ * @param {String} context the app context
+ * @param {Object} options include `formattedValues`
+ * @returns {Object} A key value pair containing value and isHTML that detemrines the presentation.
+ */
 AssetPseudoColumn.prototype.formatPresentation = function(data, context, options) {
     data = data || {};
     options = options || {};
@@ -2245,7 +2280,8 @@ AssetPseudoColumn.prototype.formatPresentation = function(data, context, options
     // otherwise return a download link
     var template = "[{{{caption}}}]({{{url}}}){download .download .deriva-url-validate}";
     var url = data[this._baseCol.name];
-    var caption = this.getMetadata(data, context, options).caption;
+    var metadata = this.getMetadata(data, context, options);
+    var caption = metadata.caption, origin = metadata.origin;
 
     // add the uinit=1 query params
     url += ( url.indexOf("?") !== -1 ? "&": "?") + "uinit=1";
@@ -2256,8 +2292,12 @@ AssetPseudoColumn.prototype.formatPresentation = function(data, context, options
 
     var keyValues = {
         "caption": caption,
-        "url": url
+        "url": url,
+        "origin": origin
     };
+    if (origin) {
+        template += ":span:(source: {{{origin}}}):/span:{.asset-source-description}";
+    }
     var unformatted = module._renderTemplate(template, keyValues, this.table.schema.catalog);
     return {isHTML: true, value: module._formatUtils.printMarkdown(unformatted, {inline:true}), unformatted: unformatted};
 };
