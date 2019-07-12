@@ -24,7 +24,7 @@
   "dependencies": {
     "buffer-slice": "0.0.1",
     "file-api": "^0.10.4",
-    "handlebars": "4.0.11",
+    "handlebars": "4.1.2",
     "just-handlebars-helpers": "^1.0.13",
     "lz-string": "1.4.4",
     "markdown-it": "7.0.0",
