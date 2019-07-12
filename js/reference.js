@@ -1271,9 +1271,11 @@
 
                 // attach `this` (Reference) to a variable
                 // `this` inside the Promise request is a Window object
-                var ownReference = this;
+                var ownReference = this, action = "read";
                 if (!contextHeaderParams || !isObject(contextHeaderParams)) {
-                    contextHeaderParams = {"action": "read"};
+                    contextHeaderParams = {action: action};
+                } else if (typeof contextHeaderParams.action === "string") {
+                    action = contextHeaderParams.action;
                 }
                 var config = {
                     headers: this._generateContextHeader(contextHeaderParams, limit)
@@ -1314,7 +1316,8 @@
                         var referenceWithoutPaging = _referenceCopy(ownReference);
                         referenceWithoutPaging.location.beforeObject = null;
 
-                        referenceWithoutPaging.read(limit).then(function rereadReference(rereadPage) {
+                        contextHeaderParams.action = action + "/correct-page";
+                        referenceWithoutPaging.read(limit, contextHeaderParams, useEntity, true).then(function rereadReference(rereadPage) {
                             defer.resolve(rereadPage);
                         }, function error(response) {
                             var error = module.responseToError(response);
