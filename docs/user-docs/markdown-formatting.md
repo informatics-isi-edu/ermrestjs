@@ -2,6 +2,32 @@
 
 The renderer that we use ([markdown-it](https://github.com/markdown-it/markdown-it)), supports the default markdown syntax with some extra features. Please refer to [markdown reference sheet](http://commonmark.org/help/) for markdown syntax.
 
+## Table of Contents
+  * [Inline Vs. Block](#inline-vs-block)
+  * [Attributes](#attributes)
+  * [Examples](#examples)
+    + [1. Link (Anchor)](#1-link--anchor-)
+    + [2. Download Button](#2-download-button)
+    + [3. Image](#3-image)
+    + [4. Thumbnail Image With Aspect Ratio and Height](#4-thumbnail-image-with-aspect-ratio-and-height)
+      - [Multiple Adjacent Images](#multiple-adjacent-images)
+    + [5. Thumbnail With Link To Original Image And A caption](#5-thumbnail-with-link-to-original-image-and-a-caption)
+    + [6. Iframe](#6-iframe)
+      - [Iframe With a linkable caption](#iframe-with-a-linkable-caption)
+      - [Iframe with a linkable caption positioned at its bottom](#iframe-with-a-linkable-caption-positioned-at-its-bottom)
+      - [Iframe with a linkable caption positioned at its bottom with iframe class and style](#iframe-with-a-linkable-caption-positioned-at-its-bottom-with-iframe-class-and-style)
+      - [Iframe with caption positioned at its bottom with caption class and style](#iframe-with-caption-positioned-at-its-bottom-with-caption-class-and-style)
+      - [Iframe with iframe class, style, caption class and style](#iframe-with-iframe-class--style--caption-class-and-style)
+    + [7. Dropdown download button](#7-dropdown-download-button)
+    + [8. Vocabulary](#8-vocabulary)
+    + [9. Youtube Video](#9-youtube-video)
+    + [10. Video](#10-video)
+    + [11. Subscript](#11-subscript)
+    + [12. Superscript](#12-superscript)
+    + [13. Span (Attach Attributes To Text)](#13-span--attach-attributes-to-text-)
+    + [14. RID link](#14-rid-link)
+
+
 
 ## Inline Vs. Block
 
@@ -368,7 +394,42 @@ To show text as vocabulary, you can use the predefined `vocab` class. The follow
 # OUTPUT: <strong class="vocab">some bold term</strong>
 ```
 
-### 9. Video
+### 9. Youtube Video
+
+Assuming that `https://www.youtube.com/watch?v=YOUTUBE_VIDEO_ID` is the link to a youtube video,
+
+ - Video thumbnail is `https://img.youtube.com/vi/YOUTUBE_VIDEO_ID/0.jpg`
+ - Embed link is `https://www.youtube.com/embed/YOUTUBE_VIDEO_ID`. You can also pass different query parameters to customize the way the video looks like. Please refer to the [Youtube API document](https://developers.google.com/youtube/player_parameters) for more information.
+
+Therefore you have two options for showing a youtube video in your markdown templates:
+
+- Use an iframe
+
+```html
+::: iframe [Video Caption](https://www.youtube.com/embed/YOUTUBE_VIDEO_ID){width=800 height=300} \n:::
+
+# OUTPUT:
+<figure class="embed-block">
+	<figcaption class="embed-caption">CAPTION</figcaption>
+	<iframe src="https://www.youtube.com/embed/YOUTUBE_VIDEO_ID" width="800" height="300" ></iframe>
+</figure>
+```
+
+- Show the video thumbnail that is linked to the youtube video
+
+```html
+[![](https://img.youtube.com/vi/YOUTUBE_VIDEO_ID/0.jpg){width=800 height=300}](https://www.youtube.com/watch?v=YOUTUBE_VIDEO_ID)
+
+# OUTPUT:
+<p>
+    <a href="https://www.youtube.com/watch?v=YOUTUBE_VIDEO_ID">
+        <img src="https://img.youtube.com/vi/YOUTUBE_VIDEO_ID/0.jpg" alt="">
+    </a>
+</p>
+```
+
+
+### 10. Video
 
 This is not part of commonMark specification and it will result in a [block](#inline-vs-block). You have to follow the syntax completely (notice the newline in the closing tag).
 
@@ -461,7 +522,7 @@ Invalid attributes provided to the attribute list will be simple ignored.
 </figure>
 ```
 
-### 10. Subscript
+### 11. Subscript
 
 This is not part of commonMark specification and it will result in an [inline](#inline-vs-block) element.
 
@@ -489,7 +550,7 @@ With attributes
 > <p> <sub class="class-name">This</sub> should be subscript.</p>
 
 
-### 11. Superscript
+### 12. Superscript
 
 This is not part of commonMark specification and it will result in an [inline](#inline-vs-block) element.
 
@@ -518,7 +579,7 @@ With attributes
 ```
 > <p> <sup class="class-name">This</sup> should be superscript.</p>
 
-### 12. Span (Attach Attributes To Text)
+### 13. Span (Attach Attributes To Text)
 
 This is not part of commonMark specification and it will result in an [inline](#inline-vs-block) element.  Opening tag is `:span:` and closing is `:/span:`.
 
@@ -544,7 +605,7 @@ You can also have empty span. You can use this to display glyphicons.
 ```
 > <p><span class="glyphicon glyphicon-download-alt"></span></p>
 
-### 13. RID link
+### 14. RID link
 
 Takes an RID of an existing record and generates a resolvable link for that record. This is not part of commonMark specification. It will result in an [inline](#inline-vs-block) element. You have to follow the syntax completely.
 
