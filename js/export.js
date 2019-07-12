@@ -297,10 +297,14 @@ var ERMrest = (function(module) {
      * will generate the appropriate output.
      * - If addMainKey is true,
      *    it will add the shortestkey of main table to the projection list.
-     * - If the table has foreignkeys, and the referred table has any of the
-     *  "candidate" columns, it will add those to the projection list too.
-     * - If addMainKey is false, and we're not adding any "candidate" columns
-     *   for foreignKeys, it will return an entity output, otherwise it will be attributegroup.
+     * - will go based on visible columns defined for `export` (if not `detailed`):
+     *   - Normal Columns: add to the projection list.
+     *   - ForeignKey pseudo-column: Add the constituent columns alongside extra "candidate" columns (if needed).
+     *   - Key pseudo-column: add the constituent columns.
+     *   - Asset pseudo-column: add all the metadata columns alongside the url value.
+     *   - Inline table: not applicable. Because of the one-to-many nature of the relationship this is not feasible.
+     *   - other pseudo-columns (aggregate): not applicable.
+     * If the genarated attributegroup path is long, will fall back to the entity api
      *
      * In case of attributegroup, we will change the projection list.
      * Assume that this is the model:
@@ -333,7 +337,6 @@ var ERMrest = (function(module) {
             usedNames = {},
             shortestKeyCols = {},
             fkeys = [],
-            compositeFKs = [],
             fk, fkAlias, candidate,
             addedColPrefix, names = {};
 
@@ -351,7 +354,16 @@ var ERMrest = (function(module) {
             return module._getCandidateRowNameColumn([column.name]) !== false;
         };
 
-        // we have to add all the columns, so they will be used
+        var addColumn = function (c) {
+            var columns = Array.isArray(c) ? c : [c];
+            columns.forEach(function (col) {
+                if (col == null || typeof col !== 'object'  || addedCols[col.name]) return;
+                addedCols[col.name] = true;
+                projectionList.push(encode(col.name));
+            });
+        };
+
+        // don't use any of the table column names
         ref.table.columns.all().forEach(function(col) {
             usedNames[col.name] = true;
         });
@@ -389,46 +401,58 @@ var ERMrest = (function(module) {
             }
         }
 
-        // projection list (all the columns of the reference)
-        ref.table.columns.all().forEach(function(col) {
-            // add the column has not been added before
-            // if it's part of the shortestkey, it has been added
-            if (!addedCols[col.name]) {
-                projectionList.push(encode(col.name));
+        var exportRef, hasExportColumns = false;
+        if (ref.table.annotations.contains(module._annotations.VISIBLE_COLUMNS)) {
+            var exportColumns = module._getRecursiveAnnotationValue(module._contexts.EXPORT, ref.table.annotations.get(module._annotations.VISIBLE_COLUMNS).content, true);
+            hasExportColumns = exportColumns !== -1 && Array.isArray(exportColumns);
+        }
+
+        // use export annotation, otherwise fall back to using detailed
+        exportRef = hasExportColumns ? ref.contextualize.export : ref.contextualize.detailed;
+
+        exportRef.columns.forEach(function (col) {
+            if (!col.isPseudo) {
+                addColumn(col);
+                return;
             }
 
-            if (col.memberOfForeignKeys.length === 0) return;
+            if (col.isForeignKey || (col.isPathColumn && col.isUnique && col.isEntityMode)) {
+                if (consideredFks[col.name]) return;
+                consideredFks[col.name] = true;
 
-            // add the foreignkeys
+                // add the constituent columns
+                var hasCandidate = false;
+                var firstFk = col.foreignKeys[0].obj;
+                firstFk.colset.columns.forEach(function (fkeyCol) {
+                    addColumn(fkeyCol);
+                    if (!hasCandidate && col.foreignKeys.length === 1  && isCandidateColumn(firstFk.mapping.get(fkeyCol))) {
+                        hasCandidate = true;
+                    }
+                });
 
-            // make sure they are sorted
-            var colFKs = col.memberOfForeignKeys.sort(function(a, b) {
-                return a._constraintName.localeCompare(b._constraintName);
-            });
+                // if any of the constituent columns is candidate, don't add fk projection
+                if (hasCandidate) return;
 
-            // all the foreignkeys that this column is part of
-            colFKs.forEach(function(fk) {
-                // avoid duplicates
-                if (consideredFks[fk._constraintName]) return;
-                consideredFks[fk._constraintName] = true;
-
-
-                // if the column that this current column maps to is a candidate column,
-                // don't add any extra columns since we have added the column before
-                if (isCandidateColumn(fk.mapping.get(col))) return;
-
-                // find the candidate column
-                candidate = getCandidateColumn(fk.key.table);
+                // find the candidate column in the referred table
+                var lastFK = col.foreignKeys[col.foreignKeys.length - 1].obj;
+                candidate = getCandidateColumn(lastFK.key.table);
 
                 // we couldn't find any candidate columns
                 if (!candidate) return;
 
                 // add the fkey
                 fkAlias = "F" + (fkeys.length + 1);
-                fkeys.push(fkAlias + ":=left" + fk.toString(true) + "/$" + tableAlias);
+
+                var fkeyPath = [];
+                col.foreignKeys.forEach(function (f, index, arr) {
+                    fkeyPath.push(((index === arr.length-1) ? fkAlias + ":=" : "") + f.obj.toString(!f.isInbound,true));
+                });
+
+                // path to the foreignkey + reset the path to the main table
+                fkeys.push(fkeyPath.join("/") + "/$" + tableAlias);
 
                 // add to projectionList
-                addedColPrefix = encode(fk.key.table.name) + ".";
+                addedColPrefix = encode(col.table.name) + ".";
                 name = addedColPrefix + encode(candidate);
                 i = 0;
                 while (name in usedNames) {
@@ -437,29 +461,35 @@ var ERMrest = (function(module) {
                 usedNames[name] = true;
                 name = name + ":=" + fkAlias + ":" + candidate;
 
-                // if simple add it in place, otherwise to the end of the list
-                if (fk.simple) {
-                    projectionList.push(name);
-                } else {
-                    compositeFKs.push(name);
-                }
-            });
+                projectionList.push(name);
+
+                return;
+            }
+
+            if (col.isKey) {
+                // add constituent columns
+                col.key.colset.columns.forEach(addColumn);
+                return;
+            }
+
+            if (col.isAsset) {
+                // add the column alongside the metadata columns
+                addColumn([col, col.filenameColumn, col.byteCountColumn, col.md5, col.sha256]);
+                return;
+            }
+
+            // other pseudo-columns won't be added
         });
 
-        // if we're not adding the main key or fkeys, fall back to entity
-        if (fkeys.length === 0 && !addMainKey) {
-            return module._referenceExportEntityOutput(ref, path);
-        }
-
         // generate the path, based on given values.
-        path = (typeof path === "string") ? (path + "/") : "";
+        var exportPath = (typeof path === "string") ? (path + "/") : "";
         if (fkeys.length > 0) {
-            path += fkeys.join("/") + "/";
+            exportPath += fkeys.join("/") + "/";
         }
-        path += keyList.join(",") + ";" + projectionList.concat(compositeFKs).join(",");
+        exportPath += keyList.join(",") + ";" + projectionList.join(",");
 
-        if (path.length > module.URL_PATH_LENGTH_LIMIT) {
-            console.log("Cannot add the following path for table `" + ref.table.name + "` because of url limitation.", path);
+        if (exportPath.length > module.URL_PATH_LENGTH_LIMIT) {
+            console.log("Cannot use attributegroup  api for exporting `" + ref.table.name + "` because of url limitation.");
             return module._referenceExportEntityOutput(ref, path);
         }
 
@@ -470,7 +500,7 @@ var ERMrest = (function(module) {
             },
             source: {
                 api: "attributegroup",
-                path: path
+                path: exportPath
             }
         };
     };

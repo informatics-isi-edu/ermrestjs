@@ -2141,8 +2141,17 @@
                  // main entity
                  outputs.push(getTableOutput(self, self.location.mainTableAlias));
 
+                 var exportRef, hasExportColumns = false;
+                 if (self.table.annotations.contains(module._annotations.VISIBLE_COLUMNS)) {
+                     var exportColumns = module._getRecursiveAnnotationValue(module._contexts.EXPORT, self.table.annotations.get(module._annotations.VISIBLE_COLUMNS).content, true);
+                     hasExportColumns = exportColumns !== -1 && Array.isArray(exportColumns);
+                 }
+
+                 // use export annotation, otherwise fall back to using detailed
+                 exportRef = hasExportColumns ? self.contextualize.export : self;
+
                  // assets
-                 self.columns.forEach(function(col) {
+                 exportRef.columns.forEach(function(col) {
                      var output = getAssetOutput(col, "", "");
                      if (output === null) return;
                      outputs.push(output);
@@ -2620,7 +2629,7 @@
                                                 this._referenceColumns.push(new InboundForeignKeyPseudoColumn(this, relatedRef, null, fkName));
                                             }
                                         } else {
-                                            console.log(wm.FK_NOT_RELATED);
+                                            console.log(logCol, wm.FK_NOT_RELATED, i);
                                         }
                                     }
                                     break;
@@ -3673,6 +3682,14 @@
          */
         get compactBriefInline() {
             return this._contextualize(module._contexts.COMPACT_BRIEF_INLINE);
+        },
+
+        /**
+         * get Export - export context
+         * @return {ERMrest.Reference}
+         */
+        get export() {
+            return this._contextualize(module._contexts.EXPORT);
         },
 
         _contextualize: function(context) {

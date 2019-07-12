@@ -50,18 +50,10 @@ exports.execute = function (options) {
                     },
                     source: {
                         api: "attributegroup",
-                        path: "F1:=left(fk_col_1)=(" + schema + ":outbound1:id)/$M/F2:=left(fk_col_2,fk_col_3)=(" + schema + ":outbound1:id1,id2)/$M/F3:=left(fk_col_3)=(" + schema + ":outbound3:id)/$M/F4:=left(fk_col_3,fk_col_4)=(" + schema + ":outbound3:id1,id2)/$M" +
-                              "/RID;id,fk_col_1,outbound1.Name_1:=F1:Name,fk_col_2,fk_col_3,outbound3.Accession_ID_1:=F3:Accession_ID,fk_col_4,fk_col_5,name,outbound1.Name,outbound3.Accession_ID,asset_1,asset_1_filename,asset_1_bytes,asset_1_md5,asset_2,asset_2_filename,asset_2_bytes,asset_2_sha256,asset_3,asset_3_filename,asset_4,asset_4_bytes,asset_5,RCT,RMT,RCB,RMB,outbound1.Name_2:=F2:Name,outbound3.Accession_ID_2:=F4:Accession_ID"
-                    }
-                },
-                {
-                    destination: {
-                        name: "assets/asset_1",
-                        type: "fetch"
-                    },
-                    source: {
-                        api: "attribute",
-                        path: "!(asset_1::null::)/url:=asset_1,length:=asset_1_bytes,filename:=asset_1_filename,md5:=asset_1_md5"
+                        path: "F1:=left(fk_col_1)=(" + schema+ ":outbound1:id)/$M/F2:=left(fk_col_3)=(" + schema + ":outbound3:id)/$M/F3:=left(fk_col_2,fk_col_3)=("+ schema + ":outbound1:id1,id2)/$M/" +
+                              "F4:=left(fk_col_3,fk_col_4)=(" + schema + ":outbound3:id1,id2)/$M/left(fk_col_2)=(" + schema + ":outbound2:id)/F5:=left(fk_col)=(" + schema + ":outbound1:id)/$M/" +
+                              "RID;id,fk_col_1,outbound1.Name_1:=F1:Name,fk_col_2,fk_col_3,outbound3.Accession_ID_1:=F2:Accession_ID,outbound1.Name_2:=F3:Name,fk_col_4,outbound3.Accession_ID_2:=F4:Accession_ID,fk_col_5,outbound1.Name_3:=F5:Name," +
+                              "asset_5,asset_4,asset_3,asset_3_filename,asset_2,asset_2_filename,asset_2_bytes,asset_2_sha256,asset_1,asset_1_filename,asset_1_bytes,asset_1_md5"
                     }
                 },
                 {
@@ -76,12 +68,22 @@ exports.execute = function (options) {
                 },
                 {
                     destination: {
+                        name: "assets/asset_1",
+                        type: "fetch"
+                    },
+                    source: {
+                        api: "attribute",
+                        path: "!(asset_1::null::)/url:=asset_1,length:=asset_1_bytes,filename:=asset_1_filename,md5:=asset_1_md5"
+                    }
+                },
+                {
+                    destination: {
                         name: "F1_table",
                         type: "csv"
                     },
                     source: {
                         api: "attributegroup",
-                        path: "R:=(id)=(" + schema + ":f1:id)/F1:=left(id)=(" +schema + ":no_export_annot:id)/$R/RID;id,no_export_annot.name:=F1:name,asset_1,asset_1_filename,asset_1_bytes,asset_1_md5,asset_2,asset_2_filename,asset_2_bytes,asset_2_md5,RCT,RMT,RCB,RMB"
+                        path: "R:=(id)=(" + schema + ":f1:id)/F1:=left(id)=(" +schema + ":no_export_annot:id)/$R/RID;id,asset_1,asset_1_filename,asset_1_bytes,asset_1_md5,no_export_annot.name:=F1:name,asset_2_filename"
                     }
                 },
                 {
@@ -111,7 +113,7 @@ exports.execute = function (options) {
                     },
                     source: {
                         api: "attributegroup",
-                        path: "(id)=(" + schema + ":no_export_annot_f2_assoc:id_no_export_annot)/(id_f2)=(" + schema + ":f2:id)/R:=(id)=(" + schema + ":f3:id)/RID,no_export_annot.RID_1:=M:RID;id,no_export_annot.RID,asset_1,asset_1_filename,asset_1_bytes,asset_1_md5,RCT,RMT,RCB,RMB"
+                        path: "(id)=(" + schema + ":no_export_annot_f2_assoc:id_no_export_annot)/(id_f2)=(" + schema + ":f2:id)/R:=(id)=(" + schema + ":f3:id)/RID,no_export_annot.RID_1:=M:RID;id,no_export_annot.RID,asset_1_filename,asset_1,asset_1_bytes,asset_1_md5"
                     }
                 },
                 {
@@ -237,7 +239,11 @@ exports.execute = function (options) {
                         // just to produce a better error message
                         expect(templates[0].outputs.length).toBe(defaultOutput.length, "outputs length missmatch");
                         templates[0].outputs.forEach(function (temp, i) {
-                            expect(temp).toEqual(defaultOutput[i], "template missmatch for index=" + i);
+                            var message = "missmatch for index=" + i;
+                            expect(temp.destination.name).toEqual(defaultOutput[i].destination.name, "destination.name "+ message);
+                            expect(temp.destination.type).toEqual(defaultOutput[i].destination.type, "destination.type "+ message);
+                            expect(temp.source.api).toEqual(defaultOutput[i].source.api, "source.api "+ message);
+                            expect(temp.source.path).toEqual(defaultOutput[i].source.path, "source.path "+ message);
                         });
                     });
 
@@ -256,8 +262,13 @@ exports.execute = function (options) {
                             var defaultOutput = getDefaultOutputs(schemaName1);
 
                             // just to produce a better error message
+                            expect(templates[0].outputs.length).toBe(defaultOutput.length, "outputs length missmatch");
                             templates[0].outputs.forEach(function (temp, i) {
-                                expect(temp).toEqual(defaultOutput[i], "template missmatch for index=" + i);
+                                var message = "missmatch for index=" + i;
+                                expect(temp.destination.name).toEqual(defaultOutput[i].destination.name, "destination.name "+ message);
+                                expect(temp.destination.type).toEqual(defaultOutput[i].destination.type, "destination.type "+ message);
+                                expect(temp.source.api).toEqual(defaultOutput[i].source.api, "source.api "+ message);
+                                expect(temp.source.path).toEqual(defaultOutput[i].source.path, "source.path "+ message);
                             });
                         });
 

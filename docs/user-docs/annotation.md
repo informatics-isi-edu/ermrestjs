@@ -858,6 +858,7 @@ List of _context_ names that are used in ERMrest:
 - `"entry"`: Any data-entry presentation context, i.e. when prompting the user for input column values.
   - `"entry/edit"`: A sub-context of `entry` that only applies to editing existing resources.
   - `"entry/create"`: A sub-context of `entry` that only applies to creating new resources.
+- `"export"`: Controls the presentations related to the export.
 - `"filter"`: Any data-filtering control context, i.e. when prompting the user for column constraints or facets.
 - `"row_name"`: Any abbreviated title-like presentation context.
   - `"row_name/title"`: A sub-context of `row_name` that only applies to title of page.
@@ -873,16 +874,17 @@ If more than one _context_ name in the annotation payload matches, the _options_
 
 The following matrix illustrates which context is meaningful in which annotation.
 
-| Annotation                                              | compact | compact/brief | compact/select | detailed | entry | entry/edit | entry/create | filter | row_name | * |
-|---------------------------------------------------------|---------|---------------|----------------|----------|-------|------------|--------------|--------|----------|---|
-| [2015 Display](#tag-2015-display)                           | X       | -             | X              | X        | X     | X          | X            | X      | -        | X |
-| [2016 Ignore](#tag-2016-ignore)                             | X       | -             | X              | X        | X     | X          | X            | X      | -        | X |
-| [2016 Visible Columns](#tag-2016-visible-columns)           | X       | -             | X              | X        | X     | X          | X            | X      | -        | X |
-| [2016 Column Display](#tag-2016-column-display)             | X       | -             | X              | X        | X     | X          | X            | X      | -        | X |
-| [2016 Table Display](#tag-2016-table-display)               | X       | X             | X              | X        | -     | -          | -            | X      | X        | X |
-| [2016 Visible Foreign Keys](#tag-2016-visible-foreign-keys) | X       | -             | -              | X        | X     | X          | X            | X      | -        | X |
-| [2016 Table Alternatives](#tag-2016-table-alternatives)     | X       | -             | X              | X        | -     | -          | -            | X      | -        | X |
-
+| Annotation                                                  | compact | compact/brief | compact/brief/inline | compact/select | detailed | entry | entry/edit | entry/create | export | filter | row_name | * |
+|-------------------------------------------------------------|---------|---------------|----------------------|----------------|----------|-------|------------|--------------|--------|--------|----------|---|
+| [2015 Display](#tag-2015-display)                           | X       | X             | X                    | X              | X        | -     | -          | -            | -      | -      | -        | X |
+| [2016 Ignore](#tag-2016-ignore)                             | X       | X             | X                    | X              | X        | X     | X          | X            | -      | -      | -        | X |
+| [2016 Visible Columns](#tag-2016-visible-columns)           | X       | X             | X                    | X              | X        | X     | X          | X            | X      | X      | -        | X |
+| [2017 Key Display](#tag-2017-key-display)                   | X       | X             | X                    | X              | X        | -     | -          | -            |        | -      | -        | X |
+| [2016 Column Display](#tag-2016-column-display)             | X       | X             | X                    | X              | X        | X     | X          | X            | -      | -      | -        | X |
+| [2016 Table Display](#tag-2016-table-display)               | X       | X             | X                    | X              | X        | -     | -          | -            | -      | -      | X        | X |
+| [2016 Visible Foreign Keys](#tag-2016-visible-foreign-keys) | -       | -             | -                    | -              | X        | -     | -          | -            | -      | -      | -        | X |
+| [2016 Table Alternatives](#tag-2016-table-alternatives)     | X       | X             | X                    | X              | X        | X     | X          | X            | -      | -      | -        | X |
+| [2019 Export](#tag-2019-export)                             | X       | -             | -                    | -              | X        | -     | -          | -            | -      | -      | -        | - |
 
 ## Pattern Expansion
 
