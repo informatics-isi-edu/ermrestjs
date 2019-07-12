@@ -437,6 +437,7 @@ to use for ERMrest JavaScript agents.
         * [.filenameExtFilter](#ERMrest.AssetPseudoColumn+filenameExtFilter) : [<code>Column</code>](#ERMrest.Column)
         * [._determineInputDisabled(context)](#ERMrest.AssetPseudoColumn+_determineInputDisabled) ⇒ <code>boolean</code> \| <code>object</code>
         * [.getMetadata(data, context, options)](#ERMrest.AssetPseudoColumn+getMetadata) ⇒ <code>Object</code>
+        * [.formatPresentation(data, context, options)](#ERMrest.AssetPseudoColumn+formatPresentation) ⇒ <code>Object</code>
     * [.InboundForeignKeyPseudoColumn](#ERMrest.InboundForeignKeyPseudoColumn)
         * [new InboundForeignKeyPseudoColumn(reference, fk)](#new_ERMrest.InboundForeignKeyPseudoColumn_new)
         * [.reference](#ERMrest.InboundForeignKeyPseudoColumn+reference) : [<code>Reference</code>](#ERMrest.Reference)
@@ -4259,6 +4260,7 @@ The following is the logic:
     * [.filenameExtFilter](#ERMrest.AssetPseudoColumn+filenameExtFilter) : [<code>Column</code>](#ERMrest.Column)
     * [._determineInputDisabled(context)](#ERMrest.AssetPseudoColumn+_determineInputDisabled) ⇒ <code>boolean</code> \| <code>object</code>
     * [.getMetadata(data, context, options)](#ERMrest.AssetPseudoColumn+getMetadata) ⇒ <code>Object</code>
+    * [.formatPresentation(data, context, options)](#ERMrest.AssetPseudoColumn+formatPresentation) ⇒ <code>Object</code>
 
 <a name="new_ERMrest.AssetPseudoColumn_new"></a>
 
@@ -4343,11 +4345,16 @@ If url_pattern is invalid or browser_upload=false the input will be disabled.
 #### assetPseudoColumn.getMetadata(data, context, options) ⇒ <code>Object</code>
 Given the data, will return the appropriate metadata values. The returned object
 will have the following attributes:
-- caption: the string that can be used for showing the selected file.
 - filename
 - byteCount
 - md5
 - sha256
+- origin
+- caption: the string that can be used for showing the selected file.
+The heuristics for origin and caption:
+  1. if filenameColumn is defined and its value is not null, use it as caption.
+  2. otherwise, if the url is from hatrac, extract the filename and use it as caption.
+  3. otherwise, use the last part of url as caption. in detailed context, if url is absolute find the origin.
 
 **Kind**: instance method of [<code>AssetPseudoColumn</code>](#ERMrest.AssetPseudoColumn)  
 **Returns**: <code>Object</code> - metadata object with `caption`, `filename`, `byteCount`, `md5`, and `sha256` attributes.  
@@ -4357,6 +4364,25 @@ will have the following attributes:
 | data | <code>Object</code> | key-value pair of data |
 | context | <code>String</code> | context string |
 | options | <code>Object</code> |  |
+
+<a name="ERMrest.AssetPseudoColumn+formatPresentation"></a>
+
+#### assetPseudoColumn.formatPresentation(data, context, options) ⇒ <code>Object</code>
+Format the presentation value corresponding to this asset definition.
+1. return the raw data in entry contexts.
+2. otherwise if it has wait-for return empty.
+3. otherwise if column-display is defined, use it.
+4. otherwise if value is null, return null.
+5. otherwise use getMetadata to genarate caption and origin and return a download button.
+
+**Kind**: instance method of [<code>AssetPseudoColumn</code>](#ERMrest.AssetPseudoColumn)  
+**Returns**: <code>Object</code> - A key value pair containing value and isHTML that detemrines the presentation.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| data | <code>Object</code> | the raw data of the table |
+| context | <code>String</code> | the app context |
+| options | <code>Object</code> | include `formattedValues` |
 
 <a name="ERMrest.InboundForeignKeyPseudoColumn"></a>
 
