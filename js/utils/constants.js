@@ -56,6 +56,7 @@
         DETAILED: 'detailed',
         EDIT: 'entry/edit',
         ENTRY: 'entry',
+        EXPORT: 'export',
         FILTER: 'filter',
         DEFAULT: '*',
         ROWNAME: 'row_name'

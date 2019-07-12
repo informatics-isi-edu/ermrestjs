@@ -63,7 +63,7 @@
             "table_name": "no_export_annot",
             "kind": "table",
             "keys": [
-                {"unique_columns": ["id"]}
+                {"unique_columns": ["id"], "names": [["export_schema_annot_schema", "no_export_annot_key_1"]]}
             ],
             "foreign_keys": [
                 {
@@ -336,6 +336,47 @@
                 },
                 "tag:misd.isi.edu,2015:display": {
                   "markdown_name": "**No Export Annot**"
+                },
+                "tag:isrd.isi.edu,2016:visible-columns" : {
+                    "export": [
+                        ["export_schema_annot_schema", "no_export_annot_key_1"],
+                        ["export_schema_annot_schema", "no_export_annot_fk_1"],
+                        "fk_col_2",
+                        "fk_col_3",
+                        ["export_schema_annot_schema", "no_export_annot_fk_2"],
+                        ["export_schema_annot_schema", "no_export_annot_fk_3"],
+                        ["export_schema_annot_schema", "no_export_annot_fk_4"],
+                        ["export_schema_annot_schema", "no_export_annot_fk_5"],
+                        ["export_schema_annot_schema", "no_export_annot_fk_6"],
+                        {
+                            "source": [{"inbound": ["export_schema_annot_schema", "f1_fk_1"]}, "RID"],
+                            "aggregate": "array_d"
+                        },
+                        {
+                            "source": [
+                                {"outbound": ["export_schema_annot_schema", "no_export_annot_fk_2"]},
+                                {"outbound": ["export_schema_annot_schema", "outbound2_fk1"]},
+                                "RID"
+                            ],
+                            "entity": true
+                        },
+                        {
+                            "source": [
+                                {"outbound": ["export_schema_annot_schema", "no_export_annot_fk_2"]},
+                                {"outbound": ["export_schema_annot_schema", "outbound2_fk1"]},
+                                "RID"
+                            ],
+                            "entity": false
+                        },
+                        "asset_5",
+                        "asset_4",
+                        "asset_3",
+                        "asset_2",
+                        "asset_1"
+                    ],
+                    "detailed": [
+                        "id"
+                    ]
                 }
             }
         },
@@ -344,7 +385,7 @@
             "table_name": "f1",
             "kind": "table",
             "keys": [
-                {"unique_columns": ["id"]}
+                {"unique_columns": ["id"], "names": [["export_schema_annot_schema", "f1_key_1"]]}
             ],
             "column_definitions": [
                 {
@@ -426,7 +467,7 @@
                 },
                 "tag:isrd.isi.edu,2016:visible-columns" : {
                     "detailed": [
-                        "id", "asset_1"
+                        "RID", ["export_schema_annot_schema", "f1_key_1"], "asset_1", ["export_schema_annot_schema", "f1_fk_1"], "asset_1_filename", "asset_2_filename"
                     ]
                 }
             }
@@ -556,7 +597,14 @@
                         "schema_name": "export_schema_annot_schema"
                     }]
                 }
-            ]
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2016:visible-columns" : {
+                    "detailed": [
+                        "id", "RID", "no_export_annot.RID", "asset_1_filename", "asset_1"
+                    ]
+                }
+            }
         },
         "outbound1": {
             "schema_name": "export_schema_annot_schema",
@@ -605,6 +653,21 @@
                 {"unique_columns": ["id"]},
                 {"unique_columns": ["id1", "id2"]}
             ],
+            "foreign_keys": [
+                {
+                    "names": [["export_schema_annot_schema", "outbound2_fk1"]],
+                    "foreign_key_columns": [{
+                        "column_name": "fk_col",
+                        "table_name": "outbound2",
+                        "schema_name": "export_schema_annot_schema"
+                    }],
+                    "referenced_columns": [{
+                        "column_name": "id",
+                        "table_name": "outbound1",
+                        "schema_name": "export_schema_annot_schema"
+                    }]
+                }
+            ],
             "column_definitions": [
                 {
                     "name": "id",
@@ -623,6 +686,12 @@
                 {
                     "name": "id2",
                     "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "fk_col",
                     "type": {
                         "typename": "text"
                     }
