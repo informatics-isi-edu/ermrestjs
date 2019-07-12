@@ -169,6 +169,17 @@ exports.execute = function (options) {
                     });
                 });
 
+                it("read with an increased limit and dontCorrectPage should return a Page object that is defined and honors the paging.", function(done) {
+                    reference5.read(15, {}, false, true).then(function (response) {
+                        expect(response).toEqual(jasmine.any(Object));
+                        expect(response.tuples.length).toBe(11);
+                        done();
+                    }, function (err) {
+                        console.dir(err);
+                        done.fail();
+                    });
+                });
+
                 it("read with an increased limit should return a Page object that is defined and doesn't have a previous page.", function(done) {
                     var increasedLimitPage, increasedLimitPreviousReference,
                         increasedLimit = 15;

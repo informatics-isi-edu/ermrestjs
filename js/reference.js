@@ -1226,6 +1226,15 @@
          * read request. __required__
          * @param {Object} contextHeaderParams the object that we want to log.
          * @param {Boolean} useEntity whether we should use entity api or not (if true, we won't get foreignkey data)
+         * @param {Boolean} dontCorrectPage whether we should modify the page.
+         * If there's a @before in url and the number of results is less than the
+         * given limit, we will remove the @before and run the read again. Setting
+         * dontCorrectPage to true, will not do this extra check.
+         *
+         * NOTE setting useEntity to true, will ignore any sort that is based on
+         * pseduo-columns.
+         * TODO we might want to chagne the above statement, so useEntity can
+         * be used more generally.
          *
          * @returns {Promise} A promise resolved with {@link ERMrest.Page} of results,
          * or rejected with any of these errors:
@@ -1234,7 +1243,7 @@
          * - {@link ERMrest.NotFoundError}: If asks for sorting based on columns that are not valid.
          * - ERMrestjs corresponding http errors, if ERMrest returns http error.
          */
-        read: function(limit, contextHeaderParams, useEntity) {
+        read: function(limit, contextHeaderParams, useEntity, dontCorrectPage) {
             var defer = module._q.defer(), self = this;
 
             try {
@@ -1301,7 +1310,7 @@
 
                     // we are paging based on @before (user navigated backwards in the set of data)
                     // AND there is less data than limit implies (beginning of set) OR we got the right set of data (tuples.length == pageLimit) but there's no previous set (beginning of set)
-                    if (!ownReference.location.afterObject && ownReference.location.beforeObject && (page.tuples.length < limit || !page.hasPrevious) ) {
+                    if (dontCorrectPage !== true && !ownReference.location.afterObject && ownReference.location.beforeObject && (page.tuples.length < limit || !page.hasPrevious) ) {
                         var referenceWithoutPaging = _referenceCopy(ownReference);
                         referenceWithoutPaging.location.beforeObject = null;
 
