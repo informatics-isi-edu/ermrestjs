@@ -78,6 +78,56 @@ exports.execute = function (options) {
                 },
                 {
                     destination: {
+                        name: "inline F1_table",
+                        type: "csv"
+                    },
+                    source: {
+                        api: "attributegroup",
+                        path: "R:=(id)=(" + schema + ":inline_f1:id)/F1:=left(id)=(" +schema + ":no_export_annot:id)/$R/RID;id,asset_1,asset_1_filename,asset_1_bytes,asset_1_md5,no_export_annot.name:=F1:name,asset_2_filename"
+                    }
+                },
+                {
+                    destination: {
+                        name: "assets/inline F1_table/asset_1",
+                        type: "fetch"
+                    },
+                    source: {
+                        api: "attribute",
+                        path: "R:=(id)=(" + schema + ":inline_f1:id)/!(asset_1::null::)/url:=asset_1,length:=asset_1_bytes,filename:=asset_1_filename,md5:=asset_1_md5"
+                    }
+                },
+                {
+                    destination: {
+                        name: "no_export_annot_inline_f2_assoc",
+                        type: "csv"
+                    },
+                    source: {
+                        api: "attributegroup",
+                        path: "(id)=(" + schema + ":no_export_annot_inline_f2_assoc:id_no_export_annot)/R:=(id_inline_f2)=(" + schema + ":inline_f2:id)/RID,no_export_annot.RID:=M:RID;id,col_1,RCT,RMT,RCB,RMB"
+                    }
+                },
+                {
+                    destination: {
+                        name: "inline_f3",
+                        type: "csv"
+                    },
+                    source: {
+                        api: "attributegroup",
+                        path: "(id)=(" + schema + ":no_export_annot_inline_f2_assoc:id_no_export_annot)/(id_inline_f2)=(" + schema + ":inline_f2:id)/R:=(id)=(" + schema + ":inline_f3:id)/RID,no_export_annot.RID_1:=M:RID;id,no_export_annot.RID,asset_1_filename,asset_1,asset_1_bytes,asset_1_md5"
+                    }
+                },
+                {
+                    destination: {
+                        name: "assets/inline_f3/asset_1",
+                        type: "fetch"
+                    },
+                    source: {
+                        api: "attribute",
+                        path: "(id)=(" + schema + ":no_export_annot_inline_f2_assoc:id_no_export_annot)/(id_inline_f2)=(" + schema + ":inline_f2:id)/R:=(id)=(" + schema + ":inline_f3:id)/!(asset_1::null::)/url:=asset_1,length:=asset_1_bytes,filename:=asset_1_filename,md5:=asset_1_md5"
+                    }
+                },
+                {
+                    destination: {
                         name: "F1_table",
                         type: "csv"
                     },

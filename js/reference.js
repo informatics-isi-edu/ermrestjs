@@ -2150,27 +2150,20 @@
                  var getTableOutput = module._referenceExportOutput,
                      getAssetOutput = module._getAssetExportOutput;
 
-                 // main entity
-                 outputs.push(getTableOutput(self, self.location.mainTableAlias));
+                 // given a refernece, will return it in export or detailed context
+                 var getExportReference = function (ref) {
+                     var res, hasExportColumns = false;
+                     if (ref.table.annotations.contains(module._annotations.VISIBLE_COLUMNS)) {
+                         var exportColumns = module._getRecursiveAnnotationValue(module._contexts.EXPORT, ref.table.annotations.get(module._annotations.VISIBLE_COLUMNS).content, true);
+                         hasExportColumns = exportColumns !== -1 && Array.isArray(exportColumns);
+                     }
 
-                 var exportRef, hasExportColumns = false;
-                 if (self.table.annotations.contains(module._annotations.VISIBLE_COLUMNS)) {
-                     var exportColumns = module._getRecursiveAnnotationValue(module._contexts.EXPORT, self.table.annotations.get(module._annotations.VISIBLE_COLUMNS).content, true);
-                     hasExportColumns = exportColumns !== -1 && Array.isArray(exportColumns);
-                 }
+                     // use export annotation, otherwise fall back to using detailed
+                     return hasExportColumns ? ref.contextualize.export : (ref._context === module._contexts.DETAILED ? ref : ref.contextualize.detailed);
+                 };
 
-                 // use export annotation, otherwise fall back to using detailed
-                 exportRef = hasExportColumns ? self.contextualize.export : self;
-
-                 // assets
-                 exportRef.columns.forEach(function(col) {
-                     var output = getAssetOutput(col, "", "");
-                     if (output === null) return;
-                     outputs.push(output);
-                 });
-
-                 // related entities
-                 self.related().forEach(function(rel) {
+                 // create a csv + fetch all the assets
+                 var processRelatedReference = function(rel) {
                      // the path that will be used for assets of related entities
                      var destinationPath = rel.displayname.unformatted;
                      // this will be used for source path
@@ -2197,18 +2190,42 @@
                      }
 
                      // add asset of the related table
-                     var detailedRef = rel.contextualize.detailed;
+                     var expRef = getExportReference(rel);
 
                      // alternative table, don't add asset
-                     if (detailedRef.table !== rel.table) return;
+                     if (expRef.table !== rel.table) return;
 
-                     detailedRef.columns.forEach(function(col) {
+                     expRef.columns.forEach(function(col) {
                          var output = getAssetOutput(col, destinationPath, sourcePath);
                          if (output === null) return;
                          outputs.push(output);
                      });
+                 };
 
-                 });
+                 // main entity
+                 outputs.push(getTableOutput(self, self.location.mainTableAlias));
+
+                 var exportRef = getExportReference(self);
+
+                 // we're not supporting alternative tables
+                 if (exportRef.table.name === self.table.name) {
+                     // main assets
+                     exportRef.columns.forEach(function(col) {
+                         var output = getAssetOutput(col, "", "");
+                         if (output === null) return;
+                         outputs.push(output);
+                     });
+
+                     // inline entities
+                     exportRef.columns.forEach(function (col) {
+                         if (col.isInboundForeignKey || (col.isPathColumn && col.hasPath && !col.isUnique && !col.hasAggregate)) {
+                             return processRelatedReference(col.reference);
+                         }
+                     });
+                 }
+
+                 // related entities
+                 self.related().forEach(processRelatedReference);
 
                  self._defaultExportTemplate = {
                      displayname: "BAG",
@@ -2719,7 +2736,7 @@
                                  logCol(col.self_link === true && !(isEntity && !hasPath), wm.INVALID_SELF_LINK, i) ||
                                  logCol((col.aggregate && module._pseudoColAggregateFns.indexOf(col.aggregate) === -1), wm.INVALID_AGG, i) ||
                                  logCol((!col.aggregate && hasInbound && !isEntity), wm.MULTI_SCALAR_NEED_AGG, i) ||
-                                 logCol((!col.aggregate && hasInbound && isEntity && context !== module._contexts.DETAILED), wm.MULTI_ENT_NEED_AGG, i) ||
+                                 logCol((!col.aggregate && hasInbound && isEntity && context !== module._contexts.DETAILED && context !== module._contexts.EXPORT), wm.MULTI_ENT_NEED_AGG, i) ||
                                  logCol(col.aggregate && isEntry, wm.NO_AGG_IN_ENTRY, i) ||
                                  logCol(isEntry && hasPath && (col.source.length > 2 || col.source[0].inbound), wm.NO_PATH_IN_ENTRY, i) ||
                                  (isHash && nameExistsInTable(pseudoName, col));
