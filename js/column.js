@@ -2163,7 +2163,7 @@ AssetPseudoColumn.prototype.getMetadata = function (data, context, options) {
     var self = this;
 
     var result = {
-        url: "", caption: "", filename: "", byteCount: "", md5: "", sha256: "", origin: ""
+        url: "", caption: "", filename: "", byteCount: "", md5: "", sha256: "", sameOrigin: false, hostInformation: ""
     };
 
     // if null, return null value
@@ -2184,6 +2184,22 @@ AssetPseudoColumn.prototype.getMetadata = function (data, context, options) {
         urlCaption = true;
     }
 
+    // see if link contains absolute paths that start with https:// or http://
+    var protocolRegexp = new RegExp('^(?:[a-z]+:)?//', 'i');
+    var temp = caption.split("/");
+
+    // assume same origin because most paths should be relative
+    var sameOrigin = true;
+    if (protocolRegexp.test(caption)) {
+        var assetOrigin = temp[0] + "//" + temp[2];
+        var currentOrigin = this.table.schema.catalog.server.uri;
+        // check if currentOrigin contains the
+        sameOrigin = (currentOrigin.indexOf(assetOrigin) == 0);
+    } // else, path is relative, so same origin
+
+    result.sameOrigin = sameOrigin;
+
+
     // if we're using the url as caption
     if (urlCaption) {
         // if caption matches the expected format, just show the file name
@@ -2193,17 +2209,13 @@ AssetPseudoColumn.prototype.getMetadata = function (data, context, options) {
         }
         // otherwise return the last part of url
         else {
-            // in detailed, we want to show the origin
+            // in detailed, we want to show the host information
             if (typeof context === "string" && context === module._contexts.DETAILED) {
 
                 // only match absolute paths that start with https:// or http://
-                // so when we split by /, the third element will be the origin
-                var r = new RegExp('^(?:[a-z]+:)?//', 'i');
-                if (r.test(caption)) {
-                     var temp = caption.split("/");
-                     if (temp.length > 0 && temp.length >= 3) {
-                         result.origin = temp[2];
-                     }
+                if (protocolRegexp.test(caption) && temp.length >= 3) {
+                    // so when we split by /, the third element will be the host information
+                    result.hostInformation = temp[2];
                 }
             }
 
@@ -2243,7 +2255,7 @@ AssetPseudoColumn.prototype.getMetadata = function (data, context, options) {
  * 3. otherwise if column-display is defined, use it.
  * 4. otherwise if value is null, return null.
  * 5. otherwise use getMetadata to genarate caption and origin and return a download button.
- * 
+ *
  * @param {Object} data the raw data of the table
  * @param {String} context the app context
  * @param {Object} options include `formattedValues`
@@ -2277,26 +2289,33 @@ AssetPseudoColumn.prototype.formatPresentation = function(data, context, options
         return nullValue;
     }
 
-    // otherwise return a download link
-    var template = "[{{{caption}}}]({{{url}}}){download .download .deriva-url-validate}";
-    var url = data[this._baseCol.name];
+    // var currentOrigin = server.url.origin
     var metadata = this.getMetadata(data, context, options);
-    var caption = metadata.caption, origin = metadata.origin;
+    var caption = metadata.caption,
+        hostInfo = metadata.hostInformation,
+        sameOrigin = metadata.sameOrigin;
 
-    // add the uinit=1 query params
-    url += ( url.indexOf("?") !== -1 ? "&": "?") + "uinit=1";
+    // otherwise return a download link
+    var template = "[{{{caption}}}]({{{url}}}){download .download" + (sameOrigin ? " .asset-permission" : "") + "}";
+    var url = data[this._baseCol.name];
 
-    // add cid query param
-    var cid = this.table.schema.catalog.server.cid;
-    if (cid) url += "&cid=" + cid;
+    // only add query parameters if same origin
+    if (sameOrigin) {
+        // add the uinit=1 query params
+        url += ( url.indexOf("?") !== -1 ? "&": "?") + "uinit=1";
+
+        // add cid query param
+        var cid = this.table.schema.catalog.server.cid;
+        if (cid) url += "&cid=" + cid;
+    }
 
     var keyValues = {
         "caption": caption,
         "url": url,
-        "origin": origin
+        "hostInfo": hostInfo // NOTE: this is actually just the host
     };
-    if (origin) {
-        template += ":span:(source: {{{origin}}}):/span:{.asset-source-description}";
+    if (hostInfo) {
+        template += ":span:(source: {{{hostInfo}}}):/span:{.asset-source-description}";
     }
     var unformatted = module._renderTemplate(template, keyValues, this.table.schema.catalog);
     return {isHTML: true, value: module._formatUtils.printMarkdown(unformatted, {inline:true}), unformatted: unformatted};

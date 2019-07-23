@@ -188,7 +188,9 @@
                     },
                     function(response) {
                         response.status = response.status || response.statusCode;
-                        if ((_retriable_error_codes.indexOf(response.status) != -1) && count < max_retries) {
+                        // if retry flag is set, skip on -1 and 0
+                        var skipRetry = config.skipRetryBrowserError && (response.status == -1 || response.status == 0);
+                        if ((_retriable_error_codes.indexOf(response.status) != -1) && count < max_retries && !skipRetry) {
                             count += 1;
                             setTimeout(function() {
                                 module._onHttpAuthFlowFn().then(function() {

@@ -361,7 +361,7 @@ exports.execute = function (options) {
                 '1000', '10001', 'filename', '1,242', 'md5', 'sha256',
                 '',
                 '<h2>filename</h2>\n',
-                '<a href="https://dev.isrd.isi.edu?uinit=1&amp;cid=test" download="" class="download deriva-url-validate">filename</a>',
+                '<a href="https://dev.isrd.isi.edu?uinit=1&amp;cid=test" download="" class="download asset-permission">filename</a>',
                 '4'
             ];
 

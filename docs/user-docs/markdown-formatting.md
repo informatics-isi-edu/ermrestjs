@@ -149,14 +149,14 @@ Example 1:
 
 Example 2:
 ```html
-[Jquery Download](https://code.jquery.com/jquery-3.1.0.js){download .download .deriva-url-validate}
+[Jquery Download](https://code.jquery.com/jquery-3.1.0.js){download .download .asset-permission}
 
 # OUTPUT:
 <p>
-	<a href="https://code.jquery.com/jquery-3.1.0.js" download="" class="download deriva-url-validate">Jquery Download</a>
+	<a href="https://code.jquery.com/jquery-3.1.0.js" download="" class="download asset-permission">Jquery Download</a>
 </p>
 ```
-> <p><a href="https://code.jquery.com/jquery-3.1.0.js" download="" class="download deriva-url-validate">Jquery Download</a></p>
+> <p><a href="https://code.jquery.com/jquery-3.1.0.js" download="" class="download asset-permission">Jquery Download</a></p>
 
 **NOTE:** please stick to the above formats only to generate a download link.
 
