@@ -749,11 +749,11 @@ exports.execute = function (options) {
 
                     it ("otherwise, if asset column has filenameColumn and it's value is not empty, should use it for caption.", function () {
                         val = assetRefCompactCols[10].formatPresentation({"col_asset_3": "https://example.com", "col_filename": "filename"}).value;
-                        expect(val).toEqual('<a href="https://example.com?uinit=1&amp;cid=test" download="" class="download asset-permission">filename</a>', "value missmatch.");
+                        expect(val).toEqual('<a href="https://example.com" download="" class="download">filename</a>', "value missmatch.");
 
                         val = assetRefCompactCols[10].formatPresentation({"col_asset_3": "https://example.com?query=1&v=1", "col_filename": "filename"}).value;
                         //NOTE this is the output but it will be displayed correctly.
-                        expect(val).toEqual('<a href="https://example.com?query=1&amp;v=1&amp;uinit=1&amp;cid=test" download="" class="download asset-permission">filename</a>', "couldn't handle having query params in the url.");
+                        expect(val).toEqual('<a href="https://example.com?query=1&amp;v=1" download="" class="download">filename</a>', "couldn't handle having query params in the url.");
                     });
 
                     it ("otherwise, if url matches the expected hatrac format, return the filename.", function () {

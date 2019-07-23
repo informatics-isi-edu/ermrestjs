@@ -2185,15 +2185,15 @@ AssetPseudoColumn.prototype.getMetadata = function (data, context, options) {
     }
 
     // see if link contains absolute paths that start with https:// or http://
-    var protocolRegexp = new RegExp('^(?:[a-z]+:)?//', 'i');
-    var temp = caption.split("/");
+    var hasProtocol = new RegExp('^(?:[a-z]+:)?//', 'i').test(result.url);
+    var urlParts = result.url.split("/");
 
     // assume same origin because most paths should be relative
     var sameOrigin = true;
-    if (protocolRegexp.test(caption)) {
-        var assetOrigin = temp[0] + "//" + temp[2];
+    if (hasProtocol) {
+        var assetOrigin = urlParts[0] + "//" + urlParts[2];
         var currentOrigin = this.table.schema.catalog.server.uri;
-        // check if currentOrigin contains the
+        // check if currentOrigin contains the assetOrigin
         sameOrigin = (currentOrigin.indexOf(assetOrigin) == 0);
     } // else, path is relative, so same origin
 
@@ -2213,9 +2213,9 @@ AssetPseudoColumn.prototype.getMetadata = function (data, context, options) {
             if (typeof context === "string" && context === module._contexts.DETAILED) {
 
                 // only match absolute paths that start with https:// or http://
-                if (protocolRegexp.test(caption) && temp.length >= 3) {
+                if (hasProtocol && urlParts.length >= 3) {
                     // so when we split by /, the third element will be the host information
-                    result.hostInformation = temp[2];
+                    result.hostInformation = urlParts[2];
                 }
             }
 
