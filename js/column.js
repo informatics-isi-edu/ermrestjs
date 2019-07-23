@@ -2312,7 +2312,7 @@ AssetPseudoColumn.prototype.formatPresentation = function(data, context, options
     var keyValues = {
         "caption": caption,
         "url": url,
-        "hostInfo": hostInfo // NOTE: this is actually just the host
+        "hostInfo": hostInfo
     };
     if (hostInfo) {
         template += ":span:(source: {{{hostInfo}}}):/span:{.asset-source-description}";
