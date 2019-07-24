@@ -2192,13 +2192,22 @@ AssetPseudoColumn.prototype.getMetadata = function (data, context, options) {
     var sameOrigin = true;
     if (hasProtocol) {
         var assetOrigin = urlParts[0] + "//" + urlParts[2];
+        // will be the current origin + '/ermrest'
         var currentOrigin = this.table.schema.catalog.server.uri;
-        // check if currentOrigin contains the assetOrigin
         sameOrigin = (currentOrigin.indexOf(assetOrigin) == 0);
     } // else, path is relative, so same origin
 
     result.sameOrigin = sameOrigin;
 
+    // in detailed, we want to show the host information if not on the same origin
+    if (!sameOrigin && typeof context === "string" && context === module._contexts.DETAILED) {
+
+        // only match absolute paths that start with https:// or http://
+        if (hasProtocol && urlParts.length >= 3) {
+            // so when we split by /, the third element will be the host information
+            result.hostInformation = urlParts[2];
+        }
+    }
 
     // if we're using the url as caption
     if (urlCaption) {
@@ -2209,16 +2218,6 @@ AssetPseudoColumn.prototype.getMetadata = function (data, context, options) {
         }
         // otherwise return the last part of url
         else {
-            // in detailed, we want to show the host information
-            if (typeof context === "string" && context === module._contexts.DETAILED) {
-
-                // only match absolute paths that start with https:// or http://
-                if (hasProtocol && urlParts.length >= 3) {
-                    // so when we split by /, the third element will be the host information
-                    result.hostInformation = urlParts[2];
-                }
-            }
-
             var newCaption = caption.split("/").pop();
             if (newCaption.length !== 0) {
                 caption = newCaption;
@@ -2296,7 +2295,7 @@ AssetPseudoColumn.prototype.formatPresentation = function(data, context, options
         sameOrigin = metadata.sameOrigin;
 
     // otherwise return a download link
-    var template = "[{{{caption}}}]({{{url}}}){download .download" + (sameOrigin ? " .asset-permission" : "") + "}";
+    var template = "[{{{caption}}}]({{{url}}}){download .download " + (sameOrigin ? ".asset-permission" : ".external-link") + "}";
     var url = data[this._baseCol.name];
 
     // only add query parameters if same origin
