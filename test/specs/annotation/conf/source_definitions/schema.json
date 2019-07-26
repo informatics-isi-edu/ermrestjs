@@ -59,7 +59,7 @@
               }
           ],
           "annotations": {
-              "tag:isrd.isi.edu,2019:source_definitions": {
+              "tag:isrd.isi.edu,2019:source-definitions": {
                   "columns": ["invalid_col_1", "col", "invalid_col_2"],
                   "fkeys": [["source_definitions_schema", "main_fk2"], ["source_definitions_schema", "main_fk_invalid_2"]],
                   "sources": {
@@ -281,7 +281,7 @@
               }
           ],
           "annotations": {
-              "tag:isrd.isi.edu,2019:source_definitions": {
+              "tag:isrd.isi.edu,2019:source-definitions": {
                   "columns": true,
                   "fkeys": true
               }
@@ -323,7 +323,7 @@
               }
           ],
           "annotations": {
-              "tag:isrd.isi.edu,2019:source_definitions": {
+              "tag:isrd.isi.edu,2019:source-definitions": {
                   "sources": {
                       "new_id": {"source": "id"}
                   }

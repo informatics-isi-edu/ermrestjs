@@ -8,10 +8,10 @@ Let's assume the following is the ERD of our database. In all the examples we're
 
 ## 1. Defining Sources
 
-First you need to define your source definitions. To do this, you have to define the [source_definitions](annotation.md#tag-2019-source-definitions) annotation.
+First you need to define your source definitions. To do this, you have to define the [source-definitions](annotation.md#tag-2019-source-definitions) annotation.
 
 ```
-"tag:isrd.isi.edu,2019:source_definitions": {
+"tag:isrd.isi.edu,2019:source-definitions": {
    "columns": [ cname, ... ],
    "fkeys": [  [ schema, constraint ], ... ],
    "sources": {
@@ -40,7 +40,7 @@ The following is the source definitions that we are going to use:
 
 ```javascript
 {
-    "tag:isrd.isi.edu,2019:source_definitions": {
+    "tag:isrd.isi.edu,2019:source-definitions": {
         "columns": true, // a list of columns. true means all the columns
         "fkeys": [ // a list of fkeys. true means all
             ["schema", "fk1_cons"]

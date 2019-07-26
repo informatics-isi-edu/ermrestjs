@@ -36,7 +36,7 @@
         KEY_DISPLAY: "tag:isrd.isi.edu,2017:key-display",
         NON_DELETABLE: "tag:isrd.isi.edu,2016:non-deletable",
         REQUIRED: "tag:isrd.isi.edu,2018:required",
-        SOURCE_DEFINITIONS: "tag:isrd.isi.edu,2019:source_definitions",
+        SOURCE_DEFINITIONS: "tag:isrd.isi.edu,2019:source-definitions",
         TABLE_ALTERNATIVES: "tag:isrd.isi.edu,2016:table-alternatives",
         TABLE_DISPLAY: "tag:isrd.isi.edu,2016:table-display",
         VISIBLE_COLUMNS: "tag:isrd.isi.edu,2016:visible-columns",
