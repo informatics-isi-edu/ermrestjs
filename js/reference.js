@@ -3498,7 +3498,7 @@
             this._location.sortObject = sortObject;
 
             var uri = this._location.ermrestCompactPath; // used for the http request
-            var isAttributeGroup = !useEntity && (this._table.foreignKeys.length() > 0 || allOutBounds.length > 0);
+            var isAttributeGroup = !useEntity && allOutBounds.length > 0;
 
             /** Change api to attributegroup for retrieving extra information
              * These information include:

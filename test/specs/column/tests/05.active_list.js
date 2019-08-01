@@ -1,9 +1,11 @@
 exports.execute = function (options) {
     var catalog_id = process.env.DEFAULT_CATALOG,
         schemaName = "active_list_schema",
-        tableName = "main";
+        tableName = "main",
+        tableNameEmptyFK = "main_empty_fkeys";
 
     var mainEntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + tableName + "/@sort(main_id)";
+    var mainEmptyFkEntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + tableNameEmptyFK + "/@sort(main_empty_fkeys_id)";
     var pageLen = 2;
 
     var chaiseURL = "https://dev.isrd.isi.edu/chaise";
@@ -60,6 +62,7 @@ exports.execute = function (options) {
     };
 
     var mainRef, mainRefCompact, mainPageCompact, mainTupleCompact, compactColumns;
+    var mainEmptFkRefCompact, mainEmptyFkPage;
     var columnMapping = {
         "self_link_rowname": "6LvAfWRWZJUaupAC4ebm4A",
         "self_link_id": "lOGv1uEUiOj6Z8tDhF-fwA",
@@ -99,6 +102,9 @@ exports.execute = function (options) {
                 mainRef = response;
                 mainRefCompact = response.contextualize.compact;
                 compactColumns = mainRefCompact.columns;
+                return options.ermRest.resolve(mainEmptyFkEntityUri, {cid: "test"});
+            }).then(function (response2) {
+                mainEmptFkRefCompact = response2.contextualize.compact;
                 done();
             }).catch(catchError(done));
 
@@ -364,20 +370,6 @@ exports.execute = function (options) {
             }
         });
 
-        it ("tuple.values should return empty result for the columns with secondary request wait_for.", function (done) {
-            mainRefCompact.read(pageLen).then(function (response) {
-                mainPageCompact = response;
-                expect(mainPageCompact.tuples[0].values.length).toEqual(expectedColumns.length, "length missmatch");
-                mainPageCompact.tuples[0].values.forEach(function (v, i) {
-                    var expectedVal = expectedColumns[i].value;
-                    if (expectedColumns[i].hasWaitFor) {
-                        expectedVal = "";
-                    }
-                    expect(v).toEqual(expectedVal, "value missmatch for `" + expectedColumns[i].title + "`");
-                });
-                done();
-            }).catch(catchError(done));
-        });
 
         /* TODO mvoe to chaise and do the simpler ones here.
         describe("column.sourceMarkdownPattern, ", function () {
@@ -576,9 +568,71 @@ exports.execute = function (options) {
             });
         });
 
+        describe("Reference._getReadPath in case of attributegroup", function () {
+            it ("should add the allOutBounds.", function () {
+                var expectedPath = "M:=active_list_schema:main/" +
+                "F10:=left(fk3_col1,fk3_col2)=(active_list_schema:outbound2:outbound2_id1,outbound2_id2)/$M/" +
+                "left(fk1_col1,fk1_col2)=(active_list_schema:outbound1:outbound1_id1,outbound1_id2)/left(fk1_col1)=(active_list_schema:outbound1_outbound1:outbound1_outbound1_id)/F9:=left(fk1_col1)=(active_list_schema:outbound1_outbound1_outbound1:outbound1_outbound1_outbound1_id)/$M/" +
+                "left(fk2_col1,fk2_col2)=(active_list_schema:outbound2:outbound2_id1,outbound2_id2)/F8:=left(fk1_col1)=(active_list_schema:outbound2_outbound1:outbound2_outbound1_id)/$M/" +
+                "left(fk1_col1,fk1_col2)=(active_list_schema:outbound1:outbound1_id1,outbound1_id2)/F7:=left(fk1_col1)=(active_list_schema:outbound1_outbound1:outbound1_outbound1_id)/$M/" +
+                "left(fk2_col1,fk2_col2)=(active_list_schema:outbound2:outbound2_id1,outbound2_id2)/F6:=left(fk1_col1)=(active_list_schema:outbound2_outbound1:outbound2_outbound1_id)/$M/left(fk1_col1,fk1_col2)=(active_list_schema:outbound1:outbound1_id1,outbound1_id2)/F5:=left(fk1_col1)=(active_list_schema:outbound1_outbound1:outbound1_outbound1_id)/$M/" +
+                "F4:=left(fk2_col1,fk2_col2)=(active_list_schema:outbound2:outbound2_id1,outbound2_id2)/$M/" +
+                "F3:=left(fk1_col1,fk1_col2)=(active_list_schema:outbound1:outbound1_id1,outbound1_id2)/$M/" +
+                "F2:=left(fk2_col1,fk2_col2)=(active_list_schema:outbound2:outbound2_id1,outbound2_id2)/$M/" +
+                "F1:=left(fk1_col1,fk1_col2)=(active_list_schema:outbound1:outbound1_id1,outbound1_id2)/$M/" +
+                "main_id;M:=array_d(M:*),F10:=array_d(F10:*),F9:=array_d(F9:*),F8:=array_d(F8:*),F7:=array_d(F7:*)," +
+                "F6:=array_d(F6:*),F5:=array_d(F5:*),F4:=array_d(F4:*),F3:=array_d(F3:*),F2:=array_d(F2:*),F1:=array_d(F1:*)@sort(main_id)";
+                expect(mainRefCompact.readPath).toEqual(expectedPath);
+            });
+
+            it ("should fallback to entity if there are no outbound foreignkeys.", function () {
+                expect(mainEmptFkRefCompact.readPath).toEqual("M:=active_list_schema:main_empty_fkeys@sort(main_empty_fkeys_id)");
+            });
+        });
+
+        describe("tuple.values, ", function () {
+            it ("should return empty result for the columns with secondary request wait_for.", function (done) {
+                mainRefCompact.read(pageLen).then(function (response) {
+                    mainPageCompact = response;
+                    expect(mainPageCompact.tuples[0].values.length).toEqual(expectedColumns.length, "length missmatch");
+                    mainPageCompact.tuples[0].values.forEach(function (v, i) {
+                        var expectedVal = expectedColumns[i].value;
+                        if (expectedColumns[i].hasWaitFor) {
+                            expectedVal = "";
+                        }
+                        expect(v).toEqual(expectedVal, "value missmatch for `" + expectedColumns[i].title + "`");
+                    });
+                    done();
+                }).catch(catchError(done));
+            });
+
+            it ("should work properly when fkeys is empty.", function (done) {
+                mainEmptFkRefCompact.read(1).then(function (response) {
+                    mainEmptyFkPage = response;
+                    expect(mainEmptyFkPage.tuples[0].values.length).toEqual(2, "length missmatch");
+                    expect(mainEmptyFkPage.tuples[0].values[0]).toEqual("01", "first value missmatch.");
+                    expect(mainEmptyFkPage.tuples[0].values[1]).toEqual("main_empty_fkeys one", "second value missmatch.");
+                    done();
+                }).catch(catchError(done));
+            });
+        });
 
         describe("Page.templateVariables, ", function () {
-            it ("should include all-outbounds and honor source mappings.", function () {
+            it ("should not include outbound fks if they are inivisble and source definitions fkeys is empty.", function () {
+                var res = mainEmptyFkPage.templateVariables[0];
+                var expected = {
+                    rowname_col: "main_empty_fkeys one",
+                    _rowname_col: "main_empty_fkeys one",
+                    int_col: "1,234,501",
+                    _int_col: 1234501,
+                    main_empty_fkeys_id: "01",
+                    _main_empty_fkeys_id: "01"
+                };
+
+                expect(Object.keys(res).length).toBe(Object.keys(expected).length, "keys length missmatch");
+                for (var k in expected) {
+                    expect(res[k]).toEqual(expected[k], "value missmatch for variable " + k);
+                }
 
             });
         });
