@@ -133,7 +133,7 @@ You can attach attributes to the link.
 
 ### 2. Download Button
 
-Download button is a link with some predefined attributes. You can use these attributes to ensure consistent display for the download buttons.`download` and `target="_blank"` which will allow it to open in a new tab with classes `.btn` and `.btn-primary` for CSS styling. There are 2 more classes that can be applied to add some more styling and functionality. `.download` will apply styling to make the link more button like without needing to add `.btn` or `.btn-primary`. `.derival-url-validate` can be added to validate whether the user can download the asset or not before it is downloaded.
+Download button is a link with some predefined attributes. You can use these attributes to ensure consistent display for the download buttons.`download` and `target="_blank"` which will allow it to open in a new tab with classes `.btn` and `.btn-primary` for CSS styling. There are 2 more classes that can be applied to add some more styling and functionality. `.download` will apply styling to make the link more button like without needing to add `.btn` or `.btn-primary`. `.asset-permission` can be added to validate whether the user can download the asset or not before a download is attempted. `.external-link` can be added to show a notification to the user when they are being navigated away from chaise for external links and assets hosted elsewhere.
 
 Example 1:
 ```html
