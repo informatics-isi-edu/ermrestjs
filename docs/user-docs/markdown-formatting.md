@@ -557,7 +557,7 @@ This is not part of commonMark specification and it will result in an [inline](#
 Without attributes
 
 ```html
-~This~ should be superscript.
+^This^ should be superscript.
 
 # OUTPUT:
 <p>
