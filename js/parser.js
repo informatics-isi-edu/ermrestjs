@@ -832,6 +832,14 @@
         },
 
         /**
+         * if the location has facet/filter/customfacet
+         * @return {Boolean} [description]
+         */
+        get isConstrained() {
+            return this.facets || this.searchTerm || this.filter || this.customFacets;
+        },
+
+        /**
          * Subject to change soon
          * @returns {String} The sort modifier in the string format of @sort(...)
          */
