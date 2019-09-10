@@ -133,21 +133,13 @@ You can attach attributes to the link.
 
 ### 2. Download Button
 
-Download button is a link with some predefined attributes. You can use these attributes to ensure consistent display for the download buttons.`download` and `target="_blank"` which will allow it to open in a new tab with classes `.btn` and `.btn-primary` for CSS styling. There are 2 more classes that can be applied to add some more styling and functionality. `.download` will apply styling to make the link more button like without needing to add `.btn` or `.btn-primary`. `.asset-permission` can be added to validate whether the user can download the asset or not before a download is attempted. `.external-link` can be added to show a notification to the user when they are being navigated away from chaise for external links and assets hosted elsewhere.
+Download button is a link with some predefined attributes. You can use these attributes to ensure consistent display for the download buttons:
+  - `download` and `target="_blank"` will allow it to open in a new tab and trigger the browser's default download behavior.
+  - `.download` will apply download button styling to the link. 
+  - `.asset-permission` can be added to validate whether the user can download the asset or not before a download is attempted.
+  - `.external-link` can be added to show a notification to the user when they are being navigated away from chaise for external links and assets hosted elsewhere.
 
-Example 1:
-```html
-[Jquery Download](https://code.jquery.com/jquery-3.1.0.js){download .btn .btn-primary target=_blank}
-
-# OUTPUT:
-<p>
-	<a href="https://code.jquery.com/jquery-3.1.0.js" download="" class="btn btn-primary" target="_blank">Jquery Download</a>
-</p>
-```
-> <p><a href="https://code.jquery.com/jquery-3.1.0.js" download="" class="btn btn-primary" target="\_blank">Jquery Download</a></p>
-
-
-Example 2:
+Example:
 ```html
 [Jquery Download](https://code.jquery.com/jquery-3.1.0.js){download .download .asset-permission}
 
@@ -156,7 +148,6 @@ Example 2:
 	<a href="https://code.jquery.com/jquery-3.1.0.js" download="" class="download asset-permission">Jquery Download</a>
 </p>
 ```
-> <p><a href="https://code.jquery.com/jquery-3.1.0.js" download="" class="download asset-permission">Jquery Download</a></p>
 
 **NOTE:** please stick to the above formats only to generate a download link.
 
