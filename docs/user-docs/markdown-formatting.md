@@ -135,13 +135,18 @@ You can attach attributes to the link.
 
 Download button is a link with some predefined attributes. You can use these attributes to ensure consistent display for the download buttons:
   - `download` and `target="_blank"` will allow it to open in a new tab and trigger the browser's default download behavior.
-  - `.download` will apply download button styling to the link. 
+  - `.download-alt` will change the link to look like the following:
+![download-alt btn](https://raw.githubusercontent.com/informatics-isi-edu/ermrestjs/master/docs/resources/download-alt-btn.png)
+
+  - `.download` will change the link to look like the following:
+![download btn](https://raw.githubusercontent.com/informatics-isi-edu/ermrestjs/master/docs/resources/download-btn.png)
+
   - `.asset-permission` can be added to validate whether the user can download the asset or not before a download is attempted.
   - `.external-link` can be added to show a notification to the user when they are being navigated away from chaise for external links and assets hosted elsewhere.
 
 Example:
 ```html
-[Jquery Download](https://code.jquery.com/jquery-3.1.0.js){download .download .asset-permission}
+[Filename](https://code.jquery.com/jquery-3.1.0.js){download .download-alt .asset-permission}
 
 # OUTPUT:
 <p>
