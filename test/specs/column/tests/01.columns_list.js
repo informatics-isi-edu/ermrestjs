@@ -357,9 +357,9 @@ exports.execute = function (options) {
             ];
             var html = "";
             if (process.env.TRAVIS) {
-                html = '<a href="https://dev.isrd.isi.edu" download="" class="download external-link">filename</a>'
+                html = '<a href="https://dev.isrd.isi.edu" download="" class="download-alt external-link">filename</a>'
             } else {
-                html = '<a href="https://dev.isrd.isi.edu?uinit=1&amp;cid=test" download="" class="download asset-permission">filename</a>'
+                html = '<a href="https://dev.isrd.isi.edu?uinit=1&amp;cid=test" download="" class="download-alt asset-permission">filename</a>'
             }
             assetCompactExpectedValue = [
                 '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_asset/id=1">1</a>',
