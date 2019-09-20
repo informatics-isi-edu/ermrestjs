@@ -300,7 +300,7 @@ exports.execute = function (options) {
         beforeAll(function (done) {
             options.ermRest.appLinkFn(appLinkFn);
             options.ermRest.setClientConfig({
-                hostAliases: [options.catalog.server.host]
+                hostAliases: [options.catalog.server.host, "dev.isrd.isi.edu"]
             });
             options.ermRest.resolve(singleEnitityUri, {
                 cid: "test"
@@ -359,18 +359,13 @@ exports.execute = function (options) {
                 ''
             ];
             var html = "";
-            if (process.env.TRAVIS) {
-                html = '<a href="https://dev.isrd.isi.edu" download="" class="download-alt external-link-icon external-link">filename</a>'
-            } else {
-                html = '<a href="https://dev.isrd.isi.edu?uinit=1&amp;cid=test" download="" class="download-alt asset-permission">filename</a>'
-            }
             assetCompactExpectedValue = [
                 '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_asset/id=1">1</a>',
                 '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:columns_table/RID=' + findRID("columns_table", "id", "1") + '">1</a>',
                 '1000', '10001', 'filename', '1,242', 'md5', 'sha256',
                 '',
                 '<h2>filename</h2>\n',
-                html,
+                '<a href="https://dev.isrd.isi.edu?uinit=1&amp;cid=test" download="" class="download-alt asset-permission">filename</a>',
                 '4'
             ];
 
