@@ -76,8 +76,8 @@ exports.execute = function (options) {
 
         describe("printMarkdown(), ", function () {
             var printMarkdown = formatUtils.printMarkdown;
-            var testPrintMarkdown = function (input, expected, error) {
-                expect(printMarkdown(input)).toBe(expected, error);
+            var testPrintMarkdown = function (input, expected, inline, error) {
+                expect(printMarkdown(input, {inline: inline})).toBe(expected, error);
             };
 
             it ("should return the input if it's invalid format.", function () {
@@ -185,12 +185,14 @@ exports.execute = function (options) {
                 testPrintMarkdown(
                     ":::div value \n:::",
                     '<div>value</div>\n',
+                    false,
                     "invalid string"
                 );
 
                 testPrintMarkdown(
                     ":::div value{.class-name} \n:::",
                     '<div class="class-name">value</div>\n',
+                    false,
                     "invalid string with tag"
                 );
 
@@ -220,6 +222,49 @@ exports.execute = function (options) {
             it("should support table with classname attribute.", function () {
                 var mkString = "|heading|\n|-|\n|text|\n{.class-name}";
                 expect(printMarkdown(mkString)).toBe('<table class="class-name">\n<thead>\n<tr>\n<th>heading</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td>text</td>\n</tr>\n</tbody>\n</table>\n');
+            });
+
+            describe("regarding external links, ", function () {
+                it ("should not do anything extra if client-config is not set properly.", function () {
+                    testPrintMarkdown('[caption](http://external.com)', '<a href="http://external.com">caption</a>', true, 'test 01');
+                    testPrintMarkdown('[caption](http://internal.com){.test}', '<a href="http://internal.com" class="test">caption</a>', true, 'test 02');
+                });
+
+                it ("should use the passed hosts to detect external link and add external-link-icon and external-link", function (done) {
+                    //add client config
+                    options.ermRest.setClientConfig({
+                        hostAliases: ['a.com', 'internal.com']
+                    }).then(function () {
+                        testPrintMarkdown('[caption](http://external.com)', '<a href="http://external.com" class="external-link-icon external-link">caption</a>', true, 'test 01');
+                        testPrintMarkdown('[caption](http://external.com){.test}', '<a href="http://external.com" class="test external-link-icon external-link">caption</a>', true, 'test 02');
+                        testPrintMarkdown('[caption](http://internal.com){.test}', '<a href="http://internal.com" class="test">caption</a>', true, 'test 03');
+                        testPrintMarkdown('[caption](https://a.com?q=123)', '<a href="https://a.com?q=123">caption</a>', true, 'test 04');
+
+                        // remove the client config
+                        return options.ermRest.setClientConfig({});
+                    }).then(function () {
+                        done();
+                    })
+
+                });
+
+                it ("should not add the external-link if the disableExternalLinkModal is true.", function (done) {
+                    //add client config
+                    options.ermRest.setClientConfig({
+                        hostAliases: ['a.com', 'internal.com'],
+                        disableExternalLinkModal: true,
+                    }).then(function () {
+                        testPrintMarkdown('[caption](http://external.com)', '<a href="http://external.com" class="external-link-icon">caption</a>', true, 'test 01');
+                        testPrintMarkdown('[caption](http://external.com){.test}', '<a href="http://external.com" class="test external-link-icon">caption</a>', true, 'test 02');
+                        testPrintMarkdown('[caption](http://internal.com){.test}', '<a href="http://internal.com" class="test">caption</a>', true, 'test 03');
+                        testPrintMarkdown('[caption](https://a.com?q=123)', '<a href="https://a.com?q=123">caption</a>', true, 'test 04');
+
+                        // remove the client config
+                        return options.ermRest.setClientConfig({});
+                    }).then(function () {
+                        done();
+                    })
+                });
             });
         });
 
@@ -372,13 +417,11 @@ exports.execute = function (options) {
                 "note": "With encoding and escaping. Should give correct HTML with valid caption a link"
             }];
 
-        it('module._renderMustacheTemplate() and module._renderMarkdown() should function correctly for Markdown Escaping and Encoding', function() {
-            var printMarkdown = formatUtils.printMarkdown;
-
+        it('module._renderMustacheTemplate() and module.renderMarkdown() should function correctly for Markdown Escaping and Encoding', function() {
             templateCases.forEach(function(ex) {
                 var template = module._renderMustacheTemplate(ex.template, obj);
                 expect(template).toBe(ex.after_mustache);
-                var html = printMarkdown(template);
+                var html = module.renderMarkdown(template);
                 expect(html).toBe(ex.after_render + '\n');
             });
         });

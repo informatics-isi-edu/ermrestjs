@@ -54,6 +54,14 @@
 
      module._systemColumnsHeuristicsMode = function () {};
 
+     /**
+      * the client configs. this includes the following attributes:
+      * - originAliases
+      * - disableExternalLinkModal
+      * @type {Object}
+      */
+     module._clientConfig = null;
+
     /**
      * @memberof ERMrest
      * @function
@@ -116,6 +124,19 @@
          * @type {string}
          */
         this.uri = uri;
+
+        /**
+         * The host of the uri
+         * @type {String}
+         */
+        this.host = "";
+        var hasProtocol = new RegExp('^(?:[a-z]+:)?//', 'i').test(uri);
+        if (hasProtocol) {
+            var urlParts = uri.split("/");
+            if (urlParts.length >= 3) {
+                this.host = urlParts[2];
+            }
+        }
 
         /**
          * The wrapped http service for this server instance.
@@ -2141,7 +2162,9 @@
         this.formatPresentation = function(data, context, options) {
             data = data || {};
 
-            var utils = module._formatUtils;
+            if (options === undefined || options !== Object(options)) {
+                options = {};
+            }
 
             var display = this.getDisplay(context);
 
@@ -2168,7 +2191,7 @@
                 return {
                     isHTML: true,
                     unformatted: unformatted,
-                    value: utils.printMarkdown(unformatted, options)
+                    value: module.renderMarkdown(unformatted, options.inline)
                 };
             }
 
@@ -2190,9 +2213,6 @@
                 var template = display.markdownPattern; // pattern
 
                 // Code to do template/string replacement using keyValues
-                if (options === undefined || options !== Object(options)) {
-                    options = {};
-                }
                 if (options.formattedValues === undefined) {
                     options.formattedValues = module._getFormattedKeyValues(this.table, context, data);
                 }
@@ -2210,7 +2230,7 @@
             /*
              * Call printmarkdown to generate HTML from the final generated string after templating and return it
              */
-             value = utils.printMarkdown(unformatted, options);
+             value = module.renderMarkdown(unformatted, options.inline);
 
              return { isHTML: true, value: value, unformatted: unformatted };
 

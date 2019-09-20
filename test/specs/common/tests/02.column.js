@@ -295,7 +295,7 @@ exports.execute = function(options) {
                     });
                 });
 
-                describe('should not call printMarkdown() to format,', function() {
+                describe('should not call renderMarkdown() to format,', function() {
                     it('Markdown columns correctly.', function() {
                         var testVal = '*taylor ^swift^*';
                         var col = table1_schema2.columns.get('table_1_markdown');

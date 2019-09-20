@@ -42,6 +42,11 @@ exports.runTests = function (options) {
                 });
         });
 
+        afterAll(function () {
+            // remove the client-config that it have been set by any of the specs
+            testOptions.ermRest.setClientConfig({});
+        })
+
         // execute test cases
         testCases.forEach(function (el) {
             require(process.env.PWD + "/test/specs" + el).execute(testOptions);

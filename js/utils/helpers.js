@@ -104,6 +104,12 @@
         return (typeof x === 'number') && (x % 1 === 0);
     };
 
+    var verifyClientConfig = function () {
+        if (module._clientConfig === null) {
+            throw new module.InvalidInputError("this function requires cliet-config which is not set properly.");
+        }
+    };
+
     /**
      * Check if object has all the keys in the given array
      * @param  {Object} obj the object
@@ -416,7 +422,7 @@
 
                 //get the markdown display name
                 if(display_annotation.content.markdown_name) {
-                    value = module._formatUtils.printMarkdown(display_annotation.content.markdown_name, { inline: true });
+                    value = module.renderMarkdown(display_annotation.content.markdown_name, true);
                     unformatted = display_annotation.content.name ? display_annotation.content.name : display_annotation.content.markdown_name;
                     hasDisplayName = true;
                     isHTML = true;
@@ -456,7 +462,7 @@
         // if name was not specified and name styles are defined, apply the heuristic functions (name styles)
         if(useName && !hasDisplayName && element._nameStyle){
             if(element._nameStyle.markdown){
-                value = module._formatUtils.printMarkdown(element.name, { inline: true });
+                value = module.renderMarkdown(element.name, true);
                 isHTML = true;
             } else {
                 if(element._nameStyle.underline_space){
@@ -911,7 +917,7 @@
         }
 
         return {
-            "value": module._formatUtils.printMarkdown(pattern, { inline: true }),
+            "value": module.renderMarkdown(pattern, true),
             "unformatted": pattern,
             "isHTML": true
         };
@@ -961,7 +967,7 @@
                 {templateEngine: display.templateEngine}
             );
             unformatted = (unformatted === null || unformatted.trim() === '') ? "" : unformatted;
-            caption = module._formatUtils.printMarkdown(unformatted, { inline: true });
+            caption = module.renderMarkdown(unformatted, true);
         } else {
             var values = [], unformattedValues = [];
 
@@ -1557,7 +1563,7 @@
                 // Add the ending backtick at the end
                 formattedSeq += '`';
 
-                // Run it through printMarkdown to get the sequence in a fixed-width font
+                // Run it through renderMarkdown to get the sequence in a fixed-width font
                 return module._markdownIt.renderInline(formattedSeq);
             } catch (e) {
                 console.log("Couldn't parse the given markdown value: " + value);
@@ -1661,8 +1667,8 @@
      * @return {string} A string representation of value
      * @desc public function to access markdown it renderer
      */
-    module.renderMarkdown = function(value, options) {
-      return module._formatUtils.printMarkdown(value, options);
+    module.renderMarkdown = function(value, inline) {
+      return module._formatUtils.printMarkdown(value, {inline: inline});
     };
 
     module._parsedFilterToERMrestFilter = function(filter, table) {
@@ -2207,6 +2213,88 @@
         });
     };
 
+    /**
+     * @private
+     * @desc
+     * Change the link_open function to add classes to links, based on clientConfig
+     * It will add
+     *  - external-link-icon
+     *  - exteranl-link if clientConfig.disableExternalLinkModal is not true
+     *
+     * NOTE we should call this function only ONCE when the setClientConfig is done
+     */
+    module._markdownItLinkOpenAddExternalLink = function () {
+        verifyClientConfig();
+
+        // if we haven't changed the function yet, and there's no hostAliases then don't do anything
+        if (typeof module._markdownItDefaultLinkOpenRenderer === "undefined" && module._clientConfig.hostAliases.length === 0) {
+            return;
+        }
+
+        // make sure we're calling this just once
+        if (typeof module._markdownItDefaultLinkOpenRenderer === "undefined") {
+            module._markdownItDefaultLinkOpenRenderer = module._markdownIt.renderer.rules.link_open || function(tokens, idx, options, env, self) {
+                return self.renderToken(tokens, idx, options);
+            };
+        }
+
+        // the classes that we should add
+        var className = module._classNames.externalLinkIcon;
+        if (module._clientConfig.disableExternalLinkModal !== true) {
+            className += " " + module._classNames.externalLink;
+        }
+        module._markdownIt.renderer.rules.link_open = function (tokens, idx, options, env, self) {
+            var token = tokens[idx];
+
+            // find the link value
+            var hrefIndex = token.attrIndex('href');
+            if (hrefIndex < 0) return;
+            var href = token.attrs[hrefIndex][1];
+
+            // only add the class if it's not the same origin
+            if (module._isSameHost(href) === false) {
+                var cIndex = token.attrIndex('class');
+                if (cIndex < 0) {
+                    token.attrPush(['class', className]);
+                } else {
+                    token.attrs[cIndex][1] += " " + className;
+                }
+            }
+
+            return module._markdownItDefaultLinkOpenRenderer(tokens, idx, options, env, self);
+        };
+    };
+
+    /**
+     * @desc
+     * Given a url and origin, test whether the url has the host.
+     * Returns `null` if we cannot determine the origin.
+     *
+     * @function
+     * @private
+     * @param  {string} url    url string
+     * @return {boolean|null}
+     */
+    module._isSameHost = function (url) {
+        // chaise-config hostAliases are not defined, so we cannot determine
+        if (!isObjectAndNotNull(module._clientConfig) || module._clientConfig.hostAliases.length == 0) return null;
+
+        var hasProtocol = new RegExp('^(?:[a-z]+:)?//', 'i').test(url);
+
+        // if the url doesn't have origin (relative)
+        if (!hasProtocol) return true;
+
+        var urlParts = url.split("/");
+
+        // invalid url format: cannot determine the origin
+        if (urlParts.length < 3) return null;
+
+        // actual comparission of the origin
+        return module._clientConfig.hostAliases.some(function (host) {
+            return typeof host === "string" && urlParts[2].indexOf(host) === 0;
+        });
+    };
+
     // Characters to replace Markdown special characters
     module._escapeReplacementsForMarkdown = [
       [ /\*/g, '\\*' ],
@@ -2745,8 +2833,7 @@
             return {isHTML: false, value: res, unformatted: res};
         }
 
-        var utils = module._formatUtils;
-        return {isHTML: true, value: utils.printMarkdown(res, options), unformatted: res};
+        return {isHTML: true, value: module.renderMarkdown(res, false), unformatted: res};
     };
 
     // module._constraintNames[catalogId][schemaName][constraintName] will return an object.

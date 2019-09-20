@@ -63,6 +63,7 @@ to use for ERMrest JavaScript agents.
     * [.Server](#ERMrest.Server)
         * [new Server(uri, contextHeaderParams)](#new_ERMrest.Server_new)
         * [.uri](#ERMrest.Server+uri) : <code>string</code>
+        * [.host](#ERMrest.Server+host) : <code>String</code>
         * [.cid](#ERMrest.Server+cid) : <code>string</code>
         * [.pid](#ERMrest.Server+pid) : <code>string</code>
         * [.catalogs](#ERMrest.Server+catalogs) : [<code>Catalogs</code>](#ERMrest.Catalogs)
@@ -686,6 +687,7 @@ to use for ERMrest JavaScript agents.
 * [.Server](#ERMrest.Server)
     * [new Server(uri, contextHeaderParams)](#new_ERMrest.Server_new)
     * [.uri](#ERMrest.Server+uri) : <code>string</code>
+    * [.host](#ERMrest.Server+host) : <code>String</code>
     * [.cid](#ERMrest.Server+cid) : <code>string</code>
     * [.pid](#ERMrest.Server+pid) : <code>string</code>
     * [.catalogs](#ERMrest.Server+catalogs) : [<code>Catalogs</code>](#ERMrest.Catalogs)
@@ -703,6 +705,12 @@ to use for ERMrest JavaScript agents.
 
 #### server.uri : <code>string</code>
 The URI of the ERMrest service
+
+**Kind**: instance property of [<code>Server</code>](#ERMrest.Server)  
+<a name="ERMrest.Server+host"></a>
+
+#### server.host : <code>String</code>
+The host of the uri
 
 **Kind**: instance property of [<code>Server</code>](#ERMrest.Server)  
 <a name="ERMrest.Server+cid"></a>
