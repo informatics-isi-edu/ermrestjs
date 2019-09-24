@@ -222,7 +222,7 @@
                     ],
                     "compact/brief": [
                         {"source": "col"},
-                        {"source": "main_table_id_col", "entity": false},
+                        {"source": "main_table_id_col"},
                         {"source": "main_table_id_col", "self_link": true},
                         {"source": [{"outbound": ["pseudo_column_schema", "main_fk1"]}, "RID"]},
                         "col",
@@ -376,7 +376,6 @@
                         {"source": [{"outbound": ["pseudo_column_schema", "table_w_invalid_pseudo_cols_fk1"]}, "id"], "aggregate": "invalid"},
                         {"source": [{"outbound": ["pseudo_column_schema", "table_w_invalid_pseudo_cols_fk1"]}, {"inbound": ["pseudo_column_schema", "inbound_1_fk1"]}, "id"], "entity": false},
                         {"source": [{"outbound": ["pseudo_column_schema", "table_w_invalid_pseudo_cols_fk1"]}, {"inbound": ["pseudo_column_schema", "inbound_1_fk1"]}, "id"]},
-                        {"source": "id", "entity": false, "self_link": true},
                         {"source": "col", "self_link": true},
                         {"source": [{"outbound": ["pseudo_column_schema", "table_w_invalid_pseudo_cols_fk1"]}, "id"], "self_link": true}
                     ],

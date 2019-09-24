@@ -274,6 +274,7 @@ exports.execute = function (options) {
             });
 
             describe("when `filter` annotation is defined, ", function () {
+                // TODO
                 it ("if it's not in the valid format, should use heuristics.", function (done) {
                     options.ermRest.resolve(createURL(tableF1), {cid: "test"}).then(function (ref) {
                         expect(ref.facetColumns[0]._column.name).toBe("term", "column name missmatch.");

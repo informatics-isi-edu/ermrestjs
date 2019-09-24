@@ -2688,7 +2688,7 @@
                         }
                     }
                     // pseudo-column
-                    else if (typeof col === "object") {
+                    else if (isObjectAndNotNull(col)) {
                         // invalid source
                         if (logCol(!col.source && !col.sourcekey, wm.INVALID_SOURCE, i)) continue;
 
@@ -2727,13 +2727,13 @@
                         // invalid/hidden pseudo-column:
                         // 1. duplicate
                         // 2. column/foreignkey that needs to be hidden.
-                        // 3. invalid self_link (must be entity and without path)
+                        // 3. invalid self_link (must be not-null and part of a simple key)
                         // 4. invalid aggregate function
                         // 3. The generated hash is a column for the table in database
                         ignore = logCol((pseudoName in consideredColumns), wm.DUPLICATE_PC, i) ||
                                  hideFKRByName(pseudoName) ||
                                  (!hasPath && hideColumn(sourceCol)) ||
-                                 logCol(col.self_link === true && !(isEntity && !hasPath), wm.INVALID_SELF_LINK, i) ||
+                                 logCol(col.self_link === true && !(_isColumnUniqueNotNull(sourceCol)), wm.INVALID_SELF_LINK, i) ||
                                  logCol((col.aggregate && module._pseudoColAggregateFns.indexOf(col.aggregate) === -1), wm.INVALID_AGG, i) ||
                                  logCol((!col.aggregate && hasInbound && !isEntity), wm.MULTI_SCALAR_NEED_AGG, i) ||
                                  logCol((!col.aggregate && hasInbound && isEntity && context !== module._contexts.DETAILED && context !== module._contexts.EXPORT), wm.MULTI_ENT_NEED_AGG, i) ||
@@ -2771,7 +2771,7 @@
 
                     }
                     // column
-                    else {
+                    else if (typeof col === "string") {
                         try {
                             col = this._table.columns.get(col);
                         } catch (exception) {}
@@ -2785,6 +2785,8 @@
                             consideredColumns[col.name] = true;
                             addColumn(col);
                         }
+                    } else {
+                        logCol(true, wm.INVALID_COLUMN_DEF,i);
                     }
                 }
             }
