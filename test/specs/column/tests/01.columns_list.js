@@ -300,7 +300,7 @@ exports.execute = function (options) {
         beforeAll(function (done) {
             options.ermRest.appLinkFn(appLinkFn);
             options.ermRest.setClientConfig({
-                hostAliases: [options.catalog.server.host, "dev.isrd.isi.edu"]
+                internalHosts: [options.catalog.server.host, "dev.isrd.isi.edu"]
             });
             options.ermRest.resolve(singleEnitityUri, {
                 cid: "test"

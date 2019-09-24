@@ -2226,8 +2226,8 @@
     module._markdownItLinkOpenAddExternalLink = function () {
         verifyClientConfig();
 
-        // if we haven't changed the function yet, and there's no hostAliases then don't do anything
-        if (typeof module._markdownItDefaultLinkOpenRenderer === "undefined" && module._clientConfig.hostAliases.length === 0) {
+        // if we haven't changed the function yet, and there's no internalHosts then don't do anything
+        if (typeof module._markdownItDefaultLinkOpenRenderer === "undefined" && module._clientConfig.internalHosts.length === 0) {
             return;
         }
 
@@ -2276,8 +2276,8 @@
      * @return {boolean|null}
      */
     module._isSameHost = function (url) {
-        // chaise-config hostAliases are not defined, so we cannot determine
-        if (!isObjectAndNotNull(module._clientConfig) || module._clientConfig.hostAliases.length == 0) return null;
+        // chaise-config internalHosts are not defined, so we cannot determine
+        if (!isObjectAndNotNull(module._clientConfig) || module._clientConfig.internalHosts.length == 0) return null;
 
         var hasProtocol = new RegExp('^(?:[a-z]+:)?//', 'i').test(url);
 
@@ -2290,7 +2290,7 @@
         if (urlParts.length < 3) return null;
 
         // actual comparission of the origin
-        return module._clientConfig.hostAliases.some(function (host) {
+        return module._clientConfig.internalHosts.some(function (host) {
             return typeof host === "string" && urlParts[2].indexOf(host) === 0;
         });
     };

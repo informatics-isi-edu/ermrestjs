@@ -34,7 +34,7 @@
         var res = {};
 
         var defaultConfig = {
-            hostAliases: {"type": "array", "value": []},
+            internalHosts: {"type": "array", "value": []},
             disableExternalLinkModal: {"type": "boolean", "value": false}
         };
 

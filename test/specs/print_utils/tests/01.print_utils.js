@@ -233,7 +233,7 @@ exports.execute = function (options) {
                 it ("should use the passed hosts to detect external link and add external-link-icon and external-link", function (done) {
                     //add client config
                     options.ermRest.setClientConfig({
-                        hostAliases: ['a.com', 'internal.com']
+                        internalHosts: ['a.com', 'internal.com']
                     }).then(function () {
                         testPrintMarkdown('[caption](http://external.com)', '<a href="http://external.com" class="external-link-icon external-link">caption</a>', true, 'test 01');
                         testPrintMarkdown('[caption](http://external.com){.test}', '<a href="http://external.com" class="test external-link-icon external-link">caption</a>', true, 'test 02');
@@ -251,7 +251,7 @@ exports.execute = function (options) {
                 it ("should not add the external-link if the disableExternalLinkModal is true.", function (done) {
                     //add client config
                     options.ermRest.setClientConfig({
-                        hostAliases: ['a.com', 'internal.com'],
+                        internalHosts: ['a.com', 'internal.com'],
                         disableExternalLinkModal: true,
                     }).then(function () {
                         testPrintMarkdown('[caption](http://external.com)', '<a href="http://external.com" class="external-link-icon">caption</a>', true, 'test 01');
