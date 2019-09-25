@@ -835,7 +835,7 @@ exports.execute = function (options) {
                     });
 
                     it ("max_length and order should be honored in array scalar mode.", function (done) {
-                        testGetAggregatedValue(20, '<p>2001-01-01T01:01:01, 2005-05-05T05:05:05, <em>No Value</em></p>\n', true, done);
+                        testGetAggregatedValue(20, '<p>2001-01-01T01:01:01, 2005-05-05T05:05:05, <em>No value</em></p>\n', true, done);
                     });
                 });
 

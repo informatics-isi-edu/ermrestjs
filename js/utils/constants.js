@@ -164,7 +164,7 @@
     });
 
     module._specialPresentation = Object.freeze({
-        NULL: "*No Value*",
+        NULL: "*No value*",
         EMPTY_STR: "*Empty*"
     });
 
