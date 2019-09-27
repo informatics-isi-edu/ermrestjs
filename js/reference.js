@@ -2548,7 +2548,7 @@
 
             // check if we should hide some columns or not.
             // NOTE: if the reference is actually an inbound related reference, we should hide the foreign key that created this link.
-            var hasOrigFKR = typeof this.origFKR != "undefined" && this.origFKR !== null && !this.origFKR._table._isPureBinaryAssociation();
+            var hasOrigFKR = typeof this.origFKR != "undefined" && this.origFKR !== null && !this.origFKR._table.isPureBinaryAssociation;
 
             var columns = -1,
                 consideredColumns = {}, // to avoid duplicate pseudo columns
@@ -2792,30 +2792,30 @@
             }
             // heuristics
             else {
+
                 // fetch config option for system columns heuristics (true|false|Array)
                 // if true, add all system columns
                 // if false, don't move system columns definitions within the list
                 // if array, add the ones defined
-
+                //
                 // order of system columns will always be the same
                 // RID will always be first in the visible columns list
                 // the rest will always be at the end in this order ('RCB', 'RMB', 'RCT', 'RMT')
-
+                //
                 // if compact or detailed, check for system column config option
                 var systemColumnsMode = module._systemColumnsHeuristicsMode(this._context);
 
-                // if (array and RID exists) or true, add RID to the list of columns
-                if (systemColumnsMode) {
-                    if ((Array.isArray(systemColumnsMode) && systemColumnsMode.indexOf("RID") != -1) || systemColumnsMode == true) {
-                        var ridKey = this._table.keys.all().find(function (key) {
-                            // should only ever be 1 column for RID key colset
-                            return key.simple && key.colset.columns[0].name === "RID";
-                        });
 
-                        if (ridKey) {
-                            this._referenceColumns.push(new KeyPseudoColumn(this, ridKey));
-                            consideredColumns[ridKey.colset.columns[0].name] = true;
-                        }
+                // if (array and RID exists) or true, add RID to the list of columns
+                if ((Array.isArray(systemColumnsMode) && systemColumnsMode.indexOf("RID") != -1) || systemColumnsMode == true) {
+                    var ridKey = this._table.keys.all().find(function (key) {
+                        // should only ever be 1 column for RID key colset
+                        return key.simple && key.colset.columns[0].name === "RID";
+                    });
+
+                    if (ridKey) {
+                        this._referenceColumns.push(new KeyPseudoColumn(this, ridKey));
+                        consideredColumns[ridKey.colset.columns[0].name] = true;
                     }
                 }
 
@@ -2842,7 +2842,41 @@
                     }
                 }
 
+
                 columns = this._table.columns.all();
+
+                // if systemColumnsMode is defined, we have to change the order of system columns
+                if (systemColumnsMode == true || Array.isArray(systemColumnsMode)) {
+
+                    // if it's true: add all the system columns
+                    var addedSystemColumnNames = module._systemColumns, addedSystemColumns = [];
+
+                    // if array: add the ones defined in array of config property (preserves order defined in `_systemColumns`)
+                    if (Array.isArray(systemColumnsMode)) {
+                        addedSystemColumnNames = module._systemColumns.filter(function (col) {
+                            return systemColumnsMode.indexOf(col) !== -1;
+                        });
+                    }
+
+                    // turn column names to column objects
+                    addedSystemColumns = [];
+                    addedSystemColumnNames.forEach(function (cname) {
+                        try {
+                            col = refTable.columns.get(cname);
+                            addedSystemColumns.push(col);
+                        } catch (err) {
+                            // fail silently (this means that the table doesn't have the system column)
+                        }
+                    });
+
+                    // add system columns to the end of the list
+                    columns = this._table.columns.all().filter(function (col) {
+                        return module._systemColumns.indexOf(col.name) === -1;
+                    }).concat(addedSystemColumns);
+
+                }
+
+
                 for (i = 0; i < columns.length; i++) {
                     col = columns[i];
 
@@ -2860,9 +2894,6 @@
                     // add the column if it's not part of any foreign keys
                     // or if the column type is array (currently ermrest doesn't suppor this either)
                     if (col.memberOfForeignKeys.length === 0) {
-                        if (systemColumnsMode && module._systemColumns.indexOf(col.name) !== -1) {
-                            continue; // we want system columns at the end if property is defined
-                        }
                         addColumn(col);
                     } else {
                         // sort foreign keys of a column
@@ -2911,34 +2942,6 @@
                     this._referenceColumns.push(compositeFKs[i]);
                 }
 
-                // if array or true, add the remaining system columns
-                if (systemColumnsMode) {
-                    // array of column names to add
-                    var columnsToAdd = [];
-                    if (systemColumnsMode == true) {
-                        // add all, includes RID which will be skipped because of consideredColumns
-                        columnsToAdd = module._systemColumns;
-                    } else {
-                        // add the ones defined in array of config property
-                        // preserves order defined in `_systemColumns`
-                        columnsToAdd = module._systemColumns.filter(function (col) {
-                            return systemColumnsMode.indexOf(col) !== -1;
-                        });
-                    }
-
-                    for (i=0; i < columnsToAdd.length; i++) {
-                        var colName = columnsToAdd[i];
-                        if (colName in consideredColumns) {
-                            continue;
-                        }
-
-                        consideredColumns[colName] = true;
-                        try {
-                            var column = this._table.columns.get(colName);
-                            addColumn(column);
-                        } catch (err) {}
-                    }
-                }
             }
 
             // if edit context remove filename, bytecount, md5, and sha256 from visible columns
@@ -3225,13 +3228,13 @@
             }
 
             var fkrTable = fkr.colset.columns[0].table;
-            if (checkForAssociation && fkrTable._isPureBinaryAssociation()) { // Association Table
+            if (checkForAssociation && fkrTable.isPureBinaryAssociation) { // Association Table
 
                 // find the other foreignkey
-                var otherFK;
-                for (j = 0; j < fkrTable.foreignKeys.length(); j++) {
-                    if(fkrTable.foreignKeys.all()[j] !== fkr) {
-                        otherFK = fkrTable.foreignKeys.all()[j];
+                var otherFK, pureBinaryFKs = fkrTable.pureBinaryForeignKeys;
+                for (j = 0; j < pureBinaryFKs.length; j++) {
+                    if(pureBinaryFKs[j] !== fkr) {
+                        otherFK = pureBinaryFKs[j];
                         break;
                     }
                 }

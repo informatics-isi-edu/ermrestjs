@@ -1499,41 +1499,86 @@
 
         },
 
-        // figure out if Table is pure and binary association table.
-        // binary: Has 2 outbound foreign keys. there is only a composite key constraint. This key includes all the columns from both foreign keys.
-        // pure: There is no extra column that is not part of any keys.
-        // NOTE: (As an exception, the table can have an extra key that is made of one serial type column.)
-        _isPureBinaryAssociation: function () {
-            if(this._isPureBinaryAssociation_cached === undefined) {
-                this._isPureBinaryAssociation_cached = this._computePureBinaryAssociation();
+        /**
+         * @private
+         * @desc
+         * figure out if Table is pure and binary association table.
+         * binary: Has 2 outbound foreign keys. there is only a composite key constraint. This key includes all the columns from both foreign keys.
+         * pure: There is no extra column that is not part of any keys.
+         * Execptions
+         *  - the table can have an extra key that is made of one serial type column.
+         *  - system columns are ignored completely (even if they are part of a simple fk)
+         * @type {boolean}
+         */
+        get isPureBinaryAssociation () {
+            if(this._isPureBinaryAssociation === undefined) {
+                this._isPureBinaryAssociation = this._computePureBinaryAssociation();
             }
-            return this._isPureBinaryAssociation_cached;
+            return this._isPureBinaryAssociation;
+        },
+
+        /**
+         * if the table is pure and binary, will return the two foreignkeys that create it
+         * @type {ERMrest.ForeignKeyRef[]}
+         */
+        get pureBinaryForeignKeys () {
+            if(this._pureBinaryForeignKeys_cached === undefined) {
+                // will attach the value of _pureBinaryForeignKeys_cached
+                this._computePureBinaryAssociation();
+            }
+            return this._pureBinaryForeignKeys_cached;
         },
 
         _computePureBinaryAssociation: function () {
-            if (this.referredBy.length() > 0 || this.foreignKeys.length() != 2) {
+            var isSystemCol = function (col) {
+                return module._systemColumns.indexOf(col.name) !== -1;
+            };
+
+
+            if (this.referredBy.length() > 0) {
                 return false; // not binary
             }
 
-            var serialTypes = ["serial", "serial2", "serial4", "serial8"];
-            var fkColset = new ColSet(this.foreignKeys.colsets().reduce(function(res, colset){
-                return res.concat(colset.columns);
-            }, [])); // set of foreignkey columns
+            // ignore the fks that are simple and their constituent column is system col
+            var nonSystemColumnFks = this.foreignKeys.all().filter(function (fk) {
+                return !(fk.simple && isSystemCol(fk.colset.columns[0]));
+            });
 
+            if (nonSystemColumnFks.length != 2) {
+                return false; //not binary
+            }
+
+
+            // set of foreignkey columns
+            var fkColset = new ColSet(nonSystemColumnFks.reduce(function(res, fk){
+                return res.concat(fk.colset.columns);
+            }, []));
+
+            // the key that should contain foreign key columns
             var tempKeys = this.keys.all().filter(function(key) {
                 var keyCols = key.colset.columns;
-                return !(keyCols.length == 1 && (serialTypes.indexOf(keyCols[0].type.name) != -1 ||  module._systemColumns.indexOf(keyCols[0].name) != -1) && !(keyCols[0] in fkColset.columns));
-            }); // the key that should contain foreign key columns.
+                return !(keyCols.length == 1 && (module._serialTypes.indexOf(keyCols[0].type.name) != -1 ||  module._systemColumns.indexOf(keyCols[0].name) != -1) && !(keyCols[0] in fkColset.columns));
+            });
 
             if (tempKeys.length != 1 || !fkColset._equals(tempKeys[0].colset)) {
                 return false; // not binary
             }
 
+            // columns that are not part of any keys (excluding system columns).
             var nonKeyCols = this.columns.all().filter(function(col) {
-            	return col.memberOfKeys.length === 0 && module._systemColumns.indexOf(col.name) === -1;
-            }); // columns that are not part of any keys.
+            	return col.memberOfKeys.length === 0 && !isSystemCol(col);
+            });
 
-            return nonKeyCols.length === 0; // check for purity
+            // check for purity
+            if (nonKeyCols.length === 0) {
+                // attach the value of _pureBinaryForeignKeys
+                this._pureBinaryForeignKeys_cached = nonSystemColumnFks;
+
+                return true;
+            }
+
+            this._pureBinaryForeignKeys_cached = null;
+            return false;
         }
     };
 

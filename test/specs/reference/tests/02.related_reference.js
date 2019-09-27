@@ -146,7 +146,7 @@ exports.execute = function(options) {
                 });
 
                 it('should only include visible foreign keys that are defined in the annotation. Should support path.', function() {
-                    expect(related.length).toBe(5);
+                    expect(related.length).toBe(6);
                 });
 
                 describe("regarding column objects defining path.", function () {
@@ -189,7 +189,7 @@ exports.execute = function(options) {
 
         describe("related reference APIs, ", function () {
             it('should not be labeled as association when table has extra columns.', function (){
-                expect(related[4]._table.name).toBe(AssociationTableWithExtra);
+                expect(related[5]._table.name).toBe(AssociationTableWithExtra);
             });
 
             it('.origFKR should have the correct value', function() {
@@ -333,15 +333,20 @@ exports.execute = function(options) {
                     var a = page.tuples[0].getAssociationRef({});
                     expect(a).toBe(null);
                 });
-
             });
 
             describe('for pure and binary association foreign keys, ', function() {
                 var pageWithToName, pageWithID;
 
                 it('should have the correct catalog, schema, and table.', function (){
-                    expect(related[2]._location.catalog).toBe(catalog_id.toString());
-                    expect(related[2]._table.name).toBe(inboundTableName);
+                    expect(related[2]._location.catalog).toBe(catalog_id.toString(), "missmatch for catalog index=2");
+                    expect(related[2]._table.name).toBe(inboundTableName, "missmatch for table index=2");
+
+                    expect(related[3]._location.catalog).toBe(catalog_id.toString(), "missmatch for catalog index=3");
+                    expect(related[3]._table.name).toBe(inboundTableName, "missmatch for table index=3");
+
+                    expect(related[4]._location.catalog).toBe(catalog_id.toString(), "missmatch for catalog index=4");
+                    expect(related[4]._table.name).toBe(inboundTableName, "missmatch for table index=4 (table with system column fk)");
                 });
 
                 describe('.displayname, ', function () {
@@ -395,8 +400,6 @@ exports.execute = function(options) {
                         console.dir(err);
                         done.fail();
                     });
-
-
                 });
 
                 it('Tuple.getAssociationRef should return the filtered assocation reference.', function() {

@@ -88,7 +88,7 @@ module._createPseudoColumn = function (reference, column, sourceObject, mainTupl
     if (isEntity && source.length === 3 && source[0].inbound && source[1].outbound) {
         fk = getFK(source[0].inbound);
         relatedRef = reference._generateRelatedReference(fk, mainTuple, true, sourceObject);
-        if (fk._table._isPureBinaryAssociation()) {
+        if (fk._table.isPureBinaryAssociation) {
             return new InboundForeignKeyPseudoColumn(reference, relatedRef, sourceObject, name);
         }
     }

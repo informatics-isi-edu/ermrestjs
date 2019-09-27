@@ -2,7 +2,7 @@
  * All the test cases related to the reference.columns logic
  */
 exports.execute = function (options) {
-    describe('In case of outbound foreign keys, ', function () {
+    describe('Regarding column list heuristics and logics, ', function () {
         var catalog_id = process.env.DEFAULT_CATALOG,
             schemaName = "columns_schema",
             tableName = "columns_table",
@@ -804,13 +804,17 @@ exports.execute = function (options) {
                 it('with config option: `SystemColumnsDisplayCompact=true`, RID should be first, RCB, RMB, RCT, RMT at the end', function () {
                     areSameColumnList(compactSystemColumnsModeRef.generateColumnsList(), compactSystemColumnsModeColumns);
                     //verify RID is first
-                    expect(compactSystemColumnsModeColumns[0]._baseCols[0].name).toBe('RID');
-                    expect(compactSystemColumnsModeColumns.length).toBe(8);
+                    expect(compactSystemColumnsModeColumns[0]._baseCols[0].name).toBe('RID', 'RID is not fisrt');
+                    expect(compactSystemColumnsModeColumns.length).toBe(8, 'length missmatch');
                     //verify RMB, RCB, RMT, RCT are last
-                    expect(compactSystemColumnsModeColumns[4].name).toBe('RCB');
-                    expect(compactSystemColumnsModeColumns[5].name).toBe('RMB');
-                    expect(compactSystemColumnsModeColumns[6].name).toBe('RCT');
-                    expect(compactSystemColumnsModeColumns[7].name).toBe('RMT');
+                    expect(compactSystemColumnsModeColumns[4].isForeignKey).toBe(true, 'isForeignKey index=4 missmatch');
+                    expect(compactSystemColumnsModeColumns[4].table.name).toBe("person", 'col index=4 missmatch');
+
+                    expect(compactSystemColumnsModeColumns[5].isForeignKey).toBe(true, 'isForeignKey index=5 missmatch');
+                    expect(compactSystemColumnsModeColumns[5].table.name).toBe("person", 'col index=5 missmatch');
+
+                    expect(compactSystemColumnsModeColumns[6].name).toBe('RCT', 'col index=6 missmatch');
+                    expect(compactSystemColumnsModeColumns[7].name).toBe('RMT', 'col index=7 missmatch');
                 });
 
                 it("with config option: `SystemColumnsDisplayDetailed=['RCT', 'RMB', 'not_a_col', 'RID', 'col_1']`, RID should be first, RMB, RCT at the end.", function () {
@@ -821,16 +825,18 @@ exports.execute = function (options) {
                     // order for system columns is always in the order of module._systemColumns
                     // i.e. ['RID', 'RCB', 'RMB', 'RCT', 'RMT']
                     areSameColumnList(detailedSystemColumnsModeRef.generateColumnsList(), detailedSystemColumnsModeColumns);
-                    expect(columnNames.length).toBe(6);
+                    expect(columnNames.length).toBe(6, 'length missmatch');
 
-                    expect(detailedSystemColumnsModeColumns[0]._baseCols[0].name).toBe('RID');
+                    expect(detailedSystemColumnsModeColumns[0]._baseCols[0].name).toBe('RID', 'RID is not first');
 
                     // col_1 shouldn't be moved out of default order (defined before col_2 in table definition)
                     expect(columnNames.indexOf('col_1') < columnNames.indexOf('col_2')).toBeTruthy("col_1 is not before col_2");
 
                     // the only system columns, and should be at the end
-                    expect(columnNames[4]).toBe('RMB');
-                    expect(columnNames[5]).toBe('RCT');
+                    expect(detailedSystemColumnsModeColumns[4].isForeignKey).toBe(true, 'isForeignKey index=4 missmatch');
+                    expect(detailedSystemColumnsModeColumns[4].table.name).toBe("person", 'col index=4 missmatch');
+
+                    expect(columnNames[5]).toBe('RCT', 'col index=5 missmatch');
 
                     // other system columns should not be present
                     expect(columnNames.indexOf('RCB')).toBe(-1, 'RCB in column list');

@@ -152,6 +152,7 @@
                             {"outbound": ["reference_schema", "fk_to_inbound_related_reference_table"]},
                             "id"
                         ]},
+                        ["reference_schema", "system_col_fk_asscoation_related_to_reference"],
                         ["reference_schema", "extra_fk_association_related_to_reference"]
                     ],
                     "compact/select": [
@@ -440,6 +441,82 @@
                 },
                 "tag:isrd.isi.edu,2016:non-deletable": {}
             }
+        },
+        "association_table_with_system_col_fk": {
+            "comment": "has fk to reference_table and inbound_related_reference_table. and also system columns have outbound fk",
+            "kind": "table",
+            "table_name": "association_table_with_system_col_fk",
+            "schema_name": "reference_schema",
+            "keys": [{
+                "unique_columns": ["id_from_ref_table", "id_from_inbound_related_table"]
+            }],
+            "foreign_keys": [
+                {
+                    "names": [
+                        ["reference_schema", "system_col_fk_asscoation_related_to_reference"]
+                    ],
+                    "comment": "fk to reference_table",
+                    "foreign_key_columns": [{
+                        "schema_name": "reference_schema",
+                        "table_name": "association_table_with_system_col_fk",
+                        "column_name": "id_from_ref_table"
+                    }],
+                    "referenced_columns": [{
+                        "schema_name": "reference_schema",
+                        "table_name": "reference_table",
+                        "column_name": "id"
+                    }]
+                },
+                {
+                    "comment": "fk to inbound_related_reference_table",
+                    "foreign_key_columns": [{
+                        "schema_name": "reference_schema",
+                        "table_name": "association_table_with_system_col_fk",
+                        "column_name": "id_from_inbound_related_table"
+                    }],
+                    "referenced_columns": [{
+                        "schema_name": "reference_schema",
+                        "table_name": "inbound_related_reference_table",
+                        "column_name": "id"
+                    }]
+                },
+                {
+                    "foreign_key_columns": [{
+                        "schema_name": "reference_schema",
+                        "table_name": "association_table_with_system_col_fk",
+                        "column_name": "RCB"
+                    }],
+                    "referenced_columns": [{
+                        "schema_name": "reference_schema",
+                        "table_name": "person",
+                        "column_name": "name"
+                    }]
+                },
+                {
+                    "foreign_key_columns": [{
+                        "schema_name": "reference_schema",
+                        "table_name": "association_table_with_system_col_fk",
+                        "column_name": "RMB"
+                    }],
+                    "referenced_columns": [{
+                        "schema_name": "reference_schema",
+                        "table_name": "person",
+                        "column_name": "name"
+                    }]
+                }
+            ],
+            "column_definitions": [
+                {
+                    "name": "id_from_ref_table",
+                    "nullok": false,
+                    "type": {"typename":"text"}
+                },
+                {
+                    "name": "id_from_inbound_related_table",
+                    "nullok": false,
+                    "type": {"typename":"text"}
+                }
+            ]
         },
         "association_table_with_extra": {
             "comment": "has fk to reference_table and inbound_related_reference_table. has an extra column. since it has extra columns, it should not be consdered as association",
@@ -1868,6 +1945,18 @@
                     }
                 }
             }
+        },
+        "person": {
+            "schema_name": "reference_schema",
+            "table_name": "person",
+            "keys": [{"unique_columns": ["name"]}],
+            "column_definitions": [
+                {
+                    "name": "name",
+                    "type": {"typename": "text"},
+                    "nullok": false
+                }
+            ]
         }
     },
     "comment": null,
