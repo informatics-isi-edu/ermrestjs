@@ -1513,6 +1513,18 @@
             return this._isPureBinaryAssociation_cached;
         },
 
+        /**
+         * if the tablei s pure and binary, will return the two foreignkeys that create it
+         * @type {ERMrest.ForeignKeyRef[]}
+         */
+        get pureBinaryForeignKeys () {
+            if(this._pureBinaryForeignKeys_cached === undefined) {
+                // will attach the value of _pureBinaryForeignKeys_cached
+                this._computePureBinaryAssociation();
+            }
+            return this._pureBinaryForeignKeys_cached;
+        },
+
         _computePureBinaryAssociation: function () {
             var isSystemCol = function (col) {
                 return module._systemColumns.indexOf(col.name) !== -1;
@@ -1553,7 +1565,16 @@
             	return col.memberOfKeys.length === 0 && !isSystemCol(col);
             });
 
-            return nonKeyCols.length === 0; // check for purity
+            // check for purity
+            if (nonKeyCols.length === 0) {
+                // attach the value of _pureBinaryForeignKeys
+                this._pureBinaryForeignKeys_cached = nonSystemColumnFks;
+
+                return true;
+            }
+
+            this._pureBinaryForeignKeys_cached = null;
+            return false;
         }
     };
 

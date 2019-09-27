@@ -1765,6 +1765,30 @@
                 "comment": "system_columns_heuristic_table comment"
             }],
             "foreign_keys": [
+                {
+                    "foreign_key_columns": [{
+                        "schema_name": "columns_schema",
+                        "table_name": "system_columns_heuristic_table",
+                        "column_name": "RCB"
+                    }],
+                    "referenced_columns": [{
+                        "schema_name": "columns_schema",
+                        "table_name": "person",
+                        "column_name": "name"
+                    }]
+                },
+                {
+                    "foreign_key_columns": [{
+                        "schema_name": "columns_schema",
+                        "table_name": "system_columns_heuristic_table",
+                        "column_name": "RMB"
+                    }],
+                    "referenced_columns": [{
+                        "schema_name": "columns_schema",
+                        "table_name": "person",
+                        "column_name": "name"
+                    }]
+                }
             ],
             "column_definitions": [
                 {
@@ -1799,6 +1823,18 @@
                 }
             ],
             "annotations": {}
+        },
+        "person": {
+            "schema_name": "reference_schema",
+            "table_name": "person",
+            "keys": [{"unique_columns": ["name"]}],
+            "column_definitions": [
+                {
+                    "name": "name",
+                    "type": {"typename": "text"},
+                    "nullok": false
+                }
+            ]
         }
     }
 }
