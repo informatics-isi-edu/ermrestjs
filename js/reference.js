@@ -2548,7 +2548,7 @@
 
             // check if we should hide some columns or not.
             // NOTE: if the reference is actually an inbound related reference, we should hide the foreign key that created this link.
-            var hasOrigFKR = typeof this.origFKR != "undefined" && this.origFKR !== null && !this.origFKR._table._isPureBinaryAssociation();
+            var hasOrigFKR = typeof this.origFKR != "undefined" && this.origFKR !== null && !this.origFKR._table.isPureBinaryAssociation;
 
             var columns = -1,
                 consideredColumns = {}, // to avoid duplicate pseudo columns
@@ -2792,7 +2792,7 @@
             }
             // heuristics
             else {
-                
+
                 // fetch config option for system columns heuristics (true|false|Array)
                 // if true, add all system columns
                 // if false, don't move system columns definitions within the list
@@ -3228,7 +3228,7 @@
             }
 
             var fkrTable = fkr.colset.columns[0].table;
-            if (checkForAssociation && fkrTable._isPureBinaryAssociation()) { // Association Table                
+            if (checkForAssociation && fkrTable.isPureBinaryAssociation) { // Association Table
 
                 // find the other foreignkey
                 var otherFK, pureBinaryFKs = fkrTable.pureBinaryForeignKeys;

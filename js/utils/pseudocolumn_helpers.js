@@ -621,7 +621,7 @@
         }
 
         var source = [{inbound: fk.constraint_names[0]}];
-        if (eTable._isPureBinaryAssociation()) {
+        if (eTable.isPureBinaryAssociation) {
             var otherFK, pureBinaryFKs = eTable.pureBinaryForeignKeys;
             for (j = 0; j < pureBinaryFKs.length; j++) {
                 if(pureBinaryFKs[j] !== fk) {
@@ -663,7 +663,7 @@
                 return false;
             }
 
-            return fks[0].obj._table._isPureBinaryAssociation();
+            return fks[0].obj._table.isPureBinaryAssociation;
         }
         return fks[0].isInbound;
     };

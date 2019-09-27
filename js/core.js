@@ -1499,22 +1499,26 @@
 
         },
 
-        // figure out if Table is pure and binary association table.
-        // binary: Has 2 outbound foreign keys. there is only a composite key constraint. This key includes all the columns from both foreign keys.
-        // pure: There is no extra column that is not part of any keys.
-        // Execptions
-        //  - the table can have an extra key that is made of one serial type column.
-        //  - system columns are ignored completely (even if they are part of a simple fk)
-        //
-        _isPureBinaryAssociation: function () {
-            if(this._isPureBinaryAssociation_cached === undefined) {
-                this._isPureBinaryAssociation_cached = this._computePureBinaryAssociation();
+        /**
+         * @private
+         * @desc
+         * figure out if Table is pure and binary association table.
+         * binary: Has 2 outbound foreign keys. there is only a composite key constraint. This key includes all the columns from both foreign keys.
+         * pure: There is no extra column that is not part of any keys.
+         * Execptions
+         *  - the table can have an extra key that is made of one serial type column.
+         *  - system columns are ignored completely (even if they are part of a simple fk)
+         * @type {boolean}
+         */
+        get isPureBinaryAssociation () {
+            if(this._isPureBinaryAssociation === undefined) {
+                this._isPureBinaryAssociation = this._computePureBinaryAssociation();
             }
-            return this._isPureBinaryAssociation_cached;
+            return this._isPureBinaryAssociation;
         },
 
         /**
-         * if the tablei s pure and binary, will return the two foreignkeys that create it
+         * if the table is pure and binary, will return the two foreignkeys that create it
          * @type {ERMrest.ForeignKeyRef[]}
          */
         get pureBinaryForeignKeys () {
@@ -1535,7 +1539,7 @@
                 return false; // not binary
             }
 
-            // ignroe the fks that are simple and their constituent column is system col
+            // ignore the fks that are simple and their constituent column is system col
             var nonSystemColumnFks = this.foreignKeys.all().filter(function (fk) {
                 return !(fk.simple && isSystemCol(fk.colset.columns[0]));
             });
@@ -1550,7 +1554,7 @@
                 return res.concat(fk.colset.columns);
             }, []));
 
-            // the key that should contain foreign key columns.
+            // the key that should contain foreign key columns
             var tempKeys = this.keys.all().filter(function(key) {
                 var keyCols = key.colset.columns;
                 return !(keyCols.length == 1 && (module._serialTypes.indexOf(keyCols[0].type.name) != -1 ||  module._systemColumns.indexOf(keyCols[0].name) != -1) && !(keyCols[0] in fkColset.columns));
