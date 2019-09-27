@@ -107,6 +107,8 @@
         'markdown', 'longtext', 'serial2', 'serial4', 'serial8', 'jsonb', 'json'
     ];
 
+    module._serialTypes = ["serial", "serial2", "serial4", "serial8"];
+
     // these types are not allowed for faceting (heuristic or annotation)
     module._facetUnsupportedTypes = [
         "json"
