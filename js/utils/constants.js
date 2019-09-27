@@ -107,6 +107,8 @@
         'markdown', 'longtext', 'serial2', 'serial4', 'serial8', 'jsonb', 'json'
     ];
 
+    module._serialTypes = ["serial", "serial2", "serial4", "serial8"];
+
     // these types are not allowed for faceting (heuristic or annotation)
     module._facetUnsupportedTypes = [
         "json"
@@ -232,7 +234,8 @@
         MULTI_ENT_NEED_AGG: "aggregate functions are required for entity inbound-included paths in non-detailed contexts.",
         NO_AGG_IN_ENTRY: "aggregate functions are not allowed in entry contexts.",
         NO_PATH_IN_ENTRY: "pseudo columns with path are not allowed in entry contexts (only single outbound path is allowed).",
-        INVALID_SELF_LINK: "given source is not a valid self-link."
+        INVALID_SELF_LINK: "given source is not a valid self-link (must be unique not-null).",
+        INVALID_COLUMN_DEF: "column definiton must be an array, object, or string."
     });
 
     module._permissionMessages = Object.freeze({

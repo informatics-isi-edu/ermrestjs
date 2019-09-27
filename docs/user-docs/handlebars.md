@@ -474,7 +474,7 @@ You can use following helper to check for specific equality checks using the def
 
 ### Regular Expression Match
 
-Using the `regexMatch` function you can check whether a given value matches the given regular expression.
+Using the `regexMatch` function you can check whether a given value matches the given regular expression. The regular expression syntax that Javascript supports is a bit different from other languages, please refer to [MDN regular expressions document](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions) for more information.
 
 ```
 {{#if (regexMatch value "jpg|png" )}}

@@ -495,10 +495,8 @@
 
     /**
      * If the column that the sourceObject is representing is in entity mode
-     * It will return true if:
-     *  - entity is not set to false.
-     *  - source is part of a not-null unique key, and has a path.
-     *  - source is part of a not-null unique key, doesn't have path, and has self_link = true.
+     * It will return true if entity is not set to false,
+     * source is part of a not-null unique key, and has a path.
      *
      * @param  {Object} sourceObject the facet object
      * @param  {ERMrest.Column} column      the column objKey
@@ -509,15 +507,27 @@
             return false;
         }
 
+        if (!_sourceHasPath(sourceObject.source)) {
+            return false;
+        }
+
         // column is part of simple key
         var hasKey = !column.nullok && column.memberOfKeys.filter(function (key) {
             return key.simple;
         }).length > 0;
 
-        if (!_sourceHasPath(sourceObject.source)){
-            return hasKey && sourceObject.self_link === true;
-        }
-        return hasKey ;
+        return hasKey;
+    };
+
+    /**
+     * If a column is unique and not null
+     * @param  {ERMrest.Column} column
+     * @return {boolean}
+     */
+    _isColumnUniqueNotNull = function (column) {
+        return !column.nullok && column.memberOfKeys.some(function (key) {
+            return key.simple;
+        });
     };
 
     _sourceHasInbound = function (source) {
@@ -594,7 +604,7 @@
      * @desc generates a name for the given pseudo-column
      */
     _generatePseudoColumnName = function (colObject, column) {
-        if (colObject && (typeof colObject.aggregate === "string") || _sourceHasPath(colObject.source) || _isSourceObjectEntityMode(colObject, column)) {
+        if (colObject && (colObject.self_link === true || (typeof colObject.aggregate === "string") || _sourceHasPath(colObject.source) || _isSourceObjectEntityMode(colObject, column))) {
             return {name: module.generatePseudoColumnHashName(colObject), isHash: true};
         }
 
@@ -611,11 +621,11 @@
         }
 
         var source = [{inbound: fk.constraint_names[0]}];
-        if (eTable._isPureBinaryAssociation()) {
-            var otherFK;
-            for (j = 0; j < eTable.foreignKeys.length(); j++) {
-                if(eTable.foreignKeys.all()[j] !== fk) {
-                    otherFK = eTable.foreignKeys.all()[j];
+        if (eTable.isPureBinaryAssociation) {
+            var otherFK, pureBinaryFKs = eTable.pureBinaryForeignKeys;
+            for (j = 0; j < pureBinaryFKs.length; j++) {
+                if(pureBinaryFKs[j] !== fk) {
+                    otherFK = pureBinaryFKs[j];
                     break;
                 }
             }
@@ -653,7 +663,7 @@
                 return false;
             }
 
-            return fks[0].obj._table._isPureBinaryAssociation();
+            return fks[0].obj._table.isPureBinaryAssociation;
         }
         return fks[0].isInbound;
     };

@@ -215,7 +215,8 @@ exports.execute = function (options) {
                         "main_table_id_col",
                         ["pseudo_column_schema", "main_key1"].join("_"),
                         ["pseudo_column_schema", "main_fk1"].join("_")
-                    ]
+                    ],
+                    "message": "compact/select"
                 }, {
                     "ref": mainRef.contextualize.compactBrief,
                     "expected": [
@@ -223,7 +224,8 @@ exports.execute = function (options) {
                         "main_table_id_col", // this is the normal column
                         ["pseudo_column_schema", "main_key1"].join("_"),
                         ["pseudo_column_schema", "main_fk1"].join("_")
-                    ]
+                    ],
+                    "message": "compact/brief"
                 }]);
             });
 
@@ -997,10 +999,14 @@ exports.execute = function (options) {
                     return col.sourceObject.source;
                 }
                 if (col.isPseudo && (col.isKey || col.isForeignKey || col.isInboundForeignKey)) {
+                    if (col.isKey) {
+                        console.log("HERE: "+ col.key.colset.columns[0].name);
+                    }
+
                     return col._constraintName;
                 }
                 return  col.name;
-            })).toEqual(test.expected);
+            })).toEqual(test.expected, test.message ? test.message : "checkReferenceColumns");
         });
     }
 

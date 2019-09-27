@@ -50,14 +50,17 @@ module._createPseudoColumn = function (reference, column, sourceObject, mainTupl
     }
 
     if (!_sourceHasPath(source)) {
-        if (isEntity && sourceObject.self_link === true) {
-            // no path, entity
-            var key = column.memberOfKeys.filter(function (key) {
+        // make sure the clumn is unique not-null
+        if (sourceObject.self_link === true && !column.nullok) {
+            //make sure the column is part of a simple key
+            var keys = column.memberOfKeys.filter(function (key) {
                 return key.simple;
-            })[0];
-            return new KeyPseudoColumn(reference, key, sourceObject, name);
-        }
+            });
 
+            if (keys.length !== 0) {
+                return new KeyPseudoColumn(reference, keys[0], sourceObject, name);
+            }
+        }
 
         // no path, scalar, asset
         if (column.type.name === "text" && column.annotations.contains(module._annotations.ASSET)) {
@@ -85,7 +88,7 @@ module._createPseudoColumn = function (reference, column, sourceObject, mainTupl
     if (isEntity && source.length === 3 && source[0].inbound && source[1].outbound) {
         fk = getFK(source[0].inbound);
         relatedRef = reference._generateRelatedReference(fk, mainTuple, true, sourceObject);
-        if (fk._table._isPureBinaryAssociation()) {
+        if (fk._table.isPureBinaryAssociation) {
             return new InboundForeignKeyPseudoColumn(reference, relatedRef, sourceObject, name);
         }
     }
