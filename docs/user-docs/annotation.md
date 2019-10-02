@@ -296,7 +296,7 @@ Supported _columnentry_ patterns:
     - `markdown_pattern`: Markdown pattern that will be used for generating the value.
     - `template_engine`: The template engine that should be used for the `markdown_pattern`.
     - `wait_for`: List of pseudo-column sourcekeys that the current column will use in the defined `markdown_pattern`.
-    - `array_ux_mode`: If you have `"aggregate": "array"` or `"aggregate": "array_d"` in the pseudo-column definition, a comma-seperated value will be presented to the user. You can use `array_display` attribute to change that. The available options are,
+    - `array_ux_mode`: If you have `"aggregate": "array"` or `"aggregate": "array_d"` in the pseudo-column definition, a comma-seperated value will be presented to the user. You can use `array_ux_mode` attribute to change that. The available options are,
       - `olist` for ordered bullet list.
       - `ulist` for unordered bullet list.
       - `csv` for comma-seperated values.
