@@ -38,14 +38,20 @@ Note: If the `[<schema name>, <constraint name>]` is an inbound foreign key from
 {
   "source" : <data source>,
   "entity": <true or false>,
+  "aggregate": <aggregate function>,
+  "self_link": <boolean>
   "markdown_name": <display name>,
   "comment": <tooltip message>,
   "display": {
       "markdown_pattern": <pattern>,
       "template_engine": <handlebars or mustache>,
       "wait_for": <wait_for list>,
+      "array_ux_mode": <csv|ulist|olist|raw>
   },
-  "aggregate": <aggregate function>
+  "array_options": {
+    "order": <change the default order>,
+    "max_lengh": <max length>
+  }
 }
 ```
 
@@ -60,21 +66,34 @@ or
       "markdown_pattern": <pattern>,
       "template_engine": <handlebars or mustache>,
       "wait_for": <wait_for list>,
+      "array_ux_mode": <csv|ulist|olist|raw>
+  },
+  "array_options":{
+    "order": <change the default order>,
+    "max_lengh": <max length>
   }
 }
 ```
+
 
 ### Source Definition Attributes
 
 These sets of attributes are used to define a pseudo-column. To detect duplicate pseudo-columns we only look for these attributes.
 
+
 #### source
 To define a pseudo column, you need an object with at least the `source` attribute. Please refer to [facet `data source` syntax](facet-json-structure.md#data-source) for more information on how to define `<data source>`.
+
 
 #### entity (v.s. scalar)
  If the pseudo column can be treated as entity (the column that is defined in data source is key of the table), setting `entity` attribute to `false` will force the scalar mode. This will affect different logic and heuristics. In a nutshell, entity-mode means we try to provide a UX around a set of entities (table rows).  Scalar mode means we try to provide a UX around a set of values like strings, integers, etc.
 
     "entity": false
+
+
+#### self-link
+If you want to show a self-link to the current row, you need to make sure the source is based on a not-null unique column of the current table and add the `"self_link": true` to the definition.
+
 
 #### aggregate
 
@@ -83,21 +102,22 @@ This is only applicable in visible columns definition (Not applicable in Facet d
 - `array` will return ALL the values including duplicates associated with the specified columns. For data types that are sortable (e.g integer, text), the values will be sorted alphabetically or numerically. Otherwise, it displays values in the order that it receives from ERMrest. There is no paging mechanism to limit what's shown in the aggregate column, therefore please USE WITH CARE as it can incur performance overhead and ugly presentation.
 - `array_d` will return the distinct values. It has the same performance overhead as `array`, so pleas USE WITH CARE.
 
-#### self-link
-If you want to show a self-link to the current row, you need to make sure the source is based on a not-null unique column and add the `"self_link": true` to the definition.
 
 #### sourcekey
-Instead of defining a pseudo-column in place, you can define them in the [`source-definitions` annotations](annotation.md#tag-2019-source-definitions), and refer to those definitions using `sourcekey`. If `sourcekey` is defined on a pseudo-column, the rest of source definition attributes defined on the pseudo-column will be ignored.
+Instead of defining a pseudo-column in place, you can define them in the [`source-definitions` annotations](annotation.md#tag-2019-source-definitions), and refer to those definitions using `sourcekey`. If `sourcekey` is defined on a pseudo-column, the rest of _source definition attributes_ defined on the pseudo-column will be ignored (but you still can modify the display and other types of attributes).
+
 
 
 ### Display Attributes
 
 The following attributes can be used to manipulate the display settings of the column.
 
+
 #### markdown_name
 `markdown_name` captures the display name of the column. You can change the default display name by setting the markdown_name attribute.
 
     "markdown_name": "**new name**"
+
 
 #### comment
 
@@ -105,7 +125,9 @@ In Chaise, comment is displayed as tooltip associated with columns. To change th
 
     "comment": "New comment"
 
-### display
+
+
+#### display
 
 By using this attribute you can customize the presented value to the users. The following is the accepted syntax:
 
@@ -115,22 +137,27 @@ By using this attribute you can customize the presented value to the users. The 
     "display": {
         "markdown_pattern": <markdown pattern value>,
         "template_engine": <"handlebars" | "mustache">,
-        "wait_for": <wait_for list>
+        "wait_for": <wait_for list>,
+        "array_ux_mode": <csv|ulist|olist|raw>
     }
 }
 ```
 
+##### markdown_pattern
+
 In the `markdown_pattern` you can access the current pseudo-column data with `$self` namespace alongside the defined source definitions. Please refer to the [pseudo-column display documentation](#pseudo-column-display.md) for more information.
 
-#### aggregate array_display
+##### array_ux_mode
 
-If you have `"aggregate": "array"` or `"aggregate": "array_d"` in your pseudo-column definition, you can use `array_display` attribute to change the display of values. You can use
+If you have `"aggregate": "array"` or `"aggregate": "array_d"` in your pseudo-column definition, you can use `array_ux_mode` attribute to change the display of values. You can use
 - `olist` for ordered bullet list.
 - `ulist` for unordered bullet list.
 - `csv` for comma-seperated values (the default presentation).
+- `raw` for space-seperated values.
 
 
-#### aggregate array_options
+
+#### array_options
 
 If you have `"aggregate": "array"` or `"aggregate": "array_d"` in your pseudo-column definition, you can use `array_options` to change the array of data that client will present. It will not have any effect on the generated ERMrest query and manipulation of the array is happening on the client side. The available options are:
 
@@ -176,6 +203,8 @@ If you have `"aggregate": "array"` or `"aggregate": "array_d"` in your pseudo-co
   }
 }
 ```
+
+
 
 ## Logic And Heuristics
 
