@@ -498,7 +498,7 @@ exports.execute = function (options) {
                 {
                     "column": "timestamp_array",
                     "values": [
-                        "", "", "<p>2016-01-18T13:00:00, <em>No value</em>, 2015-02-18T16:00:00</p>\n", "<p><em>No value</em></p>\n", ""
+                        "", "", "<p>2016-01-18 13:00:00, <em>No value</em>, 2015-02-18 16:00:00</p>\n", "<p><em>No value</em></p>\n", ""
                     ]
                 },
                 {
@@ -561,7 +561,7 @@ exports.execute = function (options) {
                 testValuesByIndex(12, [
                     "",
                     "",
-                    "<ul>\n<li>boolean: false, <em>No value</em>, true</li>\n<li>timestamp: 2016-01-18T13:00:00, <em>No value</em>, 2015-02-18T16:00:00</li>\n<li>numeric: 12,345.2340, <em>No value</em>, -41,232.2300</li>\n</ul>\n",
+                    "<ul>\n<li>boolean: false, <em>No value</em>, true</li>\n<li>timestamp: 2016-01-18 13:00:00, <em>No value</em>, 2015-02-18 16:00:00</li>\n<li>numeric: 12,345.2340, <em>No value</em>, -41,232.2300</li>\n</ul>\n",
                     "<ul>\n<li>boolean: <em>No value</em></li>\n<li>timestamp: <em>No value</em></li>\n<li>numeric: <em>No value</em></li>\n</ul>\n",
                     ""
                 ]);
