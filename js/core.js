@@ -164,6 +164,26 @@
          * @type {ERMrest.Catalogs}
          */
         this.catalogs = null;
+
+        /**
+         * should be used to log information on the server to different log locations
+         * @param {Object} headers - the headers to be logged, should include action
+         * @param {String} location - the path for logging (terminal_error || button_action)
+         **/
+        this.logHeaders = function (actionHeader, location) {
+            var defer = module._q.defer();
+
+            var headers = {};
+            headers[module.contextHeaderName] = actionHeader;
+
+            this.http.head(this.uri + "/" + location, {headers: headers}).then(function () {
+                defer.resolve();
+            }, function (error) {
+                defer.reject(error);
+            });
+
+            return defer.promise;
+        };
     }
 
 
