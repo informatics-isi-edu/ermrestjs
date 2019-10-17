@@ -1,4 +1,4 @@
-pseudo-column-template.md# Base Model Annotation
+# Base Model Annotation
 
 This document defines a set of annotations we suggest may be useful in
 combination with ERMrest. We define a set of _annotation keys_, any
@@ -309,7 +309,7 @@ Supported _columnentry_ patterns:
     - `template_engine`: The template engine that should be used for the `markdown_pattern`.
     - `wait_for`: List of pseudo-column sourcekeys that the current column will use in the defined `markdown_pattern`.
     - `show_foreign_key_links`: It will override the inherited behavior of outbound foreign key displays. Set it to false to avoid adding extra link to the foreign key display.
-    - `array_ux_mode`: If you have `"aggregate": "array"` or `"aggregate": "array_d"` in the pseudo-column definition, a comma-seperated value will be presented to the user. You can use `array_display` attribute to change that. The available options are,
+    - `array_ux_mode`: If you have `"aggregate": "array"` or `"aggregate": "array_d"` in the pseudo-column definition, a comma-seperated value will be presented to the user. You can use `array_ux_mode` attribute to change that. The available options are,
       - `olist` for ordered bullet list.
       - `ulist` for unordered bullet list.
       - `csv` for comma-seperated values.
@@ -440,7 +440,7 @@ Supported JSON payload patterns:
 - `{` ... `"from_name":` _fname_ ... `}`: The _fname_ string is a preferred name for the set of entities containing foreign key references described by this constraint.
 - `{` ... `"to_name":` _tname_ ... `}`: The _tname_ string is a preferred name for the set of entities containing keys described by this constraint.
 - `{` ... `"display": {` _context_`:` _option_ ...`}` ... `}`: Apply each _option_ to the presentation of referenced content for any number of _context_ names.
-- `{` ... `"domain_filter_pattern":` _pattern_ ...`}`: The _pattern_ yields a _filter_ via [Pattern Expansion](#pattern-expansion). The _filter_ is a URL substring using the ERMrest filter language, which can be applied to the referenced table. The _filter_ MUST NOT use any
+- `{` ... `"domain_filter_pattern":` _pattern_ ...`}`: The _pattern_ yields a _filter_ via [Pattern Expansion](#pattern-expansion). The _filter_ is a URL substring using the ERMrest filter language, which can be applied to the referenced table. The defined _filter_ will be appended directly to the reference uri and therefore must be properly url encoded (chaise WILL NOT apply additional url encoding).
 
 Supported display _option_ syntax:
 
