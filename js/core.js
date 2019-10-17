@@ -306,10 +306,10 @@
          * @return {Promise} a promise that returns json object or snaptime if resolved or
          *      {@link ERMrest.ERMrestError} if rejected
          */
-        currentSnaptime: function () {
+        currentSnaptime: function (action) {
             var self = this, defer = module._q.defer(), headers = {};
             headers[module.contextHeaderName] = {
-                action: "model/catalog",
+                action: action || "model/snaptime",
                 catalog: self.id
             };
             this.server.http.get(this._uri, {headers: headers}).then(function (response) {
