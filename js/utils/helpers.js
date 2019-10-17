@@ -535,29 +535,45 @@
     };
 
     /**
+    * @param {ERMrest.Table}
+    */
+    module._getHierarchicalDisplayAnnotationValue = function (obj, context, annotKey, isTable) {
+        var hierarichy = [obj], table, annot, value = -1;
+        var displayAnnot = module._annotations.DISPLAY;
+
+        if (!isTable) {
+            table = obj.table;
+            hierarichy.push(obj.table);
+        } else {
+            table = obj;
+        }
+        hierarichy.push(table.schema, table.schema.catalog);
+
+        for (var i = 0; i < hierarichy.length; i++) {
+            if (!hierarichy[i].annotations.contains(displayAnnot)) continue;
+
+            annot = hierarichy[i].annotations.get(displayAnnot);
+            if (annot && annot.content && annot.content[annotKey]) {
+                value = module._getAnnotationValueByContext(context, annot.content[annotKey]);
+                if (value !== -1) break;
+            }
+        }
+
+        return value;
+    };
+
+    /**
     * @param {object} ref The object that we want the null value for.
     * @param {string} context The context that we want the value of.
     * @param {Array} elements All the possible levels of heirarchy (column, table, schema).
     * @desc returns the null value for the column based on context and annotation and sets in the ref object too.
     */
-    module._getNullValue = function (ref, context, elements) {
+    module._getNullValue = function (ref, context, isTable) {
         if (context in ref._nullValue) { // use the cached value
             return ref._nullValue[context];
         }
 
-        var value = -1,
-            displayAnnot = module._annotations.DISPLAY;
-
-        // first look at the column, then table, and at last schema for annotation.
-        for (var i=0; i < elements.length; i++) {
-            if (elements[i].annotations.contains(displayAnnot)) {
-                var annotation = elements[i].annotations.get(displayAnnot);
-                if(annotation && annotation.content && annotation.content.show_nulls){
-                    value = module._getAnnotationValueByContext(context, annotation.content.show_nulls);
-                    if (value !== -1) break; //found the value
-                }
-            }
-        }
+        var value = module._getHierarchicalDisplayAnnotationValue(ref, context, "show_nulls", isTable);
 
         if (value === false) { //eliminate the field
             value = null;
@@ -1013,9 +1029,10 @@
      * @param  {ERMrest.Key} key   the key of the table
      * @param  {String} context    Current context
      * @param  {object} data       Data for the table that this key is referring to.
+     * @param  {boolean} addLink   whether the function should attach link or just the rowname.
      * @return {Object}            an object with `caption`, and `reference` object which can be used for getting uri.
      */
-    module._generateRowPresentation = function (key, data, context) {
+    module._generateRowPresentation = function (key, data, context, addLink) {
         var presentation = module._generateRowLinkProperties(key, data, context);
 
         if (!presentation) {
@@ -1024,9 +1041,9 @@
 
         var value, unformatted, appLink;
 
-        // if column is hidden, or caption has a link, or  or context is EDIT: don't add the link.
+        // if we don't want link, or caption has a link, or  or context is EDIT: don't add the link.
         // create the link using reference.
-        if (presentation.caption.match(/<a\b.+href=/) || module._isEntryContext(context)) {
+        if (!addLink || presentation.caption.match(/<a\b.+href=/) || module._isEntryContext(context)) {
             value = presentation.caption;
             unformatted = presentation.unformatted;
         } else {
@@ -2829,7 +2846,7 @@
         var res = module._renderTemplate(template, data, table.schema.catalog, options);
 
         if (res === null || res.trim() === '') {
-            res = module._getNullValue(table, context, [table, table.schema]);
+            res = table._getNullValue(context);
             return {isHTML: false, value: res, unformatted: res};
         }
 

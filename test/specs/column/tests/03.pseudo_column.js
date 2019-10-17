@@ -12,7 +12,7 @@
  * 7: inbound_1_fk1 (entity mode) - GUABhSm2h_kaHHPGkzYWeA (InboundForeignKeyPseudoColumn)
  * 8: association (entity mode) - gNTPCP0bGB0GRwFKEATipw (InboundForeignKeyPseudoColumn)
  * 9: association -> inbound_2_fk1 (entity mode) - nGwW9Kpx5sLf8cpX-24WNQ (PseudoColumn)
- * 10: main -> association (entity mode) - 0utuimdZvz8kTU4GI7tzWw (to check users can ignore p&b logic) (InboundForeignKeyPseudoColumn)
+ * 10: main <- association (entity mode) - 0utuimdZvz8kTU4GI7tzWw (to check users can ignore p&b logic) (InboundForeignKeyPseudoColumn)
  * 11: same as 8 with `cnt` aggregate (PseudoColumn)
  * 12: same as 9 with `cnt_d` aggregate (PseudoColumn)
  * 13: same as 10 in non-entity mode with `min` aggregate (PseudoColumn)
@@ -27,8 +27,9 @@
  * 22: asset (AssetPseudoColumn)
  * 23: asset_filename (ReferenceColumn)
  * 24: main -> outbound_2 <- outbound_2_inbound_1 (entity mode)
+ * 25: main -> outbound_2 -> outbound_2_outbound_2 (entity) -  (PseudoColumn)
  *
- * Only the followin indeces are PseudoColumn:
+ * Only the following indeces are PseudoColumn:
  * 4 (outbound len 1, scalar)
  * 5 (outbound len 2)
  * 6 (outbound len 2, scalar)
@@ -133,11 +134,11 @@ exports.execute = function (options) {
              'OpHtewN91L9_3b1Vq-jkOg', 'LHC_G9Tm_jYXQXyNNrZIGA', 'H3B-cJhnO5kI08bThBIMxw',
              'ZJll4WjE6eMk_g5e9WE1rg', 'GFBydDhuUocHxUlF894ntQ', 'vd-zzWca-ApLn2yvu7fx1w',
              '8siu02fMCXJ2DfB4GLv93Q', 'OLbAesieGW5dpAhzqTSzqw', 'MJVZnQ5mBRdCFPfjIOMvkA',
-             "asset", "asset_filename", 'IKxB9JkO83__MmKlV0Nnow'
+             "asset", "asset_filename", 'IKxB9JkO83__MmKlV0Nnow', 'wjUK75uqILcMMo85UxnPnQ'
         ];
 
         var detailedPseudoColumnIndices = [
-            4, 5, 6, 9, 11,12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 24
+            4, 5, 6, 9, 11,12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 24, 25
         ];
 
         var detailedColumnTypes = [
@@ -145,7 +146,7 @@ exports.execute = function (options) {
             "isPathColumn", "isInboundForeignKey", "isInboundForeignKey", "isPathColumn",
             "isInboundForeignKey", "isPathColumn", "isPathColumn", "isPathColumn", "isPathColumn",
             "isPathColumn", "isPathColumn", "isPathColumn", "isPathColumn", "isPathColumn",
-            "isPathColumn", "isPathColumn", "isAsset", "", "isPathColumn"
+            "isPathColumn", "isPathColumn", "isAsset", "", "isPathColumn", "isPathColumn"
         ];
 
         var mainRef, mainRefDetailed, invalidRef, mainRefEntry,
@@ -172,7 +173,7 @@ exports.execute = function (options) {
                 '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:main/main_table_id_col=01">01</a>',
                 '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:outbound_1/RID=' + findRID('outbound_1', 'id','01') + '">01</a>',
                 '<p>01: 10</p>\n', '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:outbound_1_outbound_1/RID=' + findRID('outbound_1_outbound_1', 'id', '01') + '">01</a>',
-                '01', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''
+                '01', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''
             ];
         });
 
@@ -253,7 +254,7 @@ exports.execute = function (options) {
             });
 
             it ("should create the correct columns for valid list of sources.", function () {
-                expect(mainRefDetailed.columns.length).toBe(25, "length missmatch");
+                expect(mainRefDetailed.columns.length).toBe(26, "length missmatch");
                 checkReferenceColumns([{
                     "ref": mainRefDetailed,
                     "expected": [
@@ -325,7 +326,16 @@ exports.execute = function (options) {
                         [{"inbound": ["pseudo_column_schema", "inbound_4_long_table_name_fk"]}, "foreign key column name to main"],
                         "asset",
                         "asset_filename",
-                        [{"outbound": ["pseudo_column_schema", "main_fk2"]}, {"inbound": ["pseudo_column_schema", "outbound_2_inbound_1_fk1"]}, "id"]
+                        [
+                            {"outbound": ["pseudo_column_schema", "main_fk2"]},
+                            {"inbound": ["pseudo_column_schema", "outbound_2_inbound_1_fk1"]},
+                            "id"
+                        ],
+                        [
+                            {"outbound": ["pseudo_column_schema", "main_fk2"]},
+                            {"outbound": ["pseudo_column_schema", "outbound_2_fk1"]},
+                            "id"
+                        ]
                     ]
                 }]);
             });
@@ -434,7 +444,7 @@ exports.execute = function (options) {
 
                 // NOTE faceting will change the last column of more specific pseudo-columns
                 // (ForeignKey, InboundforeignKey, etc.) to the shortestkey.
-                expect(facetColumns.length).toBe(11, "length missmatch.");
+                expect(facetColumns.length).toBe(12, "length missmatch.");
                 expect(facetColumns.map(function (fc) {
                     return fc.dataSource;
                 })).toEqual(
@@ -453,6 +463,11 @@ exports.execute = function (options) {
                             "id"
                         ],
                         "asset_filename",
+                        [
+                            {"outbound": ["pseudo_column_schema", "main_fk2"]},
+                            {"outbound": ["pseudo_column_schema", "outbound_2_fk1"]},
+                            "id"
+                        ],
                         [{"inbound": ["pseudo_column_schema", "inbound_3_outbound_1_fk1"]}, "RID"],
                         [
                             {"inbound": ["pseudo_column_schema", "main_inbound_3_association_fk1"]},
@@ -651,7 +666,7 @@ exports.execute = function (options) {
                         'inbound_2_outbound_1', 'main_inbound_2_association',
                         'main', 'inbound_2', 'inbound_2', 'inbound_2', 'inbound_2',
                         'inbound_2', 'inbound_2', 'inbound 4 long table name',
-                        'main', 'main', 'outbound_2_inbound_1'
+                        'main', 'main', 'outbound_2_inbound_1', 'outbound_2_outbound_2'
                     ]);
                 });
             });
@@ -702,11 +717,20 @@ exports.execute = function (options) {
                         expect(detailedColsWTuple[6].formatPresentation({},"detailed").value).toEqual('', "index=6 missmatch.");
                     });
 
-                    it ("if in entity mode, should apply the foreignkey logic.", function () {
-                        expect(detailedColsWTuple[5].formatPresentation(
-                            {"col": "A value", "id": "101"},
-                            "detailed"
-                        ).value).toEqual('<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:outbound_1_outbound_1/id=101">101</a>', "index=5 missmatch.");
+                    describe("if in entity mode, ", function () {
+                        it ("should apply the foreignkey logic.", function () {
+                            expect(detailedColsWTuple[5].formatPresentation(
+                                {"col": "A value", "id": "101"},
+                                "detailed"
+                            ).value).toEqual('<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:outbound_1_outbound_1/id=101">101</a>', "index=5 missmatch.");
+                        });
+
+                        it ("should not apply the foreignkey logic if the show_foreign_key_links:false is defined.", function () {
+                            expect(detailedColsWTuple[25].formatPresentation(
+                                {"col": "A value", "id": "101"},
+                                "detailed"
+                            ).value).toEqual('101', "index=5 missmatch.");
+                        });
                     });
 
                     it ("otherwise should apply the underlying column logic.", function () {

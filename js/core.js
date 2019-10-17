@@ -283,6 +283,8 @@
         },
 
         /**
+         * This will return the snapshot from the catalog request instead of schema,
+         * because it will return the snapshot based on the model changes.
          * @return {Promise} a promise that returns json object or snaptime if resolved or
          *      {@link ERMrest.ERMrestError} if rejected
          */
@@ -1600,6 +1602,15 @@
 
             this._pureBinaryForeignKeys_cached = null;
             return false;
+        },
+
+        /**
+         * return the null value that should be shown for the columns under
+         * this table for the given context.
+         * @type {object}
+         */
+        _getNullValue: function (context) {
+            return module._getNullValue(this, context, true);
         }
     };
 
@@ -2493,9 +2504,12 @@
             column.name === this.name);
         },
 
-        // find the null value for the column based on context and annotation
+        /**
+         * return the null value for the column based on context and annotation
+         * @type {object}
+         */
         _getNullValue: function (context) {
-            return module._getNullValue(this, context, [this, this.table, this.table.schema]);
+            return module._getNullValue(this, context);
         },
 
         getInputDisabled: function(context) {
@@ -3396,7 +3410,15 @@
      */
     function ForeignKeyRef(table, jsonFKR) {
 
+        /*
+         * @deprecated
+         * TODO
+         * I added `this.table` below and we should remove `this._table`. But
+         * I'm leaving it in for now because I am not sure what I might break.
+         */
         this._table = table;
+
+        this.table = table;
 
         var catalog = table.schema.catalog;
 
@@ -3580,16 +3602,27 @@
 
         getDisplay: function(context) {
             if (!(context in this._display)) {
-                var annotation = -1, columnOrder = [];
+                var self = this, annotation = -1, columnOrder = [], showFKLink = true;
                 if (this.annotations.contains(module._annotations.FOREIGN_KEY)) {
                     annotation = module._getAnnotationValueByContext(context, this.annotations.get(module._annotations.FOREIGN_KEY).get("display"));
-
                 }
 
                 columnOrder = _processColumnOrderList(annotation.column_order, this.key.table);
+                showFKLink = annotation.show_foreign_key_links;
+                if (typeof showFKLink !== "boolean") {
+                    showFKLink = module._getHierarchicalDisplayAnnotationValue(
+                        self, context, "show_foreign_key_links"
+                    );
+
+                    // default true for all the contexts
+                    if (typeof showFKLink !== "boolean") {
+                        showFKLink = true;
+                    }
+                }
 
                 this._display[context] = {
                     "columnOrder": columnOrder,
+                    "showForeignKeyLinks": showFKLink
                 };
             }
 
