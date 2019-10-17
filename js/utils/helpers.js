@@ -1144,7 +1144,7 @@
 
       if (generatedErrMessage.indexOf("violates foreign key constraint") > -1 && actionFlag == module._operationsFlag.DELETE) {
 
-          var referenceTable = "another";
+          var referenceTable = "";
 
           var detail = generatedErrMessage.search(/DETAIL:/g);
           if (detail > -1) {
@@ -1163,7 +1163,7 @@
 
               for(var i = 0; i < relatedRef.length; i++){
                   key  = relatedRef[i];
-                  if(key.origFKR.constraint_names["0"][1] == fkConstraint && key.origFKR._table.name == refTable){
+                  if(key.origFKR && key.origFKR.constraint_names["0"][1] == fkConstraint && key.origFKR._table.name == refTable){
                     referenceTable = key.displayname.value;
                     siteAdminMsg = "";
                     break;
@@ -1171,7 +1171,12 @@
                 }
             }
 
-          referenceTable =  "the <code>"+ referenceTable +"</code>";
+          // make sure referenceTable is defined first
+          if (referenceTable) {
+              referenceTable =  "the <code>"+ referenceTable +"</code>";
+          } else {
+              referenceTable = "another";
+          }
 
           // NOTE we cannot make any assumptions abou tthe table name. for now we just show the table name that database sends us.
           mappedErrMessage = "This entry cannot be deleted as it is still referenced from " + referenceTable +" table. \n All dependent entries must be removed before this item can be deleted." + siteAdminMsg;
