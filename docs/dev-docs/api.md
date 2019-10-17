@@ -67,6 +67,7 @@ to use for ERMrest JavaScript agents.
         * [.cid](#ERMrest.Server+cid) : <code>string</code>
         * [.pid](#ERMrest.Server+pid) : <code>string</code>
         * [.catalogs](#ERMrest.Server+catalogs) : [<code>Catalogs</code>](#ERMrest.Catalogs)
+        * [.logHeaders(headers, location)](#ERMrest.Server+logHeaders)
     * [.Catalogs](#ERMrest.Catalogs)
         * [new Catalogs(server)](#new_ERMrest.Catalogs_new)
         * [.length()](#ERMrest.Catalogs+length) ⇒ <code>Number</code>
@@ -695,6 +696,7 @@ to use for ERMrest JavaScript agents.
     * [.cid](#ERMrest.Server+cid) : <code>string</code>
     * [.pid](#ERMrest.Server+pid) : <code>string</code>
     * [.catalogs](#ERMrest.Server+catalogs) : [<code>Catalogs</code>](#ERMrest.Catalogs)
+    * [.logHeaders(headers, location)](#ERMrest.Server+logHeaders)
 
 <a name="new_ERMrest.Server_new"></a>
 
@@ -733,6 +735,18 @@ page-id: shows the id of the page that this server is being used for
 
 #### server.catalogs : [<code>Catalogs</code>](#ERMrest.Catalogs)
 **Kind**: instance property of [<code>Server</code>](#ERMrest.Server)  
+<a name="ERMrest.Server+logHeaders"></a>
+
+#### server.logHeaders(headers, location)
+should be used to log information on the server to different log locations
+
+**Kind**: instance method of [<code>Server</code>](#ERMrest.Server)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| headers | <code>Object</code> | the headers to be logged, should include action |
+| location | <code>String</code> | the path for logging (terminal_error || button_action) |
+
 <a name="ERMrest.Catalogs"></a>
 
 ### ERMrest.Catalogs

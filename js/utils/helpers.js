@@ -1639,6 +1639,7 @@
     _formatValueByType = function(type, data, options) {
         var utils = module._formatUtils;
         switch(type.name) {
+            case 'timestamp':
             case 'timestamptz':
                 data = utils.printTimestamp(data, options);
                 break;
