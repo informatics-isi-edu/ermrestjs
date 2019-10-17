@@ -1,4 +1,4 @@
-pseudo-column-template.md# Base Model Annotation
+# Base Model Annotation
 
 This document defines a set of annotations we suggest may be useful in
 combination with ERMrest. We define a set of _annotation keys_, any
