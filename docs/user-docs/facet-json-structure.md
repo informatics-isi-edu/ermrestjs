@@ -40,6 +40,7 @@ Even if we are faceting on a vocabulary concept and just want the user to pick v
 > Based on this, we are not supporting filtering on foreign keys with composite keys.
 
 
+<!-- TODO this has not been implemented yet
 ### Specific occurrences of rows
 
 If we ever need to model a set of constraints where the same related entity  row must simultaneously satisfy multiple facet constraints, we could add these optional instance identifier to the path elements:
@@ -57,7 +58,7 @@ the binding and use of "A" above wouldn't actually change the meaning unless ano
 When querying ERMrest, we would detect that the same instance ID is in use and map these to constrain the *same* joined table instance in the query. By default, each path element without a pre-assigned ID should get a new, unique ID assigned. Thus, every source path would imply a different joined table instance for each separate constraint.
 
 Some extra validation work may be needed once we introduce specific occurrence IDs. For example, the same instance ID cannot be assigned to elements at different depths in a source path nor to elements with different constraints. All paths with shared IDs must be identical in structure for the shared components, but may branch off with unshared suffixes.
-
+-->
 
 ## Constraints
 
@@ -78,66 +79,131 @@ A half-open range might be `{"min" lower}` or `{"max": upper}`. By default both 
 
 ## Extra Attributes
 
-
-
 #### entity v.s. scalar facet
  If the facet can be treated as entity (the column that is being used for facet is key of the table), setting `entity` attribute to `false` will force the facet to show scalar mode.
 
-    "entity": false
+```javascript
+"entity": false
+```
 
+<!-- Not implemented
 #### Mix-ins
 If a multi-modal facet control UX is available, we might even mix-in several forms of constraint on the same source. We also probably need a way to specify the preferred `ux_mode` when the facets are first rendered. For now, these options are `choices`, `search`, or `range`. We can change these values when we are done withe the UX. :
 
     {"source": "Column1", "choices": ["outlier"], "search": ["sub"], "ranges": [{"min": "xylephone"], "ux mode":"choices"}
 
 The mixing of several constraints would be disjunctive to be consistent with the disjunctive list of options in each constraint.
+-->
 
-
-#### Displayname
+#### markdown_name
 
 To change the default displayname of facets, `markdown_name` can be used.
 
-    "markdown_name": "**new name**"
+```javascript
+"markdown_name": "**new name**"
+```
 
+#### open
+
+Using `open` you can force the facet to open by default.
+
+```javascript
+"open": true
+```
+
+#### ux_mode
+
+ If a multi-modal facet control UX is available, it will specify the default UX mode that should be used (If `ux_mode` is defined, the other type of constraint will not be displayed even if you have defined it in the annotation). The available options are
+  - `choices`: for a list of selectable values.
+  - `ranges`: for providing a range input.
+  - `check_presence`: Will present only two options to the users, "null" and "not-null".
+
+### hide_null_choice/hide_not_null_choice
+
+If applicable we are going to add "null" and "not-null" options in the choice picker by default. Setting any of these variables to `true`, will hide its respective option.
+
+
+### bar_plot
+
+This attribute is meant to be an object of properties that control the display of the histogram. Setting this attribute to `false` will force the histogram to not be shown in the facet in the facet panel. If unspecified, default is `true` (or show the histogram). Available options in this object are:
+
+  - `n_bins`: Used to define the number of bins the histogram uses to fetch and display data. If undefined, default is 30 bins.
+
+### order
+
+Using this attribute you can modify the default sort order of _scalar_ facets (entity facets will use the row_order defined on the table). Its syntax is simmilar to `column_order`.
+
+Assuming your path ends with column `COL`, the default order is the following:
+
+```javascript
+[
+    {"num_occurrences": true, "descending": true},
+    {"column": "COL", "descending": false}
+]
+```
+
+As you can see, you can use `"num_occurrences": true` to refer to the number of occurrences (frequency) column.
+
+## hide_num_occurrences
+
+In _scalar_ facets we show an extra column called "number of occurrences". Use this attribute to hide the column from users.
+
+```javascript
+    "hide_num_occurrences": true
+```
 
 
 ## Examples
 
-- Consider this logical filter set:
-    - and
-       - column1 multi-choice 1, 2, 3
-       - column2 across S1:FK1 range [5,10]
 
-    It can be encoded in the following JSON using the above abbreviation techniques:
+### Example 1
+Consider this logical filter set:
+  - and
+    - column1 multi-choice 1, 2, 3
+    - column2 across S1:FK1 range [5,10]
 
-        {
-          "and": [
-            {"source": "column1", "choices": [1, 2, 3]},
-            {"source": [{"inbound": ["S1", "FK1"]}, "column2"], "ranges": [{"min": 5, "max": 10}]}
-          ]
-        }
+It can be encoded in the following JSON using the above abbreviation techniques:
 
-    Which will be translated to the following in ermrest syntax:
+```javascript
+{
+  "and": [
+    {"source": "column1", "choices": [1, 2, 3]},
+    {"source": [{"inbound": ["S1", "FK1"]}, "column2"], "ranges": [{"min": 5, "max": 10}]}
+  ]
+}
+```
 
-        /M:=S:T/(column1=1;column1=2;column1=3)/$M/(fk)=(S1:T2:key)/(column2::gt::5&column2::lt::10)/$M
+Which will be translated to the following in ermrest syntax:
 
-- A more complex example that this structure can support but as the first implementation we are not supporting:
+    /M:=S:T/(column1=1;column1=2;column1=3)/$M/(fk)=(S1:T2:key)/(column2::gt::5&column2::lt::10)/$M
+
+
+### Example 2
+
+A more complex example that this structure can support but as the first implementation we are not supporting:
 
 JSON object:
 
-        {
-            "and": [
-                 {
-                     "or": [
-                         {"source": "c1", "ranges": [{"min": 1, "max": 5}]},
-                         {"source": "c2", "choices":[1, 2]}
-                     ]
-                 },
-                 {"source": [{"inbound": ["S1", "FK1"]}, "c3"], "search": ["text"]}
-            ]
-        }
+```javascript
+{
+    "and": [
+         {
+             "or": [
+                 {"source": "c1", "ranges": [{"min": 1, "max": 5}]},
+                 {"source": "c2", "choices":[1, 2]}
+             ]
+         },
+         {"source": [{"inbound": ["S1", "FK1"]}, "c3"], "search": ["text"]}
+    ]
+}
+```
 
 which translates to:
 
 
-        /M:=S:T/(c1::gt::1&c1::lt::5);(c2=1;c2=1)/$M/(fk)=(S1:T2)/(c3::ciregexp::text)/$M
+    /M:=S:T/(c1::gt::1&c1::lt::5);(c2=1;c2=1)/$M/(fk)=(S1:T2)/(c3::ciregexp::text)/$M
+
+
+### More Examples
+
+For more examples please refer to the [facet examples document](facet-examples.md).
