@@ -688,6 +688,8 @@ exports.execute = function (options) {
             var val;
             describe('for pseudoColumns, ', function () {
                 describe('for foreign keys, ', function () {
+                    // NOTE The show_foreign_key_links are in a separate spec
+
                     it('should return the correct link.', function () {
                         val = compactColumns[20].formatPresentation(data, 'compact').value;
 

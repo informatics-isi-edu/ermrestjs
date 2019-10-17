@@ -129,6 +129,7 @@ to use for ERMrest JavaScript agents.
             * [.pureBinaryForeignKeys](#ERMrest.Table+pureBinaryForeignKeys) : [<code>Array.&lt;ForeignKeyRef&gt;</code>](#ERMrest.ForeignKeyRef)
             * [._getRowDisplayKey(context)](#ERMrest.Table+_getRowDisplayKey)
             * [.getExportTemplates()](#ERMrest.Table+getExportTemplates) : <code>Array</code> \| <code>null</code>
+            * [._getNullValue()](#ERMrest.Table+_getNullValue) : <code>object</code>
         * _static_
             * [.Entity](#ERMrest.Table.Entity)
                 * [new Entity(server, table)](#new_ERMrest.Table.Entity_new)
@@ -182,6 +183,7 @@ to use for ERMrest JavaScript agents.
         * [.formatvalue(data, context)](#ERMrest.Column+formatvalue) ⇒ <code>string</code> \| <code>Array.&lt;string&gt;</code>
         * [.formatPresentation(data, context, options)](#ERMrest.Column+formatPresentation) ⇒ <code>Object</code>
         * [.toString()](#ERMrest.Column+toString) ⇒ <code>string</code>
+        * [._getNullValue()](#ERMrest.Column+_getNullValue) : <code>object</code>
         * [.getDisplay(context)](#ERMrest.Column+getDisplay)
         * [.compare(a, b)](#ERMrest.Column+compare) ⇒ <code>integer</code>
     * [.Annotations](#ERMrest.Annotations)
@@ -396,6 +398,7 @@ to use for ERMrest JavaScript agents.
         * [.formatvalue(data, context)](#ERMrest.ReferenceColumn+formatvalue) ⇒ <code>string</code>
         * [.formatPresentation(data, context, options)](#ERMrest.ReferenceColumn+formatPresentation) ⇒ <code>Object</code>
         * [.getInputDisabled()](#ERMrest.ReferenceColumn+getInputDisabled) : <code>boolean</code> \| <code>object</code>
+        * [._getShowForeignKeyLinks(context)](#ERMrest.ReferenceColumn+_getShowForeignKeyLinks) ⇒ <code>boolean</code>
         * [.sourceFormatPresentation(templateVariables, columnValue, mainTuple)](#ERMrest.ReferenceColumn+sourceFormatPresentation) ⇒ <code>Object</code>
     * [.PseudoColumn](#ERMrest.PseudoColumn)
         * [new PseudoColumn(reference, column, sourceObject, name, mainTuple)](#new_ERMrest.PseudoColumn_new)
@@ -832,6 +835,9 @@ The catalog identifier.
 <a name="ERMrest.Catalog+currentSnaptime"></a>
 
 #### catalog.currentSnaptime() ⇒ <code>Promise</code>
+This will return the snapshot from the catalog request instead of schema,
+because it will return the snapshot based on the model changes.
+
 **Kind**: instance method of [<code>Catalog</code>](#ERMrest.Catalog)  
 **Returns**: <code>Promise</code> - a promise that returns json object or snaptime if resolved or
      [ERMrestError](#ERMrest.ERMrestError) if rejected  
@@ -1086,6 +1092,7 @@ get table by table name
         * [.pureBinaryForeignKeys](#ERMrest.Table+pureBinaryForeignKeys) : [<code>Array.&lt;ForeignKeyRef&gt;</code>](#ERMrest.ForeignKeyRef)
         * [._getRowDisplayKey(context)](#ERMrest.Table+_getRowDisplayKey)
         * [.getExportTemplates()](#ERMrest.Table+getExportTemplates) : <code>Array</code> \| <code>null</code>
+        * [._getNullValue()](#ERMrest.Table+_getNullValue) : <code>object</code>
     * _static_
         * [.Entity](#ERMrest.Table.Entity)
             * [new Entity(server, table)](#new_ERMrest.Table.Entity_new)
@@ -1236,6 +1243,13 @@ It's the same as displaykey but with extra restrictions. It might return undefin
 Returns the export templates that are defined on this table.
 NOTE If this returns `null`, then the exportTemplates is not defined on the table or schema
 NOTE The returned template might not have `outputs` attribute.
+
+**Kind**: instance method of [<code>Table</code>](#ERMrest.Table)  
+<a name="ERMrest.Table+_getNullValue"></a>
+
+#### table.\_getNullValue() : <code>object</code>
+return the null value that should be shown for the columns under
+this table for the given context.
 
 **Kind**: instance method of [<code>Table</code>](#ERMrest.Table)  
 <a name="ERMrest.Table.Entity"></a>
@@ -1573,6 +1587,7 @@ Constructor for Columns.
     * [.formatvalue(data, context)](#ERMrest.Column+formatvalue) ⇒ <code>string</code> \| <code>Array.&lt;string&gt;</code>
     * [.formatPresentation(data, context, options)](#ERMrest.Column+formatPresentation) ⇒ <code>Object</code>
     * [.toString()](#ERMrest.Column+toString) ⇒ <code>string</code>
+    * [._getNullValue()](#ERMrest.Column+_getNullValue) : <code>object</code>
     * [.getDisplay(context)](#ERMrest.Column+getDisplay)
     * [.compare(a, b)](#ERMrest.Column+compare) ⇒ <code>integer</code>
 
@@ -1731,6 +1746,12 @@ returns string representation of Column
 
 **Kind**: instance method of [<code>Column</code>](#ERMrest.Column)  
 **Returns**: <code>string</code> - string representation of Column  
+<a name="ERMrest.Column+_getNullValue"></a>
+
+#### column.\_getNullValue() : <code>object</code>
+return the null value for the column based on context and annotation
+
+**Kind**: instance method of [<code>Column</code>](#ERMrest.Column)  
 <a name="ERMrest.Column+getDisplay"></a>
 
 #### column.getDisplay(context)
@@ -3770,6 +3791,7 @@ count aggregate representation
     * [.formatvalue(data, context)](#ERMrest.ReferenceColumn+formatvalue) ⇒ <code>string</code>
     * [.formatPresentation(data, context, options)](#ERMrest.ReferenceColumn+formatPresentation) ⇒ <code>Object</code>
     * [.getInputDisabled()](#ERMrest.ReferenceColumn+getInputDisabled) : <code>boolean</code> \| <code>object</code>
+    * [._getShowForeignKeyLinks(context)](#ERMrest.ReferenceColumn+_getShowForeignKeyLinks) ⇒ <code>boolean</code>
     * [.sourceFormatPresentation(templateVariables, columnValue, mainTuple)](#ERMrest.ReferenceColumn+sourceFormatPresentation) ⇒ <code>Object</code>
 
 <a name="new_ERMrest.ReferenceColumn_new"></a>
@@ -3919,6 +3941,23 @@ object: input msut be disabled (show .message to user)
 TODO should be removed in favor of inputDisabled
 
 **Kind**: instance method of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
+<a name="ERMrest.ReferenceColumn+_getShowForeignKeyLinks"></a>
+
+#### referenceColumn.\_getShowForeignKeyLinks(context) ⇒ <code>boolean</code>
+Whether we should show the link for the foreignkey value.
+this can be based on:
+ - sourceObject.display.show_foreign_key_links
+ - or, show_foreign_key_links defined on the last foreignKey display annotation
+ - or, show_foreign_key_links defined on the table, schema, or catalog
+TODO this function shouldn't accept context and instead should just use the current context.
+But before that we have to refactor .formatPresentation functions to use the current context
+
+**Kind**: instance method of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
+
+| Param | Type |
+| --- | --- |
+| context | <code>string</code> | 
+
 <a name="ERMrest.ReferenceColumn+sourceFormatPresentation"></a>
 
 #### referenceColumn.sourceFormatPresentation(templateVariables, columnValue, mainTuple) ⇒ <code>Object</code>

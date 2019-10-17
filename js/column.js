@@ -492,7 +492,35 @@ ReferenceColumn.prototype = {
         if (this._simple) {
             return this._baseCols[0]._getNullValue(context);
         }
-        return module._getNullValue(this.table, context, [this.table, this.table.schema]);
+        return this.table._getNullValue(context);
+    },
+
+    /**
+     * Whether we should show the link for the foreignkey value.
+     * this can be based on:
+     *  - sourceObject.display.show_foreign_key_links
+     *  - or, show_foreign_key_links defined on the last foreignKey display annotation
+     *  - or, show_foreign_key_links defined on the table, schema, or catalog
+     * TODO this function shouldn't accept context and instead should just use the current context.
+     * But before that we have to refactor .formatPresentation functions to use the current context
+     * @param {string} context
+     * @return {boolean}
+     */
+    _getShowForeignKeyLinks: function (context) {
+        var self = this;
+
+        // not applicable
+        if (!Array.isArray(self.foreignKeys) || self.foreignKeys.length === 0) {
+            return true;
+        }
+
+        // find it in the source syntax
+        if (self.sourceObject.display && typeof self.sourceObject.display.show_foreign_key_links === "boolean") {
+          return self.sourceObject.display.show_foreign_key_links;
+        }
+
+        // get it from the foreignkey (which might be derived from catalog, schema, or table)
+        return self.foreignKeys[0].obj.getDisplay(context).showForeignKeyLinks;
     },
 
     /**
@@ -783,7 +811,7 @@ PseudoColumn.prototype.formatPresentation = function(data, context, options) {
     }
 
     // in entity mode, return the foreignkey value
-    var pres = module._generateRowPresentation(this._lastForeignKey.obj.key, data, context);
+    var pres = module._generateRowPresentation(this._lastForeignKey.obj.key, data, context, this._getShowForeignKeyLinks(context));
     return pres ? pres: nullValue;
 };
 
@@ -888,7 +916,7 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
     // will format a single value
     var getFormattedValue = function (val) {
         if (isRow) {
-            var pres = module._generateRowPresentation(self._key, val, context);
+            var pres = module._generateRowPresentation(self._key, val, context, self._getShowForeignKeyLinks(context));
             return pres ? pres.unformatted : null;
         }
         if (val == null || val === "") {
@@ -998,7 +1026,7 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
             );
 
             if (res === null || res.trim() === '') {
-                res = module._getNullValue(column.table, context, [column.table, column.table.schema]);
+                res = column.table._getNullValue(context);
             }
         }
         return {value: module.renderMarkdown(res, false), templateVariables: templateVariables};
@@ -1121,7 +1149,7 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
                 );
 
                 if (res === null || res.trim() === '') {
-                    res = module._getNullValue(column.table, context, [column.table, column.table.schema]);
+                    res = column.table._getNullValue(context);
                     isHTML = false;
                 }
             }
@@ -1563,6 +1591,7 @@ function ForeignKeyPseudoColumn (reference, fk, sourceObject, name) {
     this.foreignKey = fk;
 
     // TODO for compatibility
+    this._lastForeignKey = {obj: fk, isInbound: false};
     this.foreignKeys = [{obj: fk, isInbound: false}];
 
     this._constraintName = this.foreignKey._constraintName;
@@ -1721,7 +1750,7 @@ ForeignKeyPseudoColumn.prototype.formatPresentation = function(data, context, op
         );
     }
 
-    var pres = module._generateRowPresentation(this.foreignKey.key, data, context);
+    var pres = module._generateRowPresentation(this.foreignKey.key, data, context, this._getShowForeignKeyLinks(context));
     return pres ? pres: nullValue;
 };
 ForeignKeyPseudoColumn.prototype._determineSortable = function () {

@@ -4385,7 +4385,7 @@
                 );
 
                 if (pattern === null || pattern.trim() === '') {
-                    pattern = module._getNullValue(ref.table, ref._context, [ref.table, ref.table.schema]);
+                    pattern = ref.table._getNullValue(ref._context);
                 }
 
                 return module.renderMarkdown(pattern, false);
@@ -4426,7 +4426,7 @@
                 pattern = module._renderTemplate(ref.display._pageMarkdownPattern, {$page: $page}, ref.table.schema.catalog, { templateEngine: ref.display.templateEngine});
 
                 if (pattern === null || pattern.trim() === '') {
-                    pattern = module._getNullValue(ref.table, ref._context, [ref.table, ref.table.schema]);
+                    pattern = ref.table._getNullValue(ref._context);
                 }
 
                 return module.renderMarkdown(pattern, false);
@@ -4445,7 +4445,7 @@
 
                     // If value is null or empty, return value on basis of `show_nulls`
                     if (value === null || value.trim() === '') {
-                        value = module._getNullValue(ref.table, ref._context, [ref.table, ref.table.schema]);
+                        value = ref.table._getNullValue(ref._context);
                     }
                     // If final value is not null then push it in values array
                     if (value !== null) {

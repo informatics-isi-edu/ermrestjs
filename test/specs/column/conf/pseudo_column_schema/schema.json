@@ -207,7 +207,13 @@
                         {"source": [{"inbound": ["pseudo_column_schema", "inbound_4_long_table_name_fk"]}, "foreign key column name to main"], "aggregate": "cnt", "markdown_name": "**Count Agg**", "comment": "has long values"},
                         {"source": "asset", "markdown_name": "Asset name", "comment": "asset cm", "markdown_name": "**asset**"},
                         {"source": "asset_filename", "markdown_name": "filename"},
-                        {"source": [{"outbound": ["pseudo_column_schema", "main_fk2"]}, {"inbound": ["pseudo_column_schema", "outbound_2_inbound_1_fk1"]}, "id"]}
+                        {"source": [{"outbound": ["pseudo_column_schema", "main_fk2"]}, {"inbound": ["pseudo_column_schema", "outbound_2_inbound_1_fk1"]}, "id"]},
+                        {"source": [
+                            {"outbound": ["pseudo_column_schema", "main_fk2"]},
+                            {"outbound": ["pseudo_column_schema", "outbound_2_fk1"]},
+                            "id"
+                        ], "entity": true, "display": {"show_foreign_key_links":false}}
+
                     ],
                     "entry": "detailed",
                     "compact/select": [
@@ -838,10 +844,52 @@
             "table_name": "outbound_2",
             "schema_name": "pseudo_column_schema",
             "keys": [{"unique_columns": ["id"]}],
+            "foreign_keys": [
+                {
+                    "names": [["pseudo_column_schema", "outbound_2_fk1"]],
+                    "foreign_key_columns": [{
+                        "column_name": "fk",
+                        "table_name": "outbound_2",
+                        "schema_name": "pseudo_column_schema"
+                    }],
+                    "referenced_columns": [{
+                        "column_name": "id",
+                        "table_name": "outbound_2_outbound_2",
+                        "schema_name": "pseudo_column_schema"
+                    }]
+                }
+            ],
             "column_definitions": [
                 {
                     "name": "id",
                     "nullok": false,
+                    "type": {"typename": "text"}
+                },
+                {
+                    "name": "fk",
+                    "type": {"typename": "text"}
+                }
+            ]
+        },
+        "outbound_2_outbound_2": {
+            "comment": "outbound_2_outbound_2 comment",
+            "table_name": "outbound_2_outbound_2",
+            "schema_name": "pseudo_column_schema",
+            "kind": "table",
+            "keys": [{"unique_columns": ["id"]}],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {"typename": "text"},
+                    "annotations": {
+                        "tag:misd.isi.edu,2015:display": {
+                            "name": "outbound_2_outbound_2 id name"
+                        }
+                    }
+                },
+                {
+                    "name": "col",
                     "type": {"typename": "text"}
                 }
             ]
