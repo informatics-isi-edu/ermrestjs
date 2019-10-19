@@ -157,7 +157,7 @@ ReferenceColumn.prototype = {
         if (this._displayname === undefined) {
             if (this.sourceObject.markdown_name) {
                 this._displayname = {
-                    value: module._formatUtils.printMarkdown(this.sourceObject.markdown_name, {inline:true}),
+                    value: module.renderMarkdown(this.sourceObject.markdown_name, true),
                     unformatted: this.sourceObject.markdown_name,
                     isHTML: true
                 };
@@ -492,7 +492,35 @@ ReferenceColumn.prototype = {
         if (this._simple) {
             return this._baseCols[0]._getNullValue(context);
         }
-        return module._getNullValue(this.table, context, [this.table, this.table.schema]);
+        return this.table._getNullValue(context);
+    },
+
+    /**
+     * Whether we should show the link for the foreignkey value.
+     * this can be based on:
+     *  - sourceObject.display.show_foreign_key_links
+     *  - or, show_foreign_key_links defined on the last foreignKey display annotation
+     *  - or, show_foreign_key_links defined on the table, schema, or catalog
+     * TODO this function shouldn't accept context and instead should just use the current context.
+     * But before that we have to refactor .formatPresentation functions to use the current context
+     * @param {string} context
+     * @return {boolean}
+     */
+    _getShowForeignKeyLinks: function (context) {
+        var self = this;
+
+        // not applicable
+        if (!Array.isArray(self.foreignKeys) || self.foreignKeys.length === 0) {
+            return true;
+        }
+
+        // find it in the source syntax
+        if (self.sourceObject.display && typeof self.sourceObject.display.show_foreign_key_links === "boolean") {
+          return self.sourceObject.display.show_foreign_key_links;
+        }
+
+        // get it from the foreignkey (which might be derived from catalog, schema, or table)
+        return self.foreignKeys[0].obj.getDisplay(context).showForeignKeyLinks;
     },
 
     /**
@@ -783,7 +811,7 @@ PseudoColumn.prototype.formatPresentation = function(data, context, options) {
     }
 
     // in entity mode, return the foreignkey value
-    var pres = module._generateRowPresentation(this._lastForeignKey.obj.key, data, context);
+    var pres = module._generateRowPresentation(this._lastForeignKey.obj.key, data, context, this._getShowForeignKeyLinks(context));
     return pres ? pres: nullValue;
 };
 
@@ -825,7 +853,6 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
         location = this._baseReference.location,
         http = this._baseReference._server.http,
         column = this._baseCols[0],
-        printUtils = module._formatUtils,
         keyColName, keyColNameEncoded,
         baseUri, basePath, uri, i, fk, str, projection;
 
@@ -889,7 +916,7 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
     // will format a single value
     var getFormattedValue = function (val) {
         if (isRow) {
-            var pres = module._generateRowPresentation(self._key, val, context);
+            var pres = module._generateRowPresentation(self._key, val, context, self._getShowForeignKeyLinks(context));
             return pres ? pres.unformatted : null;
         }
         if (val == null || val === "") {
@@ -944,7 +971,7 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
         }
 
         // formatted array result
-        var arrayRes = printUtils.printArray(
+        var arrayRes = module._formatUtils.printArray(
             val.map(getFormattedValue),
             {
                 isMarkdown: (column.type.name === "markdown") || isRow,
@@ -999,10 +1026,10 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
             );
 
             if (res === null || res.trim() === '') {
-                res = module._getNullValue(column.table, context, [column.table, column.table.schema]);
+                res = column.table._getNullValue(context);
             }
         }
-        return {value: printUtils.printMarkdown(res), templateVariables: templateVariables};
+        return {value: module.renderMarkdown(res, false), templateVariables: templateVariables};
     };
 
     // return empty list if page is empty
@@ -1122,13 +1149,13 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
                 );
 
                 if (res === null || res.trim() === '') {
-                    res = module._getNullValue(column.table, context, [column.table, column.table.schema]);
+                    res = column.table._getNullValue(context);
                     isHTML = false;
                 }
             }
 
             if (isHTML) {
-                res = printUtils.printMarkdown(res);
+                res = module.renderMarkdown(res, false);
             }
 
             result.push({isHTML: isHTML, value: res, templateVariables: templateVariables});
@@ -1258,7 +1285,7 @@ Object.defineProperty(PseudoColumn.prototype, "displayname", {
             var attachDisplayname = function (self) {
                 if (self.sourceObject.markdown_name) {
                     self._displayname = {
-                        value: module._formatUtils.printMarkdown(self.sourceObject.markdown_name, {inline:true}),
+                        value: module.renderMarkdown(self.sourceObject.markdown_name, true),
                         unformatted: self.sourceObject.markdown_name,
                         isHTML: true
                     };
@@ -1564,6 +1591,7 @@ function ForeignKeyPseudoColumn (reference, fk, sourceObject, name) {
     this.foreignKey = fk;
 
     // TODO for compatibility
+    this._lastForeignKey = {obj: fk, isInbound: false};
     this.foreignKeys = [{obj: fk, isInbound: false}];
 
     this._constraintName = this.foreignKey._constraintName;
@@ -1722,7 +1750,7 @@ ForeignKeyPseudoColumn.prototype.formatPresentation = function(data, context, op
         );
     }
 
-    var pres = module._generateRowPresentation(this.foreignKey.key, data, context);
+    var pres = module._generateRowPresentation(this.foreignKey.key, data, context, this._getShowForeignKeyLinks(context));
     return pres ? pres: nullValue;
 };
 ForeignKeyPseudoColumn.prototype._determineSortable = function () {
@@ -1816,7 +1844,7 @@ Object.defineProperty(ForeignKeyPseudoColumn.prototype, "displayname", {
             var foreignKey = this.foreignKey, value, isHTML, unformatted;
             if (this.sourceObject.markdown_name) {
                 unformatted = this.sourceObject.markdown_name;
-                value = module._formatUtils.printMarkdown(unformatted, {inline:true});
+                value = module.renderMarkdown(unformatted, true);
                 isHTML = true;
             } else if (foreignKey.to_name !== "") {
                 value = unformatted = foreignKey.to_name;
@@ -2032,7 +2060,7 @@ Object.defineProperty(KeyPseudoColumn.prototype, "displayname", {
         if (this._displayname === undefined) {
             if (this.sourceObject.markdown_name) {
                 this._displayname = {
-                    value: module._formatUtils.printMarkdown(this.sourceObject.markdown_name, {inline:true}),
+                    value: module.renderMarkdown(this.sourceObject.markdown_name, true),
                     unformatted: this.sourceObject.markdown_name,
                     isHTML: true
                 };
@@ -2166,7 +2194,7 @@ AssetPseudoColumn.prototype.getMetadata = function (data, context, options) {
     var self = this;
 
     var result = {
-        url: "", caption: "", filename: "", byteCount: "", md5: "", sha256: "", sameOrigin: false, hostInformation: ""
+        url: "", caption: "", filename: "", byteCount: "", md5: "", sha256: "", sameHost: false, hostInformation: ""
     };
 
     // if null, return null value
@@ -2187,23 +2215,16 @@ AssetPseudoColumn.prototype.getMetadata = function (data, context, options) {
         urlCaption = true;
     }
 
-    // see if link contains absolute paths that start with https:// or http://
-    var hasProtocol = new RegExp('^(?:[a-z]+:)?//', 'i').test(result.url);
-    var urlParts = result.url.split("/");
-
     // assume same origin because most paths should be relative
-    var sameOrigin = true;
-    if (hasProtocol) {
-        var assetOrigin = urlParts[0] + "//" + urlParts[2];
-        // will be the current origin + '/ermrest'
-        var currentOrigin = this.table.schema.catalog.server.uri;
-        sameOrigin = (currentOrigin.indexOf(assetOrigin) == 0);
-    } // else, path is relative, so same origin
+    var sameHost = module._isSameHost(result.url) !== false;
 
-    result.sameOrigin = sameOrigin;
+    result.sameHost = sameHost;
 
     // in detailed, we want to show the host information if not on the same origin
-    if (!sameOrigin && typeof context === "string" && context === module._contexts.DETAILED) {
+    if (!sameHost && typeof context === "string" && context === module._contexts.DETAILED) {
+        // see if link contains absolute paths that start with https:// or http://
+        var hasProtocol = new RegExp('^(?:[a-z]+:)?//', 'i').test(result.url);
+        var urlParts = result.url.split("/");
 
         // only match absolute paths that start with https:// or http://
         if (hasProtocol && urlParts.length >= 3) {
@@ -2292,17 +2313,18 @@ AssetPseudoColumn.prototype.formatPresentation = function(data, context, options
     }
 
     // var currentOrigin = server.url.origin
+    var classNames = module._classNames;
     var metadata = this.getMetadata(data, context, options);
     var caption = metadata.caption,
         hostInfo = metadata.hostInformation,
-        sameOrigin = metadata.sameOrigin;
+        sameHost = metadata.sameHost;
 
     // otherwise return a download link
-    var template = "[{{{caption}}}]({{{url}}}){download .download " + (sameOrigin ? ".asset-permission" : ".external-link") + "}";
+    var template = "[{{{caption}}}]({{{url}}}){download ." + classNames.download + " " + (sameHost ? "." + classNames.assetPermission : "") + "}";
     var url = data[this._baseCol.name];
 
     // only add query parameters if same origin
-    if (sameOrigin) {
+    if (sameHost) {
         // add the uinit=1 query params
         url += ( url.indexOf("?") !== -1 ? "&": "?") + "uinit=1";
 
@@ -2320,7 +2342,7 @@ AssetPseudoColumn.prototype.formatPresentation = function(data, context, options
         template += ":span:(source: {{{hostInfo}}}):/span:{.asset-source-description}";
     }
     var unformatted = module._renderTemplate(template, keyValues, this.table.schema.catalog);
-    return {isHTML: true, value: module._formatUtils.printMarkdown(unformatted, {inline:true}), unformatted: unformatted};
+    return {isHTML: true, value: module.renderMarkdown(unformatted, true), unformatted: unformatted};
 };
 
 /**
@@ -2987,7 +3009,7 @@ FacetColumn.prototype = {
             var getDisplayname = function (self) {
                 if (self._facetObject.markdown_name) {
                     return {
-                        value: module._formatUtils.printMarkdown(self._facetObject.markdown_name, {inline:true}),
+                        value: module.renderMarkdown(self._facetObject.markdown_name, true),
                         unformatted: self._facetObject.markdown_name,
                         isHTML: true
                     };

@@ -24,6 +24,50 @@
     };
 
     /**
+     * This function will be called to set the config object
+     * @param {object}
+     */
+    module.setClientConfig = function (clientConfig) {
+        var defer = module._q.defer();
+
+        var inp = isObjectAndNotNull(clientConfig) ? clientConfig : {};
+        var res = {};
+
+        var defaultConfig = {
+            internalHosts: {"type": "array", "value": []},
+            disableExternalLinkModal: {"type": "boolean", "value": false}
+        };
+
+        // make sure the value is correct and has the valid type
+        for (var key in defaultConfig) {
+            if (!defaultConfig.hasOwnProperty(key)) continue;
+            var def = defaultConfig[key];
+
+            if (def.type === "array") {
+                res[key] = Array.isArray(inp[key]) ? inp[key] : def.value;
+            } else if (typeof inp[key] === def.type) {
+                res[key] = inp[key];
+            } else {
+                res[key] = def.value;
+            }
+        }
+
+        module._clientConfig = res;
+
+        // now that the client-config is done, call the functions that are using it:
+        module.onload().then(function () {
+            module._markdownItLinkOpenAddExternalLink();
+            return defer.resolve(), defer.promise;
+        }).catch(function (err) {
+            // fail silently
+            console.log("couldn't apply the client-config changes");
+            return defer.resolve(), defer.promise;
+        });
+
+        return defer.promise;
+    };
+
+    /**
      * This function resolves a URI reference to a {@link ERMrest.Reference}
      * object. It validates the syntax of the URI and validates that the
      * references to model elements in it are correct. This function makes a
@@ -3295,7 +3339,7 @@
             // if markdown_name in source object is defined
             if (sourceObject && sourceObject.markdown_name) {
                 newRef._displayname = {
-                    "value": module._formatUtils.printMarkdown(sourceObject.markdown_name, {inline:true}),
+                    "value": module.renderMarkdown(sourceObject.markdown_name, true),
                     "unformatted": sourceObject.markdown_name,
                     "isHTML": true
                 };
@@ -4320,6 +4364,7 @@
 
         getContent: function (templateVariables) {
             var self = this, ref = this._ref;
+
             if (!self._data || !self._data.length) return null;
 
             var i, value, pattern, values = [], keyValues;
@@ -4340,10 +4385,10 @@
                 );
 
                 if (pattern === null || pattern.trim() === '') {
-                    pattern = module._getNullValue(ref.table, ref._context, [ref.table, ref.table.schema]);
+                    pattern = ref.table._getNullValue(ref._context);
                 }
 
-                return module._formatUtils.printMarkdown(pattern);
+                return module.renderMarkdown(pattern, false);
             }
 
             // page_markdown_pattern
@@ -4381,10 +4426,10 @@
                 pattern = module._renderTemplate(ref.display._pageMarkdownPattern, {$page: $page}, ref.table.schema.catalog, { templateEngine: ref.display.templateEngine});
 
                 if (pattern === null || pattern.trim() === '') {
-                    pattern = module._getNullValue(ref.table, ref._context, [ref.table, ref.table.schema]);
+                    pattern = ref.table._getNullValue(ref._context);
                 }
 
-                return module._formatUtils.printMarkdown(pattern);
+                return module.renderMarkdown(pattern, false);
             }
 
             // row_markdown_pattern
@@ -4400,7 +4445,7 @@
 
                     // If value is null or empty, return value on basis of `show_nulls`
                     if (value === null || value.trim() === '') {
-                        value = module._getNullValue(ref.table, ref._context, [ref.table, ref.table.schema]);
+                        value = ref.table._getNullValue(ref._context);
                     }
                     // If final value is not null then push it in values array
                     if (value !== null) {
@@ -4409,7 +4454,7 @@
                 }
                 // Join the values array using the separator and prepend it with the prefix and append suffix to it.
                 pattern = ref.display._prefix + values.join(ref.display._separator) + ref.display._suffix;
-                return module._formatUtils.printMarkdown(pattern);
+                return module.renderMarkdown(pattern, false);
             }
 
             // no markdown_pattern, just return the list of row-names in this context (row_name/<context>)
@@ -4421,7 +4466,7 @@
                 values.push("* ["+ rowName.unformatted +"](" + url + ") " + ref.display._separator);
             }
             pattern = ref.display._prefix + values.join(" ") + ref.display._suffix;
-            return module._formatUtils.printMarkdown(pattern);
+            return module.renderMarkdown(pattern, false);
         },
 
         /**

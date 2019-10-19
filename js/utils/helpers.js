@@ -104,6 +104,12 @@
         return (typeof x === 'number') && (x % 1 === 0);
     };
 
+    var verifyClientConfig = function () {
+        if (module._clientConfig === null) {
+            throw new module.InvalidInputError("this function requires cliet-config which is not set properly.");
+        }
+    };
+
     /**
      * Check if object has all the keys in the given array
      * @param  {Object} obj the object
@@ -416,7 +422,7 @@
 
                 //get the markdown display name
                 if(display_annotation.content.markdown_name) {
-                    value = module._formatUtils.printMarkdown(display_annotation.content.markdown_name, { inline: true });
+                    value = module.renderMarkdown(display_annotation.content.markdown_name, true);
                     unformatted = display_annotation.content.name ? display_annotation.content.name : display_annotation.content.markdown_name;
                     hasDisplayName = true;
                     isHTML = true;
@@ -456,7 +462,7 @@
         // if name was not specified and name styles are defined, apply the heuristic functions (name styles)
         if(useName && !hasDisplayName && element._nameStyle){
             if(element._nameStyle.markdown){
-                value = module._formatUtils.printMarkdown(element.name, { inline: true });
+                value = module.renderMarkdown(element.name, true);
                 isHTML = true;
             } else {
                 if(element._nameStyle.underline_space){
@@ -529,29 +535,45 @@
     };
 
     /**
+    * @param {ERMrest.Table}
+    */
+    module._getHierarchicalDisplayAnnotationValue = function (obj, context, annotKey, isTable) {
+        var hierarichy = [obj], table, annot, value = -1;
+        var displayAnnot = module._annotations.DISPLAY;
+
+        if (!isTable) {
+            table = obj.table;
+            hierarichy.push(obj.table);
+        } else {
+            table = obj;
+        }
+        hierarichy.push(table.schema, table.schema.catalog);
+
+        for (var i = 0; i < hierarichy.length; i++) {
+            if (!hierarichy[i].annotations.contains(displayAnnot)) continue;
+
+            annot = hierarichy[i].annotations.get(displayAnnot);
+            if (annot && annot.content && annot.content[annotKey]) {
+                value = module._getAnnotationValueByContext(context, annot.content[annotKey]);
+                if (value !== -1) break;
+            }
+        }
+
+        return value;
+    };
+
+    /**
     * @param {object} ref The object that we want the null value for.
     * @param {string} context The context that we want the value of.
     * @param {Array} elements All the possible levels of heirarchy (column, table, schema).
     * @desc returns the null value for the column based on context and annotation and sets in the ref object too.
     */
-    module._getNullValue = function (ref, context, elements) {
+    module._getNullValue = function (ref, context, isTable) {
         if (context in ref._nullValue) { // use the cached value
             return ref._nullValue[context];
         }
 
-        var value = -1,
-            displayAnnot = module._annotations.DISPLAY;
-
-        // first look at the column, then table, and at last schema for annotation.
-        for (var i=0; i < elements.length; i++) {
-            if (elements[i].annotations.contains(displayAnnot)) {
-                var annotation = elements[i].annotations.get(displayAnnot);
-                if(annotation && annotation.content && annotation.content.show_nulls){
-                    value = module._getAnnotationValueByContext(context, annotation.content.show_nulls);
-                    if (value !== -1) break; //found the value
-                }
-            }
-        }
+        var value = module._getHierarchicalDisplayAnnotationValue(ref, context, "show_nulls", isTable);
 
         if (value === false) { //eliminate the field
             value = null;
@@ -911,7 +933,7 @@
         }
 
         return {
-            "value": module._formatUtils.printMarkdown(pattern, { inline: true }),
+            "value": module.renderMarkdown(pattern, true),
             "unformatted": pattern,
             "isHTML": true
         };
@@ -961,7 +983,7 @@
                 {templateEngine: display.templateEngine}
             );
             unformatted = (unformatted === null || unformatted.trim() === '') ? "" : unformatted;
-            caption = module._formatUtils.printMarkdown(unformatted, { inline: true });
+            caption = module.renderMarkdown(unformatted, true);
         } else {
             var values = [], unformattedValues = [];
 
@@ -1007,9 +1029,10 @@
      * @param  {ERMrest.Key} key   the key of the table
      * @param  {String} context    Current context
      * @param  {object} data       Data for the table that this key is referring to.
+     * @param  {boolean} addLink   whether the function should attach link or just the rowname.
      * @return {Object}            an object with `caption`, and `reference` object which can be used for getting uri.
      */
-    module._generateRowPresentation = function (key, data, context) {
+    module._generateRowPresentation = function (key, data, context, addLink) {
         var presentation = module._generateRowLinkProperties(key, data, context);
 
         if (!presentation) {
@@ -1018,9 +1041,9 @@
 
         var value, unformatted, appLink;
 
-        // if column is hidden, or caption has a link, or  or context is EDIT: don't add the link.
+        // if we don't want link, or caption has a link, or  or context is EDIT: don't add the link.
         // create the link using reference.
-        if (presentation.caption.match(/<a\b.+href=/) || module._isEntryContext(context)) {
+        if (!addLink || presentation.caption.match(/<a\b.+href=/) || module._isEntryContext(context)) {
             value = presentation.caption;
             unformatted = presentation.unformatted;
         } else {
@@ -1562,7 +1585,7 @@
                 // Add the ending backtick at the end
                 formattedSeq += '`';
 
-                // Run it through printMarkdown to get the sequence in a fixed-width font
+                // Run it through renderMarkdown to get the sequence in a fixed-width font
                 return module._markdownIt.renderInline(formattedSeq);
             } catch (e) {
                 console.log("Couldn't parse the given markdown value: " + value);
@@ -1621,6 +1644,7 @@
     _formatValueByType = function(type, data, options) {
         var utils = module._formatUtils;
         switch(type.name) {
+            case 'timestamp':
             case 'timestamptz':
                 data = utils.printTimestamp(data, options);
                 break;
@@ -1666,8 +1690,8 @@
      * @return {string} A string representation of value
      * @desc public function to access markdown it renderer
      */
-    module.renderMarkdown = function(value, options) {
-      return module._formatUtils.printMarkdown(value, options);
+    module.renderMarkdown = function(value, inline) {
+      return module._formatUtils.printMarkdown(value, {inline: inline});
     };
 
     module._parsedFilterToERMrestFilter = function(filter, table) {
@@ -2212,6 +2236,88 @@
         });
     };
 
+    /**
+     * @private
+     * @desc
+     * Change the link_open function to add classes to links, based on clientConfig
+     * It will add
+     *  - external-link-icon
+     *  - exteranl-link if clientConfig.disableExternalLinkModal is not true
+     *
+     * NOTE we should call this function only ONCE when the setClientConfig is done
+     */
+    module._markdownItLinkOpenAddExternalLink = function () {
+        verifyClientConfig();
+
+        // if we haven't changed the function yet, and there's no internalHosts then don't do anything
+        if (typeof module._markdownItDefaultLinkOpenRenderer === "undefined" && module._clientConfig.internalHosts.length === 0) {
+            return;
+        }
+
+        // make sure we're calling this just once
+        if (typeof module._markdownItDefaultLinkOpenRenderer === "undefined") {
+            module._markdownItDefaultLinkOpenRenderer = module._markdownIt.renderer.rules.link_open || function(tokens, idx, options, env, self) {
+                return self.renderToken(tokens, idx, options);
+            };
+        }
+
+        // the classes that we should add
+        var className = module._classNames.externalLinkIcon;
+        if (module._clientConfig.disableExternalLinkModal !== true) {
+            className += " " + module._classNames.externalLink;
+        }
+        module._markdownIt.renderer.rules.link_open = function (tokens, idx, options, env, self) {
+            var token = tokens[idx];
+
+            // find the link value
+            var hrefIndex = token.attrIndex('href');
+            if (hrefIndex < 0) return;
+            var href = token.attrs[hrefIndex][1];
+
+            // only add the class if it's not the same origin
+            if (module._isSameHost(href) === false) {
+                var cIndex = token.attrIndex('class');
+                if (cIndex < 0) {
+                    token.attrPush(['class', className]);
+                } else {
+                    token.attrs[cIndex][1] += " " + className;
+                }
+            }
+
+            return module._markdownItDefaultLinkOpenRenderer(tokens, idx, options, env, self);
+        };
+    };
+
+    /**
+     * @desc
+     * Given a url and origin, test whether the url has the host.
+     * Returns `null` if we cannot determine the origin.
+     *
+     * @function
+     * @private
+     * @param  {string} url    url string
+     * @return {boolean|null}
+     */
+    module._isSameHost = function (url) {
+        // chaise-config internalHosts are not defined, so we cannot determine
+        if (!isObjectAndNotNull(module._clientConfig) || module._clientConfig.internalHosts.length == 0) return null;
+
+        var hasProtocol = new RegExp('^(?:[a-z]+:)?//', 'i').test(url);
+
+        // if the url doesn't have origin (relative)
+        if (!hasProtocol) return true;
+
+        var urlParts = url.split("/");
+
+        // invalid url format: cannot determine the origin
+        if (urlParts.length < 3) return null;
+
+        // actual comparission of the origin
+        return module._clientConfig.internalHosts.some(function (host) {
+            return typeof host === "string" && host.length > 0 && urlParts[2].indexOf(host) === 0;
+        });
+    };
+
     // Characters to replace Markdown special characters
     module._escapeReplacementsForMarkdown = [
       [ /\*/g, '\\*' ],
@@ -2746,12 +2852,11 @@
         var res = module._renderTemplate(template, data, table.schema.catalog, options);
 
         if (res === null || res.trim() === '') {
-            res = module._getNullValue(table, context, [table, table.schema]);
+            res = table._getNullValue(context);
             return {isHTML: false, value: res, unformatted: res};
         }
 
-        var utils = module._formatUtils;
-        return {isHTML: true, value: utils.printMarkdown(res, options), unformatted: res};
+        return {isHTML: true, value: module.renderMarkdown(res, false), unformatted: res};
     };
 
     // module._constraintNames[catalogId][schemaName][constraintName] will return an object.

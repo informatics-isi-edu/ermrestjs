@@ -49,7 +49,7 @@ here is a quick matrix to locate them.
 
 | Annotation                                                  | Catalog | Schema | Table | Column | Key | FKR | Summary                                       |
 |-------------------------------------------------------------|---------|--------|-------|--------|-----|-----|-----------------------------------------------|
-| [2015 Display](#tag-2015-display)                           | -       | X      | X     | X      | X   | -   | Display options                               |
+| [2015 Display](#tag-2015-display)                           | X       | X      | X     | X      | X   | -   | Display options                               |
 | [2015 Vocabulary](#tag-2015-vocabulary)                     | -       | -      | X     | -      | -   | -   | Table as a vocabulary list                    |
 | [2016 Table Alternatives](#tag-2016-table-alternatives)     | -       | -      | X     | -      | _   | _   | Table abstracts another table                 |
 | [2016 Column Display](#tag-2016-column-display)             | -       | -      | -     | X      | -   | -   | Column-specific display options               |
@@ -93,6 +93,7 @@ Supported JSON payload patterns:
 - `{`... `"markdown_name"`: _markdown_ `}`: The _markdown_ to use in place of the model element's original name.
 - `{`... `"name_style":` `{` `"underline_space"`: _uspace_ `,` `"title_case":` _tcase_ `,` `"markdown"`: _render_ `}` ...`}`: Element name conversion instructions.
 - `{`... `"show_nulls":` `{` _ncontext_ `:` _nshow_ `,` ... `}`: How to display NULL data values.
+- `{`... `"show_foreign_key_links":` `{` _ncontext_ `:` _fklink_ `,` ... `}`: Whether default display of foreign keys should include link to the row.
 
 Supported JSON _uspace_ patterns:
 
@@ -115,6 +116,11 @@ Supported JSON _nshow_ patterns:
 - `"` _marker_ `"` (a quoted string literal): For any string literal _marker_, display the marker text value in place of NULLs.
 - `false`: Completely eliminate the field if feasible in the presentation.
 
+Supported JSON _fklink_ patterns:
+
+- `true`: Present the foreign key values with a link to the referred row.
+- `false`: Present the foreign key values without adding extra links.
+
 See [Context Names](#context-names) section for the list of supported JSON _ncontext_ patterns.
 
 #### Tag: 2015 Display Settings Hierarchy
@@ -123,9 +129,15 @@ See [Context Names](#context-names) section for the list of supported JSON _ncon
   - The `"markdown_name"` setting takes precedence if both are specified.
 - The `"name_style"` setting applies to the annotated model element and is also the default for any nested element.
 - The `"show_nulls"` settings applies to the annotated model element and is also the default for any nested element.
+  - The annotation is allowed on catalog in order to set the default for all schemas in the catalog.
   - The annotation is allowed on schemas in order to set the default for all tables in the schema.
   - Each _ncontext_ `:` _nshow_ instruction overrides the inherited instruction for the same _ncontext_ while still deferring to the inherited annotation for any unspecified _ncontext_. The `"*"` wildcard _ncontext_ allows masking of any inherited instruction.
   - A global default is assumed: `{`... `"show_nulls": { "detailed": false, "*": true` ... `}`
+- The `"show_foreign_key_links"` settings applies to the annotated model element and is also the default for any nested element.
+  - The annotation is allowed on catalog in order to set the default for all schemas in the catalog.
+  - The annotation is allowed on schemas in order to set the default for all tables in the schema.
+  - Each _ncontext_ `:` _fklink_ instruction overrides the inherited instruction for the same _ncontext_ while still deferring to the inherited annotation for any unspecified _ncontext_. The `"*"` wildcard _ncontext_ allows masking of any inherited instruction.
+  - A global default is assumed: `{`... `"show_foreign_key_links": { "*": true` ... `}`
 
 This annotation provides an override guidance for Chaise applications using a hierarchical scoping mode:
 
@@ -296,6 +308,7 @@ Supported _columnentry_ patterns:
     - `markdown_pattern`: Markdown pattern that will be used for generating the value.
     - `template_engine`: The template engine that should be used for the `markdown_pattern`.
     - `wait_for`: List of pseudo-column sourcekeys that the current column will use in the defined `markdown_pattern`.
+    - `show_foreign_key_links`: It will override the inherited behavior of outbound foreign key displays. Set it to false to avoid adding extra link to the foreign key display.
     - `array_ux_mode`: If you have `"aggregate": "array"` or `"aggregate": "array_d"` in the pseudo-column definition, a comma-seperated value will be presented to the user. You can use `array_ux_mode` attribute to change that. The available options are,
       - `olist` for ordered bullet list.
       - `ulist` for unordered bullet list.
@@ -433,6 +446,8 @@ Supported display _option_ syntax:
 
 - `"column_order"`: `[` _columnorder_key_ ... `]`: An alternative sort method to apply when a client wants to semantically sort by foreign key values.
 - `"column_order": false`: Sorting by this foreign key psuedo-column should not be offered.
+- `"show_foreign_key_links: true"`: Override the inherited behavior of foreign key display and add a link to the referred row.
+- `"show_foreign_key_links: false"`: Override the inherited behavior of foreign key display by not adding any extra links.
 
 Supported _columnorder_key_ syntax:
 

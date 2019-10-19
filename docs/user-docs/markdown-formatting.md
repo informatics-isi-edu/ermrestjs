@@ -5,6 +5,7 @@ The renderer that we use ([markdown-it](https://github.com/markdown-it/markdown-
 ## Table of Contents
   * [Inline Vs. Block](#inline-vs-block)
   * [Attributes](#attributes)
+    + [Special Classes](#special-classes)
   * [Examples](#examples)
     + [1. Link (Anchor)](#1-link--anchor-)
     + [2. Download Button](#2-download-button)
@@ -103,6 +104,21 @@ You can attach attributes to any element in your markdown. Generally you can att
 > <table class="class-name"><thead><tr><th>heading</th></tr></thead><tbody><tr><td>text</td></tr></tbody></table>
 
 
+### Special Classes
+
+The following is the list of special class names that you can use:
+
+- `.chaise-btn`: This class is used to represent buttons. You should use it in conjunction with any of the following classes:
+    - `.chaise-btn-primary`
+    - `.chaise-btn-secondary`
+    - `.chaise-btn-tertiary`
+- `.download-alt`: Use this class to represent a download button. `.download` is the old and alternative class for it.
+- `.asset-permission`: If used on a link element, chaise will validate whether the user can download the asset before a download is attempted.
+- `.external-link`: By adding this to links, chaise shows a notification to the user when they are being navigated away from chaise for external links and assets hosted elsewhere.
+- `.external-link-no-icon`: By default we're going to add a icon to any external links. If you don't want it in a particular link, you can use this class.
+- `.vocab`: Use this to represent a vocabulary.
+
+
 ## Examples
 
 ### 1. Link (Anchor)
@@ -135,13 +151,18 @@ You can attach attributes to the link.
 
 Download button is a link with some predefined attributes. You can use these attributes to ensure consistent display for the download buttons:
   - `download` and `target="_blank"` will allow it to open in a new tab and trigger the browser's default download behavior.
-  - `.download` will apply download button styling to the link. 
-  - `.asset-permission` can be added to validate whether the user can download the asset or not before a download is attempted.
+  - `.download-alt` will change the link to look like the following:
+![download-alt btn](https://raw.githubusercontent.com/informatics-isi-edu/ermrestjs/master/docs/resources/download-alt-btn.png)
+
+  - `.download` will change the link to look like the following:
+![download btn](https://raw.githubusercontent.com/informatics-isi-edu/ermrestjs/master/docs/resources/download-btn.png)
+
+  - `.asset-permission` can be added to validate whether the user can download the asset before a download is attempted.
   - `.external-link` can be added to show a notification to the user when they are being navigated away from chaise for external links and assets hosted elsewhere.
 
 Example:
 ```html
-[Jquery Download](https://code.jquery.com/jquery-3.1.0.js){download .download .asset-permission}
+[Filename](https://code.jquery.com/jquery-3.1.0.js){download .download-alt .asset-permission}
 
 # OUTPUT:
 <p>

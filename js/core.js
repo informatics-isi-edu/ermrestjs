@@ -54,6 +54,14 @@
 
      module._systemColumnsHeuristicsMode = function () {};
 
+     /**
+      * the client configs. this includes the following attributes:
+      * - originAliases
+      * - disableExternalLinkModal
+      * @type {Object}
+      */
+     module._clientConfig = null;
+
     /**
      * @memberof ERMrest
      * @function
@@ -118,6 +126,19 @@
         this.uri = uri;
 
         /**
+         * The host of the uri
+         * @type {String}
+         */
+        this.host = "";
+        var hasProtocol = new RegExp('^(?:[a-z]+:)?//', 'i').test(uri);
+        if (hasProtocol) {
+            var urlParts = uri.split("/");
+            if (urlParts.length >= 3) {
+                this.host = urlParts[2];
+            }
+        }
+
+        /**
          * The wrapped http service for this server instance.
          * @private
          * @type {Object}
@@ -143,6 +164,26 @@
          * @type {ERMrest.Catalogs}
          */
         this.catalogs = null;
+
+        /**
+         * should be used to log information on the server to different log locations
+         * @param {Object} headers - the headers to be logged, should include action
+         * @param {String} location - the path for logging (terminal_error || button_action)
+         **/
+        this.logHeaders = function (actionHeader, location) {
+            var defer = module._q.defer();
+
+            var headers = {};
+            headers[module.contextHeaderName] = actionHeader;
+
+            this.http.head(this.uri + "/" + location, {headers: headers}).then(function () {
+                defer.resolve();
+            }, function (error) {
+                defer.reject(error);
+            });
+
+            return defer.promise;
+        };
     }
 
 
@@ -262,13 +303,15 @@
         },
 
         /**
+         * This will return the snapshot from the catalog request instead of schema,
+         * because it will return the snapshot based on the model changes.
          * @return {Promise} a promise that returns json object or snaptime if resolved or
          *      {@link ERMrest.ERMrestError} if rejected
          */
-        currentSnaptime: function () {
+        currentSnaptime: function (action) {
             var self = this, defer = module._q.defer(), headers = {};
             headers[module.contextHeaderName] = {
-                action: "model/catalog",
+                action: action || "model/snaptime",
                 catalog: self.id
             };
             this.server.http.get(this._uri, {headers: headers}).then(function (response) {
@@ -1579,6 +1622,15 @@
 
             this._pureBinaryForeignKeys_cached = null;
             return false;
+        },
+
+        /**
+         * return the null value that should be shown for the columns under
+         * this table for the given context.
+         * @type {object}
+         */
+        _getNullValue: function (context) {
+            return module._getNullValue(this, context, true);
         }
     };
 
@@ -2186,7 +2238,9 @@
         this.formatPresentation = function(data, context, options) {
             data = data || {};
 
-            var utils = module._formatUtils;
+            if (options === undefined || options !== Object(options)) {
+                options = {};
+            }
 
             var display = this.getDisplay(context);
 
@@ -2213,7 +2267,7 @@
                 return {
                     isHTML: true,
                     unformatted: unformatted,
-                    value: utils.printMarkdown(unformatted, options)
+                    value: module.renderMarkdown(unformatted, options.inline)
                 };
             }
 
@@ -2235,9 +2289,6 @@
                 var template = display.markdownPattern; // pattern
 
                 // Code to do template/string replacement using keyValues
-                if (options === undefined || options !== Object(options)) {
-                    options = {};
-                }
                 if (options.formattedValues === undefined) {
                     options.formattedValues = module._getFormattedKeyValues(this.table, context, data);
                 }
@@ -2255,7 +2306,7 @@
             /*
              * Call printmarkdown to generate HTML from the final generated string after templating and return it
              */
-             value = utils.printMarkdown(unformatted, options);
+             value = module.renderMarkdown(unformatted, options.inline);
 
              return { isHTML: true, value: value, unformatted: unformatted };
 
@@ -2473,9 +2524,12 @@
             column.name === this.name);
         },
 
-        // find the null value for the column based on context and annotation
+        /**
+         * return the null value for the column based on context and annotation
+         * @type {object}
+         */
         _getNullValue: function (context) {
-            return module._getNullValue(this, context, [this, this.table, this.table.schema]);
+            return module._getNullValue(this, context);
         },
 
         getInputDisabled: function(context) {
@@ -3376,7 +3430,15 @@
      */
     function ForeignKeyRef(table, jsonFKR) {
 
+        /*
+         * @deprecated
+         * TODO
+         * I added `this.table` below and we should remove `this._table`. But
+         * I'm leaving it in for now because I am not sure what I might break.
+         */
         this._table = table;
+
+        this.table = table;
 
         var catalog = table.schema.catalog;
 
@@ -3560,16 +3622,27 @@
 
         getDisplay: function(context) {
             if (!(context in this._display)) {
-                var annotation = -1, columnOrder = [];
+                var self = this, annotation = -1, columnOrder = [], showFKLink = true;
                 if (this.annotations.contains(module._annotations.FOREIGN_KEY)) {
                     annotation = module._getAnnotationValueByContext(context, this.annotations.get(module._annotations.FOREIGN_KEY).get("display"));
-
                 }
 
                 columnOrder = _processColumnOrderList(annotation.column_order, this.key.table);
+                showFKLink = annotation.show_foreign_key_links;
+                if (typeof showFKLink !== "boolean") {
+                    showFKLink = module._getHierarchicalDisplayAnnotationValue(
+                        self, context, "show_foreign_key_links"
+                    );
+
+                    // default true for all the contexts
+                    if (typeof showFKLink !== "boolean") {
+                        showFKLink = true;
+                    }
+                }
 
                 this._display[context] = {
                     "columnOrder": columnOrder,
+                    "showForeignKeyLinks": showFKLink
                 };
             }
 

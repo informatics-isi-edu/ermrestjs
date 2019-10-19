@@ -46,6 +46,7 @@ Note: If the `[<schema name>, <constraint name>]` is an inbound foreign key from
       "markdown_pattern": <pattern>,
       "template_engine": <handlebars or mustache>,
       "wait_for": <wait_for list>,
+      "show_foreign_key_links": <boolean>,
       "array_ux_mode": <csv|ulist|olist|raw>
   },
   "array_options": {
@@ -66,6 +67,7 @@ or
       "markdown_pattern": <pattern>,
       "template_engine": <handlebars or mustache>,
       "wait_for": <wait_for list>,
+      "show_foreign_key_links": <boolean>,
       "array_ux_mode": <csv|ulist|olist|raw>
   },
   "array_options":{
@@ -138,6 +140,7 @@ By using this attribute you can customize the presented value to the users. The 
         "markdown_pattern": <markdown pattern value>,
         "template_engine": <"handlebars" | "mustache">,
         "wait_for": <wait_for list>,
+        "show_foreign_key_links": <boolean>,
         "array_ux_mode": <csv|ulist|olist|raw>
     }
 }
@@ -145,7 +148,11 @@ By using this attribute you can customize the presented value to the users. The 
 
 ##### markdown_pattern
 
-In the `markdown_pattern` you can access the current pseudo-column data with `$self` namespace alongside the defined source definitions. Please refer to the [pseudo-column display documentation](#pseudo-column-display.md) for more information.
+In the `markdown_pattern` you can access the current pseudo-column data with `$self` namespace alongside the defined source definitions. Please refer to the [pseudo-column display documentation](pseudo-column-display.md) for more information.
+
+##### show_foreign_key_links
+
+While generating a default presentation for outbound foreign keys, ermrestjs will add a link to the referred row. Using this attribute you can modify this behavior. If this attribute is missing, we are going to use the inherited behavior from [display annotation](annotation.md#tag-2015-display)
 
 ##### array_ux_mode
 

@@ -126,7 +126,7 @@ exports.execute = function (options) {
             '4002',
             '4003',
              '',
-             '<p><a href="http://example.com">12</a></p>\n',
+             '<p><a href="http://example.com" class="external-link-icon external-link">12</a></p>\n',
              '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/id_1=4000&id_2=4001">4000 , 4001</a>',
              '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key_2/id_1=4000&id_2=4003">4000:4003</a>',
              '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/id_1=4000&id_2=4002">4000 , 4002</a>',
@@ -299,6 +299,9 @@ exports.execute = function (options) {
 
         beforeAll(function (done) {
             options.ermRest.appLinkFn(appLinkFn);
+            options.ermRest.setClientConfig({
+                internalHosts: [options.catalog.server.host, "dev.isrd.isi.edu"]
+            });
             options.ermRest.resolve(singleEnitityUri, {
                 cid: "test"
             }).then(function (response) {
@@ -348,7 +351,7 @@ exports.execute = function (options) {
                 '4002',
                 '4003',
                 '',
-                '<p><a href="http://example.com">12</a></p>\n',
+                '<p><a href="http://example.com" class="external-link-icon external-link">12</a></p>\n',
                 '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/RID=' + findRID("table_w_composite_key", "id", "1") + '">4000 , 4001</a>',
                 '<a href="https://dev.isrd.isi.edu/chaise/search">1</a>',
                 '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/RID=' + findRID("table_w_composite_key", "id", "2") + '">4000 , 4002</a>',
@@ -356,18 +359,13 @@ exports.execute = function (options) {
                 ''
             ];
             var html = "";
-            if (process.env.TRAVIS) {
-                html = '<a href="https://dev.isrd.isi.edu" download="" class="download external-link">filename</a>'
-            } else {
-                html = '<a href="https://dev.isrd.isi.edu?uinit=1&amp;cid=test" download="" class="download asset-permission">filename</a>'
-            }
             assetCompactExpectedValue = [
                 '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_asset/id=1">1</a>',
                 '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:columns_table/RID=' + findRID("columns_table", "id", "1") + '">1</a>',
                 '1000', '10001', 'filename', '1,242', 'md5', 'sha256',
                 '',
                 '<h2>filename</h2>\n',
-                html,
+                '<a href="https://dev.isrd.isi.edu?uinit=1&amp;cid=test" download="" class="download-alt asset-permission">filename</a>',
                 '4'
             ];
 
@@ -378,6 +376,12 @@ exports.execute = function (options) {
                 '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key/RID=' + findRID("table_w_simple_key", "id", "9001") + '">Harold</a>',
                 '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key/RID=' + findRID("table_w_simple_key", "id", "9000") + '">Hank</a>'
             ];
+        });
+
+
+        // remove the client-config
+        afterAll(function () {
+            options.ermRest.setClientConfig({});
         });
 
         describe('.columns, ', function () {

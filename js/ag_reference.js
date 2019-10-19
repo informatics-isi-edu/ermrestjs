@@ -833,7 +833,7 @@ AttributeGroupTuple.prototype = {
             value = hasNull ? null: values.join(":");
 
             this._displayname = {
-                "value": hasMarkdown ? module._formatUtils.printMarkdown(value, { inline: true }) : value,
+                "value": hasMarkdown ? module.renderMarkdown(value, true) : value,
                 "unformatted": value,
                 "isHTML": hasMarkdown
             };
@@ -990,7 +990,7 @@ AttributeGroupColumn.prototype = {
          *
          */
         if (this.type.name === "markdown") {
-            return {isHTML: true, value: module._formatUtils.printMarkdown(formattedValue, { inline: true }), unformatted: formattedValue};
+            return {isHTML: true, value: module.renderMarkdown(formattedValue, true), unformatted: formattedValue};
         }
         return {isHTML: false, value: formattedValue, unformatted: formattedValue};
     },

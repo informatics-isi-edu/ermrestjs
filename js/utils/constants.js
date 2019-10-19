@@ -166,7 +166,7 @@
     });
 
     module._specialPresentation = Object.freeze({
-        NULL: "*No Value*",
+        NULL: "*No value*",
         EMPTY_STR: "*Empty*"
     });
 
@@ -264,3 +264,11 @@
     });
 
     module._sourceDefinitionAttributes = ["source", "aggregate", "entity", "self_link"];
+
+    module._classNames = Object.freeze({
+        externalLink: "external-link",
+        externalLinkIcon: "external-link-icon",
+        noExternalLinkIcon: "no-external-link-icon",
+        assetPermission: "asset-permission",
+        download: "download-alt"
+    });

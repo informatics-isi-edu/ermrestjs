@@ -295,7 +295,7 @@ exports.execute = function(options) {
                     });
                 });
 
-                describe('should not call printMarkdown() to format,', function() {
+                describe('should not call renderMarkdown() to format,', function() {
                     it('Markdown columns correctly.', function() {
                         var testVal = '*taylor ^swift^*';
                         var col = table1_schema2.columns.get('table_1_markdown');
@@ -344,7 +344,7 @@ exports.execute = function(options) {
                             type: "timestamp",
                             column: "table_1_timestamp_array",
                             tests: [
-                                {value: ["2016/05/02 13:00:00.00 PST", null, "2015/03/02 13:00:00.00 PST"], expected: ["2016/05/02 13:00:00.00 PST", null, "2015/03/02 13:00:00.00 PST"]}
+                                {value: ["2016/05/02 13:00:00", null, "2015/03/02 14:00:00"], expected: ["2016-05-02 13:00:00", null, "2015-03-02 14:00:00"]}
                             ]
                         },
                         {
