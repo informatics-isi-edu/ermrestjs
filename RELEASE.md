@@ -4,8 +4,17 @@ This document is a summary of code changes in Chaise. This is the vocabulary use
   - `[Added]`: newly added features.
   - `[Improved]`: additions made to an existence feature.
   - `[Changed]`: modifications to existing features.
+  - `[Refactored]`: modifications to existing code to make it more maintainable.
   - `[Fixed]`: bug fixes.
   - `[No changes]` means that Chaise hasn't been changed in the described duration.
+
+# 10/18/19
+  - [Changed] the default `.download` class in heuristics to `.download-alt`.
+  - [Added] `setCatalogConfig` callback so chaise can pass chaise-config properties to ermrestjs.
+  - [Changed] markdown-it url renderer to add `external-link-icon` by default, and `external-link` based on chaise-config.
+  - [Added] support for `show_foreign_key_links`.
+  - [Added] `logHeaders` API to allow chaise to log events.
+  - [Refactored] usage of `_printMarkdown` to use the more appropriate `renderMarkdown` function.
 
 # 09/31/19
 

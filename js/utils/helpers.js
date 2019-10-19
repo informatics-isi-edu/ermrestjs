@@ -2309,7 +2309,7 @@
 
         // actual comparission of the origin
         return module._clientConfig.internalHosts.some(function (host) {
-            return typeof host === "string" && urlParts[2].indexOf(host) === 0;
+            return typeof host === "string" && host.length > 0 && urlParts[2].indexOf(host) === 0;
         });
     };
 
