@@ -314,7 +314,7 @@ Supported _columnentry_ patterns:
       - `ulist` for unordered bullet list.
       - `csv` for comma-seperated values.
       - `raw` for space-seperated values.
-  - `comment`: The tooltip to be used in place of the default heuristics for the column.
+  - `comment`: The tooltip to be used in place of the default heuristics for the column. Set this to `false` if you don't want any tooltip.
   - `entity`: If the _sourceentry_ can be treated as entity (the source column is key of the table), setting this attribute to `false` will force the scalar mode.
   - `self_link`: If the defined source is one of the unique not-null keys of the table, setting this attribute to `true` will switch the display mode to self-link.
   - `aggregate`: The aggregate function that should be used for getting an aggregated result. The available aggregate functions are `min`, `max`, `cnt`, `cnt_d`, `array`, and `array_d`.
@@ -360,8 +360,9 @@ You can use these attributes to define default preselected facets (Combination o
 
 
 Configuration attributes (optional):
-- `markdown_name`: The markdown to use in place of the default heuristics for facet title.
 - `entity`: If the facet can be treated as entity (the column that is being used for facet is key of the table), setting this attribute to `false` will force the facet to show scalar mode.
+- `markdown_name`: The markdown to use in place of the default heuristics for facet title.
+- `comment`: The tooltip to be used in place of the default heuristics for the facet. Set this to `false` if you don't want any tooltip.
 - `open`: Setting this attribute to `true`, will force the facet to open by default.
 - `bar_plot`: This attribute is meant to be an object of properties that control the display of the histogram. Setting this attribute to `false` will force the histogram to not be shown in the facet in the facet panel. If unspecified, default is `true` (or show the histogram).
 - `ux_mode`: `choices`, `ranges`, or `check_presence`. If a multi-modal facet control UX is available, it will specify the default UX mode that should be used (If `ux_mode` is defined, the other type of constraint will not be displayed even if you have defined it in the annotation). In `check_presence` mode only two options will be available to the users, "not-null" and "null".

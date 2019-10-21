@@ -240,8 +240,9 @@ ReferenceColumn.prototype = {
      */
     get comment() {
         if (this._comment === undefined) {
-            if (this.sourceObject.comment) {
-                this._comment = this.sourceObject.comment;
+            var com = _processSourceObjectColumn(this.sourceObject);
+            if (typeof com === "string") {
+                this._comment = com;
             } else {
                 this._comment = this._simple ? this._baseCols[0].comment : null;
             }
@@ -1240,8 +1241,9 @@ Object.defineProperty(PseudoColumn.prototype, "comment", {
     get: function () {
         if (this._comment === undefined) {
             var getComment = function (self) {
-                if (self.sourceObject.comment) {
-                    return self.sourceObject.comment;
+                var com = _processSourceObjectColumn(self.sourceObject);
+                if (typeof com === "string") {
+                    return com;
                 }
 
                 if (self.hasAggregate) {
@@ -2574,8 +2576,9 @@ Object.defineProperty(InboundForeignKeyPseudoColumn.prototype, "displayname", {
 Object.defineProperty(InboundForeignKeyPseudoColumn.prototype, "comment", {
     get: function () {
         if (this._comment === undefined) {
-            if (this.sourceObject.comment) {
-                this._comment = this.sourceObject.comment;
+            var com = _processSourceObjectColumn(this.sourceObject);
+            if (typeof com === "string") {
+                this._comment = com;
             } else {
                 this._comment = this.table.comment;
             }
@@ -3063,8 +3066,9 @@ FacetColumn.prototype = {
      */
     get comment () {
         if (this._comment === undefined) {
-            if (this._facetObject.comment) {
-                this._comment = this._facetObject.comment;
+            var com = _processSourceObjectColumn(this._facetObject);
+            if (typeof com === "string") {
+                this._comment = com;
             } else if (!this.isEntityMode) {
                     this._comment = this._column.comment;
             } else {

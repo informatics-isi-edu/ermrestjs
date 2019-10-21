@@ -112,7 +112,7 @@
                     "compact": "detailed",
                     "detailed": [
                         "main_table_id_col", {"source": "col", "markdown_name": "new name", "comment": "new comment"},
-                        {"source": "main_table_id_col", "self_link": true, "markdown_name": "main table key", "comment": "main table key"},
+                        {"source": "main_table_id_col", "self_link": true, "markdown_name": "main table key", "comment": false},
                         {"source": [{"outbound": ["pseudo_column_schema", "main_fk1"]}, "id"], "markdown_name": "main fk", "comment": "main fk cm"},
                         {"source": [{"outbound": ["pseudo_column_schema", "main_fk1"]}, "id"], "entity": false},
                         {"source": [
@@ -130,7 +130,7 @@
                             {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
                             {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
                             "id"
-                        ], "markdown_name": "**association table**", "comment": "association table cm"},
+                        ], "markdown_name": "**association table**", "comment": false},
                         {"source": [
                             {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
                             {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},

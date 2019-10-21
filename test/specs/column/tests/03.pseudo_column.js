@@ -498,13 +498,13 @@ exports.execute = function (options) {
             });
 
             describe("for more specific pseudo-columns (ReferenceColumn, Key, ForeignKey, InboundforeignKey, Asset), ", function () {
-                it ("comment, should come from the comment defined on the sourceObject.", function () {
+                it ("comment, should come from the comment defined on the sourceObject (false should be acceptable and treated as empty string).", function () {
                     var expectedComments = {
                         "1": "new comment",
-                        "2": "main table key",
+                        "2": "",
                         "3": "main fk cm",
                         "7": "inbound cm",
-                        "8": "association table cm",
+                        "8": "",
                         "22": "asset cm"
                     };
 
@@ -514,7 +514,7 @@ exports.execute = function (options) {
                 });
 
                 it ("displayname, should come from the markdown_name defined on the sourceObject.", function () {
-                    var expectedComments = {
+                    var expectedDisplaynames = {
                         "1": "new name",
                         "2": "main table key",
                         "3": "main fk",
@@ -523,8 +523,8 @@ exports.execute = function (options) {
                         "22": "<strong>asset</strong>"
                     };
 
-                    for (var i in expectedComments) {
-                        expect(detailedColsWTuple[i].displayname.value).toBe(expectedComments[i],"missmatch for index=" + i);
+                    for (var i in expectedDisplaynames) {
+                        expect(detailedColsWTuple[i].displayname.value).toBe(expectedDisplaynames[i],"missmatch for index=" + i);
                     }
                 });
             });

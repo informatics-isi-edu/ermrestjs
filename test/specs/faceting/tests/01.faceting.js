@@ -883,6 +883,11 @@ exports.execute = function (options) {
                     expect(mainFacets[6].comment).toBe("long text comment in facet");
                 });
 
+                it ("return empty string if the defined comment is `false`.", function () {
+                    expect(mainFacets[7].comment).toBe("", "missmatch for index=7");
+                    expect(mainFacets[10].comment).toBe("", "missmatch for index=10");
+                });
+
                 it ('if in scalar mode, return column\'s comment', function () {
                     expect(mainFacets[5].comment).toBe("text comment");
                 });

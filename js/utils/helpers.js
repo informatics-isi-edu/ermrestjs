@@ -704,6 +704,20 @@
     };
 
     /**
+     * @private
+     * Given the source object, will return the comment that should be used.
+     * - if sourceObject.comment=false: use empty string.
+     * - if sourceObject.comment=string: use the defined value
+     * - otherwise return null
+     */
+    _processSourceObjectColumn = function (sourceObject) {
+        if (!sourceObject) return null;
+        if (sourceObject.comment === false) return "";
+        if (typeof sourceObject.comment === "string") return sourceObject.comment;
+        return null;
+    };
+
+    /**
      * @function
      * @private
      * @param {ERMrest.Table} table The object that we want the formatted values for.
