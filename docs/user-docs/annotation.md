@@ -308,7 +308,7 @@ Supported _columnentry_ patterns:
     - `markdown_pattern`: Markdown pattern that will be used for generating the value.
     - `template_engine`: The template engine that should be used for the `markdown_pattern`.
     - `wait_for`: List of pseudo-column sourcekeys that the current column will use in the defined `markdown_pattern`.
-    - `show_foreign_key_links`: It will override the inherited behavior of outbound foreign key displays. Set it to false to avoid adding extra link to the foreign key display.
+    - `show_foreign_key_links`: It will override the inherited behavior of outbound foreign key displays. Set it to `false` to avoid adding extra link to the foreign key display.
     - `array_ux_mode`: If you have `"aggregate": "array"` or `"aggregate": "array_d"` in the pseudo-column definition, a comma-seperated value will be presented to the user. You can use `array_ux_mode` attribute to change that. The available options are,
       - `olist` for ordered bullet list.
       - `ulist` for unordered bullet list.
@@ -446,8 +446,8 @@ Supported display _option_ syntax:
 
 - `"column_order"`: `[` _columnorder_key_ ... `]`: An alternative sort method to apply when a client wants to semantically sort by foreign key values.
 - `"column_order": false`: Sorting by this foreign key psuedo-column should not be offered.
-- `"show_foreign_key_links: true"`: Override the inherited behavior of foreign key display and add a link to the referred row.
-- `"show_foreign_key_links: false"`: Override the inherited behavior of foreign key display by not adding any extra links.
+- `"show_foreign_key_links": true`: Override the inherited behavior of foreign key display and add a link to the referred row.
+- `"show_foreign_key_links": false`: Override the inherited behavior of foreign key display by not adding any the extra.
 
 Supported _columnorder_key_ syntax:
 
