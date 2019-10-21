@@ -152,7 +152,7 @@ In the `markdown_pattern` you can access the current pseudo-column data with `$s
 
 ##### show_foreign_key_links
 
-While generating a default presentation for outbound foreign keys, ermrestjs will add a link to the referred row. Using this attribute you can modify this behavior. If this attribute is missing, we are going to use the inherited behavior from [display annotation](annotation.md#tag-2015-display)
+While generating a default presentation for all outbound foreign key paths, ermrestjs will add a link to the referred row. Using this attribute you can modify this behavior. If this attribute is missing, we are going to use the inherited behavior from the [foreign key](https://github.com/informatics-isi-edu/ermrestjs/blob/master/docs/user-docs/annotation.md#tag-2016-foreign-key) annotation defined on the last foreign key in the path. If that one is missing too, [display annotation](annotation.md#tag-2015-display) will be applied.
 
 ##### array_ux_mode
 
