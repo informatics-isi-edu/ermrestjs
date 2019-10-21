@@ -24,6 +24,7 @@
   "dependencies": {
     "buffer-slice": "0.0.1",
     "file-api": "^0.10.4",
+    "google-closure-compiler": "x",
     "handlebars": "4.1.2",
     "just-handlebars-helpers": "^1.0.13",
     "lz-string": "1.4.4",
@@ -40,8 +41,6 @@
     "spark-md5": "^3.0.0"
   },
   "devDependencies": {
-    "bower": "x",
-    "google-closure-compiler": "x",
     "jasmine": "2.5.3",
     "jasmine-expect": "^3.7.1",
     "jasmine-spec-reporter": "^2.5.0",

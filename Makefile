@@ -175,7 +175,7 @@ help: usage
 usage:
 	@echo "Available 'make' targets:"
 	@echo "    all       - build and docs"
-	@echo "    deps      - local install of node and bower dependencies"
+	@echo "    deps      - local install of node dependencies"
 	@echo "    updeps    - update local dependencies"
 	@echo "    install   - installs the package (ERMRESTJSDIR=$(ERMRESTJSDIR))"
 	@echo "    installm  - also installs the minified package"
