@@ -808,14 +808,14 @@ Note: Some properties might not make sense to be used in this annotation. The `d
 
 ### Tag: 2019 Source Definitions
 
-`tag:isrd.isi.edu,2019:source-defnitions`
+`tag:isrd.isi.edu,2019:source-definitions`
 
 This key allows specification of sources that can be used in `visible-columns` and `visible-foreignKeys` annotations. It will also allow defining the list of column names and outbound forieng keys that should be available in the templating environments. Please refer to [this document](pseudo-column-template.md) for more information about how to use this annotation.
 
 Example:
 
 ```json
-"tag:isrd.isi.edu,2019:source-defnitions": {
+"tag:isrd.isi.edu,2019:source-definitions": {
     "columns": true,
     "fkeys": true,
     "sources": {
