@@ -168,15 +168,16 @@
         /**
          * should be used to log information on the server to different log locations
          * @param {Object} headers - the headers to be logged, should include action
-         * @param {String} location - the path for logging (terminal_error || button_action)
+         * @param {String} location - the path for logging (terminal_error || client_action)
          **/
-        this.logHeaders = function (actionHeader, location) {
+        this.logHeaders = function (contextHeaderParams, location) {
             var defer = module._q.defer();
 
-            var headers = {};
-            headers[module.contextHeaderName] = actionHeader;
+            var config = {
+                headers: this._generateContextHeader(contextHeaderParams)
+            };
 
-            this.http.head(this.uri + "/" + location, {headers: headers}).then(function () {
+            this.http.head(this.uri + "/" + location, config).then(function () {
                 defer.resolve();
             }, function (error) {
                 defer.reject(error);
