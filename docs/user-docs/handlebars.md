@@ -2,9 +2,8 @@
 
 [Handlebars](http://handlebarsjs.com/) is almost similar to Mustache with some additional benefits. There are some things that you can't do in Mustache (e.g if-else statement) that Handlebars allows us to do easily using `helpers`.
 
-Handlebars supports most of the Mustache syntax. However, there are a few features that are not supported by Handlebars. The primary ones are the block syntax (e.g. `{{#name}}...{{/name}} vs {{#if name}}...{{/if}}`) which is often used in Deriva annoations to perform boolean (or null) check, and the encode/decode methods (e.g. `{{#encode}}...{{/encode}} vs {{#encode URL}}{{/encode}}` and `{{#decode}}...{{/decode}} vs {{#decode URL}}{{/decode}}` ). For example:
-
-- Block syntax: With handlebars you need to pass the variables to an `if` helper to do the check.
+Handlebars supports most of the Mustache syntax. However, there are a few features that are not supported by Handlebars. For example: 
+- Block syntax `{{#name}}...{{/name}}`: This is primarily used in Deriva annoations to perform boolean (or null) check. With handlebars you need to pass the variables to an `if` helper to do the check e.g. `{{#if name}}...{{/if}}`.
 
 ```js
 // Mustache
@@ -19,8 +18,8 @@ Handlebars supports most of the Mustache syntax. However, there are a few featur
 {{#if name}}Hello {{name}}{{else}}No name available{{/if}}
 ```
 
-- encode/decode: With handlebards the value to be encoded is passed to the `encode`/`decode` helper.
- 
+- encode/decode `{{#encode}}...{{/encode}}`/`{{#decode}}...{{/decode}}`: With handlebards the value to be encoded is passed to the `encode`/`decode` helper e.g. `{{#encode ...}}{{/encode}}` or `{{#decode ...}}{{/decode}}`.
+
 ```
 // Mustache
 {{#encode}}My URL{{/encode}}
