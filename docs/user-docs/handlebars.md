@@ -19,7 +19,7 @@ Handlebars supports most of the Mustache syntax. However, there are a few featur
 {{#if name}}Hello {{name}}{{else}}No name available{{/if}}
 ```
 
-- encode: With handlebards the value to be encoded is passed to the `encode` helper.
+- encode/decode: With handlebards the value to be encoded is passed to the `encode`/`decode` helper.
  
 ```
 // Mustache
