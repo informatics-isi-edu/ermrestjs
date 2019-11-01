@@ -521,8 +521,8 @@ exports.execute = function (options) {
                     it('in other columns, should create a pseudo-column for those and remove them from related references.', function () {
                         expect(detailedRef.columns[3]._constraintName).toBe(["columns_schema", "inbound_related_to_columns_table_2_fkey"].join("_"), "didn't create a pseudo column.");
 
-                        expect(detailedRef.related().length).toBe(1, "didn't remove the column from related references");
-                        expect(detailedRef.related()[0].table.name).toBe("inbound_related_to_columns_table", "the name of related reference is not what was expected");
+                        expect(detailedRef.related.length).toBe(1, "didn't remove the column from related references");
+                        expect(detailedRef.related[0].table.name).toBe("inbound_related_to_columns_table", "the name of related reference is not what was expected");
                     });
                 });
 

@@ -1196,7 +1196,7 @@
 
             var fkConstraint = generatedErrMessage.match(/foreign key constraint \"(.*?)\"/)[1];    //get constraintName
             if(typeof reference === 'object' && typeof fkConstraint === 'string' && fkConstraint != ''){
-              var relatedRef = reference.related(); //get all related references
+              var relatedRef = reference.related; //get all related references
 
               for(var i = 0; i < relatedRef.length; i++){
                   key  = relatedRef[i];

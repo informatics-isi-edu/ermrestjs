@@ -395,10 +395,10 @@ exports.execute = function (options) {
 
             });
 
-            describe(".related, ", function () {
+            describe(".related and generateRelatedList, ", function () {
                 var related;
                 beforeAll(function () {
-                    related = mainRefDetailed.related(mainTuple);
+                    related = mainRefDetailed.generateRelatedList(mainTuple);
                 });
 
                 it ("should not add duplicate sources, and create the list as expected.", function () {

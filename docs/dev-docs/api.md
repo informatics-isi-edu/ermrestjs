@@ -325,6 +325,7 @@ to use for ERMrest JavaScript agents.
         * [.canUpdateReason](#ERMrest.Reference+canUpdateReason) : <code>String</code> \| <code>undefined</code>
         * [.canDelete](#ERMrest.Reference+canDelete) : <code>boolean</code> \| <code>undefined</code>
         * [.display](#ERMrest.Reference+display) : <code>Object</code>
+        * [.related](#ERMrest.Reference+related) : [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
         * [.unfilteredReference](#ERMrest.Reference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
         * [.appLink](#ERMrest.Reference+appLink) : <code>String</code>
         * [.csvDownloadLink](#ERMrest.Reference+csvDownloadLink) ⇒ <code>String</code>
@@ -338,7 +339,7 @@ to use for ERMrest JavaScript agents.
         * [.update(tuples, contextHeaderParams)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
         * [.delete(contextHeaderParams)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
             * [~self](#ERMrest.Reference+delete..self)
-        * [.related([tuple])](#ERMrest.Reference+related) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
+        * [.generateRelatedList([tuple])](#ERMrest.Reference+generateRelatedList) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
         * [.getExportTemplates(useDefault)](#ERMrest.Reference+getExportTemplates) ⇒ <code>Object</code>
         * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
         * [.getAggregates(aggregateList)](#ERMrest.Reference+getAggregates) ⇒ <code>Promise</code>
@@ -628,6 +629,7 @@ to use for ERMrest JavaScript agents.
         * [.canUpdateReason](#ERMrest.Reference+canUpdateReason) : <code>String</code> \| <code>undefined</code>
         * [.canDelete](#ERMrest.Reference+canDelete) : <code>boolean</code> \| <code>undefined</code>
         * [.display](#ERMrest.Reference+display) : <code>Object</code>
+        * [.related](#ERMrest.Reference+related) : [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
         * [.unfilteredReference](#ERMrest.Reference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
         * [.appLink](#ERMrest.Reference+appLink) : <code>String</code>
         * [.csvDownloadLink](#ERMrest.Reference+csvDownloadLink) ⇒ <code>String</code>
@@ -641,7 +643,7 @@ to use for ERMrest JavaScript agents.
         * [.update(tuples, contextHeaderParams)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
         * [.delete(contextHeaderParams)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
             * [~self](#ERMrest.Reference+delete..self)
-        * [.related([tuple])](#ERMrest.Reference+related) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
+        * [.generateRelatedList([tuple])](#ERMrest.Reference+generateRelatedList) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
         * [.getExportTemplates(useDefault)](#ERMrest.Reference+getExportTemplates) ⇒ <code>Object</code>
         * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
         * [.getAggregates(aggregateList)](#ERMrest.Reference+getAggregates) ⇒ <code>Promise</code>
@@ -2723,6 +2725,7 @@ Constructor for a ParsedFilter.
     * [.canUpdateReason](#ERMrest.Reference+canUpdateReason) : <code>String</code> \| <code>undefined</code>
     * [.canDelete](#ERMrest.Reference+canDelete) : <code>boolean</code> \| <code>undefined</code>
     * [.display](#ERMrest.Reference+display) : <code>Object</code>
+    * [.related](#ERMrest.Reference+related) : [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
     * [.unfilteredReference](#ERMrest.Reference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
     * [.appLink](#ERMrest.Reference+appLink) : <code>String</code>
     * [.csvDownloadLink](#ERMrest.Reference+csvDownloadLink) ⇒ <code>String</code>
@@ -2736,7 +2739,7 @@ Constructor for a ParsedFilter.
     * [.update(tuples, contextHeaderParams)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
     * [.delete(contextHeaderParams)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
         * [~self](#ERMrest.Reference+delete..self)
-    * [.related([tuple])](#ERMrest.Reference+related) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
+    * [.generateRelatedList([tuple])](#ERMrest.Reference+generateRelatedList) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
     * [.getExportTemplates(useDefault)](#ERMrest.Reference+getExportTemplates) ⇒ <code>Object</code>
     * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
     * [.getAggregates(aggregateList)](#ERMrest.Reference+getAggregates) ⇒ <code>Promise</code>
@@ -2982,6 +2985,23 @@ if ( displayType === 'table') {
 ```
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+related"></a>
+
+#### reference.related : [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
+The "related" references. Relationships are defined by foreign key
+references between [Table](#ERMrest.Table)s. Those references can be
+considered "outbound" where the table has FKRs to other entities or
+"inbound" where other entities have FKRs to this entity. Finally,
+entities can be "associated" by means of associative entities. Those
+are entities in another table that establish _many-to-many_
+relationships between entities. If this help `A <- B -> C` where
+entities in `B` establish relationships between entities in `A` and
+`C`. Thus entities in `A` and `C` may be associated and we may
+ignore `B` and think of this relationship as `A <-> C`, unless `B`
+has other moderating attributes, for instance that indicate the
+`type` of relationship, but this is a model-depenent detail.
+
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+unfilteredReference"></a>
 
 #### reference.unfilteredReference : [<code>Reference</code>](#ERMrest.Reference)
@@ -3169,21 +3189,21 @@ without any joins.
 github issue: #425
 
 **Kind**: inner property of [<code>delete</code>](#ERMrest.Reference+delete)  
-<a name="ERMrest.Reference+related"></a>
+<a name="ERMrest.Reference+generateRelatedList"></a>
 
-#### reference.related([tuple]) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
-The "related" references. Relationships are defined by foreign key
-references between [Table](#ERMrest.Table)s. Those references can be
-considered "outbound" where the table has FKRs to other entities or
-"inbound" where other entities have FKRs to this entity. Finally,
-entities can be "associated" by means of associative entities. Those
-are entities in another table that establish _many-to-many_
-relationships between entities. If this help `A <- B -> C` where
-entities in `B` establish relationships between entities in `A` and
-`C`. Thus entities in `A` and `C` may be associated and we may
-ignore `B` and think of this relationship as `A <-> C`, unless `B`
-has other moderating attributes, for instance that indicate the
-`type` of relationship, but this is a model-depenent detail.
+#### reference.generateRelatedList([tuple]) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
+The function that can be used to generate .related API.
+The logic is as follows:
+
+1. Get the list of visible inbound foreign keys (if annotation is not defined,
+it will consider all the inbound foreign keys).
+
+2. Go through the list of visible inbound foreign keys
+ 2.1 if it's not part of InboundForeignKeyPseudoColumn apply the generateRelatedRef logic.
+The logic for are sorted based on following attributes:
+ 1. displayname
+ 2. position of key columns that are involved in the foreignkey
+ 3. position of columns that are involved in the foreignkey
 
 **Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
 
@@ -6175,6 +6195,7 @@ get PathColumn object by column name
     * [.canUpdateReason](#ERMrest.Reference+canUpdateReason) : <code>String</code> \| <code>undefined</code>
     * [.canDelete](#ERMrest.Reference+canDelete) : <code>boolean</code> \| <code>undefined</code>
     * [.display](#ERMrest.Reference+display) : <code>Object</code>
+    * [.related](#ERMrest.Reference+related) : [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
     * [.unfilteredReference](#ERMrest.Reference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
     * [.appLink](#ERMrest.Reference+appLink) : <code>String</code>
     * [.csvDownloadLink](#ERMrest.Reference+csvDownloadLink) ⇒ <code>String</code>
@@ -6188,7 +6209,7 @@ get PathColumn object by column name
     * [.update(tuples, contextHeaderParams)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
     * [.delete(contextHeaderParams)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
         * [~self](#ERMrest.Reference+delete..self)
-    * [.related([tuple])](#ERMrest.Reference+related) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
+    * [.generateRelatedList([tuple])](#ERMrest.Reference+generateRelatedList) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
     * [.getExportTemplates(useDefault)](#ERMrest.Reference+getExportTemplates) ⇒ <code>Object</code>
     * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
     * [.getAggregates(aggregateList)](#ERMrest.Reference+getAggregates) ⇒ <code>Promise</code>
@@ -6434,6 +6455,23 @@ if ( displayType === 'table') {
 ```
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+related"></a>
+
+#### reference.related : [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
+The "related" references. Relationships are defined by foreign key
+references between [Table](#ERMrest.Table)s. Those references can be
+considered "outbound" where the table has FKRs to other entities or
+"inbound" where other entities have FKRs to this entity. Finally,
+entities can be "associated" by means of associative entities. Those
+are entities in another table that establish _many-to-many_
+relationships between entities. If this help `A <- B -> C` where
+entities in `B` establish relationships between entities in `A` and
+`C`. Thus entities in `A` and `C` may be associated and we may
+ignore `B` and think of this relationship as `A <-> C`, unless `B`
+has other moderating attributes, for instance that indicate the
+`type` of relationship, but this is a model-depenent detail.
+
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+unfilteredReference"></a>
 
 #### reference.unfilteredReference : [<code>Reference</code>](#ERMrest.Reference)
@@ -6621,21 +6659,21 @@ without any joins.
 github issue: #425
 
 **Kind**: inner property of [<code>delete</code>](#ERMrest.Reference+delete)  
-<a name="ERMrest.Reference+related"></a>
+<a name="ERMrest.Reference+generateRelatedList"></a>
 
-#### reference.related([tuple]) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
-The "related" references. Relationships are defined by foreign key
-references between [Table](#ERMrest.Table)s. Those references can be
-considered "outbound" where the table has FKRs to other entities or
-"inbound" where other entities have FKRs to this entity. Finally,
-entities can be "associated" by means of associative entities. Those
-are entities in another table that establish _many-to-many_
-relationships between entities. If this help `A <- B -> C` where
-entities in `B` establish relationships between entities in `A` and
-`C`. Thus entities in `A` and `C` may be associated and we may
-ignore `B` and think of this relationship as `A <-> C`, unless `B`
-has other moderating attributes, for instance that indicate the
-`type` of relationship, but this is a model-depenent detail.
+#### reference.generateRelatedList([tuple]) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
+The function that can be used to generate .related API.
+The logic is as follows:
+
+1. Get the list of visible inbound foreign keys (if annotation is not defined,
+it will consider all the inbound foreign keys).
+
+2. Go through the list of visible inbound foreign keys
+ 2.1 if it's not part of InboundForeignKeyPseudoColumn apply the generateRelatedRef logic.
+The logic for are sorted based on following attributes:
+ 1. displayname
+ 2. position of key columns that are involved in the foreignkey
+ 3. position of columns that are involved in the foreignkey
 
 **Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
 
