@@ -4450,7 +4450,7 @@
                     // render template
                     value = module._renderTemplate(ref.display._rowMarkdownPattern, keyValues, ref.table.schema.catalog, { templateEngine: ref.display.templateEngine});
 
-                    // If value is null or empty, return value on basis of `show_nulls`
+                    // If value is null or empty, return value on basis of `show_null`
                     if (value === null || value.trim() === '') {
                         value = ref.table._getNullValue(ref._context);
                     }

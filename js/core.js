@@ -2259,7 +2259,7 @@
             if (!display.isMarkdownPattern && this.type.isArray) {
                 unformatted = module._formatUtils.printArray(formattedValue, {isMarkdown: display.isHTML});
 
-                // If value is null or empty, return value on basis of `show_nulls`
+                // If value is null or empty, return value on basis of `show_null`
                 if (unformatted === null || unformatted.trim() === '') {
                     return { isHTML: false, value: this._getNullValue(context), unformatted: this._getNullValue(context) };
                 }
@@ -2298,7 +2298,7 @@
             }
 
 
-            // If value is null or empty, return value on basis of `show_nulls`
+            // If value is null or empty, return value on basis of `show_null`
             if (unformatted === null || unformatted.trim() === '') {
                 return { isHTML: false, value: this._getNullValue(context), unformatted: this._getNullValue(context) };
             }
@@ -3628,10 +3628,10 @@
                 }
 
                 columnOrder = _processColumnOrderList(annotation.column_order, this.key.table);
-                showFKLink = annotation.show_foreign_key_links;
+                showFKLink = annotation.show_foreign_key_link;
                 if (typeof showFKLink !== "boolean") {
                     showFKLink = module._getHierarchicalDisplayAnnotationValue(
-                        self, context, "show_foreign_key_links"
+                        self, context, "show_foreign_key_link"
                     );
 
                     // default true for all the contexts

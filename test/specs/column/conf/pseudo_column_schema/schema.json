@@ -212,7 +212,7 @@
                             {"outbound": ["pseudo_column_schema", "main_fk2"]},
                             {"outbound": ["pseudo_column_schema", "outbound_2_fk1"]},
                             "id"
-                        ], "entity": true, "display": {"show_foreign_key_links":false}}
+                        ], "entity": true, "display": {"show_foreign_key_link":false}}
 
                     ],
                     "entry": "detailed",
@@ -927,7 +927,7 @@
     },
     "annotations": {
         "tag:misd.isi.edu,2015:display": {
-            "show_nulls": {"*": ""}
+            "show_null": {"*": ""}
         }
     }
 }

@@ -41,7 +41,7 @@ exports.execute = function(options) {
             schemaName2 = "common_schema_2";
         var table1_schema1, // has two outbound fks to table2_schema1. with foreign-key annotation.
             table2_schema1, // has outbound fk to table1_schema2.
-            table1_schema2, // doesn't have any outbount foreignkeys in different schema. has one fk to a table in its own schema to test show_foreign_key_links
+            table1_schema2, // doesn't have any outbount foreignkeys in different schema. has one fk to a table in its own schema to test show_foreign_key_link
             catalog;
 
         beforeAll(function(done) {
@@ -299,14 +299,14 @@ exports.execute = function(options) {
             });
 
             /*
-            * By default the show_foreign_key_links is true, so in annotations
+            * By default the show_foreign_key_link is true, so in annotations
             * I only used `false` to show that it's being changed. This value
             * is defined on the following level for the given contexts only:
             * - schema  -> compact/brief
             * - table   -> compact/select
             * - fk      -> detailed
             */
-            describe("regarding show_foreign_key_links in formatPresentation, ", function () {
+            describe("regarding show_foreign_key_link in formatPresentation, ", function () {
                 // NOTE other types are defined in column spec.
 
                 // we cannot test catalog level because it will affect all the other test cases

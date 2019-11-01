@@ -12,7 +12,7 @@ This document is a summary of code changes in Chaise. This is the vocabulary use
   - [Changed] the default `.download` class in heuristics to `.download-alt`.
   - [Added] `setCatalogConfig` callback so chaise can pass chaise-config properties to ermrestjs.
   - [Changed] markdown-it url renderer to add `external-link-icon` by default, and `external-link` based on chaise-config.
-  - [Added] support for `show_foreign_key_links`.
+  - [Added] support for `show_foreign_key_link`.
   - [Added] `logHeaders` API to allow chaise to log events.
   - [Refactored] usage of `_printMarkdown` to use the more appropriate `renderMarkdown` function.
 

@@ -573,7 +573,13 @@
             return ref._nullValue[context];
         }
 
-        var value = module._getHierarchicalDisplayAnnotationValue(ref, context, "show_nulls", isTable);
+        var value = module._getHierarchicalDisplayAnnotationValue(ref, context, "show_null", isTable);
+
+        // backward compatibility: try show_nulls too
+        // TODO eventually should be removed
+        if (value === -1) {
+            value = module._getHierarchicalDisplayAnnotationValue(ref, context, "show_nulls", isTable);
+        }
 
         if (value === false) { //eliminate the field
             value = null;

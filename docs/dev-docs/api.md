@@ -3966,9 +3966,9 @@ TODO should be removed in favor of inputDisabled
 #### referenceColumn.\_getShowForeignKeyLinks(context) ⇒ <code>boolean</code>
 Whether we should show the link for the foreignkey value.
 this can be based on:
- - sourceObject.display.show_foreign_key_links
- - or, show_foreign_key_links defined on the last foreignKey display annotation
- - or, show_foreign_key_links defined on the table, schema, or catalog
+ - sourceObject.display.show_foreign_key_link
+ - or, show_foreign_key_link defined on the last foreignKey display annotation
+ - or, show_foreign_key_link defined on the table, schema, or catalog
 TODO this function shouldn't accept context and instead should just use the current context.
 But before that we have to refactor .formatPresentation functions to use the current context
 

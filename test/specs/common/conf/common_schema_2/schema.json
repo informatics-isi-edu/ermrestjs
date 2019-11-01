@@ -79,15 +79,17 @@
                     "type": { "typename": "markdown" }
                 },
                 {
-                    "name": "table_1_show_nulls_annotation",
+                    "name": "table_1_show_null_annotation",
                     "type": {"typename": "text"},
                     "annotations": {
                         "tag:misd.isi.edu,2015:display": {
-                            "show_nulls": {
-                                "record": "empty",
+                            "show_null": {
+                                "compact/brief": "empty",
                                 "detailed": true,
-                                "compact": "",
-                                "entry/edit": false,
+                                "entry/edit": false
+                            },
+                            "show_nulls": {
+                                "compact": "backward compatibility",
                                 "*": "default"
                             }
                         }
@@ -236,7 +238,7 @@
             "foreign_keys": [],
             "annotations": {
                 "tag:misd.isi.edu,2015:display": {
-                    "show_nulls": {
+                    "show_null": {
                         "entry/create": "table"
                     }
                 }
@@ -576,7 +578,7 @@
                     "tag:isrd.isi.edu,2016:foreign-key": {
                         "display": {
                             "detailed": {
-                                "show_foreign_key_links": false
+                                "show_foreign_key_link": false
                             }
                         }
                     }
@@ -584,7 +586,7 @@
             }],
             "annotations": {
                 "tag:misd.isi.edu,2015:display": {
-                    "show_foreign_key_links": {
+                    "show_foreign_key_link": {
                         "compact/select": false
                     }
                 },
@@ -600,10 +602,10 @@
     ],
     "annotations": {
         "tag:misd.isi.edu,2015:display": {
-            "show_nulls": {
+            "show_null": {
                 "entry": "schema"
             },
-            "show_foreign_key_links": {
+            "show_foreign_key_link": {
                 "compact/brief": false
             }
         }

@@ -1103,7 +1103,7 @@
                             }
                         },
                         "tag:misd.isi.edu,2015:display": {
-                            "show_nulls" : { "*" : false }
+                            "show_null" : { "*" : false }
                         }
                     }
                 },
@@ -1209,7 +1209,7 @@
                         "tag:isrd.isi.edu,2016:column-display" : {
                             "*" : {
                                 "markdown_pattern" : "[{{some_invisible_column}}](http://example.com/{{some_invisible_column}})",
-                                "show_nulls": "NA"
+                                "show_null": "NA"
                             }
                         }
                     }
@@ -1597,7 +1597,7 @@
                             }
                         },
                         "tag:misd.isi.edu,2015:display": {
-                            "show_nulls" : { "*" : false }
+                            "show_null" : { "*" : false }
                         }
                     }
                 },
