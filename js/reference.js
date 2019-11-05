@@ -711,7 +711,7 @@
                     });
 
                     // all the realted in detailed context
-                    detailedRef.related().forEach(function (relRef) {
+                    detailedRef.related.forEach(function (relRef) {
                         var fcObj;
                         if (relRef.pseudoColumn && !relRef.pseudoColumn.isInboundForeignKey) {
                             fcObj = {"obj": relRef.pseudoColumn.sourceObject, "column": relRef.pseudoColumn.baseColumn};
@@ -1981,93 +1981,100 @@
          * ignore `B` and think of this relationship as `A <-> C`, unless `B`
          * has other moderating attributes, for instance that indicate the
          * `type` of relationship, but this is a model-depenent detail.
-         * @returns {ERMrest.Reference[]}
+         * @type {ERMrest.Reference[]}
+         */
+        get related() {
+            if (this._related === undefined) {
+                this.generateRelatedList();
+            }
+            return this._related;
+        },
+
+        /**
+         * The function that can be used to generate .related API.
+         * The logic is as follows:
          *
+         * 1. Get the list of visible inbound foreign keys (if annotation is not defined,
+         * it will consider all the inbound foreign keys).
+         *
+         * 2. Go through the list of visible inbound foreign keys
+         *  2.1 if it's not part of InboundForeignKeyPseudoColumn apply the generateRelatedRef logic.
+         * The logic for are sorted based on following attributes:
+         *  1. displayname
+         *  2. position of key columns that are involved in the foreignkey
+         *  3. position of columns that are involved in the foreignkey
+         *
+         * @returns {ERMrest.Reference[]}
          * @param {ERMrest.Tuple=} tuple the current tuple
          */
-        related: function (tuple) {
-            if (this._related === undefined) {
-                /*
-                 * The logic is as follows:
-                 *
-                 * 1. Get the list of visible inbound foreign keys (if annotation is not defined,
-                 * it will consider all the inbound foreign keys).
-                 *
-                 * 2. Go through the list of visible inbound foreign keys
-                 *  2.1 if it's not part of InboundForeignKeyPseudoColumn apply the generateRelatedRef logic.
-                 * The logic for are sorted based on following attributes:
-                 *  1. displayname
-                 *  2. position of key columns that are involved in the foreignkey
-                 *  3. position of columns that are involved in the foreignkey
-                 *
-                 */
-                this._related = [];
+        generateRelatedList: function (tuple) {
 
-                var visibleFKs = this._table.referredBy._contextualize(this._context),
-                    notSorted,
-                    fkr, fkrName;
-                if (visibleFKs === -1) {
-                    notSorted = true;
-                    visibleFKs = this._table.referredBy.all().map(function (fkr) {
-                        return {foreignKey: fkr};
-                    });
-                }
+            this._related = [];
 
-                // if visible columns list is empty, make it.
-                if (this._referenceColumns === undefined) {
-                    // will generate the this._inboundFKColumns
-                    this.generateColumnsList(tuple);
-                }
-
-                var currentColumns = {};
-                this._referenceColumns.forEach(function (col) {
-                    if (col.isPathColumn || col.isInboundForeignKey) {
-                        currentColumns[col.name] = true;
-                    }
+            var visibleFKs = this._table.referredBy._contextualize(this._context),
+                notSorted,
+                fkr, fkrName;
+            if (visibleFKs === -1) {
+                notSorted = true;
+                visibleFKs = this._table.referredBy.all().map(function (fkr) {
+                    return {foreignKey: fkr};
                 });
+            }
 
-                for(var i = 0; i < visibleFKs.length; i++) {
-                    fkr = visibleFKs[i];
-                    // if in the visible columns list
-                    if (currentColumns[fkr.name]) {
+            // if visible columns list is empty, make it.
+            if (this._referenceColumns === undefined) {
+                // will generate the this._inboundFKColumns
+                this.generateColumnsList(tuple);
+            }
+
+            var currentColumns = {};
+            this._referenceColumns.forEach(function (col) {
+                if (col.isPathColumn || col.isInboundForeignKey) {
+                    currentColumns[col.name] = true;
+                }
+            });
+
+            for(var i = 0; i < visibleFKs.length; i++) {
+                fkr = visibleFKs[i];
+                // if in the visible columns list
+                if (currentColumns[fkr.name]) {
+                    continue;
+                }
+
+                if (fkr.isPath) {
+                    // since we're sure that the pseudoColumn either going to be
+                    // general pseudoColumn or InboundForeignKeyPseudoColumn then it will have reference
+                    this._related.push(module._createPseudoColumn(this, fkr.column, fkr.object, tuple, fkr.name, true).reference);
+                } else {
+                    fkr = fkr.foreignKey;
+
+                    // make sure that this fkr is not from an alternative table to self
+                    if (fkr._table._isAlternativeTable() && fkr._table._altForeignKey !== undefined &&
+                    fkr._table._baseTable === this._table && fkr._table._altForeignKey === fkr) {
                         continue;
                     }
 
-                    if (fkr.isPath) {
-                        // since we're sure that the pseudoColumn either going to be
-                        // general pseudoColumn or InboundForeignKeyPseudoColumn then it will have reference
-                        this._related.push(module._createPseudoColumn(this, fkr.column, fkr.object, tuple, fkr.name, true).reference);
-                    } else {
-                        fkr = fkr.foreignKey;
-
-                        // make sure that this fkr is not from an alternative table to self
-                        if (fkr._table._isAlternativeTable() && fkr._table._altForeignKey !== undefined &&
-                        fkr._table._baseTable === this._table && fkr._table._altForeignKey === fkr) {
-                            continue;
-                        }
-
-                        this._related.push(this._generateRelatedReference(fkr, tuple, true));
-                    }
+                    this._related.push(this._generateRelatedReference(fkr, tuple, true));
                 }
-
-                if (notSorted && this._related.length !== 0) {
-                    return this._related.sort(function (a, b) {
-                        // displayname
-                        if (a.displayname.value != b.displayname.value) {
-                            return a.displayname.value.localeCompare(b.displayname.value);
-                        }
-
-                        // columns
-                        if (a._related_key_column_positions.join(",") != b._related_key_column_positions.join(",")) {
-                            return a._related_key_column_positions > b._related_key_column_positions ? 1 : -1;
-                        }
-
-                        // foreignkey columns
-                        return a._related_fk_column_positions >= b._related_fk_column_positions ? 1 : -1;
-                    });
-                }
-
             }
+
+            if (notSorted && this._related.length !== 0) {
+                return this._related.sort(function (a, b) {
+                    // displayname
+                    if (a.displayname.value != b.displayname.value) {
+                        return a.displayname.value.localeCompare(b.displayname.value);
+                    }
+
+                    // columns
+                    if (a._related_key_column_positions.join(",") != b._related_key_column_positions.join(",")) {
+                        return a._related_key_column_positions > b._related_key_column_positions ? 1 : -1;
+                    }
+
+                    // foreignkey columns
+                    return a._related_fk_column_positions >= b._related_fk_column_positions ? 1 : -1;
+                });
+            }
+
             return this._related;
         },
 
@@ -2269,7 +2276,7 @@
                  }
 
                  // related entities
-                 self.related().forEach(processRelatedReference);
+                 self.related.forEach(processRelatedReference);
 
                  self._defaultExportTemplate = {
                      displayname: "BAG",
@@ -3159,7 +3166,7 @@
             });
 
             if (useRelated) {
-                self.related(tuple).forEach(function (rel, i) {
+                self.generateRelatedList(tuple).forEach(function (rel, i) {
                     // TODO must be improved
                     var addSet = true,
                         relObj = {index: i, related: true};
@@ -4443,7 +4450,7 @@
                     // render template
                     value = module._renderTemplate(ref.display._rowMarkdownPattern, keyValues, ref.table.schema.catalog, { templateEngine: ref.display.templateEngine});
 
-                    // If value is null or empty, return value on basis of `show_nulls`
+                    // If value is null or empty, return value on basis of `show_null`
                     if (value === null || value.trim() === '') {
                         value = ref.table._getNullValue(ref._context);
                     }

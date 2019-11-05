@@ -271,7 +271,7 @@ exports.execute = function (options) {
 
         describe("page.content, ", function () {
             it ("page.content for related entity with $self", function (done) {
-                var related = mainRefDetailed.related();
+                var related = mainRefDetailed.related;
                 expect(related.length).toEqual(1, "related length missmatch");
 
                 var content = "<p>";

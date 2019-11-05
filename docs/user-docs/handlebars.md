@@ -2,7 +2,8 @@
 
 [Handlebars](http://handlebarsjs.com/) is almost similar to Mustache with some additional benefits. There are some things that you can't do in Mustache (e.g if-else statement) that Handlebars allows us to do easily using `helpers`.
 
-Handlebars supports most of the Mustache syntax. However, there are a few features that are not supported by Handlebars. The primary ones are the block syntax (e.g. `{{#name}}...{{/name}}`) which is often used in Deriva annoations to perform boolean (or null) check, and the encode/decode methods (e.g. `{{#encode}}`, `{{#decode}}`). For example:
+Handlebars supports most of the Mustache syntax. However, there are a few features that are not supported by Handlebars. For example: 
+- Block syntax `{{#name}}...{{/name}}`: This is primarily used in Deriva annoations to perform boolean (or null) check. With handlebars you need to pass the variables to an `if` helper to do the check e.g. `{{#if name}}...{{/if}}`.
 
 ```js
 // Mustache
@@ -11,17 +12,24 @@ Handlebars supports most of the Mustache syntax. However, there are a few featur
 
 // name="John" (or any object that evaluates to true in javascript)                 => Hello John
 // name=null (or any object that evaluate to false such as '', 0, false, [], etc)   => No name available
+
+// handlebards
+
+{{#if name}}Hello {{name}}{{else}}No name available{{/if}}
 ```
-With handlebars you need to pass the variables to an `if` helper to do the check.
+
+- encode/decode `{{#encode}}...{{/encode}}`/`{{#decode}}...{{/decode}}`: With handlebards the value to be encoded is passed to the `encode`/`decode` helper e.g. `{{#encode ...}}{{/encode}}` or `{{#decode ...}}{{/decode}}`.
 
 ```
-{{#if name}}Hello {{name}}{{else}}No name available{{/if}}
+// Mustache
+{{#encode}}My URL{{/encode}}
+
+// handlebards
+{{#encode 'My URL'}}{{/encode}}
 ```
 
 Handlebars supports more complicated expression syntax and allow the comparison to be done at the finer level e.g. null v.s. false comparsion. This document summarizes the key concepts of Handlebars that are relevant to Deriva.
 
-
-## Notable differences between Mustache and Handlebars
 
 * [Handlebar Paths](#handlebars-paths)
 * [Helpers](#helpers)

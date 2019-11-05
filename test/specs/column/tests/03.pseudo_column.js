@@ -395,10 +395,10 @@ exports.execute = function (options) {
 
             });
 
-            describe(".related, ", function () {
+            describe(".related and generateRelatedList, ", function () {
                 var related;
                 beforeAll(function () {
-                    related = mainRefDetailed.related(mainTuple);
+                    related = mainRefDetailed.generateRelatedList(mainTuple);
                 });
 
                 it ("should not add duplicate sources, and create the list as expected.", function () {
@@ -725,7 +725,7 @@ exports.execute = function (options) {
                             ).value).toEqual('<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:outbound_1_outbound_1/id=101">101</a>', "index=5 missmatch.");
                         });
 
-                        it ("should not apply the foreignkey logic if the show_foreign_key_links:false is defined.", function () {
+                        it ("should not apply the foreignkey logic if the show_foreign_key_link:false is defined.", function () {
                             expect(detailedColsWTuple[25].formatPresentation(
                                 {"col": "A value", "id": "101"},
                                 "detailed"

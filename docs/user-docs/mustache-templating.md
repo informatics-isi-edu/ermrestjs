@@ -182,7 +182,7 @@ Research on date {{{date}}} : {{^title}}[This is some title](https://dev.isrd.is
 
 ### 6. Null Handling
 
-If the value of any of the columns which are being used in the `markdown_pattern` are either null or empty, then the pattern will fall back on the `show_nulls` display annotation to return respective value. For example, if title property in the json object is not defined or null then following template `[{{{title}}}]({{{url}}})` will resolve as null and use the `show_nulls` annotation to determine what should be done.
+If the value of any of the columns which are being used in the `markdown_pattern` are either null or empty, then the pattern will fall back on the `show_null` display annotation to return respective value. For example, if title property in the json object is not defined or null then following template `[{{{title}}}]({{{url}}})` will resolve as null and use the `show_null` annotation to determine what should be done.
 
 To make sure that you handle above case, wrap properties which can be null inside null handling blocks as mentioned in last 2 samples.
 

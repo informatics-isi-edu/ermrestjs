@@ -83,16 +83,16 @@ exports.execute = function(options) {
                 cid: "test"
             }).then(function(response) {
                 reference = response.contextualize.detailed;
-                related = reference.related();
+                related = reference.generateRelatedList();
                 return reference.read(1);
             }).then(function (responsePage) {
                 delete reference._related;
-                relatedWithTuple = reference.related(responsePage.tuples[0]);
+                relatedWithTuple = reference.generateRelatedList(responsePage.tuples[0]);
 
                 compactSelectRef = reference.contextualize.compactSelect;
                 return compactSelectRef.read(1);
             }).then(function (page) {
-                pathRelatedWithTuple = compactSelectRef.related(page.tuples[0]);
+                pathRelatedWithTuple = compactSelectRef.generateRelatedList(page.tuples[0]);
                 done();
             }).catch(function(error){
                 done.fail(error);
@@ -112,7 +112,7 @@ exports.execute = function(options) {
                     options.ermRest.resolve(noOrderUri, {
                         cid: "test"
                     }).then(function(response) {
-                        related2 = response.contextualize.detailed.related();
+                        related2 = response.contextualize.detailed.related;
                         done();
                     }, function(err) {
                         done.fail(err);
@@ -428,7 +428,7 @@ exports.execute = function(options) {
                 + schemaName3 + ":" + tableName3;
 
                 options.ermRest.resolve(tableWAlternateUri, {cid: "test"}).then(function(response) {
-                    var rel = response.related();
+                    var rel = response.related;
                     expect(rel.length).toBe(0);
                     done();
                 }, function(err) {

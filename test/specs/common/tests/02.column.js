@@ -122,35 +122,39 @@ exports.execute = function(options) {
                     var columnWithAnnotation, columnWithoutAnnotation;
 
                     beforeAll(function(done){
-                        columnWithAnnotation = table1_schema2.columns.get('table_1_show_nulls_annotation');
+                        columnWithAnnotation = table1_schema2.columns.get('table_1_show_null_annotation');
                         columnWithoutAnnotation = table1_schema2.columns.get(columnName);
                         done();
                     });
 
                     function runShowNullTestCases (column, testCases){
                         for(key in testCases){
-                            expect(column.formatvalue(null, key)).toBe(testCases[key]);
+                            expect(column.formatvalue(null, key)).toBe(testCases[key], "missmatch for context=" + key);
                         }
                     }
-                    it('should return the value that is defined in its `show_nulls` display annotation based on context.', function() {
+                    it('should return the value that is defined in its `show_null` display annotation based on context.', function() {
                         runShowNullTestCases(
                             columnWithAnnotation,
-                            {"record": "empty", "detailed": "", "compact": "", "entry/edit": null, "*": "default"}
+                            {"compact/brief": "empty", "detailed": "", "entry/edit": null}
                         );
                     });
-                    it('when the specified context is not defined in its `show_nulls` display annotation should return the value that is defined in default context .', function() {
+                    it ("should use `show_nulls` if `show_null` is not defined in display annotation for the context.", function () {
+                        runShowNullTestCases(columnWithAnnotation, {"compact": "backward compatibility", "*": "default"});
+                    });
+
+                    it('when the specified context is not defined in its `show_null` display annotation should return the value that is defined in default context .', function() {
                         runShowNullTestCases(columnWithAnnotation,{"filter": "default"});
                     });
-                    it('when `show_nulls` annotation is not defined in column, should return the value that is defined in its table `show_nulls` display annotation based on context.', function() {
+                    it('when `show_null` annotation is not defined in column, should return the value that is defined in its table `show_null` display annotation based on context.', function() {
                         runShowNullTestCases(columnWithoutAnnotation, {"entry/create": "table"});
                     });
-                    it('when `show_nulls` annotation is not defined in column or table, should return the value that is defined in its schema `show_nulls` display annotation based on context.', function() {
+                    it('when `show_null` annotation is not defined in column or table, should return the value that is defined in its schema `show_null` display annotation based on context.', function() {
                         runShowNullTestCases(columnWithoutAnnotation, {"entry": "schema"});
                     });
-                    it('when `show_nulls` annotation is not defined and context is `detailed`, should return null.', function() {
+                    it('when `show_null` annotation is not defined and context is `detailed`, should return null.', function() {
                         runShowNullTestCases(columnWithoutAnnotation, {"detailed": null});
                     });
-                    it('when `show_nulls` annotation is not defined and context is not `detailed`, should return empty string.', function() {
+                    it('when `show_null` annotation is not defined and context is not `detailed`, should return empty string.', function() {
                         runShowNullTestCases(columnWithoutAnnotation,{"filter": ""});
                     });
                     it('when context is not specified in options and default context is defined in annotation, should use the default context.', function() {
