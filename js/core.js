@@ -173,8 +173,16 @@
         this.logHeaders = function (contextHeaderParams, location) {
             var defer = module._q.defer();
 
+            if (!contextHeaderParams || (contextHeaderParams === Object(contextHeaderParams) && !Array.isArray(contextHeaderParams))) {
+                // maybe throw an error?
+                // NOTE: currently only called by a function in chaise that always sends the object { action: "" || undefined }
+            }
+
+            var headers = {};
+            headers[module.contextHeaderName] = contextHeaderParams;
+
             var config = {
-                headers: this._generateContextHeader(contextHeaderParams)
+                headers: headers
             };
 
             this.http.head(this.uri + "/" + location, config).then(function () {
