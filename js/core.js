@@ -317,13 +317,23 @@
          * @return {Promise} a promise that returns json object or snaptime if resolved or
          *      {@link ERMrest.ERMrestError} if rejected
          */
-        currentSnaptime: function (action) {
+        currentSnaptime: function (header) {
             var self = this, defer = module._q.defer(), headers = {};
-            headers[module.contextHeaderName] = {
-                action: action || "model/snaptime",
-                catalog: self.id
+
+            if (header) {
+                headers[module.contextHeaderName] = header;
+            } else {
+                headers[module.contextHeaderName] = {
+                    action: "model/snaptime",
+                    catalog: self.id
+                };
+            }
+
+            var config = {
+                headers: headers
             };
-            this.server.http.get(this._uri, {headers: headers}).then(function (response) {
+
+            this.server.http.get(this._uri, config).then(function (response) {
                 defer.resolve(response.data.snaptime);
             }, function (error) {
                 defer.reject(error);
