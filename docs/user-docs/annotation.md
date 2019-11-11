@@ -810,7 +810,7 @@ Note: Some properties might not make sense to be used in this annotation. The `d
 
 `tag:isrd.isi.edu,2019:source-definitions`
 
-This key allows specification of sources that can be used in `visible-columns` and `visible-foreignKeys` annotations. It will also allow defining the list of column names and outbound forieng keys that should be available in the templating environments. Please refer to [this document](pseudo-column-template.md) for more information about how to use this annotation.
+This key allows specification of sources that can be used in `visible-columns` and `visible-foreignKeys` annotations. It will also allow defining the list of column names and outbound foreign keys that should be available in the templating environments. Please refer to [this document](pseudo-column-template.md) for more information about how to use this annotation.
 
 Example:
 
@@ -832,7 +832,7 @@ Example:
 
 Supported JSON payload patterns:
 
-- `{` ... `"sources":` _sourcedefinitions_ `,` ... `}`: The _sourcedefinitions_ will
+- `{` ... `"sources":` _sourcedefinitions_ `,` ... `}`: the source definitions that will allow you to refer to them by just using the defined _sourcekey_.
 - `{` ... `"fkeys":` _fkeylist_  `,` ... `}`: Array of foreign key constraints that will be mapped into `$fkey_schema_contraint` key in templating environments.
 - `{` ... `"columns":` _columns_  `,` ... `}`: Array of column names that their data will be available in templating environments.
 

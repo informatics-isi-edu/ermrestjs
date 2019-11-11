@@ -2,18 +2,18 @@
 
 This document will explain which annotations you need to use and how to use them in order to be able to access more than the current table's values in the templating environment. To make this simpler, we will explain this using an example.
 
-Let's assume the following is the ERD of our database. In all the examples we're defining column list for the `Main` table (assuming `S` is the schema name).
+Let's assume the following is the ERD of our database. In all the examples we're defining column list for the `Main` table (assuming `schema` is the schema name).
 
 ![erd_01](https://raw.githubusercontent.com/informatics-isi-edu/ermrestjs/master/docs/resources/pseudo_columns_erd_01.png)
 
 ## 1. Defining Sources
 
-First you need to define your source definitions. To do this, you have to define the [source-definitions](annotation.md#tag-2019-source-definitions) annotation.
+First you need to define your source definitions. To do this, you have to define the [source-definitions](annotation.md#tag-2019-source-definitions) annotation which is in the following format:
 
 ```
 "tag:isrd.isi.edu,2019:source-definitions": {
-   "columns": [ cname, ... ],
-   "fkeys": [  [ schema, constraint ], ... ],
+   "columns": [ cname, ... ] | true,
+   "fkeys": [  [ schema, constraint ], ... ] | true,
    "sources": {
       <sourcekey>: {
           "source": <some valid path>,
@@ -24,16 +24,21 @@ First you need to define your source definitions. To do this, you have to define
 }
 ```
 
-- `"columns"`: Map implicitly to keys `cname` (formatted value) and `_cname` (raw value).
-  - if field is boolean `true` instead of list, it implies all the columns.
-- `"fkeys"`: map implicitly into the `$fkey_<schema_name>_<constraint_name>` namespace.
-  - if field is boolean `true` instead of list, it implies all the outbound foreign keys.
-- `"sources"`: Access the pseudo-column data by the given _sourcekey_. Which will allow you to refer to pseudo-columns just by using their _sourcekey_. The available data will be [different based on the pseudo-column type](#Pseudo-Column-Templating-Variable-Data-Structure). Please make sure to follow these rules while specifying the sourcekey:
+Use the `sources` attribute to define the sources that you want to use in this table. You should be able to access the data by the given _sourcekey_. The available data will be [different based on the pseudo-column type](#Pseudo-Column-Templating-Variable-Data-Structure). Please make sure to follow these rules while specifying the _sourcekey_:
 
    - sourcekey cannot start with `$`.
    - sourcekey should not be any of the table's column names.
 
+The following extra fields can be used to automatically configure the list of available columns and foreign keys in the templating environments (This syntactic sugar is of course a redundant way to specify the sources and you can just use the `sources` attribute):
+
+- `"columns"`: List of table column names. Assuming one of the defined column names is `cname`, you can use `cname` to access the formatted value and `_cname` to access the raw value.
+ - if field is boolean `true` instead of list, it implies all the columns.
+- `"fkeys"`: List of outbound foreign keys. Assuming `["schema", "constraint"]` is the constraint name of one of the specified foreign keys, you can use the `$fkey_schema_constraint` namespace (in the format of `$fkey_<schema name>_<constraint name>`) to access the foreign key data.
+ - if field is boolean `true` instead of list, it implies all the outbound foreign keys.
+
 > If you define this annotation, you have to define all three attributes. If you do not providing any values for `columns` and `fkeys`, chaise will not provide data for any columns or outbound foreign keys in templating environments.
+
+> Using `"fkeys": true` might cause performance issues since we have to fetch the data for all the outbound foreign keys of the table.
 
 
 The following is the source definitions that we are going to use:
