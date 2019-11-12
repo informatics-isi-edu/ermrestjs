@@ -166,16 +166,16 @@
         this.catalogs = null;
 
         /**
-         * should be used to log information on the server to different log locations
+         * should be used to log client action information on the server
          * @param {Object} headers - the headers to be logged, should include action
-         * @param {String} location - the path for logging (terminal_error || client_action)
          **/
-        this.logHeaders = function (contextHeaderParams, location) {
+        this.logClientAction = function (contextHeaderParams) {
             var defer = module._q.defer();
 
             if (!contextHeaderParams || (contextHeaderParams === Object(contextHeaderParams) && !Array.isArray(contextHeaderParams))) {
-                // maybe throw an error?
-                // NOTE: currently only called by a function in chaise that always sends the object { action: "" || undefined }
+                var error = new module.InvalidInputError("Context header params were not passed");
+                // Errors for client action logging should not force a terminal error
+                defer.resolve(error);
             }
 
             var headers = {};
@@ -185,10 +185,10 @@
                 headers: headers
             };
 
-            this.http.head(this.uri + "/" + location, config).then(function () {
+            this.http.head(this.uri + "/client_action", config).then(function () {
                 defer.resolve();
             }, function (error) {
-                defer.reject(error);
+                defer.resolve(error);
             });
 
             return defer.promise;
@@ -314,14 +314,15 @@
         /**
          * This will return the snapshot from the catalog request instead of schema,
          * because it will return the snapshot based on the model changes.
+         * @param {Object} contextHeaderParams - properties to log under the dcctx header
          * @return {Promise} a promise that returns json object or snaptime if resolved or
          *      {@link ERMrest.ERMrestError} if rejected
          */
-        currentSnaptime: function (header) {
+        currentSnaptime: function (contextHeaderParams) {
             var self = this, defer = module._q.defer(), headers = {};
 
-            if (header) {
-                headers[module.contextHeaderName] = header;
+            if (contextHeaderParams) {
+                headers[module.contextHeaderName] = contextHeaderParams;
             } else {
                 headers[module.contextHeaderName] = {
                     action: "model/snaptime",
