@@ -126,6 +126,7 @@
         function wrap(method, fn, scope) {
             scope = scope || window;
             var cfg_idx = _method_to_config_idx[method];
+            var startTime = Date.now();
             return function() {
                 var args;
 
@@ -170,6 +171,7 @@
                   *
                   **/
                 if (typeof config.headers[module.contextHeaderName] === 'object') {
+                    config.headers[module.contextHeaderName].elapsed_s = Date.now() - startTime;
                     // encode and make sure it's not very lengthy
                     config.headers[module.contextHeaderName] = module._certifyContextHeader(config.headers[module.contextHeaderName]);
                 }

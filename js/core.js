@@ -145,7 +145,6 @@
          */
         this.http = module._wrap_http(module._http);
         this.http.contextHeaderParams = contextHeaderParams;
-        this.http.contextHeaderParams.cid = this.http.contextHeaderParams.cid;
 
         /**
          * context-id: shows the id of app that this server is being used for
