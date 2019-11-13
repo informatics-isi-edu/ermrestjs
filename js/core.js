@@ -171,7 +171,8 @@
         this.logClientAction = function (contextHeaderParams) {
             var defer = module._q.defer();
 
-            if (!contextHeaderParams || (contextHeaderParams === Object(contextHeaderParams) && !Array.isArray(contextHeaderParams))) {
+            // make sure contextHeaderParams is an object and NOT an array
+            if (!contextHeaderParams || (contextHeaderParams === Object(contextHeaderParams) && Array.isArray(contextHeaderParams))) {
                 var error = new module.InvalidInputError("Context header params were not passed");
                 // Errors for client action logging should not force a terminal error
                 return defer.reject(error), defer.promise;
