@@ -174,7 +174,7 @@
             if (!contextHeaderParams || (contextHeaderParams === Object(contextHeaderParams) && !Array.isArray(contextHeaderParams))) {
                 var error = new module.InvalidInputError("Context header params were not passed");
                 // Errors for client action logging should not force a terminal error
-                defer.resolve(error);
+                return defer.reject(error), defer.promise;
             }
 
             var headers = {};
@@ -187,7 +187,7 @@
             this.http.head(this.uri + "/client_action", config).then(function () {
                 defer.resolve();
             }, function (error) {
-                defer.resolve(error);
+                defer.reject(error);
             });
 
             return defer.promise;
