@@ -145,7 +145,6 @@
          */
         this.http = module._wrap_http(module._http);
         this.http.contextHeaderParams = contextHeaderParams;
-        this.http.contextHeaderParams.cid = this.http.contextHeaderParams.cid;
 
         /**
          * context-id: shows the id of app that this server is being used for
@@ -166,17 +165,27 @@
         this.catalogs = null;
 
         /**
-         * should be used to log information on the server to different log locations
+         * should be used to log client action information on the server
          * @param {Object} headers - the headers to be logged, should include action
-         * @param {String} location - the path for logging (terminal_error || button_action)
          **/
-        this.logHeaders = function (actionHeader, location) {
+        this.logClientAction = function (contextHeaderParams) {
             var defer = module._q.defer();
 
-            var headers = {};
-            headers[module.contextHeaderName] = actionHeader;
+            // make sure contextHeaderParams is an object and NOT an array
+            if (!contextHeaderParams || (contextHeaderParams === Object(contextHeaderParams) && Array.isArray(contextHeaderParams))) {
+                var error = new module.InvalidInputError("Context header params were not passed");
+                // Errors for client action logging should not force a terminal error
+                return defer.reject(error), defer.promise;
+            }
 
-            this.http.head(this.uri + "/" + location, {headers: headers}).then(function () {
+            var headers = {};
+            headers[module.contextHeaderName] = contextHeaderParams;
+
+            var config = {
+                headers: headers
+            };
+
+            this.http.head(this.uri + "/client_action", config).then(function () {
                 defer.resolve();
             }, function (error) {
                 defer.reject(error);
@@ -305,16 +314,27 @@
         /**
          * This will return the snapshot from the catalog request instead of schema,
          * because it will return the snapshot based on the model changes.
+         * @param {Object} contextHeaderParams - properties to log under the dcctx header
          * @return {Promise} a promise that returns json object or snaptime if resolved or
          *      {@link ERMrest.ERMrestError} if rejected
          */
-        currentSnaptime: function (action) {
+        currentSnaptime: function (contextHeaderParams) {
             var self = this, defer = module._q.defer(), headers = {};
-            headers[module.contextHeaderName] = {
-                action: action || "model/snaptime",
-                catalog: self.id
+
+            if (contextHeaderParams) {
+                headers[module.contextHeaderName] = contextHeaderParams;
+            } else {
+                headers[module.contextHeaderName] = {
+                    action: "model/snaptime",
+                    catalog: self.id
+                };
+            }
+
+            var config = {
+                headers: headers
             };
-            this.server.http.get(this._uri, {headers: headers}).then(function (response) {
+
+            this.server.http.get(this._uri, config).then(function (response) {
                 defer.resolve(response.data.snaptime);
             }, function (error) {
                 defer.reject(error);

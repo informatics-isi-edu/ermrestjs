@@ -67,7 +67,7 @@ to use for ERMrest JavaScript agents.
         * [.cid](#ERMrest.Server+cid) : <code>string</code>
         * [.pid](#ERMrest.Server+pid) : <code>string</code>
         * [.catalogs](#ERMrest.Server+catalogs) : [<code>Catalogs</code>](#ERMrest.Catalogs)
-        * [.logHeaders(headers, location)](#ERMrest.Server+logHeaders)
+        * [.logClientAction(headers)](#ERMrest.Server+logClientAction)
     * [.Catalogs](#ERMrest.Catalogs)
         * [new Catalogs(server)](#new_ERMrest.Catalogs_new)
         * [.length()](#ERMrest.Catalogs+length) ⇒ <code>Number</code>
@@ -78,7 +78,7 @@ to use for ERMrest JavaScript agents.
         * [.id](#ERMrest.Catalog+id) : <code>string</code>
         * [.schemas](#ERMrest.Catalog+schemas) : [<code>Schemas</code>](#ERMrest.Schemas)
         * [.chaiseConfig](#ERMrest.Catalog+chaiseConfig) ⇒ <code>Object</code>
-        * [.currentSnaptime()](#ERMrest.Catalog+currentSnaptime) ⇒ <code>Promise</code>
+        * [.currentSnaptime(contextHeaderParams)](#ERMrest.Catalog+currentSnaptime) ⇒ <code>Promise</code>
         * [.constraintByNamePair(pair, subject)](#ERMrest.Catalog+constraintByNamePair) ⇒ <code>Object</code> \| <code>null</code>
         * [.getTable(tableName, schemaName)](#ERMrest.Catalog+getTable) ⇒ [<code>Table</code>](#ERMrest.Table)
     * [.Schemas](#ERMrest.Schemas)
@@ -698,7 +698,7 @@ to use for ERMrest JavaScript agents.
     * [.cid](#ERMrest.Server+cid) : <code>string</code>
     * [.pid](#ERMrest.Server+pid) : <code>string</code>
     * [.catalogs](#ERMrest.Server+catalogs) : [<code>Catalogs</code>](#ERMrest.Catalogs)
-    * [.logHeaders(headers, location)](#ERMrest.Server+logHeaders)
+    * [.logClientAction(headers)](#ERMrest.Server+logClientAction)
 
 <a name="new_ERMrest.Server_new"></a>
 
@@ -737,17 +737,16 @@ page-id: shows the id of the page that this server is being used for
 
 #### server.catalogs : [<code>Catalogs</code>](#ERMrest.Catalogs)
 **Kind**: instance property of [<code>Server</code>](#ERMrest.Server)  
-<a name="ERMrest.Server+logHeaders"></a>
+<a name="ERMrest.Server+logClientAction"></a>
 
-#### server.logHeaders(headers, location)
-should be used to log information on the server to different log locations
+#### server.logClientAction(headers)
+should be used to log client action information on the server
 
 **Kind**: instance method of [<code>Server</code>](#ERMrest.Server)  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | headers | <code>Object</code> | the headers to be logged, should include action |
-| location | <code>String</code> | the path for logging (terminal_error || button_action) |
 
 <a name="ERMrest.Catalogs"></a>
 
@@ -804,7 +803,7 @@ Get a catalog by id. This call does catalog introspection.
     * [.id](#ERMrest.Catalog+id) : <code>string</code>
     * [.schemas](#ERMrest.Catalog+schemas) : [<code>Schemas</code>](#ERMrest.Schemas)
     * [.chaiseConfig](#ERMrest.Catalog+chaiseConfig) ⇒ <code>Object</code>
-    * [.currentSnaptime()](#ERMrest.Catalog+currentSnaptime) ⇒ <code>Promise</code>
+    * [.currentSnaptime(contextHeaderParams)](#ERMrest.Catalog+currentSnaptime) ⇒ <code>Promise</code>
     * [.constraintByNamePair(pair, subject)](#ERMrest.Catalog+constraintByNamePair) ⇒ <code>Object</code> \| <code>null</code>
     * [.getTable(tableName, schemaName)](#ERMrest.Catalog+getTable) ⇒ [<code>Table</code>](#ERMrest.Table)
 
@@ -836,13 +835,18 @@ The catalog identifier.
 **Returns**: <code>Object</code> - the chaise config object from the catalog annotation  
 <a name="ERMrest.Catalog+currentSnaptime"></a>
 
-#### catalog.currentSnaptime() ⇒ <code>Promise</code>
+#### catalog.currentSnaptime(contextHeaderParams) ⇒ <code>Promise</code>
 This will return the snapshot from the catalog request instead of schema,
 because it will return the snapshot based on the model changes.
 
 **Kind**: instance method of [<code>Catalog</code>](#ERMrest.Catalog)  
 **Returns**: <code>Promise</code> - a promise that returns json object or snaptime if resolved or
      [ERMrestError](#ERMrest.ERMrestError) if rejected  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| contextHeaderParams | <code>Object</code> | properties to log under the dcctx header |
+
 <a name="ERMrest.Catalog+constraintByNamePair"></a>
 
 #### catalog.constraintByNamePair(pair, subject) ⇒ <code>Object</code> \| <code>null</code>
