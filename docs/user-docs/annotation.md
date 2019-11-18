@@ -67,7 +67,7 @@ here is a quick matrix to locate them.
 | [2016 Export](#tag-2016-export-deprecated) (_deprecated_)              | -       | X      | X     | -      | -   | -   | Describes export templates                    |
 | [2017 Asset](#tag-2017-asset)                               | -       | -      | -     | X      | -   | -   | Describes assets                              |
 | [2018 Citation](#tag-2018-citation)                         | -       | -      | X     | -      | -   | -   | Describes citation                            |
-| [2018 Required](#tag-2018-required)                         | -       | -      | X     | -      | -   | -   | Required model column                         |
+| [2018 Required](#tag-2018-required)                         | -       | -      | -     | X      | -   | -   | Required model column                         |
 | [2018 Indexing Preferences](#tag-2018-indexing-preferences) | -       | -      | X     | X      | -   | -   | Specify database indexing preferences         |
 | [2019 Chaise Config](#tag-2019-chaise-config)               | X       | -      | -     | -      | -   | -   | Properties to configure chaise app UX         |
 | [2019 Source Definitions](#tag-2019-source-definitions)     | -       | -      | X     | -      | -   | -   | Describe source definitions                   |
