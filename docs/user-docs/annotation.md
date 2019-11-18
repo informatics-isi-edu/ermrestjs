@@ -50,7 +50,7 @@ here is a quick matrix to locate them.
 | Annotation                                                  | Catalog | Schema | Table | Column | Key | FKR | Summary                                       |
 |-------------------------------------------------------------|---------|--------|-------|--------|-----|-----|-----------------------------------------------|
 | [2015 Display](#tag-2015-display)                           | X       | X      | X     | X      | X   | -   | Display options                               |
-| [2015 Vocabulary](#tag-2015-vocabulary)                     | -       | -      | X     | -      | -   | -   | Table as a vocabulary list                    |
+| [2015 Vocabulary](#tag-2015-vocabulary) (_deprecated_)                     | -       | -      | X     | -      | -   | -   | Table as a vocabulary list                    |
 | [2016 Table Alternatives](#tag-2016-table-alternatives)     | -       | -      | X     | -      | _   | _   | Table abstracts another table                 |
 | [2016 Column Display](#tag-2016-column-display)             | -       | -      | -     | X      | -   | -   | Column-specific display options               |
 | [2017 Key Display](#tag-2017-key-display)                   | -       | -      | -     | -      | X   | -   | Key augmentation                              |
@@ -150,11 +150,11 @@ Note:
 - An explicit setting of `null` will turn *off* inheritence and restore default behavior for that modele element and any of its nested elements.
 - The name_style has to be derived separately for each field e.g. one can set `underline_space=true` at the schema-level and doesn't have to set this again.   
 
-### Tag: 2015 Vocabulary
+### Tag: 2015 Vocabulary (_deprecated_)
 
 `tag:misd.isi.edu,2015:vocabulary`
 
-This key is allowed on any number of tables in the model, where the
+This key has been deprecated. It was allowed on any number of tables in the model, where the
 table contains at least one key comprised of a single textual
 column. A vocabulary table is one where each row represents a term or
 concept in a controlled vocabulary.
