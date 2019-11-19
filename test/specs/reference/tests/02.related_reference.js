@@ -199,6 +199,35 @@ exports.execute = function(options) {
                 expect(related[3].origFKR.toString()).toBe('(id)=(reference_schema:association%20table%20with%20id:id%20from%20ref%20table)');
             });
 
+            it ('.dataSource should have the correct value', function () {
+                var expectedDataSources = [
+                    [{"inbound": ["reference_schema", "fromname_fk_inbound_related_to_reference"]}, "RID"],
+                    [{"inbound": ["reference_schema", "fk_inbound_related_to_reference"]}, "id"],
+                    [
+                        {"inbound": ["reference_schema", "toname_fk_association_related_to_reference"]},
+                        {"outbound": ["reference_schema", "association_table_with_toname_id_from_inbound_related_table1"]},
+                        "RID"
+                    ],
+                    [
+                        {"inbound": ["reference_schema", "id_fk_association_related_to_reference"]},
+                        {"outbound": ["reference_schema", "fk_to_inbound_related_reference_table"]},
+                        "id"
+                    ],
+                    [
+                        {"inbound": ["reference_schema", "system_col_fk_asscoation_related_to_reference"]},
+                        {"outbound": ["reference_schema", "association_table_with_system_col_fk_fk2"]},
+                        "RID"
+                    ],
+                    [
+                        {"inbound": ["reference_schema", "extra_fk_association_related_to_reference"]},
+                        "RID"
+                    ]
+                ];
+                related.forEach(function (rel, i) {
+                    expect(related[i].dataSource).toEqual(expectedDataSources[i], "missmatch for index=" + i);
+                })
+            })
+
             describe('for inbound foreign keys, ', function() {
                 it('should have the correct catalog, schema, and table.', function() {
                     expect(related[0]._location.catalog).toBe(catalog_id.toString());

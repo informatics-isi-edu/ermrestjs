@@ -385,6 +385,7 @@ to use for ERMrest JavaScript agents.
         * [.isPseudo](#ERMrest.ReferenceColumn+isPseudo) : <code>boolean</code>
         * [.table](#ERMrest.ReferenceColumn+table) : [<code>Table</code>](#ERMrest.Table)
         * [.name](#ERMrest.ReferenceColumn+name) : <code>string</code>
+        * [.dataSource](#ERMrest.ReferenceColumn+dataSource)
         * [.displayname](#ERMrest.ReferenceColumn+displayname) : <code>object</code>
         * [.type](#ERMrest.ReferenceColumn+type) : [<code>Type</code>](#ERMrest.Type)
         * [.nullok](#ERMrest.ReferenceColumn+nullok) : <code>Boolean</code>
@@ -3801,6 +3802,7 @@ count aggregate representation
     * [.isPseudo](#ERMrest.ReferenceColumn+isPseudo) : <code>boolean</code>
     * [.table](#ERMrest.ReferenceColumn+table) : [<code>Table</code>](#ERMrest.Table)
     * [.name](#ERMrest.ReferenceColumn+name) : <code>string</code>
+    * [.dataSource](#ERMrest.ReferenceColumn+dataSource)
     * [.displayname](#ERMrest.ReferenceColumn+displayname) : <code>object</code>
     * [.type](#ERMrest.ReferenceColumn+type) : [<code>Type</code>](#ERMrest.Type)
     * [.nullok](#ERMrest.ReferenceColumn+nullok) : <code>Boolean</code>
@@ -3848,6 +3850,13 @@ indicates that this object represents a Column.
 name of the column.
 
 **Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
+<a name="ERMrest.ReferenceColumn+dataSource"></a>
+
+#### referenceColumn.dataSource
+the source path from the main reference to this column
+
+**Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
+**Type{object}**:   
 <a name="ERMrest.ReferenceColumn+displayname"></a>
 
 #### referenceColumn.displayname : <code>object</code>
