@@ -535,7 +535,10 @@
     };
 
     /**
-    * @param {ERMrest.Table}
+    * @param {ERMrest.Table|ERMrest.Column|ERMrest.ForeignKeyRef} obj either table object, or an object that has `.table`
+    * @param {String} context the context string
+    * @param {String} annotKey the annotation key that you want the annotation value for
+    * @param {Boolean} isTable if the first parameter is table, you should pass `true` for this parameter
     */
     module._getHierarchicalDisplayAnnotationValue = function (obj, context, annotKey, isTable) {
         var hierarichy = [obj], table, annot, value = -1;
