@@ -150,6 +150,23 @@ ReferenceColumn.prototype = {
     },
 
     /**
+     * the source path from the main reference to this column
+     * @type{Object}
+     */
+    get dataSource() {
+        if (this._dataSource === undefined) {
+            if (this.sourceObject && this.sourceObject.source) {
+                this._dataSource = this.sourceObject.source;
+            } else if (this._simple) {
+                this._dataSource = this._baseCols[0].name;
+            } else {
+                this._dataSource = null;
+            }
+        }
+        return this._dataSource;
+    },
+
+    /**
      * @type {object}
      * @desc name of the column.
      */
@@ -1938,6 +1955,23 @@ Object.defineProperty(ForeignKeyPseudoColumn.prototype, "display", {
         return this._display_cached;
     }
 });
+Object.defineProperty(ForeignKeyPseudoColumn.prototype, "dataSource", {
+    get: function () {
+        if (this._dataSource === undefined) {
+            if (this.sourceObject && this.sourceObject.source) {
+                this._dataSource = this.sourceObject.source;
+            } else if (this.table.shortestKey.length === 1){
+                this._dataSource = [
+                    {"outbound": this.foreignKey.constraint_names[0]},
+                    this.table.shortestKey[0].name
+                ];
+            } else {
+                this._dataSource = null;
+            }
+        }
+        return this._dataSource;
+    }
+});
 
 /**
  * @memberof ERMrest
@@ -2594,6 +2628,20 @@ Object.defineProperty(InboundForeignKeyPseudoColumn.prototype, "default", {
 Object.defineProperty(InboundForeignKeyPseudoColumn.prototype, "nullok", {
     get: function () {
         throw new Error("can not use this type of column in entry mode.");
+    }
+});
+Object.defineProperty(InboundForeignKeyPseudoColumn.prototype, "dataSource", {
+    get: function () {
+        if (this._dataSource === undefined) {
+            if (this.sourceObject && this.sourceObject.source) {
+                this._dataSource = this.sourceObject.source;
+            } else if (this.reference.dataSource){
+                this._dataSource = this.reference.dataSource;
+            } else {
+                this._dataSource = null;
+            }
+        }
+        return this._dataSource;
     }
 });
 

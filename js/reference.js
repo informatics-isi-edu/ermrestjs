@@ -3216,6 +3216,8 @@
          *      0.1 origFKR: the foreign key that created this related reference (used in chaise for autofill)
          *      0.2 parentDisplayname: the displayname of parent
          *          - logic: foriengkey's to_name or this.displayname
+         *      0.3 mainTuple: the tuple used to generate the related references (might be undefined)
+         *      0.4 dataSource: the source path from the main to the related table (might be undefined)
          *
          * 1. If it's pure and binary association. (current reference: T1) <-F1-(A)-F2-> (T2)
          *      1.1 displayname: F2.to_name or T2.displayname
@@ -3240,7 +3242,7 @@
          * @return {ERMrest.Reference}  a reference which is related to current reference with the given fkr
          */
         _generateRelatedReference: function (fkr, tuple, checkForAssociation, sourceObject) {
-            var j, col, uri, source;
+            var j, col, uri, filterSource = [], dataSource = [];
 
             var useFaceting = (typeof tuple === 'object');
 
@@ -3278,7 +3280,10 @@
                 newRef.parentDisplayname = this.displayname;
             }
 
+            dataSource.push({"inbound": fkr.constraint_names[0]});
+
             var fkrTable = fkr.colset.columns[0].table;
+
             if (checkForAssociation && fkrTable.isPureBinaryAssociation) { // Association Table
 
                 // find the other foreignkey
@@ -3305,10 +3310,11 @@
                     newRef._location = module.parse(this._location.compactUri + "/" + fkr.toString() + "/" + otherFK.toString(true));
                 }
 
-                // build source
-                source = [
-                    {"inbound": otherFK.constraint_names[0]}
-                ];
+                // build the filter source
+                filterSource.push({"inbound": otherFK.constraint_names[0]});
+
+                // buld the data source
+                dataSource.push({"outbound": otherFK.constraint_names[0]});
 
                 // additional values for sorting related references
                 newRef._related_key_column_positions = fkr.key.colset._getColumnPositions();
@@ -3335,8 +3341,6 @@
                 if (!useFaceting) {
                     newRef._location = module.parse(this._location.compactUri + "/" + fkr.toString());
                 }
-                // build source
-                source = [];
 
                 // additional values for sorting related references
                 newRef._related_key_column_positions = fkr.key.colset._getColumnPositions();
@@ -3352,9 +3356,15 @@
                 };
             }
 
-            source.push({"outbound": fkr.constraint_names[0]});
-            // TODO should we do something with the source?
-            // it could be use for generating the name and stuff...
+            // attach the dataSource
+            if (sourceObject && sourceObject.source) {
+                newRef.dataSource = sourceObject.source;
+            } else if (newRef._table.shortestKey.length === 1) {
+                newRef.dataSource = dataSource.concat(newRef._table.shortestKey[0].name);
+            }
+
+            // complete the path
+            filterSource.push({"outbound": fkr.constraint_names[0]});
 
             if (useFaceting) {
                 var table = newRef._table;
@@ -3368,7 +3378,7 @@
                 var filters = [], filter;
                 fkr.key.table.shortestKey.forEach(function (col) {
                     filter = {
-                        source: source.concat(col.name)
+                        source: filterSource.concat(col.name)
                     };
                     filter[module._facetFilterTypes.CHOICE] = [tuple.data[col.name]];
                     filters.push(filter);
