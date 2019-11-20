@@ -353,6 +353,7 @@ to use for ERMrest JavaScript agents.
         * [new Page(reference, etag, data, hasPrevious, hasNext, extraData)](#new_ERMrest.Page_new)
         * [.reference](#ERMrest.Page+reference) : [<code>Reference</code>](#ERMrest.Reference)
         * [.tuples](#ERMrest.Page+tuples) : [<code>Array.&lt;Tuple&gt;</code>](#ERMrest.Tuple)
+        * [.length](#ERMrest.Page+length) : <code>integer</code>
         * [.hasPrevious](#ERMrest.Page+hasPrevious) ⇒ <code>boolean</code>
         * [.previous](#ERMrest.Page+previous) : [<code>Reference</code>](#ERMrest.Reference) \| <code>undefined</code>
         * [.hasNext](#ERMrest.Page+hasNext) ⇒ <code>boolean</code>
@@ -3402,6 +3403,7 @@ Check the sort object. Does not change the `this._location` object.
     * [new Page(reference, etag, data, hasPrevious, hasNext, extraData)](#new_ERMrest.Page_new)
     * [.reference](#ERMrest.Page+reference) : [<code>Reference</code>](#ERMrest.Reference)
     * [.tuples](#ERMrest.Page+tuples) : [<code>Array.&lt;Tuple&gt;</code>](#ERMrest.Tuple)
+    * [.length](#ERMrest.Page+length) : <code>integer</code>
     * [.hasPrevious](#ERMrest.Page+hasPrevious) ⇒ <code>boolean</code>
     * [.previous](#ERMrest.Page+previous) : [<code>Reference</code>](#ERMrest.Reference) \| <code>undefined</code>
     * [.hasNext](#ERMrest.Page+hasNext) ⇒ <code>boolean</code>
@@ -3451,6 +3453,12 @@ for (var i=0, len=page.tuples.length; i<len; i++) {
   console.log("Tuple:", tuple.displayname.value, "has values:", tuple.values);
 }
 ```
+
+**Kind**: instance property of [<code>Page</code>](#ERMrest.Page)  
+<a name="ERMrest.Page+length"></a>
+
+#### page.length : <code>integer</code>
+the page length (number of rows in the page)
 
 **Kind**: instance property of [<code>Page</code>](#ERMrest.Page)  
 <a name="ERMrest.Page+hasPrevious"></a>

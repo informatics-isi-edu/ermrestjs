@@ -4275,6 +4275,17 @@
         },
 
         /**
+         * the page length (number of rows in the page)
+         * @type {integer}
+         */
+        get length() {
+            if (this._length === undefined) {
+                this._length = this._data.length;
+            }
+            return this._length;
+        },
+
+        /**
          * Whether there is more entities before this page
          * @returns {boolean}
          */
