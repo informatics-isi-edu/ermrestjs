@@ -671,6 +671,106 @@ exports.execute = function (options) {
                 });
             });
 
+            describe("dataSource, ", function () {
+                var detailedColumnDataSources = [
+                    "main_table_id_col", //0
+                    "col", //1
+                    "main_table_id_col", //2
+                    [{"outbound": ["pseudo_column_schema", "main_fk1"]}, "id"], //3
+                    [{"outbound": ["pseudo_column_schema", "main_fk1"]}, "id"], //4
+                    [
+                        {"outbound": ["pseudo_column_schema", "main_fk1"]},
+                        {"outbound": ["pseudo_column_schema", "outbound_1_fk1"]},
+                        "id"
+                    ], //5
+                    [
+                        {"outbound": ["pseudo_column_schema", "main_fk1"]},
+                        {"outbound": ["pseudo_column_schema", "outbound_1_fk1"]},
+                        "id"
+                    ], //6
+                    [{"inbound": ["pseudo_column_schema", "inbound_1_fk1"]}, "id"], //7
+                    [
+                        {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
+                        {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
+                        "id"
+                    ], //8
+                    [
+                        {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
+                        {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
+                        {"outbound": ["pseudo_column_schema", "inbound_2_fk1"]},
+                        "id"
+                    ], //9
+                    [
+                        {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]}, "id"
+                    ], //10
+                    [
+                        {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
+                        {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
+                        "id"
+                    ], //11
+                    [
+                        {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
+                        {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
+                        {"outbound": ["pseudo_column_schema", "inbound_2_fk1"]},
+                        "id"
+                    ], //12
+                    [
+                        {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]}, "id"
+                    ], //13
+                    "col", //14
+                    [
+                        {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
+                        {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
+                        "id"
+                    ], //15
+                    [
+                        { "inbound": [ "pseudo_column_schema", "main_inbound_2_association_fk1"]},
+                        { "outbound": [ "pseudo_column_schema", "main_inbound_2_association_fk2"]},
+                        "id"
+                    ], //16
+                    [
+                        { "inbound": [ "pseudo_column_schema", "main_inbound_2_association_fk1"]},
+                        { "outbound": [ "pseudo_column_schema", "main_inbound_2_association_fk2"]},
+                        "id"
+                    ], //17
+                    [
+                        {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
+                        {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
+                        "id"
+                    ], //18
+                    [
+                        {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
+                        {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
+                        "RID"
+                    ], //19
+                    [
+                        {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
+                        {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
+                        "timestamp_col"
+                    ], //20
+                    [
+                        {"inbound": ["pseudo_column_schema", "inbound_4_long_table_name_fk"]}, "foreign key column name to main"
+                    ], //21
+                    "asset", //22
+                    "asset_filename", //23
+                    [
+                        {"outbound": ["pseudo_column_schema", "main_fk2"]},
+                        {"inbound": ["pseudo_column_schema", "outbound_2_inbound_1_fk1"]},
+                        "id"
+                    ], //24
+                    [
+                        {"outbound": ["pseudo_column_schema", "main_fk2"]},
+                        {"outbound": ["pseudo_column_schema", "outbound_2_fk1"]},
+                        "id"
+                    ] //25
+                ];
+                it ("should return the data source of the pseudo-column.", function () {
+                    detailedColsWTuple.forEach(function (col, index) {
+                        expect(col.dataSource).toEqual(detailedColumnDataSources[index], "missmatch for index=" + index);
+                    });
+                });
+            })
+
             describe("sortable, ", function () {
                 describe("if it's unique (one-to-one) path should apply the same logic as foreignkey. ", function () {
                     it ("use the column_order defined on last foreignkey.", function () {

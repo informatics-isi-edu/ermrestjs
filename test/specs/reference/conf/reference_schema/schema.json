@@ -468,6 +468,9 @@
                     }]
                 },
                 {
+                    "names": [
+                        ["reference_schema", "association_table_with_system_col_fk_fk2"]
+                    ],
                     "comment": "fk to inbound_related_reference_table",
                     "foreign_key_columns": [{
                         "schema_name": "reference_schema",
@@ -481,6 +484,9 @@
                     }]
                 },
                 {
+                    "names": [
+                        ["reference_schema", "association_table_with_system_col_fk_fk3"]
+                    ],
                     "foreign_key_columns": [{
                         "schema_name": "reference_schema",
                         "table_name": "association_table_with_system_col_fk",
@@ -493,6 +499,9 @@
                     }]
                 },
                 {
+                    "names": [
+                        ["reference_schema", "association_table_with_system_col_fk_fk4"]
+                    ],
                     "foreign_key_columns": [{
                         "schema_name": "reference_schema",
                         "table_name": "association_table_with_system_col_fk",

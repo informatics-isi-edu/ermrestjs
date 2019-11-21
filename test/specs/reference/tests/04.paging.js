@@ -63,6 +63,10 @@ exports.execute = function (options) {
                 });
             });
 
+            it("length should return number of returned data.", function () {
+                expect(page1.length).toBe(10);
+            });
+
             it('tuples should be sorted by ascending value of shortestkey by default. ', function() {
                 tuples = page1.tuples;
                 expect(tuples.length).toBe(10);
@@ -93,6 +97,10 @@ exports.execute = function (options) {
                         console.dir(err);
                         done.fail();
                     });
+                });
+
+                it("length should return number of returned data.", function () {
+                    expect(page2.length).toBe(6);
                 });
 
                 it('tuples should be sorted by ascending value of shortestkey by default. ', function() {
@@ -138,9 +146,13 @@ exports.execute = function (options) {
                     });
                 });
 
+                it("length should return number of returned data.", function () {
+                    expect(page3.length).toBe(10);
+                });
+
                 it('tuples should be sorted by ascending id by default. ', function() {
                     tuples = page3.tuples;
-                    expect(tuples.length === 10);
+                    expect(tuples.length).toBe(10);
                     var shortestkey = tuples[0].reference._shortestKey[0].name; // only 1 column
                     for(var i = 0; i < tuples.length - 1; i++) {
                         expect(tuples[i].reference._location.uri).toBe(
@@ -187,11 +199,12 @@ exports.execute = function (options) {
                     reference5.read(increasedLimit).then(function (response) {
                         increasedLimitPage = response;
 
-                        expect(increasedLimitPage).toEqual(jasmine.any(Object));
-                        expect(increasedLimitPage.tuples.length).toBe(increasedLimit);
+                        expect(increasedLimitPage).toEqual(jasmine.any(Object), "invalid page object");
+                        expect(increasedLimitPage.length).toBe(increasedLimit, "length missmatch")
+                        expect(increasedLimitPage.tuples.length).toBe(increasedLimit, "tuples length missmatch");
 
                         increasedLimitPreviousReference = increasedLimitPage.previous;
-                        expect(increasedLimitPreviousReference).toBe(null);
+                        expect(increasedLimitPreviousReference).toBe(null, "previous missmatch");
 
                         done();
                     }, function (err) {
@@ -207,11 +220,12 @@ exports.execute = function (options) {
                     reference5.read(decreasedLimit).then(function (response) {
                         decreasedLimitPage = response;
 
-                        expect(decreasedLimitPage).toEqual(jasmine.any(Object));
-                        expect(decreasedLimitPage.tuples.length).toBe(decreasedLimit);
+                        expect(decreasedLimitPage).toEqual(jasmine.any(Object), "invalid page object");
+                        expect(decreasedLimitPage.length).toBe(decreasedLimit, "length missmatch");
+                        expect(decreasedLimitPage.tuples.length).toBe(decreasedLimit, "tuples length missmatch");
 
                         decreasedLimitPreviousReference = decreasedLimitPage.previous;
-                        expect(decreasedLimitPreviousReference).toBe(null);
+                        expect(decreasedLimitPreviousReference).toBe(null, "previous missmatch");
 
                         done();
                     }, function (err) {
@@ -267,6 +281,10 @@ exports.execute = function (options) {
                 });
             });
 
+            it("length should return number of returned data.", function () {
+                expect(page1.length).toBe(10);
+            });
+
             it('tuples should be sorted by name. ', function() {
                 tuples = page1.tuples;
                 expect(tuples.length).toBe(10);
@@ -298,6 +316,10 @@ exports.execute = function (options) {
                         console.dir(err);
                         done.fail();
                     });
+                });
+
+                it("length should return number of returned data.", function () {
+                    expect(page2.length).toBe(10);
                 });
 
                 it('tuples should be sorted by name. ', function() {
@@ -344,9 +366,13 @@ exports.execute = function (options) {
                     });
                 });
 
+                it("length should return number of returned data.", function () {
+                    expect(page3.length).toBe(10);
+                });
+
                 it('tuples should be sorted by ascending id by default. ', function() {
                     tuples = page3.tuples;
-                    expect(tuples.length === 10);
+                    expect(tuples.length).toBe(10);
                     var shortestkey = tuples[0].reference._shortestKey[0].name; // only 1 column
                     for(var i = 0; i < tuples.length - 1; i++) {
                         expect(tuples[i].reference._location.uri).toBe(
@@ -402,6 +428,10 @@ exports.execute = function (options) {
                 });
             });
 
+            it("length should return number of returned data.", function () {
+                expect(page1.length).toBe(10);
+            });
+
             it('tuples should be sorted by ascending id by default. ', function() {
                 tuples = page1.tuples;
                 expect(tuples.length).toBe(10);
@@ -433,6 +463,10 @@ exports.execute = function (options) {
                         console.dir(err);
                         done.fail();
                     });
+                });
+
+                it("length should return number of returned data.", function () {
+                    expect(page2.length).toBe(6);
                 });
 
                 it('tuples should be sorted by ascending id by default. ', function() {
@@ -479,9 +513,13 @@ exports.execute = function (options) {
                     });
                 });
 
+                it("length should return number of returned data.", function () {
+                    expect(page3.length).toBe(10);
+                });
+
                 it('tuples should be sorted by ascending id by default. ', function() {
                     tuples = page3.tuples;
-                    expect(tuples.length === 10);
+                    expect(tuples.length).toBe(10);
                     var shortestkey = tuples[0].reference._shortestKey[0].name; // only 1 column
                     for(var i = 0; i < tuples.length - 1; i++) {
                         expect(tuples[i].reference._location.uri).toBe(
@@ -537,6 +575,10 @@ exports.execute = function (options) {
                 });
             });
 
+            it("length should return number of returned data.", function () {
+                expect(page1.length).toBe(10);
+            });
+
             it('tuples should be sorted by ascending id by default. ', function() {
                 tuples = page1.tuples;
                 expect(tuples.length).toBe(10);
@@ -566,6 +608,10 @@ exports.execute = function (options) {
                         console.dir(err);
                         done.fail();
                     });
+                });
+
+                it("length should return number of returned data.", function () {
+                    expect(page2.length).toBe(6);
                 });
 
                 it('tuples should be sorted by ascending id by default. ', function() {
@@ -602,9 +648,13 @@ exports.execute = function (options) {
                     });
                 });
 
+                it("length should return number of returned data.", function () {
+                    expect(page3.length).toBe(10);
+                });
+
                 it('tuples should be sorted by ascending id by default. ', function() {
                     tuples = page3.tuples;
-                    expect(tuples.length === 10);
+                    expect(tuples.length).toBe(10);
                     var shortestkey = tuples[0].reference._shortestKey[0].name; // only 1 column
                     for(var i = 0; i < tuples.length - 1; i++) {
                         expect(tuples[i].reference._location.uri).toBe(
@@ -645,7 +695,8 @@ exports.execute = function (options) {
                 it ("tuples should be on the expected order.", function (done) {
                     newRef.read(5).then(function (res) {
                         page = res;
-                        expect(page.tuples.length).toEqual(5, "length missmatch.");
+                        expect(page.length).toBe(5, "length missmatch");
+                        expect(page.tuples.length).toEqual(5, "tuples length missmatch.");
                         expect(page.tuples[0].data['value x']).toEqual(19,"data missmatch.");
                         done();
                     }).catch(function (err) {
@@ -666,7 +717,8 @@ exports.execute = function (options) {
 
                 it ("tuples should be on the expected order.", function (done) {
                     newRef.read(5).then(function (page) {
-                        expect(page.tuples.length).toEqual(5, "length missmatch.");
+                        expect(page.length).toBe(5, "length missmatch");
+                        expect(page.tuples.length).toEqual(5, "tuples length missmatch.");
                         expect(page.tuples[0].data['value x']).toEqual(1,"data missmatch.");
                         done();
                     }).catch(function (err) {
@@ -974,7 +1026,8 @@ exports.execute = function (options) {
             }).then(function (res) {
                 page = res;
 
-                expect(page.tuples.length).toBe(expectedIds.length, "length missmatch.");
+                expect(page.length).toBe(expectedIds.length, "length missmatch.");
+                expect(page.tuples.length).toBe(expectedIds.length, "tuples length missmatch.");
                 expect(page.tuples.map(function (t) {
                     return t.data[idCol];
                 })).toEqual(expectedIds, "data missmatch.");
@@ -988,7 +1041,8 @@ exports.execute = function (options) {
 
         it ('next should return the correct reference.', function (done) {
             page.next.read(limit).then(function (p) {
-                expect(p.tuples.length).toBe(nextExpectedIds.length, "length missmatch for next.");
+                expect(page.length).toBe(nextExpectedIds.length, "length missmatch for next.");
+                expect(p.tuples.length).toBe(nextExpectedIds.length, "tuples length missmatch for next.");
                 expect(p.tuples.map(function (t) {
                     return t.data[idCol];
                 })).toEqual(nextExpectedIds, "data missmatch for next.");
@@ -1002,7 +1056,8 @@ exports.execute = function (options) {
 
         it ("previous shoudl return the correct reference.", function (done) {
             page.previous.read(limit).then(function (p) {
-                expect(p.tuples.length).toBe(prevExpectedIds.length, "length missmatch for previous.");
+                expect(p.length).toBe(prevExpectedIds.length, "length missmatch for previous.");
+                expect(p.tuples.length).toBe(prevExpectedIds.length, "tuples length missmatch for previous.");
                 expect(p.tuples.map(function (t) {
                     return t.data[idCol];
                 })).toEqual(prevExpectedIds, "data missmatch for previous.");

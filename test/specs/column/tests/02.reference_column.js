@@ -71,6 +71,33 @@ exports.execute = function (options) {
             "id_2": "3"
         };
 
+        // NOTE relies on the heuristics
+        // needs to be adjusted if we change the heuristics
+        var expectedDataSources = [
+            "id",
+            [{"outbound": ["columns_schema", "outbound_fk_1"]}, "RID"],
+            [{"outbound": ["columns_schema", "outbound_fk_2"]}, "RID"],
+            [{"outbound": ["columns_schema", "outbound_fk_3"]}, "RID"],
+            [{"outbound": ["columns_schema", "outbound_fk_4"]}, "RID"],
+            "col_3",
+            "col_4",
+            "col 5",
+            "col_6",
+            "col_7",
+            "columns_schema_outbound_fk_7",
+            "columns_schema_handlebars_col",
+            "RID",
+            "RCT",
+            "RMT",
+            "RCB",
+            "RMB",
+            [{"outbound": ["columns_schema", "outbound_fk_5"]}, "RID"],
+            [{"outbound": ["columns_schema", "outbound_fk_6"]}, "RID"],
+            [{"outbound": ["columns_schema", "outbound_fk_8"]}, "RID"],
+            [{"outbound": ["columns_schema", "outbound_fk_7"]}, "RID"],
+            [{"outbound": ["columns_schema", "outbound_fk_9"]}, "RID"]
+        ];
+
 
         var reference, compactRef, entryCreateRef, entryEditRef, compactSelectRef, compactBriefRef, compactColumns;
         var assetRef, assetRefCompactCols, assetRefEntryCols, detailedRef, detailedColumns, diffColTypeColumns;
@@ -230,6 +257,15 @@ exports.execute = function (options) {
                 }
             });
         });
+
+
+        describe("dataSource, ", function () {
+            it ("should return the correct value for all the different column types.", function () {
+                compactColumns.forEach(function (col, index) {
+                    expect(col.dataSource).toEqual(expectedDataSources[index], "missmatch for index=" + index);
+                });
+            });
+        })
 
         describe('.name, ', function () {
             it('for pseudoColumns, should return a unique and deterministic string.', function () {

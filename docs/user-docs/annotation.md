@@ -50,13 +50,13 @@ here is a quick matrix to locate them.
 | Annotation                                                  | Catalog | Schema | Table | Column | Key | FKR | Summary                                       |
 |-------------------------------------------------------------|---------|--------|-------|--------|-----|-----|-----------------------------------------------|
 | [2015 Display](#tag-2015-display)                           | X       | X      | X     | X      | X   | -   | Display options                               |
-| [2015 Vocabulary](#tag-2015-vocabulary)                     | -       | -      | X     | -      | -   | -   | Table as a vocabulary list                    |
+| [2015 Vocabulary](#tag-2015-vocabulary-deprecated) (_deprecated_)                     | -       | -      | X     | -      | -   | -   | Table as a vocabulary list                    |
 | [2016 Table Alternatives](#tag-2016-table-alternatives)     | -       | -      | X     | -      | _   | _   | Table abstracts another table                 |
 | [2016 Column Display](#tag-2016-column-display)             | -       | -      | -     | X      | -   | -   | Column-specific display options               |
 | [2017 Key Display](#tag-2017-key-display)                   | -       | -      | -     | -      | X   | -   | Key augmentation                              |
 | [2016 Foreign Key](#tag-2016-foreign-key)                   | -       | -      | -     | -      | -   | X   | Foreign key augmentation                      |
 | [2016 Generated](#tag-2016-generated)                       | -       | X      | X     | X      | -   | -   | Generated model element                       |
-| [2016 Ignore](#tag-2016-ignore) (_deprecated_)              | -       | X      | X     | X      | -   | -   | Ignore model element                          |
+| [2016 Ignore](#tag-2016-ignore-deprecated) (_deprecated_)              | -       | X      | X     | X      | -   | -   | Ignore model element                          |
 | [2016 Immutable](#tag-2016-immutable)                       | -       | X      | X     | X      | -   | -   | Immutable model element                       |
 | [2016 Non Deletable](#tag-2016-non-deletable)               | -       | X      | X     | -      | -   | -   | Non-deletable model element                   |
 | [2016 App Links](#tag-2016-app-links)                       | -       | X      | X     | -      | -   | -   | Intra-Chaise app links                        |
@@ -64,10 +64,10 @@ here is a quick matrix to locate them.
 | [2016 Visible Columns](#tag-2016-visible-columns)           | -       | -      | X     | -      | -   | -   | Column visibility and presentation order      |
 | [2016 Visible Foreign Keys](#tag-2016-visible-foreign-keys) | -       | -      | X     | -      | -   | -   | Foreign key visibility and presentation order |
 | [2019 Export](#tag-2019-export)                             | -       | X      | X     | -      | -   | -   | Describes export templates                    |
-| [2016 Export](#tag-2016-export) (_deprecated_)              | -       | X      | X     | -      | -   | -   | Describes export templates                    |
+| [2016 Export](#tag-2016-export-deprecated) (_deprecated_)              | -       | X      | X     | -      | -   | -   | Describes export templates                    |
 | [2017 Asset](#tag-2017-asset)                               | -       | -      | -     | X      | -   | -   | Describes assets                              |
 | [2018 Citation](#tag-2018-citation)                         | -       | -      | X     | -      | -   | -   | Describes citation                            |
-| [2018 Required](#tag-2018-required)                         | -       | -      | X     | -      | -   | -   | Required model column                         |
+| [2018 Required](#tag-2018-required)                         | -       | -      | -     | X      | -   | -   | Required model column                         |
 | [2018 Indexing Preferences](#tag-2018-indexing-preferences) | -       | -      | X     | X      | -   | -   | Specify database indexing preferences         |
 | [2019 Chaise Config](#tag-2019-chaise-config)               | X       | -      | -     | -      | -   | -   | Properties to configure chaise app UX         |
 | [2019 Source Definitions](#tag-2019-source-definitions)     | -       | -      | X     | -      | -   | -   | Describe source definitions                   |
@@ -150,11 +150,11 @@ Note:
 - An explicit setting of `null` will turn *off* inheritence and restore default behavior for that modele element and any of its nested elements.
 - The name_style has to be derived separately for each field e.g. one can set `underline_space=true` at the schema-level and doesn't have to set this again.   
 
-### Tag: 2015 Vocabulary
+### Tag: 2015 Vocabulary (_deprecated_)
 
 `tag:misd.isi.edu,2015:vocabulary`
 
-This key is allowed on any number of tables in the model, where the
+This key has been deprecated. It was allowed on any number of tables in the model, where the
 table contains at least one key comprised of a single textual
 column. A vocabulary table is one where each row represents a term or
 concept in a controlled vocabulary.
