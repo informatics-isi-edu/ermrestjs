@@ -250,12 +250,6 @@
             // fail silently
         }
 
-        // parse TERM (it will not do it recursively)
-        // returns null if it's not valid
-        var parseAnd = function (and) {
-
-        };
-
         var andOperator = module._FacetsLogicalOperators.AND;
 
         // NOTE we only support and at the moment.
