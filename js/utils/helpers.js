@@ -78,6 +78,15 @@
     };
 
     /**
+     * Returns true if given parameter is not undefined and not null
+     * @param  {*} obj
+     * @return {boolean}
+     */
+    var isDefinedAndNotNull = function (v) {
+        return v !== undefined && v !== null;
+    };
+
+    /**
      * Returns true if given parameter is object and not null
      * @param  {*} obj
      * @return {boolean}

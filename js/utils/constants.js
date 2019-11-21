@@ -200,7 +200,8 @@
         invalidSearch: "invalid search value.",
         missingConstraints: "No constraints are defined for the facet.",
         onlyOneNullFilter: "Only one null filter is allowed in the facets",
-        duplicateFacets: "Cannot define two different sets of facets"
+        duplicateFacets: "Cannot define two different sets of facets",
+        invalidSourcekey: "Given sourcekey string is not valid"
     });
 
     module._HTTPErrorCodes = Object.freeze({
@@ -260,7 +261,8 @@
      * @type {Object}
      */
     module._FacetsLogicalOperators = Object.freeze({
-        AND: "and"
+        AND: "and",
+        OR: "or"
     });
 
     module._sourceDefinitionAttributes = ["source", "aggregate", "entity", "self_link"];
@@ -271,4 +273,8 @@
         noExternalLinkIcon: "no-external-link-icon",
         assetPermission: "asset-permission",
         download: "download-alt"
+    });
+
+    module._specialSourceDefinitions = Object.freeze({
+        SEARCH_BOX: "search-box"
     });

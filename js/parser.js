@@ -13,17 +13,18 @@
      * @memberof ERMrest
      * @function parse
      * @param {String} uri An ERMrest resource URI to be parsed.
+     * @param {ERMrest.Catalog?} catalogObject the catalog object that the uri is based on
      * @returns {ERMrest.Location} Location object created from the URI.
      * @throws {ERMrest.InvalidInputError} If the URI does not contain the
      * service name.
      */
-    module.parse = function (uri) {
+    module.parse = function (uri, catalogObject) {
         var svc_idx = uri.indexOf(_service_name);
         if (svc_idx < 0) {
             throw new module.InvalidInputError('uri not contain the expected service name: ' + _service_name);
         }
 
-        return new Location(uri);
+        return new Location(uri, catalogObject);
 
     };
 
@@ -65,9 +66,10 @@
      * @param  {string} tableName  Name of table
      * @param  {object} facets     an object
      * @param  {object} cfacets    an object
+     * @param  {ERMrest.Catalog} [catalogObject] the catalog object (optional)
      * @return {string}            a path that ERMrestJS understands and can parse, can be undefined
      */
-    module.createLocation = function (service, catalogId, schemaName, tableName, facets, cfacets) {
+    module.createLocation = function (service, catalogId, schemaName, tableName, facets, cfacets, catalogObject) {
         verify(typeof service === "string" && service.length > 0, "service must be an string.");
         verify(typeof catalogId === "string" && catalogId.length > 0, "catalogId must be an string.");
         verify(typeof tableName === "string" && tableName.length > 0, "tableName must be an string.");
@@ -87,7 +89,7 @@
         }
 
         if (service.endsWith("/")) service = service.slice(0, -1);
-        return module.parse(service + "/catalog/" + catalogId + "/entity/" + compactPath);
+        return module.parse(service + "/catalog/" + catalogId + "/entity/" + compactPath, catalogObject);
     };
 
     var MAIN_TABLE_ALIAS = "M";
@@ -111,10 +113,14 @@
      * paging: optional @before/@after
      * query params: optional ?
      *
+     *
+     * NOTE: For parsing the facet, Location object needs the catalog object.
+     *       it should either be passed while creating the location object, or set after.
      * @param {String} uri full path
+     * @param {ERMrest.Catalog} the catalog object for parsing some parts of url might be needed.
      * @constructor
      */
-    function Location(uri) {
+    function Location(uri, catalogObject) {
 
         // full uri
         this._uri = uri;
@@ -152,6 +158,14 @@
         var catalogParts = this._catalogSnapshot.split('@');
         this._catalog = catalogParts[0];
         this._version = catalogParts[1] || null;
+
+        if (catalogObject) {
+            if (catalogObject.id !== this._catalog) {
+                throw new module.InvalidInputError("Given catalog object is not the same catalog used in the url.");
+            }
+
+            this._catalogObject = catalogObject;
+        }
 
         // api
         this._api = parts[3];
@@ -451,7 +465,7 @@
 
                     // facet
                     if (part.facets) {
-                        facetRes = _JSONToErmrestFilter(part.facets.decoded, part.alias, part.table, self.catalog, module._constraintNames);
+                        facetRes = _renderFacet(part.facets.decoded, part.alias, part.schema, part.table, self.catalog, self.catalogObject, module._constraintNames);
                         if (!facetRes.successful) {
                             throw new module.InvalidFacetOperatorError(self.path, facetRes.message);
                         }
@@ -468,7 +482,7 @@
                     // cfacet
                     if (part.customFacets) {
                         if (part.customFacets.facets) {
-                            facetRes = _JSONToErmrestFilter(part.customFacets.facets.decoded, part.alias, part.table, self.catalog, module._constraintNames);
+                            facetRes = _renderFacet(part.customFacets.facets.decoded, part.alias, part.schema, part.table, self.catalog, self.catalogObject, module._constraintNames);
                             if (!facetRes.successful) {
                                 throw new module.InvalidCustomFacetOperatorError(self.path, facetRes.message);
                             }
@@ -1023,7 +1037,7 @@
                 return;
             }
 
-            var newSearchFacet = {"source": "*", "search": [term]};
+            var newSearchFacet = {"sourcekey": module._specialSourceDefinitions.SEARCH_BOX, "search": [term]};
             var hasSearch = this.searchTerm != null;
             var hasFacets = this.facets != null;
             var andOperator = module._FacetsLogicalOperators.AND;
@@ -1034,7 +1048,7 @@
                 // if term === null, that means the searchTerm is not null, therefore has search
                 facetObject = [];
                 this.facets.decoded[andOperator].forEach(function (f) {
-                    if (f.source !== "*") {
+                    if (f.sourcekey !== module._specialSourceDefinitions.SEARCH_BOX) {
                         facetObject.push(f);
                     }
                 });
@@ -1050,7 +1064,7 @@
                     } else {
                         andFilters  = facetObject[andOperator];
                         for (var i = 0; i < andFilters.length; i++) {
-                            if (andFilters[i].source === "*") {
+                            if (andFilters[i].sourcekey === module._specialSourceDefinitions.SEARCH_BOX) {
                                 if (Array.isArray(andFilters[i].search)) {
                                     andFilters[i].search = [term];
                                 }
@@ -1081,12 +1095,12 @@
         },
 
         /**
-         * Create a new location object with the same uri
+         * Create a new location object with the same uri and catalogObject
          * @returns {ERMrest.Location} new location object
          * @private
          */
         _clone: function() {
-            return module.parse(this.uri);
+            return module.parse(this.uri, this.catalogObject);
         },
 
         _setDirty: function() {
@@ -1098,6 +1112,26 @@
             delete this._ermrestPath;
             delete this._ermrestCompactUri;
             delete this._ermrestCompactPath;
+        },
+
+        /**
+         * mechanism to pass catalog object to parser object.
+         * parser initially was designed so it would just return the different
+         * url sections, and it is the reference and other apis responsibility
+         * to check the model (therefore parser didn't need to know anything about the model).
+         * But now the facet part of url, needs information about the model structure since
+         * we have to support the sourcekey syntax in there here.
+         * TODO we migth be able to improve how this is setup.
+         */
+        set catalogObject(obj) {
+            this._catalogObject = obj;
+        },
+
+        /**
+         * @type {ERMrest.catalog}
+         */
+        get catalogObject() {
+            return this._catalogObject;
         }
     };
 
@@ -1273,7 +1307,7 @@
             searchTerm = "";
 
         for (var i = 0; i < andFilters.length; i++) {
-            if (andFilters[i].source === "*") {
+            if (andFilters[i].sourcekey === module._specialSourceDefinitions.SEARCH_BOX) {
                 if (Array.isArray(andFilters[i].search)) {
                     searchTerm = andFilters[i].search.join("|");
                 }

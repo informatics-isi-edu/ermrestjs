@@ -2925,10 +2925,10 @@ FacetColumn.prototype = {
 
             // TODO might be able to improve this
             if (typeof loc.searchTerm === "string") {
-                jsonFilters.push({"source": "*", "search": [loc.searchTerm]});
+                jsonFilters.push({"sourcekey": module._specialSourceDefinitions.SEARCH_BOX, "search": [loc.searchTerm]});
             }
 
-            var newLoc = module.parse(loc.compactUri);
+            var newLoc = module.parse(loc.compactUri, loc.catalogObject);
 
             //get all the filters from other facetColumns
             if (loc.facets) {
@@ -3789,7 +3789,7 @@ FacetColumn.prototype = {
 
         // TODO might be able to improve this
         if (typeof loc.searchTerm === "string") {
-            jsonFilters.push({"source": "*", "search": [this.reference.location.searchTerm]});
+            jsonFilters.push({"sourcekey": module._specialSourceDefinitions.SEARCH_BOX, "search": [this.reference.location.searchTerm]});
         }
 
         // apply the hidden facets
