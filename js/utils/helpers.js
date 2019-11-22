@@ -721,8 +721,19 @@
      */
     _processSourceObjectColumn = function (sourceObject) {
         if (!sourceObject) return null;
-        if (sourceObject.comment === false) return "";
-        if (typeof sourceObject.comment === "string") return sourceObject.comment;
+        return _processModelComment(sourceObject.comment);
+    };
+
+    /**
+     * @private
+     * Given an input string for the comment, will return the actual strng that should be used.
+     *   - if =false : returns empty string.
+     *   - if =string: returns the string.
+     *   - otherwise returns null
+     */
+    _processModelComment = function (comment) {
+        if (comment === false) return "";
+        if (typeof comment === "string") return comment;
         return null;
     };
 

@@ -671,6 +671,12 @@
          * @type {string}
          */
         this.comment = jsonSchema.comment;
+        if (this.annotations.contains(module._annotations.DISPLAY)) {
+            var cm = _processModelComment(this.annotations.get(module._annotations.DISPLAY).content.comment);
+            if (typeof cm === "string") {
+                this.comment = cm;
+            }
+        }
 
         if (this.annotations.contains(module._annotations.APP_LINKS)) {
             this._appLinksAnnotation = this.annotations.get(module._annotations.APP_LINKS).content;
@@ -918,6 +924,12 @@
          * @type {string}
          */
         this.comment = jsonTable.comment;
+        if (this.annotations.contains(module._annotations.DISPLAY)) {
+            var cm = _processModelComment(this.annotations.get(module._annotations.DISPLAY).content.comment);
+            if (typeof cm === "string") {
+                this.comment = cm;
+            }
+        }
 
         /**
          * @desc The type of this table
@@ -2381,17 +2393,6 @@
         this.type = new Type(jsonColumn.type);
 
         /**
-         * @desc Documentation for this column
-         * @type {string}
-         */
-        this.comment = jsonColumn.comment;
-
-        // If the comment is not defined for a system column, then it is assigned a default comment
-        if((this.comment == null || this.comment == undefined) && this.isSystemColumn){
-            this.comment = module._defaultColumnComment[this.name];
-        }
-
-        /**
          *
          * @type {boolean}
          */
@@ -2412,6 +2413,23 @@
                 (jsonAnnotation === null || jsonAnnotation === [])) {
                 this.ignore = true;
             }
+        }
+
+        /**
+         * @desc Documentation for this column
+         * @type {string}
+         */
+        this.comment = jsonColumn.comment;
+        if (this.annotations.contains(module._annotations.DISPLAY)) {
+            var cm = _processModelComment(this.annotations.get(module._annotations.DISPLAY).content.comment);
+            if (typeof cm === "string") {
+                this.comment = cm;
+            }
+        }
+
+        // If the comment is not defined for a system column, then it is assigned a default comment
+        if((this.comment == null || this.comment == undefined) && this.isSystemColumn){
+            this.comment = module._defaultColumnComment[this.name];
         }
 
         /**
@@ -2947,6 +2965,12 @@
          * @type {string}
          */
         this.comment = jsonKey.comment;
+        if (this.annotations.contains(module._annotations.DISPLAY)) {
+            var cm = _processModelComment(this.annotations.get(module._annotations.DISPLAY).content.comment);
+            if (typeof cm === "string") {
+                this.comment = cm;
+            }
+        }
 
         /**
          * The exact `names` array in key definition

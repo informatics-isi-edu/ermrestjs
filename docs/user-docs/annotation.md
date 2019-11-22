@@ -89,6 +89,7 @@ element and its nested model elements.
 
 Supported JSON payload patterns:
 
+- `{`... `"comment":` _comment_ ...`}`: The _comment_ (tooltip) to be used in place of the model element's original comment. Set this to `false` if you don't want any tooltips.
 - `{`... `"name":` _name_ ...`}`: The _name_ to use in place of the model element's original name.
 - `{`... `"markdown_name"`: _markdown_ `}`: The _markdown_ to use in place of the model element's original name.
 - `{`... `"name_style":` `{` `"underline_space"`: _uspace_ `,` `"title_case":` _tcase_ `,` `"markdown"`: _render_ `}` ...`}`: Element name conversion instructions.
@@ -125,6 +126,7 @@ See [Context Names](#context-names) section for the list of supported JSON _ncon
 
 #### Tag: 2015 Display Settings Hierarchy
 
+- The `"comment"` setting applies *only* to the model element which is annotated.
 - The `"name"` and `"markdown_name"` setting applies *only* to the model element which is annotated. They bypass the `name_style` controls which only apply to actual model names.
   - The `"markdown_name"` setting takes precedence if both are specified.
 - The `"name_style"` setting applies to the annotated model element and is also the default for any nested element.

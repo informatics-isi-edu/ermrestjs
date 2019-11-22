@@ -14,18 +14,43 @@ exports.execute = function (options) {
             expect(schema.comment).toBe("schema with a comment");
         });
 
-        it('table_with_comment should have a non-null .comment property.', function () {
-            var table = schema.tables.get('table_with_comment');
-            expect(table.hasOwnProperty('comment')).toBe(true);
-            expect(table.comment).toBe("table with a comment");
+        describe("table, ", function () {
+            it('table_with_comment should have a non-null .comment property.', function () {
+                var table = schema.tables.get('table_with_comment');
+                expect(table.hasOwnProperty('comment')).toBe(true);
+                expect(table.comment).toBe("table with a comment");
+            });
+
+            it('table_with_null_comment should have a null .comment property.', function () {
+                var table = schema.tables.get('table_with_null_comment');
+                expect(table.hasOwnProperty('comment')).toBe(true);
+                expect(table.comment).toBe(null);
+            });
+
+            it('table_w_display_comment should use the display comment.', function () {
+                var table = schema.tables.get('table_w_display_comment');
+                expect(table.comment).toBe("");
+            });
         });
 
-        it('table_with_null_comment should have a null .comment property.', function () {
-            var table = schema.tables.get('table_with_null_comment');
-            expect(table.hasOwnProperty('comment')).toBe(true);
-            expect(table.comment).toBe(null);
+        describe("column, ", function () {
+            it('column_with_display_comment should have a non-null .comment property.', function () {
+                var column = schema.tables.get('table_with_comment').columns.get("column_with_display_comment");
+                expect(column.comment).toBe("display comment");
+            });
+
+            it('column_with_null_display_comment should use the model .comment property.', function () {
+                var column = schema.tables.get('table_with_comment').columns.get("column_with_null_display_comment");
+                expect(column.comment).toBe("column with a comment");
+            });
+
+            it('column_with_empty_display_comment should have an empty .comment property.', function () {
+                var column = schema.tables.get('table_with_comment').columns.get("column_with_empty_display_comment");
+                expect(column.comment).toBe("");
+            });
         });
-        
+
+
         //TODO Update this testcase for changes in system columns
         xit('this key with a comment should have a non-null .comment property.', function () {
             var key = schema.tables.get('table_with_comment').keys.all()[0];

@@ -171,9 +171,9 @@ to use for ERMrest JavaScript agents.
         * [.isImmutable](#ERMrest.Column+isImmutable) : <code>Boolean</code>
         * [.name](#ERMrest.Column+name) : <code>string</code>
         * [.type](#ERMrest.Column+type) : [<code>Type</code>](#ERMrest.Type)
-        * [.comment](#ERMrest.Column+comment) : <code>string</code>
         * [.ignore](#ERMrest.Column+ignore) : <code>boolean</code>
         * [.annotations](#ERMrest.Column+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
+        * [.comment](#ERMrest.Column+comment) : <code>string</code>
         * [.nullok](#ERMrest.Column+nullok) : <code>Boolean</code>
         * [.displayname](#ERMrest.Column+displayname) : <code>object</code>
         * [.memberOfKeys](#ERMrest.Column+memberOfKeys) : [<code>Array.&lt;Key&gt;</code>](#ERMrest.Key)
@@ -1583,9 +1583,9 @@ Constructor for Columns.
     * [.isImmutable](#ERMrest.Column+isImmutable) : <code>Boolean</code>
     * [.name](#ERMrest.Column+name) : <code>string</code>
     * [.type](#ERMrest.Column+type) : [<code>Type</code>](#ERMrest.Type)
-    * [.comment](#ERMrest.Column+comment) : <code>string</code>
     * [.ignore](#ERMrest.Column+ignore) : <code>boolean</code>
     * [.annotations](#ERMrest.Column+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
+    * [.comment](#ERMrest.Column+comment) : <code>string</code>
     * [.nullok](#ERMrest.Column+nullok) : <code>Boolean</code>
     * [.displayname](#ERMrest.Column+displayname) : <code>object</code>
     * [.memberOfKeys](#ERMrest.Column+memberOfKeys) : [<code>Array.&lt;Key&gt;</code>](#ERMrest.Key)
@@ -1663,12 +1663,6 @@ Mentions whether this column is immutable depending on update rights
 
 #### column.type : [<code>Type</code>](#ERMrest.Type)
 **Kind**: instance property of [<code>Column</code>](#ERMrest.Column)  
-<a name="ERMrest.Column+comment"></a>
-
-#### column.comment : <code>string</code>
-Documentation for this column
-
-**Kind**: instance property of [<code>Column</code>](#ERMrest.Column)  
 <a name="ERMrest.Column+ignore"></a>
 
 #### column.ignore : <code>boolean</code>
@@ -1676,6 +1670,12 @@ Documentation for this column
 <a name="ERMrest.Column+annotations"></a>
 
 #### column.annotations : [<code>Annotations</code>](#ERMrest.Annotations)
+**Kind**: instance property of [<code>Column</code>](#ERMrest.Column)  
+<a name="ERMrest.Column+comment"></a>
+
+#### column.comment : <code>string</code>
+Documentation for this column
+
 **Kind**: instance property of [<code>Column</code>](#ERMrest.Column)  
 <a name="ERMrest.Column+nullok"></a>
 
