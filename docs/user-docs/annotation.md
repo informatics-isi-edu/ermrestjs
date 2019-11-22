@@ -548,7 +548,7 @@ The first applicable rule MAY cause sorting to be disabled. Consider that determ
 
 `tag:isrd.isi.edu,2016:table-display`
 
-This key allows specification of table presentation options at the table or schema level of the model.
+This key allows specification of table presentation options at the table level of the model.
 
 - `{` ... _context_ `:` `{` _option_ ... `}` ... `}`: Apply each _option_ to the presentation of table content in the given _context_.
 - `{` ... _context1_ `:` _context2_ ... `}`: Short-hand to allow _context1_ to use the same options configured for _context2_.
