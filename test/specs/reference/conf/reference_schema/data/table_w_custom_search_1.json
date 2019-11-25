@@ -1,0 +1,5 @@
+[
+    {"id": "01", "search_col_1": "there is term here", "search_col_2": "another value", "search_col_ignored": "another value"},
+    {"id": "02", "search_col_1": "another value", "search_col_2": "has term", "search_col_ignored": "another value"},
+    {"id": "03", "search_col_1": "another value", "search_col_2": "another value", "search_col_ignored": "term"}
+]

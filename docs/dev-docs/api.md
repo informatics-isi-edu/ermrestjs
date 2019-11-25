@@ -126,6 +126,7 @@ to use for ERMrest JavaScript agents.
             * [.displayKey](#ERMrest.Table+displayKey) : [<code>Array.&lt;Column&gt;</code>](#ERMrest.Column)
             * [.uri](#ERMrest.Table+uri) : <code>string</code>
             * [.sourceDefinitions](#ERMrest.Table+sourceDefinitions) : <code>Object</code>
+            * [.searchSourceDefinition](#ERMrest.Table+searchSourceDefinition) : <code>Array.&lt;Object&gt;</code> \| <code>false</code>
             * [.pureBinaryForeignKeys](#ERMrest.Table+pureBinaryForeignKeys) : [<code>Array.&lt;ForeignKeyRef&gt;</code>](#ERMrest.ForeignKeyRef)
             * [._getRowDisplayKey(context)](#ERMrest.Table+_getRowDisplayKey)
             * [.getExportTemplates()](#ERMrest.Table+getExportTemplates) : <code>Array</code> \| <code>null</code>
@@ -316,6 +317,7 @@ to use for ERMrest JavaScript agents.
         * [.facetBaseTable](#ERMrest.Reference+facetBaseTable) : [<code>Table</code>](#ERMrest.Table)
         * [.columns](#ERMrest.Reference+columns) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
         * [.facetColumns](#ERMrest.Reference+facetColumns) ⇒ [<code>Array.&lt;FacetColumn&gt;</code>](#ERMrest.FacetColumn)
+        * [.searchColumns](#ERMrest.Reference+searchColumns) : <code>Array.&lt;ERMRest.ReferenceColumn&gt;</code> \| <code>false</code>
         * [.location](#ERMrest.Reference+location) ⇒ <code>ERMrest.Location</code>
         * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
         * [.canCreate](#ERMrest.Reference+canCreate) : <code>boolean</code> \| <code>undefined</code>
@@ -622,6 +624,7 @@ to use for ERMrest JavaScript agents.
         * [.facetBaseTable](#ERMrest.Reference+facetBaseTable) : [<code>Table</code>](#ERMrest.Table)
         * [.columns](#ERMrest.Reference+columns) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
         * [.facetColumns](#ERMrest.Reference+facetColumns) ⇒ [<code>Array.&lt;FacetColumn&gt;</code>](#ERMrest.FacetColumn)
+        * [.searchColumns](#ERMrest.Reference+searchColumns) : <code>Array.&lt;ERMRest.ReferenceColumn&gt;</code> \| <code>false</code>
         * [.location](#ERMrest.Reference+location) ⇒ <code>ERMrest.Location</code>
         * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
         * [.canCreate](#ERMrest.Reference+canCreate) : <code>boolean</code> \| <code>undefined</code>
@@ -685,7 +688,7 @@ to use for ERMrest JavaScript agents.
     * [.BucketAttributeGroupReference](#ERMrest.BucketAttributeGroupReference) : <code>object</code>
     * [.configure(http, q)](#ERMrest.configure)
     * [.getServer(uri, [contextHeaderParams])](#ERMrest.getServer) ⇒ [<code>Server</code>](#ERMrest.Server)
-    * [.parse(uri)](#ERMrest.parse) ⇒ <code>ERMrest.Location</code>
+    * [.parse(uri, catalogObject)](#ERMrest.parse) ⇒ <code>ERMrest.Location</code>
     * [.resolve(uri, [contextHeaderParams])](#ERMrest.resolve) ⇒ <code>Promise</code>
 
 <a name="ERMrest.Server"></a>
@@ -1097,6 +1100,7 @@ get table by table name
         * [.displayKey](#ERMrest.Table+displayKey) : [<code>Array.&lt;Column&gt;</code>](#ERMrest.Column)
         * [.uri](#ERMrest.Table+uri) : <code>string</code>
         * [.sourceDefinitions](#ERMrest.Table+sourceDefinitions) : <code>Object</code>
+        * [.searchSourceDefinition](#ERMrest.Table+searchSourceDefinition) : <code>Array.&lt;Object&gt;</code> \| <code>false</code>
         * [.pureBinaryForeignKeys](#ERMrest.Table+pureBinaryForeignKeys) : [<code>Array.&lt;ForeignKeyRef&gt;</code>](#ERMrest.ForeignKeyRef)
         * [._getRowDisplayKey(context)](#ERMrest.Table+_getRowDisplayKey)
         * [.getExportTemplates()](#ERMrest.Table+getExportTemplates) : <code>Array</code> \| <code>null</code>
@@ -1224,6 +1228,17 @@ Returns an object with
   - hasInbound
   - isEntity
 - sourceMapping: hashname to all the names
+
+**Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
+<a name="ERMrest.Table+searchSourceDefinition"></a>
+
+#### table.searchSourceDefinition : <code>Array.&lt;Object&gt;</code> \| <code>false</code>
+Returns an array of objects with the followin attributes:
+  - sourceObject
+  - column
+  - hasPath
+  - hasInbound
+  - isEntity
 
 **Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
 <a name="ERMrest.Table+pureBinaryForeignKeys"></a>
@@ -2722,6 +2737,7 @@ Constructor for a ParsedFilter.
     * [.facetBaseTable](#ERMrest.Reference+facetBaseTable) : [<code>Table</code>](#ERMrest.Table)
     * [.columns](#ERMrest.Reference+columns) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
     * [.facetColumns](#ERMrest.Reference+facetColumns) ⇒ [<code>Array.&lt;FacetColumn&gt;</code>](#ERMrest.FacetColumn)
+    * [.searchColumns](#ERMrest.Reference+searchColumns) : <code>Array.&lt;ERMRest.ReferenceColumn&gt;</code> \| <code>false</code>
     * [.location](#ERMrest.Reference+location) ⇒ <code>ERMrest.Location</code>
     * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
     * [.canCreate](#ERMrest.Reference+canCreate) : <code>boolean</code> \| <code>undefined</code>
@@ -2870,6 +2886,13 @@ Usage:
    console.log("Column name:", fc.column.name, "has following facets:", fc.filters);
  }
 ```
+
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+searchColumns"></a>
+
+#### reference.searchColumns : <code>Array.&lt;ERMRest.ReferenceColumn&gt;</code> \| <code>false</code>
+List of columns that are used for search
+if it's false, then we're using all the columns for search
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+location"></a>
@@ -6207,6 +6230,7 @@ get PathColumn object by column name
     * [.facetBaseTable](#ERMrest.Reference+facetBaseTable) : [<code>Table</code>](#ERMrest.Table)
     * [.columns](#ERMrest.Reference+columns) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
     * [.facetColumns](#ERMrest.Reference+facetColumns) ⇒ [<code>Array.&lt;FacetColumn&gt;</code>](#ERMrest.FacetColumn)
+    * [.searchColumns](#ERMrest.Reference+searchColumns) : <code>Array.&lt;ERMRest.ReferenceColumn&gt;</code> \| <code>false</code>
     * [.location](#ERMrest.Reference+location) ⇒ <code>ERMrest.Location</code>
     * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
     * [.canCreate](#ERMrest.Reference+canCreate) : <code>boolean</code> \| <code>undefined</code>
@@ -6355,6 +6379,13 @@ Usage:
    console.log("Column name:", fc.column.name, "has following facets:", fc.filters);
  }
 ```
+
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+searchColumns"></a>
+
+#### reference.searchColumns : <code>Array.&lt;ERMRest.ReferenceColumn&gt;</code> \| <code>false</code>
+List of columns that are used for search
+if it's false, then we're using all the columns for search
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+location"></a>
@@ -7211,7 +7242,7 @@ URI should be to the ERMrest _service_. For example,
 
 <a name="ERMrest.parse"></a>
 
-### ERMrest.parse(uri) ⇒ <code>ERMrest.Location</code>
+### ERMrest.parse(uri, catalogObject) ⇒ <code>ERMrest.Location</code>
 This function parses a URI and constructs a representation of the URI.
 
 **Kind**: static method of [<code>ERMrest</code>](#ERMrest)  
@@ -7225,6 +7256,7 @@ service name.
 | Param | Type | Description |
 | --- | --- | --- |
 | uri | <code>String</code> | An ERMrest resource URI to be parsed. |
+| catalogObject | [<code>Catalog</code>](#ERMrest.Catalog) | the catalog object that the uri is based on |
 
 <a name="ERMrest.resolve"></a>
 

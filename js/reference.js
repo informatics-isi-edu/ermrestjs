@@ -1,4 +1,5 @@
 
+
     /**
      * set callback function that converts app tag to app URL
      * @param {appLinkFn} fn callback function
@@ -189,15 +190,6 @@
     };
 
     /**
-     * Returns true if given value is defined and not null.
-     * @param  {object}  v the object that we want to test
-     * @return {Boolean}  true if defined and not null, otherwise false.
-     */
-    function isDefinedAndNotNull(v) {
-        return v !== null && v !== undefined;
-    }
-
-    /**
      * Constructs a Reference object.
      *
      * For most uses, maybe all, of the `ermrestjs` library, the Reference
@@ -232,6 +224,10 @@
          * different compared to `reference.columns`.
          */
         this.contextualize = new Contextualize(this);
+
+        // make sure location object has the catalog
+        // TODO could be improved
+        location.catalogObject = catalog;
 
         this._location = location;
 
@@ -664,7 +660,7 @@
                     //NOTE We're allowing duplicates in annotation.
                     annotationCols.forEach(function (obj) {
                         // if we have filters in the url, we will get the filters only from url
-                        if (obj.source === "*" && andFilters.length === 0) {
+                        if (obj.sourcekey === module._specialSourceDefinitions.SEARCH_BOX && andFilters.length === 0) {
                             if (!searchTerm) {
                                 searchTerm = _getSearchTerm({"and": [obj]});
                             }
@@ -757,8 +753,8 @@
                 // if we have filters in the url, we should just get the structure from annotation
                 var j, facetLen = facetObjects.length;
                 for (var i = 0; i < andFilters.length; i++) {
+                    if (andFilters[i].sourcekey === module._specialSourceDefinitions.SEARCH_BOX) continue;
                     if (!andFilters[i].source) continue;
-                    if (andFilters[i].source === "*") continue;
                     if (andFilters[i].hidden) {
                         newFilters.push(andFilters[i]);
                         continue;
@@ -810,7 +806,7 @@
 
                 // add the search term
                 if (typeof searchTerm === "string") {
-                    newFilters.push({"source": "*", "search": [searchTerm]});
+                    newFilters.push({"sourcekey": module._specialSourceDefinitions.SEARCH_BOX, "search": [searchTerm]});
                 }
 
                 if (newFilters.length > 0) {
@@ -820,6 +816,26 @@
 
             }
             return this._facetColumns;
+        },
+
+        /**
+         * List of columns that are used for search
+         * if it's false, then we're using all the columns for search
+         * @type {ERMRest.ReferenceColumn[]|false}
+         */
+        get searchColumns() {
+            if (this._searchColumns === undefined) {
+                var self = this;
+                this._searchColumns = false;
+                if (Array.isArray(this.table.searchSourceDefinition)) {
+                    this._searchColumns = this.table.searchSourceDefinition.map(function (sd) {
+                        // TODO currently only supports normal columns
+                        // TODO doesn't support * syntax.
+                        return module._createPseudoColumn(self, sd.column, sd.sourceObject, null, null, sd.isEntry);
+                    });
+                }
+            }
+            return this._searchColumns;
         },
 
         /**
@@ -3245,6 +3261,7 @@
             var j, col, uri, filterSource = [], dataSource = [];
 
             var useFaceting = (typeof tuple === 'object');
+            var catalog = this.table.schema.catalog;
 
             var newRef = _referenceCopy(this);
             delete newRef._context; // NOTE: related reference is not contextualized
@@ -3307,7 +3324,7 @@
 
                 // uri and location
                 if (!useFaceting) {
-                    newRef._location = module.parse(this._location.compactUri + "/" + fkr.toString() + "/" + otherFK.toString(true));
+                    newRef._location = module.parse(this._location.compactUri + "/" + fkr.toString() + "/" + otherFK.toString(true), catalog);
                 }
 
                 // build the filter source
@@ -3321,7 +3338,7 @@
                 newRef._related_fk_column_positions = otherFK.colset._getColumnPositions();
 
                 // will be used to determine whether this related reference is derived from association relation or not
-                newRef.derivedAssociationReference = new Reference(module.parse(this._location.compactUri + "/" + fkr.toString()), newRef._table.schema.catalog);
+                newRef.derivedAssociationReference = new Reference(module.parse(this._location.compactUri + "/" + fkr.toString()), catalog);
                 newRef.derivedAssociationReference.session = this._session;
                 newRef.derivedAssociationReference.origFKR = newRef.origFKR;
                 newRef.derivedAssociationReference._secondFKR = otherFK;
@@ -3339,7 +3356,7 @@
 
                 // uri and location
                 if (!useFaceting) {
-                    newRef._location = module.parse(this._location.compactUri + "/" + fkr.toString());
+                    newRef._location = module.parse(this._location.compactUri + "/" + fkr.toString(), catalog);
                 }
 
                 // additional values for sorting related references
@@ -3369,10 +3386,10 @@
             if (useFaceting) {
                 var table = newRef._table;
                 newRef._location = module.parse([
-                    table.schema.catalog.server.uri ,"catalog" ,
-                    table.schema.catalog.id, "entity",
+                    catalog.server.uri ,"catalog" ,
+                    catalog.id, "entity",
                     module._fixedEncodeURIComponent(table.schema.name) + ":" + module._fixedEncodeURIComponent(table.name)
-                ].join("/"));
+                ].join("/"), catalog);
 
                 //filters
                 var filters = [], filter;
@@ -3801,6 +3818,7 @@
             // use the base table to get the alternative table of that context.
             // a base table's .baseTable is itself
             var newTable = source._table._baseTable._getAlternativeTable(context);
+            var catalog = newTable.schema.catalog;
 
 
             /**
@@ -3921,7 +3939,7 @@
                                     return;
                                 }
 
-                                fkObj = module._getConstraintObject(source._location.catalog, cons[0], cons[1]);
+                                fkObj = module._getConstraintObject(catalog.id, cons[0], cons[1]);
                                 if (fkObj == null || fkObj.subject !== module._constraintTypes.FOREIGN_KEY) {
                                     return;
                                 }
@@ -3982,13 +4000,13 @@
                         });
                     }
 
-                    newLocationString = source._location.service + "/catalog/" + source._location.catalog + "/" +
+                    newLocationString = source._location.service + "/catalog/" + catalog.id + "/" +
                                         source._location.api + "/" + module._fixedEncodeURIComponent(newTable.schema.name) + ":" + module._fixedEncodeURIComponent(newTable.name);
                 }
                 else {
                     if (source._location.filter === undefined) {
                         // 4.1 no filter
-                        newLocationString = source._location.service + "/catalog/" + source._location.catalog + "/" +
+                        newLocationString = source._location.service + "/catalog/" + catalog.id + "/" +
                                             source._location.api + "/" + module._fixedEncodeURIComponent(newTable.schema.name) + ":" + module._fixedEncodeURIComponent(newTable.name);
                     } else {
                         // 4.2.1 single entity key filter (without any join), swap table and switch to mapping key
@@ -4014,7 +4032,7 @@
                                     filterString = module._fixedEncodeURIComponent(sharedKey.colset.columns[0].name) + "=" + filter.value;
                                 }
 
-                                newLocationString = source._location.service + "/catalog/" + source._location.catalog + "/" +
+                                newLocationString = source._location.service + "/catalog/" + catalog.id + "/" +
                                                     source._location.api + "/" + module._fixedEncodeURIComponent(newTable.schema.name) + ":" + module._fixedEncodeURIComponent(newTable.name) + "/" +
                                                     filterString;
                             }
@@ -4082,7 +4100,7 @@
                                         filterString += (j === 0? "" : "&") + module._fixedEncodeURIComponent(mapping[f.column]) + "=" + module._fixedEncodeURIComponent(f.value);
                                     }
 
-                                    newLocationString = source._location.service + "/catalog/" + source._location.catalog + "/" +
+                                    newLocationString = source._location.service + "/catalog/" + catalog.id + "/" +
                                         source._location.api + "/" + module._fixedEncodeURIComponent(newTable.schema.name) + ":" + module._fixedEncodeURIComponent(newTable.name) + "/" +
                                         filterString;
                                 }
@@ -4111,7 +4129,7 @@
                     newLocationString += "?" + source._location.queryParamsString;
                 }
 
-                newRef._location = module.parse(newLocationString);
+                newRef._location = module.parse(newLocationString, catalog);
 
                 // change the face filters
                 if (newFacetFilters.length > 0) {
@@ -4607,7 +4625,7 @@
                     }
                 }
 
-                this._ref._location = module.parse(uri);
+                this._ref._location = module.parse(uri, this._ref.table.schema.catalog);
 
                 // add the tuple to reference so that when calling read() we don't need to fetch the data again.
                 this._ref._tuple = this._tuple;

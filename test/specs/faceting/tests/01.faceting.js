@@ -328,7 +328,7 @@ exports.execute = function (options) {
                     );
                 });
 
-                describe("if source: `*` is defined, ", function () {
+                describe("if sourcekey: `search-box` is defined, ", function () {
                     it ("if it doesn't have `search`, it should be ignored.", function () {
                         var facetColumns = refLP5.facetColumns;
                         expect(refLP5.location.searchTerm).toBe(null, "has searchTerm");
@@ -491,7 +491,7 @@ exports.execute = function (options) {
                 });
 
                 it ("if annotation has default search and so does the uri, the uri should take precedence.", function (done) {
-                    facetObj = {"and": [{"source": "*", "search": ["newTerm"]}]};
+                    facetObj = {"and": [{"sourcekey": "search-box", "search": ["newTerm"]}]};
                     options.ermRest.resolve(createURL(tableSecondPath2, facetObj)).then(function (ref) {
                         var facetColumns = ref.facetColumns;
                         expect(facetColumns.length).toBe(1, "length missmatch.");

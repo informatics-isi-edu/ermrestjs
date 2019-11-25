@@ -1245,6 +1245,10 @@
              if (annot.sources && typeof annot.sources === "object") {
                  for (var key in annot.sources) {
                      if (!annot.sources.hasOwnProperty(key)) continue;
+
+                     // if the key is special
+                     if (Object.keys(module._specialSourceDefinitions).indexOf(key) !== -1) continue;
+
                      var message = "source definition, table =" + self.name + ", name=" + key;
 
                      // TODO why? make sure key is not the same as table columns
@@ -1277,6 +1281,78 @@
              }
 
              return res;
+         },
+
+         /**
+          * Returns an array of objects with the followin attributes:
+          *   - sourceObject
+          *   - column
+          *   - hasPath
+          *   - hasInbound
+          *   - isEntity
+          * @type {Object[]|false}
+          */
+         get searchSourceDefinition() {
+             if (this._searchSourceDefinition === undefined) {
+                 var _getSearchSourceDefinition = function (self) {
+                     var consNames = module._constraintNames,
+                         sd = module._annotations.SOURCE_DEFINITIONS,
+                         sb = module._specialSourceDefinitions.SEARCH_BOX,
+                         orOperator = module._FacetsLogicalOperators.OR,
+                         sbDef;
+                     var hasAnnot = self.annotations.contains(sd);
+
+                     // annotation is missing
+                     if (!hasAnnot) return false;
+
+
+                     var annot = self.annotations.get(sd).content;
+
+                     // annotation is not well defined
+                     if (typeof annot.sources !== "object" || !annot.sources || typeof annot.sources[sb] !== "object" || !annot.sources[sb]) return false;
+
+                     /*
+                      * accepted format:
+                      * "or": [
+                      *    // source def
+                      * ]
+                      */
+                     sbDef = annot.sources[sb];
+
+                     var message = "search column definition, table =" + self.name;
+
+                     // make sure it's properly defined as `or` of sources
+                     if (!sbDef.hasOwnProperty(orOperator) || !Array.isArray(sbDef[orOperator])) {
+                         console.log(message + ": search-box must be defined as `or` of sources.");
+                         return false;
+                     }
+
+                     var res = [];
+                     sbDef[orOperator].forEach(function (src, index) {
+                         // process each individual object
+                         var pSource = _processSourceObject(src, self, consNames, message + ", index=" + index);
+                         if (pSource.error) {
+                             console.log(pSource.message);
+                             return;
+                         }
+                         if (pSource.hasPath) {
+                             console.log(message + ": only table columns are accepted.");
+                             return;
+                         }
+
+                         res.push(pSource);
+                     });
+
+                     if (res.length === 0) {
+                         console.log(message + ": none of the defined sources were valid, using all the columns.");
+                         return false;
+                     }
+                     return res;
+                 };
+
+                 this._searchSourceDefinition = _getSearchSourceDefinition(this);
+             }
+             return this._searchSourceDefinition;
          },
 
         /**

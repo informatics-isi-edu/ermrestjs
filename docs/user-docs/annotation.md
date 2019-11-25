@@ -812,7 +812,11 @@ Note: Some properties might not make sense to be used in this annotation. The `d
 
 `tag:isrd.isi.edu,2019:source-definitions`
 
-This key allows specification of sources that can be used in `visible-columns` and `visible-foreignKeys` annotations. It will also allow defining the list of column names and outbound foreign keys that should be available in the templating environments. Please refer to [this document](pseudo-column-template.md) for more information about how to use this annotation.
+Using this key you can,
+
+- Define `sources` that can be used in `visible-column` and `visible-foreignkeys` annotations.
+- Define list of column names and outbound foreign keys that should be available in the templating environments (Please refer to [this document](pseudo-column-template.md) for more information).
+- Modify the behavior of main search box in recordset page.
 
 Example:
 
@@ -825,6 +829,13 @@ Example:
             "source": [{"inbound": ["schema", "fk1"]}, "RID"],
             "entity": true,
             "aggregate": "array_d"
+        },
+        "search-box": {
+            "or": [
+                {"source": "column1", "markdown_name": "another name"},
+                {"source": "column2"},
+                {"source": "column3", "markdown_name": "Column 3 name"},
+            ]
         }
     }
 }
@@ -841,9 +852,11 @@ Supported JSON payload patterns:
 
 Supported _sourcedefinitions_ patterns:
 
-- `{"` _sourcekey_ `":` _sourceentry_ ... `}`: where _sourcekey_ is a name that will be used to refer to the defined _sourceentry_. _sourcekey_,
+- `{` ... `"` _sourcekey_ `":` _sourceentry_ `,` ... `}`: where _sourcekey_ is a name that will be used to refer to the defined _sourceentry_. _sourcekey_,
   - Cannot start with `$`.
   - Should not be any of the table's column names.
+  - `search-box` is a reserved _sourcekey_ and cannot be used.
+- `{` ... `"search-box": { "or": [` _searchcolumn_ `,` ... `]} }`: Configure list of search columns.
 
 Supported _sourceentry_ pattern:
   - _columnname_: : A string literal. _columnname_ identifies a constituent column of the table.
@@ -851,6 +864,10 @@ Supported _sourceentry_ pattern:
 
           "`{` _direction_ `:[` *schema name*`,` *constraint name* `]}` "
       Where _direction_ is either `inbound`, or `outbound`.
+
+Supported _searchcolumn_ pattern:
+ - `{ "source":` _columnname_  `}`: Defines a search column based on the given string literal of _columnname_. Other optional attributes that this JSON document can have are:
+   - `markdown_name`: The client will show the displayname of columns as placeholder in the search box. To modify this default behavior, you can use this attribute.
 
 Supported _fkeylist_ patterns:
 

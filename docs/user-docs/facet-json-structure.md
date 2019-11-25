@@ -26,9 +26,8 @@ We want the structure to be as general as possible, so we don't need to redesign
 
 ## Data Source
 
-The difference between base table columns and columns in related entities is just a difference in data source. It shouldn't involve a completely different set of filter structures.  Instead, the single filter structure should conceptually allow various forms of data source specification
+The difference between base table columns and columns in related entities is just a difference in data source. It shouldn't involve a completely different set of filter structures. Instead, the single filter structure should conceptually allow various forms of data source specification
 
-    "*"
     "Column1"
     [{"inbound": ["S1", "FK1"]}, "Column2"]
     [{"inbound": ["S1", "FK1"]}, {"outbound": ["S2", "FK2"]}, "Column3"]

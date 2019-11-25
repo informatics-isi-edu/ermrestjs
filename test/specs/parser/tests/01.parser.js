@@ -1,5 +1,5 @@
 exports.execute = function(options) {
-    var catalogId = 1,
+    var catalogId = process.env.DEFAULT_CATALOG,
     schemaName = "parse_schema",
     tableName = "parse_table";
 
@@ -411,19 +411,19 @@ exports.execute = function(options) {
         });
 
         describe("Facets, ", function() {
-            var validBlob = "N4IghgdgJiBcDaoDOB7ArgJwMYFM7i1ySQEsUIQAaELACxRKLnhAEYQBdAX0uXWzywQAKiogkOMNlrMQAFxxI5nLtyA";
+            var validBlob = "N4IghgdgJiBcDaoDOB7ArgJwMYFM7i1ySQEsUIQAaELACxRKLnhAEYQBdAX0uXWzywQqALY4AtCgAutHBnFYUAGzQiK1JDjDZazEFJxIpnLtyA";
             var facetObj = {
                 "and":[
                     {"source":"accession", "choices":["1"]},
-                    {"source":"*", "search":["test"]}
+                    {"source":"some-other-column", "search":["test"]}
                 ]
             };
 
-            var validBlob2 = "N4IghgdgJiBcDaoDOB7ArgJwMYFM7i1ySQEsUIQAaELACxRKLnhACYQBdAX0uXWzywQAKiogkOMNlrMQAFxxI57btyA";
+            var validBlob2 = "N4IghgdgJiBcDaoDOB7ArgJwMYFM7i1ySQEsUIQAaELACxRKLnhACYQBdAX0uXWzywQqALY4AtCgAutHBnFYUAGzQiK1JDjDZazEFJxIp7btyA";
             var facetObj2 = {
                 "and":[
                     {"source":"accession", "choices":["2"]},
-                    {"source":"*", "search":["test2"]}
+                    {"source":"some-other-column", "search":["test2"]}
                 ]
             };
 
@@ -566,7 +566,7 @@ exports.execute = function(options) {
 
                     expect(location.facets).toBeUndefined("facets is defined.");
 
-                    expect(location.ermrestCompactPath).toEqual("T:=parse_schema:parse_table/accession=1/$T/*::ciregexp::test/$T/M:=(id)=(s:otherTable:id)", "ermrestCompactPath missmatch");
+                    expect(location.ermrestCompactPath).toEqual("T:=parse_schema:parse_table/accession=1/$T/some-other-column::ciregexp::test/$T/M:=(id)=(s:otherTable:id)", "ermrestCompactPath missmatch");
                 });
 
                 it("parser should handle having facet after join.", function() {
@@ -582,7 +582,7 @@ exports.execute = function(options) {
                     expect(location.facets.encoded).toEqual(validBlob2, "facets encoded missmatch.");
                     expect(JSON.stringify(location.facets.decoded)).toEqual(JSON.stringify(facetObj2), "facets decoded missmatch.");
 
-                    expect(location.ermrestCompactPath).toEqual("T:=parse_schema:parse_table/M:=(id)=(s:otherTable:id)/accession=2/$M/*::ciregexp::test2/$M", "ermrestCompactPath missmatch");
+                    expect(location.ermrestCompactPath).toEqual("T:=parse_schema:parse_table/M:=(id)=(s:otherTable:id)/accession=2/$M/some-other-column::ciregexp::test2/$M", "ermrestCompactPath missmatch");
                 });
 
                 it('parser should handle having facet after and before join.', function() {
@@ -597,7 +597,7 @@ exports.execute = function(options) {
                     expect(JSON.stringify(location.facets.decoded)).toEqual(JSON.stringify(facetObj2), "facets decoded missmatch.");
 
                     expect(location.ermrestCompactPath).toEqual(
-                        "T:=parse_schema:parse_table/accession=1/$T/*::ciregexp::test/$T/M:=(id)=(s:otherTable:id)/accession=2/$M/*::ciregexp::test2/$M",
+                        "T:=parse_schema:parse_table/accession=1/$T/some-other-column::ciregexp::test/$T/M:=(id)=(s:otherTable:id)/accession=2/$M/some-other-column::ciregexp::test2/$M",
                         "ermrestCompactPath missmatch"
                     );
                 });
@@ -609,8 +609,6 @@ exports.execute = function(options) {
 
                     uri = baseUri + "/*::facets::" + validBlob + "/(id)=(s:otherTable:id)" + "/*::facets::" + validBlob;
                     expect(location.uri).toBe(uri, "uri missmatch.");
-
-                    expect(location.searchTerm).toEqual("test", "searchTerm missmatch.");
                 });
             });
 
@@ -618,17 +616,17 @@ exports.execute = function(options) {
                 var facet, blob;
                 var unicodeSample =  "ɐ ɔ", encodedUnicodeSample = "%C9%90%20%C9%94";
 
-                var expectError = function (blob) {
+                var expectError = function (blob, passCatalog, errorMessage) {
                     expect(function () {
-                        var loc = options.ermRest.parse(baseUri + "/*::facets::" + blob);
+                        var loc = options.ermRest.parse(baseUri + "/*::facets::" + blob, passCatalog ? options.catalog : null);
                         var ermrestURL = loc.ermrestCompactUri;
-                    }).toThrow(facetError);
+                    }).toThrow(errorMessage ? errorMessage : facetError);
                 };
 
                 var expectLocation = function (blob, facetObject, path, errMessage) {
                     var url = baseUri + "/*::facets::" + blob;
 
-                    var loc = options.ermRest.parse(url);
+                    var loc = options.ermRest.parse(url, options.catalog);
 
                     expect(loc).toBeDefined("location is not defined" + (errMessage ? errMessage : "."));
 
@@ -669,6 +667,33 @@ exports.execute = function(options) {
                     });
 
                     // array for source test cases are in faceting spec.
+                });
+
+                describe("regarding sourcekey attribute, ", function () {
+                    var searchFacet = {"and": [{"sourcekey": "search-box", "search": ["term"]}]};
+                    var searchBlob = "N4IghgdgJiBcDaoDOB7ArgJwMYFMDWOAnnCEjmNgBYC0ARigB4gA0p5Vc8IALjhgLYgAugF9RQA";
+
+
+                    it ("should throw an error if catalog is not passed", function () {
+                        expectError(searchBlob, false, "");
+                    });
+
+                    it ("should throw an error if the sourcekey is not valid.", function () {
+                        // {"and": [{"some-invalid-value": "search-box", "choices": ["1"]}]}
+                        expectError("N4IghgdgJiBcDaoDOB7AtgUwLQEsIDcwAbHKLQogVwzhCQzACcBjACywCMUAPEAGhBsUOZhiRx4IAIwgAugF8FQA", false, "");
+                    });
+
+                    // NOTE extra test cases are in refererence/13.search.js
+                    it ("should support search-box.", function () {
+                        expectLocation(searchBlob, searchFacet, "*::ciregexp::term/$M");
+                    });
+
+                    it ("should handle valid sourcekeys.", function () {
+                        expectLocation(
+                            "N4IghgdgJiBcDaoDOB7ArgJwMYFMDWOAnnCOgC4BG60AjAPo4RkCWZxANCFgBYrO5I48EADcaIALoBfaUA",
+                            {"and": [ {"sourcekey": "outbound1_entity", "choices": ["v1"]} ]},
+                            "(fk1_col1)=(parse_schema:outbound1:id)/RID=v1/$M");
+                    });
                 });
 
                 describe("regarding choices attribute, ", function () {
@@ -855,9 +880,14 @@ exports.execute = function(options) {
                     });
                 });
 
+                it ("should throw an error if search-box doesn't have search.", function () {
+                    // {"and": [ {"sourcekey": "search-box", "choices": ["test"]} ]}
+                    expectError("N4IghgdgJiBcDaoDOB7ArgJwMYFMDWOAnnCEjmNgBYC0ARigB4gA0IWlKAlrknPCABccSASAC6AX0lA");
+                });
+
                 it ("should throw an error if one of the facets don't have any constraints.", function () {
-                    // {"and": [ {"source": "*"} ]}
-                    expectError("N4IghgdgJiBcDaoDOB7ArgJwMYFM4gCoQBfAXWKA");
+                    // {"and": [ {"source": "column"} ]}
+                    expectError("N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixQBs0BbCEAXwF1Kg");
                 });
             });
         });
@@ -939,13 +969,13 @@ exports.execute = function(options) {
                         // {"displayname": "value", "ermrest_path": "id=2"}
                         blob = "N4IgJglgzgDgNgQwJ4DsEFsCmIBcIBuCcArtgDQiYBO6VmUALgPowIMAWuIEYAvAEwgAvkA";
 
-                        // facetObj = {"and":[{"source":"accession", "choices":["1"]}, {"source":"*", "search":["test"]}]}
-                        var facetBlob = "N4IghgdgJiBcDaoDOB7ArgJwMYFM7i1ySQEsUIQAaELACxRKLnhAEYQBdAX0uXWzywQAKiogkOMNlrMQAFxxI5nLtyA";
+                        // facetObj = {"and":[{"source":"accession", "choices":["1"]}, {"source":"column", "search":["test"]}]}
+                        var facetBlob = "N4IghgdgJiBcDaoDOB7ArgJwMYFM7i1ySQEsUIQAaELACxRKLnhAEYQBdAX0uXWzywaKADZoAthWpIcYbLWYgALjiRLOXbkA";
                         testCustomFacets(
                             baseUri + "/*::facets::" + facetBlob + "/*::cfacets::" + blob,
                             blob,
                             {"displayname": "value", "ermrest_path": "id=2"},
-                            "M:=parse_schema:parse_table/accession=1/$M/*::ciregexp::test/$M/id=2"
+                            "M:=parse_schema:parse_table/accession=1/$M/column::ciregexp::test/$M/id=2"
                         );
                     });
                 });
@@ -976,9 +1006,9 @@ exports.execute = function(options) {
         });
 
         describe("createPath, ", function() {
-            var validBlob = "N4IghgdgJiBcDaoDOB7ArgJwMYFM4gCoQAaEJHMbACznhABccl6QBdAXw6A";
+            var validBlob = "N4IghgdgJiBcDaoDOBTMAnAxgCziTA9gDYCuAthCADT7YECWmKSc8IALs+yALoC+-IA";
             var facetObj = {
-                "and":[{"source":"*", "search": ["test"]}]
+                "and":[{"search": "column", "choices": ["test"]}]
             };
             var path;
 
@@ -1009,9 +1039,9 @@ exports.execute = function(options) {
 
         describe("createLocation, ", function () {
             var facetObj = {
-                "and":[{"source":"*", "search": ["test"]}]
+                "and":[{"source":"column", "search": ["test"]}]
             };
-            var parsedFacet = "*::ciregexp::test/$M";
+            var parsedFacet = "column::ciregexp::test/$M";
             var service = "test.com/ermrest";
             var location;
 

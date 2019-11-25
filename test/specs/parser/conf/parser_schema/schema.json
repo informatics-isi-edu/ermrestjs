@@ -1,0 +1,77 @@
+{
+    "schema_name": "parse_schema",
+    "tables": {
+        "parse_table": {
+            "kind": "table",
+            "table_name": "parse_table",
+            "schema_name": "parse_schema",
+            "keys": [
+                {"unique_columns": ["id"]}
+            ],
+            "foreign_keys": [
+                {
+                    "names": [["parse_schema", "parse_table_fk1"]],
+                    "foreign_key_columns": [
+                        {
+                            "column_name": "fk1_col1",
+                            "table_name": "parse_table",
+                            "schema_name": "parse_schema"
+                        }
+                    ],
+                    "referenced_columns": [
+                        {
+                            "column_name": "id",
+                            "table_name": "outbound1",
+                            "schema_name": "parse_schema"
+                        }
+                    ]
+                }
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {"typename": "text"}
+                },
+                {
+                    "name": "accession",
+                    "nullok": false,
+                    "type": {"typename": "text"}
+                },
+                {
+                    "name": "some-other-column",
+                    "type": {"typename": "text"}
+                },
+                {
+                    "name": "fk1_col1",
+                    "type": {"typename": "text"}
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2019:source-definitions": {
+                    "sources": {
+                        "outbound1_entity": {
+                            "source": [{"outbound": ["parse_schema", "parse_table_fk1"]}, "RID"],
+                            "entity": true
+                        }
+                    }
+                }
+            }
+        },
+        "outbound1": {
+            "kind": "table",
+            "table_name": "outbound1",
+            "schema_name": "parse_schema",
+            "keys": [
+                {"unique_columns": ["id"]}
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {"typename": "text"}
+                }
+            ]
+        }
+    }
+}

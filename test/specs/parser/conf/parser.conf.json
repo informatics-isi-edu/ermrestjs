@@ -1,0 +1,11 @@
+{
+    "catalog": {},
+    "schema": {
+        "name": "parse_schema",
+        "createNew": true,
+        "path": "test/specs/parser/conf/parser_schema/schema.json"
+    },
+    "tables": {
+        "createNew": true
+    }
+}

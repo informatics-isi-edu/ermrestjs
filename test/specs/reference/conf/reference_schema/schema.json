@@ -1061,6 +1061,84 @@
                 }
             }
         },
+        "table_w_custom_search_invalid": {
+            "kind": "table",
+            "schema_name": "reference_schema",
+            "table_name": "table_w_custom_search_invalid",
+            "keys": [
+                {"unique_columns": ["id"]}
+            ],
+            "foreign_keys": [],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2019:source-definitions": {
+                    "sources": {
+                        "search-box": {
+                            "or": [
+                                {"source": "invalid_col"},
+                                {"source": "invalid_col_2"}
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "table_w_custom_search_1": {
+            "kind": "table",
+            "schema_name": "reference_schema",
+            "table_name": "table_w_custom_search_1",
+            "keys": [
+                {"unique_columns": ["id"]}
+            ],
+            "foreign_keys": [],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "search_col_1",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "search_col_2",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "search_col_ignored",
+                    "type": {
+                        "typename": "text"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2019:source-definitions": {
+                    "sources": {
+                        "search-box": {
+                            "or": [
+                                {"source": "search_col_2", "markdown_name": "**some name**"},
+                                {"source": "search_col_1"}
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "reference_values": {
             "comment": "Table to represent a testable reference object with markdown_pattern values",
             "kind": "table",
