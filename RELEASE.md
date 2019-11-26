@@ -4,9 +4,23 @@ This document is a summary of code changes in Chaise. This is the vocabulary use
   - `[Added]`: newly added features.
   - `[Improved]`: additions made to an existence feature.
   - `[Changed]`: modifications to existing features.
+  - `[Deprecated]`: removal (modification) of an existing feature that are not supported anymore.
   - `[Refactored]`: modifications to existing code to make it more maintainable.
   - `[Fixed]`: bug fixes.
   - `[No changes]` means that Chaise hasn't been changed in the described duration.
+
+# 11/25/19
+ - [Added] `sourcekey` support to facet blobs.
+ - [Added] `search-box` support to customize the search filter.
+ - [Refactored] function used for parsing the facet object.
+ - [Changed] how we encode search filter in the url to use the new `search-box` sourcekey.
+ - [Added] `comment` support to display annotation.
+ - [Changed] `comment` behavior in annotations so that `false` is treated the same as empty string.
+ - [Added] `elapsed_s` attribute to `Deriva-Client-Context` header object for all the http requests.
+ - [Added] `show_foreign_key_link` support.
+ - [Changed] `show_nulls` to `show_null` in display annotation.
+
+
 
 # 10/18/19
   - [Changed] the default `.download` class in heuristics to `.download-alt`.
