@@ -225,8 +225,31 @@ exports.execute = function(options) {
                 ];
                 related.forEach(function (rel, i) {
                     expect(related[i].dataSource).toEqual(expectedDataSources[i], "missmatch for index=" + i);
-                })
-            })
+                });
+            });
+
+            describe("for related tables using source path.", function () {
+                // what about other APIs?
+                it (".dataSource should have the correct value.", function () {
+                    var expectedDataSources = [
+                        [{"inbound": ["reference_schema", "id_fk_association_related_to_reference"]}, "ID"],
+                        [
+                            {"inbound": ["reference_schema", "id_fk_association_related_to_reference"]},
+                            {"outbound": ["reference_schema", "fk_to_inbound_related_reference_table"]},
+                            {"outbound": ["reference_schema", "fromname_fk_inbound_related_to_reference"]},
+                            "id"
+                        ],
+                        [
+                            {"outbound": ["reference_schema", "reference_table_fk1"]},
+                            {"inbound": ["reference_schema", "reference_outbound_1_inbound_1_fk1"]},
+                            "id"
+                        ]
+                    ];
+                    pathRelatedWithTuple.forEach(function (rel, i) {
+                        expect(rel.dataSource).toEqual(expectedDataSources[i], "missmatch for index=" + i);
+                    });
+                });
+            });
 
             describe('for inbound foreign keys, ', function() {
                 it('should have the correct catalog, schema, and table.', function() {
