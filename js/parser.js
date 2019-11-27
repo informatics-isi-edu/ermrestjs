@@ -160,7 +160,7 @@
         this._version = catalogParts[1] || null;
 
         if (catalogObject) {
-            if (catalogObject.id !== this._catalog) {
+            if (catalogObject.id !== this._catalogSnapshot) {
                 throw new module.InvalidInputError("Given catalog object is not the same catalog used in the url.");
             }
 
@@ -568,7 +568,7 @@
 
         /**
          *
-         * @returns {String} catalog id
+         * @returns {String} catalog id with version
          */
         get catalog() {
             return this._catalogSnapshot;
@@ -576,7 +576,7 @@
 
         /**
          *
-         * @returns {String} just the catalog id
+         * @returns {String} just the catalog id without version
          */
         get catalogId() {
             return this._catalog;
@@ -1124,6 +1124,9 @@
          * TODO we migth be able to improve how this is setup.
          */
         set catalogObject(obj) {
+            if (obj.id !== this.catalog) {
+                throw new module.InvalidInputError("Given catalog object is not the same catalog used in the url.");
+            }
             this._catalogObject = obj;
         },
 
