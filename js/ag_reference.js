@@ -1263,7 +1263,7 @@ function BucketAttributeGroupReference(baseColumn, baseRef, min, max, numberOfBu
 
     var countName = "cnt(*)";
     if (baseRef.location.hasJoin) {
-        countName = "cnt_d(" + baseRef.location.facetBaseTableAlias + ":" + module._fixedEncodeURIComponent(baseRef.baseTable.shortestKey[0].name) + ")";
+        countName = "cnt_d(" + baseRef.location.facetBaseTableAlias + ":" + module._fixedEncodeURIComponent(baseRef.table.shortestKey[0].name) + ")";
     }
 
     var aggregateColumns = [
