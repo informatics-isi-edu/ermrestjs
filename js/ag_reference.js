@@ -1262,8 +1262,10 @@ function BucketAttributeGroupReference(baseColumn, baseRef, min, max, numberOfBu
     ];
 
     var countName = "cnt(*)";
+
+    // if there's a join, we cannot use cnt(*) and we should count the shortestkeys of facet base table (not the projected table)
     if (baseRef.location.hasJoin) {
-        countName = "cnt_d(" + baseRef.location.facetBaseTableAlias + ":" + module._fixedEncodeURIComponent(baseRef.table.shortestKey[0].name) + ")";
+        countName = "cnt_d(" + baseRef.location.facetBaseTableAlias + ":" + module._fixedEncodeURIComponent(baseRef.facetBaseTable.shortestKey[0].name) + ")";
     }
 
     var aggregateColumns = [
