@@ -207,7 +207,8 @@
                                 "entity": false
                             },
                             {"source": [{"inbound": ["faceting_schema", "main_f3_assoc_fk1"]}, {"outbound": ["faceting_schema", "main_f3_assoc_fk2"]}, "id"]},
-                            {"source": "numeric_col"}
+                            {"source": "numeric_col"},
+                            {"source": [{"inbound": ["faceting_schema", "f4_fk1"]}, "int_col"], "entity": false}
                         ]
                     }
                 },
@@ -411,7 +412,7 @@
                     "names": [["faceting_schema", "f4_fk1"]],
                     "foreign_key_columns": [
                         {
-                            "column_name": "id",
+                            "column_name": "fk_to_main",
                             "table_name": "f4",
                             "schema_name": "faceting_schema"
                         }
@@ -464,6 +465,18 @@
                     "name": "term",
                     "type": {
                         "typename": "text"
+                    }
+                },
+                {
+                    "name": "int_col",
+                    "type": {
+                        "typename": "int4"
+                    }
+                },
+                {
+                    "name": "fk_to_main",
+                    "type": {
+                        "typename": "int4"
                     }
                 }
             ],
