@@ -470,6 +470,30 @@ exports.execute = function(options) {
                     var ref = pageWithToName.tuples[0].getAssociationRef({"not the id":9003});
                     expect(ref).toBe(null);
                 });
+
+                describe('Tuple.getBatchAssociationRef, ', function () {
+                    var batchPage, selectedTuples;
+                    it('should return the filtered assocation reference.', function() {
+                        var url = options.url + "/catalog/" + catalog_id + "/entity/";
+                        // there are 3 rows in the set for "pageWithToName"
+                        related[2].sort([{"column":"id", "descending":false}]).read(3).then(function(response) {
+                            batchPage = response;
+
+                            selectedTuples = [batchPage.tuples[0], batchPage.tuples[1]];
+                            var batchRef = batchPage.tuples[0].reference.getBatchAssociationRef(selectedTuples);
+                            expect(batchRef.uri).toEqual(url + "reference_schema:reference_table/id=9003/(id)=(reference_schema:association_table_with_toname:id_from_ref_table)/(id_from_inbound_related_table=1);(id_from_inbound_related_table=2)", "batch reference uri is incorrect");
+
+                            return batchRef.read(2);
+                        }).then(function(batchResponse) {
+                            expect(batchResponse.data.length).toBe(2);
+
+                            done();
+                        }, function(err) {
+                            console.dir(err);
+                            done.fail();
+                        });
+                    });
+                })
             });
 
             it('when table has alternative tables, should not include self-link to the base.', function (done) {

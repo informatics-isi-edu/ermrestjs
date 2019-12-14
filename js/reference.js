@@ -1858,6 +1858,62 @@
         },
 
         /**
+         * If the current reference is derived from an association related table,
+         * this function will return a reference to the corresponding
+         * entity set from the corresponding association table denoted by the list of tuples.
+         *
+         * For example, assume
+         * Table1(K1,C1) <- AssociationTable(FK1, FK2) -> Table2(K2,C2)
+         * and the current tuples are from Table2 with k2 = "2" and k2 = "3".
+         * With origFKRData = {"k1": "1"} this function will return a reference
+         * to AssocitaitonTable with FK1 = "1" as a part of the path and FK2 = "2" and FK2 = "3"
+         * as the filters that define the set and how they are related to Table1.
+         *
+         * @param {Array} tuples - an array of ERMrest.Tuple objects from Table2 (from example above)
+         *
+         * @returns {ERMrest.Reference} a reference for the AssociationTable that maps the supplied tuples to a row from Table1
+         **/
+        getBatchAssociationRef: function (tuples) {
+            try {
+                verify(tuples, "'tuples' must be specified");
+                verify(tuples.length > 0, "'tuples' must have at least one row to update");
+            } catch (e) {
+                throw module.responseToError(e, this);
+            }
+
+            if (!this.derivedAssociationReference) return null;
+
+            var assocationRef = this.derivedAssociationReference;
+
+            var filters = [];
+            var keyColumns = assocationRef._secondFKR.colset.columns; // columns tells us what the key column names are in the fkr "_to" relationship
+            var mapping = assocationRef._secondFKR.mapping; // mapping tells us what the column name is on the leaf tuple, so we know what data to fetch from each tuple for identifying
+
+            for (var i=0; i<tuples.length; i++) {
+                var tupleData = tuples[i].data;
+                var filter = '(';  // group each unique filter because it can be conjunction
+
+                for (var j=0; j<keyColumns.length; j++) {
+                    var keyCol = keyColumns[j],
+                        data = tupleData[mapping.get(keyCol).name];
+
+                    if (data === undefined || data === null) return null; // tuple data for keyCol doesn't exist
+                    if (j != 0) filter += '&';
+                    filter += module._fixedEncodeURIComponent(keyCol.name) + '=' + module._fixedEncodeURIComponent(data);
+                }
+
+                filter += ')';
+                filters.push(filter);
+            }
+
+            // concatenate each uniquely identifying filter with the disjunction operator
+            var uri = assocationRef.uri + '/' + filters.join(";");
+            var reference = new Reference(module.parse(uri), this.table.schema.catalog);
+            reference.session = assocationRef._session;
+            return reference;
+        },
+
+        /**
          * An object which contains row display properties for this reference.
          * It is determined based on the `table-display` annotation. It has the
          * following properties:
