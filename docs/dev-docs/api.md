@@ -341,7 +341,7 @@ to use for ERMrest JavaScript agents.
         * [.update(tuples, contextHeaderParams)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
         * [.delete(contextHeaderParams)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
             * [~self](#ERMrest.Reference+delete..self)
-        * [.getBatchAssociationRef(tuples)](#ERMrest.Reference+getBatchAssociationRef) ⇒ [<code>Reference</code>](#ERMrest.Reference)
+        * [.getBatchAssociationRef(tuples)](#ERMrest.Reference+getBatchAssociationRef) ⇒ <code>Array</code>
         * [.generateRelatedList([tuple])](#ERMrest.Reference+generateRelatedList) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
         * [.getExportTemplates(useDefault)](#ERMrest.Reference+getExportTemplates) ⇒ <code>Object</code>
         * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
@@ -649,7 +649,7 @@ to use for ERMrest JavaScript agents.
         * [.update(tuples, contextHeaderParams)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
         * [.delete(contextHeaderParams)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
             * [~self](#ERMrest.Reference+delete..self)
-        * [.getBatchAssociationRef(tuples)](#ERMrest.Reference+getBatchAssociationRef) ⇒ [<code>Reference</code>](#ERMrest.Reference)
+        * [.getBatchAssociationRef(tuples)](#ERMrest.Reference+getBatchAssociationRef) ⇒ <code>Array</code>
         * [.generateRelatedList([tuple])](#ERMrest.Reference+generateRelatedList) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
         * [.getExportTemplates(useDefault)](#ERMrest.Reference+getExportTemplates) ⇒ <code>Object</code>
         * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
@@ -2763,7 +2763,7 @@ Constructor for a ParsedFilter.
     * [.update(tuples, contextHeaderParams)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
     * [.delete(contextHeaderParams)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
         * [~self](#ERMrest.Reference+delete..self)
-    * [.getBatchAssociationRef(tuples)](#ERMrest.Reference+getBatchAssociationRef) ⇒ [<code>Reference</code>](#ERMrest.Reference)
+    * [.getBatchAssociationRef(tuples)](#ERMrest.Reference+getBatchAssociationRef) ⇒ <code>Array</code>
     * [.generateRelatedList([tuple])](#ERMrest.Reference+generateRelatedList) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
     * [.getExportTemplates(useDefault)](#ERMrest.Reference+getExportTemplates) ⇒ <code>Object</code>
     * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
@@ -3223,7 +3223,7 @@ github issue: #425
 **Kind**: inner property of [<code>delete</code>](#ERMrest.Reference+delete)  
 <a name="ERMrest.Reference+getBatchAssociationRef"></a>
 
-#### reference.getBatchAssociationRef(tuples) ⇒ [<code>Reference</code>](#ERMrest.Reference)
+#### reference.getBatchAssociationRef(tuples) ⇒ <code>Array</code>
 If the current reference is derived from an association related table,
 this function will return a reference to the corresponding
 entity set from the corresponding association table denoted by the list of tuples.
@@ -3236,7 +3236,7 @@ to AssocitaitonTable with FK1 = "1" as a part of the path and FK2 = "2" and FK2 
 as the filters that define the set and how they are related to Table1.
 
 **Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
-**Returns**: [<code>Reference</code>](#ERMrest.Reference) - a reference for the AssociationTable that maps the supplied tuples to a row from Table1  
+**Returns**: <code>Array</code> - an array of ERMrest.Reference for the AssociationTable that maps the supplied tuples to a row from Table1  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -6278,7 +6278,7 @@ get PathColumn object by column name
     * [.update(tuples, contextHeaderParams)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
     * [.delete(contextHeaderParams)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
         * [~self](#ERMrest.Reference+delete..self)
-    * [.getBatchAssociationRef(tuples)](#ERMrest.Reference+getBatchAssociationRef) ⇒ [<code>Reference</code>](#ERMrest.Reference)
+    * [.getBatchAssociationRef(tuples)](#ERMrest.Reference+getBatchAssociationRef) ⇒ <code>Array</code>
     * [.generateRelatedList([tuple])](#ERMrest.Reference+generateRelatedList) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
     * [.getExportTemplates(useDefault)](#ERMrest.Reference+getExportTemplates) ⇒ <code>Object</code>
     * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
@@ -6738,7 +6738,7 @@ github issue: #425
 **Kind**: inner property of [<code>delete</code>](#ERMrest.Reference+delete)  
 <a name="ERMrest.Reference+getBatchAssociationRef"></a>
 
-#### reference.getBatchAssociationRef(tuples) ⇒ [<code>Reference</code>](#ERMrest.Reference)
+#### reference.getBatchAssociationRef(tuples) ⇒ <code>Array</code>
 If the current reference is derived from an association related table,
 this function will return a reference to the corresponding
 entity set from the corresponding association table denoted by the list of tuples.
@@ -6751,7 +6751,7 @@ to AssocitaitonTable with FK1 = "1" as a part of the path and FK2 = "2" and FK2 
 as the filters that define the set and how they are related to Table1.
 
 **Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
-**Returns**: [<code>Reference</code>](#ERMrest.Reference) - a reference for the AssociationTable that maps the supplied tuples to a row from Table1  
+**Returns**: <code>Array</code> - an array of ERMrest.Reference for the AssociationTable that maps the supplied tuples to a row from Table1  
 
 | Param | Type | Description |
 | --- | --- | --- |

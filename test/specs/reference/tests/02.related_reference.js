@@ -473,17 +473,19 @@ exports.execute = function(options) {
 
                 describe('Tuple.getBatchAssociationRef, ', function () {
                     var batchPage, selectedTuples;
-                    it('should return the filtered assocation reference.', function() {
+                    it('should return an array of references including the filtered assocation reference.', function() {
                         var url = options.url + "/catalog/" + catalog_id + "/entity/";
                         // there are 3 rows in the set for "pageWithToName"
                         related[2].sort([{"column":"id", "descending":false}]).read(3).then(function(response) {
                             batchPage = response;
+                            expect(batchPage.tuples.length).toBe(3, "pageWithToName set is not of size 3");
 
                             selectedTuples = [batchPage.tuples[0], batchPage.tuples[1]];
-                            var batchRef = batchPage.tuples[0].reference.getBatchAssociationRef(selectedTuples);
-                            expect(batchRef.uri).toEqual(url + "reference_schema:reference_table/id=9003/(id)=(reference_schema:association_table_with_toname:id_from_ref_table)/(id_from_inbound_related_table=1);(id_from_inbound_related_table=2)", "batch reference uri is incorrect");
+                            var batchRefs = batchPage.tuples[0].reference.getBatchAssociationRef(selectedTuples);
+                            expect(batchRefs.length).toBe(1, "more than 1 reference was returned");
+                            expect(batchRefs[0].uri).toEqual(url + "reference_schema:reference_table/id=9003/(id)=(reference_schema:association_table_with_toname:id_from_ref_table)/(id_from_inbound_related_table=1);(id_from_inbound_related_table=2)", "batch reference uri is incorrect");
 
-                            return batchRef.read(2);
+                            return batchRefs[0].read(5);
                         }).then(function(batchResponse) {
                             expect(batchResponse.data.length).toBe(2);
 
@@ -492,6 +494,35 @@ exports.execute = function(options) {
                             console.dir(err);
                             done.fail();
                         });
+                    });
+
+                    it('should return 2 references if the number of tuples to create an association for exceeds the url length limit.', function () {
+                        related[2].sort([{"column":"id", "descending":false}]).read(3).then(function(response) {
+                            var batchPage = response;
+
+                            // modify length limit to make testing this easier
+                            var oldLimit = options.ermRest.URL_PATH_LENGTH_LIMIT;
+                            options.ermRest.URL_PATH_LENGTH_LIMIT = 500;
+
+                            function doubleArray (inputArray) {
+                                return inputArray.reduce(function (res, current, index, array) {
+                                    return res.concat([current, current]);
+                                }, []);
+                            }
+
+                            var tupleArray = doubleArray(doubleArray(batchPage.tuples));
+                            var batchRefs = batchPage.tuples[0].reference.getBatchAssociationRef(tupleArray);
+                            expect(batchRefs.length).toBe(2, "incorrect number of references generated after reducing the url limit");
+                            expect(batchRefs[0].uri.length).toBeLessThanOrEqual(options.ermRest.URL_PATH_LENGTH_LIMIT);
+                            expect(batchRefs[1].uri.length).toBeLessThanOrEqual(options.ermRest.URL_PATH_LENGTH_LIMIT);
+
+                            options.ermRest.URL_PATH_LENGTH_LIMIT = oldLimit;
+
+                            done();
+                        }, function(err) {
+                            console.dir(err);
+                            done.fail();
+                        })
                     });
                 })
             });
