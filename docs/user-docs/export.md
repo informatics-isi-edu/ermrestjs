@@ -35,7 +35,7 @@ This annotation only applies to table but MAY be annotated at the schema level t
 
 - `csv` of `attributegroup` API request to the main table. The projection list is created based on the `visible-columns` defined for `export` context (or `detailed` if `export` annotation is not defined).
 
-- `csv` of `attributegroup` API for all the other related entities. The projection list includes all the visible columns of the table (based on `export` or `detailed` context), plus the foreign key value of the main entity. This request will be grouped by the value of table's key and foreign key value.
+- `csv` of `attributegroup` API for all the other related entities (using the `context` or `detailed` context in `visible-foreign-keys` annotation). The projection list includes all the visible columns of the table (based on `export` or `detailed` context), plus the foreign key value of the main entity. This request will be grouped by the value of table's key and foreign key value.
 
 - `fetch` all visible assets of the main entity (in `export` or `detailed` context) that have `byte_count_column`, `filename_column`, and `md5` (or `sha256`) in the asset annotation.
 

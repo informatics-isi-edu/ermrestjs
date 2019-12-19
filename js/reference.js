@@ -2291,8 +2291,18 @@
                      });
                  }
 
-                 // related entities
-                 self.related.forEach(processRelatedReference);
+                 // related entities (use the export context otherwise detailed)
+                 var hasRelatedExport = false;
+                 if (self.table.annotations.contains(module._annotations.VISIBLE_FOREIGN_KEYS)) {
+                     var exportRelated = module._getRecursiveAnnotationValue(module._contexts.EXPORT, self.table.annotations.get(module._annotations.VISIBLE_FOREIGN_KEYS).content, true);
+                     hasRelatedExport = exportRelated !== -1 && Array.isArray(exportRelated);
+                 }
+
+                 // if export context is defined in visible-foreign-keys, use it, otherwise fallback to detailed
+                 var exportRefForRelated = hasRelatedExport ? self.contextualize.export : (self._context === module._contexts.DETAILED ? self : self.contextualize.detailed);
+                 if (exportRefForRelated.table.name === self.table.name) {
+                     exportRefForRelated.related.forEach(processRelatedReference);
+                 }
 
                  self._defaultExportTemplate = {
                      displayname: "BAG",
