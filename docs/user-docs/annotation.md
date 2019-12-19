@@ -650,7 +650,7 @@ See [Context Names](#context-names) section for the list of supported _context_ 
 
 `tag:isrd.isi.edu,2019:export`
 
-This key can be used to define export templates that will be used for `ioboxd` service integration with the client tools. For more information about the annotation payload please visit [the iobodx integration document](https://github.com/informatics-isi-edu/ioboxd/blob/master/doc/integration.md).
+This key can be used to define export templates that will be used for `ioboxd` service integration with the client tools. For more information about the annotation payload please visit [this document](export.md).
 
 Supported JSON payload patterns:
 
@@ -678,6 +678,10 @@ Supported _destinationentry_ patterns:
 #### Export Annotation Hierarchy
 
 This annotation only applies to table but MAY be annotated at the schema level to set a schema-wide default. If the annotation is missing on the table, we will get the export definition from the schema.
+
+#### Heurisistics
+
+If the annotation is missing from the table and the schema, client MAY apply a set of heuristics. Currently, chaise will apply some heursitscs only in `detailed` context (record app) which you can find more information about it [in here](export.md#how-ermrestjs-interperts-it).
 
 ### Tag: 2016 Export (_Deprecated_)
 
