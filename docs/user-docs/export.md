@@ -37,8 +37,8 @@ This annotation only applies to table but MAY be annotated at the schema level t
 
 - `csv` of `attributegroup` API for all the other related entities (using the `context` or `detailed` context in `visible-foreign-keys` annotation). The projection list includes all the visible columns of the table (based on `export` or `detailed` context), plus the foreign key value of the main entity. This request will be grouped by the value of table's key and foreign key value.
 
-- `fetch` all visible assets of the main entity (in `export` or `detailed` context) that have `byte_count_column`, `filename_column`, and `md5` (or `sha256`) in the asset annotation.
+- `fetch` all visible assets of the main entity (in `export` or `detailed` context). The `destination.name` is generated using the `assets/<column name>` pattern, where `<column name>` is the name of your asset column.
 
-- `fetch` all visible assets of the related entities (in `export` or `detailed` context) that have `byte_count_column`, `filename_column`, and `md5` (or `sha256`) in the asset annotation.
+- `fetch` all visible assets of the related entities (in `export` or `detailed` context). The `destination.name` is generated using the `assets/<table displayname>/<column name>` pattern, where `<table displayname>` is the displayname of the related table, and `<column name>` is the name of your asset column.
 
 > If the generated path for any of the `attributegroup` API requests is lengthy, we will use the `entity` API instead.

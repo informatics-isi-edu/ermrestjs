@@ -58,6 +58,36 @@ exports.execute = function (options) {
                 },
                 {
                     destination: {
+                        name: "assets/asset_5",
+                        type: "fetch"
+                    },
+                    source: {
+                        api: "attribute",
+                        path: "!(asset_5::null::)/url:=asset_5"
+                    }
+                },
+                {
+                    destination: {
+                        name: "assets/asset_4",
+                        type: "fetch"
+                    },
+                    source: {
+                        api: "attribute",
+                        path: "!(asset_4::null::)/url:=asset_4"
+                    }
+                },
+                {
+                    destination: {
+                        name: "assets/asset_3",
+                        type: "fetch"
+                    },
+                    source: {
+                        api: "attribute",
+                        path: "!(asset_3::null::)/url:=asset_3,filename:=asset_3_filename"
+                    }
+                },
+                {
+                    destination: {
                         name: "assets/asset_2",
                         type: "fetch"
                     },
