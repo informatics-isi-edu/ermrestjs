@@ -31,14 +31,25 @@ The following is how ERMrestJS and Chaise leverage the different values defined 
 
 ## How ERMrestJS Interperts It
 
-This annotation only applies to table but MAY be annotated at the schema level to set a schema-wide default. If the annotation is missing on the table, we will get the export definition from the schema. If the annotation is missing from both schema and table, we are going to apply default heuristics for this annotation in detailed context. This means if you navigate to a page with `detailed` context (record page in chaise) and you haven't defined any export annotation, we are going to use the default export template. The following is the content of the generated default export template:
 
-- `csv` of `attributegroup` API request to the main table. The projection list is created based on the `visible-columns` defined for `export` context (or `detailed` if `export` annotation is not defined).
+This annotation only applies to a table, but MAY be annotated at the schema level to set a schema-wide default. If the annotation is missing on the table, we will get the export definition from the schema. If the annotation is missing from both schema and table, we are going to apply default heuristics for this annotation only in `detailed` context. This means if you navigate to a page with `detailed` context (record page in chaise) and you haven't defined any export annotation, we are going to use the default export template. The following is the content of the generated default export template:
 
-- `csv` of `attributegroup` API for all the other related entities. The projection list includes all the visible columns of the table (based on `export` or `detailed` context), plus the foreign key value of the main entity. This request will be grouped by the value of table's key and foreign key value.
+- `csv` of `attributegroup` API request to the main table.
+  - The projection list is created based on the `visible-columns` defined for the `export` context (or `detailed` if `export` annotation is not specified).
 
-- `fetch` all visible assets of the main entity (in `export` or `detailed` context) that have `byte_count_column`, `filename_column`, and `md5` (or `sha256`) in the asset annotation.
 
-- `fetch` all visible assets of the related entities (in `export` or `detailed` context) that have `byte_count_column`, `filename_column`, and `md5` (or `sha256`) in the asset annotation.
+- `csv` of `attributegroup` API for all the other related entities.
+  - The List of related entities is populated using the `export` (or `detailed`) context in `visible-foreign-keys` annotation.
+  - The projection list includes all the visible columns of the related table based on `export` (or `detailed`) context.
+  - The foreign key column of the main entity is added to the projection list, so we don't lose the relationship of the related entity.
+  - This request is grouped by the value of table's key and foreign key value.
+
+
+- `fetch` all visible assets of the main entity in `export` (or `detailed`) context.
+   - The `destination.name` is generated using the `assets/<column name>` pattern, where `<column name>` is the name of your asset column.
+
+
+- `fetch` all visible assets of the related entities in `export` (or `detailed` ) context.
+  - The `destination.name` is generated using the `assets/<table displayname>/<column name>` pattern, where `<table displayname>` is the displayname of the related table, and `<column name>` is the name of your asset column.
 
 > If the generated path for any of the `attributegroup` API requests is lengthy, we will use the `entity` API instead.

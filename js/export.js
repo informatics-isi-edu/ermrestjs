@@ -532,7 +532,7 @@ var ERMrest = (function(module) {
 
     /**
      * Given a column will return the appropriate output object for asset.
-     * It will return null if annotation is not complete or column is not an asset.
+     * It will return null if column is not an asset.
      * @private
      * @param  {ERMrest.Column} col the column object
      * @param  {String} destinationPath the string that will be prepended to destination path
@@ -546,14 +546,10 @@ var ERMrest = (function(module) {
         var sanitize = module._sanitizeFilename,
             encode = module._fixedEncodeURIComponent;
 
-        // required attributes
+        // attributes
         var attributes = {
             byteCountColumn: "length",
-            filenameColumn: "filename"
-        };
-
-        // at least one of these must be available
-        var checksum = {
+            filenameColumn: "filename",
             md5: "md5",
             sha256: "sha256"
         };
@@ -561,21 +557,11 @@ var ERMrest = (function(module) {
         // add the url
         path.push("url:=" + encode(col.name));
 
-        // add the required attributes
+        // add the attributes (ignore the ones that are not defined)
         for (key in attributes) {
-            if (col[key] == null) return null;
+            if (col[key] == null) continue;
             path.push(attributes[key] + ":=" + encode(col[key].name));
         }
-
-        // at least one checksum must be available
-        var hasChecksum = false;
-        for (key in checksum) {
-            if (col[key] == null) continue;
-            hasChecksum = true;
-            path.push(checksum[key] + ":=" + encode(col[key].name));
-        }
-
-        if (!hasChecksum) return null;
 
         return {
             destination: {
