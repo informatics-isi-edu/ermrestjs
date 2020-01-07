@@ -1881,15 +1881,16 @@
 
                 if (!self.derivedAssociationReference) return null;
 
-                var assocationRef = self.derivedAssociationReference;
-                var uri = assocationRef.uri + '/';
+                var associationRef = self.derivedAssociationReference;
+                var baseUri = associationRef.location.service + "/catalog/" + associationRef.location.catalog + "/entity/";
+                var compactPath = associationRef.location.compactPath + '/';
 
-                var referenceURLs = [],
+                var referencePaths = [],
                     references = [];
-                var keyColumns = assocationRef._secondFKR.colset.columns; // columns tells us what the key column names are in the fkr "_to" relationship
-                var mapping = assocationRef._secondFKR.mapping; // mapping tells us what the column name is on the leaf tuple, so we know what data to fetch from each tuple for identifying
+                var keyColumns = associationRef._secondFKR.colset.columns; // columns tells us what the key column names are in the fkr "_to" relationship
+                var mapping = associationRef._secondFKR.mapping; // mapping tells us what the column name is on the leaf tuple, so we know what data to fetch from each tuple for identifying
 
-                var currentUrl = uri;
+                var currentPath = compactPath;
                 for (var i=0; i<tuples.length; i++) {
                     var tupleData = tuples[i].data;
 
@@ -1907,21 +1908,21 @@
                     filter += ')';
 
                     // check url length limit if not first one
-                    if (i != 0 && (currentUrl + filter).length > module.URL_PATH_LENGTH_LIMIT) {
-                        referenceURLs.push(currentUrl);
-                        currentUrl = uri;
+                    if (i != 0 && (currentPath + filter).length > module.URL_PATH_LENGTH_LIMIT) {
+                        referencePaths.push(currentPath);
+                        currentPath = compactPath;
                     } else if (i != 0) {
                         // prepend the conjunction operator when it isn't the first filter to create and we aren't dealing with a url length limit
                         filter = ";" + filter;
                     }
 
-                    currentUrl += filter;
+                    currentPath += filter;
                 }
-                referenceURLs.push(currentUrl);
+                referencePaths.push(currentPath);
 
-                referenceURLs.forEach(function (uri) {
-                    var reference = new Reference(module.parse(uri), self.table.schema.catalog);
-                    reference.session = assocationRef._session;
+                referencePaths.forEach(function (path) {
+                    var reference = new Reference(module.parse(baseUri + path), self.table.schema.catalog);
+                    reference.session = associationRef._session;
                     references.push(reference);
                 });
 

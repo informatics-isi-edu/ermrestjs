@@ -497,12 +497,9 @@ exports.execute = function(options) {
                     });
 
                     it('should return 2 references if the number of tuples to create an association for exceeds the url length limit.', function () {
-                        related[2].sort([{"column":"id", "descending":false}]).read(3).then(function(response) {
+                        var batchRefs;
+                        related[2].sort([{"column":"id", "descending":false}]).read(20).then(function(response) {
                             var batchPage = response;
-
-                            // modify length limit to make testing this easier
-                            var oldLimit = options.ermRest.URL_PATH_LENGTH_LIMIT;
-                            options.ermRest.URL_PATH_LENGTH_LIMIT = 500;
 
                             function doubleArray (inputArray) {
                                 return inputArray.reduce(function (res, current, index, array) {
@@ -510,13 +507,23 @@ exports.execute = function(options) {
                                 }, []);
                             }
 
+                            // options.ermRest.URL_PATH_LENGTH_LIMIT = 2000;
                             var tupleArray = doubleArray(doubleArray(batchPage.tuples));
-                            var batchRefs = batchPage.tuples[0].reference.getBatchAssociationRef(tupleArray);
+                            batchRefs = batchPage.tuples[0].reference.getBatchAssociationRef(tupleArray);
                             expect(batchRefs.length).toBe(2, "incorrect number of references generated after reducing the url limit");
-                            expect(batchRefs[0].uri.length).toBeLessThanOrEqual(options.ermRest.URL_PATH_LENGTH_LIMIT);
-                            expect(batchRefs[1].uri.length).toBeLessThanOrEqual(options.ermRest.URL_PATH_LENGTH_LIMIT);
+                            expect(batchRefs[0].location.compactPath.length).toBeLessThanOrEqual(options.ermRest.URL_PATH_LENGTH_LIMIT);
+                            expect(batchRefs[1].location.compactPath.length).toBeLessThanOrEqual(options.ermRest.URL_PATH_LENGTH_LIMIT);
 
-                            options.ermRest.URL_PATH_LENGTH_LIMIT = oldLimit;
+                            console.log(batchRefs[0].uri)
+                            return batchRefs[0].read(60);
+                        }).then(function (batchResponse) {
+                            console.log("reponse 1: ", batchResponse.tuples.length);
+                            expect(batchResponse.tuples.length).toBe(60);
+
+                            return batchRefs[1].read(40);
+                        }).then(function (batchResponse2) {
+                            console.log("reponse 2: ", batchResponse2.tuples.length);
+                            expect(batchResponse2.tuples.length).toBe(20);
 
                             done();
                         }, function(err) {
