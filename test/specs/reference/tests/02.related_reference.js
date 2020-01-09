@@ -498,32 +498,22 @@ exports.execute = function(options) {
 
                     it('should return 2 references if the number of tuples to create an association for exceeds the url length limit.', function () {
                         var batchRefs;
-                        related[2].sort([{"column":"id", "descending":false}]).read(20).then(function(response) {
+                        related[2].sort([{"column":"id", "descending":false}]).read(70).then(function(response) {
                             var batchPage = response;
 
-                            function doubleArray (inputArray) {
-                                return inputArray.reduce(function (res, current, index, array) {
-                                    return res.concat([current, current]);
-                                }, []);
-                            }
-
-                            // options.ermRest.URL_PATH_LENGTH_LIMIT = 2000;
-                            var tupleArray = doubleArray(doubleArray(batchPage.tuples));
+                            var tupleArray = batchPage.tuples;
                             batchRefs = batchPage.tuples[0].reference.getBatchAssociationRef(tupleArray);
                             expect(batchRefs.length).toBe(2, "incorrect number of references generated after reducing the url limit");
-                            expect(batchRefs[0].location.compactPath.length).toBeLessThanOrEqual(options.ermRest.URL_PATH_LENGTH_LIMIT);
-                            expect(batchRefs[1].location.compactPath.length).toBeLessThanOrEqual(options.ermRest.URL_PATH_LENGTH_LIMIT);
+                            expect(batchRefs[0].location.compactPath.length).toBeLessThanOrEqual(options.ermRest.URL_PATH_LENGTH_LIMIT, "batch ref with index 0 has compact patht hat extends the URL_PATH_LENGTH_LIMIT");
+                            expect(batchRefs[1].location.compactPath.length).toBeLessThanOrEqual(options.ermRest.URL_PATH_LENGTH_LIMIT, "batch ref with index 1 has compact patht hat extends the URL_PATH_LENGTH_LIMIT");
 
-                            console.log(batchRefs[0].uri)
-                            return batchRefs[0].read(60);
+                            // testing this because read rewrites and extends the url
+                            return batchRefs[0].read(70);
                         }).then(function (batchResponse) {
-                            console.log("reponse 1: ", batchResponse.tuples.length);
-                            expect(batchResponse.tuples.length).toBe(60);
+                            expect(batchResponse.tuples.length).toBe(68, "number of tuples returned is incorrect.");
 
-                            return batchRefs[1].read(40);
                         }).then(function (batchResponse2) {
-                            console.log("reponse 2: ", batchResponse2.tuples.length);
-                            expect(batchResponse2.tuples.length).toBe(20);
+                            expect(batchResponse2.tuples.length).toBe(2, "number of tuples returned is incorrect.");
 
                             done();
                         }, function(err) {

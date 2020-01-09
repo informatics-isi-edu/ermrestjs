@@ -1907,8 +1907,8 @@
 
                     filter += ')';
 
-                    // check url length limit if not first one
-                    if (i != 0 && (currentPath + filter).length > module.URL_PATH_LENGTH_LIMIT) {
+                    // check url length limit if not first one;
+                    if (i != 0 && new Reference(module.parse(baseUri + currentPath + (i != 0 ? ';' : '') + filter), self.table.schema.catalog)._getReadPath().value.length > module.URL_PATH_LENGTH_LIMIT) {
                         referencePaths.push(currentPath);
                         currentPath = compactPath;
                     } else if (i != 0) {
