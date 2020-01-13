@@ -893,13 +893,18 @@ exports.execute = function (options) {
                 });
             });
 
+            // for refUri:
+            //   - use 85 as limit for inbound_related_reference_table
+            //   - set is ordered based on id in inbound_related_reference_table
+            //   - ordered 1, 2, 3, 3xxxxxxxxxx, ..., 4, ..., 9, 91, 9x
             describe("if page didn't have any extra data, ", function () {
                 it ("if page didn't have any paging options should return a reference without any page setting.", function (done) {
-                    testUri(done, refUri, 25, null, null);
+                    testUri(done, refUri, 85, null, null);
                 });
 
                 it ("if page had before, should return a reference with before.", function (done) {
-                    testUri(done, refUri + "@before(6)", 5, null, ["6"]);
+                    // only 9 records after "id=9", so before should be 85 total rows - (9 after + id=9 itself), hence read with limit=75
+                    testUri(done, refUri + "@before(9)", 75, null, ["9"]);
                 });
 
                 it ("if page had after, should return a reference with after.", function (done) {
@@ -911,11 +916,11 @@ exports.execute = function (options) {
 
             describe("if page had extra data, ", function () {
                 it ("if page didn't have any paging options should return a reference with before.", function (done) {
-                    testUri(done, refUri, 5, null, ["6"]);
+                    testUri(done, refUri, 75, null, ["9"]);
                 });
 
                 it ("if page had before, should return a reference with same before and new after.", function (done) {
-                    testUri(done, refUri + "@before(7)", 5, ["1"], ["7"]);
+                    testUri(done, refUri + "@before(91)", 5, ["4"], ["91"]);
                 });
 
                 it ("if page had after, should return a reference with same after and new before.", function (done) {
@@ -926,10 +931,11 @@ exports.execute = function (options) {
             });
 
             it ("if page had search, it should change the search accordingly.", function (done) {
+                // same comment above as refUri, has 85 rows in table inbound_related_reference_table
                 options.ermRest.resolve(baseUri + tableNameInboundRelated + "@sort(id)").then(function (ref) {
                     //this might match the values or RID, therefore we are reading all the existing rows
                     ref = ref.search("9");
-                    return ref.read(30);
+                    return ref.read(85);
                 }).then(function (page) {
                     newRef = currRef.setSamePaging(page);
                     expect(newRef.location.beforeObject).toEqual(null, "beforeObject missmatch.");
@@ -1003,15 +1009,15 @@ exports.execute = function (options) {
                 // is sorting based on fk value and a key value.
                 var url = refUriWithoutSort + "@sort(reference_schema_fromname_fk_inbound_related_to_reference,id)";
                 it ("if page didn't have any paging options should return a reference with before.", function (done) {
-                    testUri(done, url, 5, null, ["9005", "6"]);
+                    testUri(done, url, 3, null, ["9004", "4"]);
                 });
 
                 it ("if page had before, should return a reference with same before and new after.", function (done) {
-                    testUri(done, url + "@before(9005,7)", 5, ["9001", "1"], ["9005", "7"]);
+                    testUri(done, url + "@before(9005,93)", 5, ["9005", "6"], ["9005", "93"]);
                 });
 
                 it ("if page had after, should return a reference with same after and new before.", function (done) {
-                    testUri(done, url + "@after(9003,3)", 5, ["9003", "3"], ["9005", "9"]);
+                    testUri(done, url + "@after(9005,8)", 5, ["9005", "8"], ["9005", "95"]);
                 });
             });
         });

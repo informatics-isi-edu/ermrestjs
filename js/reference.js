@@ -1858,6 +1858,81 @@
         },
 
         /**
+         * If the current reference is derived from an association related table,
+         * this function will return a reference to the corresponding
+         * entity set from the corresponding association table denoted by the list of tuples.
+         *
+         * For example, assume
+         * Table1(K1,C1) <- AssociationTable(FK1, FK2) -> Table2(K2,C2)
+         * and the current tuples are from Table2 with k2 = "2" and k2 = "3".
+         * With origFKRData = {"k1": "1"} this function will return a reference
+         * to AssocitaitonTable with FK1 = "1" as a part of the path and FK2 = "2" and FK2 = "3"
+         * as the filters that define the set and how they are related to Table1.
+         *
+         * @param {Array} tuples - an array of ERMrest.Tuple objects from Table2 (from example above)
+         *
+         * @returns {Array} an array of ERMrest.Reference for the AssociationTable that maps the supplied tuples to a row from Table1
+         **/
+        getBatchAssociationRef: function (tuples) {
+            var self = this;
+            try {
+                verify(tuples, "'tuples' must be specified");
+                verify(tuples.length > 0, "'tuples' must have at least one row to update");
+
+                if (!self.derivedAssociationReference) return null;
+
+                var associationRef = self.derivedAssociationReference;
+                var baseUri = associationRef.location.service + "/catalog/" + associationRef.location.catalog + "/entity/";
+                var compactPath = associationRef.location.compactPath + '/';
+
+                var referencePaths = [],
+                    references = [];
+                var keyColumns = associationRef._secondFKR.colset.columns; // columns tells us what the key column names are in the fkr "_to" relationship
+                var mapping = associationRef._secondFKR.mapping; // mapping tells us what the column name is on the leaf tuple, so we know what data to fetch from each tuple for identifying
+
+                var currentPath = compactPath;
+                for (var i=0; i<tuples.length; i++) {
+                    var tupleData = tuples[i].data;
+
+                    var filter = '(';  // group each unique filter because it can be conjunction
+
+                    for (var j=0; j<keyColumns.length; j++) {
+                        var keyCol = keyColumns[j],
+                        data = tupleData[mapping.get(keyCol).name];
+
+                        if (data === undefined || data === null) return null; // tuple data for keyCol doesn't exist
+                        if (j != 0) filter += '&';
+                        filter += module._fixedEncodeURIComponent(keyCol.name) + '=' + module._fixedEncodeURIComponent(data);
+                    }
+
+                    filter += ')';
+
+                    // check url length limit if not first one;
+                    if (i != 0 && new Reference(module.parse(baseUri + currentPath + (i != 0 ? ';' : '') + filter), self.table.schema.catalog)._getReadPath().value.length > module.URL_PATH_LENGTH_LIMIT) {
+                        referencePaths.push(currentPath);
+                        currentPath = compactPath;
+                    } else if (i != 0) {
+                        // prepend the conjunction operator when it isn't the first filter to create and we aren't dealing with a url length limit
+                        filter = ";" + filter;
+                    }
+
+                    currentPath += filter;
+                }
+                referencePaths.push(currentPath);
+
+                referencePaths.forEach(function (path) {
+                    var reference = new Reference(module.parse(baseUri + path), self.table.schema.catalog);
+                    reference.session = associationRef._session;
+                    references.push(reference);
+                });
+
+                return references;
+            } catch (e) {
+                throw module.responseToError(e, self);
+            }
+        },
+
+        /**
          * An object which contains row display properties for this reference.
          * It is determined based on the `table-display` annotation. It has the
          * following properties:
