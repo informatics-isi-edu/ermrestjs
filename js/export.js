@@ -252,10 +252,12 @@ var ERMrest = (function(module) {
                     contextHeaderParams[key] = self.reference.defaultLogInfo[key];
                 }
                 // add the displayname and type of template
-                contextHeaderParams.template = {
-                    displayname: self.template.displayname,
-                    type: self.template.type
-                };
+                if (Array.isArray(contextHeaderParams.stack)) {
+                    contextHeaderParams.stack[contextHeaderParams.stack.length-1].template = {
+                        displayname: self.template.displayname,
+                        type: self.template.type
+                    };
+                }
                 headers[module.contextHeaderName] = contextHeaderParams;
 
                 self.canceled = false;

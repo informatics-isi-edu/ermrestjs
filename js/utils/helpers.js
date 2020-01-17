@@ -120,6 +120,23 @@
     };
 
     /**
+     * Given an object and two string (k1, k2), if object has k1 key, will
+     * rename that key to k2 instead (values that were accessible through k1
+     * key name will be moved to k2 instead)
+     * @param {Object} obj
+     * @param {String} oldKey
+     * @param {String} newKey
+     */
+    var renameKey = function (obj, oldKey, newKey) {
+        if (!isObjectAndNotNull(obj)) return;
+        if (oldKey === newKey) return;
+        if (!obj.hasOwnProperty(oldKey)) return;
+
+        Object.defineProperty(obj, newKey, Object.getOwnPropertyDescriptor(obj, oldKey));
+        delete obj[oldKey];
+    };
+
+    /**
      * Check if object has all the keys in the given array
      * @param  {Object} obj the object
      * @param  {String[]} arr array of key strings

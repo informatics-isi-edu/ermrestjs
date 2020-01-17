@@ -835,3 +835,62 @@
             return returnError("Invalid column name in source");
         }
     };
+
+    /**
+     * @private
+     * @param {Object} source the source array or string
+     * @desc
+     * Will compress the source that can be used for logging purposes. It will,
+     *  - `inbound` to `i`
+     *  - `outbound` to `o`
+     */
+    _compressSource = function (source) {
+        if (!source) return source;
+
+        var res = module._simpleDeepCopy(source);
+        var shorter = module._shorterVersion;
+
+        if (!_sourceHasPath(source)) return res;
+
+        for (var i = 0; i < res.length; i++) {
+            renameKey(res[i], "inbound", shorter.inbound);
+            renameKey(res[i], "outbound", shorter.outbound);
+        }
+        return res;
+    };
+
+    /**
+     * @private
+     * @param {Object} facet the facet object
+     * Given a facet will compress it so it can be used for logging purposes, it will,
+     *  - `inbound` to `i`
+     *  - `outbound` to `o`
+     *  - `source` to `src`
+     *  - `sourcekey` to `key`
+     *  - `choices` to `ch`
+     *  - `ranges` to `r`
+     *  - `search` to `s`
+     * assumption: the facet is using conjunction
+     */
+    _compressFacetObject = function (facet) {
+        var res = module._simpleDeepCopy(facet),
+            and = module._FacetsLogicalOperators.AND,
+            shorter = module._shorterVersion;
+
+        var shorten = function (f) {
+            return function (k) {
+                renameKey(f, k, shorter[k]);
+            };
+        };
+
+        for (var i = 0; i < res[and].length; i++) {
+            var f = res[and][i];
+            if (f.source) {
+                f.src = _compressSource(f.source);
+                delete f.source;
+            }
+
+            ["choices", "ranges", "search", "sourcekey"].forEach(shorten(f));
+        }
+        return res;
+    };

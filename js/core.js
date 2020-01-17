@@ -3678,7 +3678,7 @@
         constructor: ForeignKeyRef,
 
         /**
-         * A unique nam that can be used for referring to this foreignkey.
+         * A unique name that can be used for referring to this foreignkey.
          * @type {string}
          */
         get name () {

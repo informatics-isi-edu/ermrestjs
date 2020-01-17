@@ -153,17 +153,20 @@ ReferenceColumn.prototype = {
      * the source path from the main reference to this column
      * @type{Object}
      */
-    get dataSource() {
-        if (this._dataSource === undefined) {
+    get compressedDataSource() {
+        if (this._compressedDataSource === undefined) {
+            var ds;
             if (this.sourceObject && this.sourceObject.source) {
-                this._dataSource = this.sourceObject.source;
+                ds = this.sourceObject.source;
             } else if (this._simple) {
-                this._dataSource = this._baseCols[0].name;
+                ds = this._baseCols[0].name;
             } else {
-                this._dataSource = null;
+                ds = null;
             }
+
+            this._compressedDataSource = _compressSource(ds);
         }
-        return this._dataSource;
+        return this._compressedDataSource;
     },
 
     /**
@@ -1455,6 +1458,14 @@ Object.defineProperty(PseudoColumn.prototype, "hasAggregate", {
         return this._hasAggregate;
     }
 });
+Object.defineProperty(PseudoColumn.prototype, "aggregateFn", {
+    get: function () {
+        if (this._aggregateFn === undefined) {
+            this._aggregateFn = this.hasAggregate ? this.sourceObject.aggregate : null;
+        }
+        return this._aggregateFn;
+    }
+});
 
 /**
  * Returns a reference to the current pseudo-column
@@ -1541,7 +1552,7 @@ Object.defineProperty(PseudoColumn.prototype, "reference", {
             // make sure data-source is available on the reference
             // TODO this has been added to be consistent with the old related reference apis
             // other apis are not available, maybe we should add them as well? (origFKR, etc.)
-            self._reference.dataSource = self.dataSource;
+            self._reference.compressedDataSource = self.compressedDataSource;
 
             // make sure the refernece has the correct displayname
             if (self.hasPath) {
@@ -1960,21 +1971,23 @@ Object.defineProperty(ForeignKeyPseudoColumn.prototype, "display", {
         return this._display_cached;
     }
 });
-Object.defineProperty(ForeignKeyPseudoColumn.prototype, "dataSource", {
+Object.defineProperty(ForeignKeyPseudoColumn.prototype, "compressedDataSource", {
     get: function () {
-        if (this._dataSource === undefined) {
+        if (this._compressedDataSource === undefined) {
+            var ds;
             if (this.sourceObject && this.sourceObject.source) {
-                this._dataSource = this.sourceObject.source;
+                ds = this.sourceObject.source;
             } else if (this.table.shortestKey.length === 1){
-                this._dataSource = [
+                ds = [
                     {"outbound": this.foreignKey.constraint_names[0]},
                     this.table.shortestKey[0].name
                 ];
             } else {
-                this._dataSource = null;
+                ds = null;
             }
+            this._compressedDataSource = _compressSource(ds);
         }
-        return this._dataSource;
+        return this._compressedDataSource;
     }
 });
 
@@ -2635,18 +2648,18 @@ Object.defineProperty(InboundForeignKeyPseudoColumn.prototype, "nullok", {
         throw new Error("can not use this type of column in entry mode.");
     }
 });
-Object.defineProperty(InboundForeignKeyPseudoColumn.prototype, "dataSource", {
+Object.defineProperty(InboundForeignKeyPseudoColumn.prototype, "compressedDataSource", {
     get: function () {
-        if (this._dataSource === undefined) {
+        if (this._compressedDataSource === undefined) {
+            var ds = null;
             if (this.sourceObject && this.sourceObject.source) {
-                this._dataSource = this.sourceObject.source;
-            } else if (this.reference.dataSource){
-                this._dataSource = this.reference.dataSource;
-            } else {
-                this._dataSource = null;
+                ds = _compressSource(this.sourceObject.source);
+            } else if (this.reference.compressedDataSource){
+                ds = this.reference.compressedDataSource;
             }
+            this._compressedDataSource = ds;
         }
-        return this._dataSource;
+        return this._compressedDataSource;
     }
 });
 
@@ -2695,6 +2708,12 @@ function FacetColumn (reference, index, column, facetObject, filters) {
      * @type {obj|string}
      */
     this.dataSource = facetObject.source;
+
+    /**
+     * the compressed version of data source data-source path
+     * @type {obj|string}
+     */
+    this.compressedDataSource = _compressSource(facetObject.source);
 
     /**
      * Filters that are applied to this facet.

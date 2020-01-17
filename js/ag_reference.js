@@ -533,6 +533,19 @@ AttributeGroupReference.prototype = {
         return obj;
     },
 
+    /**
+     * The filter information that should be logged
+     * Currently only includes the search term.
+     * @type {Object}
+     */
+    get filterLogInfo() {
+        var obj = {};
+        if (isObjectAndNotNull(this.location.searchObject)) {
+            obj.filters = _compressFacetObject({"and": [{"source": "search-box", "search": [this.location.searchTerm]}]});
+        }
+        return obj;
+    },
+
     _generateContextHeader: function (contextHeaderParams, page_size) {
         if (!contextHeaderParams || !isObject(contextHeaderParams)) {
             contextHeaderParams = {};

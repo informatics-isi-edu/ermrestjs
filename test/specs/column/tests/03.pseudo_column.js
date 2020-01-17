@@ -446,38 +446,38 @@ exports.execute = function (options) {
                 // (ForeignKey, InboundforeignKey, etc.) to the shortestkey.
                 expect(facetColumns.length).toBe(12, "length missmatch.");
                 expect(facetColumns.map(function (fc) {
-                    return fc.dataSource;
+                    return fc.compressedDataSource;
                 })).toEqual(
                     [
                         "main_table_id_col", "col", "main_table_id_col", // the key
-                        [{"outbound": ["pseudo_column_schema", "main_fk1"]}, "RID"],
-                        [{"outbound": ["pseudo_column_schema", "main_fk1"]}, "id"], //entity:false
+                        [{"o": ["pseudo_column_schema", "main_fk1"]}, "RID"],
+                        [{"o": ["pseudo_column_schema", "main_fk1"]}, "id"], //entity:false
                         [
-                            {"outbound": ["pseudo_column_schema", "main_fk1"]},
-                            {"outbound": ["pseudo_column_schema", "outbound_1_fk1"]},
+                            {"o": ["pseudo_column_schema", "main_fk1"]},
+                            {"o": ["pseudo_column_schema", "outbound_1_fk1"]},
                             "id"
                         ],
                         [
-                            {"outbound": ["pseudo_column_schema", "main_fk1"]},
-                            {"outbound": ["pseudo_column_schema", "outbound_1_fk1"]},
+                            {"o": ["pseudo_column_schema", "main_fk1"]},
+                            {"o": ["pseudo_column_schema", "outbound_1_fk1"]},
                             "id"
                         ],
                         "asset_filename",
                         [
-                            {"outbound": ["pseudo_column_schema", "main_fk2"]},
-                            {"outbound": ["pseudo_column_schema", "outbound_2_fk1"]},
+                            {"o": ["pseudo_column_schema", "main_fk2"]},
+                            {"o": ["pseudo_column_schema", "outbound_2_fk1"]},
                             "id"
                         ],
-                        [{"inbound": ["pseudo_column_schema", "inbound_3_outbound_1_fk1"]}, "RID"],
+                        [{"i": ["pseudo_column_schema", "inbound_3_outbound_1_fk1"]}, "RID"],
                         [
-                            {"inbound": ["pseudo_column_schema", "main_inbound_3_association_fk1"]},
-                            {"outbound": ["pseudo_column_schema", "main_inbound_3_association_fk2"]},
+                            {"i": ["pseudo_column_schema", "main_inbound_3_association_fk1"]},
+                            {"o": ["pseudo_column_schema", "main_inbound_3_association_fk2"]},
                             "RID"
                         ],
                         [
-                            {"inbound": ["pseudo_column_schema", "main_inbound_3_association_fk1"]},
-                            {"outbound": ["pseudo_column_schema", "main_inbound_3_association_fk2"]},
-                            {"outbound": ["pseudo_column_schema", "inbound_3_fk1"]},
+                            {"i": ["pseudo_column_schema", "main_inbound_3_association_fk1"]},
+                            {"o": ["pseudo_column_schema", "main_inbound_3_association_fk2"]},
+                            {"o": ["pseudo_column_schema", "inbound_3_fk1"]},
                             "id"
                         ]
                     ],
@@ -671,102 +671,102 @@ exports.execute = function (options) {
                 });
             });
 
-            describe("dataSource, ", function () {
-                var detailedColumnDataSources = [
+            describe("compressedDataSource, ", function () {
+                var detailedColumnCompressedDataSources = [
                     "main_table_id_col", //0
                     "col", //1
                     "main_table_id_col", //2
-                    [{"outbound": ["pseudo_column_schema", "main_fk1"]}, "id"], //3
-                    [{"outbound": ["pseudo_column_schema", "main_fk1"]}, "id"], //4
+                    [{"o": ["pseudo_column_schema", "main_fk1"]}, "id"], //3
+                    [{"o": ["pseudo_column_schema", "main_fk1"]}, "id"], //4
                     [
-                        {"outbound": ["pseudo_column_schema", "main_fk1"]},
-                        {"outbound": ["pseudo_column_schema", "outbound_1_fk1"]},
+                        {"o": ["pseudo_column_schema", "main_fk1"]},
+                        {"o": ["pseudo_column_schema", "outbound_1_fk1"]},
                         "id"
                     ], //5
                     [
-                        {"outbound": ["pseudo_column_schema", "main_fk1"]},
-                        {"outbound": ["pseudo_column_schema", "outbound_1_fk1"]},
+                        {"o": ["pseudo_column_schema", "main_fk1"]},
+                        {"o": ["pseudo_column_schema", "outbound_1_fk1"]},
                         "id"
                     ], //6
-                    [{"inbound": ["pseudo_column_schema", "inbound_1_fk1"]}, "id"], //7
+                    [{"i": ["pseudo_column_schema", "inbound_1_fk1"]}, "id"], //7
                     [
-                        {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
-                        {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
+                        {"i": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
+                        {"o": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
                         "id"
                     ], //8
                     [
-                        {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
-                        {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
-                        {"outbound": ["pseudo_column_schema", "inbound_2_fk1"]},
+                        {"i": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
+                        {"o": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
+                        {"o": ["pseudo_column_schema", "inbound_2_fk1"]},
                         "id"
                     ], //9
                     [
-                        {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]}, "id"
+                        {"i": ["pseudo_column_schema", "main_inbound_2_association_fk1"]}, "id"
                     ], //10
                     [
-                        {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
-                        {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
+                        {"i": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
+                        {"o": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
                         "id"
                     ], //11
                     [
-                        {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
-                        {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
-                        {"outbound": ["pseudo_column_schema", "inbound_2_fk1"]},
+                        {"i": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
+                        {"o": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
+                        {"o": ["pseudo_column_schema", "inbound_2_fk1"]},
                         "id"
                     ], //12
                     [
-                        {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]}, "id"
+                        {"i": ["pseudo_column_schema", "main_inbound_2_association_fk1"]}, "id"
                     ], //13
                     "col", //14
                     [
-                        {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
-                        {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
+                        {"i": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
+                        {"o": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
                         "id"
                     ], //15
                     [
-                        { "inbound": [ "pseudo_column_schema", "main_inbound_2_association_fk1"]},
-                        { "outbound": [ "pseudo_column_schema", "main_inbound_2_association_fk2"]},
+                        { "i": [ "pseudo_column_schema", "main_inbound_2_association_fk1"]},
+                        { "o": [ "pseudo_column_schema", "main_inbound_2_association_fk2"]},
                         "id"
                     ], //16
                     [
-                        { "inbound": [ "pseudo_column_schema", "main_inbound_2_association_fk1"]},
-                        { "outbound": [ "pseudo_column_schema", "main_inbound_2_association_fk2"]},
+                        { "i": [ "pseudo_column_schema", "main_inbound_2_association_fk1"]},
+                        { "o": [ "pseudo_column_schema", "main_inbound_2_association_fk2"]},
                         "id"
                     ], //17
                     [
-                        {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
-                        {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
+                        {"i": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
+                        {"o": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
                         "id"
                     ], //18
                     [
-                        {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
-                        {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
+                        {"i": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
+                        {"o": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
                         "RID"
                     ], //19
                     [
-                        {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
-                        {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
+                        {"i": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
+                        {"o": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
                         "timestamp_col"
                     ], //20
                     [
-                        {"inbound": ["pseudo_column_schema", "inbound_4_long_table_name_fk"]}, "foreign key column name to main"
+                        {"i": ["pseudo_column_schema", "inbound_4_long_table_name_fk"]}, "foreign key column name to main"
                     ], //21
                     "asset", //22
                     "asset_filename", //23
                     [
-                        {"outbound": ["pseudo_column_schema", "main_fk2"]},
-                        {"inbound": ["pseudo_column_schema", "outbound_2_inbound_1_fk1"]},
+                        {"o": ["pseudo_column_schema", "main_fk2"]},
+                        {"i": ["pseudo_column_schema", "outbound_2_inbound_1_fk1"]},
                         "id"
                     ], //24
                     [
-                        {"outbound": ["pseudo_column_schema", "main_fk2"]},
-                        {"outbound": ["pseudo_column_schema", "outbound_2_fk1"]},
+                        {"o": ["pseudo_column_schema", "main_fk2"]},
+                        {"o": ["pseudo_column_schema", "outbound_2_fk1"]},
                         "id"
                     ] //25
                 ];
                 it ("should return the data source of the pseudo-column.", function () {
                     detailedColsWTuple.forEach(function (col, index) {
-                        expect(col.dataSource).toEqual(detailedColumnDataSources[index], "missmatch for index=" + index);
+                        expect(col.compressedDataSource).toEqual(detailedColumnCompressedDataSources[index], "missmatch for index=" + index);
                     });
                 });
             })

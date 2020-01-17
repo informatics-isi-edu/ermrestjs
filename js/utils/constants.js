@@ -278,3 +278,13 @@
     module._specialSourceDefinitions = Object.freeze({
         SEARCH_BOX: "search-box"
     });
+
+    module._shorterVersion = Object.freeze({
+        "inbound": "i",
+        "outbound": "o",
+        "source": "src",
+        "sourcekey": "key",
+        "choices": "ch",
+        "ranges": "r",
+        "search": "s"
+    });
