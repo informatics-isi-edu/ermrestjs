@@ -527,7 +527,7 @@
             ],
             "annotations": {
                 "tag:isrd.isi.edu,2016:visible-foreign-keys": {
-                    "*": [
+                    "export": [
                         ["export_table_annot_schema", "f1_fk_1"],
                         ["export_table_annot_schema", "no_export_annot_f2_assoc_fk_1"],
                         {
