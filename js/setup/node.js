@@ -199,3 +199,14 @@ ERMrest.onload = function() {
 
     return defer.promise;
 };
+
+
+var startTime = Date.now();
+/**
+ * @function
+ * @returns {integer} A value set to determine the elapsed time
+ * since the ermrestJS has been available (milliseconds).
+ */
+ERMrest.getElapsedTime = function () {
+    return Date.now() - startTime;
+};

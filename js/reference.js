@@ -1156,8 +1156,12 @@
                     uri += (i === 0 ? "?defaults=" : ',') + module._fixedEncodeURIComponent(defaults[i]);
                 }
 
+                if (isObject(contextHeaderParams) && Array.isArray(contextHeaderParams.stack)) {
+                    var stack = contextHeaderParams.stack;
+                    stack[stack.length-1].num_created = data.length;
+                }
                 // create the context header params for log
-                if (!contextHeaderParams || !isObject(contextHeaderParams)) {
+                else if (!contextHeaderParams || !isObject(contextHeaderParams)) {
                     contextHeaderParams = {"action": "create"};
                 }
                 var config = {
@@ -1380,7 +1384,7 @@
                         var actionVerb = action.substring(action.lastIndexOf(";")+1),
                             newActionVerb = "auto-reload";
 
-                        // TODO LOG better?
+                        // TODO (could be optimized)
                         if (["load-domain", "reload-domain"].indexOf(actionVerb) === 0) {
                             newActionVerb = "auto-reload-domain";
                         }
@@ -1670,9 +1674,28 @@
                     uri += module._fixedEncodeURIComponent(columnProjections[k]) + newAlias + ":=" + module._fixedEncodeURIComponent(columnProjections[k]);
                 }
 
-                if (!contextHeaderParams || !isObject(contextHeaderParams)) {
+                /**
+                 * We are going to add the following to the last element of stack in the logs:
+                 * {
+                 *   "num_updated": "number of updated rows"
+                 * }
+                 */
+                if (isObject(contextHeaderParams) && Array.isArray(contextHeaderParams.stack)) {
+                    var stack = contextHeaderParams.stack, numUpdated = submissionData.length;
+                    stack[stack.length-1].num_updated = numUpdated;
+
+                    stack[stack.length-1].updated_keys = {
+                        cols: shortestKeyNames,
+                        vals: allNewData.map(function (d) {
+                            return shortestKeyNames.map(function (kname) {
+                                return d[kname];
+                            });
+                        })
+                    };
+                } else if (!contextHeaderParams || !isObject(contextHeaderParams)) {
                     contextHeaderParams = {"action": "update"};
                 }
+
                 var config = {
                     headers: this._generateContextHeader(contextHeaderParams, submissionData.length)
                 };
@@ -3437,11 +3460,6 @@
                     newRef._location = module.parse(this._location.compactUri + "/" + fkr.toString() + "/" + otherFK.toString(true), catalog);
                 }
 
-                // build the filter source
-                filterSource.push({"inbound": otherFK.constraint_names[0]});
-
-                // buld the data source
-                dataSource.push({"outbound": otherFK.constraint_names[0]});
 
                 // additional values for sorting related references
                 newRef._related_key_column_positions = fkr.key.colset._getColumnPositions();
@@ -3453,6 +3471,11 @@
                 newRef.derivedAssociationReference.origFKR = newRef.origFKR;
                 newRef.derivedAssociationReference._secondFKR = otherFK;
 
+                // build the filter source
+                filterSource.push({"inbound": otherFK.constraint_names[0]});
+
+                // buld the data source
+                dataSource.push({"outbound": otherFK.constraint_names[0]});
             } else { // Simple inbound Table
                 newRef._table = fkrTable;
                 newRef._shortestKey = newRef._table.shortestKey;

@@ -540,7 +540,7 @@ AttributeGroupReference.prototype = {
      */
     get filterLogInfo() {
         var obj = {};
-        if (isObjectAndNotNull(this.location.searchObject)) {
+        if (isObjectAndNotNull(this.location.searchObject) && typeof this.location.searchTerm === "string" && this.location.searchTerm) {
             obj.filters = _compressFacetObject({"and": [{"source": "search-box", "search": [this.location.searchTerm]}]});
         }
         return obj;

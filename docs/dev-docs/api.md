@@ -697,6 +697,7 @@ to use for ERMrest JavaScript agents.
     * [.getServer(uri, [contextHeaderParams])](#ERMrest.getServer) ⇒ [<code>Server</code>](#ERMrest.Server)
     * [.parse(uri, catalogObject)](#ERMrest.parse) ⇒ <code>ERMrest.Location</code>
     * [.resolve(uri, [contextHeaderParams])](#ERMrest.resolve) ⇒ <code>Promise</code>
+    * [.getElapsedTime()](#ERMrest.getElapsedTime) ⇒ <code>integer</code>
 
 <a name="ERMrest.Server"></a>
 
@@ -7407,6 +7408,12 @@ ERMrest.resolve('https://example.org/catalog/42/entity/s:t/k=123').then(
 | uri | <code>string</code> | An ERMrest resource URI, such as `https://example.org/ermrest/catalog/1/entity/s:t/k=123`. |
 | [contextHeaderParams] | <code>Object</code> | An optional context header parameters object. The (key, value) pairs from the object are converted to URL `key=value` query parameters and appended to every request to the ERMrest service. |
 
+<a name="ERMrest.getElapsedTime"></a>
+
+### ERMrest.getElapsedTime() ⇒ <code>integer</code>
+**Kind**: static method of [<code>ERMrest</code>](#ERMrest)  
+**Returns**: <code>integer</code> - A value set to determine the elapsed time
+since the ermrestJS has been available (milliseconds).  
 <a name="formatDate"></a>
 
 ## formatDate() ⇒

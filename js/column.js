@@ -3346,8 +3346,21 @@ FacetColumn.prototype = {
      * @return {Promise} A promise resolved with list of objects that have `uniqueId`, and `displayname`.
      */
     getChoiceDisplaynames: function (contextHeaderParams) {
-        var defer = module._q.defer();
-        var filters =  [];
+        var defer = module._q.defer(), filters =  [];
+        var table = this._column.table, columnName = this._column.name;
+
+        var createRef = function (filterStrs) {
+            var uri = [
+                table.schema.catalog.server.uri ,"catalog" ,
+                table.schema.catalog.id, "entity",
+                module._fixedEncodeURIComponent(table.schema.name) + ":" + module._fixedEncodeURIComponent(table.name),
+                filterStrs.join(";")
+            ].join("/");
+
+            var ref = new Reference(module.parse(uri), table.schema.catalog).contextualize.compactSelect;
+            ref = ref.sort([{"column": columnName, "descending": false}]);
+            return ref;
+        };
 
         // if no filter, just resolve with empty list.
         if (this.choiceFilters.length === 0) {
@@ -3366,8 +3379,6 @@ FacetColumn.prototype = {
         }
         // otherwise generate an ermrest request to get the displaynames.
         else {
-
-            var table = this._column.table, columnName = this._column.name;
             var filterStr = [];
 
             // list of filters that we want their displaynames.
@@ -3388,18 +3399,7 @@ FacetColumn.prototype = {
             }
 
             // create a url
-            var uri = [
-                table.schema.catalog.server.uri ,"catalog" ,
-                table.schema.catalog.id, "entity",
-                module._fixedEncodeURIComponent(table.schema.name) + ":" + module._fixedEncodeURIComponent(table.name),
-                filterStr.join(";")
-            ].join("/");
-
-            var ref = new Reference(module.parse(uri), table.schema.catalog).contextualize.compactSelect;
-
-            ref = ref.sort([{"column": columnName, "descending": false}]);
-
-            ref.read(this.choiceFilters.length, contextHeaderParams, true).then(function (page) {
+            createRef(filterStr).read(this.choiceFilters.length, contextHeaderParams, true).then(function (page) {
                 // create the response
                 page.tuples.forEach(function (t) {
                     filters.push({uniqueId: t.data[columnName], displayname: t.displayname, tuple: t});
