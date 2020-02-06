@@ -1880,7 +1880,7 @@
                             }
 
                             // Encapsulate the iframe inside a figure tag
-                            html = '<figure class="embed-block' + (iframeClass.length ? (" "  + iframeClass): "") + '" style="' + (iframeStyle.length ? (" "  + iframeStyle ) : "") + '">' + html + "</figure>";
+                            html = '<figure class="embed-block chaise-post-load' + (iframeClass.length ? (" "  + iframeClass): "") + '" style="' + (iframeStyle.length ? (" "  + iframeStyle ) : "") + '">' + html + "</figure>";
                         }
                     }
                     // if attrs was empty or it didn't find any link simply render the internal markdown
