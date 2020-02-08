@@ -325,7 +325,7 @@
                 headers[module.contextHeaderName] = contextHeaderParams;
             } else {
                 headers[module.contextHeaderName] = {
-                    action: "model/snaptime",
+                    action: ":,catalog/snaptime;load",
                     catalog: self.id
                 };
             }
@@ -357,7 +357,7 @@
                 self.snaptime = snaptime;
                 var headers = {};
                 headers[module.contextHeaderName] = {
-                    action: "model/schema",
+                    action: ":,catalog/schema;load",
                     catalog: self.id
                 };
                 return self.server.http.get(self._uri + "/schema", {headers: headers});
@@ -594,9 +594,16 @@
         this.catalog = catalog;
 
         /**
-         *
+         * @desc the database name of the schema
+         * @type {string}
          */
         this.name = jsonSchema.schema_name;
+
+        /**
+         * @desc The RID of this schema (might not be defined)
+         * @type {?string}
+         */
+        this.RID = jsonSchema.RID;
 
         //this._uri = catalog._uri + "/schema/" + module._fixedEncodeURIComponent(this.name);
 
@@ -807,10 +814,17 @@
         this.schema = schema;
 
         /**
-         *
+         * @desc the database name of the table
+         * @type {string}
          */
         this.name = jsonTable.table_name;
         this._jsonTable = jsonTable;
+
+        /**
+         * @desc The RID of this table (might not be defined)
+         * @type {?string}
+         */
+        this.RID = jsonTable.RID;
 
 
         this._nullValue = {}; // used to avoid recomputation of null value for different contexts.
@@ -2458,9 +2472,16 @@
         this.isImmutable = this.rights.update === false;
 
         /**
+         * The database name of this column
          * @type {string}
          */
         this.name = jsonColumn.name;
+
+        /**
+         * @desc The RID of this column (might not be defined)
+         * @type {?string}
+         */
+        this.RID = jsonColumn.RID;
 
         /**
          *
@@ -3049,6 +3070,12 @@
         }
 
         /**
+         * @desc The RID of this key (might not be defined)
+         * @type {?string}
+         */
+        this.RID = jsonKey.RID;
+
+        /**
          * The exact `names` array in key definition
          * @type {Array}
          */
@@ -3558,7 +3585,17 @@
          */
         this._table = table;
 
+        /**
+         * @desc The table that this foreignkey is defined on (from table)
+         * @type {ERMrest.Table}
+         */
         this.table = table;
+
+        /**
+         * @desc The RID of this column (might not be defined)
+         * @type {?string}
+         */
+        this.RID = jsonFKR.RID;
 
         var catalog = table.schema.catalog;
 
@@ -3676,6 +3713,24 @@
 
     ForeignKeyRef.prototype = {
         constructor: ForeignKeyRef,
+
+        /**
+         * the compressed source path from the main reference to this column
+         * @type{Object}
+         */
+        get compressedDataSource() {
+            if (this._compressedDataSource === undefined) {
+                var ds = null;
+                if (this.table.shortestKey.length === 1) {
+                    ds = [
+                        {"outbound": this.constraint_names[0]},
+                        this.table.shortestKey[0].name
+                    ];
+                }
+                this._compressedDataSource = _compressSource(ds);
+            }
+            return this._compressedDataSource;
+        },
 
         /**
          * A unique name that can be used for referring to this foreignkey.

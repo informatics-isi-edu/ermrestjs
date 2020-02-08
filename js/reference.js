@@ -1385,7 +1385,7 @@
                             newActionVerb = "auto-reload";
 
                         // TODO (could be optimized)
-                        if (["load-domain", "reload-domain"].indexOf(actionVerb) === 0) {
+                        if (["load-domain", "reload-domain"].indexOf(actionVerb) !== -1) {
                             newActionVerb = "auto-reload-domain";
                         }
                         contextHeaderParams.action = action.substring(0,action.lastIndexOf(";")+1) + newActionVerb;
@@ -3552,10 +3552,6 @@
                 // only add the values that are not defined.
                 if (key in contextHeaderParams) continue;
                 contextHeaderParams[key] = this.defaultLogInfo[key];
-            }
-
-            if (isInteger(page_size)) {
-                contextHeaderParams.page_size = page_size;
             }
 
             var headers = {};

@@ -170,7 +170,7 @@
                   *
                   **/
                 if (typeof config.headers[module.contextHeaderName] === 'object') {
-                    config.headers[module.contextHeaderName].elapsed_s = module.getElapsedTime();
+                    config.headers[module.contextHeaderName].elapsed_ms = module.getElapsedTime();
                     // encode and make sure it's not very lengthy
                     config.headers[module.contextHeaderName] = module._certifyContextHeader(config.headers[module.contextHeaderName]);
                 }

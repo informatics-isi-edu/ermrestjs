@@ -92,7 +92,8 @@ to use for ERMrest JavaScript agents.
     * [.Schema](#ERMrest.Schema)
         * [new Schema(catalog, jsonSchema)](#new_ERMrest.Schema_new)
         * [.catalog](#ERMrest.Schema+catalog) : [<code>Catalog</code>](#ERMrest.Catalog)
-        * [.name](#ERMrest.Schema+name)
+        * [.name](#ERMrest.Schema+name) : <code>string</code>
+        * [.RID](#ERMrest.Schema+RID) : <code>string</code>
         * [.ignore](#ERMrest.Schema+ignore) : <code>boolean</code>
         * [.annotations](#ERMrest.Schema+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
         * [.rights](#ERMrest.Schema+rights) : <code>Object</code>
@@ -109,7 +110,8 @@ to use for ERMrest JavaScript agents.
         * [new Table(schema, jsonTable)](#new_ERMrest.Table_new)
         * _instance_
             * [.schema](#ERMrest.Table+schema) : [<code>Schema</code>](#ERMrest.Schema)
-            * [.name](#ERMrest.Table+name)
+            * [.name](#ERMrest.Table+name) : <code>string</code>
+            * [.RID](#ERMrest.Table+RID) : <code>string</code>
             * [.entity](#ERMrest.Table+entity) : [<code>Entity</code>](#ERMrest.Table.Entity)
             * [.ignore](#ERMrest.Table+ignore) : <code>boolean</code>
             * [._baseTable](#ERMrest.Table+_baseTable) : [<code>Table</code>](#ERMrest.Table)
@@ -171,6 +173,7 @@ to use for ERMrest JavaScript agents.
         * [.isSystemColumn](#ERMrest.Column+isSystemColumn) : <code>Boolean</code>
         * [.isImmutable](#ERMrest.Column+isImmutable) : <code>Boolean</code>
         * [.name](#ERMrest.Column+name) : <code>string</code>
+        * [.RID](#ERMrest.Column+RID) : <code>string</code>
         * [.type](#ERMrest.Column+type) : [<code>Type</code>](#ERMrest.Type)
         * [.ignore](#ERMrest.Column+ignore) : <code>boolean</code>
         * [.annotations](#ERMrest.Column+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
@@ -210,6 +213,7 @@ to use for ERMrest JavaScript agents.
         * [.colset](#ERMrest.Key+colset) : [<code>ColSet</code>](#ERMrest.ColSet)
         * [.annotations](#ERMrest.Key+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
         * [.comment](#ERMrest.Key+comment) : <code>string</code>
+        * [.RID](#ERMrest.Key+RID) : <code>string</code>
         * [.constraint_names](#ERMrest.Key+constraint_names) : <code>Array</code>
         * [.name](#ERMrest.Key+name) : <code>string</code>
         * [.simple](#ERMrest.Key+simple) : <code>boolean</code>
@@ -236,6 +240,8 @@ to use for ERMrest JavaScript agents.
         * [.get(colset)](#ERMrest.ForeignKeys+get) ⇒ [<code>Array.&lt;ForeignKeyRef&gt;</code>](#ERMrest.ForeignKeyRef)
     * [.ForeignKeyRef](#ERMrest.ForeignKeyRef)
         * [new ForeignKeyRef(table, jsonFKR)](#new_ERMrest.ForeignKeyRef_new)
+        * [.table](#ERMrest.ForeignKeyRef+table) : [<code>Table</code>](#ERMrest.Table)
+        * [.RID](#ERMrest.ForeignKeyRef+RID) : <code>string</code>
         * [.colset](#ERMrest.ForeignKeyRef+colset) : [<code>ColSet</code>](#ERMrest.ColSet)
         * [.key](#ERMrest.ForeignKeyRef+key) : [<code>Key</code>](#ERMrest.Key)
         * [.rights](#ERMrest.ForeignKeyRef+rights) : <code>Object</code>
@@ -246,6 +252,7 @@ to use for ERMrest JavaScript agents.
         * [.ignore](#ERMrest.ForeignKeyRef+ignore) : <code>boolean</code>
         * [.annotations](#ERMrest.ForeignKeyRef+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
         * [.comment](#ERMrest.ForeignKeyRef+comment) : <code>string</code>
+        * [.compressedDataSource](#ERMrest.ForeignKeyRef+compressedDataSource)
         * [.name](#ERMrest.ForeignKeyRef+name) : <code>string</code>
         * [.simple](#ERMrest.ForeignKeyRef+simple) : <code>Boolean</code>
         * [.toString(reverse, isLeft)](#ERMrest.ForeignKeyRef+toString) ⇒ <code>string</code>
@@ -977,7 +984,8 @@ it will throw an error
 * [.Schema](#ERMrest.Schema)
     * [new Schema(catalog, jsonSchema)](#new_ERMrest.Schema_new)
     * [.catalog](#ERMrest.Schema+catalog) : [<code>Catalog</code>](#ERMrest.Catalog)
-    * [.name](#ERMrest.Schema+name)
+    * [.name](#ERMrest.Schema+name) : <code>string</code>
+    * [.RID](#ERMrest.Schema+RID) : <code>string</code>
     * [.ignore](#ERMrest.Schema+ignore) : <code>boolean</code>
     * [.annotations](#ERMrest.Schema+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
     * [.rights](#ERMrest.Schema+rights) : <code>Object</code>
@@ -1002,7 +1010,15 @@ Constructor for the Catalog.
 **Kind**: instance property of [<code>Schema</code>](#ERMrest.Schema)  
 <a name="ERMrest.Schema+name"></a>
 
-#### schema.name
+#### schema.name : <code>string</code>
+the database name of the schema
+
+**Kind**: instance property of [<code>Schema</code>](#ERMrest.Schema)  
+<a name="ERMrest.Schema+RID"></a>
+
+#### schema.RID : <code>string</code>
+The RID of this schema (might not be defined)
+
 **Kind**: instance property of [<code>Schema</code>](#ERMrest.Schema)  
 <a name="ERMrest.Schema+ignore"></a>
 
@@ -1091,7 +1107,8 @@ get table by table name
     * [new Table(schema, jsonTable)](#new_ERMrest.Table_new)
     * _instance_
         * [.schema](#ERMrest.Table+schema) : [<code>Schema</code>](#ERMrest.Schema)
-        * [.name](#ERMrest.Table+name)
+        * [.name](#ERMrest.Table+name) : <code>string</code>
+        * [.RID](#ERMrest.Table+RID) : <code>string</code>
         * [.entity](#ERMrest.Table+entity) : [<code>Entity</code>](#ERMrest.Table.Entity)
         * [.ignore](#ERMrest.Table+ignore) : <code>boolean</code>
         * [._baseTable](#ERMrest.Table+_baseTable) : [<code>Table</code>](#ERMrest.Table)
@@ -1141,7 +1158,15 @@ Constructor for Table.
 **Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
 <a name="ERMrest.Table+name"></a>
 
-#### table.name
+#### table.name : <code>string</code>
+the database name of the table
+
+**Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
+<a name="ERMrest.Table+RID"></a>
+
+#### table.RID : <code>string</code>
+The RID of this table (might not be defined)
+
 **Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
 <a name="ERMrest.Table+entity"></a>
 
@@ -1605,6 +1630,7 @@ Constructor for Columns.
     * [.isSystemColumn](#ERMrest.Column+isSystemColumn) : <code>Boolean</code>
     * [.isImmutable](#ERMrest.Column+isImmutable) : <code>Boolean</code>
     * [.name](#ERMrest.Column+name) : <code>string</code>
+    * [.RID](#ERMrest.Column+RID) : <code>string</code>
     * [.type](#ERMrest.Column+type) : [<code>Type</code>](#ERMrest.Type)
     * [.ignore](#ERMrest.Column+ignore) : <code>boolean</code>
     * [.annotations](#ERMrest.Column+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
@@ -1681,6 +1707,14 @@ Mentions whether this column is immutable depending on update rights
 <a name="ERMrest.Column+name"></a>
 
 #### column.name : <code>string</code>
+The database name of this column
+
+**Kind**: instance property of [<code>Column</code>](#ERMrest.Column)  
+<a name="ERMrest.Column+RID"></a>
+
+#### column.RID : <code>string</code>
+The RID of this column (might not be defined)
+
 **Kind**: instance property of [<code>Column</code>](#ERMrest.Column)  
 <a name="ERMrest.Column+type"></a>
 
@@ -1964,6 +1998,7 @@ get the key by the column set
     * [.colset](#ERMrest.Key+colset) : [<code>ColSet</code>](#ERMrest.ColSet)
     * [.annotations](#ERMrest.Key+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
     * [.comment](#ERMrest.Key+comment) : <code>string</code>
+    * [.RID](#ERMrest.Key+RID) : <code>string</code>
     * [.constraint_names](#ERMrest.Key+constraint_names) : <code>Array</code>
     * [.name](#ERMrest.Key+name) : <code>string</code>
     * [.simple](#ERMrest.Key+simple) : <code>boolean</code>
@@ -1998,6 +2033,12 @@ Reference to the table that this Key belongs to.
 
 #### key.comment : <code>string</code>
 Documentation for this key
+
+**Kind**: instance property of [<code>Key</code>](#ERMrest.Key)  
+<a name="ERMrest.Key+RID"></a>
+
+#### key.RID : <code>string</code>
+The RID of this key (might not be defined)
 
 **Kind**: instance property of [<code>Key</code>](#ERMrest.Key)  
 <a name="ERMrest.Key+constraint_names"></a>
@@ -2209,6 +2250,8 @@ get the foreign key of the given column set
 
 * [.ForeignKeyRef](#ERMrest.ForeignKeyRef)
     * [new ForeignKeyRef(table, jsonFKR)](#new_ERMrest.ForeignKeyRef_new)
+    * [.table](#ERMrest.ForeignKeyRef+table) : [<code>Table</code>](#ERMrest.Table)
+    * [.RID](#ERMrest.ForeignKeyRef+RID) : <code>string</code>
     * [.colset](#ERMrest.ForeignKeyRef+colset) : [<code>ColSet</code>](#ERMrest.ColSet)
     * [.key](#ERMrest.ForeignKeyRef+key) : [<code>Key</code>](#ERMrest.Key)
     * [.rights](#ERMrest.ForeignKeyRef+rights) : <code>Object</code>
@@ -2219,6 +2262,7 @@ get the foreign key of the given column set
     * [.ignore](#ERMrest.ForeignKeyRef+ignore) : <code>boolean</code>
     * [.annotations](#ERMrest.ForeignKeyRef+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
     * [.comment](#ERMrest.ForeignKeyRef+comment) : <code>string</code>
+    * [.compressedDataSource](#ERMrest.ForeignKeyRef+compressedDataSource)
     * [.name](#ERMrest.ForeignKeyRef+name) : <code>string</code>
     * [.simple](#ERMrest.ForeignKeyRef+simple) : <code>Boolean</code>
     * [.toString(reverse, isLeft)](#ERMrest.ForeignKeyRef+toString) ⇒ <code>string</code>
@@ -2233,6 +2277,18 @@ get the foreign key of the given column set
 | table | [<code>Table</code>](#ERMrest.Table) | 
 | jsonFKR | <code>Object</code> | 
 
+<a name="ERMrest.ForeignKeyRef+table"></a>
+
+#### foreignKeyRef.table : [<code>Table</code>](#ERMrest.Table)
+The table that this foreignkey is defined on (from table)
+
+**Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
+<a name="ERMrest.ForeignKeyRef+RID"></a>
+
+#### foreignKeyRef.RID : <code>string</code>
+The RID of this column (might not be defined)
+
+**Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
 <a name="ERMrest.ForeignKeyRef+colset"></a>
 
 #### foreignKeyRef.colset : [<code>ColSet</code>](#ERMrest.ColSet)
@@ -2281,6 +2337,13 @@ The constraint names for this foreign key
 Documentation for this foreign key reference
 
 **Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
+<a name="ERMrest.ForeignKeyRef+compressedDataSource"></a>
+
+#### foreignKeyRef.compressedDataSource
+the compressed source path from the main reference to this column
+
+**Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
+**Type{object}**:   
 <a name="ERMrest.ForeignKeyRef+name"></a>
 
 #### foreignKeyRef.name : <code>string</code>
@@ -3930,7 +3993,7 @@ name of the column.
 <a name="ERMrest.ReferenceColumn+compressedDataSource"></a>
 
 #### referenceColumn.compressedDataSource
-the source path from the main reference to this column
+the compressed source path from the main reference to this column
 
 **Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
 **Type{object}**:   

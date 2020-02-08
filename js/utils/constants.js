@@ -10,6 +10,12 @@
         }
     }
 
+    /**
+     * @desc Maximum allowed length of the context header that ermrestjs sends with each request.
+     * If the length of a context heeader goes over the limit, we will try to truncate it.
+     */
+    module.CONTEXT_HEADER_LENGTH_LIMIT = 6500;
+
     module._constraintTypes = Object.freeze({
         KEY: "k",
         FOREIGN_KEY: "fk"

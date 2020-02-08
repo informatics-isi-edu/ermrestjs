@@ -870,11 +870,13 @@
      *  - `choices` to `ch`
      *  - `ranges` to `r`
      *  - `search` to `s`
-     * assumption: the facet is using conjunction
+     * NOTE: This function supports combination of conjunction and disjunction.
+     * // TODO LOG SHOULD SUPPORT MORE....
      */
     _compressFacetObject = function (facet) {
         var res = module._simpleDeepCopy(facet),
             and = module._FacetsLogicalOperators.AND,
+            or = module._FacetsLogicalOperators.OR,
             shorter = module._shorterVersion;
 
         var shorten = function (f) {
@@ -883,14 +885,17 @@
             };
         };
 
-        for (var i = 0; i < res[and].length; i++) {
-            var f = res[and][i];
-            if (f.source) {
-                f.src = _compressSource(f.source);
-                delete f.source;
-            }
+        [and, or].forEach(function (operator) {
+            if (!Array.isArray(res[operator])) return;
 
-            ["choices", "ranges", "search", "sourcekey"].forEach(shorten(f));
-        }
+            res[operator].forEach(function (f) {
+                if (f.source) {
+                    f.src = _compressSource(f.source);
+                    delete f.source;
+                }
+
+                ["choices", "ranges", "search", "sourcekey"].forEach(shorten(f));
+            });
+        });
         return res;
     };

@@ -350,9 +350,11 @@ AttributeGroupReference.prototype = {
                 uri += "?limit=" + (limit+1);
             }
 
-            var currRef = this;
+            var currRef = this, action = "read";
             if (!contextHeaderParams || !isObject(contextHeaderParams)) {
-                contextHeaderParams = {"action": "read"};
+                contextHeaderParams = {"action": action};
+            } else if (typeof contextHeaderParams.action === "string") {
+                action = contextHeaderParams.action;
             }
             var config = {
                 headers: this._generateContextHeader(contextHeaderParams, limit)
@@ -395,7 +397,10 @@ AttributeGroupReference.prototype = {
                     // a new location without paging
                     var newLocation = currRef.location.changePage();
                     var referenceWithoutPaging = new AttributeGroupReference(currRef._keyColumns, currRef._aggregateColumns, newLocation, currRef._catalog, currRef.table, currRef._context);
-                    referenceWithoutPaging.read(limit).then(function rereadReference(rereadPage) {
+
+                    // remove the function and replace it with auto-reload
+                    contextHeaderParams.action = action.substring(0,action.lastIndexOf(";")+1) + "auto-reload";
+                    referenceWithoutPaging.read(limit, contextHeaderParams).then(function rereadReference(rereadPage) {
                         defer.resolve(rereadPage);
                     }, function error(err) {
                         throw err;

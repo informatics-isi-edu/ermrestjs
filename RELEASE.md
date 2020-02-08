@@ -16,7 +16,7 @@ This document is a summary of code changes in Chaise. This is the vocabulary use
  - [Changed] how we encode search filter in the url to use the new `search-box` sourcekey.
  - [Added] `comment` support to display annotation.
  - [Changed] `comment` behavior in annotations so that `false` is treated the same as empty string.
- - [Added] `elapsed_s` attribute to `Deriva-Client-Context` header object for all the http requests.
+ - [Added] `elapsed_ms` attribute to `Deriva-Client-Context` header object for all the http requests.
  - [Added] `show_foreign_key_link` support.
  - [Changed] `show_nulls` to `show_null` in display annotation.
 

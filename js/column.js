@@ -150,7 +150,7 @@ ReferenceColumn.prototype = {
     },
 
     /**
-     * the source path from the main reference to this column
+     * the compressed source path from the main reference to this column
      * @type{Object}
      */
     get compressedDataSource() {
