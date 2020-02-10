@@ -899,6 +899,6 @@
             }
         };
 
-        compressRec(facet);
+        compressRec(res);
         return res;
     };
