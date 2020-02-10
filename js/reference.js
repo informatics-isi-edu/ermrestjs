@@ -2259,7 +2259,9 @@
          * The object that can be logged to capture the filter state of the reference.
          * The return object can have:
          *  - filters: the facet object.
-         *  - custom_filters: the filter strings that parser couldn't turn to facet.
+         *  - custom_filters:
+         *      - the filter strings that parser couldn't turn to facet.
+         *      - if we could turn the custom filter to facet, this will return `true`
          *  - cfacet: if there's a cfacet it will be 1
          *    - cfacet_str: if cfacet=1, it will be displayname of cfacet.
          *    - cfacet_path: if cfacet=1, it will be ermrest path of cfacet.
@@ -2286,6 +2288,7 @@
             } else if (this.location.filter) {
                 if (this.location.filter.facet) {
                     obj.filters = _compressFacetObject(this.location.filter.facet);
+                    obj.custom_filters = true;
                 } else {
                     obj.custom_filters = this.location.filtersString;
                 }

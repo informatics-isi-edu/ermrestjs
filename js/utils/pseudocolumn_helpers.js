@@ -871,7 +871,6 @@
      *  - `ranges` to `r`
      *  - `search` to `s`
      * NOTE: This function supports combination of conjunction and disjunction.
-     * // TODO LOG SHOULD SUPPORT MORE....
      */
     _compressFacetObject = function (facet) {
         var res = module._simpleDeepCopy(facet),
@@ -879,23 +878,27 @@
             or = module._FacetsLogicalOperators.OR,
             shorter = module._shorterVersion;
 
-        var shorten = function (f) {
+        var shorten = function (node) {
             return function (k) {
-                renameKey(f, k, shorter[k]);
+                renameKey(node, k, shorter[k]);
             };
         };
 
-        [and, or].forEach(function (operator) {
-            if (!Array.isArray(res[operator])) return;
+        var compressRec = function (node) {
+            if ("source" in node) {
+                node.src = _compressSource(node.source);
+                delete node.source;
 
-            res[operator].forEach(function (f) {
-                if (f.source) {
-                    f.src = _compressSource(f.source);
-                    delete f.source;
-                }
+                ["choices", "ranges", "search", "sourcekey"].forEach(shorten(node));
+            } else {
+                [and, or].forEach(function (operator) {
+                    if (!Array.isArray(node[operator])) return;
 
-                ["choices", "ranges", "search", "sourcekey"].forEach(shorten(f));
-            });
-        });
+                    node[operator].forEach(compressRec);
+                });
+            }
+        };
+
+        compressRec(facet);
         return res;
     };
