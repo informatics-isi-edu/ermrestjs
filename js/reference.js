@@ -58,6 +58,7 @@
         // now that the client-config is done, call the functions that are using it:
         module.onload().then(function () {
             module._markdownItLinkOpenAddExternalLink();
+            module._markdownItImageAddClass();
             return defer.resolve(), defer.promise;
         }).catch(function (err) {
             // fail silently
