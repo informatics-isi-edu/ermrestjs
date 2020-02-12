@@ -3307,7 +3307,7 @@ FacetColumn.prototype = {
         verify(!this.isEntityMode, "this API cannot be used in entity-mode");
 
         if (this._scalarValuesRef === undefined) {
-            this._scalarValuesRef = this.column.groupAggregate.entityCounts(this.sortColumns, this.hideNumOccurrences, true);
+            this._scalarValuesRef = this.column.groupAggregate.entityCounts(this.displayname, this.sortColumns, this.hideNumOccurrences, true);
         }
         return this._scalarValuesRef;
     },
@@ -4091,12 +4091,13 @@ ColumnGroupAggregateFn.prototype = {
      * The result is based on shortest key of the parent table. If we have join
      * in the path, we are counting the shortest key of the parent table (not the end table).
      * NOTE: Will create a new reference by each call.
+     * @type {Object=} columnDisplayname the displayname of main column.
      * @type {Object=} sortColumns the sort column object that you want to pass
      * @type {Boolean=} hideNumOccurrences whether we should add number of Occurrences or not.
      * @type {Boolean=} dontAllowNull whether the null value should be returned for the facet or not.
      * @returns {ERMrest.AttributeGroupReference}
      */
-    entityCounts: function(sortColumns, hideNumOccurrences, dontAllowNull) {
+    entityCounts: function(columnDisplayname, sortColumns, hideNumOccurrences, dontAllowNull) {
         if (this.column.isPseudo) {
             throw new Error("Cannot use this API on pseudo-column.");
         }
@@ -4114,18 +4115,18 @@ ColumnGroupAggregateFn.prototype = {
             sortObj = [], i = 0, colAlias;
 
         // key columns will have numbers as alias, and the aggregate is `count`
-        var addToKeyColumns = function (col, isVisible) {
+        var addToKeyColumns = function (col, isVisible, displayname) {
             colAlias = (i++).toString();
             keyColumns.push(new AttributeGroupColumn(
                 colAlias,
                 module._fixedEncodeURIComponent(col.name),
-                col, null, null, col.comment, true, isVisible
+                col, displayname, null, col.comment, true, isVisible
             ));
             return colAlias;
         };
 
         // the first column is always the column that we want to get the values of
-        addToKeyColumns(column._baseCols[0], true);
+        addToKeyColumns(column._baseCols[0], true, columnDisplayname);
 
         if (Array.isArray(sortColumns) && sortColumns.length > 0) {
             sortColumns.forEach(function (sc) {

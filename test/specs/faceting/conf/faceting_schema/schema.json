@@ -169,9 +169,9 @@
                     "filter": {
                         "and": [
                             {"sourcekey": "search-box", "choices": ["test"]},
-                            {"sourcekey": "id_source_definition", "choices": ["1"], "hide_num_occurrences": false},
+                            {"sourcekey": "id_source_definition", "choices": ["1"], "hide_num_occurrences": false, "markdown_name": "ID facet"},
                             {"source": "int_col", "ux_mode": "choices", "ranges": [{"min": -2}], "order": [{"column": "id", "descending": true}], "hide_num_occurrences": true, "hide_not_null_choice": true},
-                            {"source": ["float_col"], "ux_mode": "invalid mode", "order": [{"column": "id"}, {"column": "float_col", "descending": true}], "hide_not_null_choice": true},
+                            {"source": ["float_col"], "markdown_name": "float_col markdown_name", "ux_mode": "invalid mode", "order": [{"column": "id"}, {"column": "float_col", "descending": true}], "hide_not_null_choice": true},
                             {"source": "date_col"},
                             {"source": "timestamp_col"},
                             {"sourcekey": "text_col_source_definition", "ux_mode": "invalid mode", "order": [{"column": "date_col"}, {"num_occurrences": true}]},
