@@ -835,3 +835,70 @@
             return returnError("Invalid column name in source");
         }
     };
+
+    /**
+     * @private
+     * @param {Object} source the source array or string
+     * @desc
+     * Will compress the source that can be used for logging purposes. It will,
+     *  - `inbound` to `i`
+     *  - `outbound` to `o`
+     */
+    _compressSource = function (source) {
+        if (!source) return source;
+
+        var res = module._simpleDeepCopy(source);
+        var shorter = module._shorterVersion;
+
+        if (!_sourceHasPath(source)) return res;
+
+        for (var i = 0; i < res.length; i++) {
+            renameKey(res[i], "inbound", shorter.inbound);
+            renameKey(res[i], "outbound", shorter.outbound);
+        }
+        return res;
+    };
+
+    /**
+     * @private
+     * @param {Object} facet the facet object
+     * Given a facet will compress it so it can be used for logging purposes, it will,
+     *  - `inbound` to `i`
+     *  - `outbound` to `o`
+     *  - `source` to `src`
+     *  - `sourcekey` to `key`
+     *  - `choices` to `ch`
+     *  - `ranges` to `r`
+     *  - `search` to `s`
+     * NOTE: This function supports combination of conjunction and disjunction.
+     */
+    _compressFacetObject = function (facet) {
+        var res = module._simpleDeepCopy(facet),
+            and = module._FacetsLogicalOperators.AND,
+            or = module._FacetsLogicalOperators.OR,
+            shorter = module._shorterVersion;
+
+        var shorten = function (node) {
+            return function (k) {
+                renameKey(node, k, shorter[k]);
+            };
+        };
+
+        var compressRec = function (node) {
+            if ("source" in node) {
+                node.src = _compressSource(node.source);
+                delete node.source;
+
+                ["choices", "ranges", "search", "sourcekey"].forEach(shorten(node));
+            } else {
+                [and, or].forEach(function (operator) {
+                    if (!Array.isArray(node[operator])) return;
+
+                    node[operator].forEach(compressRec);
+                });
+            }
+        };
+
+        compressRec(res);
+        return res;
+    };

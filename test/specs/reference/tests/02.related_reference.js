@@ -199,54 +199,54 @@ exports.execute = function(options) {
                 expect(related[3].origFKR.toString()).toBe('(id)=(reference_schema:association%20table%20with%20id:id%20from%20ref%20table)');
             });
 
-            it ('.dataSource should have the correct value', function () {
-                var expectedDataSources = [
-                    [{"inbound": ["reference_schema", "fromname_fk_inbound_related_to_reference"]}, "RID"],
-                    [{"inbound": ["reference_schema", "fk_inbound_related_to_reference"]}, "id"],
+            it ('.compressedDataSource should have the correct value', function () {
+                var expectedCompressedDataSources = [
+                    [{"i": ["reference_schema", "fromname_fk_inbound_related_to_reference"]}, "RID"],
+                    [{"i": ["reference_schema", "fk_inbound_related_to_reference"]}, "id"],
                     [
-                        {"inbound": ["reference_schema", "toname_fk_association_related_to_reference"]},
-                        {"outbound": ["reference_schema", "association_table_with_toname_id_from_inbound_related_table1"]},
+                        {"i": ["reference_schema", "toname_fk_association_related_to_reference"]},
+                        {"o": ["reference_schema", "association_table_with_toname_id_from_inbound_related_table1"]},
                         "RID"
                     ],
                     [
-                        {"inbound": ["reference_schema", "id_fk_association_related_to_reference"]},
-                        {"outbound": ["reference_schema", "fk_to_inbound_related_reference_table"]},
+                        {"i": ["reference_schema", "id_fk_association_related_to_reference"]},
+                        {"o": ["reference_schema", "fk_to_inbound_related_reference_table"]},
                         "id"
                     ],
                     [
-                        {"inbound": ["reference_schema", "system_col_fk_asscoation_related_to_reference"]},
-                        {"outbound": ["reference_schema", "association_table_with_system_col_fk_fk2"]},
+                        {"i": ["reference_schema", "system_col_fk_asscoation_related_to_reference"]},
+                        {"o": ["reference_schema", "association_table_with_system_col_fk_fk2"]},
                         "RID"
                     ],
                     [
-                        {"inbound": ["reference_schema", "extra_fk_association_related_to_reference"]},
+                        {"i": ["reference_schema", "extra_fk_association_related_to_reference"]},
                         "RID"
                     ]
                 ];
                 related.forEach(function (rel, i) {
-                    expect(related[i].dataSource).toEqual(expectedDataSources[i], "missmatch for index=" + i);
+                    expect(related[i].compressedDataSource).toEqual(expectedCompressedDataSources[i], "missmatch for index=" + i);
                 });
             });
 
             describe("for related tables using source path.", function () {
                 // what about other APIs?
-                it (".dataSource should have the correct value.", function () {
-                    var expectedDataSources = [
-                        [{"inbound": ["reference_schema", "id_fk_association_related_to_reference"]}, "ID"],
+                it (".compressedDataSource should have the correct value.", function () {
+                    var expectedCompressedDataSources = [
+                        [{"i": ["reference_schema", "id_fk_association_related_to_reference"]}, "ID"],
                         [
-                            {"inbound": ["reference_schema", "id_fk_association_related_to_reference"]},
-                            {"outbound": ["reference_schema", "fk_to_inbound_related_reference_table"]},
-                            {"outbound": ["reference_schema", "fromname_fk_inbound_related_to_reference"]},
+                            {"i": ["reference_schema", "id_fk_association_related_to_reference"]},
+                            {"o": ["reference_schema", "fk_to_inbound_related_reference_table"]},
+                            {"o": ["reference_schema", "fromname_fk_inbound_related_to_reference"]},
                             "id"
                         ],
                         [
-                            {"outbound": ["reference_schema", "reference_table_fk1"]},
-                            {"inbound": ["reference_schema", "reference_outbound_1_inbound_1_fk1"]},
+                            {"o": ["reference_schema", "reference_table_fk1"]},
+                            {"i": ["reference_schema", "reference_outbound_1_inbound_1_fk1"]},
                             "id"
                         ]
                     ];
                     pathRelatedWithTuple.forEach(function (rel, i) {
-                        expect(rel.dataSource).toEqual(expectedDataSources[i], "missmatch for index=" + i);
+                        expect(rel.compressedDataSource).toEqual(expectedCompressedDataSources[i], "missmatch for index=" + i);
                     });
                 });
             });

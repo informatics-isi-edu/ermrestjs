@@ -350,9 +350,11 @@ AttributeGroupReference.prototype = {
                 uri += "?limit=" + (limit+1);
             }
 
-            var currRef = this;
+            var currRef = this, action = "read";
             if (!contextHeaderParams || !isObject(contextHeaderParams)) {
-                contextHeaderParams = {"action": "read"};
+                contextHeaderParams = {"action": action};
+            } else if (typeof contextHeaderParams.action === "string") {
+                action = contextHeaderParams.action;
             }
             var config = {
                 headers: this._generateContextHeader(contextHeaderParams, limit)
@@ -395,7 +397,10 @@ AttributeGroupReference.prototype = {
                     // a new location without paging
                     var newLocation = currRef.location.changePage();
                     var referenceWithoutPaging = new AttributeGroupReference(currRef._keyColumns, currRef._aggregateColumns, newLocation, currRef._catalog, currRef.table, currRef._context);
-                    referenceWithoutPaging.read(limit).then(function rereadReference(rereadPage) {
+
+                    // remove the function and replace it with auto-reload
+                    contextHeaderParams.action = action.substring(0,action.lastIndexOf(";")+1) + "auto-reload";
+                    referenceWithoutPaging.read(limit, contextHeaderParams).then(function rereadReference(rereadPage) {
                         defer.resolve(rereadPage);
                     }, function error(err) {
                         throw err;
@@ -529,6 +534,19 @@ AttributeGroupReference.prototype = {
         obj.catalog = this._catalog.id;
         if (this.table) {
             obj.schema_table = this.table.schema.name + ":" + this.table.name;
+        }
+        return obj;
+    },
+
+    /**
+     * The filter information that should be logged
+     * Currently only includes the search term.
+     * @type {Object}
+     */
+    get filterLogInfo() {
+        var obj = {};
+        if (isObjectAndNotNull(this.location.searchObject) && typeof this.location.searchTerm === "string" && this.location.searchTerm) {
+            obj.filters = _compressFacetObject({"and": [{"source": "search-box", "search": [this.location.searchTerm]}]});
         }
         return obj;
     },
