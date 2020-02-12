@@ -88,7 +88,7 @@ exports.execute = function (options) {
                 expect(printMarkdown('*markdown*')).toBe('<p><em>markdown</em></p>\n', "invalid em");
                 expect(printMarkdown('markdown')).toBe('<p>markdown</p>\n', "invalid paragraph");
                 expect(printMarkdown("![a random image](random_image.com)"))
-                    .toBe('<p><img src="random_image.com" alt="a random image"></p>\n', "invalid image");
+                    .toBe('<p><img src="random_image.com" alt="a random image" class="chaise-post-load"></p>\n', "invalid image");
                 // Check for anchor tags
                 expect(printMarkdown('[NormalLink](https://dev.isrd.isi.edu/chaise/search)'))
                     .toBe('<p><a href=\"https://dev.isrd.isi.edu/chaise/search\">NormalLink</a></p>\n', "invalid link");
@@ -105,11 +105,11 @@ exports.execute = function (options) {
 
                 // Check for image tag with size
                 expect(printMarkdown('**Image With Size** \n ![ImageWithSize](http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg){width=800 height=300}'))
-                    .toBe('<p><strong>Image With Size</strong><br>\n<img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" alt="ImageWithSize" width="800" height="300"></p>\n', "invalid image with tag");
+                    .toBe('<p><strong>Image With Size</strong><br>\n<img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" alt="ImageWithSize" width="800" height="300" class="chaise-post-load"></p>\n', "invalid image with tag");
 
                 // Check for thumbnail with link to original image
                 expect(printMarkdown("[![Image](http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg){width=500 height=400}](https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg){target=_blank}"))
-                    .toBe('<p><a href="https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg" target="_blank"><img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" alt="Image" width="500" height="400"></a></p>\n', "invalid thumbnail with tag");
+                    .toBe('<p><a href="https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg" target="_blank"><img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" alt="Image" width="500" height="400" class="chaise-post-load"></a></p>\n', "invalid thumbnail with tag");
             });
 
             it ("should support :::iframe.", function () {

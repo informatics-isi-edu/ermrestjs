@@ -2282,6 +2282,32 @@
                 return true;
             });
         });
+
+        /**
+         * Change the image function to add a specific classes to image tags
+         * this is done on the image tag instead of link_open to prevent polluting other html tags
+         * make sure we're calling this just once
+         */
+        if (typeof module._markdownItDefaultImageRenderer === "undefined") {
+            module._markdownItDefaultImageRenderer = md.renderer.rules.image || function(tokens, idx, options, env, self) {
+                return self.renderToken(tokens, idx, options);
+            };
+        }
+
+        // the class that we should add
+        var className = module._classNames.postLoad;
+        md.renderer.rules.image = function (tokens, idx, options, env, self) {
+            var token = tokens[idx];
+
+            var cIndex = token.attrIndex('class');
+            if (cIndex < 0) {
+                token.attrPush(['class', className]);
+            } else {
+                token.attrs[cIndex][1] += " " + className;
+            }
+
+            return module._markdownItDefaultImageRenderer(tokens, idx, options, env, self);
+        };
     };
 
     /**
@@ -2333,37 +2359,6 @@
             }
 
             return module._markdownItDefaultLinkOpenRenderer(tokens, idx, options, env, self);
-        };
-    };
-
-    /**
-     * @private
-     * @desc
-     * Change the image function to add a specific classes to image tags
-     * this is done on the image tag instead of link_open to prevent polluting other html tags
-     */
-    module._markdownItImageAddClass = function () {
-
-        // make sure we're calling this just once
-        if (typeof module._markdownItDefaultImageRenderer === "undefined") {
-            module._markdownItDefaultImageRenderer = module._markdownIt.renderer.rules.image || function(tokens, idx, options, env, self) {
-                return self.renderToken(tokens, idx, options);
-            };
-        }
-
-        // the class that we should add
-        var className = module._classNames.postLoad;
-        module._markdownIt.renderer.rules.image = function (tokens, idx, options, env, self) {
-            var token = tokens[idx];
-
-            var cIndex = token.attrIndex('class');
-            if (cIndex < 0) {
-                token.attrPush(['class', className]);
-            } else {
-                token.attrs[cIndex][1] += " " + className;
-            }
-
-            return module._markdownItDefaultImageRenderer(tokens, idx, options, env, self);
         };
     };
 
