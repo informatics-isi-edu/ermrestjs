@@ -4,9 +4,9 @@ exports.execute = function (options) {
      *
      * main:
      *  - Has the following facets:
-     *    0: id | choices | appliedFilter: 1
+     *    0: id | choices | appliedFilter: 1 | markdown_name
      *    1: int_col | ranges | appliedFilter: min:-2
-     *    2: float_col
+     *    2: float_col | markdown_name
      *    3: date_col
      *    4: timestamp_col
      *    5: text_col
@@ -848,13 +848,13 @@ exports.execute = function (options) {
             describe("displayname, ", function () {
 
                 it ("if `markdown_name` is defined, should return it.", function () {
+                    checkMainFacetDisplayname(0, "ID facet", true);
+                    checkMainFacetDisplayname(2, "float_col markdown_name", true);
                     checkMainFacetDisplayname(10, "<strong>F1</strong>", true);
                 });
 
                 it ("if source is not an array, should return the column's displayname.", function () {
-                    checkMainFacetDisplayname(0, "id", false);
                     checkMainFacetDisplayname(1, "int_col", false);
-                    checkMainFacetDisplayname(2, "float_col", false);
                     checkMainFacetDisplayname(3, "date_col", false);
                     checkMainFacetDisplayname(4, "timestamp_col", false);
                     checkMainFacetDisplayname(5, "text_col", false);
@@ -1665,8 +1665,9 @@ exports.execute = function (options) {
             });
 
             describe("scalarValuesReference", function () {
-                var testEntityCounts = function (entityCountRef, path, length, values, valuesLength, done) {
+                var testEntityCounts = function (entityCountRef, displayname, path, length, values, valuesLength, done) {
                     expect(entityCountRef.ermrestPath).toEqual(path, "path missmatch.");
+                    expect(entityCountRef.columns[0].displayname.value).toBe(displayname, "displayname missmatch");
                     entityCountRef.read(length).then(function (page) {
                         expect(page.tuples.length).toBe(length, "length missmatch.");
                         // all tuples are the same, just looking at the first one is enough
@@ -1690,6 +1691,7 @@ exports.execute = function (options) {
                 it ("should return the list of avaialble facets sorted by frequency and tie break by column.", function (done) {
                     testEntityCounts(
                         mainFacets[0].scalarValuesReference,
+                        "ID facet",
                         "M:=faceting_schema:main/int_col::geq::-2/$M/!(id::null::)/0:=id;count:=cnt(*)@sort(count::desc::,0)",
                         10,
                         ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'],
@@ -1701,6 +1703,7 @@ exports.execute = function (options) {
                 it ("should be able to pass the FacetColumn.sortColumns to it.", function (done) {
                     testEntityCounts(
                         mainFacets[2].scalarValuesReference,
+                        "float_col markdown_name",
                         "M:=faceting_schema:main/id=1/$M/int_col::geq::-2/$M/!(float_col::null::)/0:=float_col,1:=id;count:=cnt(*)@sort(1,0::desc::)",
                         1, // the reference has applied filters
                         ["11.1100"],
@@ -1712,6 +1715,7 @@ exports.execute = function (options) {
                 it ("should be able to pass the FacetColumn.hideNumOccurrences to it (should still add the count and just hide it).", function (done) {
                     testEntityCounts(
                         mainFacets[7].scalarValuesReference,
+                        "markdown_col",
                         "M:=faceting_schema:main/id=1/$M/int_col::geq::-2/$M/!(markdown_col::null::)/0:=markdown_col;count:=cnt(*)@sort(count::desc::,0)",
                         1,
                         ["<strong>one</strong>"],
@@ -1723,6 +1727,7 @@ exports.execute = function (options) {
                 it ("should not add count column if it's hidden and not part of sortColumns.", function (done) {
                     testEntityCounts(
                         mainFacets[1].scalarValuesReference,
+                        "int_col",
                         "M:=faceting_schema:main/id=1/$M/!(int_col::null::)/0:=int_col,1:=id@sort(1::desc::)",
                         1,
                         ["11"],

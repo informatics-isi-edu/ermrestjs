@@ -92,7 +92,8 @@ to use for ERMrest JavaScript agents.
     * [.Schema](#ERMrest.Schema)
         * [new Schema(catalog, jsonSchema)](#new_ERMrest.Schema_new)
         * [.catalog](#ERMrest.Schema+catalog) : [<code>Catalog</code>](#ERMrest.Catalog)
-        * [.name](#ERMrest.Schema+name)
+        * [.name](#ERMrest.Schema+name) : <code>string</code>
+        * [.RID](#ERMrest.Schema+RID) : <code>string</code>
         * [.ignore](#ERMrest.Schema+ignore) : <code>boolean</code>
         * [.annotations](#ERMrest.Schema+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
         * [.rights](#ERMrest.Schema+rights) : <code>Object</code>
@@ -109,7 +110,8 @@ to use for ERMrest JavaScript agents.
         * [new Table(schema, jsonTable)](#new_ERMrest.Table_new)
         * _instance_
             * [.schema](#ERMrest.Table+schema) : [<code>Schema</code>](#ERMrest.Schema)
-            * [.name](#ERMrest.Table+name)
+            * [.name](#ERMrest.Table+name) : <code>string</code>
+            * [.RID](#ERMrest.Table+RID) : <code>string</code>
             * [.entity](#ERMrest.Table+entity) : [<code>Entity</code>](#ERMrest.Table.Entity)
             * [.ignore](#ERMrest.Table+ignore) : <code>boolean</code>
             * [._baseTable](#ERMrest.Table+_baseTable) : [<code>Table</code>](#ERMrest.Table)
@@ -171,6 +173,7 @@ to use for ERMrest JavaScript agents.
         * [.isSystemColumn](#ERMrest.Column+isSystemColumn) : <code>Boolean</code>
         * [.isImmutable](#ERMrest.Column+isImmutable) : <code>Boolean</code>
         * [.name](#ERMrest.Column+name) : <code>string</code>
+        * [.RID](#ERMrest.Column+RID) : <code>string</code>
         * [.type](#ERMrest.Column+type) : [<code>Type</code>](#ERMrest.Type)
         * [.ignore](#ERMrest.Column+ignore) : <code>boolean</code>
         * [.annotations](#ERMrest.Column+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
@@ -210,6 +213,7 @@ to use for ERMrest JavaScript agents.
         * [.colset](#ERMrest.Key+colset) : [<code>ColSet</code>](#ERMrest.ColSet)
         * [.annotations](#ERMrest.Key+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
         * [.comment](#ERMrest.Key+comment) : <code>string</code>
+        * [.RID](#ERMrest.Key+RID) : <code>string</code>
         * [.constraint_names](#ERMrest.Key+constraint_names) : <code>Array</code>
         * [.name](#ERMrest.Key+name) : <code>string</code>
         * [.simple](#ERMrest.Key+simple) : <code>boolean</code>
@@ -236,6 +240,8 @@ to use for ERMrest JavaScript agents.
         * [.get(colset)](#ERMrest.ForeignKeys+get) ⇒ [<code>Array.&lt;ForeignKeyRef&gt;</code>](#ERMrest.ForeignKeyRef)
     * [.ForeignKeyRef](#ERMrest.ForeignKeyRef)
         * [new ForeignKeyRef(table, jsonFKR)](#new_ERMrest.ForeignKeyRef_new)
+        * [.table](#ERMrest.ForeignKeyRef+table) : [<code>Table</code>](#ERMrest.Table)
+        * [.RID](#ERMrest.ForeignKeyRef+RID) : <code>string</code>
         * [.colset](#ERMrest.ForeignKeyRef+colset) : [<code>ColSet</code>](#ERMrest.ColSet)
         * [.key](#ERMrest.ForeignKeyRef+key) : [<code>Key</code>](#ERMrest.Key)
         * [.rights](#ERMrest.ForeignKeyRef+rights) : <code>Object</code>
@@ -246,6 +252,7 @@ to use for ERMrest JavaScript agents.
         * [.ignore](#ERMrest.ForeignKeyRef+ignore) : <code>boolean</code>
         * [.annotations](#ERMrest.ForeignKeyRef+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
         * [.comment](#ERMrest.ForeignKeyRef+comment) : <code>string</code>
+        * [.compressedDataSource](#ERMrest.ForeignKeyRef+compressedDataSource)
         * [.name](#ERMrest.ForeignKeyRef+name) : <code>string</code>
         * [.simple](#ERMrest.ForeignKeyRef+simple) : <code>Boolean</code>
         * [.toString(reverse, isLeft)](#ERMrest.ForeignKeyRef+toString) ⇒ <code>string</code>
@@ -332,6 +339,7 @@ to use for ERMrest JavaScript agents.
         * [.appLink](#ERMrest.Reference+appLink) : <code>String</code>
         * [.csvDownloadLink](#ERMrest.Reference+csvDownloadLink) ⇒ <code>String</code>
         * [.defaultLogInfo](#ERMrest.Reference+defaultLogInfo) : <code>Object</code>
+        * [.filterLogInfo](#ERMrest.Reference+filterLogInfo) : <code>Object</code>
         * [.defaultExportTemplate](#ERMrest.Reference+defaultExportTemplate) : <code>string</code>
         * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
         * [.hideFacets()](#ERMrest.Reference+hideFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
@@ -389,7 +397,7 @@ to use for ERMrest JavaScript agents.
         * [.isPseudo](#ERMrest.ReferenceColumn+isPseudo) : <code>boolean</code>
         * [.table](#ERMrest.ReferenceColumn+table) : [<code>Table</code>](#ERMrest.Table)
         * [.name](#ERMrest.ReferenceColumn+name) : <code>string</code>
-        * [.dataSource](#ERMrest.ReferenceColumn+dataSource)
+        * [.compressedDataSource](#ERMrest.ReferenceColumn+compressedDataSource)
         * [.displayname](#ERMrest.ReferenceColumn+displayname) : <code>object</code>
         * [.type](#ERMrest.ReferenceColumn+type) : [<code>Type</code>](#ERMrest.Type)
         * [.nullok](#ERMrest.ReferenceColumn+nullok) : <code>Boolean</code>
@@ -463,6 +471,7 @@ to use for ERMrest JavaScript agents.
         * [.reference](#ERMrest.FacetColumn+reference) : [<code>Reference</code>](#ERMrest.Reference)
         * [.index](#ERMrest.FacetColumn+index) : <code>int</code>
         * [.dataSource](#ERMrest.FacetColumn+dataSource) : <code>obj</code> \| <code>string</code>
+        * [.compressedDataSource](#ERMrest.FacetColumn+compressedDataSource) : <code>obj</code> \| <code>string</code>
         * [.filters](#ERMrest.FacetColumn+filters)
         * [.isOpen](#ERMrest.FacetColumn+isOpen) : <code>Boolean</code>
         * [.hasPath](#ERMrest.FacetColumn+hasPath) : <code>Boolean</code>
@@ -535,6 +544,7 @@ to use for ERMrest JavaScript agents.
         * [.unfilteredReference](#ERMrest.AttributeGroupReference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
         * [.ermrestPath](#ERMrest.AttributeGroupReference+ermrestPath) : <code>string</code>
         * [.defaultLogInfo](#ERMrest.AttributeGroupReference+defaultLogInfo) : <code>Object</code>
+        * [.filterLogInfo](#ERMrest.AttributeGroupReference+filterLogInfo) : <code>Object</code>
         * [.read([limit], contextHeaderParams)](#ERMrest.AttributeGroupReference+read) ⇒ <code>ERMRest.AttributeGroupPage</code>
         * [.getColumnByName(name)](#ERMrest.AttributeGroupReference+getColumnByName) ⇒ <code>ERMrest.AttributeGroupColumn</code>
     * [.AttributeGroupPage](#ERMrest.AttributeGroupPage)
@@ -640,6 +650,7 @@ to use for ERMrest JavaScript agents.
         * [.appLink](#ERMrest.Reference+appLink) : <code>String</code>
         * [.csvDownloadLink](#ERMrest.Reference+csvDownloadLink) ⇒ <code>String</code>
         * [.defaultLogInfo](#ERMrest.Reference+defaultLogInfo) : <code>Object</code>
+        * [.filterLogInfo](#ERMrest.Reference+filterLogInfo) : <code>Object</code>
         * [.defaultExportTemplate](#ERMrest.Reference+defaultExportTemplate) : <code>string</code>
         * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
         * [.hideFacets()](#ERMrest.Reference+hideFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
@@ -672,6 +683,7 @@ to use for ERMrest JavaScript agents.
         * [.unfilteredReference](#ERMrest.AttributeGroupReference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
         * [.ermrestPath](#ERMrest.AttributeGroupReference+ermrestPath) : <code>string</code>
         * [.defaultLogInfo](#ERMrest.AttributeGroupReference+defaultLogInfo) : <code>Object</code>
+        * [.filterLogInfo](#ERMrest.AttributeGroupReference+filterLogInfo) : <code>Object</code>
         * [.read([limit], contextHeaderParams)](#ERMrest.AttributeGroupReference+read) ⇒ <code>ERMRest.AttributeGroupPage</code>
         * [.getColumnByName(name)](#ERMrest.AttributeGroupReference+getColumnByName) ⇒ <code>ERMrest.AttributeGroupColumn</code>
     * [.AttributeGroupPage](#ERMrest.AttributeGroupPage) : <code>object</code>
@@ -692,6 +704,7 @@ to use for ERMrest JavaScript agents.
     * [.getServer(uri, [contextHeaderParams])](#ERMrest.getServer) ⇒ [<code>Server</code>](#ERMrest.Server)
     * [.parse(uri, catalogObject)](#ERMrest.parse) ⇒ <code>ERMrest.Location</code>
     * [.resolve(uri, [contextHeaderParams])](#ERMrest.resolve) ⇒ <code>Promise</code>
+    * [.getElapsedTime()](#ERMrest.getElapsedTime) ⇒ <code>integer</code>
 
 <a name="ERMrest.Server"></a>
 
@@ -971,7 +984,8 @@ it will throw an error
 * [.Schema](#ERMrest.Schema)
     * [new Schema(catalog, jsonSchema)](#new_ERMrest.Schema_new)
     * [.catalog](#ERMrest.Schema+catalog) : [<code>Catalog</code>](#ERMrest.Catalog)
-    * [.name](#ERMrest.Schema+name)
+    * [.name](#ERMrest.Schema+name) : <code>string</code>
+    * [.RID](#ERMrest.Schema+RID) : <code>string</code>
     * [.ignore](#ERMrest.Schema+ignore) : <code>boolean</code>
     * [.annotations](#ERMrest.Schema+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
     * [.rights](#ERMrest.Schema+rights) : <code>Object</code>
@@ -996,7 +1010,15 @@ Constructor for the Catalog.
 **Kind**: instance property of [<code>Schema</code>](#ERMrest.Schema)  
 <a name="ERMrest.Schema+name"></a>
 
-#### schema.name
+#### schema.name : <code>string</code>
+the database name of the schema
+
+**Kind**: instance property of [<code>Schema</code>](#ERMrest.Schema)  
+<a name="ERMrest.Schema+RID"></a>
+
+#### schema.RID : <code>string</code>
+The RID of this schema (might not be defined)
+
 **Kind**: instance property of [<code>Schema</code>](#ERMrest.Schema)  
 <a name="ERMrest.Schema+ignore"></a>
 
@@ -1085,7 +1107,8 @@ get table by table name
     * [new Table(schema, jsonTable)](#new_ERMrest.Table_new)
     * _instance_
         * [.schema](#ERMrest.Table+schema) : [<code>Schema</code>](#ERMrest.Schema)
-        * [.name](#ERMrest.Table+name)
+        * [.name](#ERMrest.Table+name) : <code>string</code>
+        * [.RID](#ERMrest.Table+RID) : <code>string</code>
         * [.entity](#ERMrest.Table+entity) : [<code>Entity</code>](#ERMrest.Table.Entity)
         * [.ignore](#ERMrest.Table+ignore) : <code>boolean</code>
         * [._baseTable](#ERMrest.Table+_baseTable) : [<code>Table</code>](#ERMrest.Table)
@@ -1135,7 +1158,15 @@ Constructor for Table.
 **Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
 <a name="ERMrest.Table+name"></a>
 
-#### table.name
+#### table.name : <code>string</code>
+the database name of the table
+
+**Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
+<a name="ERMrest.Table+RID"></a>
+
+#### table.RID : <code>string</code>
+The RID of this table (might not be defined)
+
 **Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
 <a name="ERMrest.Table+entity"></a>
 
@@ -1599,6 +1630,7 @@ Constructor for Columns.
     * [.isSystemColumn](#ERMrest.Column+isSystemColumn) : <code>Boolean</code>
     * [.isImmutable](#ERMrest.Column+isImmutable) : <code>Boolean</code>
     * [.name](#ERMrest.Column+name) : <code>string</code>
+    * [.RID](#ERMrest.Column+RID) : <code>string</code>
     * [.type](#ERMrest.Column+type) : [<code>Type</code>](#ERMrest.Type)
     * [.ignore](#ERMrest.Column+ignore) : <code>boolean</code>
     * [.annotations](#ERMrest.Column+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
@@ -1675,6 +1707,14 @@ Mentions whether this column is immutable depending on update rights
 <a name="ERMrest.Column+name"></a>
 
 #### column.name : <code>string</code>
+The database name of this column
+
+**Kind**: instance property of [<code>Column</code>](#ERMrest.Column)  
+<a name="ERMrest.Column+RID"></a>
+
+#### column.RID : <code>string</code>
+The RID of this column (might not be defined)
+
 **Kind**: instance property of [<code>Column</code>](#ERMrest.Column)  
 <a name="ERMrest.Column+type"></a>
 
@@ -1958,6 +1998,7 @@ get the key by the column set
     * [.colset](#ERMrest.Key+colset) : [<code>ColSet</code>](#ERMrest.ColSet)
     * [.annotations](#ERMrest.Key+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
     * [.comment](#ERMrest.Key+comment) : <code>string</code>
+    * [.RID](#ERMrest.Key+RID) : <code>string</code>
     * [.constraint_names](#ERMrest.Key+constraint_names) : <code>Array</code>
     * [.name](#ERMrest.Key+name) : <code>string</code>
     * [.simple](#ERMrest.Key+simple) : <code>boolean</code>
@@ -1992,6 +2033,12 @@ Reference to the table that this Key belongs to.
 
 #### key.comment : <code>string</code>
 Documentation for this key
+
+**Kind**: instance property of [<code>Key</code>](#ERMrest.Key)  
+<a name="ERMrest.Key+RID"></a>
+
+#### key.RID : <code>string</code>
+The RID of this key (might not be defined)
 
 **Kind**: instance property of [<code>Key</code>](#ERMrest.Key)  
 <a name="ERMrest.Key+constraint_names"></a>
@@ -2203,6 +2250,8 @@ get the foreign key of the given column set
 
 * [.ForeignKeyRef](#ERMrest.ForeignKeyRef)
     * [new ForeignKeyRef(table, jsonFKR)](#new_ERMrest.ForeignKeyRef_new)
+    * [.table](#ERMrest.ForeignKeyRef+table) : [<code>Table</code>](#ERMrest.Table)
+    * [.RID](#ERMrest.ForeignKeyRef+RID) : <code>string</code>
     * [.colset](#ERMrest.ForeignKeyRef+colset) : [<code>ColSet</code>](#ERMrest.ColSet)
     * [.key](#ERMrest.ForeignKeyRef+key) : [<code>Key</code>](#ERMrest.Key)
     * [.rights](#ERMrest.ForeignKeyRef+rights) : <code>Object</code>
@@ -2213,6 +2262,7 @@ get the foreign key of the given column set
     * [.ignore](#ERMrest.ForeignKeyRef+ignore) : <code>boolean</code>
     * [.annotations](#ERMrest.ForeignKeyRef+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
     * [.comment](#ERMrest.ForeignKeyRef+comment) : <code>string</code>
+    * [.compressedDataSource](#ERMrest.ForeignKeyRef+compressedDataSource)
     * [.name](#ERMrest.ForeignKeyRef+name) : <code>string</code>
     * [.simple](#ERMrest.ForeignKeyRef+simple) : <code>Boolean</code>
     * [.toString(reverse, isLeft)](#ERMrest.ForeignKeyRef+toString) ⇒ <code>string</code>
@@ -2227,6 +2277,18 @@ get the foreign key of the given column set
 | table | [<code>Table</code>](#ERMrest.Table) | 
 | jsonFKR | <code>Object</code> | 
 
+<a name="ERMrest.ForeignKeyRef+table"></a>
+
+#### foreignKeyRef.table : [<code>Table</code>](#ERMrest.Table)
+The table that this foreignkey is defined on (from table)
+
+**Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
+<a name="ERMrest.ForeignKeyRef+RID"></a>
+
+#### foreignKeyRef.RID : <code>string</code>
+The RID of this column (might not be defined)
+
+**Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
 <a name="ERMrest.ForeignKeyRef+colset"></a>
 
 #### foreignKeyRef.colset : [<code>ColSet</code>](#ERMrest.ColSet)
@@ -2275,10 +2337,17 @@ The constraint names for this foreign key
 Documentation for this foreign key reference
 
 **Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
+<a name="ERMrest.ForeignKeyRef+compressedDataSource"></a>
+
+#### foreignKeyRef.compressedDataSource
+the compressed source path from the main reference to this column
+
+**Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
+**Type{object}**:   
 <a name="ERMrest.ForeignKeyRef+name"></a>
 
 #### foreignKeyRef.name : <code>string</code>
-A unique nam that can be used for referring to this foreignkey.
+A unique name that can be used for referring to this foreignkey.
 
 **Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
 <a name="ERMrest.ForeignKeyRef+simple"></a>
@@ -2754,6 +2823,7 @@ Constructor for a ParsedFilter.
     * [.appLink](#ERMrest.Reference+appLink) : <code>String</code>
     * [.csvDownloadLink](#ERMrest.Reference+csvDownloadLink) ⇒ <code>String</code>
     * [.defaultLogInfo](#ERMrest.Reference+defaultLogInfo) : <code>Object</code>
+    * [.filterLogInfo](#ERMrest.Reference+filterLogInfo) : <code>Object</code>
     * [.defaultExportTemplate](#ERMrest.Reference+defaultExportTemplate) : <code>string</code>
     * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
     * [.hideFacets()](#ERMrest.Reference+hideFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
@@ -3063,7 +3133,24 @@ NOTE It will not have the same sort and paging as the reference.
 
 #### reference.defaultLogInfo : <code>Object</code>
 The default information that we want to be logged. This includes:
- - catalog, schema_table, cfacet, cfacet_str, cfacet_path, facets
+ - catalog, schema_table
+TODO Evaluate whether we even need this function
+
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+filterLogInfo"></a>
+
+#### reference.filterLogInfo : <code>Object</code>
+The object that can be logged to capture the filter state of the reference.
+The return object can have:
+ - filters: the facet object.
+ - custom_filters:
+     - the filter strings that parser couldn't turn to facet.
+     - if we could turn the custom filter to facet, this will return `true`
+ - cfacet: if there's a cfacet it will be 1
+   - cfacet_str: if cfacet=1, it will be displayname of cfacet.
+   - cfacet_path: if cfacet=1, it will be ermrest path of cfacet.
+This function creates a new object everytime that it's called, so it
+can be manipulated further.
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+defaultExportTemplate"></a>
@@ -3857,7 +3944,7 @@ count aggregate representation
     * [.isPseudo](#ERMrest.ReferenceColumn+isPseudo) : <code>boolean</code>
     * [.table](#ERMrest.ReferenceColumn+table) : [<code>Table</code>](#ERMrest.Table)
     * [.name](#ERMrest.ReferenceColumn+name) : <code>string</code>
-    * [.dataSource](#ERMrest.ReferenceColumn+dataSource)
+    * [.compressedDataSource](#ERMrest.ReferenceColumn+compressedDataSource)
     * [.displayname](#ERMrest.ReferenceColumn+displayname) : <code>object</code>
     * [.type](#ERMrest.ReferenceColumn+type) : [<code>Type</code>](#ERMrest.Type)
     * [.nullok](#ERMrest.ReferenceColumn+nullok) : <code>Boolean</code>
@@ -3905,10 +3992,10 @@ indicates that this object represents a Column.
 name of the column.
 
 **Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
-<a name="ERMrest.ReferenceColumn+dataSource"></a>
+<a name="ERMrest.ReferenceColumn+compressedDataSource"></a>
 
-#### referenceColumn.dataSource
-the source path from the main reference to this column
+#### referenceColumn.compressedDataSource
+the compressed source path from the main reference to this column
 
 **Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
 **Type{object}**:   
@@ -4610,6 +4697,7 @@ Indicates that this ReferenceColumn is an inbound foreign key.
     * [.reference](#ERMrest.FacetColumn+reference) : [<code>Reference</code>](#ERMrest.Reference)
     * [.index](#ERMrest.FacetColumn+index) : <code>int</code>
     * [.dataSource](#ERMrest.FacetColumn+dataSource) : <code>obj</code> \| <code>string</code>
+    * [.compressedDataSource](#ERMrest.FacetColumn+compressedDataSource) : <code>obj</code> \| <code>string</code>
     * [.filters](#ERMrest.FacetColumn+filters)
     * [.isOpen](#ERMrest.FacetColumn+isOpen) : <code>Boolean</code>
     * [.hasPath](#ERMrest.FacetColumn+hasPath) : <code>Boolean</code>
@@ -4692,6 +4780,12 @@ NOTE: Might not be needed
 #### facetColumn.dataSource : <code>obj</code> \| <code>string</code>
 A valid data-source path
 NOTE: we're not validating this data-source, we assume that this is valid.
+
+**Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
+<a name="ERMrest.FacetColumn+compressedDataSource"></a>
+
+#### facetColumn.compressedDataSource : <code>obj</code> \| <code>string</code>
+the compressed version of data source data-source path
 
 **Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
 <a name="ERMrest.FacetColumn+filters"></a>
@@ -5342,6 +5436,7 @@ parent table (not the end table).
     * [.unfilteredReference](#ERMrest.AttributeGroupReference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
     * [.ermrestPath](#ERMrest.AttributeGroupReference+ermrestPath) : <code>string</code>
     * [.defaultLogInfo](#ERMrest.AttributeGroupReference+defaultLogInfo) : <code>Object</code>
+    * [.filterLogInfo](#ERMrest.AttributeGroupReference+filterLogInfo) : <code>Object</code>
     * [.read([limit], contextHeaderParams)](#ERMrest.AttributeGroupReference+read) ⇒ <code>ERMRest.AttributeGroupPage</code>
     * [.getColumnByName(name)](#ERMrest.AttributeGroupReference+getColumnByName) ⇒ <code>ERMrest.AttributeGroupColumn</code>
 
@@ -5440,6 +5535,13 @@ NOTE:
 
 #### attributeGroupReference.defaultLogInfo : <code>Object</code>
 The default information that we want to be logged including catalog, schema_table, and facet (filter).
+
+**Kind**: instance property of [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)  
+<a name="ERMrest.AttributeGroupReference+filterLogInfo"></a>
+
+#### attributeGroupReference.filterLogInfo : <code>Object</code>
+The filter information that should be logged
+Currently only includes the search term.
 
 **Kind**: instance property of [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)  
 <a name="ERMrest.AttributeGroupReference+read"></a>
@@ -6269,6 +6371,7 @@ get PathColumn object by column name
     * [.appLink](#ERMrest.Reference+appLink) : <code>String</code>
     * [.csvDownloadLink](#ERMrest.Reference+csvDownloadLink) ⇒ <code>String</code>
     * [.defaultLogInfo](#ERMrest.Reference+defaultLogInfo) : <code>Object</code>
+    * [.filterLogInfo](#ERMrest.Reference+filterLogInfo) : <code>Object</code>
     * [.defaultExportTemplate](#ERMrest.Reference+defaultExportTemplate) : <code>string</code>
     * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
     * [.hideFacets()](#ERMrest.Reference+hideFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
@@ -6578,7 +6681,24 @@ NOTE It will not have the same sort and paging as the reference.
 
 #### reference.defaultLogInfo : <code>Object</code>
 The default information that we want to be logged. This includes:
- - catalog, schema_table, cfacet, cfacet_str, cfacet_path, facets
+ - catalog, schema_table
+TODO Evaluate whether we even need this function
+
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+filterLogInfo"></a>
+
+#### reference.filterLogInfo : <code>Object</code>
+The object that can be logged to capture the filter state of the reference.
+The return object can have:
+ - filters: the facet object.
+ - custom_filters:
+     - the filter strings that parser couldn't turn to facet.
+     - if we could turn the custom filter to facet, this will return `true`
+ - cfacet: if there's a cfacet it will be 1
+   - cfacet_str: if cfacet=1, it will be displayname of cfacet.
+   - cfacet_path: if cfacet=1, it will be ermrest path of cfacet.
+This function creates a new object everytime that it's called, so it
+can be manipulated further.
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+defaultExportTemplate"></a>
@@ -6973,6 +7093,7 @@ Check the sort object. Does not change the `this._location` object.
     * [.unfilteredReference](#ERMrest.AttributeGroupReference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
     * [.ermrestPath](#ERMrest.AttributeGroupReference+ermrestPath) : <code>string</code>
     * [.defaultLogInfo](#ERMrest.AttributeGroupReference+defaultLogInfo) : <code>Object</code>
+    * [.filterLogInfo](#ERMrest.AttributeGroupReference+filterLogInfo) : <code>Object</code>
     * [.read([limit], contextHeaderParams)](#ERMrest.AttributeGroupReference+read) ⇒ <code>ERMRest.AttributeGroupPage</code>
     * [.getColumnByName(name)](#ERMrest.AttributeGroupReference+getColumnByName) ⇒ <code>ERMrest.AttributeGroupColumn</code>
 
@@ -7071,6 +7192,13 @@ NOTE:
 
 #### attributeGroupReference.defaultLogInfo : <code>Object</code>
 The default information that we want to be logged including catalog, schema_table, and facet (filter).
+
+**Kind**: instance property of [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)  
+<a name="ERMrest.AttributeGroupReference+filterLogInfo"></a>
+
+#### attributeGroupReference.filterLogInfo : <code>Object</code>
+The filter information that should be logged
+Currently only includes the search term.
 
 **Kind**: instance property of [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)  
 <a name="ERMrest.AttributeGroupReference+read"></a>
@@ -7347,6 +7475,12 @@ ERMrest.resolve('https://example.org/catalog/42/entity/s:t/k=123').then(
 | uri | <code>string</code> | An ERMrest resource URI, such as `https://example.org/ermrest/catalog/1/entity/s:t/k=123`. |
 | [contextHeaderParams] | <code>Object</code> | An optional context header parameters object. The (key, value) pairs from the object are converted to URL `key=value` query parameters and appended to every request to the ERMrest service. |
 
+<a name="ERMrest.getElapsedTime"></a>
+
+### ERMrest.getElapsedTime() ⇒ <code>integer</code>
+**Kind**: static method of [<code>ERMrest</code>](#ERMrest)  
+**Returns**: <code>integer</code> - A value set to determine the elapsed time
+since the ermrestJS has been available (milliseconds).  
 <a name="formatDate"></a>
 
 ## formatDate() ⇒

@@ -73,12 +73,12 @@ exports.execute = function (options) {
 
         // NOTE relies on the heuristics
         // needs to be adjusted if we change the heuristics
-        var expectedDataSources = [
+        var expectedCompressedDataSources = [
             "id",
-            [{"outbound": ["columns_schema", "outbound_fk_1"]}, "RID"],
-            [{"outbound": ["columns_schema", "outbound_fk_2"]}, "RID"],
-            [{"outbound": ["columns_schema", "outbound_fk_3"]}, "RID"],
-            [{"outbound": ["columns_schema", "outbound_fk_4"]}, "RID"],
+            [{"o": ["columns_schema", "outbound_fk_1"]}, "RID"],
+            [{"o": ["columns_schema", "outbound_fk_2"]}, "RID"],
+            [{"o": ["columns_schema", "outbound_fk_3"]}, "RID"],
+            [{"o": ["columns_schema", "outbound_fk_4"]}, "RID"],
             "col_3",
             "col_4",
             "col 5",
@@ -91,11 +91,11 @@ exports.execute = function (options) {
             "RMT",
             "RCB",
             "RMB",
-            [{"outbound": ["columns_schema", "outbound_fk_5"]}, "RID"],
-            [{"outbound": ["columns_schema", "outbound_fk_6"]}, "RID"],
-            [{"outbound": ["columns_schema", "outbound_fk_8"]}, "RID"],
-            [{"outbound": ["columns_schema", "outbound_fk_7"]}, "RID"],
-            [{"outbound": ["columns_schema", "outbound_fk_9"]}, "RID"]
+            [{"o": ["columns_schema", "outbound_fk_5"]}, "RID"],
+            [{"o": ["columns_schema", "outbound_fk_6"]}, "RID"],
+            [{"o": ["columns_schema", "outbound_fk_8"]}, "RID"],
+            [{"o": ["columns_schema", "outbound_fk_7"]}, "RID"],
+            [{"o": ["columns_schema", "outbound_fk_9"]}, "RID"]
         ];
 
 
@@ -259,10 +259,10 @@ exports.execute = function (options) {
         });
 
 
-        describe("dataSource, ", function () {
+        describe("compressedDataSource, ", function () {
             it ("should return the correct value for all the different column types.", function () {
                 compactColumns.forEach(function (col, index) {
-                    expect(col.dataSource).toEqual(expectedDataSources[index], "missmatch for index=" + index);
+                    expect(col.compressedDataSource).toEqual(expectedCompressedDataSources[index], "missmatch for index=" + index);
                 });
             });
         })

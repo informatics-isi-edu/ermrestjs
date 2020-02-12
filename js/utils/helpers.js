@@ -120,6 +120,23 @@
     };
 
     /**
+     * Given an object and two string (k1, k2), if object has k1 key, will
+     * rename that key to k2 instead (values that were accessible through k1
+     * key name will be moved to k2 instead)
+     * @param {Object} obj
+     * @param {String} oldKey
+     * @param {String} newKey
+     */
+    var renameKey = function (obj, oldKey, newKey) {
+        if (!isObjectAndNotNull(obj)) return;
+        if (oldKey === newKey) return;
+        if (!obj.hasOwnProperty(oldKey)) return;
+
+        Object.defineProperty(obj, newKey, Object.getOwnPropertyDescriptor(obj, oldKey));
+        delete obj[oldKey];
+    };
+
+    /**
      * Check if object has all the keys in the given array
      * @param  {Object} obj the object
      * @param  {String[]} arr array of key strings
@@ -2959,7 +2976,8 @@
         module._constraintNames[catalogId][schemaName][constraintName] = {
             "subject": subject,
             "object": obj,
-            "code": "c" + (consIndex++)
+            "code": "c" + (consIndex++),
+            "RID": obj.RID
         };
     };
 
@@ -3068,216 +3086,183 @@
     };
 
     /**
-     * Given a header value, will encode and truncate if its length is more than the allowed length.
-     * If the output has `"t":1`, then it has been truncated.
-     * These are the allowed and expected values in a header (in order or priority):
-     * - cid
-     * - pid
-     * - wid
-     * - schema_table: schema:table
-     * - catalog
-     * - cqp (chaise query parameter): 1, cfacet: 1, ppid, pcid
-     * - template
-     * - referrer: for related entities the main entity, for recordset facets: the main entity
-     *    - schema_table
-     *    - cfacet_str
-     *    - cfacet_path
-     *    - filter
-     *    - facet
-     * - source: the source object of facet
-     * - column
-     * - cfacet_str
-     * - cfacet_path
-     * - filter
-     * - facet
-     *
-     * The truncation logic is as follows:
-     *  1. if the encoded string is not more than the limit, don't truncate.
+     * @private
+     * @desc
+     * Given a header object, will encode and if neccessary truncate it.
+     * Maximum allowed length of a header after encoding: 6500 characters.
+     * The logic is as follows:
+     *  1. If the encoded string is not lengthy, return it.
      *  2. otherwise,
-     *      2.1. create the bare minimum log object with the following attributes:
-     *        - t: 1
-     *        - cid, wid, pid, action, catalog, schema_table
-     *        - if cfacet exists: cfacet
-     *     2.2. Add other attributes step by step and check the limit. The following
-     *          is the priority list:
-     *        - referrer.schema_table, referrer.cfacet, referrer.filter, referrer.facet
-     *        - source
-     *        - column
-     *        - filter, facet, cfacet
+     *    2.1. Return an empty object if the minimal header (defined below) goes over the limit.
+     *    2.2. Otherwise start truncating `stack` object by doing the following. In each step,
+     *         if the encoded and truncated header goes below the length limit, return it.
+     *         - replace all foreign key constraints with their RIDs (if RID is defined for all of them).
+     *         - replace values (`choices`, `ranges`, `search`) in the filters with the number of values.
+     *         - replace all `filters.and` with the number of filters.
+     *         - replace all source paths with the number of path nodes.
+     *         - use replace stack value with the number of stack nodes.
+     *         If after performing all these steps, the header is still lengthy, return the minimal header.
      *
-     * @param  {object} header The header content
+     * A minimal header will have the following attributes:
+     *  - cid, pid, wid, action, schema_table, catalog, t:1
+     * And might have these optional attributes:
+     *  - elapsed_ms, cqp, ppid, pcid
+     *
+     * @param {object} header - the header context
      * @return {object}
      */
     module._certifyContextHeader = function (header) {
-        var MAX_LENGTH = 6500;
-        var encode = module._encodeHeaderContent;
-        var res = encode(header), prevRes, facetRes;
+        var MAX_LENGTH = module.CONTEXT_HEADER_LENGTH_LIMIT;
+
+        var shorter = module._shorterVersion;
+        var replaceConstraintWithRID = function (src, noRID) {
+            if (noRID) return false;
+
+            var o = shorter.outbound, i = shorter.inbound, fk;
+            if (Array.isArray(srcs)) {
+                src.forEach(function (srcNode) {
+                    if (noRID) return;
+                    [shorter.outbound, shorter.inbound].forEach(function (direction) {
+                        if (noRID) return;
+
+                        if (Array.isArray(srcNode[direction])) {
+                            fk = module._getConstraintObject(catalog, srcNode[direction][0], srcNode[direction][1]);
+                            if (fk && fk.RID) {
+                                srcNode[direction] = fk.RID;
+                            } else {
+                                noRID = true;
+                                return;
+                            }
+                        }
+                    });
+                });
+            }
+
+            return !noRID;
+        };
+
+        var encode = module._encodeHeaderContent, i;
+
+        var res = encode(header);
 
         if (res.length < MAX_LENGTH) {
             return res;
         }
 
-        // the minimal required attributes for log
-        var obj = {
+        var catalog = header.catalog;
+        var minimalObj = {
             cid: header.cid,
             wid: header.wid,
             pid: header.pid,
-            action: header.action,
             catalog: header.catalog,
             schema_table: header.schema_table,
-            t: 1 // indicates that this request has been truncated
+            action: header.action,
+            t: 1
         };
 
         // these attributes might not be available on the header, but if they
         // are, we must include them in the minimal header content
-        ['cqp', 'cfacet', 'ppid', 'pcid'].forEach(function (attr) {
+        ['elapsed_ms', 'cqp', 'ppid', 'pcid'].forEach(function (attr) {
             if (header[attr]) {
-                obj[attr] = header[attr];
+                minimalObj[attr] = header[attr];
             }
         });
 
-        prevRes = res = encode(obj);
-        if (res.length >= MAX_LENGTH) {
+        // if even minimal is bigger than the limit, don't log anything
+        if (encode(minimalObj).length >= MAX_LENGTH) {
             return {};
         }
 
-        // truncate cfacet, facet, or filter
-        // if it's a facet that has `and` in the first level,
-        // it will remove only the array element that is needed. otherwise
-        // the whole facet/filter will be removed.
-        var truncateFacet = function (obj, header, key) {
-            var prevRes = encode(obj);
-            var h = key ? header[key] : header;
-
-            var setObjAndEncode = function (attr) {
-                if (key) {
-                    obj[key][attr] = h[attr];
-                } else {
-                    obj[attr] = h[attr];
-                }
-                return encode(obj);
-            };
-
-            if (h.cfacet_str) {
-                res = setObjAndEncode("cfacet_str");
-                if (res.length >= MAX_LENGTH) {
-                    return {truncated: true, res: prevRes};
-                }
-                prevRes = res;
-            }
-
-            if (h.cfacet_path) {
-                res = setObjAndEncode("cfacet_str");
-                if (res.length >= MAX_LENGTH) {
-                    return {truncated: true, res: prevRes};
-                }
-                prevRes = res;
-            }
-
-            if (h.filter) {
-                // add filter
-                res = setObjAndEncode("filter");
-                if (res.length >= MAX_LENGTH) {
-                    // it was lengthy so just return the obj without filter
-                    return {truncated: true, res: prevRes};
-                }
-
-                // return result with filter
-                return {truncated: false, res: res};
-            }
-
-            // this function only expects cfacet, facet, and filter. it will ignore other variables
-            if (!h.facet) {
-                return {truncated: false, res: prevRes};
-            }
-
-            // only optimized for just one type of facet that we currently support: {and: []}
-            // otherwise just treat it as a object
-            if (!Array.isArray(h.facet.and)) {
-
-                // add the facet
-                res = setObjAndEncode("filter");
-                if (res.length >= MAX_LENGTH) {
-                    return {truncated: true, res: prevRes};
-                }
-
-                // return result with facet
-                return {truncated: true, res: res};
-            }
-
-            if (key) {
-                obj[key].facet = {and: []};
-            } else {
-                obj.facet = {and: []};
-            }
-
-            // add fitlers in the and array one by one until getting to the limit.
-            for (var i = 0; i < h.facet.and.length; i++) {
-                if (key) {
-                    obj[key].facet.and.push(h.facet.and[i]);
-                } else {
-                    obj.facet.and.push(h.facet.and[i]);
-                }
-
-                res = encode(obj);
-                if (res.length >= MAX_LENGTH) {
-                    return {truncated: true, res: prevRes};
-                }
-                prevRes = res;
-            }
-
-            // this means that the object had other attributes (apart from filter and facet)
-            // which is getting truncated
-            return {truncated: true, res: res};
-        };
-
-        // template
-        if (header.template) {
-            obj.template = header.template;
-            res = encode(obj);
-            if (res.length >= MAX_LENGTH) {
-                return prevRes;
-            }
+        // truncation is based on stack, if there's no stack, just log the minimal object
+        if (!Array.isArray(header.stack)) {
+            return minimalObj;
         }
 
-        // referrer: schema_table, facet (filter)
-        if (header.referrer) {
-            obj.referrer = {
-                schema_table: header.referrer.schema_table
-            };
-            res = encode(obj);
-            if (res.length >= MAX_LENGTH) {
-                return prevRes;
+        var truncated = module._simpleDeepCopy(header);
+
+        // replace all fk constraints with their RID
+        // if RID is not available on even one fk, we will not replacing any of RIDs
+        // and go to the next step.
+        var noRID = false;
+        truncated.stack.forEach(function (stackEl) {
+            if (noRID) return;
+
+            // filters
+            if (stackEl.filters && Array.isArray(stackEl.filters.and)) {
+                stackEl.filters.and.forEach(function (facet) {
+                    if (noRID) return;
+
+                    if (Array.isArray(facet[shorter.source])) {
+                        noRID = !replaceConstraintWithRID(facet[shorter.source]);
+                    }
+                });
             }
 
-            // take care of facet and fitler in referrer
-            facetRes = truncateFacet(obj, header, "referrer");
-            if (facetRes.truncated) {
-                return facetRes.res;
+            // sources
+            if (stackEl.source && Array.isArray(stackEl.source)) {
+                noRID = !replaceConstraintWithRID(stackEl.source);
             }
-            prevRes = facetRes.res;
+        });
+
+        if (noRID) {
+            truncated = module._simpleDeepCopy(header);
+        } else {
+            res = encode(truncated);
+            if (res.length < MAX_LENGTH) {
+            return res;
+        }
         }
 
-        // .source
-        if (header.source) {
-            obj.source = header.source;
-            res = encode(obj);
-            if (res.length >= MAX_LENGTH) {
-                return prevRes;
+        // replace choices, ranges, search with number of values
+        truncated.stack.forEach(function (stackEl) {
+            if (stackEl.filters && Array.isArray(stackEl.filters.and)) {
+                stackEl.filters.and.forEach(function (facet) {
+                    [shorter.choices, shorter.ranges, shorter.search].forEach(function (k) {
+                        facet[k] = Array.isArray(facet[k]) ? facet[k].length : 1;
+                    });
+                });
             }
+        });
+
+        res = encode(truncated);
+        if (res.length < MAX_LENGTH) {
+            return res;
         }
 
-        // .column
-        if (header.column) {
-            obj.column = header.column;
-            res = encode(obj);
-            if (res.length >= MAX_LENGTH) {
-                return prevRes;
+        // replace all filters.and with the number of filters
+        truncated.stack.forEach(function (stackEl) {
+            if (stackEl.filters && Array.isArray(stackEl.filters.and)) {
+                stackEl.filters.and = stackEl.filters.and.length;
             }
+        });
+
+        res = encode(truncated);
+        if (res.length < MAX_LENGTH) {
+            return res;
         }
 
-        // take care of facet and fitler
-        return truncateFacet(obj, header).res;
+        // replace all source paths with the number of path nodes
+        truncated.stack.forEach(function (stackEl) {
+            if (stackEl.source) {
+                stackEl.source = Array.isArray(stackEl.source) ? stackEl.source.length : 1;
+            }
+        });
+
+        res = encode(truncated);
+        if (res.length < MAX_LENGTH) {
+            return res;
+        }
+
+        // replace stack with the number of elements
+        truncated.stack = truncated.stack.length;
+
+        res = encode(truncated);
+        if (res.length < MAX_LENGTH) {
+            return res;
+        }
+
+        // if none of the truncation works, just return the minimal obj
+        return encode(minimalObj);
     };
 
     module._isEntryContext = function(context) {

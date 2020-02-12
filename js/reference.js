@@ -1156,8 +1156,12 @@
                     uri += (i === 0 ? "?defaults=" : ',') + module._fixedEncodeURIComponent(defaults[i]);
                 }
 
+                if (isObject(contextHeaderParams) && Array.isArray(contextHeaderParams.stack)) {
+                    var stack = contextHeaderParams.stack;
+                    stack[stack.length-1].num_created = data.length;
+                }
                 // create the context header params for log
-                if (!contextHeaderParams || !isObject(contextHeaderParams)) {
+                else if (!contextHeaderParams || !isObject(contextHeaderParams)) {
                     contextHeaderParams = {"action": "create"};
                 }
                 var config = {
@@ -1376,7 +1380,15 @@
                         var referenceWithoutPaging = _referenceCopy(ownReference);
                         referenceWithoutPaging.location.beforeObject = null;
 
-                        contextHeaderParams.action = action + "/correct-page";
+                        // remove the function and replace it with auto-reload
+                        var actionVerb = action.substring(action.lastIndexOf(";")+1),
+                            newActionVerb = "auto-reload";
+
+                        // TODO (could be optimized)
+                        if (["load-domain", "reload-domain"].indexOf(actionVerb) !== -1) {
+                            newActionVerb = "auto-reload-domain";
+                        }
+                        contextHeaderParams.action = action.substring(0,action.lastIndexOf(";")+1) + newActionVerb;
                         referenceWithoutPaging.read(limit, contextHeaderParams, useEntity, true).then(function rereadReference(rereadPage) {
                             defer.resolve(rereadPage);
                         }, function error(response) {
@@ -1662,9 +1674,28 @@
                     uri += module._fixedEncodeURIComponent(columnProjections[k]) + newAlias + ":=" + module._fixedEncodeURIComponent(columnProjections[k]);
                 }
 
-                if (!contextHeaderParams || !isObject(contextHeaderParams)) {
+                /**
+                 * We are going to add the following to the last element of stack in the logs:
+                 * {
+                 *   "num_updated": "number of updated rows"
+                 * }
+                 */
+                if (isObject(contextHeaderParams) && Array.isArray(contextHeaderParams.stack)) {
+                    var stack = contextHeaderParams.stack, numUpdated = submissionData.length;
+                    stack[stack.length-1].num_updated = numUpdated;
+
+                    stack[stack.length-1].updated_keys = {
+                        cols: shortestKeyNames,
+                        vals: allNewData.map(function (d) {
+                            return shortestKeyNames.map(function (kname) {
+                                return d[kname];
+                            });
+                        })
+                    };
+                } else if (!contextHeaderParams || !isObject(contextHeaderParams)) {
                     contextHeaderParams = {"action": "update"};
                 }
+
                 var config = {
                     headers: this._generateContextHeader(contextHeaderParams, submissionData.length)
                 };
@@ -2213,13 +2244,33 @@
 
         /**
          * The default information that we want to be logged. This includes:
-         *  - catalog, schema_table, cfacet, cfacet_str, cfacet_path, facets
+         *  - catalog, schema_table
+         * TODO Evaluate whether we even need this function
          * @type {Object}
          */
         get defaultLogInfo() {
             var obj = {};
             obj.catalog = this.table.schema.catalog.id;
             obj.schema_table = this.table.schema.name + ":" + this.table.name;
+            return obj;
+        },
+
+        /**
+         * The object that can be logged to capture the filter state of the reference.
+         * The return object can have:
+         *  - filters: the facet object.
+         *  - custom_filters:
+         *      - the filter strings that parser couldn't turn to facet.
+         *      - if we could turn the custom filter to facet, this will return `true`
+         *  - cfacet: if there's a cfacet it will be 1
+         *    - cfacet_str: if cfacet=1, it will be displayname of cfacet.
+         *    - cfacet_path: if cfacet=1, it will be ermrest path of cfacet.
+         * This function creates a new object everytime that it's called, so it
+         * can be manipulated further.
+         * @type {Object}
+         */
+        get filterLogInfo() {
+            var obj = {};
 
             // custom facet
             if (this.location.customFacets) {
@@ -2233,15 +2284,15 @@
             }
 
             if (this.location.facets) {
-                obj.facet = this.location.facets.decoded;
+                obj.filters = _compressFacetObject(this.location.facets.decoded);
             } else if (this.location.filter) {
                 if (this.location.filter.facet) {
-                    obj.facet = this.location.filter.facet;
+                    obj.filters = _compressFacetObject(this.location.filter.facet);
+                    obj.custom_filters = true;
                 } else {
-                    obj.filter = this.location.filtersString;
+                    obj.custom_filters = this.location.filtersString;
                 }
             }
-
             return obj;
         },
 
@@ -3318,7 +3369,7 @@
          *      0.2 parentDisplayname: the displayname of parent
          *          - logic: foriengkey's to_name or this.displayname
          *      0.3 mainTuple: the tuple used to generate the related references (might be undefined)
-         *      0.4 dataSource: the source path from the main to the related table (might be undefined)
+         *      0.4 compressedDataSource: the compressed source path from the main to the related table (might be undefined)
          *
          * 1. If it's pure and binary association. (current reference: T1) <-F1-(A)-F2-> (T2)
          *      1.1 displayname: F2.to_name or T2.displayname
@@ -3412,11 +3463,6 @@
                     newRef._location = module.parse(this._location.compactUri + "/" + fkr.toString() + "/" + otherFK.toString(true), catalog);
                 }
 
-                // build the filter source
-                filterSource.push({"inbound": otherFK.constraint_names[0]});
-
-                // buld the data source
-                dataSource.push({"outbound": otherFK.constraint_names[0]});
 
                 // additional values for sorting related references
                 newRef._related_key_column_positions = fkr.key.colset._getColumnPositions();
@@ -3428,6 +3474,11 @@
                 newRef.derivedAssociationReference.origFKR = newRef.origFKR;
                 newRef.derivedAssociationReference._secondFKR = otherFK;
 
+                // build the filter source
+                filterSource.push({"inbound": otherFK.constraint_names[0]});
+
+                // buld the data source
+                dataSource.push({"outbound": otherFK.constraint_names[0]});
             } else { // Simple inbound Table
                 newRef._table = fkrTable;
                 newRef._shortestKey = newRef._table.shortestKey;
@@ -3458,12 +3509,14 @@
                 };
             }
 
-            // attach the dataSource
             if (sourceObject && sourceObject.source) {
-                newRef.dataSource = sourceObject.source;
+                dataSource = sourceObject.source;
             } else if (newRef._table.shortestKey.length === 1) {
-                newRef.dataSource = dataSource.concat(newRef._table.shortestKey[0].name);
+                dataSource = dataSource.concat(newRef._table.shortestKey[0].name);
             }
+
+            // attach the compressedDataSource
+            newRef.compressedDataSource = _compressSource(dataSource);
 
             // complete the path
             filterSource.push({"outbound": fkr.constraint_names[0]});
@@ -3502,10 +3555,6 @@
                 // only add the values that are not defined.
                 if (key in contextHeaderParams) continue;
                 contextHeaderParams[key] = this.defaultLogInfo[key];
-            }
-
-            if (isInteger(page_size)) {
-                contextHeaderParams.page_size = page_size;
             }
 
             var headers = {};

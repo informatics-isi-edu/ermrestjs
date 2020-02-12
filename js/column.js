@@ -150,20 +150,23 @@ ReferenceColumn.prototype = {
     },
 
     /**
-     * the source path from the main reference to this column
+     * the compressed source path from the main reference to this column
      * @type{Object}
      */
-    get dataSource() {
-        if (this._dataSource === undefined) {
+    get compressedDataSource() {
+        if (this._compressedDataSource === undefined) {
+            var ds;
             if (this.sourceObject && this.sourceObject.source) {
-                this._dataSource = this.sourceObject.source;
+                ds = this.sourceObject.source;
             } else if (this._simple) {
-                this._dataSource = this._baseCols[0].name;
+                ds = this._baseCols[0].name;
             } else {
-                this._dataSource = null;
+                ds = null;
             }
+
+            this._compressedDataSource = _compressSource(ds);
         }
-        return this._dataSource;
+        return this._compressedDataSource;
     },
 
     /**
@@ -1455,6 +1458,14 @@ Object.defineProperty(PseudoColumn.prototype, "hasAggregate", {
         return this._hasAggregate;
     }
 });
+Object.defineProperty(PseudoColumn.prototype, "aggregateFn", {
+    get: function () {
+        if (this._aggregateFn === undefined) {
+            this._aggregateFn = this.hasAggregate ? this.sourceObject.aggregate : null;
+        }
+        return this._aggregateFn;
+    }
+});
 
 /**
  * Returns a reference to the current pseudo-column
@@ -1541,7 +1552,7 @@ Object.defineProperty(PseudoColumn.prototype, "reference", {
             // make sure data-source is available on the reference
             // TODO this has been added to be consistent with the old related reference apis
             // other apis are not available, maybe we should add them as well? (origFKR, etc.)
-            self._reference.dataSource = self.dataSource;
+            self._reference.compressedDataSource = self.compressedDataSource;
 
             // make sure the refernece has the correct displayname
             if (self.hasPath) {
@@ -1960,21 +1971,23 @@ Object.defineProperty(ForeignKeyPseudoColumn.prototype, "display", {
         return this._display_cached;
     }
 });
-Object.defineProperty(ForeignKeyPseudoColumn.prototype, "dataSource", {
+Object.defineProperty(ForeignKeyPseudoColumn.prototype, "compressedDataSource", {
     get: function () {
-        if (this._dataSource === undefined) {
+        if (this._compressedDataSource === undefined) {
+            var ds;
             if (this.sourceObject && this.sourceObject.source) {
-                this._dataSource = this.sourceObject.source;
+                ds = this.sourceObject.source;
             } else if (this.table.shortestKey.length === 1){
-                this._dataSource = [
+                ds = [
                     {"outbound": this.foreignKey.constraint_names[0]},
                     this.table.shortestKey[0].name
                 ];
             } else {
-                this._dataSource = null;
+                ds = null;
             }
+            this._compressedDataSource = _compressSource(ds);
         }
-        return this._dataSource;
+        return this._compressedDataSource;
     }
 });
 
@@ -2635,18 +2648,18 @@ Object.defineProperty(InboundForeignKeyPseudoColumn.prototype, "nullok", {
         throw new Error("can not use this type of column in entry mode.");
     }
 });
-Object.defineProperty(InboundForeignKeyPseudoColumn.prototype, "dataSource", {
+Object.defineProperty(InboundForeignKeyPseudoColumn.prototype, "compressedDataSource", {
     get: function () {
-        if (this._dataSource === undefined) {
+        if (this._compressedDataSource === undefined) {
+            var ds = null;
             if (this.sourceObject && this.sourceObject.source) {
-                this._dataSource = this.sourceObject.source;
-            } else if (this.reference.dataSource){
-                this._dataSource = this.reference.dataSource;
-            } else {
-                this._dataSource = null;
+                ds = _compressSource(this.sourceObject.source);
+            } else if (this.reference.compressedDataSource){
+                ds = this.reference.compressedDataSource;
             }
+            this._compressedDataSource = ds;
         }
-        return this._dataSource;
+        return this._compressedDataSource;
     }
 });
 
@@ -2695,6 +2708,12 @@ function FacetColumn (reference, index, column, facetObject, filters) {
      * @type {obj|string}
      */
     this.dataSource = facetObject.source;
+
+    /**
+     * the compressed version of data source data-source path
+     * @type {obj|string}
+     */
+    this.compressedDataSource = _compressSource(facetObject.source);
 
     /**
      * Filters that are applied to this facet.
@@ -3307,7 +3326,7 @@ FacetColumn.prototype = {
         verify(!this.isEntityMode, "this API cannot be used in entity-mode");
 
         if (this._scalarValuesRef === undefined) {
-            this._scalarValuesRef = this.column.groupAggregate.entityCounts(this.sortColumns, this.hideNumOccurrences, true);
+            this._scalarValuesRef = this.column.groupAggregate.entityCounts(this.displayname, this.sortColumns, this.hideNumOccurrences, true);
         }
         return this._scalarValuesRef;
     },
@@ -3327,8 +3346,21 @@ FacetColumn.prototype = {
      * @return {Promise} A promise resolved with list of objects that have `uniqueId`, and `displayname`.
      */
     getChoiceDisplaynames: function (contextHeaderParams) {
-        var defer = module._q.defer();
-        var filters =  [];
+        var defer = module._q.defer(), filters =  [];
+        var table = this._column.table, columnName = this._column.name;
+
+        var createRef = function (filterStrs) {
+            var uri = [
+                table.schema.catalog.server.uri ,"catalog" ,
+                table.schema.catalog.id, "entity",
+                module._fixedEncodeURIComponent(table.schema.name) + ":" + module._fixedEncodeURIComponent(table.name),
+                filterStrs.join(";")
+            ].join("/");
+
+            var ref = new Reference(module.parse(uri), table.schema.catalog).contextualize.compactSelect;
+            ref = ref.sort([{"column": columnName, "descending": false}]);
+            return ref;
+        };
 
         // if no filter, just resolve with empty list.
         if (this.choiceFilters.length === 0) {
@@ -3347,8 +3379,6 @@ FacetColumn.prototype = {
         }
         // otherwise generate an ermrest request to get the displaynames.
         else {
-
-            var table = this._column.table, columnName = this._column.name;
             var filterStr = [];
 
             // list of filters that we want their displaynames.
@@ -3369,18 +3399,7 @@ FacetColumn.prototype = {
             }
 
             // create a url
-            var uri = [
-                table.schema.catalog.server.uri ,"catalog" ,
-                table.schema.catalog.id, "entity",
-                module._fixedEncodeURIComponent(table.schema.name) + ":" + module._fixedEncodeURIComponent(table.name),
-                filterStr.join(";")
-            ].join("/");
-
-            var ref = new Reference(module.parse(uri), table.schema.catalog).contextualize.compactSelect;
-
-            ref = ref.sort([{"column": columnName, "descending": false}]);
-
-            ref.read(this.choiceFilters.length, contextHeaderParams, true).then(function (page) {
+            createRef(filterStr).read(this.choiceFilters.length, contextHeaderParams, true).then(function (page) {
                 // create the response
                 page.tuples.forEach(function (t) {
                     filters.push({uniqueId: t.data[columnName], displayname: t.displayname, tuple: t});
@@ -4091,12 +4110,13 @@ ColumnGroupAggregateFn.prototype = {
      * The result is based on shortest key of the parent table. If we have join
      * in the path, we are counting the shortest key of the parent table (not the end table).
      * NOTE: Will create a new reference by each call.
+     * @type {Object=} columnDisplayname the displayname of main column.
      * @type {Object=} sortColumns the sort column object that you want to pass
      * @type {Boolean=} hideNumOccurrences whether we should add number of Occurrences or not.
      * @type {Boolean=} dontAllowNull whether the null value should be returned for the facet or not.
      * @returns {ERMrest.AttributeGroupReference}
      */
-    entityCounts: function(sortColumns, hideNumOccurrences, dontAllowNull) {
+    entityCounts: function(columnDisplayname, sortColumns, hideNumOccurrences, dontAllowNull) {
         if (this.column.isPseudo) {
             throw new Error("Cannot use this API on pseudo-column.");
         }
@@ -4114,18 +4134,18 @@ ColumnGroupAggregateFn.prototype = {
             sortObj = [], i = 0, colAlias;
 
         // key columns will have numbers as alias, and the aggregate is `count`
-        var addToKeyColumns = function (col, isVisible) {
+        var addToKeyColumns = function (col, isVisible, displayname) {
             colAlias = (i++).toString();
             keyColumns.push(new AttributeGroupColumn(
                 colAlias,
                 module._fixedEncodeURIComponent(col.name),
-                col, null, null, col.comment, true, isVisible
+                col, displayname, null, col.comment, true, isVisible
             ));
             return colAlias;
         };
 
         // the first column is always the column that we want to get the values of
-        addToKeyColumns(column._baseCols[0], true);
+        addToKeyColumns(column._baseCols[0], true, columnDisplayname);
 
         if (Array.isArray(sortColumns) && sortColumns.length > 0) {
             sortColumns.forEach(function (sc) {
