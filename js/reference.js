@@ -1975,9 +1975,16 @@
          * properties:
          *
          *   - `markdownPattern`: markdown pattern,
+         *   - `templateEngine`: the template engine to be used for the pattern
          *   - `separator`: markdown pattern (default: newline character `'\n'`),
          *   - `suffix`: markdown pattern (detaul: empty string `''`),
          *   - `prefix`: markdown pattern (detaul: empty string `''`)
+         *
+         * Extra optional attributes:
+         *  - `sourceMarkdownPattern`: the markdown pattern defined on the source definition
+         *  - `sourceTemplateEngine`: the template engine to be used for the pattern
+         *  - `sourceHasWaitFor`: if there's waitfor defiend for the source markdown pattern.
+         *  - `sourceWaitFor`: the waitfor definition in the source
          *
          * If type is `'module'`, the object will have these additional
          * properties:
@@ -2000,7 +2007,6 @@
          * @type {Object}
          *
          **/
-
         get display() {
             if (this._display === undefined) {
                 var self = this;
@@ -2082,8 +2088,12 @@
                 // attach the display settings defined on the source definition
                 if (this.pseudoColumn && this.pseudoColumn.display.sourceMarkdownPattern) {
                     this._display.type = module._displayTypes.MARKDOWN;
-                    this._display._sourceMarkdownPattern = this.pseudoColumn.display.sourceMarkdownPattern;
-                    this._display._sourceTemplateEngine = this.pseudoColumn.display.sourceTemplateEngine;
+
+                    var displ = this.pseudoColumn.display;
+                    this._display.sourceMarkdownPattern = displ.sourceMarkdownPattern;
+                    this._display.sourceTemplateEngine = displ.sourceTemplateEngine;
+                    this._display.sourceWaitFor = this.pseudoColumn.waitFor;
+                    this._display.sourceHasWaitFor = this.pseudoColumn.hasWaitFor;
                 }
             }
 
@@ -3212,10 +3222,16 @@
         /**
          * Generate the list of extra reads that we should do.
          * this should include
-         * - aggreagtes: [{column: ERMrest.ReferenceColumn, objects: [{index: integer, column: boolean, related: boolean}]]
-         * - entitySets: [{reference: ERMrest.Reference,}]
-         * - allOutBounds: ERMrest.ReferenceColumn[]
-         * - (TODO) selfLinks: ERMrest.KeyPseudoColumn[]
+         * - aggreagtes: the aggregates the page needs
+         *   [{column: ERMrest.ReferenceColumn, columnName: string, objects: [{index: integer, column: boolean, related: boolean}]]
+         * - entitySets: the inline entity sets the page needs (only in detailed)
+         *   [{reference: ERMrest.Reference, columnName: string, objects: [{index: integer, column: boolean, related: boolean}]]
+         * - relatedEntitySets: the related entity sets the page needs (only in detailed)
+         *   [{reference: ERMrest.Reference, columnName: string, objects: [{index: integer, column: boolean, related: boolean}]]
+         * - allOutBounds: the all-outbound foreign keys (added so we can later append to the url).
+         *   ERMrest.ReferenceColumn[]
+         * - selfLinks: the self-links (so it can be added to the template variables)
+         *   ERMrest.KeyPseudoColumn[]
          *
          * TODO we might want to detect duplciates in allOutBounds better?
          * currently it's done based on name, but based on the path should be enough..
@@ -3223,25 +3239,38 @@
          * the old code was kinda handling this by just adding the multi ones,
          * so if the fk definition is based on fkcolum and and not the RID, it would handle it.
          *
-         * TODO don't allow entitysets in detailed context
-         *
          * @param  {ERMrest.Tuple=} tuple
-         * @param  {Boolean=} useRelated
          * @return {Object}
          */
-        generateActiveList: function (tuple, useRelated) {
+        generateActiveList: function (tuple) {
             var columns = [], entitySets = [], relatedEntitySets = [], allOutBounds = [], aggregates = [], selfLinks = [];
             var consideredSets = {}, consideredRelatedSets = {}, consideredOutbounds = {}, consideredAggregates = {}, consideredSelfLinks = {};
 
             var self = this;
             var sds = self.table.sourceDefinitions;
 
-            var addColumn = function (col, index, isWaitFor, isRelated) {
-                var obj = { index: index, isWaitFor: isWaitFor};
-                if (isRelated) {
-                    obj.related = true;
-                } else {
-                    obj.column = true;
+            // in detailed, we want related and citation
+            var isDetailed = self._context === module._contexts.DETAILED;
+
+            var COLUMN_TYPE = "column", RELATED_TYPE = "related", CITATION_TYPE = "citation", INLINE_TYPE = "inline";
+
+            var isInline = function (col) {
+                return col.isInboundForeignKey || (col.isPathColumn && col.hasPath && !col.isUnique && !col.hasAggregate);
+            };
+
+            // col: the column that we need its data
+            // isWaitFor: whether it was part of waitFor or just visible
+            // type: where in the page it belongs to
+            // index: the container index (column index, or related index) (optional)
+            var addColToActiveList = function (col, isWaitFor, type, index) {
+                var obj = {isWaitFor: isWaitFor};
+
+                // add the type
+                obj[type] = true;
+
+                // add index if available (not available in citation)
+                if (index) {
+                    obj.index = index;
                 }
 
                 // aggregates
@@ -3259,24 +3288,28 @@
                 }
 
                 //entitysets
-                if (col.isInboundForeignKey || (col.isPathColumn && col.hasPath && !col.isUnique && !col.hasAggregate)) {
-                    if (self._context !== module._contexts.DETAILED) {
-                        return;
+                if (isInline(col)) {
+                    if (!isDetailed) {
+                        return; // only acceptable in detailed
                     }
-                    // duplciate
-                    if (col.name in consideredSets) {
-                        entitySets[consideredSets[col.name]].objects.push(obj);
-                        return;
-                    } else if (useRelated && col.name in consideredRelatedSets) {
+
+                    if (col.name in consideredRelatedSets) {
                         relatedEntitySets[consideredRelatedSets[col.name]].objects.push(obj);
                         return;
                     }
 
-                    // new
-                    if (useRelated) {
+                    if (col.name in consideredSets) {
+                        entitySets[consideredSets[col.name]].objects.push(obj);
+                        return;
+                    }
+
+                    // related entity sets
+                    if (type === RELATED_TYPE) {
                         consideredRelatedSets[col.name] = relatedEntitySets.length;
                         relatedEntitySets.push({reference: col.reference, columnName: col.name, objects: [obj]});
-                    } else {
+                    }
+                    //inline entity sets
+                    else {
                         consideredSets[col.name] = entitySets.length;
                         entitySets.push({reference: col.reference, columnName: col.name, objects: [obj]});
                     }
@@ -3299,14 +3332,16 @@
                 }
             };
 
+
             columns = self.generateColumnsList(tuple);
 
             // columns
             columns.forEach(function (col, i) {
-                addColumn(col, i, false, false);
+                addColToActiveList(col, false, COLUMN_TYPE, i);
 
+                var wfType = isInline(col) ? INLINE_TYPE : COLUMN_TYPE;
                 col.waitFor.forEach(function (wf) {
-                    addColumn(wf, i, true, false);
+                    addColToActiveList(wf, true, wfType, i);
                 });
             });
 
@@ -3317,7 +3352,8 @@
                 allOutBounds.push(new ForeignKeyPseudoColumn(self, fk));
             });
 
-            if (useRelated) {
+            // related
+            if (isDetailed) {
                 self.generateRelatedList(tuple).forEach(function (rel, i) {
                     // TODO must be improved
                     var addSet = true,
@@ -3336,11 +3372,20 @@
 
                     if (rel.pseudoColumn) {
                         rel.pseudoColumn.waitFor.forEach(function (wf) {
-                            addColumn(wf, i, true, true);
+                            addColToActiveList(wf, true, RELATED_TYPE, i);
                         });
                     }
                 });
             }
+
+
+            // citation
+            if (isDetailed && tuple && tuple.citation) {
+                tuple.citation.waitFor.forEach(function (col) {
+                    addColToActiveList(col, true, CITATION_TYPE);
+                });
+            }
+
             this._activeList = {
                 aggregates: aggregates,
                 entitySets: entitySets,
@@ -4551,7 +4596,7 @@
             var display = ref.display;
 
             // markdown_pattern in the source object
-            if (typeof display._sourceMarkdownPattern === "string") {
+            if (typeof display.sourceMarkdownPattern === "string") {
                 var $self = self.tuples.map(function (t) {
                     return t.templateVariables;
                 });
@@ -4559,9 +4604,9 @@
                 keyValues = Object.assign({$self: $self}, templateVariables);
 
                 pattern = module._renderTemplate(
-                    display._sourceMarkdownPattern,
+                    display.sourceMarkdownPattern,
                     keyValues, ref.table.schema.catalog,
-                    { templateEngine: display._sourceTemplateEngine}
+                    { templateEngine: display.sourceTemplateEngine}
                 );
 
                 if (pattern === null || pattern.trim() === '') {
@@ -5095,47 +5140,22 @@
         },
 
         /**
-         * The citation that should be used for this tuple.
-         * - if citation has wait-for, it will return false.
-         * - If the annoation is missing or is invalid, it will return null.
-         * otherwise it will return an object with the following attributes:
-         * - journal (required)
-         * - year (required)
-         * - url (required)
-         * - author
-         * - title
-         * - id
-         * @type {Object}
+         * If annotation is defined and has the required attributes, will return
+         * a Citation object that can be used to generate the citation for this tuple.
+         * @type {ERMrest.Citation}
          */
         get citation() {
             if (this._citation === undefined) {
                 var table = this._pageRef.table;
-                if (table.annotations.contains(module._annotations.CITATION)) {
-                    var citationAnno = table.annotations.get(module._annotations.CITATION).content;
-
-                    // if required fields are present, render each template and set that value on the citation object
-                    if (citationAnno.journal_pattern && citationAnno.year_pattern && citationAnno.url_pattern) {
-                        var options = {
-                            templateEngine: citationAnno.template_engine
-                        };
-                        var keyValues = this.templateVariables.values;
-
-                        this._citation = {};
-                        var self = this;
-                        // author, title, id set to null if not defined
-                        ["author", "title", "journal", "year", "url", "id"].forEach(function (key) {
-                            self._citation[key] = module._renderTemplate(citationAnno[key+"_pattern"], keyValues, table.schema.catalog, options);
-                        });
-
-                        // if after processing the templates, any of the required fields are null, template is invalid
-                        if (!this._citation.journal || !this._citation.year || !this._citation.url) {
-                            this._citation = null;
-                        }
-                    } else {
-                        this._citation = null;
-                    }
-                } else {
+                if (!table.annotations.contains(module._annotations.CITATION)) {
                     this._citation = null;
+                } else {
+                    var citationAnno = table.annotations.get(module._annotations.CITATION).content;
+                    if (!citationAnno.journal_pattern || !citationAnno.year_pattern || !citationAnno.url_pattern) {
+                        this._citation = null;
+                    } else {
+                        this._citation = new Citation(this, citationAnno);
+                    }
                 }
             }
             return this._citation;
@@ -5318,5 +5338,73 @@
             }
 
             return "cnt_d(" + module._fixedEncodeURIComponent(this._ref.table.shortestKey[0].name) + ")";
+        }
+    };
+
+    /**
+     * Constructs a citation for the given tuple.
+     * The given citationAnnotation must be valid and have the appropriate variables.
+     */
+    function Citation (tuple, citationAnnotation) {
+        this._tuple = tuple;
+
+        this._table = tuple._pageRef.table;
+
+        /**
+         * citation specific properties include:
+         *   - journal*
+         *   - author
+         *   - title
+         *   - year*
+         *   - url*
+         *   - id
+         * other properties:
+         *   - template_engine
+         *   - wait_for
+         */
+        this._citationAnnotation = citationAnnotation;
+
+        var waitForRes = module._processWaitForList(citationAnnotation.wait_for, tuple._pageRef, tuple._pageRef.table, null, tuple, "citation");
+
+        this.waitFor = waitForRes.waitForList;
+        this.hasWaitFor = waitForRes.hasWaitFor;
+    }
+
+    Citation.prototype = {
+        /**
+         * Given the templateVariables variables, will generate the citaiton.
+         * @param {Object} templateVariables
+         * @return {String|null} if the returned template for required attributes are empty, it will return null.
+         */
+        compute: function (templateVariables) {
+            var table = this._table, citationAnno = this._citationAnnotation;
+
+            // make sure required parameters are present
+            if (!citationAnno.journal_pattern || !citationAnno.year_pattern || !citationAnno.url_pattern) {
+                return null;
+            }
+
+            if (!templateVariables) {
+                templateVariables = this._tuple.templateVariables.values;
+            }
+
+            var citation = {};
+            var self = this;
+            // author, title, id set to null if not defined
+            ["author", "title", "journal", "year", "url", "id"].forEach(function (key) {
+                citation[key] = module._renderTemplate(
+                    citationAnno[key+"_pattern"],
+                    templateVariables,
+                    table.schema.catalog,
+                    {templateEngine: citationAnno.template_engine}
+                );
+            });
+
+            // if after processing the templates, any of the required fields are null, template is invalid
+            if (!citation.journal || !citation.year || !citation.url) {
+                return null;
+            }
+
+            return citation;
         }
     };

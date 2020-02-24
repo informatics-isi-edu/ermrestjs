@@ -74,12 +74,14 @@ exports.execute = function (options) {
                 // tuple with title
                 tuple = tuples[0];
                 expect(tuple.citation).not.toBe(null, "Citation is null");
-                expect(tuple.citation.journal).toBe("Journal of ISRD Test Data", "Journal does not match for tuple[0]");
-                expect(tuple.citation.author).toBe("John Doe", "Author does not match for tuple[0]");
-                expect(tuple.citation.title).toBe("The First Data Row", "Title does not match for tuple[0]");
-                expect(tuple.citation.year).toBe("2018", "Year does not match for tuple[0]");
-                expect(tuple.citation.url).toBe("https://dev.isrd.isi.edu/chaise/record/#" + catalog_id + "/citation_schema:citation_w_mustache/id=1", "Url does not match for tuple[0]");
-                expect(tuple.citation.id).toBe("1", "Id does not match for tuple[0]");
+
+                var citation = tuple.citation.compute();
+                expect(citation.journal).toBe("Journal of ISRD Test Data", "Journal does not match for tuple[0]");
+                expect(citation.author).toBe("John Doe", "Author does not match for tuple[0]");
+                expect(citation.title).toBe("The First Data Row", "Title does not match for tuple[0]");
+                expect(citation.year).toBe("2018", "Year does not match for tuple[0]");
+                expect(citation.url).toBe("https://dev.isrd.isi.edu/chaise/record/#" + catalog_id + "/citation_schema:citation_w_mustache/id=1", "Url does not match for tuple[0]");
+                expect(citation.id).toBe("1", "Id does not match for tuple[0]");
 
                 done();
             });
@@ -88,12 +90,14 @@ exports.execute = function (options) {
                 // tuple without title
                 tuple = tuples[1];
                 expect(tuple.citation).not.toBe(null, "Citation is null");
-                expect(tuple.citation.journal).toBe("Journal of ISRD Test Data", "Journal does not match for tuple[1]");
-                expect(tuple.citation.author).toBe("John Doe", "Author does not match for tuple[1]");
-                expect(tuple.citation.title).toBe("No title", "Title does not match for tuple[1]");
-                expect(tuple.citation.year).toBe("2018", "Year does not match for tuple[1]");
-                expect(tuple.citation.url).toBe("https://dev.isrd.isi.edu/chaise/record/#" + catalog_id + "/citation_schema:citation_w_mustache/id=2", "Url does not match for tuple[1]");
-                expect(tuple.citation.id).toBe("2", "Id does not match for tuple[1]");
+
+                var citation = tuple.citation.compute();
+                expect(citation.journal).toBe("Journal of ISRD Test Data", "Journal does not match for tuple[1]");
+                expect(citation.author).toBe("John Doe", "Author does not match for tuple[1]");
+                expect(citation.title).toBe("No title", "Title does not match for tuple[1]");
+                expect(citation.year).toBe("2018", "Year does not match for tuple[1]");
+                expect(citation.url).toBe("https://dev.isrd.isi.edu/chaise/record/#" + catalog_id + "/citation_schema:citation_w_mustache/id=2", "Url does not match for tuple[1]");
+                expect(citation.id).toBe("2", "Id does not match for tuple[1]");
 
                 done();
             });
@@ -101,8 +105,8 @@ exports.execute = function (options) {
             it("when a required field's template evaluates to `null`, citation should be `null`.", function (done) {
                 // tuple with journal template that evaluates to null (journal value is missing)
                 tuple = tuples[2];
-                expect(tuple.citation).toBe(null, "Citation is not null");
-
+                expect(tuple.citation).not.toBe(null, "Citation is not null");
+                expect(tuple.citation.compute()).toBe(null, "Computed value is not null");
                 done();
             });
         });
@@ -130,12 +134,14 @@ exports.execute = function (options) {
                 // tuple with title
                 tuple = tuples[0];
                 expect(tuple.citation).not.toBe(null, "Citation is null");
-                expect(tuple.citation.journal).toBe("Journal of ISRD Test Data", "Journal does not match for tuple[0]");
-                expect(tuple.citation.author).toBe("John Doe", "Author does not match for tuple[0]");
-                expect(tuple.citation.title).toBe("The First Data Row", "Title does not match for tuple[0]");
-                expect(tuple.citation.year).toBe(year, "Year does not match for tuple[0]");
-                expect(tuple.citation.url).toBe("https://dev.isrd.isi.edu/chaise/record/#" + catalog_id + "/citation_schema:citation_w_handlebars/id=1", "Url does not match for tuple[0]");
-                expect(tuple.citation.id).toBe("1", "Id does not match for tuple[0]");
+
+                var citation = tuple.citation.compute();
+                expect(citation.journal).toBe("Journal of ISRD Test Data", "Journal does not match for tuple[0]");
+                expect(citation.author).toBe("John Doe", "Author does not match for tuple[0]");
+                expect(citation.title).toBe("The First Data Row", "Title does not match for tuple[0]");
+                expect(citation.year).toBe(year, "Year does not match for tuple[0]");
+                expect(citation.url).toBe("https://dev.isrd.isi.edu/chaise/record/#" + catalog_id + "/citation_schema:citation_w_handlebars/id=1", "Url does not match for tuple[0]");
+                expect(citation.id).toBe("1", "Id does not match for tuple[0]");
 
                 done();
             });
@@ -147,12 +153,14 @@ exports.execute = function (options) {
                 // tuple without title
                 tuple = tuples[1];
                 expect(tuple.citation).not.toBe(null, "Citation is null");
-                expect(tuple.citation.journal).toBe("Journal of ISRD Test Data", "Journal does not match for tuple[1]");
-                expect(tuple.citation.author).toBe("John Doe", "Author does not match for tuple[1]");
-                expect(tuple.citation.title).toBe("No title", "Title does not match for tuple[1]");
-                expect(tuple.citation.year).toBe(year, "Year does not match for tuple[1]");
-                expect(tuple.citation.url).toBe("https://dev.isrd.isi.edu/chaise/record/#" + catalog_id + "/citation_schema:citation_w_handlebars/id=2", "Url does not match for tuple[1]");
-                expect(tuple.citation.id).toBe("2", "Id does not match for tuple[1]");
+
+                var citation = tuple.citation.compute();
+                expect(citation.journal).toBe("Journal of ISRD Test Data", "Journal does not match for tuple[1]");
+                expect(citation.author).toBe("John Doe", "Author does not match for tuple[1]");
+                expect(citation.title).toBe("No title", "Title does not match for tuple[1]");
+                expect(citation.year).toBe(year, "Year does not match for tuple[1]");
+                expect(citation.url).toBe("https://dev.isrd.isi.edu/chaise/record/#" + catalog_id + "/citation_schema:citation_w_handlebars/id=2", "Url does not match for tuple[1]");
+                expect(citation.id).toBe("2", "Id does not match for tuple[1]");
 
                 done();
             });
@@ -160,7 +168,8 @@ exports.execute = function (options) {
             it("when a required field's template evaluates to `null`, citation should be `null`.", function (done) {
                 // tuple with journal template that evaluates to null (journal value is missing)
                 tuple = tuples[2];
-                expect(tuple.citation).toBe(null, "Citation is not null");
+                expect(tuple.citation).not.toBe(null, "Citation is not null");
+                expect(tuple.citation.compute()).toBe(null, "Computed value is not null");
 
                 done();
             });
@@ -173,15 +182,16 @@ exports.execute = function (options) {
                 return response.read(1);
             }).then(function (response) {
                 tuple = response.tuples[0];
+                expect(tuple.citation).not.toBe(null, "Citation is null");
 
                 // tuple with title
-                expect(tuple.citation).not.toBe(null, "Citation is null");
-                expect(tuple.citation.journal).toBe("Journal of ISRD Test Data", "Journal does not match");
-                expect(tuple.citation.author).toBe("John Doe", "Author does not match");
-                expect(tuple.citation.title).toBe("The First Data Row", "Title does not match");
-                expect(tuple.citation.year).toBe("2018", "Year does not match");
-                expect(tuple.citation.url).toBe("https://dev.isrd.isi.edu/id=1", "Url does not match");
-                expect(tuple.citation.id).toBe("1", "Id does not match");
+                var citation = tuple.citation.compute();
+                expect(citation.journal).toBe("Journal of ISRD Test Data", "Journal does not match");
+                expect(citation.author).toBe("John Doe", "Author does not match");
+                expect(citation.title).toBe("The First Data Row", "Title does not match");
+                expect(citation.year).toBe("2018", "Year does not match");
+                expect(citation.url).toBe("https://dev.isrd.isi.edu/id=1", "Url does not match");
+                expect(citation.id).toBe("1", "Id does not match");
 
                 done();
             }).catch(function (err) {

@@ -568,73 +568,11 @@ ReferenceColumn.prototype = {
      */
     get waitFor() {
         if (this._waitFor === undefined) {
-            var self = this, res = [], hasWaitFor = false, waitFors = [];
-            if (self.sourceObject && self.sourceObject.display) {
-                if (Array.isArray(self.sourceObject.display.wait_for)) {
-                    waitFors = self.sourceObject.display.wait_for;
-                } else if (typeof self.sourceObject.display.wait_for === "string") {
-                    waitFors = [self.sourceObject.display.wait_for];
-                }
-            }
-
-            var consideredWaitFors = {};
-            waitFors.forEach(function (wf, index) {
-                var message = "wait_for defined on table=`" + self._currentTable.name + "`, pseudo-column=`" + self.displayname.value + "`, index=" + index + ", ";
-                if (typeof wf !== "string") {
-                    console.log(message + "must be an string");
-                    return;
-                }
-
-                // duplicate
-                if (consideredWaitFors[wf]) {
-                    return;
-                }
-                consideredWaitFors[wf] = true;
-
-                // column names
-                if (wf in self._currentTable.sourceDefinitions.columns) {
-                    // there's no reason to add normal columns.
-                    return;
-                }
-
-                // sources
-                if ((wf in self._currentTable.sourceDefinitions.sources)) {
-                    var sd = self._currentTable.sourceDefinitions.sources[wf];
-
-                    // entitysets are only allowed in detailed
-                    if (sd.hasInbound && !sd.sourceObject.aggregate && self._context !== module._contexts.DETAILED) {
-                        console.log(messge + ", wait_for element index=", index, " is not valid (entity sets are not allowed in detailed).");
-                        return;
-                    }
-
-                    // NOTE because it's redundant
-                    if (sd.name === self.name) {
-                        // don't add itself
-                        return;
-                    }
-
-                    // there's at least one secondary request
-                    if (sd.hasInbound || sd.sourceObject.aggregate) {
-                        hasWaitFor = true;
-                    }
-
-                    // NOTE this coukd be in the table.sourceDefinitions
-                    // the only issue is that in there we don't have the mainTuple...
-                    var pc = module._createPseudoColumn(self._baseReference, sd.column, sd.sourceObject, self._mainTuple, sd.name, sd.isEntity);
-
-                    // ignore normal columns
-                    if (!pc.isPseudo || pc.isAsset) return;
-
-                    res.push(pc);
-
-                    return;
-                }
-
-            });
-
-
-            this._waitFor = res;
-            this._hasWaitFor = hasWaitFor;
+            var self = this;
+            var wfDef = self.sourceObject && self.sourceObject.display ? self.sourceObject.display.wait_for : [];
+            var res = module._processWaitForList(wfDef, self._baseReference, self._currentTable, self, self._mainTuple, "pseudo-column=`" + self.displayname.value + "`");
+            this._waitFor = res.waitForList;
+            this._hasWaitFor = res.hasWaitFor;
         }
         return this._waitFor;
     },

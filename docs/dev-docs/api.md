@@ -357,7 +357,7 @@ to use for ERMrest JavaScript agents.
         * [.setSamePaging(page)](#ERMrest.Reference+setSamePaging) ⇒ [<code>Reference</code>](#ERMrest.Reference)
         * [.getColumnByName(name)](#ERMrest.Reference+getColumnByName) ⇒ [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)
         * [.generateColumnsList(tuple)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
-        * [.generateActiveList([tuple], [useRelated])](#ERMrest.Reference+generateActiveList) ⇒ <code>Object</code>
+        * [.generateActiveList([tuple])](#ERMrest.Reference+generateActiveList) ⇒ <code>Object</code>
         * [._getReadPath()](#ERMrest.Reference+_getReadPath) : <code>Object</code>
             * [~processSortObject()](#ERMrest.Reference+_getReadPath..processSortObject)
     * [.Page](#ERMrest.Page)
@@ -383,7 +383,7 @@ to use for ERMrest JavaScript agents.
         * [.isHTML](#ERMrest.Tuple+isHTML) : <code>Array.&lt;boolean&gt;</code>
         * [.displayname](#ERMrest.Tuple+displayname) : <code>string</code>
         * [.uniqueId](#ERMrest.Tuple+uniqueId) : <code>string</code>
-        * [.citation](#ERMrest.Tuple+citation) : <code>Object</code>
+        * [.citation](#ERMrest.Tuple+citation) : <code>ERMrest.Citation</code>
         * [.templateVariables](#ERMrest.Tuple+templateVariables) : <code>Object</code>
         * [.update()](#ERMrest.Tuple+update) ⇒ <code>Promise</code>
         * [.delete()](#ERMrest.Tuple+delete) ⇒ <code>Promise</code>
@@ -668,7 +668,7 @@ to use for ERMrest JavaScript agents.
         * [.setSamePaging(page)](#ERMrest.Reference+setSamePaging) ⇒ [<code>Reference</code>](#ERMrest.Reference)
         * [.getColumnByName(name)](#ERMrest.Reference+getColumnByName) ⇒ [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)
         * [.generateColumnsList(tuple)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
-        * [.generateActiveList([tuple], [useRelated])](#ERMrest.Reference+generateActiveList) ⇒ <code>Object</code>
+        * [.generateActiveList([tuple])](#ERMrest.Reference+generateActiveList) ⇒ <code>Object</code>
         * [._getReadPath()](#ERMrest.Reference+_getReadPath) : <code>Object</code>
             * [~processSortObject()](#ERMrest.Reference+_getReadPath..processSortObject)
     * [.AttributeGroupReference](#ERMrest.AttributeGroupReference) : <code>object</code>
@@ -2841,7 +2841,7 @@ Constructor for a ParsedFilter.
     * [.setSamePaging(page)](#ERMrest.Reference+setSamePaging) ⇒ [<code>Reference</code>](#ERMrest.Reference)
     * [.getColumnByName(name)](#ERMrest.Reference+getColumnByName) ⇒ [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)
     * [.generateColumnsList(tuple)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
-    * [.generateActiveList([tuple], [useRelated])](#ERMrest.Reference+generateActiveList) ⇒ <code>Object</code>
+    * [.generateActiveList([tuple])](#ERMrest.Reference+generateActiveList) ⇒ <code>Object</code>
     * [._getReadPath()](#ERMrest.Reference+_getReadPath) : <code>Object</code>
         * [~processSortObject()](#ERMrest.Reference+_getReadPath..processSortObject)
 
@@ -3063,9 +3063,16 @@ If type is `'markdown'`, the object will also these additional
 properties:
 
   - `markdownPattern`: markdown pattern,
+  - `templateEngine`: the template engine to be used for the pattern
   - `separator`: markdown pattern (default: newline character `'\n'`),
   - `suffix`: markdown pattern (detaul: empty string `''`),
   - `prefix`: markdown pattern (detaul: empty string `''`)
+
+Extra optional attributes:
+ - `sourceMarkdownPattern`: the markdown pattern defined on the source definition
+ - `sourceTemplateEngine`: the template engine to be used for the pattern
+ - `sourceHasWaitFor`: if there's waitfor defiend for the source markdown pattern.
+ - `sourceWaitFor`: the waitfor definition in the source
 
 If type is `'module'`, the object will have these additional
 properties:
@@ -3482,13 +3489,19 @@ NOTE:
 
 <a name="ERMrest.Reference+generateActiveList"></a>
 
-#### reference.generateActiveList([tuple], [useRelated]) ⇒ <code>Object</code>
+#### reference.generateActiveList([tuple]) ⇒ <code>Object</code>
 Generate the list of extra reads that we should do.
 this should include
-- aggreagtes: [{column: ERMrest.ReferenceColumn, objects: [{index: integer, column: boolean, related: boolean}]]
-- entitySets: [{reference: ERMrest.Reference,}]
-- allOutBounds: ERMrest.ReferenceColumn[]
-- (TODO) selfLinks: ERMrest.KeyPseudoColumn[]
+- aggreagtes: the aggregates the page needs
+  [{column: ERMrest.ReferenceColumn, columnName: string, objects: [{index: integer, column: boolean, related: boolean}]]
+- entitySets: the inline entity sets the page needs (only in detailed)
+  [{reference: ERMrest.Reference, columnName: string, objects: [{index: integer, column: boolean, related: boolean}]]
+- relatedEntitySets: the related entity sets the page needs (only in detailed)
+  [{reference: ERMrest.Reference, columnName: string, objects: [{index: integer, column: boolean, related: boolean}]]
+- allOutBounds: the all-outbound foreign keys (added so we can later append to the url).
+  ERMrest.ReferenceColumn[]
+- selfLinks: the self-links (so it can be added to the template variables)
+  ERMrest.KeyPseudoColumn[]
 
 TODO we might want to detect duplciates in allOutBounds better?
 currently it's done based on name, but based on the path should be enough..
@@ -3496,14 +3509,11 @@ as long as it's entity the last column is useless...
 the old code was kinda handling this by just adding the multi ones,
 so if the fk definition is based on fkcolum and and not the RID, it would handle it.
 
-TODO don't allow entitysets in detailed context
-
 **Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
 
 | Param | Type |
 | --- | --- |
 | [tuple] | [<code>Tuple</code>](#ERMrest.Tuple) | 
-| [useRelated] | <code>Boolean</code> | 
 
 <a name="ERMrest.Reference+_getReadPath"></a>
 
@@ -3682,7 +3692,7 @@ It will return:
     * [.isHTML](#ERMrest.Tuple+isHTML) : <code>Array.&lt;boolean&gt;</code>
     * [.displayname](#ERMrest.Tuple+displayname) : <code>string</code>
     * [.uniqueId](#ERMrest.Tuple+uniqueId) : <code>string</code>
-    * [.citation](#ERMrest.Tuple+citation) : <code>Object</code>
+    * [.citation](#ERMrest.Tuple+citation) : <code>ERMrest.Citation</code>
     * [.templateVariables](#ERMrest.Tuple+templateVariables) : <code>Object</code>
     * [.update()](#ERMrest.Tuple+update) ⇒ <code>Promise</code>
     * [.delete()](#ERMrest.Tuple+delete) ⇒ <code>Promise</code>
@@ -3845,17 +3855,9 @@ of the shortest key columns concatenated together by an '_'
 **Kind**: instance property of [<code>Tuple</code>](#ERMrest.Tuple)  
 <a name="ERMrest.Tuple+citation"></a>
 
-#### tuple.citation : <code>Object</code>
-The citation that should be used for this tuple.
-- if citation has wait-for, it will return false.
-- If the annoation is missing or is invalid, it will return null.
-otherwise it will return an object with the following attributes:
-- journal (required)
-- year (required)
-- url (required)
-- author
-- title
-- id
+#### tuple.citation : <code>ERMrest.Citation</code>
+If annotation is defined and has the required attributes, will return
+a Citation object that can be used to generate the citation for this tuple.
 
 **Kind**: instance property of [<code>Tuple</code>](#ERMrest.Tuple)  
 <a name="ERMrest.Tuple+templateVariables"></a>
@@ -6389,7 +6391,7 @@ get PathColumn object by column name
     * [.setSamePaging(page)](#ERMrest.Reference+setSamePaging) ⇒ [<code>Reference</code>](#ERMrest.Reference)
     * [.getColumnByName(name)](#ERMrest.Reference+getColumnByName) ⇒ [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)
     * [.generateColumnsList(tuple)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
-    * [.generateActiveList([tuple], [useRelated])](#ERMrest.Reference+generateActiveList) ⇒ <code>Object</code>
+    * [.generateActiveList([tuple])](#ERMrest.Reference+generateActiveList) ⇒ <code>Object</code>
     * [._getReadPath()](#ERMrest.Reference+_getReadPath) : <code>Object</code>
         * [~processSortObject()](#ERMrest.Reference+_getReadPath..processSortObject)
 
@@ -6611,9 +6613,16 @@ If type is `'markdown'`, the object will also these additional
 properties:
 
   - `markdownPattern`: markdown pattern,
+  - `templateEngine`: the template engine to be used for the pattern
   - `separator`: markdown pattern (default: newline character `'\n'`),
   - `suffix`: markdown pattern (detaul: empty string `''`),
   - `prefix`: markdown pattern (detaul: empty string `''`)
+
+Extra optional attributes:
+ - `sourceMarkdownPattern`: the markdown pattern defined on the source definition
+ - `sourceTemplateEngine`: the template engine to be used for the pattern
+ - `sourceHasWaitFor`: if there's waitfor defiend for the source markdown pattern.
+ - `sourceWaitFor`: the waitfor definition in the source
 
 If type is `'module'`, the object will have these additional
 properties:
@@ -7030,13 +7039,19 @@ NOTE:
 
 <a name="ERMrest.Reference+generateActiveList"></a>
 
-#### reference.generateActiveList([tuple], [useRelated]) ⇒ <code>Object</code>
+#### reference.generateActiveList([tuple]) ⇒ <code>Object</code>
 Generate the list of extra reads that we should do.
 this should include
-- aggreagtes: [{column: ERMrest.ReferenceColumn, objects: [{index: integer, column: boolean, related: boolean}]]
-- entitySets: [{reference: ERMrest.Reference,}]
-- allOutBounds: ERMrest.ReferenceColumn[]
-- (TODO) selfLinks: ERMrest.KeyPseudoColumn[]
+- aggreagtes: the aggregates the page needs
+  [{column: ERMrest.ReferenceColumn, columnName: string, objects: [{index: integer, column: boolean, related: boolean}]]
+- entitySets: the inline entity sets the page needs (only in detailed)
+  [{reference: ERMrest.Reference, columnName: string, objects: [{index: integer, column: boolean, related: boolean}]]
+- relatedEntitySets: the related entity sets the page needs (only in detailed)
+  [{reference: ERMrest.Reference, columnName: string, objects: [{index: integer, column: boolean, related: boolean}]]
+- allOutBounds: the all-outbound foreign keys (added so we can later append to the url).
+  ERMrest.ReferenceColumn[]
+- selfLinks: the self-links (so it can be added to the template variables)
+  ERMrest.KeyPseudoColumn[]
 
 TODO we might want to detect duplciates in allOutBounds better?
 currently it's done based on name, but based on the path should be enough..
@@ -7044,14 +7059,11 @@ as long as it's entity the last column is useless...
 the old code was kinda handling this by just adding the multi ones,
 so if the fk definition is based on fkcolum and and not the RID, it would handle it.
 
-TODO don't allow entitysets in detailed context
-
 **Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
 
 | Param | Type |
 | --- | --- |
 | [tuple] | [<code>Tuple</code>](#ERMrest.Tuple) | 
-| [useRelated] | <code>Boolean</code> | 
 
 <a name="ERMrest.Reference+_getReadPath"></a>
 

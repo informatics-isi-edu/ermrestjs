@@ -902,3 +902,89 @@
         compressRec(res);
         return res;
     };
+
+    /**
+     * @private
+     * Process the defined waitfor
+     *
+     * It will
+     * - ignore entitysets for non-detailed contexts.
+     * - will ignore normal columns.
+     * will return an object with the following attributes:
+     * - list: an array of pseudo-columns
+     * - hasWaitFor: whether any of the waitFor columns is seconadry
+     * @param {Array|String} waitFor - the waitfor definition
+     * @param {ERMrest.Reference} baseReference - the reference that this waitfor is based on
+     * @param {ERMrest.Table} currentTable - the current table.
+     * @param {ERMrest.ReferenceColumn=} currentColumn - if this is defined on a column.
+     * @param {ERMrest.Tuple=} mainTable - the main tuple data.
+     * @param {String} message - the message that should be appended to warning messages.
+     */
+    module._processWaitForList = function (waitFor, baseReference, currentTable, currentColumn, mainTuple, message) {
+        var wfList = [], hasWaitFor = false, waitFors = [];
+        if (Array.isArray(waitFor)) {
+            waitFors = waitFor;
+        } else if (typeof waitFor === "string") {
+            waitFors = [waitFor];
+        }
+
+        var consideredWaitFors = {};
+        waitFors.forEach(function (wf, index) {
+            var errorMessage = "wait_for defined on table=`" + currentTable.name + "`, " + message + "`, index=" + index + ": ";
+            if (typeof wf !== "string") {
+                console.log(errorMessage + "must be an string");
+                return;
+            }
+
+            // duplicate
+            if (consideredWaitFors[wf]) {
+                return;
+            }
+            consideredWaitFors[wf] = true;
+
+            // column names
+            if (wf in currentTable.sourceDefinitions.columns) {
+                // there's no reason to add normal columns.
+                return;
+            }
+
+            // sources
+            if ((wf in currentTable.sourceDefinitions.sources)) {
+                var sd = currentTable.sourceDefinitions.sources[wf];
+
+                // entitysets are only allowed in detailed
+                if (sd.hasInbound && !sd.sourceObject.aggregate && baseReference._context !== module._contexts.DETAILED) {
+                    console.log(errorMessage + "entity sets are not allowed in detailed.");
+                    return;
+                }
+
+                // NOTE because it's redundant
+                if (sd.name === currentColumn.name) {
+                    // don't add itself
+                    return;
+                }
+
+                // there's at least one secondary request
+                if (sd.hasInbound || sd.sourceObject.aggregate) {
+                    hasWaitFor = true;
+                }
+
+                // NOTE this coukd be in the table.sourceDefinitions
+                // the only issue is that in there we don't have the mainTuple...
+                var pc = module._createPseudoColumn(baseReference, sd.column, sd.sourceObject, mainTuple, sd.name, sd.isEntity);
+
+                // ignore normal columns
+                if (!pc.isPseudo || pc.isAsset) return;
+
+                wfList.push(pc);
+
+                return;
+            }
+
+        });
+
+        return {
+            hasWaitFor: hasWaitFor,
+            waitForList: wfList
+        };
+    };
