@@ -414,6 +414,8 @@ to use for ERMrest JavaScript agents.
         * [.getInputDisabled()](#ERMrest.ReferenceColumn+getInputDisabled) : <code>boolean</code> \| <code>object</code>
         * [._getShowForeignKeyLinks(context)](#ERMrest.ReferenceColumn+_getShowForeignKeyLinks) ⇒ <code>boolean</code>
         * [.sourceFormatPresentation(templateVariables, columnValue, mainTuple)](#ERMrest.ReferenceColumn+sourceFormatPresentation) ⇒ <code>Object</code>
+    * [.VirtualColumn](#ERMrest.VirtualColumn)
+        * [new VirtualColumn(reference, column, sourceObject, name, mainTuple)](#new_ERMrest.VirtualColumn_new)
     * [.PseudoColumn](#ERMrest.PseudoColumn)
         * [new PseudoColumn(reference, column, sourceObject, name, mainTuple)](#new_ERMrest.PseudoColumn_new)
         * [.isPseudo](#ERMrest.PseudoColumn+isPseudo) : <code>boolean</code>
@@ -4150,6 +4152,25 @@ Should be called once every value is retrieved
 | templateVariables | <code>Object</code> | [description] |
 | columnValue | <code>Object</code> | the value of aggregate column (if it's aggregate) |
 | mainTuple | [<code>Tuple</code>](#ERMrest.Tuple) | [description] |
+
+<a name="ERMrest.VirtualColumn"></a>
+
+### ERMrest.VirtualColumn
+**Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
+<a name="new_ERMrest.VirtualColumn_new"></a>
+
+#### new VirtualColumn(reference, column, sourceObject, name, mainTuple)
+A pseudo-column without any actual source definition behind it.
+This constructor assumes that the sourceObject has markdown_name and display.markdown_pattern.
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| reference | [<code>Reference</code>](#ERMrest.Reference) | column's reference |
+| column | [<code>Column</code>](#ERMrest.Column) | the column that this pseudo-column is representing |
+| sourceObject | <code>object</code> | the whole column object |
+| name | <code>string</code> | to avoid processing the name again, this might be undefined. |
+| mainTuple | [<code>Tuple</code>](#ERMrest.Tuple) | if the reference is referring to just one tuple, this is defined. |
 
 <a name="ERMrest.PseudoColumn"></a>
 

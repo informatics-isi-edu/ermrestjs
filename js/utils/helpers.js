@@ -105,6 +105,15 @@
     };
 
     /**
+     * Returns true if given paramter is a non-empty string.
+     * @param  {*} obj
+     * @return {boolean}
+     */
+    var isStringAndNotEmpty = function (obj) {
+        return typeof obj === "string" && obj.length > 0;
+    };
+
+    /**
      * Returns true if given parameter isan integer
      * @param  {*} x
      * @return {boolean}

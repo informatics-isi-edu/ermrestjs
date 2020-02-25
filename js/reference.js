@@ -2778,6 +2778,7 @@
                 hasInbound, isEntity, hasPath, isEntityMode,
                 isEntry,
                 colFks,
+                virtualIndex = 1, // used in generation of name for virtual columns.
                 ignore, cols, col, fk, i, j;
 
             var context = this._context;
@@ -2902,9 +2903,22 @@
                     }
                     // pseudo-column
                     else if (isObjectAndNotNull(col)) {
-                        // invalid source
-                        if (logCol(!col.source && !col.sourcekey, wm.INVALID_SOURCE, i)) continue;
 
+                        // virtual column
+                        if (!col.source && !col.sourcekey) {
+                            ignore = logCol(!isStringAndNotEmpty(col.markdown_name), wm.INVALID_VIRTUAL_NO_NAME, i) ||
+                                     logCol(!isObjectAndNotNull(col.display) || !isStringAndNotEmpty(col.display.markdown_pattern), wm.INVALID_VIRTUAL_NO_VALUE, i) ||
+                                     isEntry;
+
+                            if (!ignore) {
+                                // generate name for virtual-column
+                                pseudoName = "$virual-column-" + virtualIndex++;
+                                this._referenceColumns.push(new VirtualColumn(this, col, pseudoName, tuple));
+                            }
+                            continue;
+                        }
+
+                        // pseudo-column
                         var sd;
                         if (col.sourcekey) {
                             sd = self.table.sourceDefinitions.sources[col.sourcekey];

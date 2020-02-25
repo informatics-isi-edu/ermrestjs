@@ -123,9 +123,9 @@ function ReferenceColumn(reference, cols, sourceObject, name, mainTuple) {
     /**
      * @type {ERMrest.Table}
      */
-    this.table = this._baseCols[0].table;
+    this.table = this._baseCols.length > 0 ? this._baseCols[0].table : reference.table;
 
-    this._currentTable = this._baseCols[0].table;
+    this._currentTable = this._baseCols.length > 0 ? this._baseCols[0].table : reference.table;
 
     this._name = name;
 
@@ -399,16 +399,18 @@ ReferenceColumn.prototype = {
         if (this.display.sourceMarkdownPattern) {
             var res, keyValues = options.templateVariables || {}, cols = this._baseCols;
 
-            if (this._simple) {
-                keyValues.$self = cols[0].formatvalue(data[cols[0].name], context, options);
-                keyValues.$_self = data[cols[0].name];
-            } else {
-                var values = {};
-                cols.forEach(function (col) {
-                    values[col.name] = col.formatvalue(data[col.name], context, options);
-                    values["_" + col.name] = data[col.name];
-                });
-                keyValues.$self = {values : values};
+            if (cols.length > 0) {
+                if (this._simple) {
+                    keyValues.$self = cols[0].formatvalue(data[cols[0].name], context, options);
+                    keyValues.$_self = data[cols[0].name];
+                } else {
+                    var values = {};
+                    cols.forEach(function (col) {
+                        values[col.name] = col.formatvalue(data[col.name], context, options);
+                        values["_" + col.name] = data[col.name];
+                    });
+                    keyValues.$self = {values : values};
+                }
             }
 
             return module._processMarkdownPattern(
@@ -620,7 +622,7 @@ ReferenceColumn.prototype = {
                 selfTemplateVariables = {
                     "$self": module._getRowTemplateVariables(self.table, context, mainTuple._data)
                 };
-            } else {
+            } else if (baseCol) {
                 selfTemplateVariables = {
                     "$self": baseCol.formatvalue(mainTuple.data[baseCol.name], context),
                     "$_self": mainTuple.data[baseCol.name]
@@ -664,6 +666,31 @@ ReferenceColumn.prototype = {
 
     }
 };
+
+/**
+ * A pseudo-column without any actual source definition behind it.
+ * This constructor assumes that the sourceObject has markdown_name and display.markdown_pattern.
+ *
+ *
+ * @memberof ERMrest
+ * @param {ERMrest.Reference} reference  column's reference
+ * @param {ERMrest.Column} column      the column that this pseudo-column is representing
+ * @param {object} sourceObject the whole column object
+ * @param {string} name        to avoid processing the name again, this might be undefined.
+ * @param {ERMrest.Tuple} mainTuple   if the reference is referring to just one tuple, this is defined.
+ * @constructor
+ * @class
+ */
+function VirtualColumn(reference, sourceObject, name, mainTuple) {
+    VirtualColumn.superClass.call(this, reference, [], sourceObject, name, mainTuple);
+
+    this.isPseudo = true;
+
+    this.isVirtualColumn = true;
+}
+
+// extend the prototype
+module._extends(VirtualColumn, ReferenceColumn);
 
 /**
  * If you want to create an object of this type, use the `module._createPseudoColumn` method.
