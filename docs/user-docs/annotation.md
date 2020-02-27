@@ -93,8 +93,8 @@ Supported JSON payload patterns:
 - `{`... `"name":` _name_ ...`}`: The _name_ to use in place of the model element's original name.
 - `{`... `"markdown_name"`: _markdown_ `}`: The _markdown_ to use in place of the model element's original name.
 - `{`... `"name_style":` `{` `"underline_space"`: _uspace_ `,` `"title_case":` _tcase_ `,` `"markdown"`: _render_ `}` ...`}`: Element name conversion instructions.
-- `{`... `"show_null":` `{` _ncontext_ `:` _nshow_ `,` ... `}`: How to display NULL data values.
-- `{`... `"show_foreign_key_link":` `{` _ncontext_ `:` _fklink_ `,` ... `}`: Whether default display of foreign keys should include link to the row.
+- `{`... `"show_null":` `{` _context_ `:` _nshow_ `,` ... `}`: How to display NULL data values.
+- `{`... `"show_foreign_key_link":` `{` _context_ `:` _fklink_ `,` ... `}`: Whether default display of foreign keys should include link to the row.
 
 Supported JSON _uspace_ patterns:
 
@@ -122,7 +122,8 @@ Supported JSON _fklink_ patterns:
 - `true`: Present the foreign key values with a link to the referred row.
 - `false`: Present the foreign key values without adding extra links.
 
-See [Context Names](#context-names) section for the list of supported JSON _ncontext_ patterns.
+Supported JSON _context_ patterns:
+- See [Context Names](#context-names) section for the list of supported JSON _context_ patterns.
 
 #### Tag: 2015 Display Settings Hierarchy
 
@@ -133,12 +134,12 @@ See [Context Names](#context-names) section for the list of supported JSON _ncon
 - The `"show_null"` settings applies to the annotated model element and is also the default for any nested element.
   - The annotation is allowed on catalog in order to set the default for all schemas in the catalog.
   - The annotation is allowed on schemas in order to set the default for all tables in the schema.
-  - Each _ncontext_ `:` _nshow_ instruction overrides the inherited instruction for the same _ncontext_ while still deferring to the inherited annotation for any unspecified _ncontext_. The `"*"` wildcard _ncontext_ allows masking of any inherited instruction.
+  - Each _context_ `:` _nshow_ instruction overrides the inherited instruction for the same _context_ while still deferring to the inherited annotation for any unspecified _context_. The `"*"` wildcard _context_ allows masking of any inherited instruction.
   - A global default is assumed: `{`... `"show_null": { "detailed": false, "*": true` ... `}`
 - The `"show_foreign_key_link"` settings applies to the annotated model element and is also the default for any nested element.
   - The annotation is allowed on catalog in order to set the default for all schemas in the catalog.
   - The annotation is allowed on schemas in order to set the default for all tables in the schema.
-  - Each _ncontext_ `:` _fklink_ instruction overrides the inherited instruction for the same _ncontext_ while still deferring to the inherited annotation for any unspecified _ncontext_. The `"*"` wildcard _ncontext_ allows masking of any inherited instruction.
+  - Each _context_ `:` _fklink_ instruction overrides the inherited instruction for the same _context_ while still deferring to the inherited annotation for any unspecified _context_. The `"*"` wildcard _context_ allows masking of any inherited instruction.
   - A global default is assumed: `{`... `"show_foreign_key_link": { "*": true` ... `}`
 
 This annotation provides an override guidance for Chaise applications using a hierarchical scoping mode:
