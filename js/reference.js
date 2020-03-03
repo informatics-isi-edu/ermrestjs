@@ -3234,14 +3234,16 @@
         },
 
         /**
-         * Generate the list of extra reads that we should do.
+         * Generates the list of extra elements that hte page might need,
          * this should include
-         * - aggreagtes: the aggregates the page needs
-         *   [{column: ERMrest.ReferenceColumn, columnName: string, objects: [{index: integer, column: boolean, related: boolean}]]
-         * - entitySets: the inline entity sets the page needs (only in detailed)
-         *   [{reference: ERMrest.Reference, columnName: string, objects: [{index: integer, column: boolean, related: boolean}]]
-         * - relatedEntitySets: the related entity sets the page needs (only in detailed)
-         *   [{reference: ERMrest.Reference, columnName: string, objects: [{index: integer, column: boolean, related: boolean}]]
+         * - requests: An array of the secondary request objects which inlcudes aggregates, entitysets, inline tables, and related tables.
+         *   Depending on the type of request it can have different attibutes.
+         *   - for aggregate and entitysets:
+         *     {column: ERMrest.ReferenceColumn, <type>: true, objects: [{index: integer, column: boolean, related: boolean, inline: boolean, citation: boolean}]
+         *     where the type is `entityset` or `aggregate`. Each object is capturing where in the page needs this pseudo-column.
+         *   - for related and inline tables:
+         *     {<type>: true, index: integer}
+         *     where the type is `inline` or `related`.
          * - allOutBounds: the all-outbound foreign keys (added so we can later append to the url).
          *   ERMrest.ReferenceColumn[]
          * - selfLinks: the self-links (so it can be added to the template variables)
@@ -3257,8 +3259,10 @@
          * @return {Object}
          */
         generateActiveList: function (tuple) {
-            var columns = [], entitySets = [], relatedEntitySets = [], allOutBounds = [], aggregates = [], selfLinks = [];
-            var consideredSets = {}, consideredRelatedSets = {}, consideredOutbounds = {}, consideredAggregates = {}, consideredSelfLinks = {};
+
+            // VARIABLES:
+            var columns = [], allOutBounds = [], requests = [], selfLinks = [];
+            var consideredSets = {}, consideredOutbounds = {}, consideredAggregates = {}, consideredSelfLinks = {};
 
             var self = this;
             var sds = self.table.sourceDefinitions;
@@ -3268,8 +3272,13 @@
 
             var COLUMN_TYPE = "column", RELATED_TYPE = "related", CITATION_TYPE = "citation", INLINE_TYPE = "inline";
 
+            // FUNCTIONS:
             var isInline = function (col) {
                 return col.isInboundForeignKey || (col.isPathColumn && col.hasPath && !col.isUnique && !col.hasAggregate);
+            };
+
+            var hasAggregate = function (col) {
+                return col.hasWaitForAggregate || (col.isPathColumn && col.hasAggregate);
             };
 
             // col: the column that we need its data
@@ -3291,13 +3300,13 @@
                 if (col.isPathColumn && col.hasAggregate) {
                     // duplicate
                     if (col.name in consideredAggregates) {
-                        aggregates[consideredAggregates[col.name]].objects.push(obj);
+                        requests[consideredAggregates[col.name]].objects.push(obj);
                         return;
                     }
 
                     // new
-                    consideredAggregates[col.name] = aggregates.length;
-                    aggregates.push({column: col, columnName: col.name, objects: [obj]});
+                    consideredAggregates[col.name] = requests.length;
+                    requests.push({aggregate: true, column: col, objects: [obj]});
                     return;
                 }
 
@@ -3307,28 +3316,13 @@
                         return; // only acceptable in detailed
                     }
 
-                    if (col.name in consideredRelatedSets) {
-                        relatedEntitySets[consideredRelatedSets[col.name]].objects.push(obj);
-                        return;
-                    }
-
                     if (col.name in consideredSets) {
-                        entitySets[consideredSets[col.name]].objects.push(obj);
+                        requests[consideredSets[col.name]].objects.push(obj);
                         return;
                     }
 
-                    // related entity sets
-                    if (type === RELATED_TYPE) {
-                        consideredRelatedSets[col.name] = relatedEntitySets.length;
-                        relatedEntitySets.push({reference: col.reference, columnName: col.name, objects: [obj]});
-                    }
-                    //inline entity sets
-                    else {
-                        consideredSets[col.name] = entitySets.length;
-                        entitySets.push({reference: col.reference, columnName: col.name, objects: [obj]});
-                    }
-
-                    return;
+                    consideredSets[col.name] = requests.length;
+                    requests.push({entityset: true, column: col, objects: [obj]});
                 }
 
                 // all outbounds
@@ -3346,43 +3340,48 @@
                 }
             };
 
+            var addInlineColumn = function (col, i) {
+                if (isInline(col)) {
+                    requests.push({inline: true, index: i});
+                } else {
+                    addColToActiveList(col, false, COLUMN_TYPE, i);
+                }
+
+                col.waitFor.forEach(function (wf) {
+                    addColToActiveList(wf, true, COLUMN_TYPE, i);
+                });
+            };
+
+
+            // THE CODE STARTS HERE:
 
             columns = self.generateColumnsList(tuple);
 
-            // columns
-            columns.forEach(function (col, i) {
-                addColToActiveList(col, false, COLUMN_TYPE, i);
-
-                var wfType = isInline(col) ? INLINE_TYPE : COLUMN_TYPE;
-                col.waitFor.forEach(function (wf) {
-                    addColToActiveList(wf, true, wfType, i);
+            // citation
+            if (isDetailed && tuple && tuple.citation) {
+                tuple.citation.waitFor.forEach(function (col) {
+                    addColToActiveList(col, true, CITATION_TYPE);
                 });
+            }
+
+            // columns without aggregate
+            columns.forEach(function (col, i) {
+                if (!hasAggregate(col)) {
+                    addInlineColumn(col, i);
+                }
             });
 
-            //fkeys
-            sds.fkeys.forEach(function (fk) {
-                if (fk.name in consideredOutbounds) return;
-                consideredOutbounds[fk.name] = true;
-                allOutBounds.push(new ForeignKeyPseudoColumn(self, fk));
+            // columns with aggregate
+            columns.forEach(function (col,i ) {
+                if (hasAggregate(col)) {
+                    addInlineColumn(col, i);
+                }
             });
 
-            // related
+            // related tables
             if (isDetailed) {
                 self.generateRelatedList(tuple).forEach(function (rel, i) {
-                    // TODO must be improved
-                    var addSet = true,
-                        relObj = {index: i, related: true};
-                    if (rel.pseudoColumn) {
-                        if ((rel.pseudoColumn.name in consideredSets)) {
-                            entitySets[consideredSets[rel.pseudoColumn.name]].objects.push(relObj);
-                            addSet = false;
-                        }
-                    } else if (_generateForeignKeyName(rel.origFKR, true) in consideredSets) {
-                        addSet = false;
-                    }
-                    if (addSet) {
-                        relatedEntitySets.push({reference: rel, objects: [relObj]});
-                    }
+                    requests.push({related: true, index: i});
 
                     if (rel.pseudoColumn) {
                         rel.pseudoColumn.waitFor.forEach(function (wf) {
@@ -3392,18 +3391,15 @@
                 });
             }
 
-
-            // citation
-            if (isDetailed && tuple && tuple.citation) {
-                tuple.citation.waitFor.forEach(function (col) {
-                    addColToActiveList(col, true, CITATION_TYPE);
-                });
-            }
+            //fkeys
+            sds.fkeys.forEach(function (fk) {
+                if (fk.name in consideredOutbounds) return;
+                consideredOutbounds[fk.name] = true;
+                allOutBounds.push(new ForeignKeyPseudoColumn(self, fk));
+            });
 
             this._activeList = {
-                aggregates: aggregates,
-                entitySets: entitySets,
-                relatedEntitySets: relatedEntitySets,
+                requests: requests,
                 allOutBounds: allOutBounds,
                 selfLinks: selfLinks
             };
@@ -5382,6 +5378,7 @@
 
         this.waitFor = waitForRes.waitForList;
         this.hasWaitFor = waitForRes.hasWaitFor;
+        this.hasWaitForAggregate = waitForRes.hasWaitForAggregate;
     }
 
     Citation.prototype = {

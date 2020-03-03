@@ -257,7 +257,7 @@ exports.execute = function (options) {
             ];
 
             expectedActiveList = {
-                aggregates: [
+                requests: [
                     {
                         "column": "array_d_scalar_i1",
                         "objects": [
@@ -359,14 +359,14 @@ exports.execute = function (options) {
                 ],
                 allOutBounds: [
                     "outbound_entity_o1", "outbound_entity_o2", "outbound_scalar_o1",
-                    "outbound_scalar_o2", "all_outbound_entity_o1_o1", "all_outbound_entity_o2_o1",
+                    "all_outbound_entity_o1_o1", "all_outbound_entity_o2_o1",
                     "all_outbound_scalar_o1_o1", "all_outbound_scalar_o2_o1", "all_outbound_entity_o1_o1_o1",
-                    "tLQ8i6ghoS6sodD7G8V7kQ" // not defined, so it's the fk.name
+                    "outbound_scalar_o2",
+                    "tLQ8i6ghoS6sodD7G8V7kQ", // not defined, so it's the fk.name
                 ],
                 selfLinks: [
                     "self_link_rowname", "self_link_id"
-                ],
-                entitySets: []
+                ]
             }
         });
 
@@ -502,7 +502,7 @@ exports.execute = function (options) {
                 expect(compactColumns[0].hasWaitFor).toBe(expectedColumns[0].hasWaitFor, "hasWaitFor missmatch.");
             });
 
-            it ("should validate the given names and not allow entity sets in detailed context.", function () {
+            it ("should validate the given names and not allow entity sets in non-detailed context.", function () {
                 expect(compactColumns[2].waitFor.length).toBe(expectedColumns[2].waitFor.length, "length missmatch.");
                 expect(compactColumns[2].hasWaitFor).toBe(expectedColumns[2].hasWaitFor, "hasWaitFor missmatch.");
             });
@@ -539,9 +539,10 @@ exports.execute = function (options) {
             });
 
             it ("should return the aggregate list properly.", function () {
-                expect(activeList.aggregates.length).toBe(expectedActiveList.aggregates.length, "length missmatch.");
-                activeList.aggregates.forEach(function (ag, agIndex) {
-                    var expAgg = expectedActiveList.aggregates[agIndex];
+                expect(activeList.requests.length).toBe(expectedActiveList.requests.length, "length missmatch.");
+                // expect(activeList.requests).toEqual({});
+                activeList.requests.forEach(function (ag, agIndex) {
+                    var expAgg = expectedActiveList.requests[agIndex];
                     var message = " for index= " + agIndex + "(expected column= `"+ columnMapping[expAgg.column] +"`)";
 
                     expect(ag.column.name).toBe(columnMapping[expAgg.column], "column missmatch" + message);
@@ -562,26 +563,30 @@ exports.execute = function (options) {
             it ("should return the selfLinks properly.", function () {
                 testNameList(activeList.selfLinks, expectedActiveList.selfLinks);
             });
-
-            it ("should return the entitySets properly.", function () {
-                testNameList(activeList.entitySets, expectedActiveList.entitySets);
-            });
         });
 
         describe("Reference._getReadPath in case of attributegroup", function () {
             it ("should add the allOutBounds.", function () {
                 var expectedPath = "M:=active_list_schema:main/" +
                 "F10:=left(fk3_col1,fk3_col2)=(active_list_schema:outbound2:outbound2_id1,outbound2_id2)/$M/" +
-                "left(fk1_col1,fk1_col2)=(active_list_schema:outbound1:outbound1_id1,outbound1_id2)/left(fk1_col1)=(active_list_schema:outbound1_outbound1:outbound1_outbound1_id)/F9:=left(fk1_col1)=(active_list_schema:outbound1_outbound1_outbound1:outbound1_outbound1_outbound1_id)/$M/" +
-                "left(fk2_col1,fk2_col2)=(active_list_schema:outbound2:outbound2_id1,outbound2_id2)/F8:=left(fk1_col1)=(active_list_schema:outbound2_outbound1:outbound2_outbound1_id)/$M/" +
-                "left(fk1_col1,fk1_col2)=(active_list_schema:outbound1:outbound1_id1,outbound1_id2)/F7:=left(fk1_col1)=(active_list_schema:outbound1_outbound1:outbound1_outbound1_id)/$M/" +
-                "left(fk2_col1,fk2_col2)=(active_list_schema:outbound2:outbound2_id1,outbound2_id2)/F6:=left(fk1_col1)=(active_list_schema:outbound2_outbound1:outbound2_outbound1_id)/$M/left(fk1_col1,fk1_col2)=(active_list_schema:outbound1:outbound1_id1,outbound1_id2)/F5:=left(fk1_col1)=(active_list_schema:outbound1_outbound1:outbound1_outbound1_id)/$M/" +
-                "F4:=left(fk2_col1,fk2_col2)=(active_list_schema:outbound2:outbound2_id1,outbound2_id2)/$M/" +
+                "F9:=left(fk2_col1,fk2_col2)=(active_list_schema:outbound2:outbound2_id1,outbound2_id2)/$M/" +
+                "left(fk1_col1,fk1_col2)=(active_list_schema:outbound1:outbound1_id1,outbound1_id2)/" +
+                "left(fk1_col1)=(active_list_schema:outbound1_outbound1:outbound1_outbound1_id)/" +
+                "F8:=left(fk1_col1)=(active_list_schema:outbound1_outbound1_outbound1:outbound1_outbound1_outbound1_id)/$M/" +
+                "left(fk2_col1,fk2_col2)=(active_list_schema:outbound2:outbound2_id1,outbound2_id2)/" +
+                "F7:=left(fk1_col1)=(active_list_schema:outbound2_outbound1:outbound2_outbound1_id)/$M/" +
+                "left(fk1_col1,fk1_col2)=(active_list_schema:outbound1:outbound1_id1,outbound1_id2)/" +
+                "F6:=left(fk1_col1)=(active_list_schema:outbound1_outbound1:outbound1_outbound1_id)/$M/" +
+                "left(fk2_col1,fk2_col2)=(active_list_schema:outbound2:outbound2_id1,outbound2_id2)/" +
+                "F5:=left(fk1_col1)=(active_list_schema:outbound2_outbound1:outbound2_outbound1_id)/$M/" +
+                "left(fk1_col1,fk1_col2)=(active_list_schema:outbound1:outbound1_id1,outbound1_id2)/" +
+                "F4:=left(fk1_col1)=(active_list_schema:outbound1_outbound1:outbound1_outbound1_id)/$M/" +
                 "F3:=left(fk1_col1,fk1_col2)=(active_list_schema:outbound1:outbound1_id1,outbound1_id2)/$M/" +
                 "F2:=left(fk2_col1,fk2_col2)=(active_list_schema:outbound2:outbound2_id1,outbound2_id2)/$M/" +
                 "F1:=left(fk1_col1,fk1_col2)=(active_list_schema:outbound1:outbound1_id1,outbound1_id2)/$M/" +
                 "main_id;M:=array_d(M:*),F10:=array_d(F10:*),F9:=array_d(F9:*),F8:=array_d(F8:*),F7:=array_d(F7:*)," +
                 "F6:=array_d(F6:*),F5:=array_d(F5:*),F4:=array_d(F4:*),F3:=array_d(F3:*),F2:=array_d(F2:*),F1:=array_d(F1:*)@sort(main_id)";
+
                 expect(mainRefCompact.readPath).toEqual(expectedPath);
             });
 

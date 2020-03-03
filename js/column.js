@@ -560,6 +560,19 @@ ReferenceColumn.prototype = {
     },
 
     /**
+     * Whether the value of the column comes from an aggregate source, based on
+     * its active list
+     * @return {Boolean} [description]
+     */
+    get hasWaitForAggregate() {
+        if (this._hasWaitForAggregate === undefined) {
+            // will generate the _hasWaitFor
+            var waitFor = this.waitFor;
+        }
+        return this._hasWaitForAggregate;
+    },
+
+    /**
      * Array of columns
      * It will
      * - ignore entitysets for non-detailed contexts.
@@ -575,6 +588,7 @@ ReferenceColumn.prototype = {
             var res = module._processWaitForList(wfDef, self._baseReference, self._currentTable, self, self._mainTuple, "pseudo-column=`" + self.displayname.value + "`");
             this._waitFor = res.waitForList;
             this._hasWaitFor = res.hasWaitFor;
+            this._hasWaitForAggregate = res.hasWaitForAggregate;
         }
         return this._waitFor;
     },

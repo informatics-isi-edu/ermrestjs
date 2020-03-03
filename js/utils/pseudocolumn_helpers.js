@@ -911,8 +911,9 @@
      * - ignore entitysets for non-detailed contexts.
      * - will ignore normal columns.
      * will return an object with the following attributes:
-     * - list: an array of pseudo-columns
+     * - waitForList: an array of pseudo-columns
      * - hasWaitFor: whether any of the waitFor columns is seconadry
+     * - hasWaitForAggregate: whether any of the waitfor columns are aggregate
      * @param {Array|String} waitFor - the waitfor definition
      * @param {ERMrest.Reference} baseReference - the reference that this waitfor is based on
      * @param {ERMrest.Table} currentTable - the current table.
@@ -921,7 +922,7 @@
      * @param {String} message - the message that should be appended to warning messages.
      */
     module._processWaitForList = function (waitFor, baseReference, currentTable, currentColumn, mainTuple, message) {
-        var wfList = [], hasWaitFor = false, waitFors = [];
+        var wfList = [], hasWaitFor = false, hasWaitForAggregate = false, waitFors = [];
         if (Array.isArray(waitFor)) {
             waitFors = waitFor;
         } else if (typeof waitFor === "string") {
@@ -976,6 +977,10 @@
                 // ignore normal columns
                 if (!pc.isPseudo || pc.isAsset) return;
 
+                if (pc.isPathColumn && pc.hasAggregate) {
+                    hasWaitForAggregate = true;
+                }
+
                 wfList.push(pc);
 
                 return;
@@ -985,6 +990,7 @@
 
         return {
             hasWaitFor: hasWaitFor,
+            hasWaitForAggregate: hasWaitForAggregate,
             waitForList: wfList
         };
     };

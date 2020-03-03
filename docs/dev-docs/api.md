@@ -408,6 +408,7 @@ to use for ERMrest JavaScript agents.
         * [.inputDisabled](#ERMrest.ReferenceColumn+inputDisabled) : <code>boolean</code> \| <code>object</code>
         * [.sortable](#ERMrest.ReferenceColumn+sortable) : <code>boolean</code>
         * [.hasWaitFor](#ERMrest.ReferenceColumn+hasWaitFor) ⇒ <code>Boolean</code>
+        * [.hasWaitForAggregate](#ERMrest.ReferenceColumn+hasWaitForAggregate) ⇒ <code>Boolean</code>
         * [.waitFor](#ERMrest.ReferenceColumn+waitFor) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
         * [.formatvalue(data, context)](#ERMrest.ReferenceColumn+formatvalue) ⇒ <code>string</code>
         * [.formatPresentation(data, context, options)](#ERMrest.ReferenceColumn+formatPresentation) ⇒ <code>Object</code>
@@ -3492,14 +3493,16 @@ NOTE:
 <a name="ERMrest.Reference+generateActiveList"></a>
 
 #### reference.generateActiveList([tuple]) ⇒ <code>Object</code>
-Generate the list of extra reads that we should do.
+Generates the list of extra elements that hte page might need,
 this should include
-- aggreagtes: the aggregates the page needs
-  [{column: ERMrest.ReferenceColumn, columnName: string, objects: [{index: integer, column: boolean, related: boolean}]]
-- entitySets: the inline entity sets the page needs (only in detailed)
-  [{reference: ERMrest.Reference, columnName: string, objects: [{index: integer, column: boolean, related: boolean}]]
-- relatedEntitySets: the related entity sets the page needs (only in detailed)
-  [{reference: ERMrest.Reference, columnName: string, objects: [{index: integer, column: boolean, related: boolean}]]
+- requests: An array of the secondary request objects which inlcudes aggregates, entitysets, inline tables, and related tables.
+  Depending on the type of request it can have different attibutes.
+  - for aggregate and entitysets:
+    {column: ERMrest.ReferenceColumn, <type>: true, objects: [{index: integer, column: boolean, related: boolean, inline: boolean, citation: boolean}]
+    where the type is `entityset` or `aggregate`. Each object is capturing where in the page needs this pseudo-column.
+  - for related and inline tables:
+    {<type>: true, index: integer}
+    where the type is `inline` or `related`.
 - allOutBounds: the all-outbound foreign keys (added so we can later append to the url).
   ERMrest.ReferenceColumn[]
 - selfLinks: the self-links (so it can be added to the template variables)
@@ -3959,6 +3962,7 @@ count aggregate representation
     * [.inputDisabled](#ERMrest.ReferenceColumn+inputDisabled) : <code>boolean</code> \| <code>object</code>
     * [.sortable](#ERMrest.ReferenceColumn+sortable) : <code>boolean</code>
     * [.hasWaitFor](#ERMrest.ReferenceColumn+hasWaitFor) ⇒ <code>Boolean</code>
+    * [.hasWaitForAggregate](#ERMrest.ReferenceColumn+hasWaitForAggregate) ⇒ <code>Boolean</code>
     * [.waitFor](#ERMrest.ReferenceColumn+waitFor) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
     * [.formatvalue(data, context)](#ERMrest.ReferenceColumn+formatvalue) ⇒ <code>string</code>
     * [.formatPresentation(data, context, options)](#ERMrest.ReferenceColumn+formatPresentation) ⇒ <code>Object</code>
@@ -4066,6 +4070,14 @@ Heuristics are as follows:
 
 #### referenceColumn.hasWaitFor ⇒ <code>Boolean</code>
 Whether the value of the column comes from a secondary source, based on
+its active list
+
+**Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
+**Returns**: <code>Boolean</code> - [description]  
+<a name="ERMrest.ReferenceColumn+hasWaitForAggregate"></a>
+
+#### referenceColumn.hasWaitForAggregate ⇒ <code>Boolean</code>
+Whether the value of the column comes from an aggregate source, based on
 its active list
 
 **Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
@@ -7061,14 +7073,16 @@ NOTE:
 <a name="ERMrest.Reference+generateActiveList"></a>
 
 #### reference.generateActiveList([tuple]) ⇒ <code>Object</code>
-Generate the list of extra reads that we should do.
+Generates the list of extra elements that hte page might need,
 this should include
-- aggreagtes: the aggregates the page needs
-  [{column: ERMrest.ReferenceColumn, columnName: string, objects: [{index: integer, column: boolean, related: boolean}]]
-- entitySets: the inline entity sets the page needs (only in detailed)
-  [{reference: ERMrest.Reference, columnName: string, objects: [{index: integer, column: boolean, related: boolean}]]
-- relatedEntitySets: the related entity sets the page needs (only in detailed)
-  [{reference: ERMrest.Reference, columnName: string, objects: [{index: integer, column: boolean, related: boolean}]]
+- requests: An array of the secondary request objects which inlcudes aggregates, entitysets, inline tables, and related tables.
+  Depending on the type of request it can have different attibutes.
+  - for aggregate and entitysets:
+    {column: ERMrest.ReferenceColumn, <type>: true, objects: [{index: integer, column: boolean, related: boolean, inline: boolean, citation: boolean}]
+    where the type is `entityset` or `aggregate`. Each object is capturing where in the page needs this pseudo-column.
+  - for related and inline tables:
+    {<type>: true, index: integer}
+    where the type is `inline` or `related`.
 - allOutBounds: the all-outbound foreign keys (added so we can later append to the url).
   ERMrest.ReferenceColumn[]
 - selfLinks: the self-links (so it can be added to the template variables)
