@@ -88,7 +88,7 @@ exports.execute = function (options) {
                 expect(printMarkdown('*markdown*')).toBe('<p><em>markdown</em></p>\n', "invalid em");
                 expect(printMarkdown('markdown')).toBe('<p>markdown</p>\n', "invalid paragraph");
                 expect(printMarkdown("![a random image](random_image.com)"))
-                    .toBe('<p><img src="random_image.com" alt="a random image"></p>\n', "invalid image");
+                    .toBe('<p><img src="random_image.com" alt="a random image" class="-chaise-post-load"></p>\n', "invalid image");
                 // Check for anchor tags
                 expect(printMarkdown('[NormalLink](https://dev.isrd.isi.edu/chaise/search)'))
                     .toBe('<p><a href=\"https://dev.isrd.isi.edu/chaise/search\">NormalLink</a></p>\n', "invalid link");
@@ -105,42 +105,42 @@ exports.execute = function (options) {
 
                 // Check for image tag with size
                 expect(printMarkdown('**Image With Size** \n ![ImageWithSize](http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg){width=800 height=300}'))
-                    .toBe('<p><strong>Image With Size</strong><br>\n<img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" alt="ImageWithSize" width="800" height="300"></p>\n', "invalid image with tag");
+                    .toBe('<p><strong>Image With Size</strong><br>\n<img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" alt="ImageWithSize" width="800" height="300" class="-chaise-post-load"></p>\n', "invalid image with tag");
 
                 // Check for thumbnail with link to original image
                 expect(printMarkdown("[![Image](http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg){width=500 height=400}](https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg){target=_blank}"))
-                    .toBe('<p><a href="https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg" target="_blank"><img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" alt="Image" width="500" height="400"></a></p>\n', "invalid thumbnail with tag");
+                    .toBe('<p><a href="https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg" target="_blank"><img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" alt="Image" width="500" height="400" class="-chaise-post-load"></a></p>\n', "invalid thumbnail with tag");
             });
 
             it ("should support :::iframe.", function () {
                 // Check for iframe ith height and width
                 expect(printMarkdown('::: iframe [Chaise](https://dev.isrd.isi.edu/chaise/search){width=800 height=300} \n:::'))
-                    .toBe('<figure class="embed-block" style=""><figcaption class="embed-caption" style="">Chaise</figcaption><iframe src="https://dev.isrd.isi.edu/chaise/search" width="800" height="300" ></iframe></figure>');
+                    .toBe('<figure class="embed-block -chaise-post-load" style=""><figcaption class="embed-caption" style="">Chaise</figcaption><iframe src="https://dev.isrd.isi.edu/chaise/search" width="800" height="300" ></iframe></figure>');
 
                 // Check for iframe tag with a link and caption
                 var iframeMarkdown = '::: iframe [SOME LINK CAPTION](https://dev.isrd.isi.edu/chaise/search){height=400 link=https://dev.isrd.isi.edu/chaise/search} \n:::';
-                var iframeHTML = '<figure class="embed-block" style=""><figcaption class="embed-caption" style=""><a href="https://dev.isrd.isi.edu/chaise/search" target="_blank">SOME LINK CAPTION</a></figcaption><iframe src="https://dev.isrd.isi.edu/chaise/search" height="400"  ></iframe></figure>';
+                var iframeHTML = '<figure class="embed-block -chaise-post-load" style=""><figcaption class="embed-caption" style=""><a href="https://dev.isrd.isi.edu/chaise/search" target="_blank">SOME LINK CAPTION</a></figcaption><iframe src="https://dev.isrd.isi.edu/chaise/search" height="400"  ></iframe></figure>';
                 expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML);
 
                 // Check for iframe tag with a link and caption at the bottom with no iframe-style and iframe-class
                 var iframeMarkdown = '::: iframe [CAPTION](https://dev.isrd.isi.edu/chaise/search){link="https://dev.isrd.isi.edu/chaise/search" pos="bottom"} \n:::';
-                var iframeHTML = '<figure class="embed-block" style=""><iframe src="https://dev.isrd.isi.edu/chaise/search"   ></iframe><figcaption class="embed-caption" style=""><a href="https://dev.isrd.isi.edu/chaise/search" target="_blank">CAPTION</a></figcaption></figure>';
+                var iframeHTML = '<figure class="embed-block -chaise-post-load" style=""><iframe src="https://dev.isrd.isi.edu/chaise/search"   ></iframe><figcaption class="embed-caption" style=""><a href="https://dev.isrd.isi.edu/chaise/search" target="_blank">CAPTION</a></figcaption></figure>';
                 expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML);
 
                 // Check for iframe tag with a link and caption at the bottom with iframe-style and iframe-class
                 var iframeMarkdown = '::: iframe [CAPTION](https://dev.isrd.isi.edu/chaise/search){link="https://dev.isrd.isi.edu/chaise/search" pos="bottom" iframe-class="iclass" iframe-style="border:1px solid;"} \n:::';
-                var iframeHTML = '<figure class="embed-block iclass" style=" border:1px solid;"><iframe src="https://dev.isrd.isi.edu/chaise/search"     ></iframe><figcaption class="embed-caption" style=""><a href="https://dev.isrd.isi.edu/chaise/search" target="_blank">CAPTION</a></figcaption></figure>';
+                var iframeHTML = '<figure class="embed-block -chaise-post-load iclass" style=" border:1px solid;"><iframe src="https://dev.isrd.isi.edu/chaise/search"     ></iframe><figcaption class="embed-caption" style=""><a href="https://dev.isrd.isi.edu/chaise/search" target="_blank">CAPTION</a></figcaption></figure>';
                 expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML);
 
                 // Check for iframe tag with a caption at the bottom with caption-style and caption-class
                 var iframeMarkdown = '::: iframe [CAPTION](https://dev.isrd.isi.edu/chaise/search){pos="bottom" caption-class="cclass" caption-style="font-weight:500;"} \n:::';
-                var iframeHTML = '<figure class="embed-block" style=""><iframe src="https://dev.isrd.isi.edu/chaise/search"    ></iframe><figcaption class="embed-caption cclass" style=" font-weight:500;">CAPTION</figcaption></figure>';
+                var iframeHTML = '<figure class="embed-block -chaise-post-load" style=""><iframe src="https://dev.isrd.isi.edu/chaise/search"    ></iframe><figcaption class="embed-caption cclass" style=" font-weight:500;">CAPTION</figcaption></figure>';
                 expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML);
 
 
                 // Check for iframe tag with a caption at the bottom with iframe-style and caption-class
                 var iframeMarkdown = '::: iframe [CAPTION](https://dev.isrd.isi.edu/chaise/search){pos="bottom" caption-class="cclass" caption-style="font-weight:500;"} \n:::';
-                var iframeHTML = '<figure class="embed-block" style=""><iframe src="https://dev.isrd.isi.edu/chaise/search"    ></iframe><figcaption class="embed-caption cclass" style=" font-weight:500;">CAPTION</figcaption></figure>';
+                var iframeHTML = '<figure class="embed-block -chaise-post-load" style=""><iframe src="https://dev.isrd.isi.edu/chaise/search"    ></iframe><figcaption class="embed-caption cclass" style=" font-weight:500;">CAPTION</figcaption></figure>';
                 expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML);
 
 
@@ -155,29 +155,29 @@ exports.execute = function (options) {
             it ("should support :::image.", function () {
                 // Check for thumbnail with link to original image and a caption
                 expect(printMarkdown(":::image [Skyscrapers](http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg){height=200 link=https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg} \n:::"))
-                .toBe('<figure class="embed-block" style="display:inline-block;"><a href="https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg" target="_blank"><figcaption class="embed-caption">Skyscrapers</figcaption><img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" height="200"  /></a></figure>');
+                .toBe('<figure class="embed-block -chaise-post-load" style="display:inline-block;"><a href="https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg" target="_blank"><figcaption class="embed-caption">Skyscrapers</figcaption><img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" height="200"  /></a></figure>');
             });
 
             it ("should support :::video", function () {
 
                 //Check for proper rendering of video tag with no attributes
                 var videoMarkDown = '::: video [caption](http://techslides.com/demos/sample-videos/small.mp4){} \n:::';
-                var videoHTML = '<figure><figcaption>caption</figcaption><video controls ><source src="http://techslides.com/demos/sample-videos/small.mp4" type="video/mp4"></video></figure>';
+                var videoHTML = '<figure><figcaption>caption</figcaption><video controls class="-chaise-post-load" ><source src="http://techslides.com/demos/sample-videos/small.mp4" type="video/mp4"></video></figure>';
                 expect(printMarkdown(videoMarkDown)).toBe(videoHTML, "The video tag is not rendered properly with no attributes ");
 
                 //Check for proper rendering of video tag with height and width attributes
                 var videoMarkDown = '::: video [caption](http://techslides.com/demos/sample-videos/small.mp4){width=800 height=200} \n:::';
-                var videoHTML = '<figure><figcaption>caption</figcaption><video controls width=800 height=200 ><source src="http://techslides.com/demos/sample-videos/small.mp4" type="video/mp4"></video></figure>';
+                var videoHTML = '<figure><figcaption>caption</figcaption><video controls class="-chaise-post-load" width=800 height=200 ><source src="http://techslides.com/demos/sample-videos/small.mp4" type="video/mp4"></video></figure>';
                 expect(printMarkdown(videoMarkDown)).toBe(videoHTML, "The video tag is not rendered properly with height and width attributes ");
 
                 //Check for proper rendering of video tag with height and width attributes and some boolean attributes like loop and muted
                 var videoMarkDown = '::: video [caption](http://techslides.com/demos/sample-videos/small.mp4){width=800 height=200 loop muted} \n:::';
-                var videoHTML = '<figure><figcaption>caption</figcaption><video controls width=800 height=200 loop muted ><source src="http://techslides.com/demos/sample-videos/small.mp4" type="video/mp4"></video></figure>';
+                var videoHTML = '<figure><figcaption>caption</figcaption><video controls class="-chaise-post-load" width=800 height=200 loop muted ><source src="http://techslides.com/demos/sample-videos/small.mp4" type="video/mp4"></video></figure>';
                 expect(printMarkdown(videoMarkDown)).toBe(videoHTML, "The video tag is not rendered properly with boolean attributes ");
 
                 //Check for proper rendering of video tag with some invalid attributes
                 var videoMarkDown = '::: video [caption](http://techslides.com/demos/sample-videos/small.mp4){loop=5 width=800} \n:::';
-                var videoHTML = '<figure><figcaption>caption</figcaption><video controls width=800 ><source src="http://techslides.com/demos/sample-videos/small.mp4" type="video/mp4"></video></figure>';
+                var videoHTML = '<figure><figcaption>caption</figcaption><video controls class="-chaise-post-load" width=800 ><source src="http://techslides.com/demos/sample-videos/small.mp4" type="video/mp4"></video></figure>';
                 expect(printMarkdown(videoMarkDown)).toBe(videoHTML, "The video tag is not rendered properly with invalid attributes ");
             });
 

@@ -280,7 +280,8 @@
         externalLinkIcon: "external-link-icon",
         noExternalLinkIcon: "no-external-link-icon",
         assetPermission: "asset-permission",
-        download: "download-alt"
+        download: "download-alt",
+        postLoad: "-chaise-post-load"
     });
 
     module._specialSourceDefinitions = Object.freeze({

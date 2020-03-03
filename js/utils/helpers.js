@@ -1906,7 +1906,7 @@
                             }
 
                             // Encapsulate the iframe inside a figure tag
-                            html = '<figure class="embed-block' + (iframeClass.length ? (" "  + iframeClass): "") + '" style="' + (iframeStyle.length ? (" "  + iframeStyle ) : "") + '">' + html + "</figure>";
+                            html = '<figure class="embed-block ' + module._classNames.postLoad + (iframeClass.length ? (" "  + iframeClass): "") + '" style="' + (iframeStyle.length ? (" "  + iframeStyle ) : "") + '">' + html + "</figure>";
                         }
                     }
                     // if attrs was empty or it didn't find any link simply render the internal markdown
@@ -2096,7 +2096,7 @@
                             }
 
                             // Encapsulate the iframe inside a paragraph tag
-                            html = '<figure class="embed-block" style="display:inline-block;">' + html + "</figure>";
+                            html = '<figure class="embed-block ' + module._classNames.postLoad + '" style="display:inline-block;">' + html + "</figure>";
                         }
                     }
 
@@ -2129,7 +2129,6 @@
 
                 // If this is the opening tag i.e. starts with "::: video "
                 if (tokens[idx].nesting === 1 && m.length > 0) {
-
                     // Extract remaining string before closing tag and get its parsed markdown attributes
                     var attrs = md.parseInline(m[1]), html = "";
 
@@ -2137,7 +2136,7 @@
                         // Check If the markdown is a link
                         if (attrs[0].children[0].type == "link_open") {
                             var videoHTML="<video controls ", openingLink = attrs[0].children[0];
-                            var srcHTML="", videoClass="", flag = true, posTop = true;
+                            var srcHTML="", videoClass='class="' + module._classNames.postLoad, videoAttrs="", flag = true, posTop = true;
 
                             // Add all attributes to the video
                             openingLink.attrs.forEach(function(attr) {
@@ -2149,15 +2148,21 @@
                                     srcHTML += '<source src="' + attr[1] + '" type="video/mp4">';
                                 }
                                 else if ( (attr[0] == "width" || attr[0] == "height") && attr[1]!=="") {
-                                    videoClass +=  attr[0]+ "="+ attr[1] +" ";
+                                    videoAttrs +=  attr[0]+ "="+ attr[1] +" ";
                                 }
                                 else if ( (attr[0] == "loop" || attr[0] == "preload" || attr[0] == "muted" || attr[0] == "autoload") && attr[1]=="") {
-                                    videoClass +=  attr[0]+ " ";
+                                    videoAttrs +=  attr[0]+ " ";
+                                }
+                                else if ( (attr[0] == "class") && attr[1]!=="") {
+                                    // class was defined above to begin with "class=" and a class name
+                                    videoClass += " " + attr[1];
                                 }
                                 else if ( (attr[0] == "pos") && attr[1]!=="") {
                                     posTop =  attr[1].toLowerCase() == 'bottom' ? false : true;
                                 }
                             });
+                            // add closing quote
+                            videoClass += '"' + " " + videoAttrs;
 
                             var captionHTML="";
                             // If the next attribute is not a closing link then iterate
@@ -2303,6 +2308,32 @@
                 return true;
             });
         });
+
+        /**
+         * Change the image function to add a specific classes to image tags
+         * this is done on the image tag instead of link_open to prevent polluting other html tags
+         * make sure we're calling this just once
+         */
+        if (typeof module._markdownItDefaultImageRenderer === "undefined") {
+            module._markdownItDefaultImageRenderer = md.renderer.rules.image || function(tokens, idx, options, env, self) {
+                return self.renderToken(tokens, idx, options);
+            };
+        }
+
+        // the class that we should add
+        var className = module._classNames.postLoad;
+        md.renderer.rules.image = function (tokens, idx, options, env, self) {
+            var token = tokens[idx];
+
+            var cIndex = token.attrIndex('class');
+            if (cIndex < 0) {
+                token.attrPush(['class', className]);
+            } else {
+                token.attrs[cIndex][1] += " " + className;
+            }
+
+            return module._markdownItDefaultImageRenderer(tokens, idx, options, env, self);
+        };
     };
 
     /**
