@@ -2717,7 +2717,10 @@
          *          1.1.3 make sure it is not hidden(+).
          *          1.1.4 if it's outbound foreign key, create a pseudo-column for that.
          *          1.1.5 if it's inbound foreign key, create the related reference and a pseudo-column based on that.
-         *      1.2 otherwise find the corresponding column if exits and add it (avoid duplicate),
+         *      1.2 if it's an object.
+         *          1.2.1 if it doesn't have any source or sourcekey, if it's non-entry and has markdown_name and markdown_pattern create a VirtualColumn.
+         *          1.2.2 create a pseudo-column if it's properly defined.
+         *      1.3 otherwise find the corresponding column if exits and add it (avoid duplicate),
          *          apply *addColumn* heuristics explained below.
          *
          * 2.otherwise go through list of table columns
@@ -2912,7 +2915,12 @@
 
                             if (!ignore) {
                                 // generate name for virtual-column
-                                pseudoName = "$virual-column-" + virtualIndex++;
+                                var extra = 0;
+                                pseudoName = "$" + col.markdown_name;
+                                while (pseudoName in tableColumns) {
+                                    extra++;
+                                    pseudoName += "-" + extra;
+                                }
                                 this._referenceColumns.push(new VirtualColumn(this, col, pseudoName, tuple));
                             }
                             continue;
