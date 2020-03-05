@@ -47,6 +47,7 @@ SOURCE=$(UTIL)/polyfills.js \
 	   $(JS)/export.js \
 	   $(JS)/hatrac.js \
 	   $(JS)/format.js \
+	   $(BUILD)/node_build.js \
 	   $(SETUP)/ng.js \
 
 # Vendor libs
@@ -69,10 +70,11 @@ JSDOC=jsdoc
 LINT=.make-lint
 TEST=.make-test.js
 
-.PHONY: pre-generate-files-for-build
+# .PHONY: pre-generate-files-for-build
 pre-generate-files-for-build:
+	mkdir -p $(BUILD)
 	# create the version variable and use the current date + time for versioning
-	echo 'var version=$(shell date +%Y%m%d%H%M%S);' | cat - $(SETUP)/node.js > node_build.js
+	echo 'var version=$(shell date +%Y%m%d%H%M%S);' | cat - $(SETUP)/node.js > $(BUILD)/node_build.js
 
 .PHONY: all
 all: $(BUILD) $(DOC)
@@ -94,7 +96,6 @@ $(BUILD)/$(VER): $(SOURCE)
 $(BUILD)/$(PKG): $(SOURCE)
 	mkdir -p $(BUILD)
 	cat $(SOURCE) > $(BUILD)/$(PKG)
-	cat node_build.js > $(BUILD)/$(PKG)
 
 # Rule to build the minified package
 # we should list all the tags that jsDoc accepst but the gccjs doesn't.
@@ -147,7 +148,6 @@ clean:
 	rm -rf $(BUILD)
 	rm -rf $(JSDOC)
 	rm -f .make-*
-	rm -f  $(SETUP)/node_build.js
 
 # Rule to clean the dependencies too
 .PHONY: distclean
