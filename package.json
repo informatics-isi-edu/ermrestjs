@@ -6,8 +6,8 @@
   "private": true,
   "main": "build/ermrest.js",
   "scripts": {
-    "build": "make build",
-    "pretest": "make build",
+    "build": "sudo make build",
+    "pretest": "sudo make build",
     "test": "make test",
     "docs": "make doc"
   },
