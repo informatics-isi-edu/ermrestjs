@@ -47,7 +47,7 @@ SOURCE=$(UTIL)/polyfills.js \
 	   $(JS)/export.js \
 	   $(JS)/hatrac.js \
 	   $(JS)/format.js \
-	   $(BUILD)/node_build.js \
+	   $(SETUP)/node_build.js \
 	   $(SETUP)/ng.js \
 
 # Vendor libs
@@ -72,9 +72,8 @@ TEST=.make-test.js
 
 .PHONY: pre-generate-files-for-build
 pre-generate-files-for-build:
-	mkdir -p $(BUILD)
 	# create the version variable and use the current date + time for versioning
-	echo 'var version=$(shell date +%Y%m%d%H%M%S);' | cat - $(SETUP)/node.js > $(BUILD)/node_build.js
+	echo 'var version=$(shell date +%Y%m%d%H%M%S);' | cat - $(SETUP)/node.js > $(SETUP)/node_build.js
 
 .PHONY: all
 all: $(BUILD) $(DOC)
@@ -156,12 +155,12 @@ distclean: clean
 
 # Rule to run the unit tests
 .PHONY: test
-test: $(BUILD) ../ErmrestDataUtils
+test: ../ErmrestDataUtils
 	node test/jasmine-runner.js
 
 # Rule to run the unit tests
 .PHONY: testsingle
-testsingle: $(BUILD) ../ErmrestDataUtils
+testsingle: ../ErmrestDataUtils
 	node test/single-test-runner.js
 
 # Rule to install the package
