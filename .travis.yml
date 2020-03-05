@@ -108,8 +108,7 @@ before_script:
   - sudo -H -u webauthn webauthn2-manage addattr admin
   - sudo -H -u webauthn webauthn2-manage assign test1 admin
 
- script:
-  - sudo make build
+script:
   - make test
 
 after_failure:
