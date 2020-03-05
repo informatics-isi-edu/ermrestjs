@@ -64,4 +64,3 @@ node_modules
 dist
 test/support/*.spec.js
 test/specs/upload/files/*.*
-js/setup/node_build.js

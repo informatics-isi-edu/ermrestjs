@@ -47,7 +47,8 @@ SOURCE=$(UTIL)/polyfills.js \
 	   $(JS)/export.js \
 	   $(JS)/hatrac.js \
 	   $(JS)/format.js \
-	   $(SETUP)/node_build.js \
+	   $(BUILD)/makefile_variables.js \
+	   $(SETUP)/node.js \
 	   $(SETUP)/ng.js \
 
 # Vendor libs
@@ -72,8 +73,9 @@ TEST=.make-test.js
 
 .PHONY: pre-generate-files-for-build
 pre-generate-files-for-build:
+	mkdir -p $(BUILD)
 	# create the version variable and use the current date + time for versioning
-	echo 'var version=$(shell date +%Y%m%d%H%M%S);' | cat - $(SETUP)/node.js > $(SETUP)/node_build.js
+	echo 'var version=$(shell date +%Y%m%d%H%M%S);' > $(BUILD)/makefile_variables.js
 
 .PHONY: all
 all: $(BUILD) $(DOC)
@@ -164,8 +166,9 @@ testsingle: ../ErmrestDataUtils
 	node test/single-test-runner.js
 
 # Rule to install the package
+# pre-generate-files-for-build done here incase make install called without make all (might be the case for server rebuilds)
 .PHONY: install installm dont_install_in_root
-install: $(BUILD)/$(PKG) $(BUILD)/$(VER) $(VENDOR)/* dont_install_in_root
+install: pre-generate-files-for-build $(BUILD)/$(PKG) $(BUILD)/$(VER) $(VENDOR)/* dont_install_in_root
 	rsync -avz $(BUILD)/ $(ERMRESTJSDIR)
 	rsync -avz $(VENDOR) $(ERMRESTJSDIR)
 
