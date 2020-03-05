@@ -960,7 +960,7 @@
                 }
 
                 // NOTE because it's redundant
-                if (sd.name === currentColumn.name) {
+                if (currentColumn && sd.name === currentColumn.name) {
                     // don't add itself
                     return;
                 }

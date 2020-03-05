@@ -1,8 +1,8 @@
 exports.execute = function (options) {
     var catalog_id = process.env.DEFAULT_CATALOG,
         schemaName = "active_list_schema",
-        tableName = "main",
-        tableNameEmptyFK = "main_empty_fkeys";
+        tableName = "main", // the main table that this test is based on
+        tableNameEmptyFK = "main_empty_fkeys"; // table that doesn't have any fkeys
 
     var mainEntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + tableName + "/@sort(main_id)";
     var mainEmptyFkEntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + tableNameEmptyFK + "/@sort(main_empty_fkeys_id)";
@@ -404,7 +404,6 @@ exports.execute = function (options) {
                 })
             });
         });
-
 
         describe("Reference.activeList, ", function () {
             var activeList;

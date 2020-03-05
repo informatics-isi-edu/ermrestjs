@@ -3366,8 +3366,8 @@
             columns = self.generateColumnsList(tuple);
 
             // citation
-            if (isDetailed && tuple && tuple.citation) {
-                tuple.citation.waitFor.forEach(function (col) {
+            if (isDetailed && self.citation) {
+                self.citation.waitFor.forEach(function (col) {
                     addColToActiveList(col, true, CITATION_TYPE);
                 });
             }
@@ -3420,6 +3420,31 @@
                 this.generateActiveList();
             }
             return this._activeList;
+        },
+
+        /**
+         * If annotation is defined and has the required attributes, will return
+         * a Citation object that can be used to generate citation.
+         * NOTE I had to move this here because activeList is using this before read,
+         * to get the all-outbound foreignkeys which might be in the waitfor of citation annotation
+         * In the future we might also want to generate citation based on page and not necessarily tuple.
+         * @type {ERMrest.Citation}
+         */
+        get citation() {
+            if (this._citation === undefined) {
+                var table = this.table;
+                if (!table.annotations.contains(module._annotations.CITATION)) {
+                    this._citation = null;
+                } else {
+                    var citationAnno = table.annotations.get(module._annotations.CITATION).content;
+                    if (!citationAnno.journal_pattern || !citationAnno.year_pattern || !citationAnno.url_pattern) {
+                        this._citation = null;
+                    } else {
+                        this._citation = new Citation(this, citationAnno);
+                    }
+                }
+            }
+            return this._citation;
         },
 
         /**
@@ -5201,6 +5226,10 @@
                 // TODO should we move these to the _getFormattedKeyValues?
                 // the multi-fk all-outbounds
                 var sm = this._pageRef.table.sourceDefinitions.sourceMapping;
+
+                // TODO the problem here is that activeList might have been called before, so we don't have the allOutBounds
+                // Currently the wait_for is under the tuple and therefore needs the tuple...
+                // TODO HEEEEEREEEEE!!!!!
                 self._pageRef.activeList.allOutBounds.forEach(function (col) {
                     // data is null, so we don't need to add it
                     if (!self._linkedData[col.name]) return;
@@ -5363,10 +5392,10 @@
      * Constructs a citation for the given tuple.
      * The given citationAnnotation must be valid and have the appropriate variables.
      */
-    function Citation (tuple, citationAnnotation) {
-        this._tuple = tuple;
+    function Citation (reference, citationAnnotation) {
+        this._reference = reference;
 
-        this._table = tuple._pageRef.table;
+        this._table = reference.table;
 
         /**
          * citation specific properties include:
@@ -5382,7 +5411,7 @@
          */
         this._citationAnnotation = citationAnnotation;
 
-        var waitForRes = module._processWaitForList(citationAnnotation.wait_for, tuple._pageRef, tuple._pageRef.table, null, tuple, "citation");
+        var waitForRes = module._processWaitForList(citationAnnotation.wait_for, reference, reference.table, null, null, "citation");
 
         this.waitFor = waitForRes.waitForList;
         this.hasWaitFor = waitForRes.hasWaitFor;
@@ -5392,10 +5421,11 @@
     Citation.prototype = {
         /**
          * Given the templateVariables variables, will generate the citaiton.
-         * @param {Object} templateVariables
+         * @param {ERMrest.Tuple} tuple - the tuple object that this citaiton is based on
+         * @param {Object=} templateVariables - if it's not an obect, we will use the tuple templateVariables
          * @return {String|null} if the returned template for required attributes are empty, it will return null.
          */
-        compute: function (templateVariables) {
+        compute: function (tuple, templateVariables) {
             var table = this._table, citationAnno = this._citationAnnotation;
 
             // make sure required parameters are present
@@ -5404,11 +5434,10 @@
             }
 
             if (!templateVariables) {
-                templateVariables = this._tuple.templateVariables.values;
+                templateVariables = tuple.templateVariables.values;
             }
 
             var citation = {};
-            var self = this;
             // author, title, id set to null if not defined
             ["author", "title", "journal", "year", "url", "id"].forEach(function (key) {
                 citation[key] = module._renderTemplate(

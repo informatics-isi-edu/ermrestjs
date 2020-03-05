@@ -154,6 +154,20 @@
                     "type": {
                         "typename": "text"
                     }
+                },
+                {
+                    "name": "col_w_waitfor_in_col_display",
+                    "type": {
+                        "typename": "text"
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:column-display": {
+                            "*": {
+                                "markdown_pattern": "",
+                                "wait_for": [""]
+                            }
+                        }
+                    }
                 }
             ],
             "annotations": {
