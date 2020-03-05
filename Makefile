@@ -74,6 +74,10 @@ all: $(BUILD) $(DOC)
 
 # Build rule
 $(BUILD): $(LINT) $(BUILD)/$(PKG) $(BUILD)/$(MIN) $(BUILD)/$(VER)
+	# remove the first line (should be a comment or version=xxxxxxxxxx;)
+	sed '1d' js/setup/node.js > tmpfile && mv tmpfile js/setup/node.js
+	# create the version variable and use the current date + time for versioning
+	echo 'var version=$(shell date +%Y%m%d%H%M%S);' | cat - js/setup/node.js > temp.js && mv temp.js js/setup/node.js
 	@touch $(BUILD)
 
 # Rule to build the library (non-minified)

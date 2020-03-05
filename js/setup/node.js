@@ -1,3 +1,4 @@
+// placeholder for version=xxxxxxxxxx; written by makefile
 var _scriptsLoaded = false, _defers = [];
 
 // Check for whether the environment is Node.js or Browser
@@ -82,7 +83,8 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
       /* Load script from url and calls callback once it's loaded */
       var scriptTag = document.createElement('script');
       scriptTag.setAttribute("type", "text/javascript");
-      scriptTag.setAttribute("src", url);
+      // version variable is added in the makefile by the prepend-version command
+      scriptTag.setAttribute("src", url + "?v=" + version);
       if (typeof callback !== "undefined") {
         if (scriptTag.readyState) {
           /* For old versions of IE */
