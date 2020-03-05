@@ -73,7 +73,7 @@ TEST=.make-test.js
 .PHONY: pre-generate-files-for-build
 pre-generate-files-for-build:
 	# create the version variable and use the current date + time for versioning
-	echo 'var version=$(shell date +%Y%m%d%H%M%S);' | cat - $(SETUP)/node.js >  $(SETUP)/node_build.js
+	echo 'var version=$(shell date +%Y%m%d%H%M%S);' | cat - $(SETUP)/node.js > $(SETUP)/node_build.js
 
 .PHONY: all
 all: $(BUILD) $(DOC)
