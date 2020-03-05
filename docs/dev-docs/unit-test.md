@@ -198,14 +198,16 @@ export AUTH_COOKIE=YOUR_ERMREST_COOKIE
 export RESTRICTED_AUTH_COOKIE=YOUR_SECOND_USER_ERMREST_COOKIE
 ```
 
-To execute test case run the following command
+The build needs to be generated for the tests to work, which means running the following commands to execute the test cases.
 
 ```sh
+$ make install
 $ make test
 ```
 or
 
 ```sh
+$ make install
 $ node test/jasmine-runner.js
 ```
 
