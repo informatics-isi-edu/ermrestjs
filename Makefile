@@ -73,18 +73,18 @@ TEST=.make-test.js
 .PHONY: pre-generate-files-for-build
 pre-generate-files-for-build:
 	# create the version variable and use the current date + time for versioning
-	echo 'var version=$(shell date +%Y%m%d%H%M%S);' | cat -  $(SETUP)/node.js >  $(SETUP)/node_build.js
+	echo 'var version=$(shell date +%Y%m%d%H%M%S);' | cat - $(SETUP)/node.js >  $(SETUP)/node_build.js
 
 .PHONY: all
-all: pre-generate-files-for-build $(BUILD) $(DOC)
+all: $(BUILD) $(DOC)
 
 # Build rule
-$(BUILD): $(LINT) $(BUILD)/$(PKG) $(BUILD)/$(MIN) $(BUILD)/$(VER)
+$(BUILD): pre-generate-files-for-build $(LINT) $(BUILD)/$(PKG) $(BUILD)/$(MIN) $(BUILD)/$(VER)
 	@touch $(BUILD)
 
 # Rule to build the library (non-minified)
 .PHONY: package
-package: $(BUILD)/$(PKG) $(BUILD)/$(VER)
+package: pre-generate-files-for-build $(BUILD)/$(PKG) $(BUILD)/$(VER)
 
 # Rule to build the version number file
 $(BUILD)/$(VER): $(SOURCE)
