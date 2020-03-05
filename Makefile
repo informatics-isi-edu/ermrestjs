@@ -70,7 +70,7 @@ JSDOC=jsdoc
 LINT=.make-lint
 TEST=.make-test.js
 
-# .PHONY: pre-generate-files-for-build
+.PHONY: pre-generate-files-for-build
 pre-generate-files-for-build:
 	mkdir -p $(BUILD)
 	# create the version variable and use the current date + time for versioning
