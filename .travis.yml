@@ -1,24 +1,12 @@
 language: node_js
-
-sudo: required
-dist: xenial
-
 node_js:
   - stable
 
 python:
   - "3.5"
 
-notifications:
-  email:
-    on_success: change
-    on_failure: always
-
-virtualenv:
-  system_site_packages: true
-
-services:
-  - postgresql
+sudo: required
+dist: xenial
 
 addons:
   postgresql: "10"
@@ -36,6 +24,17 @@ addons:
       - python3-pip
       - python3-setuptools
       - python3-ply
+
+notifications:
+  email:
+    on_success: change
+    on_failure: always
+
+virtualenv:
+  system_site_packages: true
+
+services:
+  - postgresql
 
 before_install:
   - export TZ=America/Los_Angeles
@@ -110,6 +109,7 @@ before_script:
   - sudo -H -u webauthn webauthn2-manage assign test1 admin
 
  script:
+  - sudo make build
   - make test
 
 after_failure:
