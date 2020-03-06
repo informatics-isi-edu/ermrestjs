@@ -74,8 +74,8 @@ TEST=.make-test.js
 .PHONY: pre-generate-files-for-build
 pre-generate-files-for-build:
 	mkdir -p $(BUILD)
-	# create the version variable and use the current date + time for versioning
-	echo 'var version=$(shell date +%Y%m%d%H%M%S);' > $(BUILD)/makefile_variables.js
+	# create the ermrestjsBuildVersion variable and use the current date + time for versioning
+	echo 'var ermrestjsBuildVersion=$(shell date +%Y%m%d%H%M%S);' > $(BUILD)/makefile_variables.js
 
 .PHONY: all
 all: $(BUILD) $(DOC)

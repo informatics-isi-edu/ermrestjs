@@ -82,8 +82,8 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
       /* Load script from url and calls callback once it's loaded */
       var scriptTag = document.createElement('script');
       scriptTag.setAttribute("type", "text/javascript");
-      // version variable is added in the makefile by the pre-generate-files-for-build command
-      scriptTag.setAttribute("src", url + "?v=" + version);
+      // ermrestjsBuildVersion variable is added in the makefile by the pre-generate-files-for-build command
+      scriptTag.setAttribute("src", url + "?v=" + ermrestjsBuildVersion);
       if (typeof callback !== "undefined") {
         if (scriptTag.readyState) {
           /* For old versions of IE */
