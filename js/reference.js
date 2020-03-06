@@ -460,6 +460,11 @@
                 };
 
                 var checkRefColumn = function (col) {
+                    //virtual column is not supported
+                    if (col.isVirtualColumn) {
+                        return false;
+                    }
+
                     // column type array is not supported
                     if (col.type.isArray || col._baseCols[0].type.isArray) {
                         return false;
@@ -2769,6 +2774,7 @@
             var columns = -1,
                 consideredColumns = {}, // to avoid duplicate pseudo columns
                 tableColumns = {}, // to make sure the hashes we genereate are not clashing with table column names
+                virtualColumnNames = {}, // to make sure the names generated for virtual names are not the same
                 compositeFKs = [], // to add composite keys at the end of the list
                 assetColumns = [], // columns that have asset annotation
                 hiddenFKR = this.origFKR,
@@ -2781,7 +2787,6 @@
                 hasInbound, isEntity, hasPath, isEntityMode,
                 isEntry,
                 colFks,
-                virtualIndex = 1, // used in generation of name for virtual columns.
                 ignore, cols, col, fk, i, j;
 
             var context = this._context;
@@ -2917,10 +2922,11 @@
                                 // generate name for virtual-column
                                 var extra = 0;
                                 pseudoName = "$" + col.markdown_name;
-                                while (pseudoName in tableColumns) {
+                                while ((pseudoName in tableColumns) || (pseudoName in virtualColumnNames)) {
                                     extra++;
                                     pseudoName += "-" + extra;
                                 }
+                                virtualColumnNames[pseudoName] = true;
                                 this._referenceColumns.push(new VirtualColumn(this, col, pseudoName, tuple));
                             }
                             continue;

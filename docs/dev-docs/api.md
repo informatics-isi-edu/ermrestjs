@@ -3183,8 +3183,9 @@ It will include:
 #### reference.citation : <code>ERMrest.Citation</code>
 If annotation is defined and has the required attributes, will return
 a Citation object that can be used to generate citation.
-I had to move this here because activeList is using this before read,
+NOTE I had to move this here because activeList is using this before read,
 to get the all-outbound foreignkeys which might be in the waitfor of citation annotation
+In the future we might also want to generate citation based on page and not necessarily tuple.
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+removeAllFacetFilters"></a>
@@ -6774,8 +6775,9 @@ It will include:
 #### reference.citation : <code>ERMrest.Citation</code>
 If annotation is defined and has the required attributes, will return
 a Citation object that can be used to generate citation.
-I had to move this here because activeList is using this before read,
+NOTE I had to move this here because activeList is using this before read,
 to get the all-outbound foreignkeys which might be in the waitfor of citation annotation
+In the future we might also want to generate citation based on page and not necessarily tuple.
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+removeAllFacetFilters"></a>
