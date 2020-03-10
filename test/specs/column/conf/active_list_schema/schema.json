@@ -12,7 +12,7 @@
                     "annotations": {
                         "tag:isrd.isi.edu,2017:key-display": {
                             "*": {
-                                "wait_for": ["all_outbound_entity_o3_o2"],
+                                "wait_for": ["all_outbound_entity_o3_o2", "outbound_entity_o3"],
                                 "markdown_pattern": "fko3 o2 rowname: {{{all_outbound_entity_o3_o2.rowName}}}"
                             }
                         }
@@ -438,7 +438,7 @@
                     "author_pattern":  "author",
                     "title_pattern":   "title",
                     "year_pattern":    "2018",
-                    "url_pattern":     "https://dev.isrd.isi.edu/chaise/record/#{{{$catalog.snapshot}}}/citation_schema:citation_w_mustache/id=1",
+                    "url_pattern":     "https://dev.isrd.isi.edu/chaise/record/#{{{$catalog.snapshot}}}/schema:table/id=1",
                     "id_pattern":      "1"
                 },
                 "tag:isrd.isi.edu,2019:source-definitions": {
@@ -466,6 +466,10 @@
                         },
                         "outbound_entity_o2": {
                             "source": [{"outbound": ["active_list_schema", "main_fk2"]}, "RID"],
+                            "entity": true
+                        },
+                        "outbound_entity_o3": {
+                            "source": [{"outbound": ["active_list_schema", "main_fk4"]}, "RID"],
                             "entity": true
                         },
                         "outbound_scalar_o1": {
