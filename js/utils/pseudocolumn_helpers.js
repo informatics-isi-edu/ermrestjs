@@ -955,7 +955,7 @@
 
                 // entitysets are only allowed in detailed
                 if (sd.hasInbound && !sd.sourceObject.aggregate && baseReference._context !== module._contexts.DETAILED) {
-                    console.log(errorMessage + "entity sets are not allowed in detailed.");
+                    console.log(errorMessage + "entity sets are not allowed in non-detailed.");
                     return;
                 }
 

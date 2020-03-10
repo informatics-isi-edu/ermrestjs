@@ -331,7 +331,7 @@ ReferenceColumn.prototype = {
     get display() {
         if (this._display_cached === undefined) {
             var res = {};
-            if (res._simple) {
+            if (this._simple) {
                 res = this._baseCols[0].getDisplay(this._context);
             }
 
@@ -2533,7 +2533,7 @@ function InboundForeignKeyPseudoColumn (reference, relatedReference, sourceObjec
     var fk = relatedReference.origFKR;
 
     // call the parent constructor
-    InboundForeignKeyPseudoColumn.superClass.call(this, relatedReference, fk.colset.columns, sourceObject);
+    InboundForeignKeyPseudoColumn.superClass.call(this, reference, fk.colset.columns, sourceObject);
 
     /**
      * The reference that can be used to get the data for this pseudo-column

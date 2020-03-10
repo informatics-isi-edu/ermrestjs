@@ -2091,14 +2091,19 @@
                 }
 
                 // attach the display settings defined on the source definition
-                if (this.pseudoColumn && this.pseudoColumn.display.sourceMarkdownPattern) {
-                    this._display.type = module._displayTypes.MARKDOWN;
-
+                if (this.pseudoColumn && this.pseudoColumn.display) {
                     var displ = this.pseudoColumn.display;
-                    this._display.sourceMarkdownPattern = displ.sourceMarkdownPattern;
-                    this._display.sourceTemplateEngine = displ.sourceTemplateEngine;
                     this._display.sourceWaitFor = this.pseudoColumn.waitFor;
                     this._display.sourceHasWaitFor = this.pseudoColumn.hasWaitFor;
+
+                    if (displ.sourceMarkdownPattern) {
+                        this._display.type = module._displayTypes.MARKDOWN;
+                        this._display.sourceMarkdownPattern = displ.sourceMarkdownPattern;
+                        this._display.sourceTemplateEngine = displ.sourceTemplateEngine;
+                    }
+                } else {
+                    this._display.sourceWaitFor = [];
+                    this._display.sourceHasWaitFor = false;
                 }
             }
 
@@ -3306,7 +3311,7 @@
                 obj[type] = true;
 
                 // add index if available (not available in citation)
-                if (index) {
+                if (Number.isInteger(index)) {
                     obj.index = index;
                 }
 
@@ -3490,7 +3495,7 @@
         _generateRelatedReference: function (fkr, tuple, checkForAssociation, sourceObject) {
             var j, col, uri, filterSource = [], dataSource = [];
 
-            var useFaceting = (typeof tuple === 'object');
+            var useFaceting = isObjectAndNotNull(tuple);
             var catalog = this.table.schema.catalog;
 
             var newRef = _referenceCopy(this);
