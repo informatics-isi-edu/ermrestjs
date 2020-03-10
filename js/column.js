@@ -380,7 +380,7 @@ ReferenceColumn.prototype = {
      *
      * @param {Object} data the raw data of the table.
      * @param {String} context the app context
-     * @param {Object} options includes `context` and `formattedValues`
+     * @param {Object} options includes `context` and `templateVariables`
      * @returns {Object} A key value pair containing value and isHTML that detemrines the presentation.
      */
     formatPresentation: function(data, context, options) {
@@ -672,7 +672,7 @@ ReferenceColumn.prototype = {
         // rest of the cases
         // NOTE by passing the given templateVariables instead of the one attached to the main tuple, we're supporting wait_for in column and key display.
         // (in combination with the wait_for logic that looks for the one that is defined on column/key display)
-        var pres = self.formatPresentation(mainTuple._data, mainTuple._pageRef._context, { formattedValues: templateVariables, skipWaitFor: true});
+        var pres = self.formatPresentation(mainTuple._data, mainTuple._pageRef._context, { templateVariables: templateVariables, skipWaitFor: true});
         if (self.type.name === "gene_sequence") {
             pres.isHTML = true;
         }
@@ -758,7 +758,7 @@ module._extends(PseudoColumn, ReferenceColumn);
  *
  * @param {Object} data the raw data of the table
  * @param {String} context the app context
- * @param {Object} options include `formattedValues`
+ * @param {Object} options include `templateVariables`
  * @returns {Object} A key value pair containing value and isHTML that detemrines the presentation.
  */
 PseudoColumn.prototype.formatPresentation = function(data, context, options) {
@@ -789,16 +789,19 @@ PseudoColumn.prototype.formatPresentation = function(data, context, options) {
         return nullValue;
     }
 
-    // make sure formattedValues is valid
+    // make sure templateVariables is valid
     if (!options) options = {};
 
-    if (options.formattedValues === undefined) {
-        options.formattedValues = module._getFormattedKeyValues(this.table, context, data);
+    if (options.templateVariables === undefined) {
+        options.templateVariables = module._getFormattedKeyValues(this.table, context, data);
     }
 
     // not in entity mode, just return the column value.
     if (!this.isEntityMode) {
-        return PseudoColumn.super.formatPresentation.call(this, data, context, options);
+        // we should not pass the same options (templateVariables) to the parent,
+        // since when it goes to the parent it will be based on the leaf table
+        // while the options.templateVariables is based on the parent table.
+        return PseudoColumn.super.formatPresentation.call(this, data, context, {});
     }
 
     if (this.display.sourceMarkdownPattern) {
@@ -2027,7 +2030,7 @@ module._extends(KeyPseudoColumn, ReferenceColumn);
  *    - If any of the constituent columnhas markdown don't add self-link, otherwise add the self-link.
  * @param  {Object} data    given raw data for the table columns
  * @param  {String} context the app context
- * @param  {Object} options might include `formattedValues`
+ * @param  {Object} options might include `templateVariables`
  * @return {Object} A key value pair containing value and isHTML that detemrines the presentation.
  */
 KeyPseudoColumn.prototype.formatPresentation = function(data, context, options) {
@@ -2317,7 +2320,7 @@ AssetPseudoColumn.prototype.getMetadata = function (data, context, options) {
  *
  * @param {Object} data the raw data of the table
  * @param {String} context the app context
- * @param {Object} options include `formattedValues`
+ * @param {Object} options include `templateVariables`
  * @returns {Object} A key value pair containing value and isHTML that detemrines the presentation.
  */
 AssetPseudoColumn.prototype.formatPresentation = function(data, context, options) {

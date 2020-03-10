@@ -1807,7 +1807,7 @@ This will call `formatvalue` for the current column and other columns if necessa
 | --- | --- | --- |
 | data | <code>Object</code> | The `raw` data for the table. |
 | context | <code>String</code> | the app context |
-| options | <code>Object</code> | The key value pair of possible options with all formatted values in '.formattedValues' key |
+| options | <code>Object</code> | The key value pair of possible options with all formatted values in '.templateVariables' key |
 
 <a name="ERMrest.Column+toString"></a>
 
@@ -4130,7 +4130,7 @@ It will return:
 | --- | --- | --- |
 | data | <code>Object</code> | the raw data of the table. |
 | context | <code>String</code> | the app context |
-| options | <code>Object</code> | includes `context` and `formattedValues` |
+| options | <code>Object</code> | includes `context` and `templateVariables` |
 
 <a name="ERMrest.ReferenceColumn+getInputDisabled"></a>
 
@@ -4331,7 +4331,7 @@ Format the presentation value corresponding to this pseudo-column definition.
 | --- | --- | --- |
 | data | <code>Object</code> | the raw data of the table |
 | context | <code>String</code> | the app context |
-| options | <code>Object</code> | include `formattedValues` |
+| options | <code>Object</code> | include `templateVariables` |
 
 <a name="ERMrest.PseudoColumn+getAggregatedValue"></a>
 
@@ -4522,7 +4522,7 @@ The following is the logic:
 | --- | --- | --- |
 | data | <code>Object</code> | given raw data for the table columns |
 | context | <code>String</code> | the app context |
-| options | <code>Object</code> | might include `formattedValues` |
+| options | <code>Object</code> | might include `templateVariables` |
 
 <a name="ERMrest.AssetPseudoColumn"></a>
 
@@ -4675,7 +4675,7 @@ Format the presentation value corresponding to this asset definition.
 | --- | --- | --- |
 | data | <code>Object</code> | the raw data of the table |
 | context | <code>String</code> | the app context |
-| options | <code>Object</code> | include `formattedValues` |
+| options | <code>Object</code> | include `templateVariables` |
 
 <a name="ERMrest.InboundForeignKeyPseudoColumn"></a>
 

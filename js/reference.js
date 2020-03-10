@@ -5026,7 +5026,7 @@
                 /*
                  * There are multiple annotations involved in getting the value of column,
                  * one of these annotations is markdown_pattern that can be defined on columns.
-                 * For that annotation, we need the formattedValues of all the columns.
+                 * For that annotation, we need the templateVariables of all the columns.
                  * Therefore at first we're calling `_getFormattedKeyValues` which internally
                  * will call `formatvalue` for all the columns and also adds the extra attributes.
                  * We're passing the raw value to the formatPresentation, because that function
@@ -5073,7 +5073,7 @@
                             if (column.isForeignKey) {
                                 presentation = column.formatPresentation(this._linkedData[column.name], this._pageRef._context, {templateVariables: keyValues});
                             } else {
-                                presentation = column.formatPresentation(this._data, this._pageRef._context, { formattedValues: keyValues, templateVariables: keyValues});
+                                presentation = column.formatPresentation(this._data, this._pageRef._context, { templateVariables: keyValues});
                             }
                             this._values[i] = presentation.value;
                             this._isHTML[i] = presentation.isHTML;
@@ -5102,10 +5102,10 @@
                             if (column.isForeignKey || (column.isPathColumn && column.hasPath)) {
                                 values[i] = column.formatPresentation(this._linkedData[column.name], this._pageRef._context, {templateVariables: keyValues});
                             } else {
-                                values[i] = column.formatPresentation(this._data, this._pageRef._context, { formattedValues: keyValues, templateVariables: keyValues});
+                                values[i] = column.formatPresentation(this._data, this._pageRef._context, { templateVariables: keyValues});
                             }
                         } else {
-                            values[i] = column.formatPresentation(this._data, this._pageRef._context, { formattedValues: keyValues, templateVariables: keyValues});
+                            values[i] = column.formatPresentation(this._data, this._pageRef._context, { templateVariables: keyValues});
 
                             if (column.type.name === "gene_sequence") {
                                 values[i].isHTML = true;
