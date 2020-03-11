@@ -330,20 +330,23 @@ ReferenceColumn.prototype = {
      */
     get display() {
         if (this._display_cached === undefined) {
-            var res = {};
+            var res = {}, colDisplay = {}, sourceDisplay = {};
             if (this._simple) {
-                res = this._baseCols[0].getDisplay(this._context);
+                colDisplay = this._baseCols[0].getDisplay(this._context);
             }
 
             // attach display defined on the source
             if (this.sourceObject && this.sourceObject.display) {
                 var displ = this.sourceObject.display;
                 if (typeof displ.markdown_pattern === "string") {
-                    res.sourceMarkdownPattern = displ.markdown_pattern;
-                    res.sourceTemplateEngine = displ.template_engine;
+                    sourceDisplay.sourceMarkdownPattern = displ.markdown_pattern;
+                    sourceDisplay.sourceTemplateEngine = displ.template_engine;
                 }
             }
 
+            // I'm using assign to avoid changing the original colDisplay
+            // it was causing issues and some columns were using other column's display properties
+            Object.assign(res, colDisplay, sourceDisplay);
             this._display_cached = res;
         }
         return this._display_cached;
@@ -1942,15 +1945,17 @@ Object.defineProperty(ForeignKeyPseudoColumn.prototype, "comment", {
 Object.defineProperty(ForeignKeyPseudoColumn.prototype, "display", {
     get: function () {
         if (this._display_cached === undefined) {
-            var res = this.foreignKey.getDisplay(this._context);
+            var res = {}, fkDisplay = this.foreignKey.getDisplay(this._context), sourceDisplay = {};
             // attach display defined on the source
             if (this.sourceObject && this.sourceObject.display) {
                 var displ = this.sourceObject.display;
                 if (typeof displ.markdown_pattern === "string") {
-                    res.sourceMarkdownPattern = displ.markdown_pattern;
-                    res.sourceTemplateEngine = displ.template_engine;
+                    sourceDisplay.sourceMarkdownPattern = displ.markdown_pattern;
+                    sourceDisplay.sourceTemplateEngine = displ.template_engine;
                 }
             }
+
+            Object.assign(res, fkDisplay, sourceDisplay);
             this._display_cached = res;
         }
         return this._display_cached;
@@ -2135,15 +2140,17 @@ Object.defineProperty(KeyPseudoColumn.prototype, "default", {
 Object.defineProperty(KeyPseudoColumn.prototype, "display", {
     get: function () {
         if (this._display_cached === undefined) {
-            var res = this.key.getDisplay(this._context);
+            var res = {}, keyDisplay = this.key.getDisplay(this._context), sourceDisplay = {};
             // attach display defined on the source
             if (this.sourceObject && this.sourceObject.display) {
                 var displ = this.sourceObject.display;
                 if (typeof displ.markdown_pattern === "string") {
-                    res.sourceMarkdownPattern = displ.markdown_pattern;
-                    res.sourceTemplateEngine = displ.template_engine;
+                    sourceDisplay.sourceMarkdownPattern = displ.markdown_pattern;
+                    sourceDisplay.sourceTemplateEngine = displ.template_engine;
                 }
             }
+
+            Object.assign(res, keyDisplay, sourceDisplay);
             this._display_cached = res;
         }
         return this._display_cached;
