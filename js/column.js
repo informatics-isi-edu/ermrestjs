@@ -586,9 +586,6 @@ ReferenceColumn.prototype = {
             var wfDef = [];
             if (self.sourceObject && self.sourceObject.display) {
                 wfDef = self.sourceObject.display.wait_for;
-            } else if (self.display.waitForRaw) {
-                // the waitfor could be defined on column_display or key_display
-                wfDef = self.display.waitForRaw;
             }
 
             var res = module._processWaitForList(wfDef, self._baseReference, self._currentTable, self, self._mainTuple, "pseudo-column=`" + self.displayname.value + "`");

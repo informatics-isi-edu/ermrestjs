@@ -2728,8 +2728,7 @@
                     "isHTML": (typeof annotation.markdown_pattern === 'string') || this.type.name === 'markdown',
                     "markdownPattern": annotation.markdown_pattern,
                     "templateEngine": annotation.template_engine,
-                    "columnOrder": columnOrder,
-                    "waitForRaw": annotation.wait_for
+                    "columnOrder": columnOrder
                 };
             }
             return this._display[context];
@@ -3186,8 +3185,7 @@
                     "columnOrder": columnOrder,
                     "isMarkdownPattern": (typeof annotation.markdown_pattern === 'string'),
                     "templateEngine": annotation.template_engine,
-                    "markdownPattern": annotation.markdown_pattern,
-                    "waitForRaw": annotation.wait_for
+                    "markdownPattern": annotation.markdown_pattern
                 };
             }
 

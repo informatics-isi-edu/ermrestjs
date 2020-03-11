@@ -7,17 +7,7 @@
             "schema_name": "active_list_schema",
             "keys": [
                 {"unique_columns": ["main_id"]},
-                {
-                    "unique_columns": ["rowname_col"],
-                    "annotations": {
-                        "tag:isrd.isi.edu,2017:key-display": {
-                            "*": {
-                                "wait_for": ["all_outbound_entity_o3_o2", "outbound_entity_o3"],
-                                "markdown_pattern": "fko3 o2 rowname: {{{all_outbound_entity_o3_o2.rowName}}}"
-                            }
-                        }
-                    }
-                }
+                {"unique_columns": ["rowname_col"]}
             ],
             "foreign_keys": [
                 {
@@ -190,20 +180,6 @@
                     "name": "fk4_col1",
                     "type": {
                         "typename": "text"
-                    }
-                },
-                {
-                    "name": "col_w_waitfor_in_col_display",
-                    "type": {
-                        "typename": "text"
-                    },
-                    "annotations": {
-                        "tag:isrd.isi.edu,2016:column-display": {
-                            "*": {
-                                "markdown_pattern": "",
-                                "wait_for": ["all_outbound_entity_o3_o2_o1", "array_d_scalar_i2", "entity_set_i2"]
-                            }
-                        }
                     }
                 }
             ],
@@ -403,9 +379,6 @@
                                 "markdown_pattern": "{{max_i2}}",
                                 "wait_for": ["max_i2", "entity_set_i3"]
                             }
-                        },
-                        {
-                            "source": "col_w_waitfor_in_col_display"
                         }
                     ]
                 },
