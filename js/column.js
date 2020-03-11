@@ -380,10 +380,11 @@ ReferenceColumn.prototype = {
      *
      * @param {Object} data the raw data of the table.
      * @param {String} context the app context
-     * @param {Object} options includes `context` and `templateVariables`
+     * @param {Object} templateVariables the template variables that should be used
+     * @param {Object} options
      * @returns {Object} A key value pair containing value and isHTML that detemrines the presentation.
      */
-    formatPresentation: function(data, context, options) {
+    formatPresentation: function(data, context, templateVariables, options) {
         data = data || {};
         options = options || {};
 
@@ -397,7 +398,7 @@ ReferenceColumn.prototype = {
         }
 
         if (this.display.sourceMarkdownPattern) {
-            var res, keyValues = options.templateVariables || {}, cols = this._baseCols;
+            var res, keyValues = templateVariables || {}, cols = this._baseCols;
 
             if (cols.length > 0) {
                 if (this._simple) {
@@ -423,12 +424,12 @@ ReferenceColumn.prototype = {
         }
 
         if (this._simple) {
-            return this._baseCols[0].formatPresentation(data, context, options);
+            return this._baseCols[0].formatPresentation(data, context, templateVariables, options);
         }
 
         var isHTML = false, value = "", unformatted = "", curr;
         for (var i = 0; i < this._baseCols.length; i++) {
-            curr = this._baseCols[i].formatPresentation(data, context, options);
+            curr = this._baseCols[i].formatPresentation(data, context, templateVariables, options);
             if (!isHTML && curr.isHTML) {
                 isHTML = true;
             }
@@ -666,13 +667,13 @@ ReferenceColumn.prototype = {
 
         // all outbound
         if (self.isForeignKey || (self.isPathColumn && self.hasPath && self.isUnique)) {
-            return self.formatPresentation(mainTuple._linkedData[self.name], mainTuple._pageRef._context, {skipWaitFor: true});
+            return self.formatPresentation(mainTuple._linkedData[self.name], mainTuple._pageRef._context, null, {skipWaitFor: true});
         }
 
         // rest of the cases
         // NOTE by passing the given templateVariables instead of the one attached to the main tuple, we're supporting wait_for in column and key display.
         // (in combination with the wait_for logic that looks for the one that is defined on column/key display)
-        var pres = self.formatPresentation(mainTuple._data, mainTuple._pageRef._context, { templateVariables: templateVariables, skipWaitFor: true});
+        var pres = self.formatPresentation(mainTuple._data, mainTuple._pageRef._context, templateVariables, {skipWaitFor: true});
         if (self.type.name === "gene_sequence") {
             pres.isHTML = true;
         }
@@ -761,7 +762,7 @@ module._extends(PseudoColumn, ReferenceColumn);
  * @param {Object} options include `templateVariables`
  * @returns {Object} A key value pair containing value and isHTML that detemrines the presentation.
  */
-PseudoColumn.prototype.formatPresentation = function(data, context, options) {
+PseudoColumn.prototype.formatPresentation = function(data, context, templateVariables, options) {
     data = data || {};
     options = options || {};
 
@@ -790,22 +791,21 @@ PseudoColumn.prototype.formatPresentation = function(data, context, options) {
     }
 
     // make sure templateVariables is valid
-    if (!options) options = {};
-
-    if (options.templateVariables === undefined) {
-        options.templateVariables = module._getFormattedKeyValues(this.table, context, data);
+    if (!isObjectAndNotNull(templateVariables)) {
+        templateVariables = module._getFormattedKeyValues(this.table, context, data);
     }
 
     // not in entity mode, just return the column value.
     if (!this.isEntityMode) {
-        // we should not pass the same options (templateVariables) to the parent,
+        // we should not pass the same templateVariables to the parent,
         // since when it goes to the parent it will be based on the leaf table
-        // while the options.templateVariables is based on the parent table.
-        return PseudoColumn.super.formatPresentation.call(this, data, context, {});
+        // while the templateVariables is based on the parent table.
+        // only if we're going to use this with sourceMarkdownPattern we should pass this value
+        return PseudoColumn.super.formatPresentation.call(this, data, context, this.display.sourceMarkdownPattern ? templateVariables : null);
     }
 
     if (this.display.sourceMarkdownPattern) {
-        var keyValues = options.templateVariables || {};
+        var keyValues = templateVariables || {};
         keyValues.$self = module._getRowTemplateVariables(this.table, context, data);
         return module._processMarkdownPattern(
             this.display.sourceMarkdownPattern,
@@ -1744,7 +1744,7 @@ ForeignKeyPseudoColumn.prototype._determineDefaultValue = function () {
     this._defaultValues = res.values;
     this._defaultReference = res.reference;
 };
-ForeignKeyPseudoColumn.prototype.formatPresentation = function(data, context, options) {
+ForeignKeyPseudoColumn.prototype.formatPresentation = function(data, context, templateVariables, options) {
     data = data || {};
     options = options || {};
     var nullValue = {
@@ -1759,7 +1759,7 @@ ForeignKeyPseudoColumn.prototype.formatPresentation = function(data, context, op
     }
 
     if (this.display.sourceMarkdownPattern) {
-        var keyValues = options.templateVariables || {};
+        var keyValues = templateVariables || {};
         keyValues.$self = module._getRowTemplateVariables(this.table, context, data);
         return module._processMarkdownPattern(
             this.display.sourceMarkdownPattern,
@@ -2033,7 +2033,7 @@ module._extends(KeyPseudoColumn, ReferenceColumn);
  * @param  {Object} options might include `templateVariables`
  * @return {Object} A key value pair containing value and isHTML that detemrines the presentation.
  */
-KeyPseudoColumn.prototype.formatPresentation = function(data, context, options) {
+KeyPseudoColumn.prototype.formatPresentation = function(data, context, templateVariables, options) {
     data = data || {};
     options = options || {};
     var nullValue = {
@@ -2046,7 +2046,7 @@ KeyPseudoColumn.prototype.formatPresentation = function(data, context, options) 
         return nullValue;
     }
     if (this.display.sourceMarkdownPattern) {
-        var keyValues = options.templateVariables || {};
+        var keyValues = templateVariables || {};
         keyValues.$self = module._getRowTemplateVariables(this.table, context, data, null, this.key);
         return module._processMarkdownPattern(
             this.display.sourceMarkdownPattern,
@@ -2057,7 +2057,7 @@ KeyPseudoColumn.prototype.formatPresentation = function(data, context, options) 
         );
     }
 
-    var pres = module._generateKeyPresentation(this.key, data, context, options);
+    var pres = module._generateKeyPresentation(this.key, data, context, templateVariables);
     return pres ? pres : nullValue;
  };
 KeyPseudoColumn.prototype._determineSortable = function () {
@@ -2323,7 +2323,7 @@ AssetPseudoColumn.prototype.getMetadata = function (data, context, options) {
  * @param {Object} options include `templateVariables`
  * @returns {Object} A key value pair containing value and isHTML that detemrines the presentation.
  */
-AssetPseudoColumn.prototype.formatPresentation = function(data, context, options) {
+AssetPseudoColumn.prototype.formatPresentation = function(data, context, templateVariables, options) {
     data = data || {};
     options = options || {};
     var nullValue = {
@@ -2343,7 +2343,7 @@ AssetPseudoColumn.prototype.formatPresentation = function(data, context, options
 
     // if column has column-display annotation, use it
     if (this.display.sourceMarkdownPattern || this._baseCol.getDisplay(context).isMarkdownPattern) {
-        return AssetPseudoColumn.super.formatPresentation.call(this, data, context, options);
+        return AssetPseudoColumn.super.formatPresentation.call(this, data, context, templateVariables, options);
     }
 
     // if null, return null value
@@ -2583,7 +2583,7 @@ function InboundForeignKeyPseudoColumn (reference, relatedReference, sourceObjec
 module._extends(InboundForeignKeyPseudoColumn, ReferenceColumn);
 
 // properties to be overriden:
-InboundForeignKeyPseudoColumn.prototype.formatPresentation = function(data, context, options) {
+InboundForeignKeyPseudoColumn.prototype.formatPresentation = function(data, context, templateVariables, options) {
     // NOTE this property should not be used.
     return {isHTML: true, value: "", unformatted: ""};
  };

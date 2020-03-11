@@ -783,7 +783,7 @@ AttributeGroupTuple.prototype = {
             var presentation;
 
             columns.forEach(function (col) {
-                presentation = col.formatPresentation(self._data, context, {templateVariables: templateVariables});
+                presentation = col.formatPresentation(self._data, context, templateVariables);
                 self._values.push(presentation.value);
                 self._isHTML.push(presentation.isHTML);
             });
@@ -993,7 +993,7 @@ AttributeGroupColumn.prototype = {
         return _formatValueByType(this.type, data, options);
     },
 
-    formatPresentation: function (data, context, options) {
+    formatPresentation: function (data, context, templateVariables, options) {
         data = data || {};
 
         var formattedValue = this.formatvalue(data[this.name], context, options);

@@ -5071,9 +5071,9 @@
                         column = this._pageRef.columns[i];
                         if (column.isPseudo) {
                             if (column.isForeignKey) {
-                                presentation = column.formatPresentation(this._linkedData[column.name], this._pageRef._context, {templateVariables: keyValues});
+                                presentation = column.formatPresentation(this._linkedData[column.name], this._pageRef._context, keyValues);
                             } else {
-                                presentation = column.formatPresentation(this._data, this._pageRef._context, { templateVariables: keyValues});
+                                presentation = column.formatPresentation(this._data, this._pageRef._context, keyValues);
                             }
                             this._values[i] = presentation.value;
                             this._isHTML[i] = presentation.isHTML;
@@ -5100,12 +5100,12 @@
                         column = this._pageRef.columns[i];
                         if (column.isPseudo) {
                             if (column.isForeignKey || (column.isPathColumn && column.hasPath)) {
-                                values[i] = column.formatPresentation(this._linkedData[column.name], this._pageRef._context, {templateVariables: keyValues});
+                                values[i] = column.formatPresentation(this._linkedData[column.name], this._pageRef._context, keyValues);
                             } else {
-                                values[i] = column.formatPresentation(this._data, this._pageRef._context, { templateVariables: keyValues});
+                                values[i] = column.formatPresentation(this._data, this._pageRef._context, keyValues);
                             }
                         } else {
-                            values[i] = column.formatPresentation(this._data, this._pageRef._context, { templateVariables: keyValues});
+                            values[i] = column.formatPresentation(this._data, this._pageRef._context, keyValues);
 
                             if (column.type.name === "gene_sequence") {
                                 values[i].isHTML = true;

@@ -185,7 +185,7 @@ to use for ERMrest JavaScript agents.
         * [.ermrestDefault](#ERMrest.Column+ermrestDefault) : <code>object</code>
         * [.default](#ERMrest.Column+default) ⇒ <code>string</code>
         * [.formatvalue(data, context)](#ERMrest.Column+formatvalue) ⇒ <code>string</code> \| <code>Array.&lt;string&gt;</code>
-        * [.formatPresentation(data, context, options)](#ERMrest.Column+formatPresentation) ⇒ <code>Object</code>
+        * [.formatPresentation(data, context, templateVariables, options)](#ERMrest.Column+formatPresentation) ⇒ <code>Object</code>
         * [.toString()](#ERMrest.Column+toString) ⇒ <code>string</code>
         * [._getNullValue()](#ERMrest.Column+_getNullValue) : <code>object</code>
         * [.getDisplay(context)](#ERMrest.Column+getDisplay)
@@ -412,7 +412,7 @@ to use for ERMrest JavaScript agents.
         * [.hasWaitForAggregate](#ERMrest.ReferenceColumn+hasWaitForAggregate) ⇒ <code>Boolean</code>
         * [.waitFor](#ERMrest.ReferenceColumn+waitFor) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
         * [.formatvalue(data, context)](#ERMrest.ReferenceColumn+formatvalue) ⇒ <code>string</code>
-        * [.formatPresentation(data, context, options)](#ERMrest.ReferenceColumn+formatPresentation) ⇒ <code>Object</code>
+        * [.formatPresentation(data, context, templateVariables, options)](#ERMrest.ReferenceColumn+formatPresentation) ⇒ <code>Object</code>
         * [.getInputDisabled()](#ERMrest.ReferenceColumn+getInputDisabled) : <code>boolean</code> \| <code>object</code>
         * [._getShowForeignKeyLinks(context)](#ERMrest.ReferenceColumn+_getShowForeignKeyLinks) ⇒ <code>boolean</code>
         * [.sourceFormatPresentation(templateVariables, columnValue, mainTuple)](#ERMrest.ReferenceColumn+sourceFormatPresentation) ⇒ <code>Object</code>
@@ -1647,7 +1647,7 @@ Constructor for Columns.
     * [.ermrestDefault](#ERMrest.Column+ermrestDefault) : <code>object</code>
     * [.default](#ERMrest.Column+default) ⇒ <code>string</code>
     * [.formatvalue(data, context)](#ERMrest.Column+formatvalue) ⇒ <code>string</code> \| <code>Array.&lt;string&gt;</code>
-    * [.formatPresentation(data, context, options)](#ERMrest.Column+formatPresentation) ⇒ <code>Object</code>
+    * [.formatPresentation(data, context, templateVariables, options)](#ERMrest.Column+formatPresentation) ⇒ <code>Object</code>
     * [.toString()](#ERMrest.Column+toString) ⇒ <code>string</code>
     * [._getNullValue()](#ERMrest.Column+_getNullValue) : <code>object</code>
     * [.getDisplay(context)](#ERMrest.Column+getDisplay)
@@ -1795,7 +1795,7 @@ null and value. `null` for arrays is a valid value. [`null`] is different from `
 
 <a name="ERMrest.Column+formatPresentation"></a>
 
-#### column.formatPresentation(data, context, options) ⇒ <code>Object</code>
+#### column.formatPresentation(data, context, templateVariables, options) ⇒ <code>Object</code>
 Formats the presentation value corresponding to this column definition.
 For getting the value of a column we should use this function and not formatvalue directly.
 This will call `formatvalue` for the current column and other columns if necessary.
@@ -1807,7 +1807,8 @@ This will call `formatvalue` for the current column and other columns if necessa
 | --- | --- | --- |
 | data | <code>Object</code> | The `raw` data for the table. |
 | context | <code>String</code> | the app context |
-| options | <code>Object</code> | The key value pair of possible options with all formatted values in '.templateVariables' key |
+| templateVariables | <code>Object</code> | tempalte variables |
+| options | <code>Object</code> |  |
 
 <a name="ERMrest.Column+toString"></a>
 
@@ -3981,7 +3982,7 @@ count aggregate representation
     * [.hasWaitForAggregate](#ERMrest.ReferenceColumn+hasWaitForAggregate) ⇒ <code>Boolean</code>
     * [.waitFor](#ERMrest.ReferenceColumn+waitFor) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
     * [.formatvalue(data, context)](#ERMrest.ReferenceColumn+formatvalue) ⇒ <code>string</code>
-    * [.formatPresentation(data, context, options)](#ERMrest.ReferenceColumn+formatPresentation) ⇒ <code>Object</code>
+    * [.formatPresentation(data, context, templateVariables, options)](#ERMrest.ReferenceColumn+formatPresentation) ⇒ <code>Object</code>
     * [.getInputDisabled()](#ERMrest.ReferenceColumn+getInputDisabled) : <code>boolean</code> \| <code>object</code>
     * [._getShowForeignKeyLinks(context)](#ERMrest.ReferenceColumn+_getShowForeignKeyLinks) ⇒ <code>boolean</code>
     * [.sourceFormatPresentation(templateVariables, columnValue, mainTuple)](#ERMrest.ReferenceColumn+sourceFormatPresentation) ⇒ <code>Object</code>
@@ -4117,7 +4118,7 @@ Formats a value corresponding to this reference-column definition.
 
 <a name="ERMrest.ReferenceColumn+formatPresentation"></a>
 
-#### referenceColumn.formatPresentation(data, context, options) ⇒ <code>Object</code>
+#### referenceColumn.formatPresentation(data, context, templateVariables, options) ⇒ <code>Object</code>
 Formats the presentation value corresponding to this reference-column definition.
 It will return:
  - rendered value of sourceMarkdownPattern if exists.
@@ -4130,7 +4131,8 @@ It will return:
 | --- | --- | --- |
 | data | <code>Object</code> | the raw data of the table. |
 | context | <code>String</code> | the app context |
-| options | <code>Object</code> | includes `context` and `templateVariables` |
+| templateVariables | <code>Object</code> | the template variables that should be used |
+| options | <code>Object</code> |  |
 
 <a name="ERMrest.ReferenceColumn+getInputDisabled"></a>
 

@@ -1016,12 +1016,12 @@
      * @param  {ERMrest.Key} key    the key object
      * @param  {object} data        the data for the table that key is from
      * @param  {string} context     the context string
-     * @param  {object=} options
+     * @param  {object=} templateVariables
      * @return {object} the presentation object that can be used for the key
      * (it has `isHTML`, `value`, and `unformatted`).
      * NOTE the function might return `null`.
      */
-    module._generateKeyPresentation = function (key, data, context, options) {
+    module._generateKeyPresentation = function (key, data, context, templateVariables) {
         // if data is empty
         if (typeof data === "undefined" || data === null || Object.keys(data).length === 0) {
             return null;
@@ -1037,9 +1037,8 @@
         }
 
         // make sure that templateVariables is defined
-        options = options || {};
-        if (options.templateVariables === undefined) {
-           options.templateVariables = module._getFormattedKeyValues(key.table, context, data);
+        if (!isObjectAndNotNull(templateVariables)) {
+           templateVariables = module._getFormattedKeyValues(key.table, context, data);
         }
 
         // use the markdown_pattern that is defiend in key-display annotation
@@ -1047,7 +1046,7 @@
         if (display.isMarkdownPattern) {
             unformatted = module._renderTemplate(
                 display.markdownPattern,
-                options.templateVariables,
+                templateVariables,
                 key.table.schema.catalog,
                 {templateEngine: display.templateEngine}
             );
@@ -1060,7 +1059,7 @@
             var presentation;
             for (i = 0; i < cols.length; i++) {
                 try {
-                    presentation = cols[i].formatPresentation(data, context, {templateVariables: options.templateVariables});
+                    presentation = cols[i].formatPresentation(data, context, templateVariables);
                     values.push(presentation.value);
                     unformattedValues.push(presentation.unformatted);
                 } catch (exception) {

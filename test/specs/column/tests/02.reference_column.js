@@ -759,21 +759,21 @@ exports.execute = function (options) {
                     });
 
                     it('should use `markdown_pattern` from key display annotation with a link.', function () {
-                        val = compactBriefRef.columns[1].formatPresentation({"col_1":1, "col_3":2, "col_4":"value"}, "compact/brief", {"templateVariables": {"col_4":"value"}}).value;
+                        val = compactBriefRef.columns[1].formatPresentation({"col_1":1, "col_3":2, "col_4":"value"}, "compact/brief", {"col_4":"value"}).value;
                         expect(val).toEqual('<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:columns_table/col_1=1&col_3=2"><strong>value</strong></a>');
                     });
 
                     describe('otherwise, ', function () {
                         it ("should use key columns values separated with colon for caption. The URL should refer to the current reference.", function(){
-                            val = compactColumns[0].formatPresentation({"id":2}, "detailed", {"templateVariables": {"id":2}}).value;
+                            val = compactColumns[0].formatPresentation({"id":2}, "detailed", {"id":2}).value;
                             expect(val).toEqual('<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:columns_table/id=2">2</a>');
 
-                            val = compactBriefRef.columns[0].formatPresentation({"col_3":"3", "col_6":"6"}, "compact/brief", {"templateVariables": {"col_3":"3", "col_6":"6"}}).value;
+                            val = compactBriefRef.columns[0].formatPresentation({"col_3":"3", "col_6":"6"}, "compact/brief", {"col_3":"3", "col_6":"6"}).value;
                             expect(val).toEqual('<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:columns_table/col_3=3&col_6=6">3:6</a>');
                         });
 
                         it('should not add link if the key columns produce a link.', function () {
-                            val = compactBriefRef.columns[2].formatPresentation({"columns_schema_outbound_fk_7":"value"}, "compact/brief", {"templateVariables": {"columns_schema_outbound_fk_7":"value"}}).value;
+                            val = compactBriefRef.columns[2].formatPresentation({"columns_schema_outbound_fk_7":"value"}, "compact/brief", {"columns_schema_outbound_fk_7":"value"}).value;
                             expect(val).toEqual('<p><a href="http://example.com" class="external-link-icon external-link">value</a></p>\n');
                         })
                     });
@@ -781,15 +781,15 @@ exports.execute = function (options) {
 
                 describe('for assets, ', function() {
                     it('if in entry context, return the original underlying data, even if colummn-display annotation is present.', function() {
-                        val = assetRefEntryCols[6].formatPresentation({"col_asset_3": "https://example.com"}, "entry", {"templateVariables":{"col_asset_3": "https://example.com"}}).value;
+                        val = assetRefEntryCols[6].formatPresentation({"col_asset_3": "https://example.com"}, "entry", {"col_asset_3": "https://example.com"}).value;
                         expect(val).toEqual("https://example.com");
 
-                        val = assetRefCompactCols[9].formatPresentation({"col_filename": "filename", "col_asset_2": "value"}, "entry", {"templateVariables":{"col_filename": "filename"}}).value;
+                        val = assetRefCompactCols[9].formatPresentation({"col_filename": "filename", "col_asset_2": "value"}, "entry", {"col_filename": "filename"}).value;
                         expect(val).toEqual("value");
                     });
 
                     it('otherwise, if coulmn has column-display annotation, use it.', function () {
-                        val = assetRefCompactCols[9].formatPresentation({"col_filename": "filename", "col_asset_2": "value"}, "compact", {"templateVariables":{"col_filename": "filename"}}).value;
+                        val = assetRefCompactCols[9].formatPresentation({"col_filename": "filename", "col_asset_2": "value"}, "compact", {"col_filename": "filename"}).value;
                         expect(val).toEqual("<h2>filename</h2>\n");
                     });
 

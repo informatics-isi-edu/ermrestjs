@@ -2354,10 +2354,11 @@
          *
          * @param {Object} data The `raw` data for the table.
          * @param {String} context the app context
-         * @param {Object} options The key value pair of possible options with all formatted values in '.templateVariables' key
+         * @param {Object} templateVariables tempalte variables
+         * @param {Object} options
          * @returns {Object} A key value pair containing value and isHTML that detemrines the presentation.
          */
-        this.formatPresentation = function(data, context, options) {
+        this.formatPresentation = function(data, context, templateVariables, options) {
             data = data || {};
 
             if (options === undefined || options !== Object(options)) {
@@ -2411,12 +2412,11 @@
                 var template = display.markdownPattern; // pattern
 
                 // Code to do template/string replacement using keyValues
-                if (options.templateVariables === undefined) {
-                    options.templateVariables = module._getFormattedKeyValues(this.table, context, data);
+                if (!isObjectAndNotNull(templateVariables)) {
+                    templateVariables = module._getFormattedKeyValues(this.table, context, data);
                 }
 
-                options.templateEngine = display.templateEngine;
-                unformatted = module._renderTemplate(template, options.templateVariables, this.table.schema.catalog, options);
+                unformatted = module._renderTemplate(template, templateVariables, this.table.schema.catalog, {templateEngine: display.templateEngine});
             }
 
 
