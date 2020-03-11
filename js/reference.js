@@ -1466,10 +1466,12 @@
 
                 var defer = module._q.defer();
 
+                var urlEncode = module._fixedEncodeURIComponent;
+
                 var self = this,
                     oldAlias = "_o",
                     newAlias = "_n",
-                    uri = this._location.service + "/catalog/" + this._location.catalog + "/attributegroup/" + this._location.schemaName + ':' + this._location.tableName + '/';
+                    uri = this._location.service + "/catalog/" + this.table.schema.catalog.id + "/attributegroup/" + urlEncode(this.table.schema.name) + ':' + urlEncode(this.table.name) + '/';
 
                 var submissionData = [],        // the list of submission data for updating
                     columnProjections = [],     // the list of column names to use in the uri projection list
@@ -1717,7 +1719,7 @@
                     var etag = response.headers().etag;
                     var pageData = [];
 
-                    var uri = self._location.service + "/catalog/" + self._location.catalog + "/entity/" + self._location.schemaName + ':' + self._location.tableName + '/';
+                    var uri = self._location.service + "/catalog/" + self.table.schema.catalog.id + "/entity/" + urlEncode(self.table.schema.name) + ':' + urlEncode(self.table.name) + '/';
                     // loop through each returned Row and get the key value
                     for (j = 0; j < response.data.length; j++) {
                         // build the uri
