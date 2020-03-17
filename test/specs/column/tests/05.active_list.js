@@ -292,7 +292,9 @@ exports.execute = function (options) {
         describe("Page.templateVariables, ", function () {
             it ("should not include outbound fks if they are inivisble and source definitions fkeys is empty.", function () {
                 var res = mainEmptyFkPage.templateVariables[0];
-                var expected = {
+                expect(res.rowName).toBe("main_empty_fkeys one", "rowname missmatch");
+                expect(res.uri.detailed).toContain("active_list_schema:main_empty_fkeys/RID=" + findRID("main_empty_fkeys", "main_empty_fkeys_id", "01"), "uri missmatch");
+                var expectedValues = {
                     rowname_col: "main_empty_fkeys one",
                     _rowname_col: "main_empty_fkeys one",
                     int_col: "1,234,501",
@@ -301,9 +303,9 @@ exports.execute = function (options) {
                     _main_empty_fkeys_id: "01"
                 };
 
-                expect(Object.keys(res).length).toBe(Object.keys(expected).length, "keys length missmatch");
-                for (var k in expected) {
-                    expect(res[k]).toEqual(expected[k], "value missmatch for variable " + k);
+                expect(Object.keys(res.values).length).toBe(Object.keys(expectedValues).length, "keys length missmatch");
+                for (var k in expectedValues) {
+                    expect(res.values[k]).toEqual(expectedValues[k], "value missmatch for variable " + k);
                 }
 
             });

@@ -2575,6 +2575,8 @@ function InboundForeignKeyPseudoColumn (reference, relatedReference, sourceObjec
      */
     this.isInboundForeignKey = true;
 
+    this.isUnique = false;
+
     this._context = reference._context;
     this._currentRef = reference;
     this._currentTable = reference.table;

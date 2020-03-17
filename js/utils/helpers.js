@@ -1134,7 +1134,7 @@
     _generateRowURI = function (table, data, key) {
         if (data == null) return null;
 
-        var cols = (key != null) ? key.colset.columns : table.shortestKey;
+        var cols = (isObjectAndNotNull(key) && key.colset) ? key.colset.columns : table.shortestKey;
         var keyPair = "", col, i;
         for (i = 0; i < cols.length; i++) {
             col = cols[i].name;

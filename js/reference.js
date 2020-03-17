@@ -2887,7 +2887,7 @@
                                                 this._referenceColumns.push(new InboundForeignKeyPseudoColumn(this, relatedRef, null, fkName));
                                             }
                                         } else {
-                                            console.log(logCol, wm.FK_NOT_RELATED, i);
+                                            logCol(true, wm.FK_NOT_RELATED, i);
                                         }
                                     }
                                     break;
@@ -4782,7 +4782,7 @@
             if (this._templateVariables === undefined) {
                 var res = [];
                 this.tuples.forEach(function (t) {
-                    res.push(t.templateVariables.values);
+                    res.push(t.templateVariables);
                 });
                 this._templateVariables = res;
             }
