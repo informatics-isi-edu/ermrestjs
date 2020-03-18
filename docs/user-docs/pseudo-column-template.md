@@ -2,7 +2,7 @@
 
 This document will explain which annotations you need to use and how to use them in order to be able to access more than the current table's values in the templating environment. To make this simpler, we will explain this using an example.
 
-Let's assume the following is the ERD of our database. In all the examples we're defining column list for the `Main` table (assuming `schema` is the schema name).
+Let's assume the following is the ERD of our database. In all the examples, we're defining column list for the `Main` table (assuming `schema` is the schema name). You can follow the same pattern in both `visible-foreign-keys` and `citation` annotations.
 
 ![erd_01](https://raw.githubusercontent.com/informatics-isi-edu/ermrestjs/master/docs/resources/pseudo_columns_erd_01.png)
 
@@ -70,6 +70,14 @@ The following is the source definitions that we are going to use:
                 ],
                 "entity": false
             },
+            "entity_set-custom-name": {
+                "source": [
+                    {"inbound": ["schema", "fk3_cons"]},
+                    {"outbound": ["schema", "main_f3_cons"]},
+                    "f3_id"
+                ],
+                "entity": true
+            },
             "entity_array_d_aggregate-custom-name": {
                 "source": [
                     {"inbound": ["schema", "fk3_cons"]},
@@ -133,7 +141,7 @@ The following is the syntax for writing a custom display for a pseudo-column:
 
 In the `markdown_pattern` defined, by default, you can access the `"columns"` and `"fkeys"` that you have in the `source-definitions` annotation.
 
-Based on the given source-definition, the following is the object that is available in templating in all the `markdown_pattern`s defined in `visible-columns` and `visible-foreign-keys`:
+Based on the given source-definition, the following is the object that is available in templating in all the `markdown_pattern`s defined in `visible-columns` and `visible-foreign-keys`, and patterns of `citation` annotation:
 
 ```json
 {
@@ -189,7 +197,7 @@ If you want to access any extra `"sources"`, you need to list them in the `wait_
 
 #### Pseudo-Column Templating Variable Data Structure
 
-The data structure that you have access to by using the given sourcekey is different based on its types. The data-structure is aligned with the $self structure which is as follows.
+The data structure of the object that you have access to by using the given sourcekey is different based on depending on the type. The data-structure is aligned with the $self structure which is as follows.
 
 - Entity `array` or `array_d` aggregate
 
@@ -212,6 +220,38 @@ The data structure that you have access to by using the given sourcekey is diffe
     }
     ```
     Example: `{{#each entity_array_d_aggregate-custom-name}}[{{{this.rowName}}}]({{{this.uri.detailed}}}){{/each}}`
+
+- Entity sets (only available in `detailed` contexts):
+
+    ```javascript
+    {
+      "entity_set-custom-name": [
+        {
+          "values": {
+            "col": "", // formatted
+            "_col": "", // raw
+            ... // other columns
+            "$fkey_schema_fk1": {
+              "values": {
+                "fk_col": "", // formatted
+                "_fk_col": "", // raw
+                ...
+              },
+              "rowName": "",
+              "uri": {"detailed": ""}
+            },
+            ... // other outbound foreign keys
+          },
+          "rowName": "",
+          "uri": {
+              "detailed": "" // link to record page
+          }
+        },
+        ... // other rows
+      ]
+    }
+    ```
+    Example: `{{#each entity_set-custom-name}}[{{{this.rowName}}}]({{{this.uri.detailed}}}){{/each}}`
 
 - All-outbound entity:
 
