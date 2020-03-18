@@ -233,10 +233,11 @@ exports.execute = function (options) {
 
         describe("Reference._getReadPath in case of attributegroup", function () {
             it ("should add the allOutBounds.", function () {
-                var expectedPath = "M:=active_list_schema:main/" +
-                "F11:=left(fk4_col1)=(active_list_schema:outbound3:outbound3_id)/$M/" +
-                "F10:=left(fk3_col1,fk3_col2)=(active_list_schema:outbound2:outbound2_id1,outbound2_id2)/$M/" +
-                "F9:=left(fk2_col1,fk2_col2)=(active_list_schema:outbound2:outbound2_id1,outbound2_id2)/$M/" +
+                // the order of defined foreignkeys might change in the schema, and
+                // therefore the order of .fkeys that we get from sourceDefinitions might change.
+                // which in turn causes allOutBounds API under activeList to not be consistent.
+                // so we are testing for both possible values.
+                var appendText = "F9:=left(fk2_col1,fk2_col2)=(active_list_schema:outbound2:outbound2_id1,outbound2_id2)/$M/" +
                 "left(fk1_col1,fk1_col2)=(active_list_schema:outbound1:outbound1_id1,outbound1_id2)/" +
                 "left(fk1_col1)=(active_list_schema:outbound1_outbound1:outbound1_outbound1_id)/" +
                 "F8:=left(fk1_col1)=(active_list_schema:outbound1_outbound1_outbound1:outbound1_outbound1_outbound1_id)/$M/"+
@@ -255,7 +256,17 @@ exports.execute = function (options) {
                 "F8:=array_d(F8:*),F7:=array_d(F7:*),F6:=array_d(F6:*),F5:=array_d(F5:*)," +
                 "F4:=array_d(F4:*),F3:=array_d(F3:*),F2:=array_d(F2:*),F1:=array_d(F1:*)@sort(main_id)";
 
-                expect(mainRefCompact.readPath).toEqual(expectedPath);
+                var expectedPath1 = "M:=active_list_schema:main/" +
+                "F11:=left(fk4_col1)=(active_list_schema:outbound3:outbound3_id)/$M/" +
+                "F10:=left(fk3_col1,fk3_col2)=(active_list_schema:outbound2:outbound2_id1,outbound2_id2)/$M/" +
+                appendText;
+
+                var expectedPath2 = "M:=active_list_schema:main/" +
+                "F11:=left(fk3_col1,fk3_col2)=(active_list_schema:outbound2:outbound2_id1,outbound2_id2)/$M/" +
+                "F10:=left(fk4_col1)=(active_list_schema:outbound3:outbound3_id)/$M/" +
+                appendText;
+
+                expect([expectedPath1, expectedPath2]).toContain(mainRefCompact.readPath);
             });
 
             it ("should fallback to entity if there are no outbound foreignkeys.", function () {
@@ -367,13 +378,15 @@ exports.execute = function (options) {
 
     function testNameList (list, expected) {
         expect(list.length).toBe(expected.length, "length missmatch");
+        var expectedRaw = expected.map(function (e) {
+            return columnMapping[e] ? columnMapping[e] : e;
+        })
         list.forEach(function (el, index) {
-            var expectedVal = columnMapping[expected[index]] ? columnMapping[expected[index]] : expected[index];
             var elReverse = "";
             if (reverseColumnMapping[el.name]) {
                 elReverse = reverseColumnMapping[el.name];
             }
-            expect(el.name).toBe(expectedVal, "value missmatch in index=" + index + (elReverse ?  " (the returned fk: " + elReverse + ")" : ""));
+            expect(expectedRaw).toContain(el.name, el.name + " was not in the expected list" + (elReverse ?  " (the mapped value: " + elReverse + ")" : ""));
         });
     };
 
