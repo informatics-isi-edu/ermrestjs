@@ -5240,9 +5240,6 @@
                 // the multi-fk all-outbounds
                 var sm = this._pageRef.table.sourceDefinitions.sourceMapping;
 
-                // TODO the problem here is that activeList might have been called before, so we don't have the allOutBounds
-                // Currently the wait_for is under the tuple and therefore needs the tuple...
-                // TODO HEEEEEREEEEE!!!!!
                 self._pageRef.activeList.allOutBounds.forEach(function (col) {
                     // data is null, so we don't need to add it
                     if (!self._linkedData[col.name]) return;
