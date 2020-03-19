@@ -286,7 +286,6 @@
                     ]
                 }
             ],
-            "foreign_keys": [],
             "table_name": "author",
             "schema_name": "citation_schema",
             "column_definitions": [
@@ -301,16 +300,246 @@
                     "name": "first_name",
                     "type": {
                         "typename": "text"
-                    }
+                    },
+                    "nullok": false
                 },
                 {
                     "name": "last_name",
                     "type": {
                         "typename": "text"
-                    }
+                    },
+                    "nullok": false
                 }
             ],
-            "annotations": {}
+            "annotations": {
+                "tag:isrd.isi.edu,2016:table-display": {
+                    "row_name": {
+                        "row_markdown_pattern": "{{{first_name}}} {{{last_name}}}"
+                    }
+                }
+
+            }
+        },
+        "citation_w_waitfor": {
+            "kind": "table",
+            "schema_name": "citation_schema",
+            "table_name": "citation_w_waitfor",
+            "keys": [
+                {
+                    "unique_columns": ["id"]
+                }
+            ],
+            "foreign_keys": [
+                {
+                    "names": [["citation_schema", "citation_w_waitfor_fk1"]],
+                    "foreign_key_columns": [{
+                        "schema_name": "citation_schema",
+                        "table_name": "citation_w_waitfor",
+                        "column_name": "journal_id"
+                    }],
+                    "referenced_columns": [{
+                        "schema_name": "citation_schema",
+                        "table_name": "journal",
+                        "column_name": "id"
+                    }]
+                }
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "type": {"typename": "text"},
+                    "nullok": false
+                },
+                {
+                    "name": "title",
+                    "type": {"typename": "text"}
+                },
+                {
+                    "name": "journal_id",
+                    "type": {"typename": "text"},
+                    "nullok": false
+                },
+                {
+                    "name": "author",
+                    "type": {"typename": "text"},
+                    "nullok": false
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2018:citation": {
+                    "template_engine": "handlebars",
+                    "journal_pattern": "{{$fkey_citation_schema_citation_w_waitfor_fk1.rowName}} ({{{citation_journal_field.rowName}}})",
+                    "author_pattern":  "{{{author}}}",
+                    "title_pattern":   "{{#if title}}{{title}}{{else}}No title{{/if}}",
+                    "year_pattern":    "{{formatDate RCT 'YYYY'}}",
+                    "url_pattern":     "https://dev.isrd.isi.edu/chaise/record/#{{$catalog.snapshot}}/citation_schema:citation_w_handlebars/id={{id}}",
+                    "id_pattern":      "{{id}}",
+                    "wait_for": ["citation_journal_field"]
+                },
+                "tag:isrd.isi.edu,2019:source-definitions": {
+                    "fkeys": true,
+                    "columns": true,
+                    "sources": {
+                        "citation_journal_field": {
+                            "source": [
+                                {"outbound": ["citation_schema", "citation_w_waitfor_fk1"]},
+                                {"outbound": ["citation_schema", "journal_fk1"]},
+                                "RID"
+                            ],
+                            "entity": true
+                        }
+                    }
+                }
+            }
+        },
+        "citation_w_waitfor_agg": {
+            "kind": "table",
+            "schema_name": "citation_schema",
+            "table_name": "citation_w_waitfor_agg",
+            "keys": [{"unique_columns": ["id"]}],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "type": {"typename": "text"},
+                    "nullok": false
+                },
+                {
+                    "name": "title",
+                    "type": {"typename": "text"}
+                },
+                {
+                    "name": "journal",
+                    "type": {"typename": "text"}
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2018:citation": {
+                    "template_engine": "handlebars",
+                    "journal_pattern": "{{{journal}}}",
+                    "author_pattern":  "{{#each citation_authors}}{{{this.rowName}}}{{/each}}",
+                    "title_pattern":   "{{#if title}}{{title}}{{else}}No title{{/if}}",
+                    "year_pattern":    "{{formatDate RCT 'YYYY'}}",
+                    "url_pattern":     "https://dev.isrd.isi.edu/chaise/record/#{{$catalog.snapshot}}/citation_schema:citation_w_handlebars/id={{id}}",
+                    "id_pattern":      "{{id}}",
+                    "wait_for": ["citation_authors"]
+                },
+                "tag:isrd.isi.edu,2019:source-definitions": {
+                    "fkeys": true,
+                    "columns": true,
+                    "sources": {
+                        "citation_authors": {
+                            "source": [
+                                {"inbound": ["citation_schema", "citation_w_waitfor_agg_authors_fk2"]},
+                                {"outbound": ["citation_schema", "citation_w_waitfor_agg_authors_fk1"]},
+                                "RID"
+                            ],
+                            "entity": true,
+                            "aggregate": "array_d"
+                        }
+                    }
+                }
+            }
+        },
+        "citation_w_waitfor_agg_authors": {
+            "kind": "table",
+            "schema_name": "citation_schema",
+            "table_name": "citation_w_waitfor_agg_authors",
+            "keys": [{"unique_columns": ["author_id", "citation_w_waitfor_agg_id"]}],
+            "foreign_keys": [
+                {
+                    "names": [["citation_schema", "citation_w_waitfor_agg_authors_fk1"]],
+                    "foreign_key_columns": [{
+                        "schema_name": "citation_schema",
+                        "table_name": "citation_w_waitfor_agg_authors",
+                        "column_name": "author_id"
+                    }],
+                    "referenced_columns": [{
+                        "schema_name": "citation_schema",
+                        "table_name": "author",
+                        "column_name": "id"
+                    }]
+                },
+                {
+                    "names": [["citation_schema", "citation_w_waitfor_agg_authors_fk2"]],
+                    "foreign_key_columns": [{
+                        "schema_name": "citation_schema",
+                        "table_name": "citation_w_waitfor_agg_authors",
+                        "column_name": "citation_w_waitfor_agg_id"
+                    }],
+                    "referenced_columns": [{
+                        "schema_name": "citation_schema",
+                        "table_name": "citation_w_waitfor_agg",
+                        "column_name": "id"
+                    }]
+                }
+            ],
+            "column_definitions": [
+                {
+                    "name": "author_id",
+                    "type": {"typename": "integer"},
+                    "nullok": false
+                },
+                {
+                    "name": "citation_w_waitfor_agg_id",
+                    "type": {"typename": "text"},
+                    "nullok": false
+                }
+            ]
+        },
+        "journal": {
+            "kind": "table",
+            "schema_name": "citation_schema",
+            "table_name": "journal",
+            "keys": [{"unique_columns": ["id"]}],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "type": {"typename": "text"},
+                    "nullok": false
+                },
+                {
+                    "name": "name",
+                    "type": {"typename": "text"},
+                    "nullok": false
+                },
+                {
+                    "name": "field_id",
+                    "type": {"typename": "text"}
+                }
+            ],
+            "foreign_keys": [
+                {
+                    "names": [["citation_schema", "journal_fk1"]],
+                    "foreign_key_columns": [{
+                        "schema_name": "citation_schema",
+                        "table_name": "journal",
+                        "column_name": "field_id"
+                    }],
+                    "referenced_columns": [{
+                        "schema_name": "citation_schema",
+                        "table_name": "journal_field",
+                        "column_name": "id"
+                    }]
+                }
+            ]
+        },
+        "journal_field": {
+            "kind": "table",
+            "schema_name": "citation_schema",
+            "table_name": "journal_field",
+            "keys": [{"unique_columns": ["id"]}],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "type": {"typename": "text"},
+                    "nullok": false
+                },
+                {
+                    "name": "name",
+                    "type": {"typename": "text"},
+                    "nullok": false
+                }
+            ]
         }
     }
 }

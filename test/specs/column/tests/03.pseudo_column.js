@@ -28,6 +28,8 @@
  * 23: asset_filename (ReferenceColumn)
  * 24: main -> outbound_2 <- outbound_2_inbound_1 (entity mode)
  * 25: main -> outbound_2 -> outbound_2_outbound_2 (entity) -  (PseudoColumn)
+ * 26: virtual-column
+ * 27: virtual-column-1-1
  *
  * Only the following indeces are PseudoColumn:
  * 4 (outbound len 1, scalar)
@@ -134,7 +136,8 @@ exports.execute = function (options) {
              'OpHtewN91L9_3b1Vq-jkOg', 'LHC_G9Tm_jYXQXyNNrZIGA', 'H3B-cJhnO5kI08bThBIMxw',
              'ZJll4WjE6eMk_g5e9WE1rg', 'GFBydDhuUocHxUlF894ntQ', 'vd-zzWca-ApLn2yvu7fx1w',
              '8siu02fMCXJ2DfB4GLv93Q', 'OLbAesieGW5dpAhzqTSzqw', 'MJVZnQ5mBRdCFPfjIOMvkA',
-             "asset", "asset_filename", 'IKxB9JkO83__MmKlV0Nnow', 'wjUK75uqILcMMo85UxnPnQ'
+             "asset", "asset_filename", 'IKxB9JkO83__MmKlV0Nnow', 'wjUK75uqILcMMo85UxnPnQ',
+             "$virtual-column-1", "$virtual-column-1-1"
         ];
 
         var detailedPseudoColumnIndices = [
@@ -173,7 +176,7 @@ exports.execute = function (options) {
                 '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:main/main_table_id_col=01">01</a>',
                 '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:outbound_1/RID=' + findRID('outbound_1', 'id','01') + '">01</a>',
                 '<p>01: 10</p>\n', '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:outbound_1_outbound_1/RID=' + findRID('outbound_1_outbound_1', 'id', '01') + '">01</a>',
-                '01', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''
+                '01', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '<p>01 virtual value 01</p>\n', '<p>01 virtual value 1</p>\n'
             ];
         });
 
@@ -254,7 +257,7 @@ exports.execute = function (options) {
             });
 
             it ("should create the correct columns for valid list of sources.", function () {
-                expect(mainRefDetailed.columns.length).toBe(26, "length missmatch");
+                expect(mainRefDetailed.columns.length).toBe(28, "length missmatch");
                 checkReferenceColumns([{
                     "ref": mainRefDetailed,
                     "expected": [
@@ -335,7 +338,9 @@ exports.execute = function (options) {
                             {"outbound": ["pseudo_column_schema", "main_fk2"]},
                             {"outbound": ["pseudo_column_schema", "outbound_2_fk1"]},
                             "id"
-                        ]
+                        ],
+                        "$virtual-column-1",
+                        "$virtual-column-1-1"
                     ]
                 }]);
             });
@@ -529,6 +534,45 @@ exports.execute = function (options) {
                 });
             });
 
+            describe("for VirtualColumns", function () {
+                it ("isVirtualColumn should return true.", function () {
+                    expect(detailedColsWTuple[26].isVirtualColumn).toBe(true, "missmatch for index=26");
+                    expect(detailedColsWTuple[27].isVirtualColumn).toBe(true, "missmatch for index=27");
+                });
+
+                it (".table should return the current table.", function () {
+                    expect(detailedColsWTuple[26].table.name).toBe("main", "missmatch for index=26");
+                    expect(detailedColsWTuple[27].table.name).toBe("main", "missmatch for index=27");
+                });
+
+                it ("should not be sortable.", function () {
+                    expect(detailedColsWTuple[26].sortable).toBe(false, "missmatch for index=26");
+                    expect(detailedColsWTuple[27].sortable).toBe(false, "missmatch for index=27");
+                });
+
+                it (".name should return a unique value.", function () {
+                    expect(detailedColsWTuple[26].name).toBe("$virtual-column-1", "missmatch for index=26");
+                    expect(detailedColsWTuple[27].name).toBe("$virtual-column-1-1", "missmatch for index=27");
+                });
+
+                it (".displayname should return the defined displayname.", function () {
+                    expect(detailedColsWTuple[26].displayname.value).toBe("virtual-column", "missmatch for index=26");
+                    expect(detailedColsWTuple[27].displayname.value).toBe("virtual-column-1", "missmatch for index=27");
+                });
+
+                describe(".comment", function () {
+                    it ("should return the defined comment.", function () {
+                        expect(detailedColsWTuple[26].comment).toBe("virtual comment", "missmatch for index=26");
+                    });
+
+                    it ("otherwise it should be null", function () {
+                        expect(detailedColsWTuple[27].comment).toEqual(null, "missmatch for index=27");
+                    });
+                });
+
+                //.formatPresentation is tested through the .values and activelist tests
+            });
+
             describe ('isPathColumn, .', function () {
                 it ("should be true for pseudo column", function () {
                     detailedPseudoColumnIndices.forEach(function (i) {
@@ -666,7 +710,8 @@ exports.execute = function (options) {
                         'inbound_2_outbound_1', 'main_inbound_2_association',
                         'main', 'inbound_2', 'inbound_2', 'inbound_2', 'inbound_2',
                         'inbound_2', 'inbound_2', 'inbound 4 long table name',
-                        'main', 'main', 'outbound_2_inbound_1', 'outbound_2_outbound_2'
+                        'main', 'main', 'outbound_2_inbound_1', 'outbound_2_outbound_2',
+                        'main', 'main'
                     ]);
                 });
             });
@@ -762,7 +807,9 @@ exports.execute = function (options) {
                         {"o": ["pseudo_column_schema", "main_fk2"]},
                         {"o": ["pseudo_column_schema", "outbound_2_fk1"]},
                         "id"
-                    ] //25
+                    ], //25
+                    null, // 26
+                    null // 27
                 ];
                 it ("should return the data source of the pseudo-column.", function () {
                     detailedColsWTuple.forEach(function (col, index) {

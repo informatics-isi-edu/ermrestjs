@@ -227,6 +227,8 @@
         NO_PSEUDO_IN_ENTRY: "pseudo-columns are not allowed in entry contexts.",
         INVALID_SOURCE: "given object is invalid. `source` is required and it must be valid",
         INVALID_SOURCEKEY: "given object is invalid. The defined `sourcekey` is invalid.",
+        INVALID_VIRTUAL_NO_NAME: "`markdown_name` is required when `source` and `sourcekey` are undefiend.",
+        INVALID_VIRTUAL_NO_VALUE: "`display.markdown_pattern` is required when `source` and `sourcekey` are undefiend.",
         DUPLICATE_COLUMN: "ignoring duplicate column definition.",
         DUPLICATE_KEY: "ignoring duplicate key definition.",
         DUPLICATE_FK: "ignoring duplicate foreign key definition.",

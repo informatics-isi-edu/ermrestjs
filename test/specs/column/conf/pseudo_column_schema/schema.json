@@ -105,6 +105,12 @@
                     "type": {
                         "typename": "text"
                     }
+                },
+                {
+                    "name": "$virtual-column",
+                    "type": {
+                        "typename": "text"
+                    }
                 }
             ],
             "annotations": {
@@ -212,8 +218,22 @@
                             {"outbound": ["pseudo_column_schema", "main_fk2"]},
                             {"outbound": ["pseudo_column_schema", "outbound_2_fk1"]},
                             "id"
-                        ], "entity": true, "display": {"show_foreign_key_link":false}}
-
+                        ], "entity": true, "display": {"show_foreign_key_link":false}},
+                        {
+                            "markdown_name": "virtual-column",
+                            "comment": "virtual comment",
+                            "display": {
+                                "template_engine": "handlebars",
+                                "markdown_pattern": "{{{main_table_id_col}}} virtual value {{{$fkey_pseudo_column_schema_main_fk1.rowName}}}"
+                            }
+                        },
+                        {
+                            "markdown_name": "virtual-column-1",
+                            "display": {
+                                "template_engine": "handlebars",
+                                "markdown_pattern": "{{{main_table_id_col}}} virtual value 1"
+                            }
+                        }
                     ],
                     "entry": "detailed",
                     "compact/select": [
@@ -383,7 +403,10 @@
                         {"source": [{"outbound": ["pseudo_column_schema", "table_w_invalid_pseudo_cols_fk1"]}, {"inbound": ["pseudo_column_schema", "inbound_1_fk1"]}, "id"], "entity": false},
                         {"source": [{"outbound": ["pseudo_column_schema", "table_w_invalid_pseudo_cols_fk1"]}, {"inbound": ["pseudo_column_schema", "inbound_1_fk1"]}, "id"]},
                         {"source": "col", "self_link": true},
-                        {"source": [{"outbound": ["pseudo_column_schema", "table_w_invalid_pseudo_cols_fk1"]}, "id"], "self_link": true}
+                        {"source": [{"outbound": ["pseudo_column_schema", "table_w_invalid_pseudo_cols_fk1"]}, "id"], "self_link": true},
+                        {"markdown_name": "invalid virtual column (needs display.markdown_pattern)"},
+                        {"markdown_name": "another invalid virtual column (needs display.markdown_pattern)", "display": {"template_engine": "handlebars"}},
+                        {"display": {"markdown_pattern": "invalid virtual column (needs markdown_name)"}}
                     ],
                     "compact/select": [
                         {"source": "col"}, {"source": "col"},

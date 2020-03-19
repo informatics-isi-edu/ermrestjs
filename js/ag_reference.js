@@ -771,19 +771,19 @@ AttributeGroupTuple.prototype = {
 
             var columns = this._page.reference.columns,
                 context = this._page.reference._context,
-                self = this, formattedValues = {}, k, v;
+                self = this, templateVariables = {}, k, v;
             columns.forEach(function (col) {
                 if (!(col.name in self._data)) return;
                 k = col.name;
                 v = col.formatvalue(self._data[k], context);
-                formattedValues[k] = v;
-                formattedValues["_" + k] = self._data[k];
+                templateVariables[k] = v;
+                templateVariables["_" + k] = self._data[k];
             });
 
             var presentation;
 
             columns.forEach(function (col) {
-                presentation = col.formatPresentation(self._data, context, {formattedValues: formattedValues});
+                presentation = col.formatPresentation(self._data, context, templateVariables);
                 self._values.push(presentation.value);
                 self._isHTML.push(presentation.isHTML);
             });
@@ -993,7 +993,7 @@ AttributeGroupColumn.prototype = {
         return _formatValueByType(this.type, data, options);
     },
 
-    formatPresentation: function (data, context, options) {
+    formatPresentation: function (data, context, templateVariables, options) {
         data = data || {};
 
         var formattedValue = this.formatvalue(data[this.name], context, options);

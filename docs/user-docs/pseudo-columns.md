@@ -5,8 +5,39 @@ ERMrestJS **pseudo columns** refer to virtual columns created from key and forei
 * Outbound ForeignKey (single- and multi-hops)
 * Inbound ForeignKey (single- and multi-hops)
 * Aggregate columns
+* Virtual columns (columns without any source)
 
-If you want to just look at some examples, go [here](#examples).
+
+## Table of contents
+
+- [Pseudo-Columns Logic And Heuristics](#pseudo-columns-logic-and-heuristics)
+  * [Where To Use](#where-to-use)
+  * [Syntax](#syntax)
+    + [Simple Syntax](#simple-syntax)
+    + [General Syntax](#general-syntax)
+    + [Source Definition Attributes](#source-definition-attributes)
+      - [source](#source)
+      - [entity (v.s. scalar)](#entity--vs-scalar-)
+      - [self-link](#self-link)
+      - [aggregate](#aggregate)
+      - [sourcekey](#sourcekey)
+    + [Display Attributes](#display-attributes)
+      - [markdown_name](#markdown-name)
+      - [comment](#comment)
+      - [display](#display)
+        * [markdown_pattern](#markdown-pattern)
+        * [show_foreign_key_link](#show-foreign-key-link)
+        * [array_ux_mode](#array-ux-mode)
+      - [array_options](#array-options)
+  * [Logic And Heuristics](#logic-and-heuristics)
+      - [Displayname](#displayname)
+      - [Value](#value)
+      - [Sort](#sort)
+  * [Virtual Column](#virtual-column)
+  * [Examples](#examples)
+    + [Visible Column List](#visible-column-list)
+    + [Visible ForeignKey List](#visible-foreignkey-list)
+    + [Specific Pseudo Columns](#specific-pseudo-columns)
 
 ## Where To Use
 
@@ -76,7 +107,6 @@ or
   }
 }
 ```
-
 
 ### Source Definition Attributes
 
@@ -149,6 +179,10 @@ By using this attribute you can customize the presented value to the users. The 
 ##### markdown_pattern
 
 In the `markdown_pattern` you can access the current pseudo-column data with `$self` namespace alongside the defined source definitions. Please refer to the [pseudo-column display documentation](pseudo-column-display.md) for more information.
+
+##### wait_for
+
+Used to signal Chaise that this pseudo-column relies on the values of other pseudo-columns. It's an array of `sourcekey`s that are defined in the [`source-definitions` annotation](annotation.md#tag-2019-source-definitions) of the table. You can access the value of pseudo-columns that you define here, in your defined `markdown_pattern`. Please refer to the [pseudo-column display documentation](pseudo-column-display.md) for more information.
 
 ##### show_foreign_key_link
 
@@ -238,7 +272,7 @@ cnt_d -> #
 #### Value
 
 1. Return null in entry mode.
-2. If the `display` is defined, return the value based on the given `display`. If the `display` has `wait_for`, the client will wait until all the data is avaialble before showing the value.
+2. If the `display` is defined, return the value based on the given `display`. If the `display` has `wait_for`, the client will wait until all the data is available before showing the value.
 3. If the pseudo-column is aggregate, get the result based on the defined (or default) array_options.
 4. If the given data-path is defining a more specific pseudo-column type (Key, ForeignKey, or Inbound-Foreignkey) then the value that is returned will be based on that type.
 5. In scalar mode, return the column's value.
@@ -249,6 +283,22 @@ cnt_d -> #
 2. Disable sort if the given pseudo-column has aggregate, or it not all-outbound.
 3. In entity mode, use the last foreignkey's logic for sorting.
 4. In scalar mode, use the constituent column's logic for sorting.
+
+
+## Virtual Column
+
+If you want to have a pseudo-column that its value is made up of multiple pseudo-columns, you don't need to define any `source` or `sourcekey`. The only required attributes for these types of columns (we call them virtual columns) are `markdown_name` that is used for generating the display name, and `markdown_pattern` to get the value. For instance the following is an acceptable virtual column:
+
+```
+{
+  "markdown_name": "displayname value",
+  "display": {
+      "markdown_pattern": "{{{column1}}}, {{{column2}}}"
+  }
+}
+```
+
+In order to access the data of other pseudo-columns in this virtual column, you can use the `wait_for` option.
 
 
 ## Examples
