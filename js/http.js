@@ -256,7 +256,7 @@
                                             _encountered401Error = false;
 
                                             _authorizationDefers.forEach(function(defer) {
-                                                deferred.resolve();
+                                                defer.resolve();
                                             });
                                         }
                                     }, function (response) {
