@@ -105,6 +105,15 @@
     };
 
     /**
+     * Returns true if given paramter is a non-empty string.
+     * @param  {*} obj
+     * @return {boolean}
+     */
+    var isStringAndNotEmpty = function (obj) {
+        return typeof obj === "string" && obj.length > 0;
+    };
+
+    /**
      * Returns true if given parameter isan integer
      * @param  {*} x
      * @return {boolean}
@@ -910,7 +919,7 @@
     module._generateRowName = function (table, context, data, linkedData, isTitle) {
         var annotation, col, template, keyValues, pattern, actualContext;
 
-        var formattedValues = module._getFormattedKeyValues(table, context, data, linkedData);
+        var templateVariables = module._getFormattedKeyValues(table, context, data, linkedData);
 
         // If table has table-display annotation then set it in annotation variable
         if (table.annotations && table.annotations.contains(module._annotations.TABLE_DISPLAY)) {
@@ -925,7 +934,7 @@
         if (annotation && typeof annotation.row_markdown_pattern === 'string') {
             template = annotation.row_markdown_pattern;
 
-            pattern = module._renderTemplate(template, formattedValues, table.schema.catalog, {templateEngine: annotation.template_engine});
+            pattern = module._renderTemplate(template, templateVariables, table.schema.catalog, {templateEngine: annotation.template_engine});
 
         }
 
@@ -935,7 +944,7 @@
             // no row_name annotation, use column with title, name, term
             var candidate = module._getCandidateRowNameColumn(Object.keys(data)), result;
             if (candidate !== false) {
-                result = formattedValues[candidate];
+                result = templateVariables[candidate];
             }
 
             if (!result) {
@@ -951,7 +960,7 @@
                 // If id column exists
                 if (idCol.length && typeof data[idCol[0].name] === 'string') {
 
-                    result = formattedValues[idCol[0].name];
+                    result = templateVariables[idCol[0].name];
 
                 } else {
 
@@ -967,7 +976,7 @@
 
                     // Iterate over the keycolumns to get their formatted values for `row_name` context
                     keyColumns.forEach(function (c) {
-                        var value = formattedValues[c.name];
+                        var value = templateVariables[c.name];
                         values.push(value);
                     });
 
@@ -1007,12 +1016,12 @@
      * @param  {ERMrest.Key} key    the key object
      * @param  {object} data        the data for the table that key is from
      * @param  {string} context     the context string
-     * @param  {object=} options
+     * @param  {object=} templateVariables
      * @return {object} the presentation object that can be used for the key
      * (it has `isHTML`, `value`, and `unformatted`).
      * NOTE the function might return `null`.
      */
-    module._generateKeyPresentation = function (key, data, context, options) {
+    module._generateKeyPresentation = function (key, data, context, templateVariables) {
         // if data is empty
         if (typeof data === "undefined" || data === null || Object.keys(data).length === 0) {
             return null;
@@ -1027,10 +1036,9 @@
             return null;
         }
 
-        // make sure that formattedValues is defined
-        options = options || {};
-        if (options.formattedValues === undefined) {
-           options.formattedValues = module._getFormattedKeyValues(key.table, context, data);
+        // make sure that templateVariables is defined
+        if (!isObjectAndNotNull(templateVariables)) {
+           templateVariables = module._getFormattedKeyValues(key.table, context, data);
         }
 
         // use the markdown_pattern that is defiend in key-display annotation
@@ -1038,7 +1046,7 @@
         if (display.isMarkdownPattern) {
             unformatted = module._renderTemplate(
                 display.markdownPattern,
-                options.formattedValues,
+                templateVariables,
                 key.table.schema.catalog,
                 {templateEngine: display.templateEngine}
             );
@@ -1051,7 +1059,7 @@
             var presentation;
             for (i = 0; i < cols.length; i++) {
                 try {
-                    presentation = cols[i].formatPresentation(data, context, {formattedValues: options.formattedValues});
+                    presentation = cols[i].formatPresentation(data, context, templateVariables);
                     values.push(presentation.value);
                     unformattedValues.push(presentation.unformatted);
                 } catch (exception) {
@@ -1126,7 +1134,7 @@
     _generateRowURI = function (table, data, key) {
         if (data == null) return null;
 
-        var cols = (key != null) ? key.colset.columns : table.shortestKey;
+        var cols = (isObjectAndNotNull(key) && key.colset) ? key.colset.columns : table.shortestKey;
         var keyPair = "", col, i;
         for (i = 0; i < cols.length; i++) {
             col = cols[i].name;
@@ -1176,14 +1184,14 @@
 
         // use key for displayname: "col_1:col_2:col_3"
         if (caption.trim() === '') {
-            var formattedValues = module._getFormattedKeyValues(table, context, data),
+            var templateVariables = module._getFormattedKeyValues(table, context, data),
                 formattedKeyCols = [],
                 unformattedKeyCols = [],
                 pres, col;
 
             for (i = 0; i < key.colset.columns.length; i++) {
                 col = key.colset.columns[i];
-                pres = col.formatPresentation(data, context, {formattedValues: formattedValues});
+                pres = col.formatPresentation(data, context, {templateVariables: templateVariables});
                 formattedKeyCols.push(pres.value);
                 unformattedKeyCols.push(pres.unformatted);
             }

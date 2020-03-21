@@ -310,7 +310,7 @@ Supported _columnentry_ patterns:
   - `display`: The display settings for generating the column presentation value. Please refer to [pseudo-columns display document](pseudo-column-display.md) for more information. The available options are:
     - `markdown_pattern`: Markdown pattern that will be used for generating the value.
     - `template_engine`: The template engine that should be used for the `markdown_pattern`.
-    - `wait_for`: List of pseudo-column sourcekeys that the current column will use in the defined `markdown_pattern`.
+    - `wait_for`: A list of pseudo-column [`sourcekey`](#tag-2019-source-definitions) that are use in the defined `markdown_pattern`. You should list all the all-outbound, aggregates, and entity sets that you want to use in your `markdown_pattern`. Entity sets (pseudo-columns with `inbound` path and no `aggregate` attribute) are only acceptable in `detailed` context.
     - `show_foreign_key_link`: It will override the inherited behavior of outbound foreign key displays. Set it to `false` to avoid adding extra link to the foreign key display.
     - `array_ux_mode`: If you have `"aggregate": "array"` or `"aggregate": "array_d"` in the pseudo-column definition, a comma-seperated value will be presented to the user. You can use `array_ux_mode` attribute to change that. The available options are,
       - `olist` for ordered bullet list.
@@ -328,6 +328,15 @@ Supported _columnentry_ patterns:
   - `array_options`: This attribute is meant to be an object of properties that control the display of `array` or `array_d` aggregate column. These options will only affect the display (and templating environment) and have no effect on the generated ERMrest query. The available options are:
     - `order`: An alternative sort method to apply when a client wants to semantically sort by key values. It follows the same syntax as `column_order`. In scalar array aggregate, you cannot sort based on other columns values, you can only sort based on the scalar value of the column.
     - `max_length`: `<number>` A number that defines the maximum number of elements that should be displayed.
+- If you want to have a pseudo-column that its value is made up of multiple pseudo-columns, you don't need to define any `source` or `sourcekey`. The only required attributes for these types of columns (we call them virtual columns) are `markdown_name` that is used for generating the display name, and `markdown_pattern` to get the value. For instance the following is an acceptable virtual column:
+  ```
+  {
+      "markdown_name": "displayname value",
+      "display": {
+          "markdown_pattern": "{{{column1}}}, {{{column2}}}"
+      }
+  }
+  ```
 
 Supported _sourceentry_ pattern:
 - _columnname_: : A string literal. _columnname_ identifies a constituent column of the table.
@@ -619,7 +628,10 @@ Supported _fkeylist_ patterns:
 - `[` `[` _schema name_`,` _constraint name_ `]` `,` ... `]`: Present foreign keys with matching _schema name_ and _constraint name_, in the order specified in the list. Ignore constraint names that do not correspond to foreign keys in the catalog. Do not present foreign keys that are not mentioned in the list. These 2-element lists use the same format as each element in the `names` property of foreign keys in the JSON model introspection output of ERMrest. The foreign keys MUST represent inbound relationships to the current table.
 - `{ "source": ` _sourceentry_ `}`:  Defines a pseudo-column based on the given _sourceentry_. For detailed explanation and examples please refer to [here](pseudo-columns.md#examples). Other optional attributes that this JSON document can have are:
   - `markdown_name`: The markdown to use in place of the default heuristics for title of column.
-  - `display`: The display settings to use for generating the value for this column. Please refer to [pseudo-columns display document](pseudo-column-display.md) for more information.
+  - `display`: The display settings to use for generating the value for this column. Please refer to [pseudo-columns display document](pseudo-column-display.md) for more information. The following are attributes that are applicable here:
+     - `markdown_pattern`: The markdown pattern that can be used for generating a custom display for the related table. If this is missing, we're going to provided `row_markdown_pattern` in the `table-display` annotation for the custom display. And if it's missing from that annotation as well, Chaise will not provide any custom display.
+     - `template_engine`: The template enginge that should be used for the `markdown_pattern`.
+     - `wait_for`: List of pseudo-column [`sourcekey`](#tag-2019-source-definitions)s that used in `markdown_pattern`. You should list all the all-outbound, aggregates, and entity sets that you are using.
 - `{ "sourcekey": ` _sourcekey_ `}`: Defines a pseudo-column based on the given _sourcekey_.
 
 Supported _sourceentry_ pattern in here:
@@ -753,6 +765,11 @@ Supported JSON payload patterns:
 - `{`... `"year_pattern": ` _pattern_ ...`}`: A desired year value can be derived by [Pattern Expansion](#pattern-expansion) on _pattern_. This attribute is required for the citation feature and if it is not specified, the client will not provide the citation display feature. See implementation notes below.
 - `{`... `"url_pattern": ` _pattern_ ...`}`: A desired url value can be derived by [Pattern Expansion](#pattern-expansion) on _pattern_. This attribute is required for the citation feature and if it is not specified, the client will not provide the citation display feature. See implementation notes below.
 - `{`... `"id_pattern": ` _pattern_ ...`}`: A desired id value can be derived by [Pattern Expansion](#pattern-expansion) on _pattern_.
+- `{`... `"wait_for":` _waitForList_ ... `}`: List of pseudo-column [`sourcekey`](#tag-2019-source-definitions)s that are used in any of the provided patterns. You should list all the all-outbound, aggregates, and entity sets that you are using.
+
+Supported _waitForList_ pattern:
+
+- `[` ... _sourcekey_ `,` ... `]`: _sourcekey_ is the string literal that refers to the sources defined in the [`source-definitions` annotation](#tag-2019-source-definitions) of the table.
 
 Default heuristics:
 - `journal_pattern`, `year_pattern`, and `url_pattern` MUST be specified for citation. If any of the 3 are not specified or if one of them produces a null value, citation will be disabled.
@@ -760,7 +777,7 @@ Default heuristics:
 
 At present, the Chaise implementation of the citation annotation has the following limitations:
 1. If `journal_pattern`, `year_pattern`, or `url_pattern` is not available, Chaise will not show a Citation list option in the Share dialog.
-2. Chaise will try to show the 3 non-required fields if their are present and their templates don't produce a null value.
+2. Chaise will try to show the 3 non-required fields if they are present and their templates don't produce a null value.
 
 ### Tag: 2018 Required
 
@@ -819,7 +836,8 @@ Note: Some properties might not make sense to be used in this annotation. The `d
 
 Using this key you can,
 
-- Define `sources` that can be used in `visible-column` and `visible-foreignkeys` annotations.
+- Define `sources` that can be used in `visible-columns` and `visible-foreign-keys` annotations.
+- Define `sources` that can be used in the `wait_for` definition of `visible-columns`, `visible-foreign-keys`, and `citation` annotations.
 - Define list of column names and outbound foreign keys that should be available in the templating environments (Please refer to [this document](pseudo-column-template.md) for more information).
 - Modify the behavior of main search box in recordset page.
 

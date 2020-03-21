@@ -185,7 +185,7 @@ to use for ERMrest JavaScript agents.
         * [.ermrestDefault](#ERMrest.Column+ermrestDefault) : <code>object</code>
         * [.default](#ERMrest.Column+default) ⇒ <code>string</code>
         * [.formatvalue(data, context)](#ERMrest.Column+formatvalue) ⇒ <code>string</code> \| <code>Array.&lt;string&gt;</code>
-        * [.formatPresentation(data, context, options)](#ERMrest.Column+formatPresentation) ⇒ <code>Object</code>
+        * [.formatPresentation(data, context, templateVariables, options)](#ERMrest.Column+formatPresentation) ⇒ <code>Object</code>
         * [.toString()](#ERMrest.Column+toString) ⇒ <code>string</code>
         * [._getNullValue()](#ERMrest.Column+_getNullValue) : <code>object</code>
         * [.getDisplay(context)](#ERMrest.Column+getDisplay)
@@ -341,6 +341,7 @@ to use for ERMrest JavaScript agents.
         * [.defaultLogInfo](#ERMrest.Reference+defaultLogInfo) : <code>Object</code>
         * [.filterLogInfo](#ERMrest.Reference+filterLogInfo) : <code>Object</code>
         * [.defaultExportTemplate](#ERMrest.Reference+defaultExportTemplate) : <code>string</code>
+        * [.citation](#ERMrest.Reference+citation) : <code>ERMrest.Citation</code>
         * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
         * [.hideFacets()](#ERMrest.Reference+hideFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
         * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
@@ -357,7 +358,7 @@ to use for ERMrest JavaScript agents.
         * [.setSamePaging(page)](#ERMrest.Reference+setSamePaging) ⇒ [<code>Reference</code>](#ERMrest.Reference)
         * [.getColumnByName(name)](#ERMrest.Reference+getColumnByName) ⇒ [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)
         * [.generateColumnsList(tuple)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
-        * [.generateActiveList([tuple], [useRelated])](#ERMrest.Reference+generateActiveList) ⇒ <code>Object</code>
+        * [.generateActiveList([tuple])](#ERMrest.Reference+generateActiveList) ⇒ <code>Object</code>
         * [._getReadPath()](#ERMrest.Reference+_getReadPath) : <code>Object</code>
             * [~processSortObject()](#ERMrest.Reference+_getReadPath..processSortObject)
     * [.Page](#ERMrest.Page)
@@ -383,7 +384,7 @@ to use for ERMrest JavaScript agents.
         * [.isHTML](#ERMrest.Tuple+isHTML) : <code>Array.&lt;boolean&gt;</code>
         * [.displayname](#ERMrest.Tuple+displayname) : <code>string</code>
         * [.uniqueId](#ERMrest.Tuple+uniqueId) : <code>string</code>
-        * [.citation](#ERMrest.Tuple+citation) : <code>Object</code>
+        * [.citation](#ERMrest.Tuple+citation) : <code>ERMrest.Citation</code>
         * [.templateVariables](#ERMrest.Tuple+templateVariables) : <code>Object</code>
         * [.update()](#ERMrest.Tuple+update) ⇒ <code>Promise</code>
         * [.delete()](#ERMrest.Tuple+delete) ⇒ <code>Promise</code>
@@ -408,12 +409,15 @@ to use for ERMrest JavaScript agents.
         * [.inputDisabled](#ERMrest.ReferenceColumn+inputDisabled) : <code>boolean</code> \| <code>object</code>
         * [.sortable](#ERMrest.ReferenceColumn+sortable) : <code>boolean</code>
         * [.hasWaitFor](#ERMrest.ReferenceColumn+hasWaitFor) ⇒ <code>Boolean</code>
+        * [.hasWaitForAggregate](#ERMrest.ReferenceColumn+hasWaitForAggregate) ⇒ <code>Boolean</code>
         * [.waitFor](#ERMrest.ReferenceColumn+waitFor) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
         * [.formatvalue(data, context)](#ERMrest.ReferenceColumn+formatvalue) ⇒ <code>string</code>
-        * [.formatPresentation(data, context, options)](#ERMrest.ReferenceColumn+formatPresentation) ⇒ <code>Object</code>
+        * [.formatPresentation(data, context, templateVariables, options)](#ERMrest.ReferenceColumn+formatPresentation) ⇒ <code>Object</code>
         * [.getInputDisabled()](#ERMrest.ReferenceColumn+getInputDisabled) : <code>boolean</code> \| <code>object</code>
         * [._getShowForeignKeyLinks(context)](#ERMrest.ReferenceColumn+_getShowForeignKeyLinks) ⇒ <code>boolean</code>
         * [.sourceFormatPresentation(templateVariables, columnValue, mainTuple)](#ERMrest.ReferenceColumn+sourceFormatPresentation) ⇒ <code>Object</code>
+    * [.VirtualColumn](#ERMrest.VirtualColumn)
+        * [new VirtualColumn(reference, column, sourceObject, name, mainTuple)](#new_ERMrest.VirtualColumn_new)
     * [.PseudoColumn](#ERMrest.PseudoColumn)
         * [new PseudoColumn(reference, column, sourceObject, name, mainTuple)](#new_ERMrest.PseudoColumn_new)
         * [.isPseudo](#ERMrest.PseudoColumn+isPseudo) : <code>boolean</code>
@@ -652,6 +656,7 @@ to use for ERMrest JavaScript agents.
         * [.defaultLogInfo](#ERMrest.Reference+defaultLogInfo) : <code>Object</code>
         * [.filterLogInfo](#ERMrest.Reference+filterLogInfo) : <code>Object</code>
         * [.defaultExportTemplate](#ERMrest.Reference+defaultExportTemplate) : <code>string</code>
+        * [.citation](#ERMrest.Reference+citation) : <code>ERMrest.Citation</code>
         * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
         * [.hideFacets()](#ERMrest.Reference+hideFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
         * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
@@ -668,7 +673,7 @@ to use for ERMrest JavaScript agents.
         * [.setSamePaging(page)](#ERMrest.Reference+setSamePaging) ⇒ [<code>Reference</code>](#ERMrest.Reference)
         * [.getColumnByName(name)](#ERMrest.Reference+getColumnByName) ⇒ [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)
         * [.generateColumnsList(tuple)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
-        * [.generateActiveList([tuple], [useRelated])](#ERMrest.Reference+generateActiveList) ⇒ <code>Object</code>
+        * [.generateActiveList([tuple])](#ERMrest.Reference+generateActiveList) ⇒ <code>Object</code>
         * [._getReadPath()](#ERMrest.Reference+_getReadPath) : <code>Object</code>
             * [~processSortObject()](#ERMrest.Reference+_getReadPath..processSortObject)
     * [.AttributeGroupReference](#ERMrest.AttributeGroupReference) : <code>object</code>
@@ -1642,7 +1647,7 @@ Constructor for Columns.
     * [.ermrestDefault](#ERMrest.Column+ermrestDefault) : <code>object</code>
     * [.default](#ERMrest.Column+default) ⇒ <code>string</code>
     * [.formatvalue(data, context)](#ERMrest.Column+formatvalue) ⇒ <code>string</code> \| <code>Array.&lt;string&gt;</code>
-    * [.formatPresentation(data, context, options)](#ERMrest.Column+formatPresentation) ⇒ <code>Object</code>
+    * [.formatPresentation(data, context, templateVariables, options)](#ERMrest.Column+formatPresentation) ⇒ <code>Object</code>
     * [.toString()](#ERMrest.Column+toString) ⇒ <code>string</code>
     * [._getNullValue()](#ERMrest.Column+_getNullValue) : <code>object</code>
     * [.getDisplay(context)](#ERMrest.Column+getDisplay)
@@ -1790,7 +1795,7 @@ null and value. `null` for arrays is a valid value. [`null`] is different from `
 
 <a name="ERMrest.Column+formatPresentation"></a>
 
-#### column.formatPresentation(data, context, options) ⇒ <code>Object</code>
+#### column.formatPresentation(data, context, templateVariables, options) ⇒ <code>Object</code>
 Formats the presentation value corresponding to this column definition.
 For getting the value of a column we should use this function and not formatvalue directly.
 This will call `formatvalue` for the current column and other columns if necessary.
@@ -1802,7 +1807,8 @@ This will call `formatvalue` for the current column and other columns if necessa
 | --- | --- | --- |
 | data | <code>Object</code> | The `raw` data for the table. |
 | context | <code>String</code> | the app context |
-| options | <code>Object</code> | The key value pair of possible options with all formatted values in '.formattedValues' key |
+| templateVariables | <code>Object</code> | tempalte variables |
+| options | <code>Object</code> |  |
 
 <a name="ERMrest.Column+toString"></a>
 
@@ -2825,6 +2831,7 @@ Constructor for a ParsedFilter.
     * [.defaultLogInfo](#ERMrest.Reference+defaultLogInfo) : <code>Object</code>
     * [.filterLogInfo](#ERMrest.Reference+filterLogInfo) : <code>Object</code>
     * [.defaultExportTemplate](#ERMrest.Reference+defaultExportTemplate) : <code>string</code>
+    * [.citation](#ERMrest.Reference+citation) : <code>ERMrest.Citation</code>
     * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
     * [.hideFacets()](#ERMrest.Reference+hideFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
     * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
@@ -2841,7 +2848,7 @@ Constructor for a ParsedFilter.
     * [.setSamePaging(page)](#ERMrest.Reference+setSamePaging) ⇒ [<code>Reference</code>](#ERMrest.Reference)
     * [.getColumnByName(name)](#ERMrest.Reference+getColumnByName) ⇒ [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)
     * [.generateColumnsList(tuple)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
-    * [.generateActiveList([tuple], [useRelated])](#ERMrest.Reference+generateActiveList) ⇒ <code>Object</code>
+    * [.generateActiveList([tuple])](#ERMrest.Reference+generateActiveList) ⇒ <code>Object</code>
     * [._getReadPath()](#ERMrest.Reference+_getReadPath) : <code>Object</code>
         * [~processSortObject()](#ERMrest.Reference+_getReadPath..processSortObject)
 
@@ -3063,9 +3070,16 @@ If type is `'markdown'`, the object will also these additional
 properties:
 
   - `markdownPattern`: markdown pattern,
+  - `templateEngine`: the template engine to be used for the pattern
   - `separator`: markdown pattern (default: newline character `'\n'`),
   - `suffix`: markdown pattern (detaul: empty string `''`),
   - `prefix`: markdown pattern (detaul: empty string `''`)
+
+Extra optional attributes:
+ - `sourceMarkdownPattern`: the markdown pattern defined on the source definition
+ - `sourceTemplateEngine`: the template engine to be used for the pattern
+ - `sourceHasWaitFor`: if there's waitfor defiend for the source markdown pattern.
+ - `sourceWaitFor`: the waitfor definition in the source
 
 If type is `'module'`, the object will have these additional
 properties:
@@ -3163,6 +3177,16 @@ It will include:
 - fetch all the assets. For fetch, we need to provide url, length, and md5 (or other checksum types).
   if these columns are missing from the asset annotation, they won't be added.
 - fetch all the assetes of related tables.
+
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+citation"></a>
+
+#### reference.citation : <code>ERMrest.Citation</code>
+If annotation is defined and has the required attributes, will return
+a Citation object that can be used to generate citation.
+NOTE I had to move this here because activeList is using this before read,
+to get the all-outbound foreignkeys which might be in the waitfor of citation annotation
+In the future we might also want to generate citation based on page and not necessarily tuple.
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+removeAllFacetFilters"></a>
@@ -3440,7 +3464,10 @@ The logic is as follows:
          1.1.3 make sure it is not hidden(+).
          1.1.4 if it's outbound foreign key, create a pseudo-column for that.
          1.1.5 if it's inbound foreign key, create the related reference and a pseudo-column based on that.
-     1.2 otherwise find the corresponding column if exits and add it (avoid duplicate),
+     1.2 if it's an object.
+         1.2.1 if it doesn't have any source or sourcekey, if it's non-entry and has markdown_name and markdown_pattern create a VirtualColumn.
+         1.2.2 create a pseudo-column if it's properly defined.
+     1.3 otherwise find the corresponding column if exits and add it (avoid duplicate),
          apply *addColumn* heuristics explained below.
 
 2.otherwise go through list of table columns
@@ -3482,13 +3509,21 @@ NOTE:
 
 <a name="ERMrest.Reference+generateActiveList"></a>
 
-#### reference.generateActiveList([tuple], [useRelated]) ⇒ <code>Object</code>
-Generate the list of extra reads that we should do.
+#### reference.generateActiveList([tuple]) ⇒ <code>Object</code>
+Generates the list of extra elements that hte page might need,
 this should include
-- aggreagtes: [{column: ERMrest.ReferenceColumn, objects: [{index: integer, column: boolean, related: boolean}]]
-- entitySets: [{reference: ERMrest.Reference,}]
-- allOutBounds: ERMrest.ReferenceColumn[]
-- (TODO) selfLinks: ERMrest.KeyPseudoColumn[]
+- requests: An array of the secondary request objects which inlcudes aggregates, entitysets, inline tables, and related tables.
+  Depending on the type of request it can have different attibutes.
+  - for aggregate and entitysets:
+    {column: ERMrest.ReferenceColumn, <type>: true, objects: [{index: integer, column: boolean, related: boolean, inline: boolean, citation: boolean}]
+    where the type is `entityset` or `aggregate`. Each object is capturing where in the page needs this pseudo-column.
+  - for related and inline tables:
+    {<type>: true, index: integer}
+    where the type is `inline` or `related`.
+- allOutBounds: the all-outbound foreign keys (added so we can later append to the url).
+  ERMrest.ReferenceColumn[]
+- selfLinks: the self-links (so it can be added to the template variables)
+  ERMrest.KeyPseudoColumn[]
 
 TODO we might want to detect duplciates in allOutBounds better?
 currently it's done based on name, but based on the path should be enough..
@@ -3496,14 +3531,11 @@ as long as it's entity the last column is useless...
 the old code was kinda handling this by just adding the multi ones,
 so if the fk definition is based on fkcolum and and not the RID, it would handle it.
 
-TODO don't allow entitysets in detailed context
-
 **Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
 
 | Param | Type |
 | --- | --- |
 | [tuple] | [<code>Tuple</code>](#ERMrest.Tuple) | 
-| [useRelated] | <code>Boolean</code> | 
 
 <a name="ERMrest.Reference+_getReadPath"></a>
 
@@ -3682,7 +3714,7 @@ It will return:
     * [.isHTML](#ERMrest.Tuple+isHTML) : <code>Array.&lt;boolean&gt;</code>
     * [.displayname](#ERMrest.Tuple+displayname) : <code>string</code>
     * [.uniqueId](#ERMrest.Tuple+uniqueId) : <code>string</code>
-    * [.citation](#ERMrest.Tuple+citation) : <code>Object</code>
+    * [.citation](#ERMrest.Tuple+citation) : <code>ERMrest.Citation</code>
     * [.templateVariables](#ERMrest.Tuple+templateVariables) : <code>Object</code>
     * [.update()](#ERMrest.Tuple+update) ⇒ <code>Promise</code>
     * [.delete()](#ERMrest.Tuple+delete) ⇒ <code>Promise</code>
@@ -3845,17 +3877,9 @@ of the shortest key columns concatenated together by an '_'
 **Kind**: instance property of [<code>Tuple</code>](#ERMrest.Tuple)  
 <a name="ERMrest.Tuple+citation"></a>
 
-#### tuple.citation : <code>Object</code>
-The citation that should be used for this tuple.
-- if citation has wait-for, it will return false.
-- If the annoation is missing or is invalid, it will return null.
-otherwise it will return an object with the following attributes:
-- journal (required)
-- year (required)
-- url (required)
-- author
-- title
-- id
+#### tuple.citation : <code>ERMrest.Citation</code>
+If annotation is defined and has the required attributes, will return
+a Citation object that can be used to generate the citation for this tuple.
 
 **Kind**: instance property of [<code>Tuple</code>](#ERMrest.Tuple)  
 <a name="ERMrest.Tuple+templateVariables"></a>
@@ -3955,9 +3979,10 @@ count aggregate representation
     * [.inputDisabled](#ERMrest.ReferenceColumn+inputDisabled) : <code>boolean</code> \| <code>object</code>
     * [.sortable](#ERMrest.ReferenceColumn+sortable) : <code>boolean</code>
     * [.hasWaitFor](#ERMrest.ReferenceColumn+hasWaitFor) ⇒ <code>Boolean</code>
+    * [.hasWaitForAggregate](#ERMrest.ReferenceColumn+hasWaitForAggregate) ⇒ <code>Boolean</code>
     * [.waitFor](#ERMrest.ReferenceColumn+waitFor) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
     * [.formatvalue(data, context)](#ERMrest.ReferenceColumn+formatvalue) ⇒ <code>string</code>
-    * [.formatPresentation(data, context, options)](#ERMrest.ReferenceColumn+formatPresentation) ⇒ <code>Object</code>
+    * [.formatPresentation(data, context, templateVariables, options)](#ERMrest.ReferenceColumn+formatPresentation) ⇒ <code>Object</code>
     * [.getInputDisabled()](#ERMrest.ReferenceColumn+getInputDisabled) : <code>boolean</code> \| <code>object</code>
     * [._getShowForeignKeyLinks(context)](#ERMrest.ReferenceColumn+_getShowForeignKeyLinks) ⇒ <code>boolean</code>
     * [.sourceFormatPresentation(templateVariables, columnValue, mainTuple)](#ERMrest.ReferenceColumn+sourceFormatPresentation) ⇒ <code>Object</code>
@@ -4061,19 +4086,21 @@ Heuristics are as follows:
 <a name="ERMrest.ReferenceColumn+hasWaitFor"></a>
 
 #### referenceColumn.hasWaitFor ⇒ <code>Boolean</code>
-Whether the value of the column comes from a secondary source, based on
-its active list
+Whether there are aggregate or entity set columns in the wai_for list of this column.
 
 **Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
-**Returns**: <code>Boolean</code> - [description]  
+<a name="ERMrest.ReferenceColumn+hasWaitForAggregate"></a>
+
+#### referenceColumn.hasWaitForAggregate ⇒ <code>Boolean</code>
+Whether there are aggregate columns in the wait_for list of this column.
+
+**Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
 <a name="ERMrest.ReferenceColumn+waitFor"></a>
 
 #### referenceColumn.waitFor : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
-Array of columns
-It will
-- ignore entitysets for non-detailed contexts.
-- will ignore normal columns.
-Will also se the `hasWaitFor` if there's at least a seconadry request.
+Array of columns that the current column value depends on. It will get the list from:
+- source display.wait_for, or
+- column-display.wait_for or key-display.wait_for (depending on the type of column)
 
 **Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
 <a name="ERMrest.ReferenceColumn+formatvalue"></a>
@@ -4091,7 +4118,7 @@ Formats a value corresponding to this reference-column definition.
 
 <a name="ERMrest.ReferenceColumn+formatPresentation"></a>
 
-#### referenceColumn.formatPresentation(data, context, options) ⇒ <code>Object</code>
+#### referenceColumn.formatPresentation(data, context, templateVariables, options) ⇒ <code>Object</code>
 Formats the presentation value corresponding to this reference-column definition.
 It will return:
  - rendered value of sourceMarkdownPattern if exists.
@@ -4104,7 +4131,8 @@ It will return:
 | --- | --- | --- |
 | data | <code>Object</code> | the raw data of the table. |
 | context | <code>String</code> | the app context |
-| options | <code>Object</code> | includes `context` and `formattedValues` |
+| templateVariables | <code>Object</code> | the template variables that should be used |
+| options | <code>Object</code> |  |
 
 <a name="ERMrest.ReferenceColumn+getInputDisabled"></a>
 
@@ -4148,6 +4176,29 @@ Should be called once every value is retrieved
 | templateVariables | <code>Object</code> | [description] |
 | columnValue | <code>Object</code> | the value of aggregate column (if it's aggregate) |
 | mainTuple | [<code>Tuple</code>](#ERMrest.Tuple) | [description] |
+
+<a name="ERMrest.VirtualColumn"></a>
+
+### ERMrest.VirtualColumn
+**Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
+<a name="new_ERMrest.VirtualColumn_new"></a>
+
+#### new VirtualColumn(reference, column, sourceObject, name, mainTuple)
+A pseudo-column without any actual source definition behind it.
+This constructor assumes that the sourceObject has markdown_name and display.markdown_pattern.
+
+The name is currently generated by the visible columns logic. It will use the
+"$<markdown_name>" pattern and if a column with this name already exists in the table,
+it will append "-<integer>" to it.
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| reference | [<code>Reference</code>](#ERMrest.Reference) | column's reference |
+| column | [<code>Column</code>](#ERMrest.Column) | the column that this pseudo-column is representing |
+| sourceObject | <code>object</code> | the whole column object |
+| name | <code>string</code> | to avoid processing the name again, this might be undefined. |
+| mainTuple | [<code>Tuple</code>](#ERMrest.Tuple) | if the reference is referring to just one tuple, this is defined. |
 
 <a name="ERMrest.PseudoColumn"></a>
 
@@ -4282,7 +4333,7 @@ Format the presentation value corresponding to this pseudo-column definition.
 | --- | --- | --- |
 | data | <code>Object</code> | the raw data of the table |
 | context | <code>String</code> | the app context |
-| options | <code>Object</code> | include `formattedValues` |
+| options | <code>Object</code> | include `templateVariables` |
 
 <a name="ERMrest.PseudoColumn+getAggregatedValue"></a>
 
@@ -4473,7 +4524,7 @@ The following is the logic:
 | --- | --- | --- |
 | data | <code>Object</code> | given raw data for the table columns |
 | context | <code>String</code> | the app context |
-| options | <code>Object</code> | might include `formattedValues` |
+| options | <code>Object</code> | might include `templateVariables` |
 
 <a name="ERMrest.AssetPseudoColumn"></a>
 
@@ -4626,7 +4677,7 @@ Format the presentation value corresponding to this asset definition.
 | --- | --- | --- |
 | data | <code>Object</code> | the raw data of the table |
 | context | <code>String</code> | the app context |
-| options | <code>Object</code> | include `formattedValues` |
+| options | <code>Object</code> | include `templateVariables` |
 
 <a name="ERMrest.InboundForeignKeyPseudoColumn"></a>
 
@@ -6373,6 +6424,7 @@ get PathColumn object by column name
     * [.defaultLogInfo](#ERMrest.Reference+defaultLogInfo) : <code>Object</code>
     * [.filterLogInfo](#ERMrest.Reference+filterLogInfo) : <code>Object</code>
     * [.defaultExportTemplate](#ERMrest.Reference+defaultExportTemplate) : <code>string</code>
+    * [.citation](#ERMrest.Reference+citation) : <code>ERMrest.Citation</code>
     * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
     * [.hideFacets()](#ERMrest.Reference+hideFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
     * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
@@ -6389,7 +6441,7 @@ get PathColumn object by column name
     * [.setSamePaging(page)](#ERMrest.Reference+setSamePaging) ⇒ [<code>Reference</code>](#ERMrest.Reference)
     * [.getColumnByName(name)](#ERMrest.Reference+getColumnByName) ⇒ [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)
     * [.generateColumnsList(tuple)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
-    * [.generateActiveList([tuple], [useRelated])](#ERMrest.Reference+generateActiveList) ⇒ <code>Object</code>
+    * [.generateActiveList([tuple])](#ERMrest.Reference+generateActiveList) ⇒ <code>Object</code>
     * [._getReadPath()](#ERMrest.Reference+_getReadPath) : <code>Object</code>
         * [~processSortObject()](#ERMrest.Reference+_getReadPath..processSortObject)
 
@@ -6611,9 +6663,16 @@ If type is `'markdown'`, the object will also these additional
 properties:
 
   - `markdownPattern`: markdown pattern,
+  - `templateEngine`: the template engine to be used for the pattern
   - `separator`: markdown pattern (default: newline character `'\n'`),
   - `suffix`: markdown pattern (detaul: empty string `''`),
   - `prefix`: markdown pattern (detaul: empty string `''`)
+
+Extra optional attributes:
+ - `sourceMarkdownPattern`: the markdown pattern defined on the source definition
+ - `sourceTemplateEngine`: the template engine to be used for the pattern
+ - `sourceHasWaitFor`: if there's waitfor defiend for the source markdown pattern.
+ - `sourceWaitFor`: the waitfor definition in the source
 
 If type is `'module'`, the object will have these additional
 properties:
@@ -6711,6 +6770,16 @@ It will include:
 - fetch all the assets. For fetch, we need to provide url, length, and md5 (or other checksum types).
   if these columns are missing from the asset annotation, they won't be added.
 - fetch all the assetes of related tables.
+
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+citation"></a>
+
+#### reference.citation : <code>ERMrest.Citation</code>
+If annotation is defined and has the required attributes, will return
+a Citation object that can be used to generate citation.
+NOTE I had to move this here because activeList is using this before read,
+to get the all-outbound foreignkeys which might be in the waitfor of citation annotation
+In the future we might also want to generate citation based on page and not necessarily tuple.
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+removeAllFacetFilters"></a>
@@ -6988,7 +7057,10 @@ The logic is as follows:
          1.1.3 make sure it is not hidden(+).
          1.1.4 if it's outbound foreign key, create a pseudo-column for that.
          1.1.5 if it's inbound foreign key, create the related reference and a pseudo-column based on that.
-     1.2 otherwise find the corresponding column if exits and add it (avoid duplicate),
+     1.2 if it's an object.
+         1.2.1 if it doesn't have any source or sourcekey, if it's non-entry and has markdown_name and markdown_pattern create a VirtualColumn.
+         1.2.2 create a pseudo-column if it's properly defined.
+     1.3 otherwise find the corresponding column if exits and add it (avoid duplicate),
          apply *addColumn* heuristics explained below.
 
 2.otherwise go through list of table columns
@@ -7030,13 +7102,21 @@ NOTE:
 
 <a name="ERMrest.Reference+generateActiveList"></a>
 
-#### reference.generateActiveList([tuple], [useRelated]) ⇒ <code>Object</code>
-Generate the list of extra reads that we should do.
+#### reference.generateActiveList([tuple]) ⇒ <code>Object</code>
+Generates the list of extra elements that hte page might need,
 this should include
-- aggreagtes: [{column: ERMrest.ReferenceColumn, objects: [{index: integer, column: boolean, related: boolean}]]
-- entitySets: [{reference: ERMrest.Reference,}]
-- allOutBounds: ERMrest.ReferenceColumn[]
-- (TODO) selfLinks: ERMrest.KeyPseudoColumn[]
+- requests: An array of the secondary request objects which inlcudes aggregates, entitysets, inline tables, and related tables.
+  Depending on the type of request it can have different attibutes.
+  - for aggregate and entitysets:
+    {column: ERMrest.ReferenceColumn, <type>: true, objects: [{index: integer, column: boolean, related: boolean, inline: boolean, citation: boolean}]
+    where the type is `entityset` or `aggregate`. Each object is capturing where in the page needs this pseudo-column.
+  - for related and inline tables:
+    {<type>: true, index: integer}
+    where the type is `inline` or `related`.
+- allOutBounds: the all-outbound foreign keys (added so we can later append to the url).
+  ERMrest.ReferenceColumn[]
+- selfLinks: the self-links (so it can be added to the template variables)
+  ERMrest.KeyPseudoColumn[]
 
 TODO we might want to detect duplciates in allOutBounds better?
 currently it's done based on name, but based on the path should be enough..
@@ -7044,14 +7124,11 @@ as long as it's entity the last column is useless...
 the old code was kinda handling this by just adding the multi ones,
 so if the fk definition is based on fkcolum and and not the RID, it would handle it.
 
-TODO don't allow entitysets in detailed context
-
 **Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
 
 | Param | Type |
 | --- | --- |
 | [tuple] | [<code>Tuple</code>](#ERMrest.Tuple) | 
-| [useRelated] | <code>Boolean</code> | 
 
 <a name="ERMrest.Reference+_getReadPath"></a>
 

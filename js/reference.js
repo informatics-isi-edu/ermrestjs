@@ -460,6 +460,11 @@
                 };
 
                 var checkRefColumn = function (col) {
+                    //virtual column is not supported
+                    if (col.isVirtualColumn) {
+                        return false;
+                    }
+
                     // column type array is not supported
                     if (col.type.isArray || col._baseCols[0].type.isArray) {
                         return false;
@@ -1977,9 +1982,16 @@
          * properties:
          *
          *   - `markdownPattern`: markdown pattern,
+         *   - `templateEngine`: the template engine to be used for the pattern
          *   - `separator`: markdown pattern (default: newline character `'\n'`),
          *   - `suffix`: markdown pattern (detaul: empty string `''`),
          *   - `prefix`: markdown pattern (detaul: empty string `''`)
+         *
+         * Extra optional attributes:
+         *  - `sourceMarkdownPattern`: the markdown pattern defined on the source definition
+         *  - `sourceTemplateEngine`: the template engine to be used for the pattern
+         *  - `sourceHasWaitFor`: if there's waitfor defiend for the source markdown pattern.
+         *  - `sourceWaitFor`: the waitfor definition in the source
          *
          * If type is `'module'`, the object will have these additional
          * properties:
@@ -2002,7 +2014,6 @@
          * @type {Object}
          *
          **/
-
         get display() {
             if (this._display === undefined) {
                 var self = this;
@@ -2082,10 +2093,19 @@
                 }
 
                 // attach the display settings defined on the source definition
-                if (this.pseudoColumn && this.pseudoColumn.display.sourceMarkdownPattern) {
-                    this._display.type = module._displayTypes.MARKDOWN;
-                    this._display._sourceMarkdownPattern = this.pseudoColumn.display.sourceMarkdownPattern;
-                    this._display._sourceTemplateEngine = this.pseudoColumn.display.sourceTemplateEngine;
+                if (this.pseudoColumn && this.pseudoColumn.display) {
+                    var displ = this.pseudoColumn.display;
+                    this._display.sourceWaitFor = this.pseudoColumn.waitFor;
+                    this._display.sourceHasWaitFor = this.pseudoColumn.hasWaitFor;
+
+                    if (displ.sourceMarkdownPattern) {
+                        this._display.type = module._displayTypes.MARKDOWN;
+                        this._display.sourceMarkdownPattern = displ.sourceMarkdownPattern;
+                        this._display.sourceTemplateEngine = displ.sourceTemplateEngine;
+                    }
+                } else {
+                    this._display.sourceWaitFor = [];
+                    this._display.sourceHasWaitFor = false;
                 }
             }
 
@@ -2709,7 +2729,10 @@
          *          1.1.3 make sure it is not hidden(+).
          *          1.1.4 if it's outbound foreign key, create a pseudo-column for that.
          *          1.1.5 if it's inbound foreign key, create the related reference and a pseudo-column based on that.
-         *      1.2 otherwise find the corresponding column if exits and add it (avoid duplicate),
+         *      1.2 if it's an object.
+         *          1.2.1 if it doesn't have any source or sourcekey, if it's non-entry and has markdown_name and markdown_pattern create a VirtualColumn.
+         *          1.2.2 create a pseudo-column if it's properly defined.
+         *      1.3 otherwise find the corresponding column if exits and add it (avoid duplicate),
          *          apply *addColumn* heuristics explained below.
          *
          * 2.otherwise go through list of table columns
@@ -2758,6 +2781,7 @@
             var columns = -1,
                 consideredColumns = {}, // to avoid duplicate pseudo columns
                 tableColumns = {}, // to make sure the hashes we genereate are not clashing with table column names
+                virtualColumnNames = {}, // to make sure the names generated for virtual names are not the same
                 compositeFKs = [], // to add composite keys at the end of the list
                 assetColumns = [], // columns that have asset annotation
                 hiddenFKR = this.origFKR,
@@ -2863,7 +2887,7 @@
                                                 this._referenceColumns.push(new InboundForeignKeyPseudoColumn(this, relatedRef, null, fkName));
                                             }
                                         } else {
-                                            console.log(logCol, wm.FK_NOT_RELATED, i);
+                                            logCol(true, wm.FK_NOT_RELATED, i);
                                         }
                                     }
                                     break;
@@ -2894,9 +2918,28 @@
                     }
                     // pseudo-column
                     else if (isObjectAndNotNull(col)) {
-                        // invalid source
-                        if (logCol(!col.source && !col.sourcekey, wm.INVALID_SOURCE, i)) continue;
 
+                        // virtual column
+                        if (!col.source && !col.sourcekey) {
+                            ignore = logCol(!isStringAndNotEmpty(col.markdown_name), wm.INVALID_VIRTUAL_NO_NAME, i) ||
+                                     logCol(!isObjectAndNotNull(col.display) || !isStringAndNotEmpty(col.display.markdown_pattern), wm.INVALID_VIRTUAL_NO_VALUE, i) ||
+                                     isEntry;
+
+                            if (!ignore) {
+                                // generate name for virtual-column
+                                var extra = 0;
+                                pseudoName = "$" + col.markdown_name;
+                                while ((pseudoName in tableColumns) || (pseudoName in virtualColumnNames)) {
+                                    extra++;
+                                    pseudoName += "-" + extra;
+                                }
+                                virtualColumnNames[pseudoName] = true;
+                                this._referenceColumns.push(new VirtualColumn(this, col, pseudoName, tuple));
+                            }
+                            continue;
+                        }
+
+                        // pseudo-column
                         var sd;
                         if (col.sourcekey) {
                             sd = self.table.sourceDefinitions.sources[col.sourcekey];
@@ -3212,12 +3255,20 @@
         },
 
         /**
-         * Generate the list of extra reads that we should do.
+         * Generates the list of extra elements that hte page might need,
          * this should include
-         * - aggreagtes: [{column: ERMrest.ReferenceColumn, objects: [{index: integer, column: boolean, related: boolean}]]
-         * - entitySets: [{reference: ERMrest.Reference,}]
-         * - allOutBounds: ERMrest.ReferenceColumn[]
-         * - (TODO) selfLinks: ERMrest.KeyPseudoColumn[]
+         * - requests: An array of the secondary request objects which inlcudes aggregates, entitysets, inline tables, and related tables.
+         *   Depending on the type of request it can have different attibutes.
+         *   - for aggregate and entitysets:
+         *     {column: ERMrest.ReferenceColumn, <type>: true, objects: [{index: integer, column: boolean, related: boolean, inline: boolean, citation: boolean}]
+         *     where the type is `entityset` or `aggregate`. Each object is capturing where in the page needs this pseudo-column.
+         *   - for related and inline tables:
+         *     {<type>: true, index: integer}
+         *     where the type is `inline` or `related`.
+         * - allOutBounds: the all-outbound foreign keys (added so we can later append to the url).
+         *   ERMrest.ReferenceColumn[]
+         * - selfLinks: the self-links (so it can be added to the template variables)
+         *   ERMrest.KeyPseudoColumn[]
          *
          * TODO we might want to detect duplciates in allOutBounds better?
          * currently it's done based on name, but based on the path should be enough..
@@ -3225,65 +3276,74 @@
          * the old code was kinda handling this by just adding the multi ones,
          * so if the fk definition is based on fkcolum and and not the RID, it would handle it.
          *
-         * TODO don't allow entitysets in detailed context
-         *
          * @param  {ERMrest.Tuple=} tuple
-         * @param  {Boolean=} useRelated
          * @return {Object}
          */
-        generateActiveList: function (tuple, useRelated) {
-            var columns = [], entitySets = [], relatedEntitySets = [], allOutBounds = [], aggregates = [], selfLinks = [];
-            var consideredSets = {}, consideredRelatedSets = {}, consideredOutbounds = {}, consideredAggregates = {}, consideredSelfLinks = {};
+        generateActiveList: function (tuple) {
+
+            // VARIABLES:
+            var columns = [], allOutBounds = [], requests = [], selfLinks = [];
+            var consideredSets = {}, consideredOutbounds = {}, consideredAggregates = {}, consideredSelfLinks = {};
 
             var self = this;
             var sds = self.table.sourceDefinitions;
 
-            var addColumn = function (col, index, isWaitFor, isRelated) {
-                var obj = { index: index, isWaitFor: isWaitFor};
-                if (isRelated) {
-                    obj.related = true;
-                } else {
-                    obj.column = true;
+            // in detailed, we want related and citation
+            var isDetailed = self._context === module._contexts.DETAILED;
+
+            var COLUMN_TYPE = "column", RELATED_TYPE = "related", CITATION_TYPE = "citation", INLINE_TYPE = "inline";
+
+            // FUNCTIONS:
+            var isInline = function (col) {
+                return col.isInboundForeignKey || (col.isPathColumn && col.hasPath && !col.isUnique && !col.hasAggregate);
+            };
+
+            var hasAggregate = function (col) {
+                return col.hasWaitForAggregate || (col.isPathColumn && col.hasAggregate);
+            };
+
+            // col: the column that we need its data
+            // isWaitFor: whether it was part of waitFor or just visible
+            // type: where in the page it belongs to
+            // index: the container index (column index, or related index) (optional)
+            var addColToActiveList = function (col, isWaitFor, type, index) {
+                var obj = {isWaitFor: isWaitFor};
+
+                // add the type
+                obj[type] = true;
+
+                // add index if available (not available in citation)
+                if (Number.isInteger(index)) {
+                    obj.index = index;
                 }
 
                 // aggregates
                 if (col.isPathColumn && col.hasAggregate) {
                     // duplicate
                     if (col.name in consideredAggregates) {
-                        aggregates[consideredAggregates[col.name]].objects.push(obj);
+                        requests[consideredAggregates[col.name]].objects.push(obj);
                         return;
                     }
 
                     // new
-                    consideredAggregates[col.name] = aggregates.length;
-                    aggregates.push({column: col, columnName: col.name, objects: [obj]});
+                    consideredAggregates[col.name] = requests.length;
+                    requests.push({aggregate: true, column: col, objects: [obj]});
                     return;
                 }
 
                 //entitysets
-                if (col.isInboundForeignKey || (col.isPathColumn && col.hasPath && !col.isUnique && !col.hasAggregate)) {
-                    if (self._context !== module._contexts.DETAILED) {
-                        return;
+                if (isInline(col)) {
+                    if (!isDetailed) {
+                        return; // only acceptable in detailed
                     }
-                    // duplciate
+
                     if (col.name in consideredSets) {
-                        entitySets[consideredSets[col.name]].objects.push(obj);
-                        return;
-                    } else if (useRelated && col.name in consideredRelatedSets) {
-                        relatedEntitySets[consideredRelatedSets[col.name]].objects.push(obj);
+                        requests[consideredSets[col.name]].objects.push(obj);
                         return;
                     }
 
-                    // new
-                    if (useRelated) {
-                        consideredRelatedSets[col.name] = relatedEntitySets.length;
-                        relatedEntitySets.push({reference: col.reference, columnName: col.name, objects: [obj]});
-                    } else {
-                        consideredSets[col.name] = entitySets.length;
-                        entitySets.push({reference: col.reference, columnName: col.name, objects: [obj]});
-                    }
-
-                    return;
+                    consideredSets[col.name] = requests.length;
+                    requests.push({entityset: true, column: col, objects: [obj]});
                 }
 
                 // all outbounds
@@ -3301,16 +3361,56 @@
                 }
             };
 
-            columns = self.generateColumnsList(tuple);
-
-            // columns
-            columns.forEach(function (col, i) {
-                addColumn(col, i, false, false);
+            var addInlineColumn = function (col, i) {
+                if (isInline(col)) {
+                    requests.push({inline: true, index: i});
+                } else {
+                    addColToActiveList(col, false, COLUMN_TYPE, i);
+                }
 
                 col.waitFor.forEach(function (wf) {
-                    addColumn(wf, i, true, false);
+                    addColToActiveList(wf, true, COLUMN_TYPE, i);
                 });
+            };
+
+
+            // THE CODE STARTS HERE:
+
+            columns = self.generateColumnsList(tuple);
+
+            // citation
+            if (isDetailed && self.citation) {
+                self.citation.waitFor.forEach(function (col) {
+                    addColToActiveList(col, true, CITATION_TYPE);
+                });
+            }
+
+            // columns without aggregate
+            columns.forEach(function (col, i) {
+                if (!hasAggregate(col)) {
+                    addInlineColumn(col, i);
+                }
             });
+
+            // columns with aggregate
+            columns.forEach(function (col,i ) {
+                if (hasAggregate(col)) {
+                    addInlineColumn(col, i);
+                }
+            });
+
+            // related tables
+            if (isDetailed) {
+                self.generateRelatedList(tuple).forEach(function (rel, i) {
+                    requests.push({related: true, index: i});
+
+                    if (rel.pseudoColumn) {
+                        rel.pseudoColumn.waitFor.forEach(function (wf) {
+                            addColToActiveList(wf, true, RELATED_TYPE, i);
+                        });
+                    }
+                });
+            }
 
             //fkeys
             sds.fkeys.forEach(function (fk) {
@@ -3319,34 +3419,8 @@
                 allOutBounds.push(new ForeignKeyPseudoColumn(self, fk));
             });
 
-            if (useRelated) {
-                self.generateRelatedList(tuple).forEach(function (rel, i) {
-                    // TODO must be improved
-                    var addSet = true,
-                        relObj = {index: i, related: true};
-                    if (rel.pseudoColumn) {
-                        if ((rel.pseudoColumn.name in consideredSets)) {
-                            entitySets[consideredSets[rel.pseudoColumn.name]].objects.push(relObj);
-                            addSet = false;
-                        }
-                    } else if (_generateForeignKeyName(rel.origFKR, true) in consideredSets) {
-                        addSet = false;
-                    }
-                    if (addSet) {
-                        relatedEntitySets.push({reference: rel, objects: [relObj]});
-                    }
-
-                    if (rel.pseudoColumn) {
-                        rel.pseudoColumn.waitFor.forEach(function (wf) {
-                            addColumn(wf, i, true, true);
-                        });
-                    }
-                });
-            }
             this._activeList = {
-                aggregates: aggregates,
-                entitySets: entitySets,
-                relatedEntitySets: relatedEntitySets,
+                requests: requests,
                 allOutBounds: allOutBounds,
                 selfLinks: selfLinks
             };
@@ -3359,6 +3433,31 @@
                 this.generateActiveList();
             }
             return this._activeList;
+        },
+
+        /**
+         * If annotation is defined and has the required attributes, will return
+         * a Citation object that can be used to generate citation.
+         * NOTE I had to move this here because activeList is using this before read,
+         * to get the all-outbound foreignkeys which might be in the waitfor of citation annotation
+         * In the future we might also want to generate citation based on page and not necessarily tuple.
+         * @type {ERMrest.Citation}
+         */
+        get citation() {
+            if (this._citation === undefined) {
+                var table = this.table;
+                if (!table.annotations.contains(module._annotations.CITATION)) {
+                    this._citation = null;
+                } else {
+                    var citationAnno = table.annotations.get(module._annotations.CITATION).content;
+                    if (!citationAnno.journal_pattern || !citationAnno.year_pattern || !citationAnno.url_pattern) {
+                        this._citation = null;
+                    } else {
+                        this._citation = new Citation(this, citationAnno);
+                    }
+                }
+            }
+            return this._citation;
         },
 
         /**
@@ -3398,7 +3497,7 @@
         _generateRelatedReference: function (fkr, tuple, checkForAssociation, sourceObject) {
             var j, col, uri, filterSource = [], dataSource = [];
 
-            var useFaceting = (typeof tuple === 'object');
+            var useFaceting = isObjectAndNotNull(tuple);
             var catalog = this.table.schema.catalog;
 
             var newRef = _referenceCopy(this);
@@ -4553,7 +4652,7 @@
             var display = ref.display;
 
             // markdown_pattern in the source object
-            if (typeof display._sourceMarkdownPattern === "string") {
+            if (typeof display.sourceMarkdownPattern === "string") {
                 var $self = self.tuples.map(function (t) {
                     return t.templateVariables;
                 });
@@ -4561,9 +4660,9 @@
                 keyValues = Object.assign({$self: $self}, templateVariables);
 
                 pattern = module._renderTemplate(
-                    display._sourceMarkdownPattern,
+                    display.sourceMarkdownPattern,
                     keyValues, ref.table.schema.catalog,
-                    { templateEngine: display._sourceTemplateEngine}
+                    { templateEngine: display.sourceTemplateEngine}
                 );
 
                 if (pattern === null || pattern.trim() === '') {
@@ -4683,7 +4782,7 @@
             if (this._templateVariables === undefined) {
                 var res = [];
                 this.tuples.forEach(function (t) {
-                    res.push(t.templateVariables.values);
+                    res.push(t.templateVariables);
                 });
                 this._templateVariables = res;
             }
@@ -4929,7 +5028,7 @@
                 /*
                  * There are multiple annotations involved in getting the value of column,
                  * one of these annotations is markdown_pattern that can be defined on columns.
-                 * For that annotation, we need the formattedValues of all the columns.
+                 * For that annotation, we need the templateVariables of all the columns.
                  * Therefore at first we're calling `_getFormattedKeyValues` which internally
                  * will call `formatvalue` for all the columns and also adds the extra attributes.
                  * We're passing the raw value to the formatPresentation, because that function
@@ -4974,9 +5073,9 @@
                         column = this._pageRef.columns[i];
                         if (column.isPseudo) {
                             if (column.isForeignKey) {
-                                presentation = column.formatPresentation(this._linkedData[column.name], this._pageRef._context, {templateVariables: keyValues});
+                                presentation = column.formatPresentation(this._linkedData[column.name], this._pageRef._context, keyValues);
                             } else {
-                                presentation = column.formatPresentation(this._data, this._pageRef._context, { formattedValues: keyValues, templateVariables: keyValues});
+                                presentation = column.formatPresentation(this._data, this._pageRef._context, keyValues);
                             }
                             this._values[i] = presentation.value;
                             this._isHTML[i] = presentation.isHTML;
@@ -5003,12 +5102,12 @@
                         column = this._pageRef.columns[i];
                         if (column.isPseudo) {
                             if (column.isForeignKey || (column.isPathColumn && column.hasPath)) {
-                                values[i] = column.formatPresentation(this._linkedData[column.name], this._pageRef._context, {templateVariables: keyValues});
+                                values[i] = column.formatPresentation(this._linkedData[column.name], this._pageRef._context, keyValues);
                             } else {
-                                values[i] = column.formatPresentation(this._data, this._pageRef._context, { formattedValues: keyValues, templateVariables: keyValues});
+                                values[i] = column.formatPresentation(this._data, this._pageRef._context, keyValues);
                             }
                         } else {
-                            values[i] = column.formatPresentation(this._data, this._pageRef._context, { formattedValues: keyValues, templateVariables: keyValues});
+                            values[i] = column.formatPresentation(this._data, this._pageRef._context, keyValues);
 
                             if (column.type.name === "gene_sequence") {
                                 values[i].isHTML = true;
@@ -5097,47 +5196,22 @@
         },
 
         /**
-         * The citation that should be used for this tuple.
-         * - if citation has wait-for, it will return false.
-         * - If the annoation is missing or is invalid, it will return null.
-         * otherwise it will return an object with the following attributes:
-         * - journal (required)
-         * - year (required)
-         * - url (required)
-         * - author
-         * - title
-         * - id
-         * @type {Object}
+         * If annotation is defined and has the required attributes, will return
+         * a Citation object that can be used to generate the citation for this tuple.
+         * @type {ERMrest.Citation}
          */
         get citation() {
             if (this._citation === undefined) {
                 var table = this._pageRef.table;
-                if (table.annotations.contains(module._annotations.CITATION)) {
-                    var citationAnno = table.annotations.get(module._annotations.CITATION).content;
-
-                    // if required fields are present, render each template and set that value on the citation object
-                    if (citationAnno.journal_pattern && citationAnno.year_pattern && citationAnno.url_pattern) {
-                        var options = {
-                            templateEngine: citationAnno.template_engine
-                        };
-                        var keyValues = this.templateVariables.values;
-
-                        this._citation = {};
-                        var self = this;
-                        // author, title, id set to null if not defined
-                        ["author", "title", "journal", "year", "url", "id"].forEach(function (key) {
-                            self._citation[key] = module._renderTemplate(citationAnno[key+"_pattern"], keyValues, table.schema.catalog, options);
-                        });
-
-                        // if after processing the templates, any of the required fields are null, template is invalid
-                        if (!this._citation.journal || !this._citation.year || !this._citation.url) {
-                            this._citation = null;
-                        }
-                    } else {
-                        this._citation = null;
-                    }
-                } else {
+                if (!table.annotations.contains(module._annotations.CITATION)) {
                     this._citation = null;
+                } else {
+                    var citationAnno = table.annotations.get(module._annotations.CITATION).content;
+                    if (!citationAnno.journal_pattern || !citationAnno.year_pattern || !citationAnno.url_pattern) {
+                        this._citation = null;
+                    } else {
+                        this._citation = new Citation(this, citationAnno);
+                    }
                 }
             }
             return this._citation;
@@ -5165,6 +5239,7 @@
                 // TODO should we move these to the _getFormattedKeyValues?
                 // the multi-fk all-outbounds
                 var sm = this._pageRef.table.sourceDefinitions.sourceMapping;
+
                 self._pageRef.activeList.allOutBounds.forEach(function (col) {
                     // data is null, so we don't need to add it
                     if (!self._linkedData[col.name]) return;
@@ -5320,5 +5395,74 @@
             }
 
             return "cnt_d(" + module._fixedEncodeURIComponent(this._ref.table.shortestKey[0].name) + ")";
+        }
+    };
+
+    /**
+     * Constructs a citation for the given tuple.
+     * The given citationAnnotation must be valid and have the appropriate variables.
+     */
+    function Citation (reference, citationAnnotation) {
+        this._reference = reference;
+
+        this._table = reference.table;
+
+        /**
+         * citation specific properties include:
+         *   - journal*
+         *   - author
+         *   - title
+         *   - year*
+         *   - url*
+         *   - id
+         * other properties:
+         *   - template_engine
+         *   - wait_for
+         */
+        this._citationAnnotation = citationAnnotation;
+
+        var waitForRes = module._processWaitForList(citationAnnotation.wait_for, reference, reference.table, null, null, "citation");
+
+        this.waitFor = waitForRes.waitForList;
+        this.hasWaitFor = waitForRes.hasWaitFor;
+        this.hasWaitForAggregate = waitForRes.hasWaitForAggregate;
+    }
+
+    Citation.prototype = {
+        /**
+         * Given the templateVariables variables, will generate the citaiton.
+         * @param {ERMrest.Tuple} tuple - the tuple object that this citaiton is based on
+         * @param {Object=} templateVariables - if it's not an obect, we will use the tuple templateVariables
+         * @return {String|null} if the returned template for required attributes are empty, it will return null.
+         */
+        compute: function (tuple, templateVariables) {
+            var table = this._table, citationAnno = this._citationAnnotation;
+
+            // make sure required parameters are present
+            if (!citationAnno.journal_pattern || !citationAnno.year_pattern || !citationAnno.url_pattern) {
+                return null;
+            }
+
+            if (!templateVariables) {
+                templateVariables = tuple.templateVariables.values;
+            }
+
+            var citation = {};
+            // author, title, id set to null if not defined
+            ["author", "title", "journal", "year", "url", "id"].forEach(function (key) {
+                citation[key] = module._renderTemplate(
+                    citationAnno[key+"_pattern"],
+                    templateVariables,
+                    table.schema.catalog,
+                    {templateEngine: citationAnno.template_engine}
+                );
+            });
+
+            // if after processing the templates, any of the required fields are null, template is invalid
+            if (!citation.journal || !citation.year || !citation.url) {
+                return null;
+            }
+
+            return citation;
         }
     };
