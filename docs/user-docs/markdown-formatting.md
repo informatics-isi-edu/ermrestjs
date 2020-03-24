@@ -314,6 +314,20 @@ If you provide an invalid link then instead of an iframe you will just get the i
 ```
 > <p><em>Invalid</em> <a href="https://dev.isrd.isi.edu/chaise/search">CAPTION</a></p>
 
+#### Iframe without scrolling
+
+```html
+::: iframe [CAPTION](https://dev.isrd.isi.edu/chaise/search){width="800" height="300" scrolling="no"} \n:::
+
+# OUTPUT:
+<figure class="embed-block">
+	<figcaption class="embed-caption">
+		CAPTION
+	</figcaption>
+	<iframe src="https://dev.isrd.isi.edu/chaise/search" width="800" height="300" scrolling="no"></iframe>
+</figure>
+```
+
 #### Iframe With a linkable caption
 
 ```html
@@ -382,6 +396,19 @@ To style the caption of an iframe you can either specify classes using `caption-
 	<iframe src="https://example.com" width="800" height="300"></iframe>
 </figure>
 ```
+
+#### Iframe with class and style attached directly to the iframe element
+
+```html
+::: iframe [CAPTION](https://example.com){pos="bottom" iframe-class="iclass" style="border:5px solid;" class="iframe-element-class" link="https://example.com} \n:::
+
+# OUTPUT:
+<figure class="embed-block iclass">
+	<figcaption class="embed-caption">CAPTION</a></figcaption>
+	<iframe src="https://example.com" width="800" height="300" style="border:5px solid;" class="iframe-element-class"></iframe>
+</figure>
+```
+
 
 ### 7. Dropdown download button
 
