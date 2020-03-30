@@ -24,6 +24,8 @@ We want the structure to be as general as possible, so we don't need to redesign
     { "or": [ term... ]}
     { "not": term }
 
+The current implementation of faceting in Chaise only supports `and`. The rest of logical operators are currently not supported.
+
 ## Data Source
 
 The difference between base table columns and columns in related entities is just a difference in data source. It shouldn't involve a completely different set of filter structures. Instead, the single filter structure should conceptually allow various forms of data source specification
