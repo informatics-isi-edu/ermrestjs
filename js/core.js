@@ -1163,12 +1163,7 @@
          * Returns an object with
          * - fkeys: array of ForeignKeyRef objects
          * - columns: Array of columns
-         * - sources: hash-map of name to an object that has
-         *   - sourceObject
-         *   - column
-         *   - hasPath
-         *   - hasInbound
-         *   - isEntity
+         * - sources: hash-map of name to the SourceObjectWrapper object.
          * - sourceMapping: hashname to all the names
          * @type {Object}
          */
@@ -1277,9 +1272,11 @@
                          continue;
                      }
 
-                     var pSource = _processSourceObject(annot.sources[key], self, consNames, message);
-                     if (pSource.error) {
-                         console.log(pSource.message);
+                     var pSource;
+                     try {
+                         pSource = new SourceObjectWrapper(annot.sources[key], self, consNames);
+                     } catch (exp) {
+                         console.log(message + ": " + exp.message);
                          continue;
                      }
 
@@ -1298,12 +1295,7 @@
          },
 
          /**
-          * Returns an array of objects with the followin attributes:
-          *   - sourceObject
-          *   - column
-          *   - hasPath
-          *   - hasInbound
-          *   - isEntity
+          * Returns an array of SourceObjectWrapper objects.
           * @type {Object[]|false}
           */
          get searchSourceDefinition() {
@@ -1343,14 +1335,17 @@
 
                      var res = [];
                      sbDef[orOperator].forEach(function (src, index) {
-                         // process each individual object
-                         var pSource = _processSourceObject(src, self, consNames, message + ", index=" + index);
-                         if (pSource.error) {
-                             console.log(pSource.message);
+                         var pSource;
+                         try {
+                             // process each individual object
+                             pSource = new SourceObjectWrapper(src, self, consNames);
+                         } catch (exp) {
+                             console.log(message + ", index=" + index + ":" + exp.message);
                              return;
                          }
+
                          if (pSource.hasPath) {
-                             console.log(message + ": only table columns are accepted.");
+                             console.log(message + ", index=" + index + ": only table columns are accepted.");
                              return;
                          }
 
@@ -2310,9 +2305,6 @@
             }
 
             var display = this.getDisplay(context);
-            var isPartOfSimpleKey = !self.nullok && self.memberOfKeys.filter(function (key) {
-                return key.simple;
-            }).length > 0;
             var isPartOfSimpleFk = self.memberOfForeignKeys.filter(function (fk) {
                 return fk.simple;
             }).length > 0;
@@ -2334,7 +2326,7 @@
 
                 // if int/serial and part of simple key or simple fk we don't want to format the value
                 if ((self.type.name.indexOf("int") === 0 || self.type.name.indexOf("serial") === 0) &&
-                    (isPartOfSimpleKey || isPartOfSimpleFk)) {
+                    (self.isUniqueNotNull || isPartOfSimpleFk)) {
                     return v.toString();
                 }
 
@@ -2811,7 +2803,35 @@
             }
 
             return [{column: this}];
-        }
+        },
+
+        /**
+         * Whether this column is unique (part of a simple key) and not-null
+         * @type {Boolean}
+         */
+        get isUniqueNotNull () {
+            if (this._isUniqueNotNull === undefined) {
+                var key = this.memberOfKeys.filter(function (key) {
+                    return key.simple;
+                })[0];
+                this._isUniqueNotNull = !this.nullok && (key !== undefined);
+                this._uniqueNotNullKey = key ? key : null;
+            }
+            return this._isUniqueNotNull;
+        },
+
+        /**
+         * If the column is unique and not-null, will return the simple key
+         * that is made of this column. Otherwise it will return `null`
+         * @type {ERMrest.Key}
+         */
+        get uniqueNotNullKey () {
+            if (this._uniqueNotNullKey === undefined) {
+                // will populate the _uniqueNotNullKey
+                var dummy = this.isUniqueNotNull;
+            }
+            return this._uniqueNotNullKey;
+         }
     };
 
     /**
@@ -3109,7 +3129,7 @@
                 if (this.simple) {
                     obj = {source: this.colset.columns[0].name, self_link: true};
                 }
-                this._name = module.generatePseudoColumnHashName(obj);
+                this._name = module._generateSourceObjectHashName(obj);
             }
             return this._name;
         },
@@ -3446,16 +3466,19 @@
                 }
                 // path
                 else if (typeof orders[i] === "object") {
+                    var wrapper;
                     if (orders[i].source || orders[i].sourcekey) {
                         if (orders[i].source) {
-                            col = _getSourceColumn(orders[i].source, this._table, module._constraintNames);
+                            try {
+                                wrapper = new SourceObjectWrapper(orders[i], this._table, module._constraintNames);
+                            } catch (exp) {
+                                // we might want to show a better error message later.
+                                wrapper = null;
+                            }
                         } else {
-                            def = definitions.sources[orders[i].sourcekey];
-                            col = null;
+                            var def = definitions.sources[orders[i].sourcekey];
                             if (def) {
-                                col = def.column;
-                                // copy the elements that are defined in the source def but not the one already defined
-                                module._shallowCopyExtras(orders[i], def.sourceObject, module._sourceDefinitionAttributes);
+                                wrapper = def.clone(orders[i], this._table, module._constraintNames);
                             }
                         }
 
@@ -3463,9 +3486,9 @@
                         // 1. invalid source and not a path.
                         // 2. not entity mode
                         // 3. has aggregate
-                        invalid = logErr(!col || !_sourceHasPath(orders[i].source), wm.INVALID_FK, i) ||
-                                  logErr(!_isSourceObjectEntityMode(orders[i], col), wm.SCALAR_NOT_ALLOWED) ||
-                                  logErr(orders[i].aggregate, wm.AGG_NOT_ALLOWED);
+                        invalid = logErr(!wrapper || !wrapper.hasPath, wm.INVALID_FK, i) ||
+                                  logErr(!wrapper.isEntityMode, wm.SCALAR_NOT_ALLOWED) ||
+                                  logErr(wrapper.hasAggregate, wm.AGG_NOT_ALLOWED);
 
                     } else {
                         invalid = true;
@@ -3473,8 +3496,7 @@
                     }
 
                     if (!invalid) {
-                        colName = _generatePseudoColumnName(orders[i], col).name;
-                        addToList({isPath: true, object: orders[i], column: col, name: colName});
+                        addToList({isPath: true, sourceObjectWrapper: wrapper, name: wrapper.name});
                     }
                 }
             }

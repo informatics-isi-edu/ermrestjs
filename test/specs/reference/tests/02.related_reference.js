@@ -305,16 +305,6 @@ exports.execute = function(options) {
                     });
                 });
 
-                describe(".parentDisplayname", function () {
-                    it('should use to_name when annotation is present.', function () {
-                        expect(related[0].parentDisplayname.value).toBe("to_name_value");
-                    });
-
-                    it("should return current reference displayname when to_name is not defined.", function () {
-                        expect(related[1].parentDisplayname.value).toBe("reference_table");
-                    });
-                });
-
                 it('.columns should be properly defiend based on schema and only in compact/brief context should not include foreign key columns that created the link.', function() {
                     checkReferenceColumns([
                         {

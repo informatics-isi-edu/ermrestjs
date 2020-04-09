@@ -368,276 +368,9 @@
                 var self = this;
                 var andOperator = module._FacetsLogicalOperators.AND;
                 var searchTerm =  this.location.searchTerm;
+                var helpers = _facetColumnHelpers;
 
-                /*
-                 * Given a ReferenceColumn, InboundForeignKeyPseudoColumn, or ForeignKeyPseudoColumn
-                 * will return {"obj": facet object, "column": Column object}
-                 * The returned facet will always be entity, if we cannot show
-                 * entity picker (table didn't have simple key), we're ignoring it.
-                 *
-                 */
-                var refColToFacetObject = function (refCol) {
-                    var obj;
-
-                    if (refCol.isKey) {
-                        var baseCol = refCol._baseCols[0];
-                        obj = {"source": baseCol.name};
-
-                        // integer and serial key columns should show choice picker
-                        if (baseCol.type.name.indexOf("int") === 0 || baseCol.type.name.indexOf("serial") === 0) {
-                            obj.ux_mode = module._facetFilterTypes.CHOICE;
-                        }
-                        return {
-                            "obj": obj,
-                            "column": baseCol
-                        };
-                    }
-
-                    // if the pseudo-column table doesn't have simple key
-                    if (refCol.isPseudo && refCol.table.shortestKey.length > 1) {
-                        return null;
-                    }
-
-                    if (refCol.isForeignKey) {
-                        var constraint = refCol.foreignKey.constraint_names[0];
-                        return {
-                            "obj": {
-                                "source":[
-                                    {"outbound": constraint},
-                                    refCol.table.shortestKey[0].name
-                                ],
-                                "markdown_name": refCol.displayname.unformatted,
-                                "entity": true
-                            },
-                            "column": refCol.table.shortestKey[0]
-                        };
-                    }
-
-                    if (refCol.isInboundForeignKey) {
-                        var res = [];
-                        var origFkR = refCol.foreignKey;
-                        var association = refCol.reference.derivedAssociationReference;
-                        var column = refCol.table.shortestKey[0];
-
-                        res.push({"inbound": origFkR.constraint_names[0]});
-                        if (association) {
-                            res.push({
-                                "outbound": association._secondFKR.constraint_names[0]
-                            });
-                        }
-                        res.push(column.name);
-
-                        return {"obj": {"source": res, "markdown_name": refCol.displayname.unformatted, "entity": true}, "column": column};
-                    }
-
-                    obj = {"source": refCol.name};
-
-                    // integer and serial key columns should show choice picker
-                    if (_isSourceObjectEntityMode(obj, refCol._baseCols[0]) &&
-                       (refCol.type.name.indexOf("int") === 0 || refCol.type.name.indexOf("serial") === 0)) {
-                        obj.ux_mode = module._facetFilterTypes.CHOICE;
-                    }
-
-                    return { "obj": obj, "column": refCol._baseCols[0]};
-                };
-
-                // will return column or false
-                var checkFacetObject = function (obj) {
-                    if (!obj.source) {
-                        return false;
-                    }
-
-                    var col = _getSourceColumn(obj.source, self.table, module._constraintNames);
-
-                    // column type array is not supported
-                    if (!col || col.type.isArray) {
-                        return false;
-                    }
-
-                    if (col && module._facetUnsupportedTypes.indexOf(col.type.name) === -1) {
-                        return col;
-                    }
-                };
-
-                var checkRefColumn = function (col) {
-                    //virtual column is not supported
-                    if (col.isVirtualColumn) {
-                        return false;
-                    }
-
-                    // column type array is not supported
-                    if (col.type.isArray || col._baseCols[0].type.isArray) {
-                        return false;
-                    }
-
-                    if (col.isPathColumn) {
-                        if (col.hasAggregate) return false;
-                        return {"obj": col.sourceObject, "column": col._baseCols[0]};
-                    }
-
-                    // we're not supporting facet for asset or composite keys (composite foreignKeys is supported).
-                    if ((col.isKey && !col._simple) || col.isAsset) {
-                        return false;
-                    }
-
-                    var fcObj = refColToFacetObject(col);
-
-                    // this filters the following unsupported cases:
-                    //  - foreignKeys in a table that only has composite keys.
-                    if (!fcObj) {
-                        return false;
-                    }
-
-                    // if in scalar, and is one of unsupported types
-                    if (!fcObj.obj.entity && module._facetHeuristicIgnoredTypes.indexOf(fcObj.column.type.name) !== -1) {
-                        return false;
-                    }
-
-                    return fcObj;
-                };
-
-                /*
-                 * Given two source objects check if they are the same.
-                 * Source can be a string or array. If it's an array, the last element
-                 * must be an string and the other elements must have either `inbound`
-                 * or `outbound` key which its value will be the constraint name array.
-                 * example:
-                 * - '*'
-                 * - 'col_name'
-                 * - [{"inbound":['s', 'c']}, {"outbound": ['s', 'c2']}, 'col']
-                 */
-                var sameSource = function (source, filterSource) {
-                    if (!_sourceHasPath(source)) {
-                        return !_sourceHasPath(filterSource) && _getSourceColumnStr(source) === _getSourceColumnStr(filterSource);
-                    }
-
-                    if (source.length !== filterSource.length) {
-                        return false;
-                    }
-
-                    var key;
-                    for (var i = 0; i < source.length; i++) {
-                        if (typeof source[i] === "string") {
-                            return source[i] === filterSource[i];
-                        }
-
-                        if (typeof source[i] !== "object" || typeof filterSource[i] !== "object") {
-                            return false;
-                        }
-
-                        if (typeof source[i].inbound === "object") {
-                            key = "inbound";
-                        } else if (typeof source[i].outbound == "object") {
-                            key = "outbound";
-                        } else {
-                            return false;
-                        }
-
-                        if (!Array.isArray(filterSource[i][key]) || filterSource[i][key].length !== 2) {
-                            return false;
-                        }
-
-                        if (source[i][key][0] !== filterSource[i][key][0] || source[i][key][1] != filterSource[i][key][1]) {
-                            return false;
-                        }
-
-                    }
-                    return true;
-                };
-
-                // only add choices, range, search, and not_null
-                var mergeFacetObjects = function (source, extra) {
-                    if (extra.not_null === true) {
-                        source.not_null = true;
-                    }
-
-                    ['choices', 'ranges', 'search'].forEach(function (key) {
-                        if (!Array.isArray(extra[key])) {
-                            return;
-                        }
-
-                        if (!Array.isArray(source[key])) {
-                            source[key] = [];
-                        }
-                        extra[key].forEach(function (ch) {
-                            // in choices we can have null
-                            if (key !== "choices" && ch == null) {
-                                return;
-                            }
-
-                            // in range we must have one of min, or max.
-                            if ( key === 'ranges' && (!isDefinedAndNotNull(ch.min) && !isDefinedAndNotNull(ch.max)) ) {
-                                return;
-                            }
-
-                            // don't add duplicates
-                            if (source[key].length > 0) {
-                                if (key !== 'ranges') {
-                                    if (source[key].indexOf(ch) !== -1) return;
-                                } else {
-                                    var exist = source[key].some(function (s) {
-                                        return (s.min === ch.min && s.max == ch.max && s.max_exclusive == ch.max_exclusive && s.min_exclusive == ch.min_exclusive);
-                                    });
-                                    if (exist) return;
-                                }
-                            }
-
-                            source[key].push(ch);
-                        });
-                    });
-                };
-
-                // this is only valid in entity mode.
-                // make sure that facetObject is pointing to the correct table.
-                // NOTE: facetColumns MUST be only used in COMPACT_SELECT context
-                // It doesn't feel right that I am doing contextualization in here,
-                // it's something that should be in client.
-                var checkForAlternative = function (facetObject) {
-                    var currTable = facetObject.column.table;
-                    var compactSelectTable = currTable._baseTable._getAlternativeTable(module._contexts.COMPACT_SELECT);
-
-                    // there's no alternative table
-                    if (currTable === compactSelectTable) {
-                        return true;
-                    }
-
-                    var basedOnKey = facetObject.column.table.keys.all().filter(function (key) {
-                        return !facetObject.column.nullok && key.simple && key.colset.columns[0] === facetObject.column;
-                    }).length > 0;
-
-                    if (!basedOnKey || facetObject.obj.entity === false) {
-                        // it's not entity mode
-                        return true;
-                    }
-
-                    // filter is based on alternative for another context, but we have to move to another table
-                    // we're not supporting this and we should just ignore it.
-                    if (currTable._isAlternativeTable()) {
-                        return false;
-                    }
-
-                    // filter is based on main, but we have to move to the alternative
-                    // we should add the join, if the filter is based on the key
-                    if (!currTable._isAlternativeTable() && compactSelectTable._isAlternativeTable()) {
-                        var fk = compactSelectTable._altForeignKey;
-                        if (!fk.simple || facetObject.column !== fk.key.colset.columns[0]) {
-                            return false;
-                        }
-                        facetObject.column = fk.colset.columns[0];
-                        facetObject.obj.source[facetObject.obj.source.length-1] = {"inbound": fk.constraint_names[0]};
-                        facetObject.obj.source.push(facetObject.column.name);
-
-                        // the makrdown_name came from the heuristics
-                        if (!usedAnnotation && facetObject.obj.markdown_name) {
-                            delete facetObject.obj.markdown_name;
-                        }
-                    }
-
-                    return true;
-                };
-
-
-                // if location has facet or filter, we should honor it. we should not add preselected facets
+                // if location has facet or filter, we should honor it and we should not add preselected facets in annotation
                 var hasFilterOrFacet = this.location.facets || this.location.filter || this.location.customFacets;
 
                 var andFilters = this.location.facets ? this.location.facets.andFilters : [];
@@ -648,7 +381,7 @@
                 }
 
                 var annotationCols = -1, usedAnnotation = false;
-                var facetObjects = [];
+                var facetObjectWrappers = [];
 
                 // get column orders from annotation
                 if (this._table.annotations.contains(module._annotations.VISIBLE_COLUMNS)) {
@@ -672,32 +405,43 @@
                             return;
                         }
 
-                        var sd;
+                        // make sure it's not referring to the annotation object.
+                        obj = module._simpleDeepCopy(obj);
+
+                        var sd, wrapper;
                         if (obj.sourcekey) {
                             sd = self.table.sourceDefinitions.sources[obj.sourcekey];
                             if (!sd) return;
 
-                            // copy the elements that are defined in the source def but not the one already defined
-                            module._shallowCopyExtras(obj, sd.sourceObject, module._sourceDefinitionAttributes);
+                            wrapper = sd.clone(obj, self._table, module._constraintNames, true);
+                        } else {
+                            try {
+                                wrapper = new SourceObjectWrapper(obj, self._table, module._constraintNames, true);
+                            } catch(exp) {
+                                console.log("facet definition: " + exp);
+                                // invalid definition or not unsupported
+                                // TODO could show the error message
+                                return;
+                            }
                         }
 
-                        var col = checkFacetObject(obj);
-                        if (!col) return;
-
-                        // make sure it's not referring to the annotation object.
-                        obj = module._simpleDeepCopy(obj);
+                        var supported = helpers.checkFacetObjectWrapper(wrapper);
+                        if (!supported) return;
 
                         // if we have filters in the url, we will get the filters only from url
                         if (hasFilterOrFacet) {
-                            delete obj.not_null;
-                            delete obj.choices;
-                            delete obj.search;
-                            delete obj.ranges;
+                            delete wrapper.sourceObject.not_null;
+                            delete wrapper.sourceObject.choices;
+                            delete wrapper.sourceObject.search;
+                            delete wrapper.sourceObject.ranges;
                         }
 
-                        facetObjects.push({"obj": obj, "column": col});
+                        facetObjectWrappers.push(wrapper);
                     });
-                } else {
+                }
+                // annotation didn't exist, so we are going to use the
+                // visible columns in detailed and related entities in detailed
+                else {
                     // this reference should be only used for getting the list,
                     var detailedRef = (this._context === module._contexts.DETAILED) ? this : this.contextualize.detailed;
                     var compactRef = (this._context === module._contexts.COMPACT) ? this : this.contextualize.compact;
@@ -705,19 +449,19 @@
 
                     // all the visible columns in compact context
                     compactRef.columns.forEach(function (col) {
-                        var fcObj = checkRefColumn(col);
+                        var fcObj = helpers.checkRefColumn(col);
                         if (!fcObj) return;
 
-                        facetObjects.push(fcObj);
+                        facetObjectWrappers.push(new SourceObjectWrapper(fcObj, self._table, module._constraintNames, true));
                     });
 
                     // all the realted in detailed context
                     detailedRef.related.forEach(function (relRef) {
                         var fcObj;
                         if (relRef.pseudoColumn && !relRef.pseudoColumn.isInboundForeignKey) {
-                            fcObj = {"obj": relRef.pseudoColumn.sourceObject, "column": relRef.pseudoColumn.baseColumn};
+                            fcObj = module._simpleDeepCopy(relRef.pseudoColumn.sourceObject);
                         } else {
-                            fcObj = checkRefColumn(new InboundForeignKeyPseudoColumn(self, relRef));
+                            fcObj = helpers.checkRefColumn(new InboundForeignKeyPseudoColumn(self, relRef));
                         }
                         if (!fcObj) return;
 
@@ -735,13 +479,13 @@
                          */
                         if (detailedRef.table !== compactRef.table &&
                             !detailedRef.table._isAlternativeTable() && compactRef.table._isAlternativeTable()) {
-                            fcObj.obj.source.unshift({"outbound": compactRef.table._altForeignKey.constraint_names[0]});
+                            fcObj.source.unshift({"outbound": compactRef.table._altForeignKey.constraint_names[0]});
                         }
-                        facetObjects.push(fcObj);
+                        facetObjectWrappers.push(new SourceObjectWrapper(fcObj, self._table, module._constraintNames, true));
                     });
                 }
 
-                // we should have facetObjects untill here, now we should combine it with andFilters
+                // we should have facetObjectWrappers untill here, now we should combine it with andFilters
                 var checkedObjects = {};
 
                 /*
@@ -756,7 +500,7 @@
                 var newFilters = [];
 
                 // if we have filters in the url, we should just get the structure from annotation
-                var j, facetLen = facetObjects.length;
+                var j, facetLen = facetObjectWrappers.length, andFilterObject;
                 for (var i = 0; i < andFilters.length; i++) {
                     if (andFilters[i].sourcekey === module._specialSourceDefinitions.SEARCH_BOX) continue;
                     if (!andFilters[i].source) continue;
@@ -767,6 +511,13 @@
 
                     found = false;
 
+                    try {
+                        // could be part of parser?
+                        andFilterObject = new SourceObjectWrapper(andFilters[i], self.table, module._constraintNames, true);
+                    } catch (exp) {
+                        throw new module.InvalidFilterOperatorError(module._errorMessage.facetOrFilterError, self.location.path, '');
+                    }
+
                     // find the facet corresponding to the filter
                     for (j = 0; j < facetLen; j++) {
 
@@ -774,35 +525,33 @@
                         // `or` and outside it's `and`.
                         if (checkedObjects[j]) continue;
 
-                        if (sameSource(facetObjects[j].obj.source, andFilters[i].source)) {
+                        // we want to make sure these two sources are exactly the same
+                        // so we can compare their hashnames
+                        if (facetObjectWrappers[j].name === andFilterObject.name) {
                             checkedObjects[j] = true;
                             found = true;
                             // merge facet objects
-                            mergeFacetObjects(facetObjects[j].obj, andFilters[i]);
+                            helpers.mergeFacetObjects(facetObjectWrappers[j].sourceObject, andFilters[i]);
                         }
                     }
 
                     // couldn't find the facet, create a new facet object
                     if (!found) {
-                        var filterCol = checkFacetObject(andFilters[i]);
-                        // this means that the facet/filter in url was not valid
-                        if (!filterCol) {
-                            throw new module.InvalidFilterOperatorError(module._errorMessage.facetOrFilterError, self.location.path, '');
-                        }
-                        facetObjects.push({"obj": andFilters[i], "column": filterCol});
+                        facetObjectWrappers.push(andFilterObject);
                     }
                 }
 
 
-                // turn facetObjects into facetColumn
-                facetObjects.forEach(function(fo, index) {
+                // turn facetObjectWrappers into facetColumn
+                facetObjectWrappers.forEach(function(fo, index) {
                     // if the function returns false, it couldn't handle that case,
                     // and therefore we are ignoring it.
-                    // It might also change fo.obj and fo.column
-                    if (!checkForAlternative(fo, usedAnnotation)) return;
-                    self._facetColumns.push(new FacetColumn(self, index, fo.column, fo.obj));
+                    // it might change the fo
+                    if (!helpers.checkForAlternative(fo, usedAnnotation, self.table, module._constraintNames)) return;
+                    self._facetColumns.push(new FacetColumn(self, index, fo));
                 });
 
+                 // get the existing facets on the columns (coming from annotation)
                 self._facetColumns.forEach(function(fc) {
                     if (fc.filters.length !== 0) {
                         newFilters.push(fc.toJSON());
@@ -836,7 +585,7 @@
                     this._searchColumns = this.table.searchSourceDefinition.map(function (sd) {
                         // TODO currently only supports normal columns
                         // TODO doesn't support * syntax.
-                        return module._createPseudoColumn(self, sd.column, sd.sourceObject, null, null, sd.isEntry);
+                        return module._createPseudoColumn(self, sd, null);
                     });
                 }
             }
@@ -865,7 +614,7 @@
             newReference._facetColumns = [];
             this.facetColumns.forEach(function (fc) {
                 newReference._facetColumns.push(
-                    new FacetColumn(newReference, fc.index, fc._column, fc._facetObject, sameFacet ? fc.filters.slice() : [])
+                    new FacetColumn(newReference, fc.index, fc._facetObjectWrapper, sameFacet ? fc.filters.slice() : [])
                 );
             });
 
@@ -2188,7 +1937,7 @@
                 if (fkr.isPath) {
                     // since we're sure that the pseudoColumn either going to be
                     // general pseudoColumn or InboundForeignKeyPseudoColumn then it will have reference
-                    this._related.push(module._createPseudoColumn(this, fkr.column, fkr.object, tuple, fkr.name, true).reference);
+                    this._related.push(module._createPseudoColumn(this, fkr.sourceObjectWrapper, tuple).reference);
                 } else {
                     fkr = fkr.foreignKey;
 
@@ -2384,13 +2133,18 @@
                      // this will be used for source path
                      var sourcePath;
                      if (rel.pseudoColumn && !rel.pseudoColumn.isInboundForeignKey) {
+                         var lastFk = rel.pseudoColumn.sourceObjectWrapper.lastForeignKeyNode;
                          // path from main to the related reference
-                         sourcePath = rel.pseudoColumn.foreignKeys.map(function(fk, i, allFks) {
-                             return ((i == allFks.length - 1) ? (relatedTableAlias + ":=") : "") + fk.obj.toString(!fk.isInbound, false);
+                         sourcePath = rel.pseudoColumn.sourceObjectNodes.map(function(sn, i, allNodes) {
+                             if (sn.isFilter) {
+                                 return sn.toString();
+                             } else {
+                                 return ((sn === lastFk) ? (relatedTableAlias + ":=") : "") + sn.toString(false, false);
+                             }
                          }).join("/");
 
                          // path more than length one, we need to add the main table fkey
-                         outputs.push(getTableOutput(rel, relatedTableAlias, sourcePath, rel.pseudoColumn.foreignKeys.length >= 2, self));
+                         outputs.push(getTableOutput(rel, relatedTableAlias, sourcePath, rel.pseudoColumn.foreignKeyPathLength >= 2, self));
                      }
                      // association table
                      else if (rel.derivedAssociationReference) {
@@ -2496,7 +2250,7 @@
             newReference._facetColumns = [];
             this.facetColumns.forEach(function (fc) {
                 newReference._facetColumns.push(
-                    new FacetColumn(newReference, fc.index, fc._column, fc._facetObject, fc.filters.slice())
+                    new FacetColumn(newReference, fc.index, fc._facetObjectWrapper, fc.filters.slice())
                 );
             });
 
@@ -2934,65 +2688,47 @@
                                     pseudoName += "-" + extra;
                                 }
                                 virtualColumnNames[pseudoName] = true;
-                                this._referenceColumns.push(new VirtualColumn(this, col, pseudoName, tuple));
+                                this._referenceColumns.push(new VirtualColumn(this, new SourceObjectWrapper(col), pseudoName, tuple));
                             }
                             continue;
                         }
 
                         // pseudo-column
-                        var sd;
+                        var sd, wrapper;
                         if (col.sourcekey) {
                             sd = self.table.sourceDefinitions.sources[col.sourcekey];
                             if (logCol(!sd, wm.INVALID_SOURCEKEY, i)) {
                                 continue;
                             }
-
-                            sourceCol = sd.column;
-                            hasPath = sd.hasPath;
-                            hasInbound = sd.hasInbound;
-
-                            // copy the elements that are defined in the source def but not the one already defined
-                            module._shallowCopyExtras(col, sd.sourceObject, module._sourceDefinitionAttributes);
-
+                            // merge the two together
+                            wrapper = sd.clone(col, this._table, module._constraintNames);
                         } else {
-                            sourceCol = _getSourceColumn(col.source, this._table, module._constraintNames);
-
-                            // invalid source
-                            if (logCol(!sourceCol, wm.INVALID_SOURCE, i)) {
+                            try {
+                                wrapper = new SourceObjectWrapper(col, this._table, module._constraintNames);
+                            } catch(exp) {
+                                logCol(true, wm.INVALID_SOURCE + ": " + exp.message, i);
                                 continue;
                             }
-
-                            hasPath = _sourceHasPath(col.source);
-                            hasInbound = _sourceHasInbound(col.source);
                         }
-
-                        // generate appropriate name for the given object
-                        pseudoNameObj = _generatePseudoColumnName(col, sourceCol);
-                        pseudoName = pseudoNameObj.name;
-                        isHash = pseudoNameObj.isHash; // whether its the actual name of column, or generated hash
-                        isEntity = _isSourceObjectEntityMode(col, sourceCol);
 
                         // invalid/hidden pseudo-column:
                         // 1. duplicate
                         // 2. column/foreignkey that needs to be hidden.
                         // 3. invalid self_link (must be not-null and part of a simple key)
                         // 4. invalid aggregate function
-                        // 3. The generated hash is a column for the table in database
-                        ignore = logCol((pseudoName in consideredColumns), wm.DUPLICATE_PC, i) ||
-                                 hideFKRByName(pseudoName) ||
-                                 (!hasPath && hideColumn(sourceCol)) ||
-                                 logCol(col.self_link === true && !(_isColumnUniqueNotNull(sourceCol)), wm.INVALID_SELF_LINK, i) ||
-                                 logCol((col.aggregate && module._pseudoColAggregateFns.indexOf(col.aggregate) === -1), wm.INVALID_AGG, i) ||
-                                 logCol((!col.aggregate && hasInbound && !isEntity), wm.MULTI_SCALAR_NEED_AGG, i) ||
-                                 logCol((!col.aggregate && hasInbound && isEntity && context !== module._contexts.DETAILED && context !== module._contexts.EXPORT), wm.MULTI_ENT_NEED_AGG, i) ||
-                                 logCol(col.aggregate && isEntry, wm.NO_AGG_IN_ENTRY, i) ||
-                                 logCol(isEntry && hasPath && (col.source.length > 2 || col.source[0].inbound), wm.NO_PATH_IN_ENTRY, i) ||
-                                 (isHash && nameExistsInTable(pseudoName, col));
+                        ignore = logCol((wrapper.name in consideredColumns), wm.DUPLICATE_PC, i) ||
+                                 hideFKRByName(wrapper.name) ||
+                                 (!wrapper.hasPath && hideColumn(wrapper.column)) ||
+                                 logCol(wrapper.sourceObject.self_link === true && !wrapper.column.isUniqueNotNull, wm.INVALID_SELF_LINK, i) ||
+                                 logCol((!wrapper.hasAggregate && wrapper.hasInbound && !wrapper.isEntityMode), wm.MULTI_SCALAR_NEED_AGG, i) ||
+                                 logCol((!wrapper.hasAggregate && wrapper.hasInbound && wrapper.isEntityMode && context !== module._contexts.DETAILED && context !== module._contexts.EXPORT), wm.MULTI_ENT_NEED_AGG, i) ||
+                                 logCol(wrapper.hasAggregate && wrapper.isEntryMode, wm.NO_AGG_IN_ENTRY, i) ||
+                                 logCol(isEntry && wrapper.hasPath && (wrapper.hasInbound || wrapper.isFiltered || wrapper.foreignKeyPathLength > 1), wm.NO_PATH_IN_ENTRY, i);
 
                         // avoid duplciates and hide the column
                         if (!ignore) {
-                            consideredColumns[pseudoName] = true;
-                            refCol = module._createPseudoColumn(this, sourceCol, col, tuple, pseudoName, isEntity);
+                            consideredColumns[wrapper.name] = true;
+                            refCol = module._createPseudoColumn(this, wrapper, tuple);
 
                             // to make sure we're removing asset related (filename, size, etc.) column in entry
                             if (refCol.isAsset) {
@@ -3259,9 +2995,9 @@
          * this should include
          * - requests: An array of the secondary request objects which inlcudes aggregates, entitysets, inline tables, and related tables.
          *   Depending on the type of request it can have different attibutes.
-         *   - for aggregate and entitysets:
+         *   - for aggregate, entitysets, and uniquefilterd:
          *     {column: ERMrest.ReferenceColumn, <type>: true, objects: [{index: integer, column: boolean, related: boolean, inline: boolean, citation: boolean}]
-         *     where the type is `entityset` or `aggregate`. Each object is capturing where in the page needs this pseudo-column.
+         *     where the type is aggregate`, `entity`, or `entityset`. Each object is capturing where in the page needs this pseudo-column.
          *   - for related and inline tables:
          *     {<type>: true, index: integer}
          *     where the type is `inline` or `related`.
@@ -3283,7 +3019,7 @@
 
             // VARIABLES:
             var columns = [], allOutBounds = [], requests = [], selfLinks = [];
-            var consideredSets = {}, consideredOutbounds = {}, consideredAggregates = {}, consideredSelfLinks = {};
+            var consideredUniqueFiltered = {}, consideredSets = {}, consideredOutbounds = {}, consideredAggregates = {}, consideredSelfLinks = {};
 
             var self = this;
             var sds = self.table.sourceDefinitions;
@@ -3315,6 +3051,21 @@
                 // add index if available (not available in citation)
                 if (Number.isInteger(index)) {
                     obj.index = index;
+                }
+
+                // unique filtered
+                // TODO FILTER_IN_SOURCE the callers should use this...
+                if (col.isUniqueFiltered) {
+                    // duplicate
+                    if (col.name in consideredUniqueFiltered) {
+                        requests[consideredUniqueFiltered[col.name]].objects.push(obj);
+                        return;
+                    }
+
+                    // new
+                    consideredUniqueFiltered[col.name] = requests.length;
+                    requests.push({entity: true, column: col, objects: [obj]});
+                    return;
                 }
 
                 // aggregates
@@ -3462,13 +3213,12 @@
 
         /**
          * Generate a related reference given a foreign key and tuple.
+         * TODO SHOULD BE REFACTORED AS A TYPE OF REFERENCE
          *
          * This is the logic:
          *
          * 0. keep track of the linkage and save some attributes:
          *      0.1 origFKR: the foreign key that created this related reference (used in chaise for autofill)
-         *      0.2 parentDisplayname: the displayname of parent
-         *          - logic: foriengkey's to_name or this.displayname
          *      0.3 mainTuple: the tuple used to generate the related references (might be undefined)
          *      0.4 compressedDataSource: the compressed source path from the main to the related table (might be undefined)
          *
@@ -3494,10 +3244,16 @@
          * @param  {Object=} sourceObject The object that defines the fkr
          * @return {ERMrest.Reference}  a reference which is related to current reference with the given fkr
          */
-        _generateRelatedReference: function (fkr, tuple, checkForAssociation, sourceObject) {
-            var j, col, uri, filterSource = [], dataSource = [];
+        _generateRelatedReference: function (fkr, tuple, checkForAssociation, sourceObjectWrapper) {
+            var i, j, sn, col, uri, filterSource = [], dataSource = [];
 
             var useFaceting = isObjectAndNotNull(tuple);
+
+            var sourceObject;
+            if (sourceObjectWrapper) {
+                sourceObject = sourceObjectWrapper.sourceObject;
+            }
+
             var catalog = this.table.schema.catalog;
 
             var newRef = _referenceCopy(this);
@@ -3526,13 +3282,6 @@
 
             // the main table
             newRef.mainTable = this.table;
-
-            // this name will be used to provide more information about the linkage
-            if (fkr.to_name) {
-                newRef.parentDisplayname = { "value": fkr.to_name,  "unformatted": fkr.to_name, "isHTMl" : false };
-            } else {
-                newRef.parentDisplayname = this.displayname;
-            }
 
             dataSource.push({"inbound": fkr.constraint_names[0]});
 
@@ -3622,6 +3371,22 @@
             // complete the path
             filterSource.push({"outbound": fkr.constraint_names[0]});
 
+            // if the sourceObjectWrapper is passed, filter source is reverse of that.
+            if (sourceObjectWrapper) {
+                filterSource = [];
+                for (i = sourceObjectWrapper.sourceObjectNodes.length -1; i >= 0; i--) {
+                    sn = sourceObjectWrapper.sourceObjectNodes[i];
+                    if (sn.isFilter) {
+                        filterSource.push(sn.nodeObject);
+                    } else if (sn.isForeignKey && sn.isInbound) {
+                        filterSource.push({"outbound": sn.nodeObject.constraint_names[0]});
+                    } else if (sn.isForeignKey && !sn.isInbound){
+                        filterSource.push({"inbound": sn.nodeObject.constraint_names[0]});
+                    }
+                }
+            }
+
+            // this is ignoring the given source completely, it should reverse it if it's available.
             if (useFaceting) {
                 var table = newRef._table;
                 newRef._location = module.parse([
@@ -3844,8 +3609,9 @@
                 // generate the projection for given pseudo column
                 var getPseudoPath = function (l) {
                     var pseudoPath = [];
-                    allOutBounds[l].foreignKeys.forEach(function (f, index, arr) {
-                        pseudoPath.push(((index === arr.length-1) ? ("F" + (k+1) + ":=") : "") + f.obj.toString(!f.isInbound,true));
+                    allOutBounds[l].sourceObjectNodes.forEach(function (sn, index, arr) {
+                        // NOTE all outbounds cannot have any filter and are just foreignkeys
+                        pseudoPath.push(((index === arr.length-1) ? ("F" + (k+1) + ":=") : "") + sn.toString(false, true));
                     });
                     return pseudoPath.join("/");
                 };
@@ -4162,7 +3928,8 @@
 
                             var fk = null;
 
-                            if (_sourceHasPath(f.source)) {
+                            //‌ُ TODO this should not be called here, we should refactor this part later
+                            if (_sourceColumnHelpers._sourceHasPath(f.source)) {
                                 var cons, isInbound = false, fkObj;
 
                                 if ("inbound" in f.source[0]) {
@@ -4186,6 +3953,7 @@
                         });
                     };
 
+                    // TODO FILTER_IN_SOURCE
                     // source: main table newTable: alternative
                     if (!source._table._isAlternativeTable() && newTable._isAlternativeTable()) {
                         modifyFacetFilters(function (facetFilter, firstFk) {

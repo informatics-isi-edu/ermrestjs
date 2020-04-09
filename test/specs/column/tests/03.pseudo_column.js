@@ -1115,16 +1115,16 @@ exports.execute = function (options) {
                 });
             });
 
-            describe("foreignKeys, ", function () {
+            describe("sourceObjectNodes, ", function () {
                 it ("if there's no path it should return an empty array.", function () {
-                    checkForeignKeys(detailedColsWTuple[14], [], "index="+ i);
+                    checkSourceObjectNodes(detailedColsWTuple[14], [], "index="+ i);
                 });
 
                 it ("otherwise it should return a list of objects that have fk and its direction", function () {
-                    checkForeignKeys(detailedColsWTuple[9], [
-                        {"const": ["pseudo_column_schema", "main_inbound_2_association_fk1"].join("_"), "isInbound": true},
-                        {"const": ["pseudo_column_schema", "main_inbound_2_association_fk2"].join("_"), "isInbound": false},
-                        {"const": ["pseudo_column_schema", "inbound_2_fk1"].join("_"), "isInbound": false},
+                    checkSourceObjectNodes(detailedColsWTuple[9], [
+                        {"isForeignKey": true, "const": ["pseudo_column_schema", "main_inbound_2_association_fk1"].join("_"), "isInbound": true},
+                        {"isForeignKey": true, "const": ["pseudo_column_schema", "main_inbound_2_association_fk2"].join("_"), "isInbound": false},
+                        {"isForeignKey": true, "const": ["pseudo_column_schema", "inbound_2_fk1"].join("_"), "isInbound": false},
                     ]);
                 });
             });
@@ -1206,11 +1206,11 @@ exports.execute = function (options) {
         }
     }
 
-    function checkForeignKeys (col, fks, colStr) {
-        expect(col.foreignKeys.length).toBe(fks.length, "length missmatch"  +  (colStr ? (" for " + colStr) : "."));
-        expect(col.foreignKeys.map(function (fk) {
-            return {"const": fk.obj._constraintName, "isInbound": fk.isInbound};
-        })).toEqual(fks, "fks missmatch" + (colStr ? (" for " + colStr) : "."));
+    function checkSourceObjectNodes (col, sns, colStr) {
+        expect(col.sourceObjectNodes.length).toBe(sns.length, "length missmatch"  +  (colStr ? (" for " + colStr) : "."));
+        expect(col.sourceObjectNodes.map(function (sn) {
+            return {"isForeignKey": sn.isForeignKey, "const": sn.nodeObject._constraintName, "isInbound": sn.isInbound};
+        })).toEqual(sns, "sns missmatch" + (colStr ? (" for " + colStr) : "."));
     }
 
     function checkReference (ref, table, facets, colStr) {

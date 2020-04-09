@@ -273,6 +273,11 @@
         OR: "or"
     });
 
+    module._ERMrestLogicalOperators = Object.freeze({
+        AND: "&",
+        OR: ";"
+    });
+
     module._sourceDefinitionAttributes = ["source", "aggregate", "entity", "self_link"];
 
     module._classNames = Object.freeze({
@@ -295,5 +300,9 @@
         "sourcekey": "key",
         "choices": "ch",
         "ranges": "r",
-        "search": "s"
+        "search": "s",
+        "filter": "f",
+        "operand": "opd",
+        "operator": "opr",
+        "negate": "n"
     });

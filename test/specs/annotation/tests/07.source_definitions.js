@@ -82,7 +82,7 @@ exports.execute = function (options) {
                             isHash: false,
                             hasPath: false,
                             hasInbound: false,
-                            isEntity: false
+                            isEntityMode: false
                         },
                         "new_col_2": {
                             name: "col",
@@ -90,7 +90,7 @@ exports.execute = function (options) {
                             isHash: false,
                             hasPath: false,
                             hasInbound: false,
-                            isEntity: false
+                            isEntityMode: false
                         },
                         "fk1_col_entity": {
                             name: "DfGbmoqMIfSqDHRJasrtnQ",
@@ -98,7 +98,7 @@ exports.execute = function (options) {
                             isHash: true,
                             hasPath: true,
                             hasInbound: false,
-                            isEntity: true
+                            isEntityMode: true
                         },
                         "fk1_col_scalar": {
                             name: "KAR6cMQDIO5pmnfhz5d4fw",
@@ -106,7 +106,7 @@ exports.execute = function (options) {
                             isHash: true,
                             hasPath: true,
                             hasInbound: false,
-                            isEntity: false
+                            isEntityMode: false
                         },
                         "fk1_col_entity_duplicate": {
                             name: "DfGbmoqMIfSqDHRJasrtnQ",
@@ -114,7 +114,7 @@ exports.execute = function (options) {
                             isHash: true,
                             hasPath: true,
                             hasInbound: false,
-                            isEntity: true
+                            isEntityMode: true
                         },
                         "fk1_col_scalar_duplicate": {
                             name: "KAR6cMQDIO5pmnfhz5d4fw",
@@ -122,7 +122,7 @@ exports.execute = function (options) {
                             isHash: true,
                             hasPath: true,
                             hasInbound: false,
-                            isEntity: false
+                            isEntityMode: false
                         },
                         "all_outbound_col": {
                             name: "TCvUzQfnU6gwYiBVTtE7jQ",
@@ -130,7 +130,7 @@ exports.execute = function (options) {
                             isHash: true,
                             hasPath: true,
                             hasInbound: false,
-                            isEntity: true
+                            isEntityMode: true
                         },
                         "inbound1_col": {
                             name: "gYt7pa2yjoSRQ4pgF9KEWQ",
@@ -138,7 +138,7 @@ exports.execute = function (options) {
                             isHash: true,
                             hasPath: true,
                             hasInbound: true,
-                            isEntity: true
+                            isEntityMode: true
                         },
                         "inbound1_col_2": {
                             name: "gYt7pa2yjoSRQ4pgF9KEWQ",
@@ -146,7 +146,7 @@ exports.execute = function (options) {
                             isHash: true,
                             hasPath: true,
                             hasInbound: true,
-                            isEntity: true
+                            isEntityMode: true
                         },
                         "agg1_cnt": {
                             name: "hVBgA7x0-AB8fNuiQ0uGYA",
@@ -154,7 +154,7 @@ exports.execute = function (options) {
                             isHash: true,
                             hasPath: true,
                             hasInbound: true,
-                            isEntity: true
+                            isEntityMode: true
                         },
                         "agg1_cnt_d": {
                             name: "Ym148G91WOlKt5GWzpq7lQ",
@@ -162,7 +162,7 @@ exports.execute = function (options) {
                             isHash: true,
                             hasPath: true,
                             hasInbound: true,
-                            isEntity: true
+                            isEntityMode: true
                         },
                         "agg1_min": {
                             name: "ii9Jz3vgiw-G00TDffG4ZQ",
@@ -170,7 +170,7 @@ exports.execute = function (options) {
                             isHash: true,
                             hasPath: true,
                             hasInbound: true,
-                            isEntity: true
+                            isEntityMode: true
                         },
                         "agg1_max": {
                             name: "raE5u8lqi8fLPc9SpChLtQ",
@@ -178,7 +178,7 @@ exports.execute = function (options) {
                             isHash: true,
                             hasPath: true,
                             hasInbound: true,
-                            isEntity: true
+                            isEntityMode: true
                         },
                         "agg1_array": {
                             name: "W-TwpGoWV0qkZnBXm2O97w",
@@ -186,7 +186,7 @@ exports.execute = function (options) {
                             isHash: true,
                             hasPath: true,
                             hasInbound: true,
-                            isEntity: true
+                            isEntityMode: true
                         },
                         "agg1_array_d_entity": {
                             name: "5KvRCbKSwkHPj74dunY-Xw",
@@ -194,7 +194,7 @@ exports.execute = function (options) {
                             isHash: true,
                             hasPath: true,
                             hasInbound: true,
-                            isEntity: true
+                            isEntityMode: true
                         },
                         "agg1_array_d": {
                             name: "Jb0K5FtG2b6SgdvH0Yud1w",
@@ -202,7 +202,7 @@ exports.execute = function (options) {
                             isHash: true,
                             hasPath: true,
                             hasInbound: true,
-                            isEntity: false
+                            isEntityMode: false
                         },
                         "agg1_array_d_duplicate": {
                             name: "Jb0K5FtG2b6SgdvH0Yud1w",
@@ -210,7 +210,7 @@ exports.execute = function (options) {
                             isHash: true,
                             hasPath: true,
                             hasInbound: true,
-                            isEntity: false
+                            isEntityMode: false
                         }
                     };
                     for (var key in expectedSources) {
@@ -220,7 +220,7 @@ exports.execute = function (options) {
                         var s =  tableMainSources[key];
                         var expectedS = expectedSources[key];
                         expect(s.column.name).toBe(expectedS.columnName, "key `" + key + "`: columnName missmatch.");
-                        ["name", "isHash", "hasPath", "hasInbound", "isEntity"].forEach(function (attr) {
+                        ["name", "isHash", "hasPath", "hasInbound", "isEntityMode"].forEach(function (attr) {
                             expect(s[attr]).toBe(expectedS[attr], "key `" + key + "`: " + attr + " missmatch.");
                         })
 

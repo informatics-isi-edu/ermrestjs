@@ -95,6 +95,10 @@
         return typeof obj === "object" && obj !== null;
     };
 
+    var isStringAndNotEmpty = function (obj) {
+        return typeof obj === "string" && obj.length > 0;
+    };
+
     /**
      * Returns true if given paramter is object.
      * @param  {*} obj
@@ -753,6 +757,8 @@
      * - if sourceObject.comment=false: use empty string.
      * - if sourceObject.comment=string: use the defined value
      * - otherwise return null
+     * TODO should be renamed or changed. the name doesn't make sense.
+     * (I wanted to use _processSourceObjectComment but called it this way accidentally)
      */
     _processSourceObjectColumn = function (sourceObject) {
         if (!sourceObject) return null;
