@@ -771,7 +771,7 @@
 
             if (col.isPathColumn) {
                 if (col.hasAggregate) return false;
-                return module._simpleDeepCopy(col.sourceObjectWrapper.source);
+                return module._simpleDeepCopy(col.sourceObjectWrapper.sourceObject);
             }
 
             // we're not supporting facet for asset or composite keys (composite foreignKeys is supported).
@@ -873,16 +873,17 @@
                 }
 
                 var sourceObject = facetObjectWrapper.sourceObject;
-                sourceObject.source[facetObjectWrapper.obj.source.length-1] = {"inbound": fk.constraint_names[0]};
-                sourceObject.source.push(facetObjectWrapper.column.name);
+                sourceObject.source[sourceObject.source.length-1] = {"inbound": fk.constraint_names[0]};
+                sourceObject.source.push(fk.colset.columns[0].name);
 
                 // the makrdown_name came from the heuristics
                 if (!usedAnnotation && sourceObject.markdown_name) {
                     delete sourceObject.markdown_name;
                 }
 
-                // update the object
-                facetObjectWrapper = new SourceObjectWrapper(facetObjectWrapper, table, consNames, true);
+                // update the object and all its properties.
+                // TODO can this be improved?
+                facetObjectWrapper = new SourceObjectWrapper(sourceObject, table, consNames, true);
             }
 
             return true;
@@ -894,7 +895,7 @@
 
         // if the extra objects are not passed, we cannot process
         if (isObjectAndNotNull(table) && isObjectAndNotNull(consNames)) {
-            var res = this._process(table, consNames, this, isFacet);
+            var res = this._process(table, consNames, isFacet);
             if (res.error) {
                 throw new Error(res.message);
             }
@@ -949,7 +950,7 @@
 
             var colName, col, colTable = table, source = sourceObject.source, sourceObjectNodes = [];
             var hasPath = false, hasInbound = false, isFiltered = false, fkPathLength = 0;
-            var fk, fkIndex, firstFkIndex = -1, i, isInbound, constraint, fkObj;
+            var fk, fkIndex = -1, firstFkIndex = -1, i, isInbound, constraint, fkObj;
 
             // from 0 to source.length-1 we have paths
             if (Array.isArray(source) && source.length === 1 && isStringAndNotEmpty(source[0])) {
@@ -959,6 +960,7 @@
                 for (i = 0; i < source.length - 1; i++) {
                     if ("fitler" in source[i] || "and" in source[i] || "or" in source[i]) {
                         sourceObjectNodes.push(new SourceObjectNode(source[i], true));
+                        continue;
                     } else if ("inbound" in source[i]) {
                         constraint = source[i].inbound;
                         isInbound = true;
@@ -1011,18 +1013,13 @@
             try {
                 col = colTable.columns.get(colName);
             } catch (exp) {
-                return returnError("Invalid column name in source");
+                return returnError(wm.INVALID_COLUMN_IN_SOURCE_PATH);
             }
             var isEntity = hasPath && (sourceObject.entity !== false) && col.isUniqueNotNull;
 
             // validate aggregate fn
-            if (sourceObject.aggregate && module._pseudoColAggregateFns.indexOf(sourceObject.aggregate) === -1) {
+            if (isFacet !== true && sourceObject.aggregate && module._pseudoColAggregateFns.indexOf(sourceObject.aggregate) === -1) {
                 return returnError(wm.INVALID_AGG);
-            }
-
-            // has inbound and not aggregate, must be entity
-            if (!sourceObject.aggregate && hasInbound && !isEntity) {
-                return returnError(wm.MULTI_SCALAR_NEED_AGG);
             }
 
             self.column = col;
@@ -1040,10 +1037,10 @@
 
             // when generating the url, we might optimize the url and remove the last hop,
             // the following boolean shows whether the end url has path or not
-            self.ermrestHasPath = false;
-            if (sourceObjectNodes.length > 0 && sourceObjectNodes[sourceObjectNodes.length-1].isForeignKey) {
+            self.ermrestHasPath = hasPath;
+            if (fkPathLength === 1) {
                 var fkCol = isInbound ? fk.colset.columns[0] : fk.key.colset.columns[0];
-                self.ermrestHasPath = !col.nullok && fk.simple && fkCol === col;
+                self.ermrestHasPath = !(!col.nullok && fk.simple && fkCol === col);
             }
 
 
@@ -1062,7 +1059,7 @@
             }
 
             // attach last fk
-            if (fkIndex) {
+            if (fkIndex !== -1) {
                 self.lastForeignKeyNode = sourceObjectNodes[fkIndex];
             }
 

@@ -244,7 +244,8 @@
         NO_AGG_IN_ENTRY: "aggregate functions are not allowed in entry contexts.",
         NO_PATH_IN_ENTRY: "pseudo columns with path are not allowed in entry contexts (only single outbound path is allowed).",
         INVALID_SELF_LINK: "given source is not a valid self-link (must be unique not-null).",
-        INVALID_COLUMN_DEF: "column definiton must be an array, object, or string."
+        INVALID_COLUMN_DEF: "column definiton must be an array, object, or string.",
+        INVALID_COLUMN_IN_SOURCE_PATH: "end column in the path is not valid (not available in the end table)"
     });
 
     module._permissionMessages = Object.freeze({

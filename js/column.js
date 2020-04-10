@@ -2636,6 +2636,8 @@ function FacetColumn (reference, index, facetObjectWrapper, filters) {
 
     this.lastForeignKeyNode = facetObjectWrapper.lastForeignKeyNode;
 
+    this.foreignKeyPathLength = facetObjectWrapper.foreignKeyPathLength;
+
     /**
      * Whether the source has path or not
      * @type {Boolean}
@@ -2651,7 +2653,7 @@ function FacetColumn (reference, index, facetObjectWrapper, filters) {
      *
      * @type {Boolean}
      */
-    this.ermrestHasPath = facetObjectWrapper.hasPath;
+    this.ermrestHasPath = facetObjectWrapper.ermrestHasPath;
 
     /**
      * Returns true if the source is on a key column.
@@ -2949,7 +2951,6 @@ FacetColumn.prototype = {
                 }
 
                 var lastFK = self.lastForeignKeyNode ? self.lastForeignKeyNode.nodeObject : null;
-                var lastFKIsInbound = self.lastForeignKeyNode ? self.lastForeignKeyNode.isInbound : null;
 
                 // if is part of the main table, just return the column's displayname
                 if (lastFK === null) {
@@ -2958,6 +2959,7 @@ FacetColumn.prototype = {
 
                 // Otherwise
                 var value, unformatted, isHTML = false;
+                var lastFKIsInbound = self.lastForeignKeyNode.isInbound;
 
                 // use from_name of the last fk if it's inbound
                 if (lastFKIsInbound && lastFK.from_name !== "") {
@@ -3112,7 +3114,7 @@ FacetColumn.prototype = {
                 var versioned = self.reference.table.schema.catalog.version;
 
                 //if from the same table, don't show if it's not-null
-                if (self._facetObjectWrapper.foreignKeyPathLength) {
+                if (self._facetObjectWrapper.foreignKeyPathLength === 0) {
                     return !versioned && !self._column.nullok && self._column.rights.select === true;
                 }
 

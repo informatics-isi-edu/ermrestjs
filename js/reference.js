@@ -512,7 +512,7 @@
                     found = false;
 
                     try {
-                        // could be part of parser?
+                        // TODO refactor: could be part of parser?
                         andFilterObject = new SourceObjectWrapper(andFilters[i], self.table, module._constraintNames, true);
                     } catch (exp) {
                         throw new module.InvalidFilterOperatorError(module._errorMessage.facetOrFilterError, self.location.path, '');
@@ -547,7 +547,7 @@
                     // if the function returns false, it couldn't handle that case,
                     // and therefore we are ignoring it.
                     // it might change the fo
-                    if (!helpers.checkForAlternative(fo, usedAnnotation, self.table, module._constraintNames)) return;
+                    if (!helpers.checkForAlternative(fo, usedAnnotation, self._table, module._constraintNames)) return;
                     self._facetColumns.push(new FacetColumn(self, index, fo));
                 });
 
