@@ -1181,7 +1181,8 @@
             ],
             "annotations": {
                 "tag:isrd.isi.edu,2016:table-alternatives": {
-                    "compact": ["faceting_schema", "f7_compact_alt"]
+                    "compact": ["faceting_schema", "f7_compact_alt"],
+                    "detailed": ["faceting_schema", "f7_detailed_alt"]
                 }
             }
         },
@@ -1196,6 +1197,37 @@
                     "foreign_key_columns": [{
                         "column_name": "id",
                         "table_name": "f7_compact_alt",
+                        "schema_name": "faceting_schema"
+                    }],
+                    "referenced_columns": [{
+                        "column_name": "id_f7",
+                        "table_name": "f7_w_alt",
+                        "schema_name": "faceting_schema"
+                    }]
+                }
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "serial4"
+                    }
+                }
+            ],
+            "annotations": {}
+        },
+        "f7_detailed_alt": {
+            "kind": "table",
+            "table_name": "f7_detailed_alt",
+            "schema_name": "faceting_schema",
+            "keys": [{"unique_columns": ["id"]}],
+            "foreign_keys": [
+                {
+                    "names": [["faceting_schema", "f7_detailed_alt_fk1"]],
+                    "foreign_key_columns": [{
+                        "column_name": "id",
+                        "table_name": "f7_detailed_alt",
                         "schema_name": "faceting_schema"
                     }],
                     "referenced_columns": [{

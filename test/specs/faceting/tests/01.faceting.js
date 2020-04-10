@@ -453,6 +453,35 @@ exports.execute = function (options) {
                     });
                 });
 
+                it ("should ignore entity/scalar mode and just match based on definition.", function (done) {
+                    facetObj = {
+                        "and": [
+                            {
+                                "source":  [
+                                    {"inbound": ["faceting_schema", "secondpath_1_fk1"]},
+                                    {"inbound": ["faceting_schema", "secondpath_2_fk1"]},
+                                    "RID"
+                                ],
+                                "choices": ["val1"]
+                            }
+                        ]
+                    };
+                    options.ermRest.resolve(createURL(tableMain, facetObj)).then(function (ref) {
+                        expect(ref.facetColumns.length).toBe(21, "length missmatch.");
+                        expect(ref.facetColumns[17].filters.length).toBe(1, "# of filters defined is incorrect");
+                        expect(ref.location.facets).toBeDefined("facets is undefined.");
+                        expect(ref.location.ermrestCompactPath).toBe(
+                            "M:=faceting_schema:main/(id)=(faceting_schema:secondpath_1:id)/(id)=(faceting_schema:secondpath_2:id)/" +
+                            "RID=val1/$M/(id)=(faceting_schema:secondpath_1:id)/(id)=(faceting_schema:secondpath_2:id)/RID=val1/$M",
+                            "path missmatch."
+                        );
+                        done();
+                    }).catch(function (err) {
+                        console.log(err);
+                        done.fail();
+                    });
+                });
+
                 describe ("should be able to handle and filter on same source", function () {
                     it ("when the facet exists in the annotation.", function (done) {
                         facetObj = { "and": [ {"source": "id", "choices": ["1"]}, {"source": "id", "choices": ["2"]} ] };
@@ -630,7 +659,7 @@ exports.execute = function (options) {
 
             describe("regarding alternative tables for any of facets (table used in faceting is not what we should display for compact/select), ", function () {
                 it ("if facet is in scalar mode, should not change the facet and just add it.", function (done) {
-                    options.ermRest.resolve(createURL(tableWFacetAlt, facetObj)).then(function (ref) {
+                    options.ermRest.resolve(createURL(tableWFacetAlt)).then(function (ref) {
                         ref = ref.contextualize.compact;
                         expect(ref.facetColumns.length).toBe(2, "length missmatch.");
                         checkFacetSource(
@@ -650,7 +679,26 @@ exports.execute = function (options) {
                     });
                 });
 
-                describe ("if facet is based on main table and has alternative table for compact/select.", function () {
+                // for testing the rest of the cases, I'm relying on the logic that we have for merging facets in url with the annotation,
+                // I did this to separate the test cases. otherwise there would have been just one `it` statement that
+                // was testing the number of expected facet columns:
+
+                it ("otherwise, if facet is based on an alternative table, we should discard it.", function (done) {
+                    // facet path ends up in an alternative table, but for compact/select we should go to another table
+                    // we're not handling this now.
+                    acetObj = { "and": [ {"source": [{"inbound": ["faceting_schema", "f7_fk1"]}, {"outbound": ["faceting_schema", "f7_detailed_alt_fk1"]}, "id_f8_1"], "choices": ["1"]} ] };
+                    options.ermRest.resolve(createURL(tableWFacetAlt, facetObj)).then(function (ref) {
+                        ref = ref.contextualize.compact;
+                        expect(ref.facetColumns.length).toBe(2);
+                        done();
+                    }).catch(function (err) {
+                        console.log(err);
+                        done.fail();
+                    });
+
+                });
+
+                describe ("otherwise, if facet is based on main table and has alternative table for compact/select.", function () {
                     it ("if filter is based on the key, add the join to path.", function (done) {
                         facetObj = { "and": [ {"source": [{"inbound": ["faceting_schema", "f7_fk1"]}, "id_f7"], "choices": ["1"]} ] };
                         options.ermRest.resolve(createURL(tableWFacetAlt, facetObj)).then(function (ref) {
@@ -667,19 +715,20 @@ exports.execute = function (options) {
                             done.fail();
                         });
                     });
-                });
 
-                it("in othercases, it should just discard the facet.", function (done) {
-                    facetObj = { "and": [ {"source": [{"inbound": ["faceting_schema", "f8_fk1"]}, "id_f8_2"], "choices": ["1"]} ] };
-                    options.ermRest.resolve(createURL(tableWFacetAlt, facetObj)).then(function (ref) {
-                        ref = ref.contextualize.compact;
-                        expect(ref.facetColumns.length).toBe(2);
-                        done();
-                    }).catch(function (err) {
-                        console.log(err);
-                        done.fail();
+                    it("in othercases, we should just discard the facet.", function (done) {
+                        facetObj = { "and": [ {"source": [{"inbound": ["faceting_schema", "f8_fk1"]}, "id_f8_1"], "choices": ["1"]} ] };
+                        options.ermRest.resolve(createURL(tableWFacetAlt, facetObj)).then(function (ref) {
+                            ref = ref.contextualize.compact;
+                            expect(ref.facetColumns.length).toBe(2);
+                            done();
+                        }).catch(function (err) {
+                            console.log(err);
+                            done.fail();
+                        });
                     });
                 });
+
             });
         });
 
