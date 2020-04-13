@@ -3484,9 +3484,11 @@
 
                         // invalid if:
                         // 1. invalid source and not a path.
-                        // 2. not entity mode
-                        // 3. has aggregate
+                        // 2. no inbound
+                        // 3. not entity mode
+                        // 4. has aggregate
                         invalid = logErr(!wrapper || !wrapper.hasPath, wm.INVALID_FK, i) ||
+                                  logErr(!wrapper.hasInbound, wm.INVALID_FK_NO_INBOUND, i) ||
                                   logErr(!wrapper.isEntityMode, wm.SCALAR_NOT_ALLOWED) ||
                                   logErr(wrapper.hasAggregate, wm.AGG_NOT_ALLOWED);
 

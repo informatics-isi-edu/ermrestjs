@@ -151,7 +151,7 @@ exports.execute = function(options) {
 
                 describe("regarding column objects defining path.", function () {
 
-                    it ('should ignore the invalid (invalid, no path, non-entity, has aggregate) objects.', function () {
+                    it ('should ignore the invalid (invalid, no path, non-entity, has aggregate, all-outbound) objects.', function () {
                         expect(pathRelatedWithTuple.length).toBe(3);
                     });
 

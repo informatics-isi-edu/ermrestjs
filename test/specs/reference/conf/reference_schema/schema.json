@@ -172,7 +172,9 @@
                             {"outbound": ["reference_schema", "reference_table_fk1"]},
                             {"inbound": ["reference_schema", "reference_outbound_1_inbound_1_fk1"]},
                             "id"
-                        ]}
+                        ]},
+                        {"sourcekey": "invalid_sourcekey"},
+                        {"sourcekey": "path_all_outbound_1"}
                     ]
                 },
                 "tag:isrd.isi.edu,2016:table-display": {
@@ -209,6 +211,12 @@
                                 "id"
                             ],
                             "aggregate": "cnt"
+                        },
+                        "path_all_outbound_1": {
+                            "source": [
+                                {"outbound": ["reference_schema", "reference_table_fk1"]},
+                                "RID"
+                            ]
                         }
                     }
                 }
