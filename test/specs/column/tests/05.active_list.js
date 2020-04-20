@@ -61,7 +61,7 @@ exports.execute = function (options) {
         return recordURL + "/" + schemaName + ":" + table + "/" + "RID=" + findRID(table, keyCol, keyValue);
     };
 
-    var mainRef, mainRefCompact, mainRefDetailed, compactColumns, detailedColumns, compactActiveList, detailedActiveList;
+    var mainRef, mainRefCompactPage, mainRefCompact, mainRefDetailed, compactColumns, detailedColumns, compactActiveList, detailedActiveList;
     var mainEmptFkRefCompact, mainEmptyFkPage;
     var columnMapping = {
         "self_link_rowname": "6LvAfWRWZJUaupAC4ebm4A",
@@ -277,6 +277,7 @@ exports.execute = function (options) {
         describe("tuple.values, ", function () {
             it ("should return empty result for the columns with secondary request wait_for.", function (done) {
                 mainRefCompact.read(pageLen).then(function (page) {
+                    mainRefCompactPage = page;
                     expect(page.tuples[0].values.length).toEqual(expectedCompactColumns.length, "length missmatch");
                     page.tuples[0].values.forEach(function (v, i) {
                         var expectedVal = expectedCompactColumns[i].value;
@@ -301,6 +302,20 @@ exports.execute = function (options) {
         });
 
         describe("Page.templateVariables, ", function () {
+            it ("should not have $self or $_self", function () {
+                // this test case assumes that .values (and therefore .formatPresentation) is called before this
+                // in .formatPresentation of columns we manipulate the templateVariables
+                // to include $self and $_self and this test case is making sure that
+                // those values are not added to the original templateVariables object
+                // and are modifying a local variable instead.
+                var tv = mainRefCompactPage.templateVariables;
+                expect(tv.length).toBe(pageLen, "length missmatch");
+                tv.forEach(function (v, i) {
+                    expect(v.values.$_self).toBeFalsy("$_self exists for index=" + i);
+                    expect(v.values.$self).toBeFalsy("$self exists for index=" + i);
+                });
+            });
+
             it ("should not include outbound fks if they are inivisble and source definitions fkeys is empty.", function () {
                 var res = mainEmptyFkPage.templateVariables[0];
                 expect(res.rowName).toBe("main_empty_fkeys one", "rowname missmatch");
