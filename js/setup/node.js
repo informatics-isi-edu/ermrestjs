@@ -79,11 +79,19 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
      * after a 20ms timeout to allow it to load
      */
     var loadScript = function (url, callback) {
+      // ermrestjsBuildVersion variable is added in the makefile by the pre-generate-files-for-build command
+      url += "?v=" + ermrestjsBuildVersion;
+
+      // already injected
+      if (document.querySelector('script[src="' + url + '"]')) {
+          if (typeof callback !== "undefined") callback();
+          return;
+      }
+
       /* Load script from url and calls callback once it's loaded */
       var scriptTag = document.createElement('script');
       scriptTag.setAttribute("type", "text/javascript");
-      // ermrestjsBuildVersion variable is added in the makefile by the pre-generate-files-for-build command
-      scriptTag.setAttribute("src", url + "?v=" + ermrestjsBuildVersion);
+      scriptTag.setAttribute("src", url);
       if (typeof callback !== "undefined") {
         if (scriptTag.readyState) {
           /* For old versions of IE */

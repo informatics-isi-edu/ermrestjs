@@ -72,7 +72,7 @@ to use for ERMrest JavaScript agents.
         * [new Catalogs(server)](#new_ERMrest.Catalogs_new)
         * [.length()](#ERMrest.Catalogs+length) ⇒ <code>Number</code>
         * [.names()](#ERMrest.Catalogs+names) ⇒ <code>Array</code>
-        * [.get(id)](#ERMrest.Catalogs+get) ⇒ <code>Promise</code>
+        * [.get(id, dontFetchSchema)](#ERMrest.Catalogs+get) ⇒ <code>Promise</code>
     * [.Catalog](#ERMrest.Catalog)
         * [new Catalog(server, id)](#new_ERMrest.Catalog_new)
         * [.id](#ERMrest.Catalog+id) : <code>string</code>
@@ -782,7 +782,7 @@ should be used to log client action information on the server
     * [new Catalogs(server)](#new_ERMrest.Catalogs_new)
     * [.length()](#ERMrest.Catalogs+length) ⇒ <code>Number</code>
     * [.names()](#ERMrest.Catalogs+names) ⇒ <code>Array</code>
-    * [.get(id)](#ERMrest.Catalogs+get) ⇒ <code>Promise</code>
+    * [.get(id, dontFetchSchema)](#ERMrest.Catalogs+get) ⇒ <code>Promise</code>
 
 <a name="new_ERMrest.Catalogs_new"></a>
 
@@ -806,7 +806,7 @@ Constructor for the Catalogs.
 **Returns**: <code>Array</code> - Returns an array of names of catalogs.  
 <a name="ERMrest.Catalogs+get"></a>
 
-#### catalogs.get(id) ⇒ <code>Promise</code>
+#### catalogs.get(id, dontFetchSchema) ⇒ <code>Promise</code>
 Get a catalog by id. This call does catalog introspection.
 
 **Kind**: instance method of [<code>Catalogs</code>](#ERMrest.Catalogs)  
@@ -817,6 +817,7 @@ Get a catalog by id. This call does catalog introspection.
 | Param | Type | Description |
 | --- | --- | --- |
 | id | <code>string</code> | Catalog ID. |
+| dontFetchSchema | <code>Boolean</code> | whether we should fetch the schemas |
 
 <a name="ERMrest.Catalog"></a>
 
