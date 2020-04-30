@@ -234,35 +234,34 @@
 
         /**
          * @param {string} id Catalog ID.
+         * @param {Boolean} dontFetchSchema whether we should fetch the schemas
          * @return {Promise} a promise that returns the catalog  if resolved or
          *     {@link ERMrest.TimedOutError}, {@link ERMrest.InternalServerError}, {@link ERMrest.ServiceUnavailableError},
          *     {@link ERMrest.NotFoundError}, {@link ERMrest.ForbiddenError} or {@link ERMrest.UnauthorizedError} if rejected
          * @desc Get a catalog by id. This call does catalog introspection.
          */
-        get: function (id) {
+        get: function (id, dontFetchSchema) {
             // do introspection here and return a promise
 
-            var self = this;
-            var defer = module._q.defer();
+            var self = this, defer = module._q.defer(), catalog;
 
-            // load catalog only when requested
+            // create a new catalog object if the object has not been created before
             if (id in this._catalogs) {
-
-                defer.resolve(self._catalogs[id]);
-                return defer.promise;
-
+                catalog = self._catalogs[id];
             } else {
-
-                var catalog = new Catalog(self._server, id);
-                catalog._introspect().then(function () {
-                    self._catalogs[id] = catalog;
-                    defer.resolve(catalog);
-                }, function (error) {
-                    defer.reject(error);
-                });
-
-                return defer.promise;
+                catalog = new Catalog(self._server, id);
             }
+
+            // make sure the catalog is introspected.
+            // the introspect function might or might not
+            catalog._introspect(dontFetchSchema).then(function () {
+                self._catalogs[id] = catalog;
+                defer.resolve(catalog);
+            }, function (error) {
+                defer.reject(error);
+            });
+
+            return defer.promise;
         }
     };
 
@@ -302,6 +301,10 @@
          * @type {ERMrest.Schemas}
          */
         this.schemas = new Schemas();
+
+        this._jsonCatalog = null;
+
+        this._schemaFetched = false;
     }
 
     Catalog.prototype = {
@@ -312,30 +315,35 @@
         },
 
         /**
-         * This will return the snapshot from the catalog request instead of schema,
-         * because it will return the snapshot based on the model changes.
+         * @private
+         * @ignore
+         * Can be used to send a request and get the catalog object from server.
          * @param {Object} contextHeaderParams - properties to log under the dcctx header
-         * @return {Promise} a promise that returns json object or snaptime if resolved or
+         * @param {Boolean} ignoreCache - whether we should ignore the cach and fetch new object
+         * @return {Promise} a promise that returns the catalog json if resolved or
          *      {@link ERMrest.ERMrestError} if rejected
          */
-        currentSnaptime: function (contextHeaderParams) {
+        _get: function (contextHeaderParams, ignoreCache) {
             var self = this, defer = module._q.defer(), headers = {};
+
+            if (ignoreCache !== true && isObjectAndNotNull(self._jsonCatalog)) {
+                return defer.resolve(self._jsonCatalog), defer.promise;
+            }
 
             if (contextHeaderParams) {
                 headers[module.contextHeaderName] = contextHeaderParams;
             } else {
                 headers[module.contextHeaderName] = {
-                    action: ":,catalog/snaptime;load",
+                    action: ":,catalog;load",
                     catalog: self.id
                 };
             }
 
-            var config = {
-                headers: headers
-            };
-
-            this.server.http.get(this._uri, config).then(function (response) {
-                defer.resolve(response.data.snaptime);
+            this.server.http.get(this._uri, {headers: headers}).then(function (response) {
+                if (!isObjectAndNotNull(self._jsonCatalog)) {
+                    self._jsonCatalog = response.data;
+                }
+                defer.resolve(response.data);
             }, function (error) {
                 defer.reject(error);
             });
@@ -344,33 +352,54 @@
         },
 
         /**
-         *
-         * @private
-         * @return {Promise} a promise that returns json object or catalog schema if resolved or
-         *     {@link ERMrest.TimedOutError}, {@link ERMrest.InternalServerError}, {@link ERMrest.ServiceUnavailableError},
-         *     {@link ERMrest.NotFoundError}, {@link ERMrest.ForbiddenError} or {@link ERMrest.UnauthorizedError} if rejected
+         * This will return the snapshot from the catalog request instead of schema,
+         * because it will return the snapshot based on the model changes.
+         * @param {Object} contextHeaderParams - properties to log under the dcctx header
+         * @return {Promise} a promise that returns json object or snaptime if resolved or
+         *      {@link ERMrest.ERMrestError} if rejected
          */
-        _introspect: function () {
-            // load all schemas
-            var self = this;
-            return this.currentSnaptime().then(function(snaptime) {
-                self.snaptime = snaptime;
-                var headers = {};
-                headers[module.contextHeaderName] = {
-                    action: ":,catalog/schema;load",
+        currentSnaptime: function (contextHeaderParams) {
+            var defer = module._q.defer(), self = this;
+            if (!isObjectAndNotNull(contextHeaderParams)) {
+                contextHeaderParams = {
+                    action: ":,catalog/snaptime;load",
                     catalog: self.id
                 };
-                return self.server.http.get(self._uri + "/schema", {headers: headers});
-            }).then(function (response) {
+            }
+
+            self._get(contextHeaderParams, true).then(function (response) {
+                defer.resolve(response.snaptime);
+            }, function (error) {
+                defer.reject(error);
+            });
+
+            return defer.promise;
+        },
+
+        /**
+         * @private
+         * @ignore
+         * fetch the schemas of the catalog and create the appropriate objects
+         */
+        _fetchSchema: function () {
+            var defer = module._q.defer(), self = this;
+
+            if (self._schemaFetched) {
+                return defer.resolve(), defer.promise;
+            }
+
+            var headers = {};
+            headers[module.contextHeaderName] = {
+                action: ":,catalog/schema;load",
+                catalog: self.id
+            };
+
+            self.server.http.get(self._uri + "/schema", {headers: headers}).then(function (response) {
                 var jsonSchemas = response.data;
 
-                self.rights = jsonSchemas.rights;
+                self._schemaFetched = true;
 
-                self.annotations = new Annotations();
-                for (var uri in jsonSchemas.annotations) {
-                    var jsonAnnotation = jsonSchemas.annotations[uri];
-                    self.annotations._push(new Annotation("catalog", uri, jsonAnnotation));
-                }
+                self.rights = jsonSchemas.rights;
 
                 for (var s in jsonSchemas.schemas) {
                     self.schemas._push(new Schema(self, jsonSchemas.schemas[s]));
@@ -400,11 +429,49 @@
                     }
                 }
 
-                return self.schemas;
+                defer.resolve();
             }, function (response) {
-                var error = module.responseToError(response);
-                return module._q.reject(error);
+                defer.reject(response);
             });
+
+            return defer.promise;
+        },
+
+        /**
+         *
+         * @private
+         * @return {Promise} a promise that returns json object or catalog schema if resolved or
+         *     {@link ERMrest.TimedOutError}, {@link ERMrest.InternalServerError}, {@link ERMrest.ServiceUnavailableError},
+         *     {@link ERMrest.NotFoundError}, {@link ERMrest.ForbiddenError} or {@link ERMrest.UnauthorizedError} if rejected
+         */
+        _introspect: function (dontFetchSchema) {
+            var defer = module._q.defer(), self = this;
+
+            // load the catalog (or use the one that is cached)
+            this._get().then(function(response) {
+                self.snaptime = response.snaptime;
+
+                self.annotations = new Annotations();
+                for (var uri in response.annotations) {
+                    self.annotations._push(new Annotation("catalog", uri, response.annotations[uri]));
+                }
+
+                if (dontFetchSchema === true || self._schemaFetched) {
+                    defer.resolve();
+                } else {
+                    // load all schemas
+                    self._fetchSchema().then(function () {
+                        defer.resolve();
+                    }).catch(function (err) {
+                        throw err;
+                    });
+                }
+
+            }).catch(function (response) {
+                defer.reject(module.responseToError(response));
+            });
+
+            return defer.promise;
         },
 
         /**
@@ -458,9 +525,11 @@
          * @return {Object} the chaise config object from the catalog annotation
          */
         get chaiseConfig () {
-            if (!this._chaiseConfig) {
+            if (this._chaiseConfig === undefined) {
                 if (this.annotations.contains(module._annotations.CHAISE_CONFIG)) {
                     this._chaiseConfig = this.annotations.get(module._annotations.CHAISE_CONFIG).content;
+                } else {
+                    this._chaiseConfig = null;
                 }
             }
             return this._chaiseConfig;
