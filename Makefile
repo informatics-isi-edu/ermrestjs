@@ -61,7 +61,7 @@ SOURCE=$(UTIL)/polyfills.js \
 	   $(JS)/export.js \
 	   $(JS)/hatrac.js \
 	   $(JS)/format.js \
-	   $(BUILD)/$(MAKEFILE_VAR) \
+	   $(DIST)/$(MAKEFILE_VAR) \
 	   $(SETUP)/node.js \
 	   $(SETUP)/ng.js \
 
@@ -80,7 +80,7 @@ LIB=$(VENDOR)/lz-string.min.js \
 
 
 # Build target
-BUILD=build
+DIST=dist
 
 # Project package full/minified
 PKG=$(PROJ).js
@@ -97,29 +97,29 @@ API=$(DOC)/api.md
 LINT=.make-lint
 
 # Build rule
-$(BUILD): print_variables $(BUILD)/$(PKG) $(BUILD)/$(MIN_LIB) $(BUILD)/$(VER)
-	@touch $(BUILD)
+$(DIST): print_variables $(DIST)/$(PKG) $(DIST)/$(MIN_LIB) $(DIST)/$(VER)
+	@touch $(DIST)
 
 # Rule to build the version number file
-$(BUILD)/$(VER): $(SOURCE) $(BIN)
-	@mkdir -p $(BUILD)
-	$(info - creating $(BUILD)/$(VER) version file)
-	@git log --pretty=format:'%H' -n 1 > $(BUILD)/$(VER)
+$(DIST)/$(VER): $(SOURCE) $(BIN)
+	@mkdir -p $(DIST)
+	$(info - creating $(DIST)/$(VER) version file)
+	@git log --pretty=format:'%H' -n 1 > $(DIST)/$(VER)
 
 # Rule to build the package
-$(BUILD)/$(PKG): $(SOURCE) $(BIN)
-	@mkdir -p $(BUILD)
-	@cat $(SOURCE) > $(BUILD)/$(PKG)
-	$(info - creating $(BUILD)/$(MIN) file)
+$(DIST)/$(PKG): $(SOURCE) $(BIN)
+	@mkdir -p $(DIST)
+	@cat $(SOURCE) > $(DIST)/$(PKG)
+	$(info - creating $(DIST)/$(MIN) file)
 	@#since we're building it in build folder but when we deploy it's not build
 	@#inside the build folder anymore, we have to define the base
-	@$(BIN)/uglifyjs $(BUILD)/$(PKG) -o $(BUILD)/$(MIN) --compress --source-map "url='$(SRC_MAP)',base='$(BUILD)',root='$(ERMRESTJS_BASE_PATH)'"
+	@$(BIN)/uglifyjs $(DIST)/$(PKG) -o $(DIST)/$(MIN) --compress --source-map "url='$(SRC_MAP)',base='$(DIST)',root='$(ERMRESTJS_BASE_PATH)'"
 
 # Rule to build the minified library file (vendor files)
-$(BUILD)/$(MIN_LIB): $(LIB) $(BIN)
-	@mkdir -p $(BUILD)
-	$(info - creating $(BUILD)/$(MIN_LIB) minified vendor file)
-	@cat $(LIB) > $(BUILD)/$(MIN_LIB)
+$(DIST)/$(MIN_LIB): $(LIB) $(BIN)
+	@mkdir -p $(DIST)
+	$(info - creating $(DIST)/$(MIN_LIB) minified vendor file)
+	@cat $(LIB) > $(DIST)/$(MIN_LIB)
 
 # Rule to lint the source (terminate build on errors)
 $(LINT): $(SOURCE) $(BIN)
@@ -134,7 +134,7 @@ $(DOC): $(API)
 $(API): $(SOURCE) $(BIN)
 	@mkdir -p $(DOC)
 	$(info - creating $(API) document)
-	@$(BIN)/jsdoc2md $(BUILD)/$(PKG) > $(API)
+	@$(BIN)/jsdoc2md $(DIST)/$(PKG) > $(API)
 
 # Rule to ensure Node bin scripts are present
 $(BIN): $(MODULES)
@@ -146,13 +146,13 @@ $(MODULES): package.json
 	@touch $(MODULES)
 
 # generate makefile_variables file
-$(BUILD)/$(MAKEFILE_VAR): FORCE
-	@mkdir -p $(BUILD)
-	$(info - creating $(BUILD)/$(MAKEFILE_VAR) file)
+$(DIST)/$(MAKEFILE_VAR): FORCE
+	@mkdir -p $(DIST)
+	$(info - creating $(DIST)/$(MAKEFILE_VAR) file)
 	@# create the ermrestjsBuildVersion variable and use the current date + time for versioning
-	@echo 'var ermrestjsBuildVersion="$(BUILD_VERSION)";' > $(BUILD)/$(MAKEFILE_VAR)
+	@echo 'var ermrestjsBuildVersion="$(BUILD_VERSION)";' > $(DIST)/$(MAKEFILE_VAR)
 	@# add the ermrestjsBasePath that is used for fetching dependencies
-	@echo 'var ermrestjsBasePath="$(ERMRESTJS_BASE_PATH)";\n' >> $(BUILD)/$(MAKEFILE_VAR)
+	@echo 'var ermrestjsBasePath="$(ERMRESTJS_BASE_PATH)";\n' >> $(DIST)/$(MAKEFILE_VAR)
 
 # make sure ERMRESTJSDIR is not the root
 dont_install_in_root:
@@ -179,7 +179,7 @@ updeps:
 # Rule to clean project directory
 .PHONY: clean
 clean:
-	rm -rf $(BUILD)
+	rm -rf $(DIST)
 	rm -rf $(API)
 	@rm -f .make-*
 
@@ -204,13 +204,13 @@ lint: $(LINT)
 
 # rule to make sure there's no error and build the package and docs
 .PHONY: all
-all: $(LINT) $(BUILD) $(DOC)
+all: $(LINT) $(DIST) $(DOC)
 
 # Rule to install (deploy) the package
 .PHONY: install dont_install_in_root
-install: $(BUILD) dont_install_in_root
+install: $(DIST) dont_install_in_root
 	$(info - deploying the package)
-	@rsync -avz --exclude=$(MAKEFILE_VAR) $(BUILD)/ $(ERMRESTJSDIR)
+	@rsync -avz --exclude=$(MAKEFILE_VAR) $(DIST)/ $(ERMRESTJSDIR)
 
 # Rules for help/usage
 .PHONY: help usage
