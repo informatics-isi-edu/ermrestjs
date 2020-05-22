@@ -1787,7 +1787,7 @@
             nonSystemColumnFks.forEach(function(fk){
                 fk.colset.columns.forEach(function (col) {
                     fkCols[col] = true;
-                })
+                });
             });
 
             // the key that should contain foreign key columns
