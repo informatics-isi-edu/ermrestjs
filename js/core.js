@@ -1782,20 +1782,30 @@
                 return false; //not binary
             }
 
-
-            // set of foreignkey columns
-            var fkColset = new ColSet(nonSystemColumnFks.reduce(function(res, fk){
-                return res.concat(fk.colset.columns);
-            }, []));
+            // set of foreignkey columns (they might be overlapping so we're not using array)
+            var fkCols = {};
+            nonSystemColumnFks.forEach(function(fk){
+                fk.colset.columns.forEach(function (col) {
+                    fkCols[col] = true;
+                })
+            });
 
             // the key that should contain foreign key columns
             var tempKeys = this.keys.all().filter(function(key) {
                 var keyCols = key.colset.columns;
-                return !(keyCols.length == 1 && (module._serialTypes.indexOf(keyCols[0].type.name) != -1 ||  module._systemColumns.indexOf(keyCols[0].name) != -1) && !(keyCols[0] in fkColset.columns));
+                return !(keyCols.length == 1 && (module._serialTypes.indexOf(keyCols[0].type.name) != -1 ||  module._systemColumns.indexOf(keyCols[0].name) != -1) && !(keyCols[0] in fkCols));
             });
 
-            if (tempKeys.length != 1 || !fkColset._equals(tempKeys[0].colset)) {
+            if (tempKeys.length != 1) {
                 return false; // not binary
+            }
+
+            //make sure the key has all the foreign key columns
+            var keyHasAllCols = tempKeys[0].colset.columns.every(function (col) {
+                return col in fkCols;
+            });
+            if (!keyHasAllCols) {
+                return false; // not pure
             }
 
             // columns that are not part of any keys (excluding system columns).
