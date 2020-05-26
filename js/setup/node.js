@@ -86,7 +86,7 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
       }
 
       // ermrestjsBuildVersion variable is added in the makefile by the pre-generate-files-for-build command
-      url += "?v=" + ermrestjsBuildVersion;
+      url += "?v=" + ermrestjsBuildVariables.buildVersion;
 
       /* Load script from url and calls callback once it's loaded */
       var scriptTag = document.createElement('script');
@@ -119,16 +119,12 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
         });
     };
 
-    // this variable is coming from makefile_variables.js
-    // make sure ermrestjsBasePath doesn't have any trailing `/`
-    ermrestjsBasePath = ERMrest._stripTrailingSlash(ermrestjsBasePath) + "/";
-
     /*
      * Call this function to load all dependent scripts in order
      * NOTE: This function does not always preserve the order of loading scripts
      */
     loadScripts([
-        ermrestjsBasePath + "ermrest.vendor.min.js"
+        ermrestjsBuildVariables.ermrestjsBasePath + "ermrest.vendor.min.js"
     ],
         function() {
             /*

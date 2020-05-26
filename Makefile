@@ -149,10 +149,9 @@ $(MODULES): package.json
 $(DIST)/$(MAKEFILE_VAR): FORCE
 	@mkdir -p $(DIST)
 	$(info - creating $(DIST)/$(MAKEFILE_VAR) file)
-	@# create the ermrestjsBuildVersion variable and use the current date + time for versioning
-	@echo 'var ermrestjsBuildVersion="$(BUILD_VERSION)";' > $(DIST)/$(MAKEFILE_VAR)
-	@# add the ermrestjsBasePath that is used for fetching dependencies
-	@echo 'var ermrestjsBasePath="$(ERMRESTJS_BASE_PATH)";\n' >> $(DIST)/$(MAKEFILE_VAR)
+	@echo 'var ermrestjsBuildVariables = {};' > $(DIST)/$(MAKEFILE_VAR)
+	@echo 'ermrestjsBuildVariables.buildVersion="$(BUILD_VERSION)";' >> $(DIST)/$(MAKEFILE_VAR)
+	@echo 'ermrestjsBuildVariables.ermrestjsBasePath="$(ERMRESTJS_BASE_PATH)";\n' >> $(DIST)/$(MAKEFILE_VAR)
 
 # make sure ERMRESTJSDIR is not the root
 dont_install_in_root:
