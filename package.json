@@ -21,13 +21,14 @@
     "library"
   ],
   "dependencies": {
-    "uglify-js": "x",
-    "jshint": "x",
-    "jsdoc": "x",
-    "jsdoc-to-markdown": "x"
+    "uglify-js": "3.9.2",
+    "jshint": "2.11.1",
+    "jsdoc": "3.6.4",
+    "jsdoc-to-markdown": "5.0.3"
   },
   "devDependencies": {
     "buffer-slice": "0.0.1",
+    "mime": "1.4.0",
     "file-api": "^0.10.4",
     "handlebars": "4.5.3",
     "just-handlebars-helpers": "^1.0.13",

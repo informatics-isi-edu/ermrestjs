@@ -61,6 +61,7 @@ ehthumbs.db
 Thumbs.db
 bower_components
 node_modules
+package-lock.json
 dist
 test/support/*.spec.js
 test/specs/upload/files/*.*
