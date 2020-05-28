@@ -7,18 +7,20 @@ This pages documents how to install ERMrestJS, a Javascript client API for the
 
 1. [make](https://en.wikipedia.org/wiki/Makefile): Make is required for any build or development. With `make` only the non-minified package can be built and installed.
 2. [Node.js](https://www.nodejs.org) (v 6.x): Node is required for most development operations including linting, minifying, and testing.
-3. []
-4. [ErmrestDataUtils](https://github.com/informatics-isi-edu/ermrestdatautils): This package is only used in test framework. If you just want to install ERMrestJS, you won't need it.
+3. [ErmrestDataUtils](https://github.com/informatics-isi-edu/ermrestdatautils): This package is only used in test framework. If you just want to install ERMrestJS, you won't need it.
 
 
 ## Building The Package
 
 If you want to build the package, you will need to have `Node.js` installed and on your path. The build script will pull in all of the
-dependencies into the `/build/` directory.
+dependencies into the `/dist/` directory.
 
 ```
 $ make all
 ```
+
+Even though this command will not deploy the package, during build we will inject some build-related parameters into the code. So you should make sure these environment variables are properly defined. You can find more information about these variables in the next section.
+
 
 ## Deploying
 
