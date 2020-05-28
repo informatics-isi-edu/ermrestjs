@@ -154,7 +154,7 @@ $(DIST)/$(MAKEFILE_VAR): FORCE
 	$(info - creating $(DIST)/$(MAKEFILE_VAR) file)
 	@echo 'var ermrestjsBuildVariables = {};' > $(DIST)/$(MAKEFILE_VAR)
 	@echo 'ermrestjsBuildVariables.buildVersion="$(BUILD_VERSION)";' >> $(DIST)/$(MAKEFILE_VAR)
-	@echo 'ermrestjsBuildVariables.ermrestjsBasePath="$(ERMRESTJS_BASE_PATH)";\n' >> $(DIST)/$(MAKEFILE_VAR)
+	@echo 'ermrestjsBuildVariables.ermrestjsBasePath="$(ERMRESTJS_BASE_PATH)";' >> $(DIST)/$(MAKEFILE_VAR)
 
 # make sure ERMRESTJSDIR is not the root
 dont_install_in_root:
