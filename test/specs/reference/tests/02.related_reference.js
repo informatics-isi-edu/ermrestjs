@@ -8,6 +8,7 @@ exports.execute = function(options) {
             associationTableWithIDDisplayname = "association table displayname",
             associationTableWithID = "association table with id",
             AssociationTableWithExtra = "association_table_with_extra",
+            associationTableWithOverlappingCol = "association_table_with_overlapping_col",
             entityId = 9003,
             relatedEntityWithToNameId = 3,
             relatedEntityId = 1,
@@ -146,7 +147,7 @@ exports.execute = function(options) {
                 });
 
                 it('should only include visible foreign keys that are defined in the annotation. Should support path.', function() {
-                    expect(related.length).toBe(6);
+                    expect(related.length).toBe(7);
                 });
 
                 describe("regarding column objects defining path.", function () {
@@ -220,6 +221,11 @@ exports.execute = function(options) {
                     ],
                     [
                         {"i": ["reference_schema", "extra_fk_association_related_to_reference"]},
+                        "RID"
+                    ],
+                    [
+                        {"i": ["reference_schema", "association_table_with_overlapping_col_fk1"]},
+                        {"o": ["reference_schema", "association_table_with_overlapping_col_fk2"]},
                         "RID"
                     ]
                 ];
@@ -399,6 +405,9 @@ exports.execute = function(options) {
 
                     expect(related[4]._location.catalog).toBe(catalog_id.toString(), "missmatch for catalog index=4");
                     expect(related[4]._table.name).toBe(inboundTableName, "missmatch for table index=4 (table with system column fk)");
+
+                    expect(related[6]._location.catalog).toBe(catalog_id.toString(), "missmatch for catalog index=6");
+                    expect(related[6]._table.name).toBe("table_w_only_composite_key", "missmatch for table index=6 (table with system column fk)");
                 });
 
                 describe('.displayname, ', function () {

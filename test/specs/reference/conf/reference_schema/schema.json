@@ -153,7 +153,8 @@
                             "id"
                         ]},
                         ["reference_schema", "system_col_fk_asscoation_related_to_reference"],
-                        ["reference_schema", "extra_fk_association_related_to_reference"]
+                        ["reference_schema", "extra_fk_association_related_to_reference"],
+                        ["reference_schema", "association_table_with_overlapping_col_fk1"]
                     ],
                     "compact/select": [
                         {"invalid": true},
@@ -579,6 +580,67 @@
                 },
                 {
                     "name": "id_from_inbound_related_table",
+                    "nullok": false,
+                    "type": {"typename":"text"}
+                }
+            ]
+        },
+        "association_table_with_overlapping_col": {
+            "comment": "has fk to reference_table and inbound_related_reference_table. the column is overlapping",
+            "kind": "table",
+            "table_name": "association_table_with_overlapping_col",
+            "schema_name": "reference_schema",
+            "keys": [{
+                "unique_columns": ["id_col_1", "id_col_2"]
+            }],
+            "foreign_keys": [
+                {
+                    "names": [
+                        ["reference_schema", "association_table_with_overlapping_col_fk1"]
+                    ],
+                    "foreign_key_columns": [{
+                        "schema_name": "reference_schema",
+                        "table_name": "association_table_with_overlapping_col",
+                        "column_name": "id_col_1"
+                    }],
+                    "referenced_columns": [{
+                        "schema_name": "reference_schema",
+                        "table_name": "reference_table",
+                        "column_name": "id"
+                    }]
+                },
+                {
+                    "names": [
+                        ["reference_schema", "association_table_with_overlapping_col_fk2"]
+                    ],
+                    "foreign_key_columns": [{
+                        "schema_name": "reference_schema",
+                        "table_name": "association_table_with_overlapping_col",
+                        "column_name": "id_col_1"
+                    }, {
+                        "schema_name": "reference_schema",
+                        "table_name": "association_table_with_overlapping_col",
+                        "column_name": "id_col_2"
+                    }],
+                    "referenced_columns": [{
+                        "schema_name": "reference_schema",
+                        "table_name": "table_w_only_composite_key",
+                        "column_name": "id_1"
+                    }, {
+                        "schema_name": "reference_schema",
+                        "table_name": "table_w_only_composite_key",
+                        "column_name": "id_2"
+                    }]
+                }
+            ],
+            "column_definitions": [
+                {
+                    "name": "id_col_1",
+                    "nullok": false,
+                    "type": {"typename":"text"}
+                },
+                {
+                    "name": "id_col_2",
                     "nullok": false,
                     "type": {"typename":"text"}
                 }
