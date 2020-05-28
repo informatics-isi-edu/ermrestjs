@@ -28,7 +28,7 @@
   },
   "devDependencies": {
     "buffer-slice": "0.0.1",
-    "mime": "1.4.0",
+    "mime": "1.4.1",
     "file-api": "^0.10.4",
     "handlebars": "4.5.3",
     "just-handlebars-helpers": "^1.0.13",
