@@ -79,8 +79,14 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
      * after a 20ms timeout to allow it to load
      */
     var loadScript = function (url, callback) {
+      // already injected
+      if (document.querySelector('script[src^="' + url + '"]')) {
+          if (typeof callback !== "undefined") callback();
+          return;
+      }
+
       // ermrestjsBuildVersion variable is added in the makefile by the pre-generate-files-for-build command
-      url += "?v=" + ermrestjsBuildVersion;
+      url += "?v=" + ermrestjsBuildVariables.buildVersion;
 
       /* Load script from url and calls callback once it's loaded */
       var scriptTag = document.createElement('script');
@@ -113,34 +119,13 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
         });
     };
 
-    var ermrestJsPath = "../../ermrestjs/";
-
     /*
      * Call this function to load all dependent scripts in order
      * NOTE: This function does not always preserve the order of loading scripts
      */
     loadScripts([
-
-        // lz-string script
-        ermrestJsPath + "vendor/lz-string.min.js",
-
-        ermrestJsPath + "vendor/spark-md5.min.js",
-
-        // Moment.js script required for moment-timezone
-        // NOTE: Moment-Timezone.js and dependent plugin scripts are attached to the bottom of vendor/moment.min.js because of the above note
-        ermrestJsPath + "vendor/moment.min.js",
-        // Mustache script
-        ermrestJsPath + "vendor/mustache.min.js",
-        // Handlebars script
-        ermrestJsPath + "vendor/handlebars.min.js",
-        // Markdown-it and dependent plugin scripts
-        ermrestJsPath + "vendor/markdown-it.min.js",
-
-        ermrestJsPath + "vendor/markdown-it-sub.min.js",
-        ermrestJsPath + "vendor/markdown-it-sup.min.js",
-        ermrestJsPath + "vendor/markdown-it-span.js",
-        ermrestJsPath + "vendor/markdown-it-attrs.js",
-        ermrestJsPath + "vendor/markdown-it-container.min.js"],
+        ermrestjsBuildVariables.ermrestjsBasePath + "ermrest.vendor.min.js"
+    ],
         function() {
             /*
              * Inject _moment-timezone module in ERMrest as moment

@@ -7,7 +7,7 @@ exports.init = function (options) {
 	var url = options.url || process.env.ERMREST_URL,
 	    authCookie = options.ermrest_cookie || process.env.AUTH_COOKIE;
 
-	var ermRest = requireReload(process.env.PWD + "/build/ermrest.js");
+	var ermRest = requireReload(process.env.PWD + "/dist/ermrest.js");
 
 	ermRest.setUserCookie(authCookie);
 

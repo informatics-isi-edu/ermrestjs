@@ -98,7 +98,7 @@ before_install:
   - sudo service apache2 restart
 
 install:
-  - sudo make build
+  - sudo make install
 
 before_script:
   - sudo -H -u webauthn webauthn2-manage adduser test1
