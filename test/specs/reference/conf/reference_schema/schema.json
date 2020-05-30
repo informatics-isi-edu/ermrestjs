@@ -437,6 +437,22 @@
                 }
             ],
             "annotations": {
+                "tag:isrd.isi.edu,2016:visible-columns": {
+                    "*": [
+                        {
+                            "source": [{"outbound": ["reference_schema", "id_fk_association_related_to_reference"]}, "RID"],
+                            "markdown_name": "ignored column 01"
+                        },
+                        {
+                            "source": [{"outbound": ["reference_schema", "id_fk_association_related_to_reference"]}, "name"],
+                            "markdown_name": "ignored column 02",
+                            "entity": false
+                        },
+                        {
+                            "source": "ID"
+                        }
+                    ]
+                },
                 "tag:misd.isi.edu,2015:display": {
                     "name": "association table displayname"
                 },
