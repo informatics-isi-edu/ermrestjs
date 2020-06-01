@@ -80,8 +80,17 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
      */
     var loadScript = function (url, callback) {
       // already injected
-      if (document.querySelector('script[src^="' + url + '"]')) {
-          if (typeof callback !== "undefined") callback();
+      scriptTag = document.querySelector('script[src^="' + url + '"]');
+      if (scriptTag) {
+          if (typeof callback !== "undefined") {
+              if (typeof ermrestjsVendorFileLoaded === "undefined") {
+                  // script tag added but the file is not loaded
+                  scriptTag.addEventListener('load', callback);
+              } else {
+                  // the file is completely loaded
+                  callback();
+              }
+          }
           return;
       }
 
@@ -89,20 +98,11 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
       url += "?v=" + ermrestjsBuildVariables.buildVersion;
 
       /* Load script from url and calls callback once it's loaded */
-      var scriptTag = document.createElement('script');
+      scriptTag = document.createElement('script');
       scriptTag.setAttribute("type", "text/javascript");
       scriptTag.setAttribute("src", url);
       if (typeof callback !== "undefined") {
-        if (scriptTag.readyState) {
-          /* For old versions of IE */
-          scriptTag.onreadystatechange = function () {
-            if (this.readyState === 'complete' || this.readyState === 'loaded') {
-              setTimeout(callback, 20);
-            }
-          };
-        } else {
-          scriptTag.onload = callback;
-        }
+          scriptTag.addEventListener('load', callback);
       }
       (document.getElementsByTagName("head")[0] || document.documentElement).appendChild(scriptTag);
     };

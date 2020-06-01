@@ -123,6 +123,7 @@ $(DIST)/$(MIN_LIB): $(LIB) $(BIN)
 	@mkdir -p $(DIST)
 	$(info - creating $(DIST)/$(MIN_LIB) minified vendor file)
 	@cat $(LIB) > $(DIST)/$(MIN_LIB)
+	@echo 'ermrestjsVendorFileLoaded = true;' >> $(DIST)/$(MIN_LIB)
 
 # Rule to lint the source (terminate build on errors)
 $(LINT): $(SOURCE) $(BIN)
