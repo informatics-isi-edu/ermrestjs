@@ -2774,9 +2774,6 @@
 
             var self = this;
 
-            // check if we should hide some columns or not.
-            // NOTE: if the reference is actually an inbound related reference, we should hide the foreign key that created this link.
-            var hasOrigFKR = typeof this.origFKR != "undefined" && this.origFKR !== null && !this.origFKR._table.isPureBinaryAssociation;
 
             var columns = -1,
                 consideredColumns = {}, // to avoid duplicate pseudo columns
@@ -2785,6 +2782,7 @@
                 compositeFKs = [], // to add composite keys at the end of the list
                 assetColumns = [], // columns that have asset annotation
                 hiddenFKR = this.origFKR,
+                hasOrigFKR,
                 refTable = this._table,
                 invalid,
                 colAdded,
@@ -2799,17 +2797,22 @@
             var context = this._context;
             isEntry = module._isEntryContext(context);
 
+            // check if we should hide some columns or not.
+            // NOTE: if the reference is actually an inbound related reference, we should hide the foreign key that created this link.
+            hasOrigFKR = typeof context === "string" && context.startsWith(module._contexts.COMPACT_BRIEF) && isObjectAndNotNull(hiddenFKR);
+
             // should hide the origFKR in case of inbound foreignKey (only in compact/brief)
             var hideFKR = function (fkr) {
-                return typeof context === "string" && context.startsWith(module._contexts.COMPACT_BRIEF) && hasOrigFKR && fkr == hiddenFKR;
+                return hasOrigFKR && fkr == hiddenFKR;
             };
-            var hideFKRByName = function (hash) {
-                return typeof context === "string" && context.startsWith(module._contexts.COMPACT_BRIEF) && hasOrigFKR && hash.name == hiddenFKR.name;
+            // TODO can be improved by checking the actual foreignkey object instead
+            var hideFKRbyConstraintName = function (cname) {
+                return hasOrigFKR && hiddenFKR._constraintName == cname;
             };
 
             // should hide the columns that are part of origFKR. (only in compact/brief)
             var hideColumn = function (col) {
-                return typeof context === "string" && context.startsWith(module._contexts.COMPACT_BRIEF) && hasOrigFKR && hiddenFKR.colset.columns.indexOf(col) != -1;
+                return hasOrigFKR && hiddenFKR.colset.columns.indexOf(col) != -1;
             };
 
             // this function will take care of adding column and asset column
@@ -2979,7 +2982,7 @@
                         // 4. invalid aggregate function
                         // 3. The generated hash is a column for the table in database
                         ignore = logCol((pseudoName in consideredColumns), wm.DUPLICATE_PC, i) ||
-                                 hideFKRByName(pseudoName) ||
+                                 (hasPath && col.source.length === 2 && Array.isArray(col.source[0].outbound) && hideFKRbyConstraintName(col.source[0].outbound.join("_"))) ||
                                  (!hasPath && hideColumn(sourceCol)) ||
                                  logCol(col.self_link === true && !(_isColumnUniqueNotNull(sourceCol)), wm.INVALID_SELF_LINK, i) ||
                                  logCol((col.aggregate && module._pseudoColAggregateFns.indexOf(col.aggregate) === -1), wm.INVALID_AGG, i) ||

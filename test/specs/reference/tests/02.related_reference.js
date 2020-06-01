@@ -58,7 +58,7 @@ exports.execute = function(options) {
         function checkReferenceColumns(tesCases) {
             tesCases.forEach(function(test){
                 expect(test.ref.columns.map(function(col){
-                    return (col.isKey || col.isForeignKey || col.isInboundForeignKey) ? col._constraintName : col.name;
+                    return (col.isKey || col.isForeignKey || col.isInboundForeignKey) ? col._constraintName : col.displayname.value;
                 })).toEqual(test.expected, "missmatch for " + test.title);
             });
         }
@@ -350,6 +350,25 @@ exports.execute = function(options) {
                                 ["reference_schema", "fromname_fk_inbound_related_to_reference"].join("_"),
                                 ["reference_schema", "hidden_fk_inbound_related_to_reference"].join("_")
                             ]
+                        },
+                        {
+                            title: "source syntax, detailed context",
+                            ref: pathRelatedWithTuple[0],
+                            expected: [
+                                ["reference_schema", "id_fk_association_related_to_reference"].join("_"), // the fk
+                                "ignored column 02", // scalar column based on the fk
+                                "ID"
+                            ]
+                        },
+                        {
+                            title: "source syntax, compact/brief context",
+                            ref: pathRelatedWithTuple[0].contextualize.compactBrief,
+                            expected: ["ID"]
+                        },
+                        {
+                            title: "source syntax, compact/brief/inline context",
+                            ref: pathRelatedWithTuple[0].contextualize.compactBriefInline,
+                            expected: ["ID"]
                         }
                     ]);
                 });
@@ -482,7 +501,7 @@ exports.execute = function(options) {
 
                 describe('Tuple.getBatchAssociationRef, ', function () {
                     var batchPage, selectedTuples;
-                    it('should return an array of references including the filtered assocation reference.', function() {
+                    it('should return an array of references including the filtered assocation reference.', function(done) {
                         var url = options.url + "/catalog/" + catalog_id + "/entity/";
                         // there are 3 rows in the set for "pageWithToName"
                         related[2].sort([{"column":"id", "descending":false}]).read(3).then(function(response) {
@@ -496,16 +515,15 @@ exports.execute = function(options) {
 
                             return batchRefs[0].read(5);
                         }).then(function(batchResponse) {
-                            expect(batchResponse.data.length).toBe(2);
+                            expect(batchResponse.tuples.length).toBe(2);
 
                             done();
-                        }, function(err) {
-                            console.dir(err);
-                            done.fail();
+                        }).catch(function(err) {
+                            done.fail(err);
                         });
                     });
 
-                    it('should return 2 references if the number of tuples to create an association for exceeds the url length limit.', function () {
+                    it('should return 2 references if the number of tuples to create an association for exceeds the url length limit.', function (done) {
                         var batchRefs;
                         related[2].sort([{"column":"id", "descending":false}]).read(70).then(function(response) {
                             var batchPage = response;
@@ -521,14 +539,14 @@ exports.execute = function(options) {
                         }).then(function (batchResponse) {
                             expect(batchResponse.tuples.length).toBe(68, "number of tuples returned is incorrect.");
 
+                            return batchRefs[1].read(5);
                         }).then(function (batchResponse2) {
                             expect(batchResponse2.tuples.length).toBe(2, "number of tuples returned is incorrect.");
 
                             done();
-                        }, function(err) {
-                            console.dir(err);
-                            done.fail();
-                        })
+                        }).catch(function(err) {
+                            done.fail(err);
+                        });
                     });
                 })
             });
