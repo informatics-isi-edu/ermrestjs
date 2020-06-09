@@ -231,6 +231,10 @@
                                 "RID"
                             ],
                             "entity": true
+                        },
+                        "f1_source_definition": {
+                            "source": [{"outbound": ["faceting_schema", "main_fk1"]}, "id"],
+                            "entity": true
                         }
                     }
                 }

@@ -394,6 +394,7 @@ exports.execute = function (options) {
                 });
 
                 it ("If the facet exists in the annotation should only add the filter to that facet from uri. (choices)", function (done) {
+                    // the facet definition is based on sourcekey, but facet blob is based on source
                     facetObj = { "and": [ {"source": "id", "choices": ["2"]} ] };
                     options.ermRest.resolve(createURL(tableMain, facetObj)).then(function (ref) {
                         expect(ref.facetColumns.length).toBe(21, "length missmatch.");
@@ -424,6 +425,41 @@ exports.execute = function (options) {
                     }).catch(function (err) {
                         console.log(err);
                         done.fail();
+                    });
+                });
+
+                it ("If the facet exists in the annotation should only add the filter to that facet from uri. (sourcekey)", function (done) {
+                    // both facet definition and facet blob are based on sourcekey
+                    facetObj = { "and": [ {"sourcekey": "text_col_source_definition", "choices": ["val"] } ] };
+                    options.ermRest.resolve(createURL(tableMain, facetObj)).then(function (ref) {
+                        expect(ref.facetColumns.length).toBe(21, "length missmatch.");
+                        expect(ref.facetColumns[5].filters.length).toBe(1, "# of filters defined is incorrect");
+                        expect(ref.location.facets).toBeDefined("facets is undefined.");
+                        expect(ref.location.ermrestCompactPath).toBe(
+                            "M:=faceting_schema:main/text_col=val/$M",
+                            "path missmatch."
+                        );
+                        done();
+                    }).catch(function (err) {
+                        done.fail(err);
+                    });
+                });
+
+                it ("if the facet exists in the annotation and the uri is based on sourcekey, should be able to merge them.", function (done) {
+                    // facet definition is based on source, but facet blob is based on sourcekey
+                    facetObj = { "and": [ {"sourcekey": "f1_source_definition", "choices": ["4"] } ] };
+                    options.ermRest.resolve(createURL(tableMain, facetObj)).then(function (ref) {
+                        expect(ref.facetColumns.length).toBe(21, "length missmatch.");
+                        expect(ref.facetColumns[10].filters.length).toBe(1, "# of filters defined is incorrect");
+                        expect(ref.location.facets).toBeDefined("facets is undefined.");
+                        // parser is optimizing this link
+                        expect(ref.location.ermrestCompactPath).toBe(
+                            "M:=faceting_schema:main/fk_to_f1=4/$M",
+                            "path missmatch."
+                        );
+                        done();
+                    }).catch(function (err) {
+                        done.fail(err);
                     });
                 });
 

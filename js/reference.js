@@ -759,6 +759,13 @@
                 var j, facetLen = facetObjects.length;
                 for (var i = 0; i < andFilters.length; i++) {
                     if (andFilters[i].sourcekey === module._specialSourceDefinitions.SEARCH_BOX) continue;
+                    if (typeof andFilters[i].sourcekey === "string") {
+                        var urlSourceDef = self.table.sourceDefinitions.sources[andFilters[i].sourcekey];
+                        if (!urlSourceDef) continue;
+
+                        // copy the elements that are defined in the source def but not the one already defined
+                        module._shallowCopyExtras(andFilters[i], urlSourceDef.sourceObject, module._sourceDefinitionAttributes);
+                    }
                     if (!andFilters[i].source) continue;
                     if (andFilters[i].hidden) {
                         newFilters.push(andFilters[i]);
