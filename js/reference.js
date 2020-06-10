@@ -4754,7 +4754,12 @@
                 var url = tuple.reference.contextualize.detailed.appLink;
                 var rowName = module._generateRowName(ref.table, ref._context, tuple._data, tuple._linkedData);
 
-                values.push("* ["+ rowName.unformatted +"](" + url + ") " + ref.display._separator);
+                // don't add link if the rowname already has link
+                if (rowName.value.match(/<a\b.+href=/)) {
+                    values.push("* " + rowName.unformatted + " " + ref.display._separator);
+                } else {
+                    values.push("* ["+ rowName.unformatted +"](" + url + ") " + ref.display._separator);
+                }
             }
             pattern = ref.display._prefix + values.join(" ") + ref.display._suffix;
             return module.renderMarkdown(pattern, false);

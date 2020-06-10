@@ -153,13 +153,17 @@ exports.execute = function(options) {
                 describe("regarding column objects defining path.", function () {
 
                     it ('should ignore the invalid (invalid, no path, non-entity, has aggregate) objects.', function () {
-                        expect(pathRelatedWithTuple.length).toBe(3);
+                        expect(pathRelatedWithTuple.length).toBe(4);
                     });
 
                     it ('should create the reference by using facet syntax (starting from related table with facet on shortestkey of main table.).', function () {
                         checkRelated(
                             pathRelatedWithTuple[0], "reference_schema", "association table with id",
                             {"and": [{"source" :[{"outbound": ["reference_schema","id_fk_association_related_to_reference"]}, "RID"], "choices": [findRID(schemaName, tableName, "id", "9003")]}]});
+
+                        checkRelated(
+                            pathRelatedWithTuple[3], "reference_schema", "table_w_linked_rowname_fk1",
+                            {"and": [{"source" :[{"outbound": ["reference_schema","table_w_linked_rowname_fk1"]}, "RID"], "choices": [findRID(schemaName, tableName, "id", "9003")]}]});
                     });
 
                     it ('should be able to support path with longer length.', function () {
@@ -249,6 +253,10 @@ exports.execute = function(options) {
                             {"o": ["reference_schema", "reference_table_fk1"]},
                             {"i": ["reference_schema", "reference_outbound_1_inbound_1_fk1"]},
                             "id"
+                        ],
+                        [
+                            {"i": ["reference_schema", "table_w_linked_rowname_fk1"]},
+                            "RID"
                         ]
                     ];
                     pathRelatedWithTuple.forEach(function (rel, i) {
@@ -605,6 +613,14 @@ exports.execute = function(options) {
                     content += '</ul>\n';
 
                     testPageContent(pathRelatedWithTuple[1], 5, content, done);
+                });
+
+                it ("if none of the markdown_patterns are defined and the returned values have links, should not add the links.", function (done) {
+                    content = '<ul>\n';
+                    content += '<li><a href="https://example.com">one</a></li>\n';
+                    content += '<li><a href="https://example.com">two</a></li>\n';
+                    content += '</ul>\n';
+                    testPageContent(pathRelatedWithTuple[3], 3, content, done);
                 });
             });
         });

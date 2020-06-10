@@ -173,6 +173,10 @@
                             {"outbound": ["reference_schema", "reference_table_fk1"]},
                             {"inbound": ["reference_schema", "reference_outbound_1_inbound_1_fk1"]},
                             "id"
+                        ]},
+                        {"source": [
+                            {"inbound": ["reference_schema", "table_w_linked_rowname_fk1"]},
+                            "RID"
                         ]}
                     ]
                 },
@@ -2122,6 +2126,46 @@
                     "nullok": false
                 }
             ]
+        },
+        "table_w_linked_rowname_fk1": {
+            "kind": "table",
+            "schema_name": "reference_schema",
+            "table_name": "table_w_linked_rowname_fk1",
+            "keys": [{"unique_columns": ["name"]}],
+            "foreign_keys": [
+                {
+                    "names": [["reference_schema", "table_w_linked_rowname_fk1"]],
+                    "foreign_key_columns": [{
+                        "schema_name": "reference_schema",
+                        "table_name": "table_w_linked_rowname_fk1",
+                        "column_name": "fk_to_reference"
+                    }],
+                    "referenced_columns": [{
+                        "schema_name": "reference_schema",
+                        "table_name": "reference_table",
+                        "column_name": "id"
+                    }]
+                }
+            ],
+            "column_definitions": [
+                {
+                    "name": "name",
+                    "type": {"typename": "text"},
+                    "nullok": false
+                },
+                {
+                    "name": "fk_to_reference",
+                    "type": {"typename": "text"},
+                    "nullok": false
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2016:table-display": {
+                    "row_name": {
+                        "row_markdown_pattern": "[{{name}}](https://example.com)"
+                    }
+                }
+            }
         }
     },
     "comment": null,
