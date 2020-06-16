@@ -245,7 +245,7 @@
 
         var rootTable = null;
         try {
-            rootTable = catalogObject.schemas.get(rootSchemaName).tables.get(tableName);
+            rootTable = catalogObject.schemas.findTable(rootTableName, rootSchemaName);
         } catch(exp) {
             // fail silently
         }

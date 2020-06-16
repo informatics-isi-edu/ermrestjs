@@ -1,7 +1,11 @@
 exports.execute = function(options) {
     var catalogId = process.env.DEFAULT_CATALOG,
-    schemaName = "parse_schema",
-    tableName = "parse_table";
+        schemaName = "parse_schema",
+        tableName = "parse_table";
+
+    var baseUri = options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ":" + tableName,
+        baseUriWOSchema = options.url + "/catalog/" + catalogId + "/entity/" + tableName;
+
 
     describe("Filters,", function() {
 
@@ -427,8 +431,6 @@ exports.execute = function(options) {
                 ]
             };
 
-
-            var baseUri = options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ":" + tableName;
             var facetError = "Given encoded string for facets is not valid.";
             var location, uri;
             var invalidPageConditionErrorObj = {
@@ -623,9 +625,12 @@ exports.execute = function(options) {
                     }).toThrow(errorMessage ? errorMessage : facetError);
                 };
 
-                var expectLocation = function (blob, facetObject, path, errMessage) {
-                    var url = baseUri + "/*::facets::" + blob;
-
+                var expectLocation = function (blob, facetObject, path, errMessage, woSchema) {
+                    var url = baseUri;
+                    if (woSchema) {
+                        url = baseUriWOSchema;
+                    }
+                    url += "/*::facets::" + blob;
                     var loc = options.ermRest.parse(url, options.catalog);
 
                     expect(loc).toBeDefined("location is not defined" + (errMessage ? errMessage : "."));
@@ -635,7 +640,11 @@ exports.execute = function(options) {
                     expect(JSON.stringify(loc.facets.decoded)).toEqual(JSON.stringify(facetObject), "facets decoded missmatch" + (errMessage ? errMessage : "."));
                     expect(loc.facets.encoded).toEqual(blob, "facets encoded missmatch" + (errMessage ? errMessage : "."));
 
-                    expect(loc.ermrestCompactPath).toEqual("M:=parse_schema:parse_table/" + path, "ermrestCompactPath missmatch" + (errMessage ? errMessage : "."));
+                    var st = "M:=parse_schema:parse_table/";
+                    if (woSchema) {
+                        st = "M:=parse_table/";
+                    }
+                    expect(loc.ermrestCompactPath).toEqual(st + path, "ermrestCompactPath missmatch" + (errMessage ? errMessage : "."));
                 };
 
                 describe("regarding source attribute, ", function () {
@@ -685,7 +694,8 @@ exports.execute = function(options) {
 
                     // NOTE extra test cases are in refererence/13.search.js
                     it ("should support search-box.", function () {
-                        expectLocation(searchBlob, searchFacet, "*::ciregexp::term/$M");
+                        expectLocation(searchBlob, searchFacet, "*::ciregexp::term/$M", "with schema");
+                        expectLocation(searchBlob, searchFacet, "*::ciregexp::term/$M", "without schema", true);
                     });
 
                     it ("should handle valid sourcekeys.", function () {
@@ -693,6 +703,16 @@ exports.execute = function(options) {
                             "N4IghgdgJiBcDaoDOB7ArgJwMYFMDWOAnnCOgC4BG60AjAPo4RkCWZxANCFgBYrO5I48EADcaIALoBfaUA",
                             {"and": [ {"sourcekey": "outbound1_entity", "choices": ["v1"]} ]},
                             "(fk1_col1)=(parse_schema:outbound1:id)/RID=v1/$M");
+                    });
+
+                    it ("should handle urls without schema name.", function () {
+                        expectLocation(
+                            "N4IghgdgJiBcDaoDOB7ArgJwMYFMDWOAnnCOgC4BG60AjAPo4RkCWZxANCFgBYrO5I48EADcaIALoBfaUA",
+                            {"and": [ {"sourcekey": "outbound1_entity", "choices": ["v1"]} ]},
+                            "(fk1_col1)=(parse_schema:outbound1:id)/RID=v1/$M",
+                            "without schema",
+                             true
+                        );
                     });
                 });
 
@@ -749,7 +769,7 @@ exports.execute = function(options) {
                             "c::ciregexp::" + options.ermRest._fixedEncodeURIComponent(intRegexPrefix + "1" + intRegexSuffix) + "/$M"
                         );
 
-                        expect(
+                        expectLocation(
                             "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoQkcxsALOecAAgCMQBdAXzaA",
                             {"and": [ {"source": "c", "search": ["a b"]} ]},
                             "c::ciregexp::a&c::ciregexp::b/$M"
@@ -893,7 +913,7 @@ exports.execute = function(options) {
         });
 
         describe("CustomFacets, ", function () {
-            var baseUri = options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ":" + tableName;
+
             var customFacetError = "Given encoded string for cfacets is not valid.", location, blob, cfacets;
             var testCustomFacets = function (uri, blob, cfacets, ermrestPath) {
                 var loc = options.ermRest.parse(uri);
