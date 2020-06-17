@@ -875,11 +875,15 @@ Supported JSON payload patterns:
 
 Supported _sourcedefinitions_ patterns:
 
-- `{` ... `"` _sourcekey_ `":` _sourceentry_ `,` ... `}`: where _sourcekey_ is a name that will be used to refer to the defined _sourceentry_. _sourcekey_,
-  - Cannot start with `$`.
-  - Should not be any of the table's column names.
-  - `search-box` is a reserved _sourcekey_ and cannot be used.
+- `{` ... `"` _sourcekey_ `":{ "source":` _sourceentry_ `},` ... `}`: where _sourcekey_ is a name that will be used to refer to the defined _sourceentry_. Since you're defining a pseudo-column here, you can use [any of the pseudo-column optional parameters that the syntax allows (e.g., `aggregate`, `entity`, `display`, `markdown_name`)](pseudo-columns.md).
+
 - `{` ... `"search-box": { "or": [` _searchcolumn_ `,` ... `]} }`: Configure list of search columns.
+
+Supported _sourcekey_ pattern:
+ - A string literal that,
+   - Cannot start with `$`.
+   - Should not be any of the table's column names.
+   - `search-box` is a reserved _sourcekey_ and cannot be used.
 
 Supported _sourceentry_ pattern:
   - _columnname_: : A string literal. _columnname_ identifies a constituent column of the table.
