@@ -1547,23 +1547,33 @@
                             // If a column is an asset column then set values for
                             // dependent properties like filename, bytes_count_column, md5 and sha
                             if (column.isAsset) {
+                                var isNull = newData[column.name] === null ? true : false;
+
                                 // If column has a filename column then add it to the projections
                                 if (column.filenameColumn) {
+                                    // If asset url is null then set filename also null
+                                    if (isNull) newData[column.filenameColumn.name] = null;
                                     addProjection(column.filenameColumn.name);
                                 }
 
                                 // If column has a bytecount column thenadd it to the projections
                                 if (column.byteCountColumn) {
+                                    // If asset url is null then set filename also null
+                                    if (isNull) newData[column.byteCountColumn.name] = null;
                                     addProjection(column.byteCountColumn.name);
                                 }
 
                                 // If column has a md5 column then add it to the projections
                                 if (column.md5 && typeof column.md5 === 'object') {
+                                    // If asset url is null then set filename also null
+                                    if (isNull) newData[column.md5.name] = null;
                                     addProjection(column.md5.name);
                                 }
 
                                 // If column has a sha256 column then add it to the projections
                                 if (column.sha256 && typeof column.sha256 === 'object') {
+                                    // If asset url is null then set filename also null
+                                    if (isNull) newData[column.sha256.name] = null;
                                     addProjection(column.sha256.name);
                                 }
 
@@ -1619,34 +1629,25 @@
                             // If a column is an asset column then set values for
                             // dependent properties like filename, bytes_count_column, md5 and sha
                             if (column.isAsset) {
-                                var isNull = newData[column.name] === null ? true : false;
                                 /* Populate all values in row depending on column from current asset */
 
                                 // If column has a filename column then populate its value
                                 if (column.filenameColumn) {
-                                    // If asset url is null then set filename also null
-                                    if (isNull) newData[column.filenameColumn.name] = null;
                                     addSubmissionData(i, column.filenameColumn.name);
                                 }
 
                                 // If column has a bytecount column then populate its value
                                 if (column.byteCountColumn) {
-                                    // If asset url is null then set filename also null
-                                    if (isNull) newData[column.byteCountColumn.name] = null;
                                     addSubmissionData(i, column.byteCountColumn.name);
                                 }
 
                                 // If column has a md5 column then populate its value
                                 if (column.md5 && typeof column.md5 === 'object') {
-                                    // If asset url is null then set filename also null
-                                    if (isNull) newData[column.md5.name] = null;
                                     addSubmissionData(i, column.md5.name);
                                 }
 
                                 // If column has a sha256 column then populate its value
                                 if (column.sha256 && typeof column.sha256 === 'object') {
-                                    // If asset url is null then set filename also null
-                                    if (isNull) newData[column.sha256.name] = null;
                                     addSubmissionData(i, column.sha256.name);
                                 }
 
