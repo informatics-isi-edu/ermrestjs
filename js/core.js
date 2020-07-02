@@ -956,6 +956,8 @@
         }
 
         this._exportTemplates = {};
+
+        this._display = {};
     }
 
     Table.prototype = {
@@ -963,6 +965,42 @@
 
         delete: function () {
 
+        },
+
+        getDisplay: function (context) {
+            // check _display for information about current context
+            if (!(context in this._display)) {
+                var comment_annotation = null, comment_display_annotation = null;
+                if (this.annotations.contains(module._annotations.DISPLAY)) {
+                    // comment can be a string or an object
+                    comment_annotation = this.annotations.get(module._annotations.DISPLAY).get("comment");
+                    // point to comment since that is what is contextualized in this annotation
+                    // if it's an object, that means it's contextualized
+                    if (typeof comment_annotation == "object") {
+                        comment_annotation = module._getAnnotationValueByContext(context, comment_annotation);
+                    }
+
+                    comment_display_annotation = module._getAnnotationValueByContext(context, this.annotations.get(module._annotations.DISPLAY).get("comment_display"));
+                }
+
+                var comment = this.comment;
+                // comment is contextualized
+                if (comment_annotation != null || comment_annotation != undefined) {
+                    comment = comment_annotation;
+                }
+
+                // values supported are tooltip | inline
+                // tooltip is default
+                var tableCommentDisplay = (comment_display_annotation && comment_display_annotation.table_comment_display) ? comment_display_annotation.table_comment_display : "tooltip";
+                var columnCommentDisplay = (comment_display_annotation && comment_display_annotation.column_comment_display) ? comment_display_annotation.column_comment_display : "tooltip";
+
+                this._display[context] = {
+                    "columnCommentDisplay": columnCommentDisplay,
+                    "comment": comment,
+                    "tableCommentDisplay": tableCommentDisplay
+                };
+            }
+            return this._display[context];
         },
 
         /**
@@ -3798,6 +3836,7 @@
         getDisplay: function(context) {
             if (!(context in this._display)) {
                 var self = this, annotation = -1, columnOrder = [], showFKLink = true;
+                var fromComment = null, fromCommentDisplay = "tooltip", toComment = null, toCommentDisplay = "tooltip";
                 if (this.annotations.contains(module._annotations.FOREIGN_KEY)) {
                     annotation = module._getAnnotationValueByContext(context, this.annotations.get(module._annotations.FOREIGN_KEY).get("display"));
                 }
@@ -3815,9 +3854,18 @@
                     }
                 }
 
+                if (typeof annotation.from_comment === "string") fromComment = annotation.from_comment;
+                if (typeof annotation.to_comment === "string") toComment = annotation.to_comment;
+                if (typeof annotation.from_comment_display === "string") fromCommentDisplay = annotation.from_comment_display;
+                if (typeof annotation.to_comment_display === "string") toCommentDisplay = annotation.to_comment_display;
+
                 this._display[context] = {
                     "columnOrder": columnOrder,
-                    "showForeignKeyLinks": showFKLink
+                    "fromComment": fromComment,
+                    "fromCommentDisplay": fromCommentDisplay,
+                    "showForeignKeyLinks": showFKLink,
+                    "toComment": toComment,
+                    "toCommentDisplay": toCommentDisplay
                 };
             }
 
