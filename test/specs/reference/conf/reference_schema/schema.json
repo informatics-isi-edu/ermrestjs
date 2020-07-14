@@ -347,6 +347,9 @@
                     }]
                 },
                 {
+                    "names": [
+                        ["reference_schema", "association_table_with_toname_id_from_inbound_related_table1"]
+                    ],
                     "comment": "fk to inbound_related_reference_table",
                     "foreign_key_columns": [{
                         "schema_name": "reference_schema",
