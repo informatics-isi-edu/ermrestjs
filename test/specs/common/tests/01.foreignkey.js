@@ -227,14 +227,6 @@ exports.execute = function(options) {
                         }
                     });
                 });
-
-                it('should use the value that ermrest automatically generated when it was not explicitly defined in schema.', function() {
-                    // NOTE: ermrest creates a default constraint_name for fks when they are not explicitly defined.
-                    expect(table2_schema1.foreignKeys.all()[0].constraint_names[0].join("|")).toBeAnyOf([
-                        'common_schema_1|table_2_schema_1_fk_1_from_table_1_schema_21',
-                        'common_schema_1|table_2_schema_1_fk_2_from_table_1_schema_21'
-                    ]);
-                });
             });
 
             describe('.from_name and .to_name ', function() {
