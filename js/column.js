@@ -1131,7 +1131,11 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
 
             // if given page is not valid (the key doesn't exist), or it returned empty result
             if (!value || !value.v){
-                result.push({isHTML: false, value: "", templateVariables: {}});
+                if (["cnt", "cnt_d"].indexOf(self.sourceObject.aggregate) !== -1) {
+                    result.push({isHTML: false, value: "0", templateVariables: { "$self": "0", "$_self": 0 }});
+                } else {
+                    result.push({isHTML: false, value: "", templateVariables: {}});
+                }
                 return;
             }
 

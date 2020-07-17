@@ -1023,7 +1023,7 @@ exports.execute = function (options) {
                         // vals must be all empty!
                         expect(val.length).toBe(3, "length missmatch");
                         val.forEach(function (v, i) {
-                            expect(v.value).toEqual("", "missmatch for value of index=" + i);
+                            expect(v.value).toEqual("0", "missmatch for value of index=" + i);
                             expect(v.isHTML).toEqual(false, "missmatch for isHTML of index="+ i);
                         });
                         done();
