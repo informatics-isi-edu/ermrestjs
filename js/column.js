@@ -73,7 +73,6 @@ module._createPseudoColumn = function (reference, column, sourceObject, mainTupl
 
     // path, entity, outbound length 1,
     if (isEntity && source.length === 2 && source[0].outbound) {
-        // this is for simple foreign keys but I think it's wrong...?
         fk = getFK(source[0].outbound);
         return new ForeignKeyPseudoColumn(reference, fk, sourceObject, name);
     }
