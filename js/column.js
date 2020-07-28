@@ -2655,7 +2655,6 @@ Object.defineProperty(InboundForeignKeyPseudoColumn.prototype, "displayname", {
 Object.defineProperty(InboundForeignKeyPseudoColumn.prototype, "comment", {
     get: function () {
         if (this._comment === undefined) {
-            console.log("inbound FK pseudo col")
             var com = _processSourceObjectColumn(this.sourceObject);
             if (typeof com === "string") {
                 this._comment = com;
