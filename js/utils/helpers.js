@@ -1850,11 +1850,24 @@
                         if (attrs[0].children[0].type == "link_open") {
                             var iframeHTML = "<iframe ", openingLink = attrs[0].children[0];
                             var enlargeLink, posTop = true, captionClass = "", captionStyle = "", iframeClass = "", iframeStyle = "";
+                            var isYTlink = false, videoText = "";
+                            var videoElem = document.createElement("a");
+
 
                             // Add all attributes to the iframe
                             openingLink.attrs.forEach(function(attr) {
                                 if (attr[0] == "href") {
+                                    videoElem.href = attr[1];
+                                    isYTlink  = (videoElem.hostname.indexOf("youtube") != -1 ? true : false);
+                                    // Add a class to hide the iframe only if the markdown is a YouTube video
+                                    if(isYTlink)
+                                    {
+                                      iframeHTML += 'class="hide-in-print"' + " ";
+                                      videoText = "Note: YouTube video " + "(" + attr[1] + ")" + " is hidden in print ";
+                                    }
+
                                     iframeHTML += 'src="' + attr[1] + '"';
+                                    videoURL = attr[1];
                                 } else if (attr[0] == "link") {
                                     enlargeLink = attr[1];
                                 } else if (attr[0] == "pos") {
@@ -1895,6 +1908,11 @@
                             if (enlargeLink) {
                                  if (!captionHTML.trim().length) captionHTML = "Enlarge";
                                 captionHTML = '<a href="' + enlargeLink + '" target="_blank">'  + captionHTML + '</a>';
+                            }
+
+                            //During print we need to display that the iframe with YouTube video is replaced with a note
+                            if (isYTlink){
+                               html = '<span class="video-info-in-print" style="visibility:hidden">' + videoText + "</span>" + html;
                             }
 
                             // Encapsulate the captionHTML inside a figcaption tag with class embed-caption
@@ -2134,8 +2152,10 @@
                     if (attrs && attrs.length == 1 && attrs[0].children) {
                         // Check If the markdown is a link
                         if (attrs[0].children[0].type == "link_open") {
-                            var videoHTML="<video controls ", openingLink = attrs[0].children[0];
-                            var srcHTML="", videoClass='class="' + module._classNames.postLoad, videoAttrs="", flag = true, posTop = true;
+                            var videoHTML="<video controls ", videoClass='class="' + module._classNames.postLoad + " " + "hide-in-print" + " ", openingLink = attrs[0].children[0];
+                            var srcHTML="", videoAttrs="", flag = true, posTop = true;
+                            var videoText="";
+                            var infoHTML = "";
 
                             // Add all attributes to the video
                             openingLink.attrs.forEach(function(attr) {
@@ -2144,6 +2164,7 @@
                                         flag= false;
                                         return "";
                                     }
+                                    videoText = "Note: Video " + "(" + attr[1] + ")" + " is hidden in print ";
                                     srcHTML += '<source src="' + attr[1] + '" type="video/mp4">';
                                 }
                                 else if ( (attr[0] == "width" || attr[0] == "height") && attr[1]!=="") {
@@ -2162,6 +2183,7 @@
                             });
                             // add closing quote
                             videoClass += '"' + " " + videoAttrs;
+                            infoHTML = '<span class="video-info-in-print" style="visibility:hidden">' + videoText + "</span>";
 
                             var captionHTML="";
                             // If the next attribute is not a closing link then iterate
@@ -2180,11 +2202,11 @@
                             }
 
                             if(captionHTML.trim().length && flag && posTop){
-                                html +=  "<figure><figcaption>"+captionHTML+ "</figcaption>" + videoHTML + videoClass +">"+ srcHTML +"</video></figure>" ;
+                                html +=  "<figure><figcaption>"+captionHTML+ "</figcaption>" + infoHTML + videoHTML + videoClass +">"+ srcHTML +"</video></figure>" ;
                             }else if(captionHTML.trim().length && flag){
-                                html +=  "<figure>"+ videoHTML + videoClass +">"+ srcHTML +"</video><figcaption>"+captionHTML+ "</figcaption></figure>" ;
+                                html +=  "<figure>"+ videoHTML + videoClass +">"+ srcHTML +"</video><figcaption>"+captionHTML+ "</figcaption>" + infoHTML + "</figure>" ;
                             } else if(flag)
-                                html += videoHTML + videoClass +">"+ srcHTML +"</video>";
+                                html += infoHTML + videoHTML + videoClass +">"+ srcHTML +"</video>";
                             else
                                 return '';
                         }

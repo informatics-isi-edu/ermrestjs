@@ -143,6 +143,11 @@ exports.execute = function (options) {
                 var iframeHTML = '<figure class="embed-block -chaise-post-load" style=""><iframe src="https://dev.isrd.isi.edu/chaise/search"    ></iframe><figcaption class="embed-caption cclass" style=" font-weight:500;">CAPTION</figcaption></figure>';
                 expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML);
 
+                //Testing for YouTube video
+                var iframeMarkdown = '::: iframe [SOME LINK CAPTION](https://www.youtube.com/embed/op1-Cw_l1Ow){width=640 height=480 link=https://www.youtube.com/embed/op1-Cw_l1Ow} \n:::';
+                var iframeHTML = '<figure class="embed-block -chaise-post-load" style=""><figcaption class="embed-caption" style="">SOME LINK CAPTION</figcaption><span class="video-info-in-print" style="visibility:hidden">Note: YouTube video (https://www.youtube.com/embed/op1-Cw_l1Ow) is hidden in print </span><iframe class="hide-in-print" src="https://www.youtube.com/embed/op1-Cw_l1Ow" width="640" height="480"></iframe></figure>';
+                expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML);
+
 
                 // Check for dropdown tag
                 var dropdownMarkdown = '::: dropdown MYCAPTION{.btn-lg} [CAPTION1](https://dev.isrd.isi.edu/chaise/search){.btn .btn-danger} [CAPTION2](https://dev.isrd.isi.edu/chaise/search) [CAPTION3](https://dev.isrd.isi.edu/chaise/search) \n:::';
@@ -178,6 +183,11 @@ exports.execute = function (options) {
                 //Check for proper rendering of video tag with some invalid attributes
                 var videoMarkDown = '::: video [caption](http://techslides.com/demos/sample-videos/small.mp4){loop=5 width=800} \n:::';
                 var videoHTML = '<figure><figcaption>caption</figcaption><video controls class="-chaise-post-load" width=800 ><source src="http://techslides.com/demos/sample-videos/small.mp4" type="video/mp4"></video></figure>';
+                expect(printMarkdown(videoMarkDown)).toBe(videoHTML, "The video tag is not rendered properly with invalid attributes ");
+
+                //Hide video markdown during print
+                var videoMarkDown = '::: video [caption](http://techslides.com/demos/sample-videos/small.mp4){width=400} \n:::';
+                var videoHTML = '<figure><figcaption>caption</figcaption><span class="video-info-in-print" style="visibility:hidden">Note: Video (http://techslides.com/demos/sample-videos/small.mp4) is hidden in print </span><video controls class="-chaise-post-load hide-in-print" width=400 ><source src="http://techslides.com/demos/sample-videos/small.mp4" type="video/mp4"></video></figure>';
                 expect(printMarkdown(videoMarkDown)).toBe(videoHTML, "The video tag is not rendered properly with invalid attributes ");
             });
 
