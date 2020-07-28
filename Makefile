@@ -3,8 +3,21 @@
 # Disable built-in rules
 .SUFFIXES:
 
-# Install target
-ERMRESTJSDIR?=/var/www/html/ermrestjs
+# set the default target to install
+.DEFAULT_GOAL:=install
+
+# env variables needed for installation
+WEB_URL_ROOT?=/
+WEB_INSTALL_ROOT?=/var/www/html/
+ERMRESTJS_REL_PATH?=ermrestjs/
+
+BUILD_VERSION:=$(shell date +%Y%m%d%H%M%S)
+
+# where chaise will be installed
+ERMRESTJSDIR:=$(WEB_INSTALL_ROOT)$(ERMRESTJS_REL_PATH)
+
+#chaise and ermrsetjs paths
+ERMRESTJS_BASE_PATH:=$(WEB_URL_ROOT)$(ERMRESTJS_REL_PATH)
 
 # Project name
 PROJ=ermrest
@@ -20,6 +33,10 @@ JS=js
 SETUP=js/setup
 UTIL=js/utils
 
+MAKEFILE_VAR=makefile_variables.js
+
+# where vendor libs reside
+VENDOR=vendor
 
 # Project source files
 HEADER=$(SETUP)/header.js
@@ -47,84 +64,81 @@ SOURCE=$(UTIL)/polyfills.js \
 	   $(JS)/export.js \
 	   $(JS)/hatrac.js \
 	   $(JS)/format.js \
-	   $(BUILD)/makefile_variables.js \
+	   $(DIST)/$(MAKEFILE_VAR) \
 	   $(SETUP)/node.js \
 	   $(SETUP)/ng.js \
 
 # Vendor libs
-VENDOR=vendor
+LIB=$(VENDOR)/lz-string.min.js \
+	$(VENDOR)/spark-md5.min.js \
+	$(VENDOR)/moment.min.js \
+	$(VENDOR)/mustache.min.js \
+	$(VENDOR)/handlebars.min.js \
+	$(VENDOR)/markdown-it.min.js \
+	$(VENDOR)/markdown-it-sub.min.js \
+	$(VENDOR)/markdown-it-sup.min.js \
+	$(VENDOR)/markdown-it-span.js \
+	$(VENDOR)/markdown-it-attrs.js \
+	$(VENDOR)/markdown-it-container.min.js
+
 
 # Build target
-BUILD=build
+DIST=dist
 
 # Project package full/minified
 PKG=$(PROJ).js
 MIN=$(PROJ).min.js
 VER=$(PROJ).ver.txt
+MIN_LIB=$(PROJ).vendor.min.js
+SRC_MAP=$(PROJ).min.js.map
 
 # Documentation target
 DOC=docs/dev-docs
 API=$(DOC)/api.md
-JSDOC=jsdoc
 
 # Hidden target files (for make only)
 LINT=.make-lint
-TEST=.make-test.js
-
-.PHONY: pre-generate-files-for-build
-pre-generate-files-for-build:
-	mkdir -p $(BUILD)
-	# create the ermrestjsBuildVersion variable and use the current date + time for versioning
-	echo 'var ermrestjsBuildVersion=$(shell date +%Y%m%d%H%M%S);' > $(BUILD)/makefile_variables.js
-
-.PHONY: all
-all: $(BUILD) $(DOC)
 
 # Build rule
-$(BUILD): pre-generate-files-for-build $(LINT) $(BUILD)/$(PKG) $(BUILD)/$(MIN) $(BUILD)/$(VER)
-	@touch $(BUILD)
-
-# Rule to build the library (non-minified)
-.PHONY: package
-package: pre-generate-files-for-build $(BUILD)/$(PKG) $(BUILD)/$(VER)
+$(DIST): print_variables $(DIST)/$(PKG) $(DIST)/$(MIN_LIB) $(DIST)/$(VER)
+	@touch $(DIST)
 
 # Rule to build the version number file
-$(BUILD)/$(VER): $(SOURCE)
-	mkdir -p $(BUILD)
-	git log --pretty=format:'%H' -n 1 > $(BUILD)/$(VER)
+$(DIST)/$(VER): $(SOURCE) $(BIN)
+	@mkdir -p $(DIST)
+	$(info - creating $(DIST)/$(VER) version file)
+	@git log --pretty=format:'%H' -n 1 > $(DIST)/$(VER)
 
-# Rule to build the un-minified library
-$(BUILD)/$(PKG): $(SOURCE)
-	mkdir -p $(BUILD)
-	cat $(SOURCE) > $(BUILD)/$(PKG)
+# Rule to build the package
+$(DIST)/$(PKG): $(SOURCE) $(BIN)
+	@mkdir -p $(DIST)
+	@cat $(SOURCE) > $(DIST)/$(PKG)
+	$(info - creating $(DIST)/$(MIN) file)
+	@#since we're building it in build folder but when we deploy it's not build
+	@#inside the build folder anymore, we have to define the base
+	@$(BIN)/uglifyjs $(DIST)/$(PKG) -o $(DIST)/$(MIN) --compress --source-map "url='$(SRC_MAP)',base='$(DIST)',root='$(ERMRESTJS_BASE_PATH)'"
 
-# Rule to build the minified package
-# we should list all the tags that jsDoc accepst but the gccjs doesn't.
-$(BUILD)/$(MIN): $(SOURCE) $(BIN)
-	mkdir -p $(BUILD)
-	$(BIN)/google-closure-compiler $(BUILD)/$(PKG) > $(BUILD)/$(MIN)
+# Rule to build the minified library file (vendor files)
+$(DIST)/$(MIN_LIB): $(LIB) $(BIN)
+	@mkdir -p $(DIST)
+	$(info - creating $(DIST)/$(MIN_LIB) minified vendor file)
+	@cat $(LIB) > $(DIST)/$(MIN_LIB)
+	@echo 'ermrestjsVendorFileLoaded = true;' >> $(DIST)/$(MIN_LIB)
 
 # Rule to lint the source (terminate build on errors)
 $(LINT): $(SOURCE) $(BIN)
-	$(BIN)/jshint $(filter $?, $(filter-out $(HEADER_FOOTER), $(SOURCE)))
+	$(info - running linter)
+	@$(BIN)/jshint $(filter $?, $(filter-out $(HEADER_FOOTER), $(SOURCE)))
 	@touch $(LINT)
-
-.PHONY: lint
-lint: $(LINT)
 
 # Rule for making markdown docs
 $(DOC): $(API)
 
 # Rule for making API doc
 $(API): $(SOURCE) $(BIN)
-	mkdir -p $(DOC)
-	$(BIN)/jsdoc2md $(BUILD)/$(PKG) > $(API)
-
-# jsdoc: target for html docs produced (using 'jsdoc')
-$(JSDOC): $(SOURCE) $(BIN)
-	mkdir -p $(JSDOC)
-	$(BIN)/jsdoc --pedantic -d $(JSDOC) $(BUILD)/$(PKG)
-	@touch $(JSDOC)
+	@mkdir -p $(DOC)
+	$(info - creating $(API) document)
+	@$(BIN)/jsdoc2md $(DIST)/$(PKG) > $(API)
 
 # Rule to ensure Node bin scripts are present
 $(BIN): $(MODULES)
@@ -132,8 +146,30 @@ $(BIN): $(MODULES)
 
 # Rule to install Node modules locally
 $(MODULES): package.json
-	npm install
+	npm install --production
 	@touch $(MODULES)
+
+# generate makefile_variables file
+$(DIST)/$(MAKEFILE_VAR): FORCE
+	@mkdir -p $(DIST)
+	$(info - creating $(DIST)/$(MAKEFILE_VAR) file)
+	@echo 'var ermrestjsBuildVariables = {};' > $(DIST)/$(MAKEFILE_VAR)
+	@echo 'ermrestjsBuildVariables.buildVersion="$(BUILD_VERSION)";' >> $(DIST)/$(MAKEFILE_VAR)
+	@echo 'ermrestjsBuildVariables.ermrestjsBasePath="$(ERMRESTJS_BASE_PATH)";' >> $(DIST)/$(MAKEFILE_VAR)
+
+# make sure ERMRESTJSDIR is not the root
+dont_install_in_root:
+	@echo "$(ERMRESTJSDIR)" | egrep -vq "^/$$|.*:/$$"
+
+print_variables:
+	$(info =================)
+	$(info BUILD_VERSION=$(BUILD_VERSION))
+	$(info building and deploying to: $(ERMRESTJSDIR))
+	$(info ERMrestJS will be accessed using: $(ERMRESTJS_BASE_PATH))
+	$(info =================)
+
+# dummy target to always run the targets that depend on it
+FORCE:
 
 # Rule for node deps
 .PHONY: deps
@@ -146,9 +182,9 @@ updeps:
 # Rule to clean project directory
 .PHONY: clean
 clean:
-	rm -rf $(BUILD)
-	rm -rf $(JSDOC)
-	rm -f .make-*
+	rm -rf $(DIST)
+	rm -rf $(API)
+	@rm -f .make-*
 
 # Rule to clean the dependencies too
 .PHONY: distclean
@@ -165,18 +201,19 @@ test: ../ErmrestDataUtils
 testsingle: ../ErmrestDataUtils
 	node test/single-test-runner.js
 
-# Rule to install the package
-# pre-generate-files-for-build done here incase make install called without make all (might be the case for server rebuilds)
-.PHONY: install installm dont_install_in_root
-install: pre-generate-files-for-build $(BUILD)/$(PKG) $(BUILD)/$(VER) $(VENDOR)/* dont_install_in_root
-	rsync -avz $(BUILD)/ $(ERMRESTJSDIR)
-	rsync -avz $(VENDOR) $(ERMRESTJSDIR)
+# Rule to run the linter
+.PHONY: lint
+lint: $(LINT)
 
-installm: install $(BUILD)/$(MIN) dont_install_in_root
-	rsync -avz $(BUILD)/$(MIN) $(ERMRESTJSDIR)/$(MIN)
+# rule to make sure there's no error and build the package and docs
+.PHONY: all
+all: $(LINT) $(DIST) $(DOC)
 
-dont_install_in_root:
-	@echo "$(ERMRESTJSDIR)" | egrep -vq "^/$$|.*:/$$"
+# Rule to install (deploy) the package
+.PHONY: install dont_install_in_root
+install: $(DIST) dont_install_in_root
+	$(info - deploying the package)
+	@rsync -avz --exclude=$(MAKEFILE_VAR) $(DIST)/ $(ERMRESTJSDIR)
 
 # Rules for help/usage
 .PHONY: help usage
@@ -184,15 +221,10 @@ help: usage
 usage:
 	@echo "Available 'make' targets:"
 	@echo "    all       - build and docs"
+	@echo "    install   - build andinstalls the package (ERMRESTJSDIR=$(ERMRESTJSDIR))"
 	@echo "    deps      - local install of node dependencies"
 	@echo "    updeps    - update local dependencies"
-	@echo "    install   - installs the package (ERMRESTJSDIR=$(ERMRESTJSDIR))"
-	@echo "    installm  - also installs the minified package"
 	@echo "    lint      - lint the source"
-	@echo "    build     - lint, package and minify"
-	@echo "    package   - concatenate into package"
 	@echo "    test      - run tests"
-	@echo "    doc       - make autogenerated markdown docs"
-	@echo "    jsdoc     - make autogenerated html docs"
 	@echo "    clean     - cleans the build environment"
 	@echo "    distclean - cleans and removes dependencies"

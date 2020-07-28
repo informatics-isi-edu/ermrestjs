@@ -14,11 +14,14 @@ The renderer that we use ([markdown-it](https://github.com/markdown-it/markdown-
       - [Multiple Adjacent Images](#multiple-adjacent-images)
     + [5. Thumbnail With Link To Original Image And A caption](#5-thumbnail-with-link-to-original-image-and-a-caption)
     + [6. Iframe](#6-iframe)
-      - [Iframe With a linkable caption](#iframe-with-a-linkable-caption)
+      - [Iframe without scrolling](#iframe-without-scrolling)
+      - [Iframe with a linkable caption](#iframe-with-a-linkable-caption)
       - [Iframe with a linkable caption positioned at its bottom](#iframe-with-a-linkable-caption-positioned-at-its-bottom)
       - [Iframe with a linkable caption positioned at its bottom with iframe class and style](#iframe-with-a-linkable-caption-positioned-at-its-bottom-with-iframe-class-and-style)
       - [Iframe with caption positioned at its bottom with caption class and style](#iframe-with-caption-positioned-at-its-bottom-with-caption-class-and-style)
-      - [Iframe with iframe class, style, caption class and style](#iframe-with-iframe-class--style--caption-class-and-style)
+      - [Iframe with iframe class, style, caption class and style](#iframe-with-iframe-class-style-caption-class-and-style)
+      - [Iframe with class and style attached directly to the iframe element
+](#iframe-with-class-and-style-attached-directly-to-the-iframe-element)
     + [7. Dropdown download button](#7-dropdown-download-button)
     + [8. Vocabulary](#8-vocabulary)
     + [9. Youtube Video](#9-youtube-video)
@@ -314,6 +317,20 @@ If you provide an invalid link then instead of an iframe you will just get the i
 ```
 > <p><em>Invalid</em> <a href="https://dev.isrd.isi.edu/chaise/search">CAPTION</a></p>
 
+#### Iframe without scrolling
+
+```html
+::: iframe [CAPTION](https://dev.isrd.isi.edu/chaise/search){width="800" height="300" scrolling="no"} \n:::
+
+# OUTPUT:
+<figure class="embed-block">
+	<figcaption class="embed-caption">
+		CAPTION
+	</figcaption>
+	<iframe src="https://dev.isrd.isi.edu/chaise/search" width="800" height="300" scrolling="no"></iframe>
+</figure>
+```
+
 #### Iframe With a linkable caption
 
 ```html
@@ -382,6 +399,19 @@ To style the caption of an iframe you can either specify classes using `caption-
 	<iframe src="https://example.com" width="800" height="300"></iframe>
 </figure>
 ```
+
+#### Iframe with class and style attached directly to the iframe element
+
+```html
+::: iframe [CAPTION](https://example.com){pos="bottom" iframe-class="iclass" style="border:5px solid;" class="iframe-element-class" link="https://example.com} \n:::
+
+# OUTPUT:
+<figure class="embed-block iclass">
+	<figcaption class="embed-caption">CAPTION</a></figcaption>
+	<iframe src="https://example.com" width="800" height="300" style="border:5px solid;" class="iframe-element-class"></iframe>
+</figure>
+```
+
 
 ### 7. Dropdown download button
 

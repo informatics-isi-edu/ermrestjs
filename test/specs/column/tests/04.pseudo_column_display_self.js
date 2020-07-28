@@ -199,7 +199,7 @@ exports.execute = function (options) {
             it ("should return the expected value for cnt scalar", function (done) {
                 testGetAggregatedValue(
                     mainRefDetailed.columns[8],
-                    [{isHTML: true, value: "<p>cnt: 5, 5</p>\n"},{ isHTML: false, value: ""}],
+                    [{isHTML: true, value: "<p>cnt: 5, 5</p>\n"},{ isHTML: false, value: "0"}],
                     function (value, index) {
                         if (index === 0) {
                             expect(value.templateVariables).toBeDefined("templateVariables was not defined for index=" + index);
@@ -207,7 +207,9 @@ exports.execute = function (options) {
                             expect(value.templateVariables.$_self).toEqual(5, "$self missmatch for index=" + index);
                         } else {
                             // the null value
-                            expect(value.templateVariables).toEqual({}, "templateVariables was defined for index=1");
+                            expect(value.templateVariables).toBeDefined("templateVariables was not defined for index" + index);
+                            expect(value.templateVariables.$self).toEqual("0", "$self missmatch for index=" + index);
+                            expect(value.templateVariables.$_self).toEqual(0, "$self missmatch for index=" + index);
                         }
                     },
                     done
@@ -217,15 +219,17 @@ exports.execute = function (options) {
             it ("should return the expected value for cnt_d scalar", function (done) {
                 testGetAggregatedValue(
                     mainRefDetailed.columns[9],
-                    [{isHTML: true, value: "<p>cnt_d: 5, 5</p>\n"},{ isHTML: false, value: ""}],
+                    [{isHTML: true, value: "<p>cnt_d: 5, 5</p>\n"},{ isHTML: false, value: "0"}],
                     function (value, index) {
                         if (index === 0) {
                             expect(value.templateVariables).toBeDefined("templateVariables was not defined for index=" + index);
                             expect(value.templateVariables.$self).toEqual("5", "$self missmatch for index=" + index);
                             expect(value.templateVariables.$_self).toEqual(5, "$self missmatch for index=" + index);
                         } else {
-                            // the null value
-                            expect(value.templateVariables).toEqual({}, "templateVariables was defined for index=1");
+                            // the empty value
+                            expect(value.templateVariables).toBeDefined("templateVariables was not defined for index" + index);
+                            expect(value.templateVariables.$self).toEqual("0", "$self missmatch for index=" + index);
+                            expect(value.templateVariables.$_self).toEqual(0, "$self missmatch for index=" + index);
                         }
                     },
                     done

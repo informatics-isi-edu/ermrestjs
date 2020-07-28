@@ -8,6 +8,7 @@ exports.execute = function(options) {
             associationTableWithIDDisplayname = "association table displayname",
             associationTableWithID = "association table with id",
             AssociationTableWithExtra = "association_table_with_extra",
+            associationTableWithOverlappingCol = "association_table_with_overlapping_col",
             entityId = 9003,
             relatedEntityWithToNameId = 3,
             relatedEntityId = 1,
@@ -57,7 +58,7 @@ exports.execute = function(options) {
         function checkReferenceColumns(tesCases) {
             tesCases.forEach(function(test){
                 expect(test.ref.columns.map(function(col){
-                    return (col.isKey || col.isForeignKey || col.isInboundForeignKey) ? col._constraintName : col.name;
+                    return (col.isKey || col.isForeignKey || col.isInboundForeignKey) ? col._constraintName : col.displayname.value;
                 })).toEqual(test.expected, "missmatch for " + test.title);
             });
         }
@@ -146,19 +147,23 @@ exports.execute = function(options) {
                 });
 
                 it('should only include visible foreign keys that are defined in the annotation. Should support path.', function() {
-                    expect(related.length).toBe(6);
+                    expect(related.length).toBe(7);
                 });
 
                 describe("regarding column objects defining path.", function () {
 
                     it ('should ignore the invalid (invalid, no path, non-entity, has aggregate) objects.', function () {
-                        expect(pathRelatedWithTuple.length).toBe(3);
+                        expect(pathRelatedWithTuple.length).toBe(4);
                     });
 
                     it ('should create the reference by using facet syntax (starting from related table with facet on shortestkey of main table.).', function () {
                         checkRelated(
                             pathRelatedWithTuple[0], "reference_schema", "association table with id",
                             {"and": [{"source" :[{"outbound": ["reference_schema","id_fk_association_related_to_reference"]}, "RID"], "choices": [findRID(schemaName, tableName, "id", "9003")]}]});
+
+                        checkRelated(
+                            pathRelatedWithTuple[3], "reference_schema", "table_w_linked_rowname_fk1",
+                            {"and": [{"source" :[{"outbound": ["reference_schema","table_w_linked_rowname_fk1"]}, "RID"], "choices": [findRID(schemaName, tableName, "id", "9003")]}]});
                     });
 
                     it ('should be able to support path with longer length.', function () {
@@ -221,6 +226,11 @@ exports.execute = function(options) {
                     [
                         {"i": ["reference_schema", "extra_fk_association_related_to_reference"]},
                         "RID"
+                    ],
+                    [
+                        {"i": ["reference_schema", "association_table_with_overlapping_col_fk1"]},
+                        {"o": ["reference_schema", "association_table_with_overlapping_col_fk2"]},
+                        "RID"
                     ]
                 ];
                 related.forEach(function (rel, i) {
@@ -243,6 +253,10 @@ exports.execute = function(options) {
                             {"o": ["reference_schema", "reference_table_fk1"]},
                             {"i": ["reference_schema", "reference_outbound_1_inbound_1_fk1"]},
                             "id"
+                        ],
+                        [
+                            {"i": ["reference_schema", "table_w_linked_rowname_fk1"]},
+                            "RID"
                         ]
                     ];
                     pathRelatedWithTuple.forEach(function (rel, i) {
@@ -344,6 +358,25 @@ exports.execute = function(options) {
                                 ["reference_schema", "fromname_fk_inbound_related_to_reference"].join("_"),
                                 ["reference_schema", "hidden_fk_inbound_related_to_reference"].join("_")
                             ]
+                        },
+                        {
+                            title: "source syntax, detailed context",
+                            ref: pathRelatedWithTuple[0],
+                            expected: [
+                                ["reference_schema", "id_fk_association_related_to_reference"].join("_"), // the fk
+                                "ignored column 02", // scalar column based on the fk
+                                "ID"
+                            ]
+                        },
+                        {
+                            title: "source syntax, compact/brief context",
+                            ref: pathRelatedWithTuple[0].contextualize.compactBrief,
+                            expected: ["ID"]
+                        },
+                        {
+                            title: "source syntax, compact/brief/inline context",
+                            ref: pathRelatedWithTuple[0].contextualize.compactBriefInline,
+                            expected: ["ID"]
                         }
                     ]);
                 });
@@ -399,6 +432,9 @@ exports.execute = function(options) {
 
                     expect(related[4]._location.catalog).toBe(catalog_id.toString(), "missmatch for catalog index=4");
                     expect(related[4]._table.name).toBe(inboundTableName, "missmatch for table index=4 (table with system column fk)");
+
+                    expect(related[6]._location.catalog).toBe(catalog_id.toString(), "missmatch for catalog index=6");
+                    expect(related[6]._table.name).toBe("table_w_only_composite_key", "missmatch for table index=6 (table with system column fk)");
                 });
 
                 describe('.displayname, ', function () {
@@ -473,7 +509,7 @@ exports.execute = function(options) {
 
                 describe('Tuple.getBatchAssociationRef, ', function () {
                     var batchPage, selectedTuples;
-                    it('should return an array of references including the filtered assocation reference.', function() {
+                    it('should return an array of references including the filtered assocation reference.', function(done) {
                         var url = options.url + "/catalog/" + catalog_id + "/entity/";
                         // there are 3 rows in the set for "pageWithToName"
                         related[2].sort([{"column":"id", "descending":false}]).read(3).then(function(response) {
@@ -487,16 +523,15 @@ exports.execute = function(options) {
 
                             return batchRefs[0].read(5);
                         }).then(function(batchResponse) {
-                            expect(batchResponse.data.length).toBe(2);
+                            expect(batchResponse.tuples.length).toBe(2);
 
                             done();
-                        }, function(err) {
-                            console.dir(err);
-                            done.fail();
+                        }).catch(function(err) {
+                            done.fail(err);
                         });
                     });
 
-                    it('should return 2 references if the number of tuples to create an association for exceeds the url length limit.', function () {
+                    it('should return 2 references if the number of tuples to create an association for exceeds the url length limit.', function (done) {
                         var batchRefs;
                         related[2].sort([{"column":"id", "descending":false}]).read(70).then(function(response) {
                             var batchPage = response;
@@ -512,14 +547,14 @@ exports.execute = function(options) {
                         }).then(function (batchResponse) {
                             expect(batchResponse.tuples.length).toBe(68, "number of tuples returned is incorrect.");
 
+                            return batchRefs[1].read(5);
                         }).then(function (batchResponse2) {
                             expect(batchResponse2.tuples.length).toBe(2, "number of tuples returned is incorrect.");
 
                             done();
-                        }, function(err) {
-                            console.dir(err);
-                            done.fail();
-                        })
+                        }).catch(function(err) {
+                            done.fail(err);
+                        });
                     });
                 })
             });
@@ -578,6 +613,14 @@ exports.execute = function(options) {
                     content += '</ul>\n';
 
                     testPageContent(pathRelatedWithTuple[1], 5, content, done);
+                });
+
+                it ("if none of the markdown_patterns are defined and the returned values have links, should not add the links.", function (done) {
+                    content = '<ul>\n';
+                    content += '<li><a href="https://example.com">one</a></li>\n';
+                    content += '<li><a href="https://example.com">two</a></li>\n';
+                    content += '</ul>\n';
+                    testPageContent(pathRelatedWithTuple[3], 3, content, done);
                 });
             });
         });

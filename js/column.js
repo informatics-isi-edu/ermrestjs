@@ -401,22 +401,29 @@ ReferenceColumn.prototype = {
         }
 
         if (this.display.sourceMarkdownPattern) {
-            var res, keyValues = templateVariables || {}, cols = this._baseCols;
+            var res, keyValues = {}, selfTemplateVariables = {}, cols = this._baseCols;
 
             if (cols.length > 0) {
                 if (this._simple) {
-                    keyValues.$self = cols[0].formatvalue(data[cols[0].name], context, options);
-                    keyValues.$_self = data[cols[0].name];
+                    selfTemplateVariables = {
+                        "$self": cols[0].formatvalue(data[cols[0].name], context, options),
+                        "$_self": data[cols[0].name]
+                    };
                 } else {
                     var values = {};
                     cols.forEach(function (col) {
                         values[col.name] = col.formatvalue(data[col.name], context, options);
                         values["_" + col.name] = data[col.name];
                     });
-                    keyValues.$self = {values : values};
+                    selfTemplateVariables = {
+                        "$self": {
+                            "values" : values
+                        }
+                    };
                 }
             }
 
+            Object.assign(keyValues, templateVariables, selfTemplateVariables);
             return module._processMarkdownPattern(
                 this.display.sourceMarkdownPattern,
                 keyValues,
@@ -619,6 +626,7 @@ ReferenceColumn.prototype = {
             var keyValues = {}, selfTemplateVariables = {};
             var baseCol = self._baseCols[0];
 
+            // TODO could be refactored so other places use the same piece of code
             // create the $self object
             if (self.isPathColumn && self.hasAggregate && columnValue) {
                 selfTemplateVariables = columnValue.templateVariables;
@@ -805,8 +813,10 @@ PseudoColumn.prototype.formatPresentation = function(data, context, templateVari
     }
 
     if (this.display.sourceMarkdownPattern) {
-        var keyValues = templateVariables || {};
-        keyValues.$self = module._getRowTemplateVariables(this.table, context, data);
+        var keyValues = {}, selfTemplateVariables = {
+            "$self": module._getRowTemplateVariables(this.table, context, data)
+        };
+        Object.assign(keyValues, templateVariables, selfTemplateVariables);
         return module._processMarkdownPattern(
             this.display.sourceMarkdownPattern,
             keyValues,
@@ -1121,7 +1131,11 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
 
             // if given page is not valid (the key doesn't exist), or it returned empty result
             if (!value || !value.v){
-                result.push({isHTML: false, value: "", templateVariables: {}});
+                if (["cnt", "cnt_d"].indexOf(self.sourceObject.aggregate) !== -1) {
+                    result.push({isHTML: false, value: "0", templateVariables: { "$self": "0", "$_self": 0 }});
+                } else {
+                    result.push({isHTML: false, value: "", templateVariables: {}});
+                }
                 return;
             }
 
@@ -1794,8 +1808,10 @@ ForeignKeyPseudoColumn.prototype.formatPresentation = function(data, context, te
     }
 
     if (this.display.sourceMarkdownPattern) {
-        var keyValues = templateVariables || {};
-        keyValues.$self = module._getRowTemplateVariables(this.table, context, data);
+        var keyValues = {}, selfTemplateVariables = {
+            "$self": module._getRowTemplateVariables(this.table, context, data)
+        };
+        Object.assign(keyValues, templateVariables, selfTemplateVariables);
         return module._processMarkdownPattern(
             this.display.sourceMarkdownPattern,
             keyValues,
@@ -2083,8 +2099,10 @@ KeyPseudoColumn.prototype.formatPresentation = function(data, context, templateV
         return nullValue;
     }
     if (this.display.sourceMarkdownPattern) {
-        var keyValues = templateVariables || {};
-        keyValues.$self = module._getRowTemplateVariables(this.table, context, data, null, this.key);
+        var keyValues = {}, selfTemplateVariables = {
+            "$self": module._getRowTemplateVariables(this.table, context, data, null, this.key)
+        };
+        Object.assign(keyValues, templateVariables, selfTemplateVariables);
         return module._processMarkdownPattern(
             this.display.sourceMarkdownPattern,
             keyValues,

@@ -370,7 +370,6 @@ In this section you can find some examples of how you can use this feature. Thes
     "tag:isrd.isi.edu,2016:visible-columns": {
         "compact": [
             {
-                "source": "int_col",
                 "markdown_name": "Integer Col + Array aggregate",
                 "comment": "value",
                 "display": {
@@ -382,3 +381,5 @@ In this section you can find some examples of how you can use this feature. Thes
         ]
     }
     ```
+    
+    As you can see, you don't need to pass any `source` or `sourcekey` if you just want to show the value of multiple pseudo-columns together. Evidently since you're not providing any "source" column to Chaise, we won't be able to provide functionalities that require this source, e.g., sorting.

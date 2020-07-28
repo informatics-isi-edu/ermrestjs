@@ -797,6 +797,13 @@
                 var j, facetLen = facetObjects.length;
                 for (var i = 0; i < andFilters.length; i++) {
                     if (andFilters[i].sourcekey === module._specialSourceDefinitions.SEARCH_BOX) continue;
+                    if (typeof andFilters[i].sourcekey === "string") {
+                        var urlSourceDef = self.table.sourceDefinitions.sources[andFilters[i].sourcekey];
+                        if (!urlSourceDef) continue;
+
+                        // copy the elements that are defined in the source def but not the one already defined
+                        module._shallowCopyExtras(andFilters[i], urlSourceDef.sourceObject, module._sourceDefinitionAttributes);
+                    }
                     if (!andFilters[i].source) continue;
                     if (andFilters[i].hidden) {
                         newFilters.push(andFilters[i]);
@@ -1578,23 +1585,33 @@
                             // If a column is an asset column then set values for
                             // dependent properties like filename, bytes_count_column, md5 and sha
                             if (column.isAsset) {
+                                var isNull = newData[column.name] === null ? true : false;
+
                                 // If column has a filename column then add it to the projections
                                 if (column.filenameColumn) {
+                                    // If asset url is null then set filename also null
+                                    if (isNull) newData[column.filenameColumn.name] = null;
                                     addProjection(column.filenameColumn.name);
                                 }
 
                                 // If column has a bytecount column thenadd it to the projections
                                 if (column.byteCountColumn) {
+                                    // If asset url is null then set filename also null
+                                    if (isNull) newData[column.byteCountColumn.name] = null;
                                     addProjection(column.byteCountColumn.name);
                                 }
 
                                 // If column has a md5 column then add it to the projections
                                 if (column.md5 && typeof column.md5 === 'object') {
+                                    // If asset url is null then set filename also null
+                                    if (isNull) newData[column.md5.name] = null;
                                     addProjection(column.md5.name);
                                 }
 
                                 // If column has a sha256 column then add it to the projections
                                 if (column.sha256 && typeof column.sha256 === 'object') {
+                                    // If asset url is null then set filename also null
+                                    if (isNull) newData[column.sha256.name] = null;
                                     addProjection(column.sha256.name);
                                 }
 
@@ -1650,34 +1667,25 @@
                             // If a column is an asset column then set values for
                             // dependent properties like filename, bytes_count_column, md5 and sha
                             if (column.isAsset) {
-                                var isNull = newData[column.name] === null ? true : false;
                                 /* Populate all values in row depending on column from current asset */
 
                                 // If column has a filename column then populate its value
                                 if (column.filenameColumn) {
-                                    // If asset url is null then set filename also null
-                                    if (isNull) newData[column.filenameColumn.name] = null;
                                     addSubmissionData(i, column.filenameColumn.name);
                                 }
 
                                 // If column has a bytecount column then populate its value
                                 if (column.byteCountColumn) {
-                                    // If asset url is null then set filename also null
-                                    if (isNull) newData[column.byteCountColumn.name] = null;
                                     addSubmissionData(i, column.byteCountColumn.name);
                                 }
 
                                 // If column has a md5 column then populate its value
                                 if (column.md5 && typeof column.md5 === 'object') {
-                                    // If asset url is null then set filename also null
-                                    if (isNull) newData[column.md5.name] = null;
                                     addSubmissionData(i, column.md5.name);
                                 }
 
                                 // If column has a sha256 column then populate its value
                                 if (column.sha256 && typeof column.sha256 === 'object') {
-                                    // If asset url is null then set filename also null
-                                    if (isNull) newData[column.sha256.name] = null;
                                     addSubmissionData(i, column.sha256.name);
                                 }
 
@@ -2812,9 +2820,6 @@
 
             var self = this;
 
-            // check if we should hide some columns or not.
-            // NOTE: if the reference is actually an inbound related reference, we should hide the foreign key that created this link.
-            var hasOrigFKR = typeof this.origFKR != "undefined" && this.origFKR !== null && !this.origFKR._table.isPureBinaryAssociation;
 
             var columns = -1,
                 consideredColumns = {}, // to avoid duplicate pseudo columns
@@ -2823,6 +2828,7 @@
                 compositeFKs = [], // to add composite keys at the end of the list
                 assetColumns = [], // columns that have asset annotation
                 hiddenFKR = this.origFKR,
+                hasOrigFKR,
                 refTable = this._table,
                 invalid,
                 colAdded,
@@ -2837,17 +2843,22 @@
             var context = this._context;
             isEntry = module._isEntryContext(context);
 
+            // check if we should hide some columns or not.
+            // NOTE: if the reference is actually an inbound related reference, we should hide the foreign key that created this link.
+            hasOrigFKR = typeof context === "string" && context.startsWith(module._contexts.COMPACT_BRIEF) && isObjectAndNotNull(hiddenFKR);
+
             // should hide the origFKR in case of inbound foreignKey (only in compact/brief)
             var hideFKR = function (fkr) {
-                return typeof context === "string" && context.startsWith(module._contexts.COMPACT_BRIEF) && hasOrigFKR && fkr == hiddenFKR;
+                return hasOrigFKR && fkr == hiddenFKR;
             };
-            var hideFKRByName = function (hash) {
-                return typeof context === "string" && context.startsWith(module._contexts.COMPACT_BRIEF) && hasOrigFKR && hash.name == hiddenFKR.name;
+            // TODO can be improved by checking the actual foreignkey object instead
+            var hideFKRbyConstraintName = function (cname) {
+                return hasOrigFKR && hiddenFKR._constraintName == cname;
             };
 
             // should hide the columns that are part of origFKR. (only in compact/brief)
             var hideColumn = function (col) {
-                return typeof context === "string" && context.startsWith(module._contexts.COMPACT_BRIEF) && hasOrigFKR && hiddenFKR.colset.columns.indexOf(col) != -1;
+                return hasOrigFKR && hiddenFKR.colset.columns.indexOf(col) != -1;
             };
 
             // this function will take care of adding column and asset column
@@ -2917,12 +2928,11 @@
                                         }
                                         // inbound foreignkey
                                         else if (fk.key.table == this._table && !isEntry) {
-                                            var relatedRef = this._generateRelatedReference(fk, tuple, true);
                                             // this is inbound foreignkey, so the name must change.
                                             fkName = _generateForeignKeyName(fk, true);
-                                            if (!(fkName in consideredColumns) && !nameExistsInTable(fkName, col)) {
+                                            if (!logCol(fkName in consideredColumns, wm.DUPLICATE_FK, i) && !logCol(context !== module._contexts.DETAILED && context !== module._contexts.EXPORT, wm.NO_INBOUND_IN_NON_DETAILED, i) && !nameExistsInTable(fkName, col)) {
                                                 consideredColumns[fkName] = true;
-                                                this._referenceColumns.push(new InboundForeignKeyPseudoColumn(this, relatedRef, null, fkName));
+                                                this._referenceColumns.push(new InboundForeignKeyPseudoColumn(this, this._generateRelatedReference(fk, tuple, true), null, fkName));
                                             }
                                         } else {
                                             logCol(true, wm.FK_NOT_RELATED, i);
@@ -3017,7 +3027,7 @@
                         // 4. invalid aggregate function
                         // 3. The generated hash is a column for the table in database
                         ignore = logCol((pseudoName in consideredColumns), wm.DUPLICATE_PC, i) ||
-                                 hideFKRByName(pseudoName) ||
+                                 (hasPath && col.source.length === 2 && Array.isArray(col.source[0].outbound) && hideFKRbyConstraintName(col.source[0].outbound.join("_"))) ||
                                  (!hasPath && hideColumn(sourceCol)) ||
                                  logCol(col.self_link === true && !(_isColumnUniqueNotNull(sourceCol)), wm.INVALID_SELF_LINK, i) ||
                                  logCol((col.aggregate && module._pseudoColAggregateFns.indexOf(col.aggregate) === -1), wm.INVALID_AGG, i) ||
@@ -4824,7 +4834,12 @@
                 var url = tuple.reference.contextualize.detailed.appLink;
                 var rowName = module._generateRowName(ref.table, ref._context, tuple._data, tuple._linkedData);
 
-                values.push("* ["+ rowName.unformatted +"](" + url + ") " + ref.display._separator);
+                // don't add link if the rowname already has link
+                if (rowName.value.match(/<a\b.+href=/)) {
+                    values.push("* " + rowName.unformatted + " " + ref.display._separator);
+                } else {
+                    values.push("* ["+ rowName.unformatted +"](" + url + ") " + ref.display._separator);
+                }
             }
             pattern = ref.display._prefix + values.join(" ") + ref.display._suffix;
             return module.renderMarkdown(pattern, false);

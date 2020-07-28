@@ -217,7 +217,7 @@
             this._rootSchemaName = decodeURIComponent(params[0]);
             this._rootTableName = decodeURIComponent(params[1]);
         } else {
-            this._rootSchemaName = null;
+            this._rootSchemaName = "";
             this._rootTableName = decodeURIComponent(params[0]);
         }
 
@@ -1162,7 +1162,7 @@
     function PathPart(alias, joins, schema, table, facets, cfacets, filter, filtersString) {
         this.alias = alias;
         this.joins = Array.isArray(joins) ? joins : [];
-        this.schema = schema;
+        this.schema = (typeof schema === "string") ? schema : "";
         this.table = table;
         this._facets = facets;
         this.searchTerm = (facets && facets.decoded) ? _getSearchTerm(facets.decoded) : null;

@@ -4,12 +4,11 @@
   "version": "0.0.0",
   "license": "Apache-2.0",
   "private": true,
-  "main": "build/ermrest.js",
+  "main": "build/ermrest.min.js",
   "scripts": {
-    "build": "make build",
-    "pretest": "make build",
-    "test": "make test",
-    "docs": "make doc"
+    "build": "make install",
+    "pretest": "make install",
+    "test": "make test"
   },
   "repository": {
     "type": "git",
@@ -22,9 +21,15 @@
     "library"
   ],
   "dependencies": {
+    "uglify-js": "3.9.2",
+    "jshint": "2.11.1",
+    "jsdoc": "3.6.4",
+    "jsdoc-to-markdown": "5.0.3"
+  },
+  "devDependencies": {
     "buffer-slice": "0.0.1",
+    "mime": "1.4.1",
     "file-api": "^0.10.4",
-    "google-closure-compiler": "x",
     "handlebars": "4.5.3",
     "just-handlebars-helpers": "^1.0.13",
     "lz-string": "1.4.4",
@@ -38,15 +43,10 @@
     "mustache": "x",
     "q": "1.5.0",
     "request-q": "x",
-    "spark-md5": "^3.0.0"
-  },
-  "devDependencies": {
+    "spark-md5": "^3.0.0",
     "jasmine": "2.5.3",
     "jasmine-expect": "^3.7.1",
     "jasmine-spec-reporter": "^2.5.0",
-    "jsdoc": "x",
-    "jsdoc-to-markdown": "x",
-    "jshint": "x",
     "nock": "9.0.22",
     "request": "x",
     "require-reload": "^0.2.2",

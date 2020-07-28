@@ -192,6 +192,45 @@ exports.execute = function (options) {
                 });
             });
 
+            it ("clearing the asset column value should clear the metadata columns as well.", function (done) {
+                var tuples, tuple, updateData = {},
+                    baseUrl = options.url.replace("/ermrest", "");
+
+                reference.read(1).then(function(response) {
+                    tuples = response.tuples;
+                    tuple = tuples[0];
+
+                    updateData = {
+                        file1_uri: null
+                    }
+                    var data = tuple.data;
+
+                    for (var key in updateData) {
+                        data[key] = updateData[key];
+                    }
+
+                    return reference.update(tuples);
+                }).then(function (response) {
+                    response = response.successful;
+                    expect(response._data.length).toBe(1, "Update data set that was returned is not the right length");
+
+                    utils.checkPageValues(response._data, tuples, sortBy);
+
+                    // verify that reading the reference again returns the updated row
+                    return reference.read(1);
+                }).then(function (response) {
+                    var pageData = response._data[0];
+                    expect(pageData.file1_uri).toBe(null, "Entity file1 uri is not null.");
+                    expect(pageData.file1_bytes).toBe(null, "Entity file1 bytes is not null.");
+                    expect(pageData.file1_MD5).toBe(null, "Entity file1 md5 does is not null.");
+                    expect(pageData.file1_name).toBe(null, "Entity file1 name does is not null.");
+                    done();
+                }).catch(function (error) {
+                    console.dir(error);
+                    done.fail();
+                });
+            });
+
             afterAll(function(done) {
                 // remove the files from the chaise folder
                 for (var j=0; j<files.length; j++) {

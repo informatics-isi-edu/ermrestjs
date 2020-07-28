@@ -251,9 +251,16 @@ String.prototype.replaceAll = function(search, replacement) {
 //  3. while (this.length) this.pop()
 // options 1 and 2 are fastest. Option 1 sets
 // the internal data to be removed by the garbage collector
-Array.prototype.clear = function() {
-    this.length = 0;
-};
+if (!Array.prototype.clear) {
+    // using defineProperty is safer than changing prototype directly.
+    // the prototype change was causing issues with unprotected for .. in loops.
+    Object.defineProperty(Array.prototype, "clear", {
+        value: function () {
+            this.length = 0;
+        },
+        enumerate: false
+    });
+ }
 
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/isInteger
 Number.isInteger = Number.isInteger || function(value) {

@@ -288,12 +288,13 @@ exports.execute = function (options) {
          *  - entry/create: does not include col_asset_3 -> so no ignore
          *  - entry/edit: includes col_asset_3 and all its contituent columns
          *  - compact/brief: includes col_asset_3 and all its contituent columns
+         *  - compact/brief/inline: inlcudes inline table that should not be visible
          *
          *  3. table_w_composite_key:
          *      has different values for row_name, row_name/compact and row_name/entry.
          */
 
-        var compactRef, compactBriefRef, compactSelectRef, entryRef, entryCreateRef, entryEditRef,
+        var compactRef, compactBriefRef, compactSelectRef, compactBriefInlineRef, entryRef, entryCreateRef, entryEditRef,
             slashRef, assetRef, assetRefEntry, assetRefCompact, assetRefCompactCols,
             compactColumns, compactSelectColumns, table2RefColumns;
 
@@ -308,6 +309,7 @@ exports.execute = function (options) {
                 compactRef = response.contextualize.compact;
                 compactBriefRef = response.contextualize.compactBrief;
                 compactSelectRef = response.contextualize.compactSelect;
+                compactBriefInlineRef = response.contextualize.compactBriefInline;
 
                 detailedRef = response.contextualize.detailed;
 
@@ -514,11 +516,13 @@ exports.execute = function (options) {
                 });
 
                 describe("for inbound foreignkey columns, ", function () {
-                    it("in entry context, should ignore them.", function () {
-                        expect(entryCreateRef.columns.length).toBe(4);
+                    it("in non-detailed context, should ignore them.", function () {
+                        expect(entryCreateRef.columns.length).toBe(4, "entry/create missmatch.");
+
+                        expect(compactBriefInlineRef.columns.length).toBe(1, "compact/brief/inline missmatch");
                     });
 
-                    it('in other columns, should create a pseudo-column for those and remove them from related references.', function () {
+                    it('in detailed context, should create a pseudo-column for those and remove them from related references.', function () {
                         expect(detailedRef.columns[3]._constraintName).toBe(["columns_schema", "inbound_related_to_columns_table_2_fkey"].join("_"), "didn't create a pseudo column.");
 
                         expect(detailedRef.related.length).toBe(1, "didn't remove the column from related references");
