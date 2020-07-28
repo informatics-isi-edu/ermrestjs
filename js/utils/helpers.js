@@ -1851,14 +1851,12 @@
                             var iframeHTML = "<iframe ", openingLink = attrs[0].children[0];
                             var enlargeLink, posTop = true, captionClass = "", captionStyle = "", iframeClass = "", iframeStyle = "";
                             var isYTlink = false, videoText = "";
-                            var videoElem = document.createElement("a");
-
 
                             // Add all attributes to the iframe
                             openingLink.attrs.forEach(function(attr) {
                                 if (attr[0] == "href") {
-                                    videoElem.href = attr[1];
-                                    isYTlink  = (videoElem.hostname.indexOf("youtube") != -1 ? true : false);
+                                    isYTlink  = (attr[1].indexOf("www.youtube.com") != -1 ? true : false);
+                                    
                                     // Add a class to hide the iframe only if the markdown is a YouTube video
                                     if(isYTlink)
                                     {
