@@ -73,6 +73,7 @@ module._createPseudoColumn = function (reference, column, sourceObject, mainTupl
 
     // path, entity, outbound length 1,
     if (isEntity && source.length === 2 && source[0].outbound) {
+        // this is for simple foreign keys but I think it's wrong...?
         fk = getFK(source[0].outbound);
         return new ForeignKeyPseudoColumn(reference, fk, sourceObject, name);
     }
@@ -1265,12 +1266,32 @@ Object.defineProperty(PseudoColumn.prototype, "comment", {
                     return self._baseCols[0].comment;
                 }
 
-                 return self._baseCols[0].table.comment;
+                var tableDisplay = self._baseCols[0].table.getDisplay(self._context);
+                return tableDisplay.comment || self._baseCols[0].table.comment;
             };
 
             this._comment = getComment(this);
         }
         return this._comment;
+    }
+});
+
+Object.defineProperty(PseudoColumn.prototype, "commentDisplay", {
+    get: function () {
+        if (this._commentDisplay === undefined) {
+            var getComment = function (self) {
+                var com_display = self.sourceObject.comment_display;
+                if (self.sourceObject.comment && typeof com_display === "string") {
+                    return com_display;
+                }
+
+                var tableDisplay = self._baseCols[0].table.getDisplay(self._context);
+                return (tableDisplay.comment && tableDisplay.tableCommentDisplay) ? tableDisplay.tableCommentDisplay : "tooltip";
+            };
+
+            this._commentDisplay = getComment(this);
+        }
+        return this._commentDisplay;
     }
 });
 
@@ -1471,14 +1492,22 @@ Object.defineProperty(PseudoColumn.prototype, "reference", {
             } else {
 
                 // attach the parent displayname
-                var firstFk = self.foreignKeys[0], parentDisplayname;
-                if (firstFk.isInbound && firstFk.obj.to_name) {
-                    parentDisplayname = {value: firstFk.obj.to_name, unformatted: firstFk.obj.to_name, isHTML: false};
-                } else if (!firstFk.isInbound && firstFk.obj.from_name) {
-                    parentDisplayname = {value: firstFk.obj.from_name, unformatted: firstFk.obj.from_name, isHTML: false};
+                var firstFk = self.foreignKeys[0], parentDisplayname, comment, commentDisplay = "tooltip";
+                // NOTE: not sure if I should do this here?
+                if (firstFk.isInbound) {
+                    if (firstFk.obj.to_name) parentDisplayname = {value: firstFk.obj.to_name, unformatted: firstFk.obj.to_name, isHTML: false};
+                } else if (!firstFk.isInbound) {
+                    if (firstFk.obj.from_name) parentDisplayname = {value: firstFk.obj.from_name, unformatted: firstFk.obj.from_name, isHTML: false};
                 } else {
                     parentDisplayname = this._baseReference.table.displayname;
                 }
+
+                // pick the last foreign key and get its key to determine the leaf table
+                var leafTable = self.foreignKeys[self.foreignKeys.length-1].obj.key.colset.columns[0].table;
+                var display = leafTable.getDisplay(self._context);
+
+                comment = display.comment || leafTable.comment;
+                if (display.tableCommentDisplay && display.comment) commentDisplay = display.tableCommentDisplay;
 
                 var source = [], i, fk, columns, noData = false;
 
@@ -1522,8 +1551,15 @@ Object.defineProperty(PseudoColumn.prototype, "reference", {
                     }).join("/");
                 }
 
+                if (self.sourceObject && self.sourceObject.comment) {
+                    comment = self.sourceObject.comment;
+                    if (self.sourceObject.comment_display) commentDisplay = self.sourceObject.comment_display;
+                }
+
                 self._reference = new Reference(module.parse(uri), self.table.schema.catalog);
                 self._reference.parentDisplayname = parentDisplayname;
+                self._reference._comment = comment;
+                self._reference._commentDisplay = commentDisplay;
 
                 // make sure data exists
                 if (!noData && filters.length > 0) {
@@ -2619,6 +2655,7 @@ Object.defineProperty(InboundForeignKeyPseudoColumn.prototype, "displayname", {
 Object.defineProperty(InboundForeignKeyPseudoColumn.prototype, "comment", {
     get: function () {
         if (this._comment === undefined) {
+            console.log("inbound FK pseudo col")
             var com = _processSourceObjectColumn(this.sourceObject);
             if (typeof com === "string") {
                 this._comment = com;

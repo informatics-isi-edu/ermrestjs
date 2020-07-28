@@ -319,6 +319,8 @@ to use for ERMrest JavaScript agents.
         * [.contextualize](#ERMrest.Reference+contextualize)
         * [.aggregate](#ERMrest.Reference+aggregate) : [<code>ReferenceAggregateFn</code>](#ERMrest.ReferenceAggregateFn)
         * [.displayname](#ERMrest.Reference+displayname) : <code>object</code>
+        * [.comment](#ERMrest.Reference+comment) : <code>String</code>
+        * [.commentDisplay](#ERMrest.Reference+commentDisplay) : <code>String</code>
         * [.uri](#ERMrest.Reference+uri) : <code>string</code>
         * [.table](#ERMrest.Reference+table) : [<code>Table</code>](#ERMrest.Table)
         * [.facetBaseTable](#ERMrest.Reference+facetBaseTable) : [<code>Table</code>](#ERMrest.Table)
@@ -634,6 +636,8 @@ to use for ERMrest JavaScript agents.
         * [.contextualize](#ERMrest.Reference+contextualize)
         * [.aggregate](#ERMrest.Reference+aggregate) : [<code>ReferenceAggregateFn</code>](#ERMrest.ReferenceAggregateFn)
         * [.displayname](#ERMrest.Reference+displayname) : <code>object</code>
+        * [.comment](#ERMrest.Reference+comment) : <code>String</code>
+        * [.commentDisplay](#ERMrest.Reference+commentDisplay) : <code>String</code>
         * [.uri](#ERMrest.Reference+uri) : <code>string</code>
         * [.table](#ERMrest.Reference+table) : [<code>Table</code>](#ERMrest.Table)
         * [.facetBaseTable](#ERMrest.Reference+facetBaseTable) : [<code>Table</code>](#ERMrest.Table)
@@ -2809,6 +2813,8 @@ Constructor for a ParsedFilter.
     * [.contextualize](#ERMrest.Reference+contextualize)
     * [.aggregate](#ERMrest.Reference+aggregate) : [<code>ReferenceAggregateFn</code>](#ERMrest.ReferenceAggregateFn)
     * [.displayname](#ERMrest.Reference+displayname) : <code>object</code>
+    * [.comment](#ERMrest.Reference+comment) : <code>String</code>
+    * [.commentDisplay](#ERMrest.Reference+commentDisplay) : <code>String</code>
     * [.uri](#ERMrest.Reference+uri) : <code>string</code>
     * [.table](#ERMrest.Reference+table) : [<code>Table</code>](#ERMrest.Table)
     * [.facetBaseTable](#ERMrest.Reference+facetBaseTable) : [<code>Table</code>](#ERMrest.Table)
@@ -2902,6 +2908,19 @@ different compared to `reference.columns`.
 The display name for this reference.
 displayname.isHTML will return true/false
 displayname.value has the value
+
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+comment"></a>
+
+#### reference.comment : <code>String</code>
+The comment for this reference.
+
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+commentDisplay"></a>
+
+#### reference.commentDisplay : <code>String</code>
+The comment display property for this reference.
+can be either "tooltip" or "inline"
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+uri"></a>
@@ -6402,6 +6421,8 @@ get PathColumn object by column name
     * [.contextualize](#ERMrest.Reference+contextualize)
     * [.aggregate](#ERMrest.Reference+aggregate) : [<code>ReferenceAggregateFn</code>](#ERMrest.ReferenceAggregateFn)
     * [.displayname](#ERMrest.Reference+displayname) : <code>object</code>
+    * [.comment](#ERMrest.Reference+comment) : <code>String</code>
+    * [.commentDisplay](#ERMrest.Reference+commentDisplay) : <code>String</code>
     * [.uri](#ERMrest.Reference+uri) : <code>string</code>
     * [.table](#ERMrest.Reference+table) : [<code>Table</code>](#ERMrest.Table)
     * [.facetBaseTable](#ERMrest.Reference+facetBaseTable) : [<code>Table</code>](#ERMrest.Table)
@@ -6495,6 +6516,19 @@ different compared to `reference.columns`.
 The display name for this reference.
 displayname.isHTML will return true/false
 displayname.value has the value
+
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+comment"></a>
+
+#### reference.comment : <code>String</code>
+The comment for this reference.
+
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+commentDisplay"></a>
+
+#### reference.commentDisplay : <code>String</code>
+The comment display property for this reference.
+can be either "tooltip" or "inline"
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+uri"></a>

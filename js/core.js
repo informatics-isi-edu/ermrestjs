@@ -991,7 +991,7 @@
 
                 // values supported are tooltip | inline
                 // tooltip is default
-                var tableCommentDisplay = (comment_display_annotation && comment_display_annotation.table_comment_display) ? comment_display_annotation.table_comment_display : "tooltip";
+                var tableCommentDisplay = (comment_display_annotation && comment_annotation && comment_display_annotation.table_comment_display) ? comment_display_annotation.table_comment_display : "tooltip";
                 var columnCommentDisplay = (comment_display_annotation && comment_display_annotation.column_comment_display) ? comment_display_annotation.column_comment_display : "tooltip";
 
                 this._display[context] = {
@@ -3856,8 +3856,8 @@
 
                 if (typeof annotation.from_comment === "string") fromComment = annotation.from_comment;
                 if (typeof annotation.to_comment === "string") toComment = annotation.to_comment;
-                if (typeof annotation.from_comment_display === "string") fromCommentDisplay = annotation.from_comment_display;
-                if (typeof annotation.to_comment_display === "string") toCommentDisplay = annotation.to_comment_display;
+                fromCommentDisplay = (annotation.from_comment && typeof annotation.from_comment_display === "string") ? annotation.from_comment_display : "tooltip";
+                toCommentDisplay = (annotation.to_comment && typeof annotation.to_comment_display === "string") ? annotation.to_comment_display : "tooltip";
 
                 this._display[context] = {
                     "columnOrder": columnOrder,

@@ -272,6 +272,44 @@
         },
 
         /**
+         * The comment for this reference.
+         *
+         * @type {String}
+         */
+        get comment () {
+            /* Note that comment is context dependent. For instance,
+             * a reference to an entity set will use the table comment
+             * as the reference comment. However, a 'related' reference
+             * will use the FKR's comment (actually its "to comment" or
+             * "from comment"). Like a Person table might have a FKR to its parent.
+             * In one directoin, the FKR is named "parent" in the other
+             * direction it is named "child".
+             */
+            if (!this._comment)
+                this._comment = this._table.comment;
+            return this._comment;
+        },
+
+        /**
+         * The comment display property for this reference.
+         * can be either "tooltip" or "inline"
+         *
+         * @type {String}
+         */
+        get commentDisplay () {
+            /* Note that commentDisplay is context dependent. However, a 'related'
+             * reference will use the FKR's commentDisplay (actually its "to comment display" or
+             * "from comment display"). Like a Person table might have a FKR to its parent.
+             * In one directoin, the FKR is named "parent" in the other
+             * direction it is named "child".
+             */
+            if (!this._commentDisplay)
+                // default value is tooltip
+                this._commentDisplay = "tooltip";
+            return this._commentDisplay;
+        },
+
+        /**
          * The string form of the `URI` for this reference.
          * NOTE: It is not understanable by ermrest, and it also doesn't have the modifiers (sort, page).
          * Should not be used for sending requests to ermrest, use this.location.ermrestCompactUri instead.
@@ -3527,6 +3565,9 @@
             // the main table
             newRef.mainTable = this.table;
 
+            // comment display defaults to "tooltip"
+            newRef._commentDisplay = "tooltip";
+
             // this name will be used to provide more information about the linkage
             if (fkr.to_name) {
                 newRef.parentDisplayname = { "value": fkr.to_name,  "unformatted": fkr.to_name, "isHTMl" : false };
@@ -3538,6 +3579,7 @@
 
             var fkrTable = fkr.colset.columns[0].table;
 
+            var display;
             if (checkForAssociation && fkrTable.isPureBinaryAssociation) { // Association Table
 
                 // find the other foreignkey
@@ -3557,6 +3599,21 @@
                     newRef._displayname = {"isHTML": false, "value": otherFK.to_name, "unformatted": otherFK.to_name};
                 } else {
                     newRef._displayname = otherFK.colset.columns[0].table.displayname;
+                }
+
+                display = otherFK.getDisplay(this._context);
+                // comment
+                if (display.toComment) {
+                    // use fkr to_comment
+                    newRef._comment = display.toComment;
+                    // only change commentDisplay if to_comment and to_comment_display are both defined
+                    if (display.toCommentDisplay) newRef._commentDisplay = display.toCommentDisplay;
+                } else {
+                    // use comment from leaf table diplay annotation or table model comment
+                    display = otherFK.key.colset.columns[0].table.getDisplay(this._context);
+
+                    newRef._comment = display.comment;
+                    newRef._commentDisplay = display.tableCommentDisplay;
                 }
 
                 // uri and location
@@ -3591,6 +3648,21 @@
                     newRef._displayname = newRef._table.displayname;
                 }
 
+                display = fkr.getDisplay(this._context);
+                // comment
+                if (display.fromComment) {
+                    // use fkr annotation from_comment
+                    newRef._comment = display.fromComment;
+                    // only change commentDisplay if from_comment and from_comment_display are both defined
+                    if (display.fromCommentDisplay) newRef._commentDisplay = display.fromCommentDisplay;
+                } else {
+                    // use comment from leaf table diplay annotation or table model comment
+                    display = newRef._table.getDisplay(this._context);
+
+                    newRef._comment = display.comment;
+                    newRef._commentDisplay = display.tableCommentDisplay;
+                }
+
                 // uri and location
                 if (!useFaceting) {
                     newRef._location = module.parse(this._location.compactUri + "/" + fkr.toString(), catalog);
@@ -3614,6 +3686,14 @@
                 dataSource = sourceObject.source;
             } else if (newRef._table.shortestKey.length === 1) {
                 dataSource = dataSource.concat(newRef._table.shortestKey[0].name);
+            }
+
+            // if comment|comment_display in source object are defined
+            // comment_display was already set to it's default above
+            if (sourceObject && sourceObject.comment) {
+                newRef._comment = sourceObject.comment;
+                // only change commentDisplay if comment and comment_display are both defined
+                if (sourceObject.comment_display) newRef._commentDisplay = sourceObject.comment_display;
             }
 
             // attach the compressedDataSource
