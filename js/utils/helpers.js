@@ -1850,22 +1850,14 @@
                         if (attrs[0].children[0].type == "link_open") {
                             var iframeHTML = "<iframe ", openingLink = attrs[0].children[0];
                             var enlargeLink, posTop = true, captionClass = "", captionStyle = "", iframeClass = "", iframeStyle = "";
-                            var isYTlink = false, videoText = "";
+                            var isYTlink = false, newClass='class="' + "hide-in-print" + '"', videoURL = "";
 
                             // Add all attributes to the iframe
                             openingLink.attrs.forEach(function(attr) {
                                 if (attr[0] == "href") {
-                                    isYTlink  = (attr[1].indexOf("www.youtube.com") != -1 ? true : false);
-                                    
-                                    // Add a class to hide the iframe only if the markdown is a YouTube video
-                                    if(isYTlink)
-                                    {
-                                      iframeHTML += 'class="hide-in-print"' + " ";
-                                      videoText = "Note: YouTube video " + "(" + attr[1] + ")" + " is hidden in print ";
-                                    }
-
+                                    isYTlink  = (attr[1].match("^(http(s)?:\/\/)?((w){3}.)?youtu(be|.be)?(\.com)?\/.+") != null);
                                     iframeHTML += 'src="' + attr[1] + '"';
-                                    videoURL = attr[1];
+                                    videoText = 'Note: YouTube video ( ' + attr[1] + ' ) is hidden in print';
                                 } else if (attr[0] == "link") {
                                     enlargeLink = attr[1];
                                 } else if (attr[0] == "pos") {
@@ -1878,12 +1870,22 @@
                                     iframeClass = attr[1];
                                 } else if (attr[0] == "iframe-style") {
                                     iframeStyle = attr[1];
+                                } else if (attr[0] == "class") {
+                                    newClass += " " + attr[1];
                                 } else {
                                     iframeHTML +=  attr[0] + '="' + attr[1] + '"';
                                 }
                                 iframeHTML += " ";
                             });
-                            html += iframeHTML + "></iframe>";
+
+                            //During print we need to display that the iframe with YouTube video is replaced with a note
+                            if(isYTlink)
+                            {
+                              html += iframeHTML + newClass + "></iframe>";
+                              html = '<span class="video-info-in-print" style="visibility:hidden">' + videoText + "</span>" + html;
+                            }
+                            else
+                              html += iframeHTML + "></iframe>";
 
                             var captionHTML = "";
 
@@ -1906,11 +1908,6 @@
                             if (enlargeLink) {
                                  if (!captionHTML.trim().length) captionHTML = "Enlarge";
                                 captionHTML = '<a href="' + enlargeLink + '" target="_blank">'  + captionHTML + '</a>';
-                            }
-
-                            //During print we need to display that the iframe with YouTube video is replaced with a note
-                            if (isYTlink){
-                               html = '<span class="video-info-in-print" style="visibility:hidden">' + videoText + "</span>" + html;
                             }
 
                             // Encapsulate the captionHTML inside a figcaption tag with class embed-caption
