@@ -1486,10 +1486,10 @@ Object.defineProperty(PseudoColumn.prototype, "reference", {
 
                 // attach the parent displayname
                 var firstFk = self.foreignKeys[0], parentDisplayname;
-                if (firstFk.isInbound) {
-                    if (firstFk.obj.to_name) parentDisplayname = {value: firstFk.obj.to_name, unformatted: firstFk.obj.to_name, isHTML: false};
-                } else if (!firstFk.isInbound) {
-                    if (firstFk.obj.from_name) parentDisplayname = {value: firstFk.obj.from_name, unformatted: firstFk.obj.from_name, isHTML: false};
+                if (firstFk.isInbound && firstFk.obj.to_name) {
+                    parentDisplayname = {value: firstFk.obj.to_name, unformatted: firstFk.obj.to_name, isHTML: false};
+                } else if (!firstFk.isInbound && firstFk.obj.from_name) {
+                    parentDisplayname = {value: firstFk.obj.from_name, unformatted: firstFk.obj.from_name, isHTML: false};
                 } else {
                     parentDisplayname = this._baseReference.table.displayname;
                 }
@@ -1497,7 +1497,7 @@ Object.defineProperty(PseudoColumn.prototype, "reference", {
                 var leafTable = self.table;
                 var display = leafTable.getDisplay(self._context);
 
-                comment = display.comment || leafTable.comment;
+                comment = display.comment;
                 if (display.tableCommentDisplay && display.comment) commentDisplay = display.tableCommentDisplay;
 
                 var source = [], i, fk, columns, noData = false;

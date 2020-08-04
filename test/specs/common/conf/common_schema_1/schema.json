@@ -26,7 +26,11 @@
                     "annotations": {
                         "tag:isrd.isi.edu,2016:foreign-key": {
                             "from_name": "from_name_value",
-                            "to_name": "to_name_value"
+                            "to_name": "to_name_value",
+                            "from_comment": "from_comment_value",
+                            "from_comment_display": "inline",
+                            "to_comment": "to_comment_value",
+                            "to_comment_display": "inline"
                         }
                     }
                 },
