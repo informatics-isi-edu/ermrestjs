@@ -249,6 +249,10 @@ to use for ERMrest JavaScript agents.
         * [.constraint_names](#ERMrest.ForeignKeyRef+constraint_names) : <code>Array</code>
         * [.from_name](#ERMrest.ForeignKeyRef+from_name) : <code>string</code>
         * [.to_name](#ERMrest.ForeignKeyRef+to_name) : <code>string</code>
+        * [.to_comment](#ERMrest.ForeignKeyRef+to_comment) : <code>string</code>
+        * [.from_comment](#ERMrest.ForeignKeyRef+from_comment) : <code>string</code>
+        * [.to_comment_display](#ERMrest.ForeignKeyRef+to_comment_display) : <code>string</code>
+        * [.from_comment_display](#ERMrest.ForeignKeyRef+from_comment_display) : <code>string</code>
         * [.ignore](#ERMrest.ForeignKeyRef+ignore) : <code>boolean</code>
         * [.annotations](#ERMrest.ForeignKeyRef+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
         * [.comment](#ERMrest.ForeignKeyRef+comment) : <code>string</code>
@@ -2270,6 +2274,10 @@ get the foreign key of the given column set
     * [.constraint_names](#ERMrest.ForeignKeyRef+constraint_names) : <code>Array</code>
     * [.from_name](#ERMrest.ForeignKeyRef+from_name) : <code>string</code>
     * [.to_name](#ERMrest.ForeignKeyRef+to_name) : <code>string</code>
+    * [.to_comment](#ERMrest.ForeignKeyRef+to_comment) : <code>string</code>
+    * [.from_comment](#ERMrest.ForeignKeyRef+from_comment) : <code>string</code>
+    * [.to_comment_display](#ERMrest.ForeignKeyRef+to_comment_display) : <code>string</code>
+    * [.from_comment_display](#ERMrest.ForeignKeyRef+from_comment_display) : <code>string</code>
     * [.ignore](#ERMrest.ForeignKeyRef+ignore) : <code>boolean</code>
     * [.annotations](#ERMrest.ForeignKeyRef+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
     * [.comment](#ERMrest.ForeignKeyRef+comment) : <code>string</code>
@@ -2333,6 +2341,22 @@ The constraint names for this foreign key
 <a name="ERMrest.ForeignKeyRef+to_name"></a>
 
 #### foreignKeyRef.to\_name : <code>string</code>
+**Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
+<a name="ERMrest.ForeignKeyRef+to_comment"></a>
+
+#### foreignKeyRef.to\_comment : <code>string</code>
+**Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
+<a name="ERMrest.ForeignKeyRef+from_comment"></a>
+
+#### foreignKeyRef.from\_comment : <code>string</code>
+**Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
+<a name="ERMrest.ForeignKeyRef+to_comment_display"></a>
+
+#### foreignKeyRef.to\_comment\_display : <code>string</code>
+**Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
+<a name="ERMrest.ForeignKeyRef+from_comment_display"></a>
+
+#### foreignKeyRef.from\_comment\_display : <code>string</code>
 **Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
 <a name="ERMrest.ForeignKeyRef+ignore"></a>
 

@@ -1060,12 +1060,12 @@
 
                 // values supported are tooltip | inline
                 // tooltip is default
-                var tableCommentDisplay = (comment_display_annotation && comment_annotation && comment_display_annotation.table_comment_display) ? comment_display_annotation.table_comment_display : "tooltip";
-                var columnCommentDisplay = (comment_display_annotation && comment_display_annotation.column_comment_display) ? comment_display_annotation.column_comment_display : "tooltip";
+                var tableCommentDisplay = (comment_display_annotation && comment_annotation && comment_display_annotation.table_comment_display) ? comment_display_annotation.table_comment_display : module._commentDisplayModes.tooltip;
+                var columnCommentDisplay = (comment_display_annotation && comment_display_annotation.column_comment_display) ? comment_display_annotation.column_comment_display : module._commentDisplayModes.tooltip;
 
                 this._display[context] = {
                     "columnCommentDisplay": columnCommentDisplay,
-                    "comment": comment,
+                    "comment": _processModelComment(comment),
                     "tableCommentDisplay": tableCommentDisplay
                 };
             }
@@ -3788,6 +3788,26 @@
         this.to_name = "";
 
         /**
+         * @type {string}
+         */
+        this.to_comment = "";
+
+        /**
+         * @type {string}
+         */
+        this.from_comment = "";
+
+        /**
+         * @type {string}
+         */
+        this.to_comment_display = module._commentDisplayModes.tooltip;
+
+        /**
+         * @type {string}
+         */
+        this.from_comment_display = module._commentDisplayModes.tooltip;
+
+        /**
          * @type {boolean}
          */
         this.ignore = false;
@@ -3814,6 +3834,18 @@
                 }
                 if(jsonAnnotation.to_name){
                     this.to_name = jsonAnnotation.to_name;
+                }
+
+                if(jsonAnnotation.to_comment){
+                    // check for null, false, empty string when digesting comment for first time
+                    this.to_comment = _processModelComment(jsonAnnotation.to_comment);
+                    if (jsonAnnotation.to_comment_display) this.to_comment_display = jsonAnnotation.to_comment_display;
+                }
+
+                if(jsonAnnotation.from_comment){
+                    // check for null, false, empty string when digesting comment for first time
+                    this.from_comment = _processModelComment(jsonAnnotation.from_comment);
+                    if (jsonAnnotation.from_comment_display) this.from_comment_display = jsonAnnotation.from_comment_display;
                 }
             }
         }
@@ -3915,7 +3947,8 @@
         getDisplay: function(context) {
             if (!(context in this._display)) {
                 var self = this, annotation = -1, columnOrder = [], showFKLink = true;
-                var fromComment = null, fromCommentDisplay = "tooltip", toComment = null, toCommentDisplay = "tooltip";
+                // NOTE: commenting out contextualized functionality since it isn't being supported just yet
+                // var fromComment = null, fromCommentDisplay = "tooltip", toComment = null, toCommentDisplay = "tooltip";
                 if (this.annotations.contains(module._annotations.FOREIGN_KEY)) {
                     annotation = module._getAnnotationValueByContext(context, this.annotations.get(module._annotations.FOREIGN_KEY).get("display"));
                 }
@@ -3933,18 +3966,18 @@
                     }
                 }
 
-                if (typeof annotation.from_comment === "string") fromComment = annotation.from_comment;
-                if (typeof annotation.to_comment === "string") toComment = annotation.to_comment;
-                fromCommentDisplay = (annotation.from_comment && typeof annotation.from_comment_display === "string") ? annotation.from_comment_display : "tooltip";
-                toCommentDisplay = (annotation.to_comment && typeof annotation.to_comment_display === "string") ? annotation.to_comment_display : "tooltip";
+                // fromComment = _processModelComment(annotation.from_comment);
+                // toComment = _processModelComment(annotation.to_comment);
+                // fromCommentDisplay = (annotation.from_comment && typeof annotation.from_comment_display === "string") ? annotation.from_comment_display : "tooltip";
+                // toCommentDisplay = (annotation.to_comment && typeof annotation.to_comment_display === "string") ? annotation.to_comment_display : "tooltip";
 
                 this._display[context] = {
                     "columnOrder": columnOrder,
-                    "fromComment": fromComment,
-                    "fromCommentDisplay": fromCommentDisplay,
+                    // "fromComment": fromComment,
+                    // "fromCommentDisplay": fromCommentDisplay,
                     "showForeignKeyLinks": showFKLink,
-                    "toComment": toComment,
-                    "toCommentDisplay": toCommentDisplay
+                    // "toComment": toComment,
+                    // "toCommentDisplay": toCommentDisplay
                 };
             }
 

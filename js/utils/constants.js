@@ -265,6 +265,11 @@
         RMT: "Record last modified timestamp"
     });
 
+    module._commentDisplayModes = Object.freeze({
+        inline: "inline",
+        tooltip: "tooltip"
+    });
+
     /**
      * List of logical operators that parser accepts in JSON facets.
      * @type {Object}

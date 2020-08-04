@@ -285,8 +285,8 @@
              * In one directoin, the FKR is named "parent" in the other
              * direction it is named "child".
              */
-            if (!this._comment)
-                this._comment = this._table.comment;
+            if (this._comment === undefined)
+                this._comment = this._table.getDisplay(this._context).comment;
             return this._comment;
         },
 
@@ -303,9 +303,9 @@
              * In one directoin, the FKR is named "parent" in the other
              * direction it is named "child".
              */
-            if (!this._commentDisplay)
+            if (this._commentDisplay === undefined)
                 // default value is tooltip
-                this._commentDisplay = "tooltip";
+                this._commentDisplay = module._commentDisplayModes.tooltip;
             return this._commentDisplay;
         },
 
@@ -3576,7 +3576,7 @@
             newRef.mainTable = this.table;
 
             // comment display defaults to "tooltip"
-            newRef._commentDisplay = "tooltip";
+            newRef._commentDisplay = module._commentDisplayModes.tooltip;
 
             // this name will be used to provide more information about the linkage
             if (fkr.to_name) {
@@ -3611,13 +3611,15 @@
                     newRef._displayname = otherFK.colset.columns[0].table.displayname;
                 }
 
-                display = otherFK.getDisplay(this._context);
+                // NOTE: this is for contextualized toComment and toCommentDisplay, to be implemented later
+                // display = otherFK.getDisplay(this._context);
+
                 // comment
-                if (display.toComment) {
+                if (otherFK.to_comment) {
                     // use fkr to_comment
-                    newRef._comment = display.toComment;
+                    newRef._comment = otherFK.to_comment;
                     // only change commentDisplay if to_comment and to_comment_display are both defined
-                    if (display.toCommentDisplay) newRef._commentDisplay = display.toCommentDisplay;
+                    if (otherFK.to_comment_display) newRef._commentDisplay = otherFK.to_comment_display;
                 } else {
                     // use comment from leaf table diplay annotation or table model comment
                     display = otherFK.key.colset.columns[0].table.getDisplay(this._context);
@@ -3658,13 +3660,15 @@
                     newRef._displayname = newRef._table.displayname;
                 }
 
-                display = fkr.getDisplay(this._context);
+                // NOTE: this is for contextualized toComment and toCommentDisplay, to be implemented later
+                // display = fkr.getDisplay(this._context);
+
                 // comment
-                if (display.fromComment) {
+                if (fkr.from_comment) {
                     // use fkr annotation from_comment
-                    newRef._comment = display.fromComment;
+                    newRef._comment = fkr.from_comment;
                     // only change commentDisplay if from_comment and from_comment_display are both defined
-                    if (display.fromCommentDisplay) newRef._commentDisplay = display.fromCommentDisplay;
+                    if (fkr.from_comment_display) newRef._commentDisplay = fkr.from_comment_display;
                 } else {
                     // use comment from leaf table diplay annotation or table model comment
                     display = newRef._table.getDisplay(this._context);
@@ -3701,7 +3705,7 @@
             // if comment|comment_display in source object are defined
             // comment_display was already set to it's default above
             if (sourceObject && sourceObject.comment) {
-                newRef._comment = sourceObject.comment;
+                newRef._comment = _processModelComment(sourceObject.comment);
                 // only change commentDisplay if comment and comment_display are both defined
                 if (sourceObject.comment_display) newRef._commentDisplay = sourceObject.comment_display;
             }

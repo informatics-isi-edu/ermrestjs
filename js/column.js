@@ -1259,50 +1259,27 @@ Object.defineProperty(PseudoColumn.prototype, "name", {
 Object.defineProperty(PseudoColumn.prototype, "comment", {
     get: function () {
         if (this._comment === undefined) {
-            var getComment = function (self) {
-                var com = _processSourceObjectColumn(self.sourceObject);
-                if (typeof com === "string") {
-                    return com;
-                }
-
-                if (self.hasAggregate) {
-                    var agIndex = module._pseudoColAggregateFns.indexOf(self.sourceObject.aggregate);
-                    var dname = self._baseCols[0].displayname.unformatted;
-                    if (self.isEntityMode) {
-                        dname = self._baseCols[0].table.displayname.unformatted;
-                    }
-
-                    return [module._pseudoColAggregateExplicitName[agIndex], dname].join(" ");
-                }
-
-                if (!self.isEntityMode) {
-                    return self._baseCols[0].comment;
-                }
-
-                var tableDisplay = self._baseCols[0].table.getDisplay(self._context);
-                return tableDisplay.comment || self._baseCols[0].table.comment;
-            };
-
-            this._comment = getComment(this);
+            this._comment = this.reference.comment;
         }
         return this._comment;
     }
 });
 
+// NOTE: this only works for multi hop with inbound foreign key
+/**
+ * The mode the tooltip should be displayed in for this column.
+ * It will return the first applicable rule:
+ * 1. commentDisplay that is defined on the sourceObject
+ * 2. commentDisplay that is defined on the table in the display annotation
+ * 3. default to "tooltip"
+ *
+ * @member {Object} commentDisplay
+ * @memberof ERMrest.PseudoColumn#
+ */
 Object.defineProperty(PseudoColumn.prototype, "commentDisplay", {
     get: function () {
         if (this._commentDisplay === undefined) {
-            var getComment = function (self) {
-                var com_display = self.sourceObject.comment_display;
-                if (self.sourceObject.comment && typeof com_display === "string") {
-                    return com_display;
-                }
-
-                var tableDisplay = self._baseCols[0].table.getDisplay(self._context);
-                return (tableDisplay.comment && tableDisplay.tableCommentDisplay) ? tableDisplay.tableCommentDisplay : "tooltip";
-            };
-
-            this._commentDisplay = getComment(this);
+            this._commentDisplay = this.reference.commentDisplay;
         }
         return this._commentDisplay;
     }
@@ -1499,14 +1476,16 @@ Object.defineProperty(PseudoColumn.prototype, "aggregateFn", {
 Object.defineProperty(PseudoColumn.prototype, "reference", {
     get: function () {
         if (this._reference === undefined) {
-            var self = this;
+            var self = this,
+                commentDisplay = "tooltip",
+                comment;
+
             if (!self.hasPath) {
                 self._reference = _referenceCopy(self._baseReference);
             } else {
 
                 // attach the parent displayname
-                var firstFk = self.foreignKeys[0], parentDisplayname, comment, commentDisplay = "tooltip";
-                // NOTE: not sure if I should do this here?
+                var firstFk = self.foreignKeys[0], parentDisplayname;
                 if (firstFk.isInbound) {
                     if (firstFk.obj.to_name) parentDisplayname = {value: firstFk.obj.to_name, unformatted: firstFk.obj.to_name, isHTML: false};
                 } else if (!firstFk.isInbound) {
@@ -1515,8 +1494,7 @@ Object.defineProperty(PseudoColumn.prototype, "reference", {
                     parentDisplayname = this._baseReference.table.displayname;
                 }
 
-                // pick the last foreign key and get its key to determine the leaf table
-                var leafTable = self.foreignKeys[self.foreignKeys.length-1].obj.key.colset.columns[0].table;
+                var leafTable = self.table;
                 var display = leafTable.getDisplay(self._context);
 
                 comment = display.comment || leafTable.comment;
@@ -1565,14 +1543,12 @@ Object.defineProperty(PseudoColumn.prototype, "reference", {
                 }
 
                 if (self.sourceObject && self.sourceObject.comment) {
-                    comment = self.sourceObject.comment;
+                    comment = _processModelComment(self.sourceObject.comment);
                     if (self.sourceObject.comment_display) commentDisplay = self.sourceObject.comment_display;
                 }
 
                 self._reference = new Reference(module.parse(uri), self.table.schema.catalog);
                 self._reference.parentDisplayname = parentDisplayname;
-                self._reference._comment = comment;
-                self._reference._commentDisplay = commentDisplay;
 
                 // make sure data exists
                 if (!noData && filters.length > 0) {
@@ -1591,6 +1567,8 @@ Object.defineProperty(PseudoColumn.prototype, "reference", {
             // make sure the refernece has the correct displayname
             if (self.hasPath) {
                 self._reference._displayname = self.displayname;
+                self._reference._comment = comment;
+                self._reference._commentDisplay = commentDisplay;
             }
         }
         return this._reference;
@@ -2672,16 +2650,21 @@ Object.defineProperty(InboundForeignKeyPseudoColumn.prototype, "displayname", {
 Object.defineProperty(InboundForeignKeyPseudoColumn.prototype, "comment", {
     get: function () {
         if (this._comment === undefined) {
-            var com = _processSourceObjectColumn(this.sourceObject);
-            if (typeof com === "string") {
-                this._comment = com;
-            } else {
-                this._comment = this.table.comment;
-            }
+            this._comment = this.reference.comment;
         }
         return this._comment;
     }
 });
+
+Object.defineProperty(InboundForeignKeyPseudoColumn.prototype, "commentDisplay", {
+    get: function () {
+        if (this._commentDisplay === undefined) {
+            this._commentDisplay = this.reference.commentDisplay;
+        }
+        return this._commentDisplay;
+    }
+});
+
 Object.defineProperty(InboundForeignKeyPseudoColumn.prototype, "default", {
     get: function () {
         throw new Error("can not use this type of column in entry mode.");

@@ -91,12 +91,8 @@
                     ],
                     "annotations": {
                         "tag:isrd.isi.edu,2016:foreign-key": {
-                            "display": {
-                                "detailed": {
-                                    "from_comment": "simple fk from_comment comment",
-                                    "from_comment_display": "inline"
-                                }
-                            }
+                            "from_comment": "simple fk from_comment comment",
+                            "from_comment_display": "inline"
                         }
                     }
                 },
@@ -119,12 +115,8 @@
                     ],
                     "annotations": {
                         "tag:isrd.isi.edu,2016:foreign-key": {
-                            "display": {
-                                "detailed": {
-                                    "from_comment": "simple fk from_comment comment",
-                                    "from_comment_display": "inline"
-                                }
-                            }
+                            "from_comment": "simple fk from_comment comment",
+                            "from_comment_display": "inline"
                         }
                     }
                 },
@@ -236,11 +228,7 @@
                     ],
                     "annotations": {
                         "tag:isrd.isi.edu,2016:foreign-key": {
-                            "display": {
-                                "detailed": {
-                                    "from_comment_display": "inline"
-                                }
-                            }
+                            "from_comment_display": "inline"
                         }
                     }
                 }
@@ -408,12 +396,8 @@
                     }],
                     "annotations": {
                         "tag:isrd.isi.edu,2016:foreign-key": {
-                            "display": {
-                                "detailed": {
-                                    "to_comment": "pure and binary fk to_comment",
-                                    "to_comment_display": "inline"
-                                }
-                            }
+                            "to_comment": "pure and binary fk to_comment",
+                            "to_comment_display": "inline"
                         }
                     }
                 }
@@ -473,12 +457,8 @@
                     }],
                     "annotations": {
                         "tag:isrd.isi.edu,2016:foreign-key": {
-                            "display": {
-                                "detailed": {
-                                    "to_comment": "pure and binary fk to_comment",
-                                    "to_comment_display": "inline"
-                                }
-                            }
+                            "to_comment": "pure and binary fk to_comment",
+                            "to_comment_display": "inline"
                         }
                     }
                 }
@@ -538,11 +518,7 @@
                     }],
                     "annotations": {
                         "tag:isrd.isi.edu,2016:foreign-key": {
-                            "display": {
-                                "detailed": {
-                                    "to_comment_display": "inline"
-                                }
-                            }
+                            "to_comment_display": "inline"
                         }
                     }
                 }
