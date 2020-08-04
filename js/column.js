@@ -1259,7 +1259,30 @@ Object.defineProperty(PseudoColumn.prototype, "name", {
 Object.defineProperty(PseudoColumn.prototype, "comment", {
     get: function () {
         if (this._comment === undefined) {
-            this._comment = this.reference.comment;
+            var getComment = function (self) {
+                var com = _processSourceObjectColumn(self.sourceObject);
+                if (typeof com === "string") {
+                    return com;
+                }
+
+                if (self.hasAggregate) {
+                    var agIndex = module._pseudoColAggregateFns.indexOf(self.sourceObject.aggregate);
+                    var dname = self._baseCols[0].displayname.unformatted;
+                    if (self.isEntityMode) {
+                        dname = self._baseCols[0].table.displayname.unformatted;
+                    }
+
+                    return [module._pseudoColAggregateExplicitName[agIndex], dname].join(" ");
+                }
+
+                if (!self.isEntityMode) {
+                    return self._baseCols[0].comment;
+                }
+
+                return self.reference.comment;
+            };
+
+            this._comment = getComment(this);
         }
         return this._comment;
     }
@@ -2650,7 +2673,12 @@ Object.defineProperty(InboundForeignKeyPseudoColumn.prototype, "displayname", {
 Object.defineProperty(InboundForeignKeyPseudoColumn.prototype, "comment", {
     get: function () {
         if (this._comment === undefined) {
-            this._comment = this.reference.comment;
+            var com = _processSourceObjectColumn(this.sourceObject);
+            if (typeof com === "string") {
+                this._comment = com;
+            } else {
+                this._comment = this.reference.comment;
+            }
         }
         return this._comment;
     }

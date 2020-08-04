@@ -269,8 +269,8 @@ exports.execute = function(options) {
                 });
 
                 it('should return default value when annotations are not defined.', function() {
-                    expect(table2_schema1.foreignKeys.all()[0].from_comment_display).toBe("inline");
-                    expect(table2_schema1.foreignKeys.all()[0].to_comment_display).toBe("inline");
+                    expect(table2_schema1.foreignKeys.all()[0].from_comment_display).toBe("tooltip");
+                    expect(table2_schema1.foreignKeys.all()[0].to_comment_display).toBe("tooltip");
                 });
             });
 
