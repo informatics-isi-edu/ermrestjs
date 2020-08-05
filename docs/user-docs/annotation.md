@@ -820,7 +820,7 @@ The json object follows the same rules as [chaise-config.js](https://github.com/
   - `{`... `"<chaise-config-property>"`: _value_ ...`}`
 
 The `chaise-config` property `configRules`, behaves the same way on the annotation that it does with the server wide config (`chaise-config.js`). The `configRules` will be checked for a match and apply and use those `chaise-config` properties over any other values defined for that same property. The order that the properties will be checked and then applied are as follows:
-  1. default values defined in [chaise-config.md](https://github.com/informatics-isi-edu/chaise/blob/master/docs/user-docs/chaise-config.md)
+  1. Default values defined in [chaise configuration document](https://github.com/informatics-isi-edu/chaise/blob/master/docs/user-docs/chaise-config.md).
   2. Any properties defined at the root of the object returned from [chaise-config.js](https://github.com/informatics-isi-edu/chaise/blob/master/chaise-config-sample.js).
   3. Any matching `configRules` in the order they appear in the `configRules` array. Properties in the last matching rule will take precedence
   4. Any properties defined at the root of the object returned from this annotation.
