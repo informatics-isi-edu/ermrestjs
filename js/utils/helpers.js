@@ -1850,11 +1850,14 @@
                         if (attrs[0].children[0].type == "link_open") {
                             var iframeHTML = "<iframe ", openingLink = attrs[0].children[0];
                             var enlargeLink, posTop = true, captionClass = "", captionStyle = "", iframeClass = "", iframeStyle = "";
+                            var isYTlink = false, videoURL = "", iframeTagClasses = [];
 
                             // Add all attributes to the iframe
                             openingLink.attrs.forEach(function(attr) {
                                 if (attr[0] == "href") {
+                                    isYTlink  = (attr[1].match("^(http(s)?:\/\/)?((w){3}.)?youtu(be|.be)?(\.com)?\/.+") != null);
                                     iframeHTML += 'src="' + attr[1] + '"';
+                                    videoText = 'Note: YouTube video ( ' + attr[1] + ' ) is hidden in print';
                                 } else if (attr[0] == "link") {
                                     enlargeLink = attr[1];
                                 } else if (attr[0] == "pos") {
@@ -1867,12 +1870,31 @@
                                     iframeClass = attr[1];
                                 } else if (attr[0] == "iframe-style") {
                                     iframeStyle = attr[1];
+                                } else if (attr[0] == "class") {
+                                    if (attr[1].length > 0) {
+                                        iframeTagClasses.push(attr[1]);
+                                        return; //we're going to add classe at the end
+                                    }
                                 } else {
                                     iframeHTML +=  attr[0] + '="' + attr[1] + '"';
                                 }
                                 iframeHTML += " ";
                             });
-                            html += iframeHTML + "></iframe>";
+
+                            //During print we need to display that the iframe with YouTube video is replaced with a note
+                            if(isYTlink){
+                              html = '<span class="' + module._classNames.showInPrintMode + '" style="visibility:hidden">' + videoText + "</span>";
+                              iframeTagClasses.push(module._classNames.hideInPrintMode);
+                            }
+                            
+                            // add the iframe tag
+                            html += iframeHTML;
+                            
+                            // attach the iframe tag classes
+                            if (iframeTagClasses.length > 0) {
+                                html += 'class="' + iframeTagClasses.join(" ") + '" ';
+                            }
+                            html += "></iframe>";
 
                             var captionHTML = "";
 
@@ -2134,8 +2156,10 @@
                     if (attrs && attrs.length == 1 && attrs[0].children) {
                         // Check If the markdown is a link
                         if (attrs[0].children[0].type == "link_open") {
-                            var videoHTML="<video controls ", openingLink = attrs[0].children[0];
-                            var srcHTML="", videoClass='class="' + module._classNames.postLoad, videoAttrs="", flag = true, posTop = true;
+                            var videoHTML="<video controls ", videoClass='class="' + module._classNames.postLoad + " " + module._classNames.hideInPrintMode, openingLink = attrs[0].children[0];
+                            var srcHTML="", videoAttrs="", flag = true, posTop = true;
+                            var videoText="";
+                            var infoHTML = "";
 
                             // Add all attributes to the video
                             openingLink.attrs.forEach(function(attr) {
@@ -2144,6 +2168,7 @@
                                         flag= false;
                                         return "";
                                     }
+                                    videoText = "Note: Video " + "(" + attr[1] + ")" + " is hidden in print ";
                                     srcHTML += '<source src="' + attr[1] + '" type="video/mp4">';
                                 }
                                 else if ( (attr[0] == "width" || attr[0] == "height") && attr[1]!=="") {
@@ -2162,6 +2187,7 @@
                             });
                             // add closing quote
                             videoClass += '"' + " " + videoAttrs;
+                            infoHTML = '<span class="' + module._classNames.showInPrintMode + '" style="visibility:hidden">' + videoText + "</span>";
 
                             var captionHTML="";
                             // If the next attribute is not a closing link then iterate
@@ -2180,11 +2206,11 @@
                             }
 
                             if(captionHTML.trim().length && flag && posTop){
-                                html +=  "<figure><figcaption>"+captionHTML+ "</figcaption>" + videoHTML + videoClass +">"+ srcHTML +"</video></figure>" ;
+                                html +=  "<figure><figcaption>"+captionHTML+ "</figcaption>" + infoHTML + videoHTML + videoClass +">"+ srcHTML +"</video></figure>" ;
                             }else if(captionHTML.trim().length && flag){
-                                html +=  "<figure>"+ videoHTML + videoClass +">"+ srcHTML +"</video><figcaption>"+captionHTML+ "</figcaption></figure>" ;
+                                html +=  "<figure>"+ videoHTML + videoClass +">"+ srcHTML +"</video><figcaption>"+captionHTML+ "</figcaption>" + infoHTML + "</figure>" ;
                             } else if(flag)
-                                html += videoHTML + videoClass +">"+ srcHTML +"</video>";
+                                html += infoHTML + videoHTML + videoClass +">"+ srcHTML +"</video>";
                             else
                                 return '';
                         }
