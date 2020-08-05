@@ -270,6 +270,18 @@ ReferenceColumn.prototype = {
         return this._comment;
     },
 
+    get commentDisplay() {
+        if (this._comment === undefined) {
+            if (this.sourceObject && this.sourceObject.comment && this.sourceObject.comment_display) {
+                // only change commentDisplay if comment and comment_display are both defined
+                this._commentDisplay = this.sourceObject.comment_display;
+            } else {
+                this._commentDisplay = "tooltip";
+            }
+        }
+        return this._commentDisplay;
+    },
+
     /**
      * @desc Indicates if the input should be disabled
      * true: input must be disabled
