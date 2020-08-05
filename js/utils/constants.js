@@ -282,7 +282,9 @@
         noExternalLinkIcon: "no-external-link-icon",
         assetPermission: "asset-permission",
         download: "download-alt",
-        postLoad: "-chaise-post-load"
+        postLoad: "-chaise-post-load",
+        hideInPrintMode: "hide-in-print",
+        showInPrintMode: "video-info-in-print"
     });
 
     module._specialSourceDefinitions = Object.freeze({

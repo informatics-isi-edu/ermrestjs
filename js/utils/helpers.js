@@ -1850,7 +1850,7 @@
                         if (attrs[0].children[0].type == "link_open") {
                             var iframeHTML = "<iframe ", openingLink = attrs[0].children[0];
                             var enlargeLink, posTop = true, captionClass = "", captionStyle = "", iframeClass = "", iframeStyle = "";
-                            var isYTlink = false, newClass='class="' + "hide-in-print" + '"', videoURL = "";
+                            var isYTlink = false, newClass='class="', videoURL = "";
 
                             // Add all attributes to the iframe
                             openingLink.attrs.forEach(function(attr) {
@@ -1871,7 +1871,7 @@
                                 } else if (attr[0] == "iframe-style") {
                                     iframeStyle = attr[1];
                                 } else if (attr[0] == "class") {
-                                    newClass += " " + attr[1];
+                                    newClass += (attr[1].length ? (attr[1] + " ") : "");
                                 } else {
                                     iframeHTML +=  attr[0] + '="' + attr[1] + '"';
                                 }
@@ -1879,13 +1879,13 @@
                             });
 
                             //During print we need to display that the iframe with YouTube video is replaced with a note
-                            if(isYTlink)
-                            {
-                              html += iframeHTML + newClass + "></iframe>";
-                              html = '<span class="video-info-in-print" style="visibility:hidden">' + videoText + "</span>" + html;
+                            if(isYTlink){
+                              html = '<span class="' + module._classNames.showInPrintMode + '" style="visibility:hidden">' + videoText + "</span>";
+                              newClass += module._classNames.hideInPrintMode;
                             }
-                            else
-                              html += iframeHTML + "></iframe>";
+                            // add closing quote
+                            newClass += '"';
+                            html += iframeHTML + newClass + "></iframe>";
 
                             var captionHTML = "";
 
@@ -2147,7 +2147,7 @@
                     if (attrs && attrs.length == 1 && attrs[0].children) {
                         // Check If the markdown is a link
                         if (attrs[0].children[0].type == "link_open") {
-                            var videoHTML="<video controls ", videoClass='class="' + module._classNames.postLoad + " " + "hide-in-print" + " ", openingLink = attrs[0].children[0];
+                            var videoHTML="<video controls ", videoClass='class="' + module._classNames.postLoad + " " + module._classNames.hideInPrintMode, openingLink = attrs[0].children[0];
                             var srcHTML="", videoAttrs="", flag = true, posTop = true;
                             var videoText="";
                             var infoHTML = "";
@@ -2178,7 +2178,7 @@
                             });
                             // add closing quote
                             videoClass += '"' + " " + videoAttrs;
-                            infoHTML = '<span class="video-info-in-print" style="visibility:hidden">' + videoText + "</span>";
+                            infoHTML = '<span class="' + module._classNames.showInPrintMode + '" style="visibility:hidden">' + videoText + "</span>";
 
                             var captionHTML="";
                             // If the next attribute is not a closing link then iterate
