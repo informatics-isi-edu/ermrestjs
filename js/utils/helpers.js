@@ -1850,7 +1850,7 @@
                         if (attrs[0].children[0].type == "link_open") {
                             var iframeHTML = "<iframe ", openingLink = attrs[0].children[0];
                             var enlargeLink, posTop = true, captionClass = "", captionStyle = "", iframeClass = "", iframeStyle = "";
-                            var isYTlink = false, newClass='class="', videoURL = "";
+                            var isYTlink = false, videoURL = "", iframeTagClasses = [];
 
                             // Add all attributes to the iframe
                             openingLink.attrs.forEach(function(attr) {
@@ -1871,7 +1871,10 @@
                                 } else if (attr[0] == "iframe-style") {
                                     iframeStyle = attr[1];
                                 } else if (attr[0] == "class") {
-                                    newClass += (attr[1].length ? (attr[1] + " ") : "");
+                                    if (attr[1].length > 0) {
+                                        iframeTagClasses.push(attr[1]);
+                                        return; //we're going to add classe at the end
+                                    }
                                 } else {
                                     iframeHTML +=  attr[0] + '="' + attr[1] + '"';
                                 }
@@ -1881,11 +1884,17 @@
                             //During print we need to display that the iframe with YouTube video is replaced with a note
                             if(isYTlink){
                               html = '<span class="' + module._classNames.showInPrintMode + '" style="visibility:hidden">' + videoText + "</span>";
-                              newClass += module._classNames.hideInPrintMode;
+                              iframeTagClasses.push(module._classNames.hideInPrintMode);
                             }
-                            // add closing quote
-                            newClass += '"';
-                            html += iframeHTML + newClass + "></iframe>";
+                            
+                            // add the iframe tag
+                            html += iframeHTML;
+                            
+                            // attach the iframe tag classes
+                            if (iframeTagClasses.length > 0) {
+                                html += 'class="' + iframeTagClasses.join(" ") + '" ';
+                            }
+                            html += "></iframe>";
 
                             var captionHTML = "";
 
