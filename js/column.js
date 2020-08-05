@@ -272,11 +272,11 @@ ReferenceColumn.prototype = {
 
     get commentDisplay() {
         if (this._comment === undefined) {
-            if (this.sourceObject && this.sourceObject.comment && this.sourceObject.comment_display) {
+            if (this.sourceObject && _isValidModelComment(his.sourceObject.comment) && _isValidModelCommentDisplay(this.sourceObject.comment_display)) {
                 // only change commentDisplay if comment and comment_display are both defined
                 this._commentDisplay = this.sourceObject.comment_display;
             } else {
-                this._commentDisplay = "tooltip";
+                this._commentDisplay = module._commentDisplayModes.tooltip;
             }
         }
         return this._commentDisplay;
@@ -1291,7 +1291,8 @@ Object.defineProperty(PseudoColumn.prototype, "comment", {
                     return self._baseCols[0].comment;
                 }
 
-                return self.reference.comment;
+                // self.table should be leaf table
+                return self.table.getDisplay(self._context).comment;
             };
 
             this._comment = getComment(this);
@@ -1314,7 +1315,26 @@ Object.defineProperty(PseudoColumn.prototype, "comment", {
 Object.defineProperty(PseudoColumn.prototype, "commentDisplay", {
     get: function () {
         if (this._commentDisplay === undefined) {
-            this._commentDisplay = this.reference.commentDisplay;
+            var getDisplay = function (self) {
+                var def = module._commentDisplayModes.tooltip;
+                if (!self.isEntity || self.hasAggregate) {
+                    return def;
+                }
+
+                if (self.sourceObject && _isValidModelComment(self.sourceObject.comment) && _isValidModelCommentDisplay(self.sourceObject.comment_display)) {
+                    return self.sourceObject.comment_display;
+                }
+
+                // self.table should be leaf table
+                var display = self.table.getDisplay(self._context);
+                if (_isValidModelCommentDisplay(display.tableCommentDisplay) && _isValidModelComment(display.comment)) {
+                    return display.tableCommentDisplay;
+                }
+
+                return def;
+            };
+
+            this._commentDisplay = getDisplay(this);
         }
         return this._commentDisplay;
     }
@@ -1511,10 +1531,7 @@ Object.defineProperty(PseudoColumn.prototype, "aggregateFn", {
 Object.defineProperty(PseudoColumn.prototype, "reference", {
     get: function () {
         if (this._reference === undefined) {
-            var self = this,
-                commentDisplay = "tooltip",
-                comment;
-
+            var self = this;
             if (!self.hasPath) {
                 self._reference = _referenceCopy(self._baseReference);
             } else {
@@ -1528,12 +1545,6 @@ Object.defineProperty(PseudoColumn.prototype, "reference", {
                 } else {
                     parentDisplayname = this._baseReference.table.displayname;
                 }
-
-                var leafTable = self.table;
-                var display = leafTable.getDisplay(self._context);
-
-                comment = display.comment;
-                if (display.tableCommentDisplay && display.comment) commentDisplay = display.tableCommentDisplay;
 
                 var source = [], i, fk, columns, noData = false;
 
@@ -1577,11 +1588,6 @@ Object.defineProperty(PseudoColumn.prototype, "reference", {
                     }).join("/");
                 }
 
-                if (self.sourceObject && self.sourceObject.comment) {
-                    comment = _processModelComment(self.sourceObject.comment);
-                    if (self.sourceObject.comment_display) commentDisplay = self.sourceObject.comment_display;
-                }
-
                 self._reference = new Reference(module.parse(uri), self.table.schema.catalog);
                 self._reference.parentDisplayname = parentDisplayname;
 
@@ -1602,8 +1608,8 @@ Object.defineProperty(PseudoColumn.prototype, "reference", {
             // make sure the refernece has the correct displayname
             if (self.hasPath) {
                 self._reference._displayname = self.displayname;
-                self._reference._comment = comment;
-                self._reference._commentDisplay = commentDisplay;
+                self._reference._comment = self.comment;
+                self._reference._commentDisplay = self.commentDisplay;
             }
         }
         return this._reference;

@@ -3615,11 +3615,10 @@
                 // display = otherFK.getDisplay(this._context);
 
                 // comment
-                if (otherFK.to_comment) {
+                if (typeof otherFK.to_comment === "string") {
                     // use fkr to_comment
                     newRef._comment = otherFK.to_comment;
-                    // only change commentDisplay if to_comment and to_comment_display are both defined
-                    if (otherFK.to_comment_display) newRef._commentDisplay = otherFK.to_comment_display;
+                    newRef._commentDisplay = otherFK.to_comment_display;
                 } else {
                     // use comment from leaf table diplay annotation or table model comment
                     display = otherFK.key.colset.columns[0].table.getDisplay(this._context);
@@ -3664,11 +3663,10 @@
                 // display = fkr.getDisplay(this._context);
 
                 // comment
-                if (fkr.from_comment) {
+                if (typeof fkr.from_comment === "string") {
                     // use fkr annotation from_comment
                     newRef._comment = fkr.from_comment;
-                    // only change commentDisplay if from_comment and from_comment_display are both defined
-                    if (fkr.from_comment_display) newRef._commentDisplay = fkr.from_comment_display;
+                    newRef._commentDisplay = fkr.from_comment_display;
                 } else {
                     // use comment from leaf table diplay annotation or table model comment
                     display = newRef._table.getDisplay(this._context);
@@ -3704,10 +3702,10 @@
 
             // if comment|comment_display in source object are defined
             // comment_display was already set to it's default above
-            if (sourceObject && sourceObject.comment) {
+            if (sourceObject && _isValidModelComment(sourceObject.comment)) {
                 newRef._comment = _processModelComment(sourceObject.comment);
                 // only change commentDisplay if comment and comment_display are both defined
-                if (sourceObject.comment_display) newRef._commentDisplay = sourceObject.comment_display;
+                if (_isValidModelCommentDisplay(sourceObject.comment_display)) newRef._commentDisplay = sourceObject.comment_display;
             }
 
             // attach the compressedDataSource
