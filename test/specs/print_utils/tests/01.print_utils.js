@@ -175,30 +175,30 @@ exports.execute = function (options) {
 
             it ("should support :::video", function () {
 
-                //Check for proper rendering of video tag with no attributes
+                //01: Check for proper rendering of video tag with no attributes
                 var videoMarkDown = '::: video [caption](http://techslides.com/demos/sample-videos/small.mp4){} \n:::';
                 var videoHTML = '<figure><figcaption>caption</figcaption><span class="video-info-in-print" style="visibility:hidden">Note: Video (http://techslides.com/demos/sample-videos/small.mp4) is hidden in print </span><video controls class="-chaise-post-load hide-in-print" ><source src="http://techslides.com/demos/sample-videos/small.mp4" type="video/mp4"></video></figure>';
-                expect(printMarkdown(videoMarkDown)).toBe(videoHTML,"The video tag is not rendered properly with height and width attributes");
+                expect(printMarkdown(videoMarkDown)).toBe(videoHTML, "01");
 
-                //Check for proper rendering of video tag with height and width attributes
+                //02: Check for proper rendering of video tag with height and width attributes
                 var videoMarkDown = '::: video [caption](http://techslides.com/demos/sample-videos/small.mp4){width=800 height=200} \n:::';
                 var videoHTML = '<figure><figcaption>caption</figcaption><span class="video-info-in-print" style="visibility:hidden">Note: Video (http://techslides.com/demos/sample-videos/small.mp4) is hidden in print </span><video controls class="-chaise-post-load hide-in-print" width=800 height=200 ><source src="http://techslides.com/demos/sample-videos/small.mp4" type="video/mp4"></video></figure>';
-                expect(printMarkdown(videoMarkDown)).toBe(videoHTML,"The video tag is not rendered properly with height and width attributes");
+                expect(printMarkdown(videoMarkDown)).toBe(videoHTML, "02");
 
-                //Check for proper rendering of video tag with height and width attributes and some boolean attributes like loop and muted
+                //03: Check for proper rendering of video tag with height and width attributes and some boolean attributes like loop and muted
                 var videoMarkDown = '::: video [caption](http://techslides.com/demos/sample-videos/small.mp4){width=800 height=200 loop muted} \n:::';
                 var videoHTML = '<figure><figcaption>caption</figcaption><span class="video-info-in-print" style="visibility:hidden">Note: Video (http://techslides.com/demos/sample-videos/small.mp4) is hidden in print </span><video controls class="-chaise-post-load hide-in-print" width=800 height=200 loop muted ><source src="http://techslides.com/demos/sample-videos/small.mp4" type="video/mp4"></video></figure>';
-                expect(printMarkdown(videoMarkDown)).toBe(videoHTML,"The video tag is not rendered properly with height and width attributes");
+                expect(printMarkdown(videoMarkDown)).toBe(videoHTML, "03");
 
-                //Check for proper rendering of video tag with some invalid attributes
+                //04: Check for proper rendering of video tag with some invalid attributes
                 var videoMarkDown = '::: video [caption](http://techslides.com/demos/sample-videos/small.mp4){loop=5 width=800} \n:::';
                 var videoHTML = '<figure><figcaption>caption</figcaption><span class="video-info-in-print" style="visibility:hidden">Note: Video (http://techslides.com/demos/sample-videos/small.mp4) is hidden in print </span><video controls class="-chaise-post-load hide-in-print" width=800 ><source src="http://techslides.com/demos/sample-videos/small.mp4" type="video/mp4"></video></figure>';
-                expect(printMarkdown(videoMarkDown)).toBe(videoHTML,"The video tag is not rendered properly with height and width attributes");
+                expect(printMarkdown(videoMarkDown)).toBe(videoHTML, "04");
 
-                //Hide video markdown during print
-                var videoMarkDown = '::: video [caption](http://techslides.com/demos/sample-videos/small.mp4){width=400} \n:::';
-                var videoHTML = '<figure><figcaption>caption</figcaption><span class="video-info-in-print" style="visibility:hidden">Note: Video (http://techslides.com/demos/sample-videos/small.mp4) is hidden in print </span><video controls class="-chaise-post-load hide-in-print" width=400 ><source src="http://techslides.com/demos/sample-videos/small.mp4" type="video/mp4"></video></figure>';
-                expect(printMarkdown(videoMarkDown)).toBe(videoHTML,"The video tag is not rendered properly with height and width attributes");
+                //05: check for proper rendering of video tag with class
+                var videoMarkDown = '::: video [caption](http://techslides.com/demos/sample-videos/small.mp4){width=400 .class-one .class-two} \n:::';
+                var videoHTML = '<figure><figcaption>caption</figcaption><span class="video-info-in-print" style="visibility:hidden">Note: Video (http://techslides.com/demos/sample-videos/small.mp4) is hidden in print </span><video controls class="-chaise-post-load hide-in-print class-one class-two" width=400 ><source src="http://techslides.com/demos/sample-videos/small.mp4" type="video/mp4"></video></figure>';
+                expect(printMarkdown(videoMarkDown)).toBe(videoHTML, "05");
             });
 
             it ("should support :::div", function () {
