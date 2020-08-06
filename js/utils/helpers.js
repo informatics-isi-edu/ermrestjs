@@ -790,7 +790,7 @@
      *   - otherwise returns false
      */
     _isValidModelCommentDisplay = function (display) {
-        return module._commentDisplayModes.indexOf(display) !== -1;
+        return typeof display === "string" && module._commentDisplayModes[display] !== -1;
     };
 
     /**

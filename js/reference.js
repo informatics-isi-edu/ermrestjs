@@ -3615,7 +3615,7 @@
                 // display = otherFK.getDisplay(this._context);
 
                 // comment
-                if (typeof otherFK.to_comment === "string") {
+                if (otherFK.to_comment && typeof otherFK.to_comment === "string") {
                     // use fkr to_comment
                     newRef._comment = otherFK.to_comment;
                     newRef._commentDisplay = otherFK.to_comment_display;
@@ -3663,7 +3663,7 @@
                 // display = fkr.getDisplay(this._context);
 
                 // comment
-                if (typeof fkr.from_comment === "string") {
+                if (fkr.from_comment && typeof fkr.from_comment === "string") {
                     // use fkr annotation from_comment
                     newRef._comment = fkr.from_comment;
                     newRef._commentDisplay = fkr.from_comment_display;

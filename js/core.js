@@ -1055,15 +1055,12 @@
                 var comment = this.comment,
                     tableCommentDisplay = module._commentDisplayModes.tooltip,
                     columnCommentDisplay = module._commentDisplayModes.tooltip;
+
                 // comment is contextualized
                 if (_isValidModelComment(comment_annotation)) {
                     comment = _processModelComment(comment_annotation);
-                }
 
-                if (_isValidModelComment(comment_annotation)) {
-                    comment = _processModelComment(comment_annotation);
-
-                    if (comment_display_annotation  && _isValidModelCommentDisplay(comment_display_annotation.column_comment_display)) {
+                    if (comment_display_annotation && _isValidModelCommentDisplay(comment_display_annotation.column_comment_display)) {
                         columnCommentDisplay = comment_display_annotation.column_comment_display;
                     }
 
@@ -3848,7 +3845,7 @@
                 if (_isValidModelComment(jsonAnnotation.to_comment)) {
                     // check for null, false, empty string when digesting comment for first time
                     this.to_comment = _processModelComment(jsonAnnotation.to_comment);
-                    if (jsonAnnotation.to_comment_display) this.to_comment_display = jsonAnnotation.to_comment_display;
+                    if (_isValidModelCommentDisplay(jsonAnnotation.to_comment_display)) this.to_comment_display = jsonAnnotation.to_comment_display;
                 }
 
                 if (_isValidModelComment(jsonAnnotation.from_comment)) {

@@ -272,7 +272,7 @@ ReferenceColumn.prototype = {
 
     get commentDisplay() {
         if (this._comment === undefined) {
-            if (this.sourceObject && _isValidModelComment(his.sourceObject.comment) && _isValidModelCommentDisplay(this.sourceObject.comment_display)) {
+            if (this.sourceObject && _isValidModelComment(this.sourceObject.comment) && _isValidModelCommentDisplay(this.sourceObject.comment_display)) {
                 // only change commentDisplay if comment and comment_display are both defined
                 this._commentDisplay = this.sourceObject.comment_display;
             } else {
@@ -1316,13 +1316,13 @@ Object.defineProperty(PseudoColumn.prototype, "commentDisplay", {
     get: function () {
         if (this._commentDisplay === undefined) {
             var getDisplay = function (self) {
-                var def = module._commentDisplayModes.tooltip;
-                if (!self.isEntity || self.hasAggregate) {
-                    return def;
-                }
-
                 if (self.sourceObject && _isValidModelComment(self.sourceObject.comment) && _isValidModelCommentDisplay(self.sourceObject.comment_display)) {
                     return self.sourceObject.comment_display;
+                }
+
+                var def = module._commentDisplayModes.tooltip;
+                if (!self.isEntityMode || self.hasAggregate) {
+                    return def;
                 }
 
                 // self.table should be leaf table
