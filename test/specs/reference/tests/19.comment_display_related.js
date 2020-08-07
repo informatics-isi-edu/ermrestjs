@@ -1,3 +1,42 @@
+/**
+ * For testing comment and comment_display using the visible foreign keys annotation, fk annotation, and table annotation.
+ * This spec is divided into 3 chunks for testing "simple inbound FK", "pure and binary FK", and "inbound multi hop foreign key"
+ *
+ * The structure of the tables used for "simple inbound FK":
+ * 1. comment_display_simple_fk_table <- table_w_simple_key_source_override
+ * 2. comment_display_simple_fk_table <- table_w_simple_key_fk_comment
+ * 3. comment_display_simple_fk_table <- table_w_simple_key_bad_annotation
+ * 4. comment_display_simple_fk_table <- table_w_simple_key_leaf_annotation
+ *
+ * Visible-foreign-keys for "comment_display_simple_fk_table" match the order of the above tables/foreign keys relationships:
+ * 1. simple_fk_1 with comment in source syntax
+ * 2. simple_fk_2 with from_comment in FK annotation
+ * 3. simple_fk_3 with from_comment_display and no from_comment in FK annotation
+ * 4. simple_fk_4 with comment in display annotation on table
+ *
+ *
+ * The structure of tables used for "pure and binary FKs":
+ * 1. comment_display_pb_table <- association_table -> inbound_related_reference_table_no_display
+ * 2. comment_display_pb_table <- tocomment_fk_association_to_inbound_related -> inbound_related_reference_table_no_display
+ * 3. comment_display_pb_table <- association_table_fk_to_comment_display -> inbound_related_reference_table_no_display
+ * 4. comment_display_pb_table <- association_table_leaf_comment -> inbound_related_reference_table
+ *
+ * The structure of tables used for "inbound multi hop foreign key":
+ * 5. comment_display_pb_table <- association_table -> inbound_related_reference_table_no_display -> multi_hop_related_reference_table
+ * 6. comment_display_pb_table <- association_table -> inbound_related_reference_table_no_display -> multi_hop_related_reference_table_comment_display
+ * 7. comment_display_pb_table <- association_table -> inbound_related_reference_table_no_display -> multi_hop_related_reference_table_leaf_comment
+ *
+ * Visible-foreign-keys for "comment_display_pb_table" match the order of the above tables/foreign keys relationships:
+ * 1. pb_source_comment with comment in source syntax
+ * 2. pb_to_comment with to_comment in FK annotation
+ * 3. pb_to_comment_display with to_comment_display and no to_comment in FK annotation
+ * 4. pb_leaf_comment with comment in display annotation on table
+ *
+ * 5. multi_source_comment with comment in source syntax
+ * 6. multi_comment_display with table_comment_display and no comment in display annotation on table
+ * 7. multi_leaf_comment with comment in display annotation on table
+ *
+ */
 exports.execute = function (options) {
 
     describe("testing foreign-key annotation,", function () {

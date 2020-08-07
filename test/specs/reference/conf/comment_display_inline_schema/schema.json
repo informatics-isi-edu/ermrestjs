@@ -57,10 +57,10 @@
                 }
             }
         },
-        "table_w_simple_key": {
-            "comment": "table with simple key",
+        "table_w_simple_key_source_override": {
+            "comment": "table with simple key that has source syntax comment and display",
             "kind": "table",
-            "table_name": "table_w_simple_key",
+            "table_name": "table_w_simple_key_source_override",
             "schema_name": "comment_display_inline_schema",
             "keys": [
                 {
@@ -78,56 +78,8 @@
                     "foreign_key_columns": [
                         {
                             "schema_name": "comment_display_inline_schema",
-                            "table_name": "table_w_simple_key",
+                            "table_name": "table_w_simple_key_source_override",
                             "column_name": "col_1"
-                        }
-                    ],
-                    "referenced_columns": [
-                        {
-                            "schema_name": "comment_display_inline_schema",
-                            "table_name": "comment_display_simple_fk_table",
-                            "column_name": "id"
-                        }
-                    ],
-                    "annotations": {
-                        "tag:isrd.isi.edu,2016:foreign-key": {
-                            "from_comment": "simple fk from_comment comment",
-                            "from_comment_display": "inline"
-                        }
-                    }
-                },
-                {
-                    "comment": "simple fk col_2 with from comment",
-                    "names": [["comment_display_inline_schema", "simple_fk_2"]],
-                    "foreign_key_columns": [
-                        {
-                            "schema_name": "comment_display_inline_schema",
-                            "table_name": "table_w_simple_key",
-                            "column_name": "col_2"
-                        }
-                    ],
-                    "referenced_columns": [
-                        {
-                            "schema_name": "comment_display_inline_schema",
-                            "table_name": "comment_display_simple_fk_table",
-                            "column_name": "id"
-                        }
-                    ],
-                    "annotations": {
-                        "tag:isrd.isi.edu,2016:foreign-key": {
-                            "from_comment": "simple fk from_comment comment",
-                            "from_comment_display": "inline"
-                        }
-                    }
-                },
-                {
-                    "comment": "simple fk col_4 with NO annotation",
-                    "names": [["comment_display_inline_schema", "simple_fk_4"]],
-                    "foreign_key_columns": [
-                        {
-                            "schema_name": "comment_display_inline_schema",
-                            "table_name": "table_w_simple_key",
-                            "column_name": "col_4"
                         }
                     ],
                     "referenced_columns": [
@@ -155,44 +107,68 @@
                         "typename": "text"
                     },
                     "comment": "simple fk to reference, col_1"
-                },
-                {
-                    "name": "col_2",
-                    "nullok": false,
-                    "type": {
-                        "typename": "text"
-                    },
-                    "comment": "simple fk to reference, col_2"
-                },
-                {
-                    "name": "col_3",
-                    "nullok": false,
-                    "type": {
-                        "typename": "text"
-                    },
-                    "comment": "simple fk to reference, col_3"
-                },
-                {
-                    "name": "col_4",
-                    "nullok": false,
-                    "type": {
-                        "typename": "text"
-                    },
-                    "comment": "simple fk to reference, col_4"
                 }
             ],
-            "annotations": {
-                "tag:misd.isi.edu,2015:display": {
-                    "comment": {
-                        "detailed": "simple fk leaf table display comment"
-                    },
-                    "comment_display": {
-                        "detailed": {
-                            "table_comment_display": "inline"
+            "annotations": {}
+        },
+        "table_w_simple_key_fk_comment": {
+            "comment": "table with simple key with comment on FK",
+            "kind": "table",
+            "table_name": "table_w_simple_key_fk_comment",
+            "schema_name": "comment_display_inline_schema",
+            "keys": [
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": [
+                        "id"
+                    ]
+                }
+            ],
+            "foreign_keys": [
+                {
+                    "comment": "simple fk col_1 with from comment",
+                    "names": [["comment_display_inline_schema", "simple_fk_2"]],
+                    "foreign_key_columns": [
+                        {
+                            "schema_name": "comment_display_inline_schema",
+                            "table_name": "table_w_simple_key_fk_comment",
+                            "column_name": "col_1"
+                        }
+                    ],
+                    "referenced_columns": [
+                        {
+                            "schema_name": "comment_display_inline_schema",
+                            "table_name": "comment_display_simple_fk_table",
+                            "column_name": "id"
+                        }
+                    ],
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:foreign-key": {
+                            "from_comment": "simple fk from_comment comment",
+                            "from_comment_display": "inline"
                         }
                     }
                 }
-            }
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "col_1",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    },
+                    "comment": "simple fk to reference, col_1"
+                }
+            ],
+            "annotations": {}
         },
         "table_w_simple_key_bad_annotation": {
             "comment": "table with simple key to reference and a foreign key annotation with no from comment display",
@@ -251,6 +227,71 @@
                 }
             ],
             "annotations": {}
+        },
+        "table_w_simple_key_leaf_annotation": {
+            "comment": "table with simple key with annotation on table",
+            "kind": "table",
+            "table_name": "table_w_simple_key_leaf_annotation",
+            "schema_name": "comment_display_inline_schema",
+            "keys": [
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": [
+                        "id"
+                    ]
+                }
+            ],
+            "foreign_keys": [
+                {
+                    "comment": "simple fk col_1 with NO annotation",
+                    "names": [["comment_display_inline_schema", "simple_fk_4"]],
+                    "foreign_key_columns": [
+                        {
+                            "schema_name": "comment_display_inline_schema",
+                            "table_name": "table_w_simple_key_leaf_annotation",
+                            "column_name": "col_1"
+                        }
+                    ],
+                    "referenced_columns": [
+                        {
+                            "schema_name": "comment_display_inline_schema",
+                            "table_name": "comment_display_simple_fk_table",
+                            "column_name": "id"
+                        }
+                    ],
+                    "annotations": {}
+                }
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "col_1",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    },
+                    "comment": "simple fk to reference, col_1"
+                }
+            ],
+            "annotations": {
+                "tag:misd.isi.edu,2015:display": {
+                    "comment": {
+                        "detailed": "simple fk leaf table display comment"
+                    },
+                    "comment_display": {
+                        "detailed": {
+                            "table_comment_display": "inline"
+                        }
+                    }
+                }
+            }
         },
         "comment_display_pb_table": {
             "comment": "table for pure and binary fk comment and comment display tests",
@@ -355,7 +396,7 @@
             }
         },
         "association_table": {
-            "comment": "has fk to comment_display_pb_table and inbound_related_reference_table. Source syntax comment is used but the fk to inbound_related_reference_table has to_comment annotation to show heuristics work",
+            "comment": "has fk to comment_display_pb_table and inbound_related_reference_table. Source syntax comment is used",
             "kind": "table",
             "table_name": "association_table",
             "schema_name": "comment_display_inline_schema",
@@ -391,15 +432,10 @@
                     }],
                     "referenced_columns": [{
                         "schema_name": "comment_display_inline_schema",
-                        "table_name": "inbound_related_reference_table",
+                        "table_name": "inbound_related_reference_table_no_display",
                         "column_name": "id"
                     }],
-                    "annotations": {
-                        "tag:isrd.isi.edu,2016:foreign-key": {
-                            "to_comment": "pure and binary fk to_comment",
-                            "to_comment_display": "inline"
-                        }
-                    }
+                    "annotations": {}
                 }
             ],
             "column_definitions": [
@@ -452,7 +488,7 @@
                     }],
                     "referenced_columns": [{
                         "schema_name": "comment_display_inline_schema",
-                        "table_name": "inbound_related_reference_table",
+                        "table_name": "inbound_related_reference_table_no_display",
                         "column_name": "id"
                     }],
                     "annotations": {
@@ -599,6 +635,37 @@
             "keys": [{
                 "unique_columns": ["id"]
             }],
+            "foreign_keys": [],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:misd.isi.edu,2015:display": {
+                    "comment": {
+                        "detailed": "pure and binary fk leaf table display comment"
+                    },
+                    "comment_display": {
+                        "detailed": {
+                            "table_comment_display": "inline"
+                        }
+                    }
+                }
+            }
+        },
+        "inbound_related_reference_table_no_display": {
+            "comment": "foreign key to association table",
+            "kind": "table",
+            "table_name": "inbound_related_reference_table_no_display",
+            "schema_name": "comment_display_inline_schema",
+            "keys": [{
+                "unique_columns": ["id"]
+            }],
             "foreign_keys": [
                 {
                     "comment": "simple fk multi_hop_col override by source syntax",
@@ -606,7 +673,7 @@
                     "foreign_key_columns": [
                         {
                             "schema_name": "comment_display_inline_schema",
-                            "table_name": "inbound_related_reference_table",
+                            "table_name": "inbound_related_reference_table_no_display",
                             "column_name": "multi_hop_col_1"
                         }
                     ],
@@ -625,7 +692,7 @@
                     "foreign_key_columns": [
                         {
                             "schema_name": "comment_display_inline_schema",
-                            "table_name": "inbound_related_reference_table",
+                            "table_name": "inbound_related_reference_table_no_display",
                             "column_name": "multi_hop_col_2"
                         }
                     ],
@@ -644,7 +711,7 @@
                     "foreign_key_columns": [
                         {
                             "schema_name": "comment_display_inline_schema",
-                            "table_name": "inbound_related_reference_table",
+                            "table_name": "inbound_related_reference_table_no_display",
                             "column_name": "multi_hop_col_3"
                         }
                     ],
@@ -688,41 +755,10 @@
                     }
                 }
             ],
-            "annotations": {
-                "tag:misd.isi.edu,2015:display": {
-                    "comment": {
-                        "detailed": "pure and binary fk leaf table display comment"
-                    },
-                    "comment_display": {
-                        "detailed": {
-                            "table_comment_display": "inline"
-                        }
-                    }
-                }
-            }
-        },
-        "inbound_related_reference_table_no_display": {
-            "comment": "foreign key to association table",
-            "kind": "table",
-            "table_name": "inbound_related_reference_table_no_display",
-            "schema_name": "comment_display_inline_schema",
-            "keys": [{
-                "unique_columns": ["id"]
-            }],
-            "foreign_keys": [],
-            "column_definitions": [
-                {
-                    "name": "id",
-                    "nullok": false,
-                    "type": {
-                        "typename": "text"
-                    }
-                }
-            ],
             "annotations": {}
         },
         "multi_hop_related_reference_table": {
-            "comment": "foreign key to association table",
+            "comment": "foreign key to association table with no table display annotation because source syntax",
             "kind": "table",
             "table_name": "multi_hop_related_reference_table",
             "schema_name": "comment_display_inline_schema",
@@ -739,18 +775,7 @@
                     }
                 }
             ],
-            "annotations": {
-                "tag:misd.isi.edu,2015:display": {
-                    "comment": {
-                        "detailed": "multi hop fk leaf table display comment"
-                    },
-                    "comment_display": {
-                        "detailed": {
-                            "table_comment_display": "inline"
-                        }
-                    }
-                }
-            }
+            "annotations": {}
         },
         "multi_hop_related_reference_table_comment_display": {
             "comment": "foreign key to association table with comment_display and no comment",
