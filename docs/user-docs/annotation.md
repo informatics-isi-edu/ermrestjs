@@ -139,7 +139,10 @@ Supported JSON _context_ patterns:
 #### Tag: 2015 Display Settings Hierarchy
 
 - The `"comment"` setting applies *only* to the model element which is annotated.
+  - Currently the contextualized `comment` is only supported for tables.
 - The `"table_comment_display"` and `"column_comment_display"` setting applies *only* to the model element which is annotated.
+  - Currently the contextualized `table_comment_display` is only supported for tables in detailed context when they are part of a foreign key relationship in `visible-columns` or `visible-foreign-keys`.
+  - `column_comment_display` is accepted as a parameter, but currently doesn't do anything.
 - The `"name"` and `"markdown_name"` setting applies *only* to the model element which is annotated. They bypass the `name_style` controls which only apply to actual model names.
   - The `"markdown_name"` setting takes precedence if both are specified.
 - The `"name_style"` setting applies to the annotated model element and is also the default for any nested element.
@@ -331,6 +334,7 @@ Supported _columnentry_ patterns:
       - `raw` for space-seperated values.
   - `comment`: The tooltip to be used in place of the default heuristics for the column. Set this to `false` if you don't want any tooltip.
   - `comment_display`: The display mode for the tooltip. Set to `inline` to show it as text or `tooltip` to show as a hover tooltip.
+    - Currently the contextualized `comment_display` is only supported for tables in detailed context when they are part of foreign key relationship.
   - `entity`: If the _sourceentry_ can be treated as entity (the source column is key of the table), setting this attribute to `false` will force the scalar mode.
   - `self_link`: If the defined source is one of the unique not-null keys of the table, setting this attribute to `true` will switch the display mode to self-link.
   - `aggregate`: The aggregate function that should be used for getting an aggregated result. The available aggregate functions are `min`, `max`, `cnt`, `cnt_d`, `array`, and `array_d`.
@@ -468,7 +472,9 @@ Supported JSON payload patterns:
 - `{` ... `"from_comment":` _comment_ ... `}`: The _comment_ string is a preferred comment for the set of entities containing keys described by this constraint.
 - `{` ... `"to_comment":` _comment_ ... `}`: The _comment_ string is a preferred comment for the set of entities containing keys described by this constraint.
 - `{` ... `"from_comment_display":` _comment_display_ ... `}`: The display mode for the tooltip. Set to `inline` to show it as text or `tooltip` to show as a hover tooltip.
+    - Currently the `comment_display` is only supported for foreign key relationships in detailed context when they are part of `visible-columns` or `visible-foreign-keys`.
 - `{` ... `"to_comment_display":` _comment_display_ ... `}`: The display mode for the tooltip. Set to `inline` to show it as text or `tooltip` to show as a hover tooltip.
+    - Currently the `comment_display` is only supported for foreign key relationships in detailed context when they are part of `visible-columns` or `visible-foreign-keys`.
 - `{` ... `"display": {` _context_`:` _option_ ...`}` ... `}`: Apply each _option_ to the presentation of referenced content for any number of _context_ names.
 - `{` ... `"domain_filter_pattern":` _pattern_ ...`}`: The _pattern_ yields a _filter_ via [Pattern Expansion](#pattern-expansion). The _filter_ is a URL substring using the ERMrest filter language, which can be applied to the referenced table. The defined _filter_ will be appended directly to the reference uri and therefore must be properly url encoded (chaise WILL NOT apply additional url encoding).
 
@@ -652,6 +658,7 @@ Supported _fkeylist_ patterns:
   - `markdown_name`: The markdown to use in place of the default heuristics for title of column.
   - `comment`: The tooltip to be used in place of the default heuristics for the column. Set this to `false` if you don't want any tooltip.
   - `comment_display`: The display mode for the tooltip. Set to `inline` to show it as text or `tooltip` to show as a hover tooltip.
+    - Currently the contextualized `comment_display` is only supported for tables in detailed context when they are part of foreign key.
   - `display`: The display settings to use for generating the value for this column. Please refer to [pseudo-columns display document](pseudo-column-display.md) for more information. The following are attributes that are applicable here:
      - `markdown_pattern`: The markdown pattern that can be used for generating a custom display for the related table. If this is missing, we're going to provided `row_markdown_pattern` in the `table-display` annotation for the custom display. And if it's missing from that annotation as well, Chaise will not provide any custom display.
      - `template_engine`: The template enginge that should be used for the `markdown_pattern`.
