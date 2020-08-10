@@ -1025,6 +1025,8 @@
         }
 
         this._exportTemplates = {};
+
+        this._display = {};
     }
 
     Table.prototype = {
@@ -1032,6 +1034,48 @@
 
         delete: function () {
 
+        },
+
+        getDisplay: function (context) {
+            // check _display for information about current context
+            if (!(context in this._display)) {
+                var comment_annotation = null, comment_display_annotation = null;
+                if (this.annotations.contains(module._annotations.DISPLAY)) {
+                    // comment can be a string or an object
+                    comment_annotation = this.annotations.get(module._annotations.DISPLAY).get("comment");
+                    // point to comment since that is what is contextualized in this annotation
+                    // if it's an object, that means it's contextualized
+                    if (typeof comment_annotation == "object") {
+                        comment_annotation = module._getAnnotationValueByContext(context, comment_annotation);
+                    }
+
+                    comment_display_annotation = module._getAnnotationValueByContext(context, this.annotations.get(module._annotations.DISPLAY).get("comment_display"));
+                }
+
+                var comment = this.comment,
+                    tableCommentDisplay = module._commentDisplayModes.tooltip,
+                    columnCommentDisplay = module._commentDisplayModes.tooltip;
+
+                // comment is contextualized
+                if (_isValidModelComment(comment_annotation)) {
+                    comment = _processModelComment(comment_annotation);
+
+                    if (comment_display_annotation && _isValidModelCommentDisplay(comment_display_annotation.column_comment_display)) {
+                        columnCommentDisplay = comment_display_annotation.column_comment_display;
+                    }
+
+                    if (comment_display_annotation && _isValidModelCommentDisplay(comment_display_annotation.table_comment_display)) {
+                        tableCommentDisplay = comment_display_annotation.table_comment_display;
+                    }
+                }
+
+                this._display[context] = {
+                    "columnCommentDisplay": columnCommentDisplay,
+                    "comment": comment,
+                    "tableCommentDisplay": tableCommentDisplay
+                };
+            }
+            return this._display[context];
         },
 
         /**
@@ -3750,6 +3794,26 @@
         this.to_name = "";
 
         /**
+         * @type {string}
+         */
+        this.to_comment = "";
+
+        /**
+         * @type {string}
+         */
+        this.from_comment = "";
+
+        /**
+         * @type {string}
+         */
+        this.to_comment_display = module._commentDisplayModes.tooltip;
+
+        /**
+         * @type {string}
+         */
+        this.from_comment_display = module._commentDisplayModes.tooltip;
+
+        /**
          * @type {boolean}
          */
         this.ignore = false;
@@ -3776,6 +3840,18 @@
                 }
                 if(jsonAnnotation.to_name){
                     this.to_name = jsonAnnotation.to_name;
+                }
+
+                if (_isValidModelComment(jsonAnnotation.to_comment)) {
+                    // check for null, false, empty string when digesting comment for first time
+                    this.to_comment = _processModelComment(jsonAnnotation.to_comment);
+                    if (_isValidModelCommentDisplay(jsonAnnotation.to_comment_display)) this.to_comment_display = jsonAnnotation.to_comment_display;
+                }
+
+                if (_isValidModelComment(jsonAnnotation.from_comment)) {
+                    // check for null, false, empty string when digesting comment for first time
+                    this.from_comment = _processModelComment(jsonAnnotation.from_comment);
+                    if (_isValidModelCommentDisplay(jsonAnnotation.from_comment_display)) this.from_comment_display = jsonAnnotation.from_comment_display;
                 }
             }
         }
@@ -3877,6 +3953,8 @@
         getDisplay: function(context) {
             if (!(context in this._display)) {
                 var self = this, annotation = -1, columnOrder = [], showFKLink = true;
+                // NOTE: commenting out contextualized functionality since it isn't being supported just yet
+                // var fromComment = null, fromCommentDisplay = "tooltip", toComment = null, toCommentDisplay = "tooltip";
                 if (this.annotations.contains(module._annotations.FOREIGN_KEY)) {
                     annotation = module._getAnnotationValueByContext(context, this.annotations.get(module._annotations.FOREIGN_KEY).get("display"));
                 }
@@ -3894,9 +3972,18 @@
                     }
                 }
 
+                // fromComment = _processModelComment(annotation.from_comment);
+                // toComment = _processModelComment(annotation.to_comment);
+                // fromCommentDisplay = (annotation.from_comment && typeof annotation.from_comment_display === "string") ? annotation.from_comment_display : "tooltip";
+                // toCommentDisplay = (annotation.to_comment && typeof annotation.to_comment_display === "string") ? annotation.to_comment_display : "tooltip";
+
                 this._display[context] = {
                     "columnOrder": columnOrder,
-                    "showForeignKeyLinks": showFKLink
+                    // "fromComment": fromComment,
+                    // "fromCommentDisplay": fromCommentDisplay,
+                    "showForeignKeyLinks": showFKLink,
+                    // "toComment": toComment,
+                    // "toCommentDisplay": toCommentDisplay
                 };
             }
 

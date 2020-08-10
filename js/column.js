@@ -270,6 +270,18 @@ ReferenceColumn.prototype = {
         return this._comment;
     },
 
+    get commentDisplay() {
+        if (this._comment === undefined) {
+            if (this.sourceObject && _isValidModelComment(this.sourceObject.comment) && _isValidModelCommentDisplay(this.sourceObject.comment_display)) {
+                // only change commentDisplay if comment and comment_display are both defined
+                this._commentDisplay = this.sourceObject.comment_display;
+            } else {
+                this._commentDisplay = module._commentDisplayModes.tooltip;
+            }
+        }
+        return this._commentDisplay;
+    },
+
     /**
      * @desc Indicates if the input should be disabled
      * true: input must be disabled
@@ -1279,12 +1291,52 @@ Object.defineProperty(PseudoColumn.prototype, "comment", {
                     return self._baseCols[0].comment;
                 }
 
-                 return self._baseCols[0].table.comment;
+                // self.table should be leaf table
+                return self.table.getDisplay(self._context).comment;
             };
 
             this._comment = getComment(this);
         }
         return this._comment;
+    }
+});
+
+// NOTE: this only works for multi hop with inbound foreign key
+/**
+ * The mode the tooltip should be displayed in for this column.
+ * It will return the first applicable rule:
+ * 1. commentDisplay that is defined on the sourceObject
+ * 2. commentDisplay that is defined on the table in the display annotation
+ * 3. default to "tooltip"
+ *
+ * @member {Object} commentDisplay
+ * @memberof ERMrest.PseudoColumn#
+ */
+Object.defineProperty(PseudoColumn.prototype, "commentDisplay", {
+    get: function () {
+        if (this._commentDisplay === undefined) {
+            var getDisplay = function (self) {
+                if (self.sourceObject && _isValidModelComment(self.sourceObject.comment) && _isValidModelCommentDisplay(self.sourceObject.comment_display)) {
+                    return self.sourceObject.comment_display;
+                }
+
+                var def = module._commentDisplayModes.tooltip;
+                if (!self.isEntityMode || self.hasAggregate) {
+                    return def;
+                }
+
+                // self.table should be leaf table
+                var display = self.table.getDisplay(self._context);
+                if (_isValidModelCommentDisplay(display.tableCommentDisplay) && _isValidModelComment(display.comment)) {
+                    return display.tableCommentDisplay;
+                }
+
+                return def;
+            };
+
+            this._commentDisplay = getDisplay(this);
+        }
+        return this._commentDisplay;
     }
 });
 
@@ -1556,6 +1608,8 @@ Object.defineProperty(PseudoColumn.prototype, "reference", {
             // make sure the refernece has the correct displayname
             if (self.hasPath) {
                 self._reference._displayname = self.displayname;
+                self._reference._comment = self.comment;
+                self._reference._commentDisplay = self.commentDisplay;
             }
         }
         return this._reference;
@@ -2641,12 +2695,22 @@ Object.defineProperty(InboundForeignKeyPseudoColumn.prototype, "comment", {
             if (typeof com === "string") {
                 this._comment = com;
             } else {
-                this._comment = this.table.comment;
+                this._comment = this.reference.comment;
             }
         }
         return this._comment;
     }
 });
+
+Object.defineProperty(InboundForeignKeyPseudoColumn.prototype, "commentDisplay", {
+    get: function () {
+        if (this._commentDisplay === undefined) {
+            this._commentDisplay = this.reference.commentDisplay;
+        }
+        return this._commentDisplay;
+    }
+});
+
 Object.defineProperty(InboundForeignKeyPseudoColumn.prototype, "default", {
     get: function () {
         throw new Error("can not use this type of column in entry mode.");

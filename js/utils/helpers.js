@@ -773,6 +773,27 @@
     };
 
     /**
+     * @private
+     * Given an input string for the comment, will return true or false depending if the comment is of a valid type and value
+     *   - if =string : returns true.
+     *   - if =false: returns true.
+     *   - otherwise returns false
+     */
+    _isValidModelComment = function (comment) {
+        return typeof comment === "string" || comment === false;
+    };
+
+    /**
+     * @private
+     * Given an input string for the comment display, will return true or false depending if the display value is of a valid type and value
+     *   - if =string && (="tooltip" || ="inline") : returns true.
+     *   - otherwise returns false
+     */
+    _isValidModelCommentDisplay = function (display) {
+        return typeof display === "string" && module._commentDisplayModes[display] !== -1;
+    };
+
+    /**
      * @function
      * @private
      * @param {ERMrest.Table} table The object that we want the formatted values for.

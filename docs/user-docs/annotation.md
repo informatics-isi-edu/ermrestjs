@@ -89,12 +89,23 @@ element and its nested model elements.
 
 Supported JSON payload patterns:
 
-- `{`... `"comment":` _comment_ ...`}`: The _comment_ (tooltip) to be used in place of the model element's original comment. Set this to `false` if you don't want any tooltips.
+- `{`... `"comment":` _comment_ || `{` _context_: _ccomment_ `}` ...`}`: The _comment_ (tooltip) to be used in place of the model element's original comment. Set this to `false` if you don't want any tooltips.
+- `{`... `"comment_display":` `{` `"table_comment_display"`: _comment_display_ `,` `"column_comment_display"`: _comment_display_ `}`
 - `{`... `"name":` _name_ ...`}`: The _name_ to use in place of the model element's original name.
 - `{`... `"markdown_name"`: _markdown_ `}`: The _markdown_ to use in place of the model element's original name.
 - `{`... `"name_style":` `{` `"underline_space"`: _uspace_ `,` `"title_case":` _tcase_ `,` `"markdown"`: _render_ `}` ...`}`: Element name conversion instructions.
 - `{`... `"show_null":` `{` _context_ `:` _nshow_ `,` ... `}`: How to display NULL data values.
 - `{`... `"show_foreign_key_link":` `{` _context_ `:` _fklink_ `,` ... `}`: Whether default display of foreign keys should include link to the row.
+
+Supported JSON _ccomment_ patterns:
+
+- `comment`: The comment to use for that context.
+- `false`: If you don't want a tooltip for this context.
+
+Supported JSON _comment_display_ patterns:
+
+- `tooltip`: Set to tooltip to show the comment as a hover over tooltip.
+- `inline`: Set to inline to show the comment as an inline tooltip.
 
 Supported JSON _uspace_ patterns:
 
@@ -128,6 +139,10 @@ Supported JSON _context_ patterns:
 #### Tag: 2015 Display Settings Hierarchy
 
 - The `"comment"` setting applies *only* to the model element which is annotated.
+  - Currently the contextualized `comment` is only supported for tables.
+- The `"table_comment_display"` and `"column_comment_display"` setting applies *only* to the model element which is annotated.
+  - Currently the contextualized `table_comment_display` is only supported for tables in detailed context when they are part of a foreign key relationship in `visible-columns` or `visible-foreign-keys`.
+  - `column_comment_display` is accepted as a parameter, but currently doesn't do anything.
 - The `"name"` and `"markdown_name"` setting applies *only* to the model element which is annotated. They bypass the `name_style` controls which only apply to actual model names.
   - The `"markdown_name"` setting takes precedence if both are specified.
 - The `"name_style"` setting applies to the annotated model element and is also the default for any nested element.
@@ -318,6 +333,8 @@ Supported _columnentry_ patterns:
       - `csv` for comma-seperated values.
       - `raw` for space-seperated values.
   - `comment`: The tooltip to be used in place of the default heuristics for the column. Set this to `false` if you don't want any tooltip.
+  - `comment_display`: The display mode for the tooltip. Set to `inline` to show it as text or `tooltip` to show as a hover tooltip.
+    - Currently the contextualized `comment_display` is only supported for tables in detailed context when they are part of foreign key relationship.
   - `entity`: If the _sourceentry_ can be treated as entity (the source column is key of the table), setting this attribute to `false` will force the scalar mode.
   - `self_link`: If the defined source is one of the unique not-null keys of the table, setting this attribute to `true` will switch the display mode to self-link.
   - `aggregate`: The aggregate function that should be used for getting an aggregated result. The available aggregate functions are `min`, `max`, `cnt`, `cnt_d`, `array`, and `array_d`.
@@ -452,8 +469,19 @@ Supported JSON payload patterns:
 
 - `{` ... `"from_name":` _fname_ ... `}`: The _fname_ string is a preferred name for the set of entities containing foreign key references described by this constraint.
 - `{` ... `"to_name":` _tname_ ... `}`: The _tname_ string is a preferred name for the set of entities containing keys described by this constraint.
+- `{` ... `"from_comment":` _comment_ ... `}`: The _comment_ string is a preferred comment for the set of entities containing keys described by this constraint.
+- `{` ... `"to_comment":` _comment_ ... `}`: The _comment_ string is a preferred comment for the set of entities containing keys described by this constraint.
+- `{` ... `"from_comment_display":` _comment_display_ ... `}`: The display mode for the tooltip. Set to `inline` to show it as text or `tooltip` to show as a hover tooltip.
+    - Currently the `comment_display` is only supported for foreign key relationships in detailed context when they are part of `visible-columns` or `visible-foreign-keys`.
+- `{` ... `"to_comment_display":` _comment_display_ ... `}`: The display mode for the tooltip. Set to `inline` to show it as text or `tooltip` to show as a hover tooltip.
+    - Currently the `comment_display` is only supported for foreign key relationships in detailed context when they are part of `visible-columns` or `visible-foreign-keys`.
 - `{` ... `"display": {` _context_`:` _option_ ...`}` ... `}`: Apply each _option_ to the presentation of referenced content for any number of _context_ names.
 - `{` ... `"domain_filter_pattern":` _pattern_ ...`}`: The _pattern_ yields a _filter_ via [Pattern Expansion](#pattern-expansion). The _filter_ is a URL substring using the ERMrest filter language, which can be applied to the referenced table. The defined _filter_ will be appended directly to the reference uri and therefore must be properly url encoded (chaise WILL NOT apply additional url encoding).
+
+Supported _comment_ syntax:
+
+- `comment`: The comment to use.
+- `false`: If you don't want a tooltip for this FK.
 
 Supported display _option_ syntax:
 
@@ -628,6 +656,9 @@ Supported _fkeylist_ patterns:
 - `[` `[` _schema name_`,` _constraint name_ `]` `,` ... `]`: Present foreign keys with matching _schema name_ and _constraint name_, in the order specified in the list. Ignore constraint names that do not correspond to foreign keys in the catalog. Do not present foreign keys that are not mentioned in the list. These 2-element lists use the same format as each element in the `names` property of foreign keys in the JSON model introspection output of ERMrest. The foreign keys MUST represent inbound relationships to the current table.
 - `{ "source": ` _sourceentry_ `}`:  Defines a pseudo-column based on the given _sourceentry_. For detailed explanation and examples please refer to [here](pseudo-columns.md#examples). Other optional attributes that this JSON document can have are:
   - `markdown_name`: The markdown to use in place of the default heuristics for title of column.
+  - `comment`: The tooltip to be used in place of the default heuristics for the column. Set this to `false` if you don't want any tooltip.
+  - `comment_display`: The display mode for the tooltip. Set to `inline` to show it as text or `tooltip` to show as a hover tooltip.
+    - Currently the contextualized `comment_display` is only supported for tables in detailed context when they are part of foreign key.
   - `display`: The display settings to use for generating the value for this column. Please refer to [pseudo-columns display document](pseudo-column-display.md) for more information. The following are attributes that are applicable here:
      - `markdown_pattern`: The markdown pattern that can be used for generating a custom display for the related table. If this is missing, we're going to provided `row_markdown_pattern` in the `table-display` annotation for the custom display. And if it's missing from that annotation as well, Chaise will not provide any custom display.
      - `template_engine`: The template enginge that should be used for the `markdown_pattern`.

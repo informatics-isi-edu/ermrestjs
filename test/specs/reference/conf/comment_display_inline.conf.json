@@ -1,0 +1,12 @@
+{
+    "catalog": {},
+    "schema": {
+        "name": "comment_display_inline_schema",
+        "createNew": true,
+        "path": "test/specs/reference/conf/comment_display_inline_schema/schema.json"
+    },
+    "tables": {
+        "createNew": true
+    },
+    "entities": {}
+}

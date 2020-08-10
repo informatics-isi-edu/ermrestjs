@@ -249,6 +249,10 @@ to use for ERMrest JavaScript agents.
         * [.constraint_names](#ERMrest.ForeignKeyRef+constraint_names) : <code>Array</code>
         * [.from_name](#ERMrest.ForeignKeyRef+from_name) : <code>string</code>
         * [.to_name](#ERMrest.ForeignKeyRef+to_name) : <code>string</code>
+        * [.to_comment](#ERMrest.ForeignKeyRef+to_comment) : <code>string</code>
+        * [.from_comment](#ERMrest.ForeignKeyRef+from_comment) : <code>string</code>
+        * [.to_comment_display](#ERMrest.ForeignKeyRef+to_comment_display) : <code>string</code>
+        * [.from_comment_display](#ERMrest.ForeignKeyRef+from_comment_display) : <code>string</code>
         * [.ignore](#ERMrest.ForeignKeyRef+ignore) : <code>boolean</code>
         * [.annotations](#ERMrest.ForeignKeyRef+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
         * [.comment](#ERMrest.ForeignKeyRef+comment) : <code>string</code>
@@ -319,6 +323,8 @@ to use for ERMrest JavaScript agents.
         * [.contextualize](#ERMrest.Reference+contextualize)
         * [.aggregate](#ERMrest.Reference+aggregate) : [<code>ReferenceAggregateFn</code>](#ERMrest.ReferenceAggregateFn)
         * [.displayname](#ERMrest.Reference+displayname) : <code>object</code>
+        * [.comment](#ERMrest.Reference+comment) : <code>String</code>
+        * [.commentDisplay](#ERMrest.Reference+commentDisplay) : <code>String</code>
         * [.uri](#ERMrest.Reference+uri) : <code>string</code>
         * [.table](#ERMrest.Reference+table) : [<code>Table</code>](#ERMrest.Table)
         * [.facetBaseTable](#ERMrest.Reference+facetBaseTable) : [<code>Table</code>](#ERMrest.Table)
@@ -422,6 +428,7 @@ to use for ERMrest JavaScript agents.
         * [new PseudoColumn(reference, column, sourceObject, name, mainTuple)](#new_ERMrest.PseudoColumn_new)
         * [.isPseudo](#ERMrest.PseudoColumn+isPseudo) : <code>boolean</code>
         * [.comment](#ERMrest.PseudoColumn+comment) : <code>Object</code>
+        * [.commentDisplay](#ERMrest.PseudoColumn+commentDisplay) : <code>Object</code>
         * [.displayname](#ERMrest.PseudoColumn+displayname) : <code>Object</code>
         * [.isUnique](#ERMrest.PseudoColumn+isUnique) : <code>boolean</code>
         * [.isEntityMode](#ERMrest.PseudoColumn+isEntityMode) : <code>boolean</code>
@@ -634,6 +641,8 @@ to use for ERMrest JavaScript agents.
         * [.contextualize](#ERMrest.Reference+contextualize)
         * [.aggregate](#ERMrest.Reference+aggregate) : [<code>ReferenceAggregateFn</code>](#ERMrest.ReferenceAggregateFn)
         * [.displayname](#ERMrest.Reference+displayname) : <code>object</code>
+        * [.comment](#ERMrest.Reference+comment) : <code>String</code>
+        * [.commentDisplay](#ERMrest.Reference+commentDisplay) : <code>String</code>
         * [.uri](#ERMrest.Reference+uri) : <code>string</code>
         * [.table](#ERMrest.Reference+table) : [<code>Table</code>](#ERMrest.Table)
         * [.facetBaseTable](#ERMrest.Reference+facetBaseTable) : [<code>Table</code>](#ERMrest.Table)
@@ -2266,6 +2275,10 @@ get the foreign key of the given column set
     * [.constraint_names](#ERMrest.ForeignKeyRef+constraint_names) : <code>Array</code>
     * [.from_name](#ERMrest.ForeignKeyRef+from_name) : <code>string</code>
     * [.to_name](#ERMrest.ForeignKeyRef+to_name) : <code>string</code>
+    * [.to_comment](#ERMrest.ForeignKeyRef+to_comment) : <code>string</code>
+    * [.from_comment](#ERMrest.ForeignKeyRef+from_comment) : <code>string</code>
+    * [.to_comment_display](#ERMrest.ForeignKeyRef+to_comment_display) : <code>string</code>
+    * [.from_comment_display](#ERMrest.ForeignKeyRef+from_comment_display) : <code>string</code>
     * [.ignore](#ERMrest.ForeignKeyRef+ignore) : <code>boolean</code>
     * [.annotations](#ERMrest.ForeignKeyRef+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
     * [.comment](#ERMrest.ForeignKeyRef+comment) : <code>string</code>
@@ -2329,6 +2342,22 @@ The constraint names for this foreign key
 <a name="ERMrest.ForeignKeyRef+to_name"></a>
 
 #### foreignKeyRef.to\_name : <code>string</code>
+**Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
+<a name="ERMrest.ForeignKeyRef+to_comment"></a>
+
+#### foreignKeyRef.to\_comment : <code>string</code>
+**Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
+<a name="ERMrest.ForeignKeyRef+from_comment"></a>
+
+#### foreignKeyRef.from\_comment : <code>string</code>
+**Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
+<a name="ERMrest.ForeignKeyRef+to_comment_display"></a>
+
+#### foreignKeyRef.to\_comment\_display : <code>string</code>
+**Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
+<a name="ERMrest.ForeignKeyRef+from_comment_display"></a>
+
+#### foreignKeyRef.from\_comment\_display : <code>string</code>
 **Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
 <a name="ERMrest.ForeignKeyRef+ignore"></a>
 
@@ -2810,6 +2839,8 @@ Constructor for a ParsedFilter.
     * [.contextualize](#ERMrest.Reference+contextualize)
     * [.aggregate](#ERMrest.Reference+aggregate) : [<code>ReferenceAggregateFn</code>](#ERMrest.ReferenceAggregateFn)
     * [.displayname](#ERMrest.Reference+displayname) : <code>object</code>
+    * [.comment](#ERMrest.Reference+comment) : <code>String</code>
+    * [.commentDisplay](#ERMrest.Reference+commentDisplay) : <code>String</code>
     * [.uri](#ERMrest.Reference+uri) : <code>string</code>
     * [.table](#ERMrest.Reference+table) : [<code>Table</code>](#ERMrest.Table)
     * [.facetBaseTable](#ERMrest.Reference+facetBaseTable) : [<code>Table</code>](#ERMrest.Table)
@@ -2903,6 +2934,19 @@ different compared to `reference.columns`.
 The display name for this reference.
 displayname.isHTML will return true/false
 displayname.value has the value
+
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+comment"></a>
+
+#### reference.comment : <code>String</code>
+The comment for this reference.
+
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+commentDisplay"></a>
+
+#### reference.commentDisplay : <code>String</code>
+The comment display property for this reference.
+can be either "tooltip" or "inline"
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+uri"></a>
@@ -4210,6 +4254,7 @@ it will append "-<integer>" to it.
     * [new PseudoColumn(reference, column, sourceObject, name, mainTuple)](#new_ERMrest.PseudoColumn_new)
     * [.isPseudo](#ERMrest.PseudoColumn+isPseudo) : <code>boolean</code>
     * [.comment](#ERMrest.PseudoColumn+comment) : <code>Object</code>
+    * [.commentDisplay](#ERMrest.PseudoColumn+commentDisplay) : <code>Object</code>
     * [.displayname](#ERMrest.PseudoColumn+displayname) : <code>Object</code>
     * [.isUnique](#ERMrest.PseudoColumn+isUnique) : <code>boolean</code>
     * [.isEntityMode](#ERMrest.PseudoColumn+isEntityMode) : <code>boolean</code>
@@ -4257,6 +4302,16 @@ It will return the first applicable rule:
 3. if aggregate and entity use the "<function> <table_displayname>"
 3. In entity mode, return the table's displayname.
 4. In scalar return the column's displayname.
+
+**Kind**: instance property of [<code>PseudoColumn</code>](#ERMrest.PseudoColumn)  
+<a name="ERMrest.PseudoColumn+commentDisplay"></a>
+
+#### pseudoColumn.commentDisplay : <code>Object</code>
+The mode the tooltip should be displayed in for this column.
+It will return the first applicable rule:
+1. commentDisplay that is defined on the sourceObject
+2. commentDisplay that is defined on the table in the display annotation
+3. default to "tooltip"
 
 **Kind**: instance property of [<code>PseudoColumn</code>](#ERMrest.PseudoColumn)  
 <a name="ERMrest.PseudoColumn+displayname"></a>
@@ -6403,6 +6458,8 @@ get PathColumn object by column name
     * [.contextualize](#ERMrest.Reference+contextualize)
     * [.aggregate](#ERMrest.Reference+aggregate) : [<code>ReferenceAggregateFn</code>](#ERMrest.ReferenceAggregateFn)
     * [.displayname](#ERMrest.Reference+displayname) : <code>object</code>
+    * [.comment](#ERMrest.Reference+comment) : <code>String</code>
+    * [.commentDisplay](#ERMrest.Reference+commentDisplay) : <code>String</code>
     * [.uri](#ERMrest.Reference+uri) : <code>string</code>
     * [.table](#ERMrest.Reference+table) : [<code>Table</code>](#ERMrest.Table)
     * [.facetBaseTable](#ERMrest.Reference+facetBaseTable) : [<code>Table</code>](#ERMrest.Table)
@@ -6496,6 +6553,19 @@ different compared to `reference.columns`.
 The display name for this reference.
 displayname.isHTML will return true/false
 displayname.value has the value
+
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+comment"></a>
+
+#### reference.comment : <code>String</code>
+The comment for this reference.
+
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+commentDisplay"></a>
+
+#### reference.commentDisplay : <code>String</code>
+The comment display property for this reference.
+can be either "tooltip" or "inline"
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+uri"></a>
