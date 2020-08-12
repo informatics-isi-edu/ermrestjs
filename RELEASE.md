@@ -33,7 +33,7 @@ This document is a summary of code changes in Chaise. This is the vocabulary use
 # 09/31/19
 
   - [Added] RID markdown tag to generate resolvable link for a record given the RID value: [[RID]]
-  - [Added] SystemColumnsDisplayCompact and SystemColumnsDisplayDetailed chaise-config properties support.
+  - [Added] systemColumnsDisplayCompact and systemColumnsDisplayDetailed chaise-config properties support.
   - [Changed] asset presentation heuristics:
     - Added external origin information
     - Added support for external-link behavior
