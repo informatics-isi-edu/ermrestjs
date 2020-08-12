@@ -5141,6 +5141,8 @@ Therefore heuristic is as follows:
  - Otherwise (entity-mode) -> generate an ermrest request to get the displaynames.
 
 NOTE This function will not return the null filter.
+NOTE the request might not return any result for a given filter (because of user access or missing data),
+     in this case, we will return the raw value instead.
 
 **Kind**: instance method of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
 **Returns**: <code>Promise</code> - A promise resolved with list of objects that have `uniqueId`, and `displayname`.  

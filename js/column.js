@@ -3414,12 +3414,14 @@ FacetColumn.prototype = {
      *  - Otherwise (entity-mode) -> generate an ermrest request to get the displaynames.
      *
      * NOTE This function will not return the null filter.
+     * NOTE the request might not return any result for a given filter (because of user access or missing data),
+     *      in this case, we will return the raw value instead.
      *
      * @param {Object} contextHeaderParams object that we want to be logged with the request
      * @return {Promise} A promise resolved with list of objects that have `uniqueId`, and `displayname`.
      */
     getChoiceDisplaynames: function (contextHeaderParams) {
-        var defer = module._q.defer(), filters =  [];
+        var defer = module._q.defer(), filters =  [], self = this;
         var table = this._column.table, columnName = this._column.name;
 
         var createRef = function (filterStrs) {
@@ -3436,12 +3438,12 @@ FacetColumn.prototype = {
         };
 
         // if no filter, just resolve with empty list.
-        if (this.choiceFilters.length === 0) {
+        if (self.choiceFilters.length === 0) {
             defer.resolve(filters);
         }
         // in scalar mode, use the their toString as displayname.
-        else if (!this.isEntityMode) {
-            this.choiceFilters.forEach(function (f) {
+        else if (!self.isEntityMode) {
+            self.choiceFilters.forEach(function (f) {
                 // don't return the null filter
                 if (f.term == null) return;
 
@@ -3452,10 +3454,12 @@ FacetColumn.prototype = {
         }
         // otherwise generate an ermrest request to get the displaynames.
         else {
-            var filterStr = [];
+            var filterStr = [], // used for generating the request
+                filterTerms = {}; // used for figuring out if there are any filter that didn't return result
+                                  // key is the term, value is the index in self.choiceFilters
 
             // list of filters that we want their displaynames.
-            this.choiceFilters.forEach(function (f) {
+            self.choiceFilters.forEach(function (f, index) {
                 // don't return the null filter
                 if (f.term == null) {
                     return;
@@ -3464,6 +3468,7 @@ FacetColumn.prototype = {
                 filterStr.push(
                     module._fixedEncodeURIComponent(columnName) + "=" + module._fixedEncodeURIComponent(f.term)
                 );
+                filterTerms[f.term] = index;
             });
 
             // the case that we have only the null value.
@@ -3472,13 +3477,32 @@ FacetColumn.prototype = {
             }
 
             // create a url
-            createRef(filterStr).read(this.choiceFilters.length, contextHeaderParams, true).then(function (page) {
-                // create the response
+            createRef(filterStr).read(self.choiceFilters.length, contextHeaderParams, true).then(function (page) {
+                // add the pages that we got
                 page.tuples.forEach(function (t) {
                     filters.push({uniqueId: t.data[columnName], displayname: t.displayname, tuple: t});
-                });
-                // if there are any filters that didn't match any rows, just return the value.
 
+                    // remove it from the term list
+                    delete filterTerms[t.data[columnName]];
+                });
+
+
+
+                // if there are any filter terms that didn't match any rows, just return the raw value:
+                // NOTE we could merge these two (page and filter) together to make the code easier to follow,
+                //      but we want to keep the selected values ordered based on roworder and
+                //      not based on the order of filters in the url
+
+                // sort the keys for deterministic output (based on the original order of filters in the url)
+                var filterTermKeys = Object.keys(filterTerms).sort(function (a, b) {
+                    return filterTerms[a] - filterTerms[b];
+                });
+
+                // add the terms to filter list
+                filterTermKeys.forEach(function (k) {
+                    var f = self.choiceFilters[filterTerms[k]];
+                    filters.push({uniqueId: f.term, displayname: {value: f.toString(), isHTML:false}, tuple: null});
+                });
 
                 defer.resolve(filters);
             }).catch(function (err) {
