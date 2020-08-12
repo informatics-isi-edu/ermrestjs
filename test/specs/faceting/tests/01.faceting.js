@@ -1536,6 +1536,23 @@ exports.execute = function (options) {
                         done.fail();
                     });
                 });
+
+                it ("if the given filters are not in database, should just return the raw values.", function (done) {
+                    var newRef = refMainFilterOnFK.facetColumns[11].addChoiceFilters([8888, 5, 4, 7777]);
+                    newRef.facetColumns[11].getChoiceDisplaynames().then(function (res){
+                        expect(res.length).toEqual(6, "length missmatch.");
+                        checkChoiceDisplayname("index=1", res[0], 2, "<strong>two</strong>", true);
+                        checkChoiceDisplayname("index=2", res[1], 3, "<strong>three</strong>", true);
+                        checkChoiceDisplayname("index=3", res[2], 4, "<strong>four</strong>", true);
+                        checkChoiceDisplayname("index=4", res[3], 5, "<strong>five</strong>", true);
+                        checkChoiceDisplayname("index=5", res[4], 8888, "8888", false);
+                        checkChoiceDisplayname("index=6", res[5], 7777, "7777", false);
+                        done();
+                    }).catch(function (err) {
+                        console.log(err);
+                        done.fail();
+                    });
+                });
             });
 
             describe("hideNumOccurrences, ", function () {
