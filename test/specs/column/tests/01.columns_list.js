@@ -782,13 +782,16 @@ exports.execute = function (options) {
                         mode = true;
                     } else if (context == 'detailed') {
                         mode = ['RCT', 'RMB', 'not_a_col', 'RID', 'col_1'];
+                    } else if (context.indexOf('entry') != -1) {
+                        mode = ['RMB', 'RID', 'RMT'];
                     }
 
                     return mode;
                 }
 
                 var compactSystemColumnsModeRef, compactSystemColumnsModeColumns,
-                    detailedSystemColumnsModeRef, detailedSystemColumnsModeColumns;
+                    detailedSystemColumnsModeRef, detailedSystemColumnsModeColumns,
+                    entrySystemColumnsModeRef, entrySystemColumnsModeColumns;
 
                 beforeAll(function (done) {
                     // set this here so it doesn't affect above columns list tests
@@ -798,9 +801,11 @@ exports.execute = function (options) {
                     }).then(function (response) {
                         compactSystemColumnsModeRef = response.contextualize.compact;
                         detailedSystemColumnsModeRef = response.contextualize.detailed;
+                        entrySystemColumnsModeRef = response.contextualize.entry;
 
                         compactSystemColumnsModeColumns = compactSystemColumnsModeRef.columns;
                         detailedSystemColumnsModeColumns = detailedSystemColumnsModeRef.columns;
+                        entrySystemColumnsModeColumns = entrySystemColumnsModeRef.columns;
 
                         done();
                     }).catch(function (err) {
@@ -809,7 +814,7 @@ exports.execute = function (options) {
                     });
                 });
 
-                it('with config option: `SystemColumnsDisplayCompact=true`, RID should be first, RCB, RMB, RCT, RMT at the end', function () {
+                it('with config option: `systemColumnsDisplayCompact=true`, RID should be first, RCB, RMB, RCT, RMT at the end', function () {
                     areSameColumnList(compactSystemColumnsModeRef.generateColumnsList(), compactSystemColumnsModeColumns);
                     //verify RID is first
                     expect(compactSystemColumnsModeColumns[0]._baseCols[0].name).toBe('RID', 'RID is not fisrt');
@@ -825,7 +830,7 @@ exports.execute = function (options) {
                     expect(compactSystemColumnsModeColumns[7].name).toBe('RMT', 'col index=7 missmatch');
                 });
 
-                it("with config option: `SystemColumnsDisplayDetailed=['RCT', 'RMB', 'not_a_col', 'RID', 'col_1']`, RID should be first, RMB, RCT at the end.", function () {
+                it("with config option: `systemColumnsDisplayDetailed=['RCT', 'RMB', 'not_a_col', 'RID', 'col_1']`, RID should be first, RMB, RCT at the end.", function () {
                     var columnNames = []
                     detailedSystemColumnsModeColumns.forEach(function (col) {
                         columnNames.push(col.name);
@@ -851,6 +856,28 @@ exports.execute = function (options) {
                     expect(columnNames.indexOf('RMT')).toBe(-1, 'RMT in column list');
                     // not_a_col is not in the table definition, and should be ignored
                     expect(columnNames.indexOf('not_a_col')).toBe(-1, 'not_a_col in column list');
+                });
+
+                it("with config option: `systemColumnsDisplayEntry=['RMB', 'RID', 'RMT']`, RID should be first, RMB, RMT at the end", function () {
+                    var columnNames = []
+                    entrySystemColumnsModeColumns.forEach(function (col) {
+                        columnNames.push(col.name);
+                    });
+
+                    areSameColumnList(entrySystemColumnsModeRef.generateColumnsList(), entrySystemColumnsModeColumns);
+                    //verify RID is first
+                    expect(entrySystemColumnsModeColumns[0]._baseCols[0].name).toBe('RID', 'RID is not first');
+                    expect(entrySystemColumnsModeColumns.length).toBe(6, 'length mismatch');
+
+                    // the only system columns, and should be at the end
+                    expect(entrySystemColumnsModeColumns[4].isForeignKey).toBe(true, 'isForeignKey index=4 mismatch');
+                    expect(entrySystemColumnsModeColumns[4].table.name).toBe("person", 'col index=4 mismatch');
+
+                    expect(entrySystemColumnsModeColumns[5].name).toBe('RMT', 'col index=5 mismatch');
+
+                    // other system columns should not be present
+                    expect(columnNames.indexOf('RCB')).toBe(-1, 'RCB in column list');
+                    expect(columnNames.indexOf('RCT')).toBe(-1, 'RMT in column list');
                 });
 
                 afterAll(function () {
