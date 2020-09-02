@@ -90,7 +90,7 @@ element and its nested model elements.
 Supported JSON payload patterns:
 
 - `{`... `"comment":` _comment_ || `{` _context_: _ccomment_ `}` ...`}`: The _comment_ (tooltip) to be used in place of the model element's original comment. Set this to `false` if you don't want any tooltips.
-- `{`... `"comment_display":` `{` `"table_comment_display"`: _comment_display_ `,` `"column_comment_display"`: _comment_display_ `}`
+- `{`... `"comment_display":` `{` _context_: `{` `"table_comment_display"`: _comment_display_ `,` `"column_comment_display"`: _comment_display_ `}` `}`
 - `{`... `"name":` _name_ ...`}`: The _name_ to use in place of the model element's original name.
 - `{`... `"markdown_name"`: _markdown_ `}`: The _markdown_ to use in place of the model element's original name.
 - `{`... `"name_style":` `{` `"underline_space"`: _uspace_ `,` `"title_case":` _tcase_ `,` `"markdown"`: _render_ `}` ...`}`: Element name conversion instructions.
