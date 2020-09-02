@@ -1059,19 +1059,21 @@
                 // comment is contextualized
                 if (_isValidModelComment(comment_annotation)) {
                     comment = _processModelComment(comment_annotation);
+                }
 
-                    if (comment_display_annotation && _isValidModelCommentDisplay(comment_display_annotation.column_comment_display)) {
-                        columnCommentDisplay = comment_display_annotation.column_comment_display;
-                    }
-
-                    if (comment_display_annotation && _isValidModelCommentDisplay(comment_display_annotation.table_comment_display)) {
-                        tableCommentDisplay = comment_display_annotation.table_comment_display;
-                    }
+                // since in the model we cannot define the comment_display settings,
+                // this annotation can be used in conjunction with the model's comments
+                // and we don't need to make sure the comment is coming from annotation
+                if (comment_display_annotation && _isValidModelCommentDisplay(comment_display_annotation.column_comment_display)) {
+                    columnCommentDisplay = comment_display_annotation.column_comment_display;
+                }
+                if (comment_display_annotation && _isValidModelCommentDisplay(comment_display_annotation.table_comment_display)) {
+                    tableCommentDisplay = comment_display_annotation.table_comment_display;
                 }
 
                 this._display[context] = {
                     "columnCommentDisplay": columnCommentDisplay,
-                    "comment": comment,
+                    "comment": comment, // coming from the model, or annotation
                     "tableCommentDisplay": tableCommentDisplay
                 };
             }

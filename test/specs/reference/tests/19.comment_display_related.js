@@ -201,6 +201,10 @@ exports.execute = function (options) {
                 it("next use display annotation on leaf table", function () {
                     expect(multiHopReference.related[6].comment).toBe("multi hop fk leaf table display comment");
                 });
+
+                it("next use comment on leaf table,", function () {
+                    expect(multiHopReference.related[5].comment).toBe("foreign key to association table with comment_display and no comment");
+                });
             });
 
             describe("for comment_display,", function () {
@@ -208,12 +212,9 @@ exports.execute = function (options) {
                     expect(multiHopReference.related[4].commentDisplay).toBe("inline");
                 });
 
-                it("ignore the comment_display property if comment is not defined", function () {
-                    expect(multiHopReference.related[5].commentDisplay).toBe("tooltip");
-                });
-
                 it("next use display annotation on leaf table", function () {
-                    expect(multiHopReference.related[6].commentDisplay).toBe("inline");
+                    expect(multiHopReference.related[5].commentDisplay).toBe("inline", "missmatch for index=5");
+                    expect(multiHopReference.related[6].commentDisplay).toBe("inline", "missmatch for index=6");
                 });
             });
         });
