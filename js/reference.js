@@ -305,7 +305,8 @@
              */
             if (this._commentDisplay === undefined)
                 // default value is tooltip
-                this._commentDisplay = module._commentDisplayModes.tooltip;
+                // NOTE: This is used as part of the conditional check before showing a comment, so getDisplay needs to also be called here
+                this._commentDisplay = this._table.getDisplay(this._context).tableCommentDisplay;
             return this._commentDisplay;
         },
 
