@@ -159,7 +159,7 @@
         "blockHelperMissing", "each", "if", "helperMissing", "unless", "with",
         // ermrestJS helpers
         "eq", "ne", "lt", "gt", "lte", "gte", "and", "or", "ifCond",
-        "escape", "encode", "formatDate", "encodeFacet", 'regexMatch',
+        "escape", "encode", "formatDate", "encodeFacet", "regexMatch", "regexString",
         // math helpers
         "add", "subtract"
     ];

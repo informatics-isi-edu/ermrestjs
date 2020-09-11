@@ -142,17 +142,17 @@ exports.execute = function (options) {
                 var iframeMarkdown = '::: iframe [CAPTION](https://dev.isrd.isi.edu/chaise/search){pos="bottom" caption-class="cclass" caption-style="font-weight:500;"} \n:::';
                 var iframeHTML = '<figure class="embed-block -chaise-post-load" style=""><iframe src="https://dev.isrd.isi.edu/chaise/search"    ></iframe><figcaption class="embed-caption cclass" style=" font-weight:500;">CAPTION</figcaption></figure>';
                 expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML, "case 06");
-                
+
                 // 07: check for iframe tag with classes
                 var iframeMarkdown = '::: iframe [SOME LINK CAPTION](https://dev.isrd.isi.edu/chaise/search){.class-one .class-two} \n:::';
                 var iframeHTML = '<figure class="embed-block -chaise-post-load" style=""><figcaption class="embed-caption" style="">SOME LINK CAPTION</figcaption><iframe src="https://dev.isrd.isi.edu/chaise/search" class="class-one class-two" ></iframe></figure>';
                 expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML, "case 07");
-                
+
                 // 08: Testing for YouTube video with classes
                 var iframeMarkdown = '::: iframe [SOME LINK CAPTION](https://www.youtube.com/embed/op1-Cw_l1Ow){.class-one .class-two} \n:::';
                 var iframeHTML = '<figure class="embed-block -chaise-post-load" style=""><figcaption class="embed-caption" style="">SOME LINK CAPTION</figcaption><span class="video-info-in-print" style="visibility:hidden">Note: YouTube video ( https://www.youtube.com/embed/op1-Cw_l1Ow ) is hidden in print</span><iframe src="https://www.youtube.com/embed/op1-Cw_l1Ow" class="class-one class-two hide-in-print" ></iframe></figure>';
                 expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML, "case 08");
-                
+
                 // 09: Testing for YouTube video
                 var iframeMarkdown = '::: iframe [SOME LINK CAPTION](https://www.youtube.com/embed/op1-Cw_l1Ow){width=640 height=480 link=https://www.youtube.com/embed/op1-Cw_l1Ow} \n:::';
                 var iframeHTML = '<figure class="embed-block -chaise-post-load" style=""><figcaption class="embed-caption" style=""><a href="https://www.youtube.com/embed/op1-Cw_l1Ow" target="_blank">SOME LINK CAPTION</a></figcaption><span class="video-info-in-print" style="visibility:hidden">Note: YouTube video ( https://www.youtube.com/embed/op1-Cw_l1Ow ) is hidden in print</span><iframe src="https://www.youtube.com/embed/op1-Cw_l1Ow" width="640" height="480"  class="hide-in-print" ></iframe></figure>';
@@ -546,6 +546,12 @@ exports.execute = function (options) {
                 var template = '{{#if (regexMatch type "jpg|png")}}image{{else}}other{{/if}}';
                 expect(module.renderHandlebarsTemplate(template, {"type": "jpg"})).toBe("image", "missmatch for 01");
                 expect(module.renderHandlebarsTemplate(template, {"type": "txt"})).toBe("other", "missmatch for 02");
+            });
+
+            it ('regexString helper', function () {
+                var template = '{{#each (regexString testString "jpg|png")}}{{this}}\n{{/each}}';
+                expect(module.renderHandlebarsTemplate(template, {"testString": "house-jpg.jpg"}) ).toBe("jpg\njpg\n", "missmatch for 1st test");
+                expect(module.renderHandlebarsTemplate(template, {"testString": "jumpng-fox.jpg"}) ).toBe("png\njpg\n", "missmatch for 2nd test");
             });
 
             it('suppressed default helper log', function () {

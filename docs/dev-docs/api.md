@@ -21,6 +21,16 @@ to use for ERMrest JavaScript agents.</p>
  str
 {{/encodeFacet}}</p>
 </dd>
+<dt><a href="#regexMatch">regexMatch()</a> ⇒</dt>
+<dd><p>{{#if (regexMatch value regexp)}}
+  .. content
+{{/if}}</p>
+</dd>
+<dt><a href="#regexString">regexString()</a> ⇒</dt>
+<dd><p>{{#each (regexMatch value regexp)}}
+  {{this}}
+{{/each}}</p>
+</dd>
 </dl>
 
 ## Typedefs
@@ -7647,6 +7657,24 @@ since the ermrestJS has been available (milliseconds).
 
 **Kind**: global function  
 **Returns**: encoded facet string that can be used in url  
+<a name="regexMatch"></a>
+
+## regexMatch() ⇒
+{{#if (regexMatch value regexp)}}
+  .. content
+{{/if}}
+
+**Kind**: global function  
+**Returns**: boolean if the value matches the regexp  
+<a name="regexString"></a>
+
+## regexString() ⇒
+{{#each (regexMatch value regexp)}}
+  {{this}}
+{{/each}}
+
+**Kind**: global function  
+**Returns**: string that matches the regular expression  
 <a name="appLinkFn"></a>
 
 ## appLinkFn : <code>function</code>

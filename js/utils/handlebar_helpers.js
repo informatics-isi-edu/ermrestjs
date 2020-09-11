@@ -31,9 +31,34 @@
                 return module.encodeFacetString(options.fn(this));
             },
 
+            /**
+             * {{#if (regexMatch value regexp)}}
+             *   .. content
+             * {{/if}}
+             *
+             * @returns boolean if the value matches the regexp
+             */
             regexMatch: function (value, regexp) {
                 var regexpObj = new RegExp(regexp);
                 return regexpObj.test(value);
+            },
+
+            /**
+             * {{#each (regexMatch value regexp)}}
+             *   {{this}}
+             * {{/each}}
+             *
+             * @returns string that matches the regular expression
+             */
+            regexString: function (value, regexp) {
+                var regexpObj = new RegExp(regexp, 'g');
+
+                var regexpArray;
+                var matches = [];
+                while ( (regexpArray = regexpObj.exec(value)) !== null) {
+                    matches.push(regexpArray[0]);
+                }
+                return matches;
             },
 
             /*
