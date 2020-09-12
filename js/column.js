@@ -1702,34 +1702,95 @@ module._extends(ForeignKeyPseudoColumn, ReferenceColumn);
  * @returns {ERMrest.Reference} the constrained reference
  */
 ForeignKeyPseudoColumn.prototype.filteredRef = function(data, linkedData) {
-    var uri = this.reference.uri,
-        location;
+    var getFilteredRef = function (self) {
+        var currURI = self.reference.uri,
+            currTable = self.reference.table, // the projected table
+            baseTable = self._baseReference.table, // the main (base) table
+            keyValues, // formated key values used in tempating
+            content, // the annotation content
+            filterPattern, // the filter pattern
+            filterPatternTemplate, // the template used with the pattern
+            uriFilter, // the ermrest path
+            displayname, // the displayname value
+            displaynameMkdn, //capture the unformatted value of displayname
+            location, // the output location (used for creating the output reference)
+            cfacets; // custom facet created based on the filter pattern
 
-    if (this.foreignKey.annotations.contains(module._annotations.FOREIGN_KEY)){
-
-        var keyValues = module._getFormattedKeyValues(this._baseReference.table, this._context, data, linkedData);
-        var content = this.foreignKey.annotations.get(module._annotations.FOREIGN_KEY).content;
-        var uriFilter = module._renderTemplate(
-            content.domain_filter_pattern,
-            keyValues,
-            this._baseReference.table.schema.catalog,
-            {templateEngine: content.template_engine}
-        );
-
-        // should ignore the annotation if it's invalid
-        if (typeof uriFilter === "string" && uriFilter.trim() !== '') {
-            try {
-                location = module.parse(uri + '/' + uriFilter.trim());
-            } catch (exp) {}
+        // if the annotaion didn't exist
+        if (!self.foreignKey.annotations.contains(module._annotations.FOREIGN_KEY)) {
+            return new Reference(module.parse(currURI), currTable.schema.catalog);
         }
-    }
 
-    if (!location) {
-        location = module.parse(uri);
-    }
+        keyValues = module._getFormattedKeyValues(baseTable, self._context, data, linkedData);
+        content = self.foreignKey.annotations.get(module._annotations.FOREIGN_KEY).content;
 
-    // TODO we might need to check the table of location, so it is indeed this.table
-    return new Reference(location, this.table.schema.catalog);
+        // backward compatibility
+        if (typeof content.domain_filter_pattern === "string") {
+            filterPattern = content.domain_filter_pattern;
+            filterPatternTemplate = content.template_engine;
+
+        // make sure the annotation is properly defined
+        } else if (isObjectAndNotNull(content.domain_filter) && isStringAndNotEmpty(content.domain_filter.ermrest_path_pattern)) {
+            filterPattern = content.domain_filter.ermrest_path_pattern;
+            filterPatternTemplate = content.domain_filter.template_engine;
+
+            // if displayname is passed, process it
+            if (isStringAndNotEmpty(content.domain_filter.display_markdown_pattern)) {
+                displaynameMkdn = module._renderTemplate(
+                    content.domain_filter.display_markdown_pattern,
+                    keyValues,
+                    baseTable.schema.catalog,
+                    {templateEngine: filterPatternTemplate}
+                )
+
+                if (displaynameMkdn != null && displaynameMkdn.trim() !== '') {
+                    displayname = module.renderMarkdown(displaynameMkdn, true);
+                }
+            }
+        }
+
+        // process the filter pattern
+        if (filterPattern) {
+            uriFilter = module._renderTemplate(
+                filterPattern,
+                keyValues,
+                baseTable.schema.catalog,
+                {templateEngine: filterPatternTemplate}
+            );
+        }
+
+        // ignore the annotation if given path is empy
+        if (typeof uriFilter === "string" && uriFilter.trim() !== '') {
+            // create a cfacets based on the given domain filter pattern
+            cfacets = {ermrest_path: uriFilter, removable: false};
+
+            // attach the displayname if it's non empty
+            if (isStringAndNotEmpty(displayname)) {
+                cfacets.displayname = {
+                    value: displayname,
+                    unformatted: displaynameMkdn,
+                    isHTML: true
+                };
+            }
+
+            // see if we can parse the url, otherwise ignore the annotaiton
+            try {
+                location = module.parse(currURI + '/*::cfacets::' + module.encodeFacet(cfacets));
+            } catch (exp) {
+                console.log("given domain_filter throws error, ignoring it. ", exp);
+            }
+        }
+
+        // if the annotation is missing or is invalid, location will be undefined
+        if (!location) {
+            location = module.parse(currURI);
+        }
+
+        return new Reference(location, currTable.schema.catalog);
+    };
+
+    return getFilteredRef(this);
+
 };
 ForeignKeyPseudoColumn.prototype.getDefaultDisplay = function (rowValues) {
     var fkColumns = this.foreignKey.colset.columns,

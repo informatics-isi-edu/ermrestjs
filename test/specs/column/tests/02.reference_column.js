@@ -539,6 +539,25 @@ exports.execute = function (options) {
                 schemaUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":";
                 mainEntityUri = schemaUri  + mainEntityTableName;
 
+            var testFilteredRef = function (ref, tableName, ermrestPath, displayname) {
+                expect(ref.table.name).toBe(tableName, "table name missmatch");
+
+                if (ermrestPath == "" || ermrestPath == null) {
+                    expect(ref.uri).toBe(schemaUri + tableName, "uri missmatch.");
+                } else {
+                    expect(ref.location.filter).not.toBeTruthy("fitler defined.");
+                    expect(ref.location.customFacets).toBeTruthy("custom facet undefiend");
+                    expect(ref.location.customFacets.ermrestPath).toBe(ermrestPath, "ermrestPath missmatch");
+                    if (displayname) {
+                        expect(ref.location.customFacets.displayname.value).toEqual(displayname, "displayname missmatch");
+                    } else {
+                        expect(ref.location.customFacets.displayname).not.toBeDefined("displayname missmatch");
+                    }
+                    expect(ref.location.customFacets.removable).toEqual(false, "removable missmatch");
+                }
+
+            };
+
             describe('for pseudoColumns, ', function() {
                 describe('for foreign keys, ', function() {
 
@@ -550,13 +569,13 @@ exports.execute = function (options) {
 
                             // mainEntityColumns[i] where:
                             // 1=0 - id for table
-                            // i=1 - foreign key to no constraint table this constrains the following col
-                            // i=2 - foreign key to constrained table with domain filter defined with a dynamic value
-                            // i=3 - foreign key to position table with domain filter defined with a static value
-                            // i=4 - text column that constrains the following fk
-                            // i=5 - foreign key to position table with domain filter defined with dynamic value
-                            // i=6 - foreign key to constrained table with domain filter with a conjunction of 2 dynamic values
-                            // i=7 - foreign key to position table with
+                            // i=1 - foreign key to no constraint table this constrains the following col (fk_no_constraint)
+                            // i=2 - foreign key to constrained table with domain filter defined with a dynamic value (fk_constrained)
+                            // i=3 - foreign key to position table with domain filter defined with a static value (fk_position_predefined)
+                            // i=4 - text column that constrains the following fk (position_text_col)
+                            // i=5 - foreign key to position table with domain filter defined with dynamic value (fk_position_user_defined)
+                            // i=6 - foreign key to constrained table with domain filter with a conjunction of 2 dynamic values (fk_multi_constrained)
+                            // i=7 - foreign key to position table with (fk_using_fkeys)
                             mainEntityColumns = response.columns;
 
                             done();
@@ -571,28 +590,40 @@ exports.execute = function (options) {
                             mainEntityData = {}
                             filteredReference = mainEntityColumns[3].filteredRef(mainEntityData);
 
-                            expect(filteredReference.uri).toBe(schemaUri + "position-type-table/position_type_col=fixed");
+                            // doesn't have displayname and therefore should be hidden
+                            testFilteredRef(filteredReference, "position-type-table", "position_type_col=fixed");
                         });
 
                         it('Reference for mainEntityColumns[5], should have proper domain filter.', function() {
                             mainEntityData = {"position_text_col": "relative"};
                             filteredReference = mainEntityColumns[5].filteredRef(mainEntityData);
 
-                            expect(filteredReference.uri).toBe(schemaUri + "position-type-table/position_type_col=" + mainEntityData.position_text_col);
+                            testFilteredRef(
+                                filteredReference,
+                                "position-type-table",
+                                "position_type_col=" + mainEntityData.position_text_col,
+                                 "<strong>position_type_col</strong>: " + mainEntityData.position_text_col
+                             );
                         });
 
                         it('Reference for mainEntityColumns[2], should have proper domain filter.', function() {
                             mainEntityData = {"fk1": 1234};
                             filteredReference = mainEntityColumns[2].filteredRef(mainEntityData);
 
-                            expect(filteredReference.uri).toBe(schemaUri + "fk-constrained-table/fk2=" + mainEntityData.fk1);
+                            // using the old domain_filter_pattern syntax
+                            testFilteredRef(filteredReference, "fk-constrained-table", "fk2=" + mainEntityData.fk1);
                         });
 
                         it('Reference for mainEntityColumns[6], should have proper domain filter.', function() {
                             mainEntityData = {"fk1": 1234, "position_text_col": "relative"};
                             filteredReference = mainEntityColumns[6].filteredRef(mainEntityData);
 
-                            expect(filteredReference.uri).toBe(schemaUri + "fk-constrained-table/fk2=" + mainEntityData.fk1 + "&position_col=" + mainEntityData.position_text_col);
+                            testFilteredRef(
+                                filteredReference,
+                                "fk-constrained-table",
+                                "fk2=" + mainEntityData.fk1 + "&position_col=" + mainEntityData.position_text_col,
+                                "<strong>fk2</strong>: " + mainEntityData.fk1 + " and <strong>position_col</strong>:" + mainEntityData.position_text_col
+                            );
                         });
                     });
 
@@ -601,33 +632,33 @@ exports.execute = function (options) {
                             mainEntityData = {};
                             filteredReference = mainEntityColumns[5].filteredRef(mainEntityData);
 
-                            expect(filteredReference.uri).toBe(schemaUri + "position-type-table");
+                            testFilteredRef(filteredReference, "position-type-table");
                         });
 
                         it('Reference for mainEntityColumns[2], should have no filter defined.', function() {
                             mainEntityData = {};
                             filteredReference = mainEntityColumns[2].filteredRef(mainEntityData);
 
-                            expect(filteredReference.uri).toBe(schemaUri + "fk-constrained-table");
+                            testFilteredRef(filteredReference, "fk-constrained-table");
                         });
 
                         it('Reference for mainEntityColumns[6], should have proper domain filter.', function() {
                             mainEntityData = {};
                             filteredReference = mainEntityColumns[6].filteredRef(mainEntityData);
 
-                            expect(filteredReference.uri).toBe(schemaUri + "fk-constrained-table");
+                            testFilteredRef(filteredReference, "fk-constrained-table");
 
                             // if one value is defined and the other isn't, filter should still be null
                             mainEntityData.fk1 = 1;
                             filteredReference = mainEntityColumns[6].filteredRef(mainEntityData);
 
-                            expect(filteredReference.uri).toBe(schemaUri + "fk-constrained-table");
+                            testFilteredRef(filteredReference, "fk-constrained-table");
 
                             delete mainEntityData.fk1;
                             mainEntityData.position_text_col = "relative";
                             filteredReference = mainEntityColumns[6].filteredRef(mainEntityData);
 
-                            expect(filteredReference.uri).toBe(schemaUri + "fk-constrained-table");
+                            testFilteredRef(filteredReference, "fk-constrained-table");
                         });
                     });
 
@@ -636,7 +667,7 @@ exports.execute = function (options) {
                             mainEntityData = {"fk1": 1234};
                             filteredReference = mainEntityColumns[7].filteredRef(mainEntityData);
 
-                            expect(filteredReference.uri).toBe(schemaUri + "fk-constrained-table");
+                            testFilteredRef(filteredReference, "fk-constrained-table");
                         });
 
                         it("otherwise should use the provided data.", function () {
@@ -656,15 +687,13 @@ exports.execute = function (options) {
                             };
                             filteredReference = mainEntityColumns[7].filteredRef(mainEntityData, foreignKeyData);
 
-                            expect(filteredReference.uri).toBe(schemaUri + "fk-constrained-table/fk2=4321&position_col=1235&id=1234");
+                            testFilteredRef(
+                                filteredReference,
+                                "fk-constrained-table",
+                                "fk2=4321&position_col=1235&id=1234",
+                                "<strong>fk2</strong>: 4321 and <strong>position_col</strong>:1235"
+                            );
                         });
-                    });
-
-                    it("should return the originating reference if the domain_filter_pattern results in an invalid (not understandable by parser) url.", function () {
-                        mainEntityData = {"position_text_col": "a&v&c"};
-                        filteredReference = mainEntityColumns[5].filteredRef(mainEntityData);
-
-                        expect(filteredReference.uri).toBe(schemaUri + "position-type-table");
                     });
                 });
             });
