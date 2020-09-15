@@ -1724,13 +1724,8 @@ ForeignKeyPseudoColumn.prototype.filteredRef = function(data, linkedData) {
         keyValues = module._getFormattedKeyValues(baseTable, self._context, data, linkedData);
         content = self.foreignKey.annotations.get(module._annotations.FOREIGN_KEY).content;
 
-        // backward compatibility
-        if (typeof content.domain_filter_pattern === "string") {
-            filterPattern = content.domain_filter_pattern;
-            filterPatternTemplate = content.template_engine;
-
         // make sure the annotation is properly defined
-        } else if (isObjectAndNotNull(content.domain_filter) && isStringAndNotEmpty(content.domain_filter.ermrest_path_pattern)) {
+        if (isObjectAndNotNull(content.domain_filter) && isStringAndNotEmpty(content.domain_filter.ermrest_path_pattern)) {
             filterPattern = content.domain_filter.ermrest_path_pattern;
             filterPatternTemplate = content.domain_filter.template_engine;
 
@@ -1747,6 +1742,11 @@ ForeignKeyPseudoColumn.prototype.filteredRef = function(data, linkedData) {
                     displayname = module.renderMarkdown(displaynameMkdn, true);
                 }
             }
+        }
+        // backward compatibility
+        else if (typeof content.domain_filter_pattern === "string") {
+            filterPattern = content.domain_filter_pattern;
+            filterPatternTemplate = content.template_engine;
         }
 
         // process the filter pattern
