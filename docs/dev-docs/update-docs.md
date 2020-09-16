@@ -93,22 +93,7 @@ If you're already familiar with deriva-py you can skip this section. This sectio
 
 #### How to run the validator
 
-After installing deriva-py, you can run the following command to find more information about the validator
-
-```
-$ python deriva/config/annotation_validate.py --help
-```
-
-To run the validator, you need to at least specify the host and catalog number, so
-
-```
-$ python deriva/config/annotation_validate.py dev.isrd.isi.edu 1
-```
-This will run the validator on the whole catalog. If you want to limit it, you can use `-s` and `-t` options. If the catalog is not visible for everyone, you need to provide your auth token as well. The following is an example of running the validator on a specific tag in a specific table that is only visible to a certain user:
-
-```
-$ python deriva/config/annotation_validate.py dev.isrd.isi.edu 1 -s isa -t dataset --token SOME_TOKEN -a tag:isrd.isi.edu,2016:foreign-key
-```
+You can find the instructions on how to run the validator [in here](https://docs.derivacloud.org/deriva-py/cli/deriva-annotation-validate.html).
 
 #### How to update the validator
 
