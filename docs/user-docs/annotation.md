@@ -476,7 +476,7 @@ Supported JSON payload patterns:
 - `{` ... `"to_comment_display":` _comment_display_ ... `}`: The display mode for the tooltip. Set to `inline` to show it as text or `tooltip` to show as a hover tooltip.
     - Currently the `comment_display` is only supported for foreign key relationships in detailed context when they are part of `visible-columns` or `visible-foreign-keys`.
 - `{` ... `"display": {` _context_`:` _option_ ...`}` ... `}`: Apply each _option_ to the presentation of referenced content for any number of _context_ names.
-- `{` ... `"domain_filter_pattern":` _pathpattern_ ...`}` (_deprecated_): The _pathpattern_ yields a _filter_ via [Pattern Expansion](#pattern-expansion). This syntax has been deprecated in favor of the next syntax (`domainfilter`). The new syntax allows you to provide the visual presentation of the filter.
+- `{` ... `"domain_filter_pattern":` _pathpattern_ ...`}` (_deprecated_): The _pathpattern_ yields a _filter_ via [Pattern Expansion](#pattern-expansion). The domain filter will be used while selecting a value for this particular foreign key in the entry contexts. This syntax has been deprecated in favor of the next syntax (`domain_filter`). The new syntax allows you to provide the visual presentation of the filter.
 - `{` ... `"domain_filter":` _domainfilter_ ...`}`: The domain filter that will be used while selecting a value for this particular foreign key in the entry contexts. This attribute can be used to limit the available options to the user.
 
 Supported _comment_ syntax:
