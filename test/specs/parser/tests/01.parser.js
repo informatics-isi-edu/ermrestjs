@@ -921,7 +921,13 @@ exports.execute = function(options) {
                 expect(loc.customFacets.encoded).toEqual(blob, "blob missmatch");
                 expect(loc.uri).toEqual(uri, "uri missmatch.");
                 expect(loc.ermrestPath).toEqual(ermrestPath, "ermrestCompactUri missmatch");
-                expect(loc.customFacets.displayname).toEqual(cfacets.displayname, "displayname missmatch");
+                if (typeof cfacets.displayname === "string") {
+                    expect(loc.customFacets.displayname.value).toEqual(cfacets.displayname, "displayname missmatch");
+                    expect(loc.customFacets.displayname.isHTML).toEqual(false, "isHTML missmatch");
+                } else {
+                    expect(loc.customFacets.displayname.value).toEqual(cfacets.displayname.value, "displayname missmatch");
+                    expect(loc.customFacets.displayname.isHTML).toEqual(cfacets.displayname.isHTML, "isHTML missmatch");
+                }
             };
 
             describe("getter, ", function () {
@@ -934,14 +940,6 @@ exports.execute = function(options) {
                     it ("when uri has an invalid cfacests blob, parser should throw an error.", function () {
                         expect(function () {
                             options.ermRest.parse(baseUri + "/*::cfacets::invalidblob");
-                        }).toThrow(customFacetError);
-                    });
-
-                    it ("when uri has a valid cfacets blob but `displayname` is missing, parser should throw an error.", function () {
-                        // {"ermrest_path": "id=2"}
-                        blob = "N4IgpgTgthYM4BcD6AHAhggFiAXCAlgCYC8ATCAL5A";
-                        expect(function () {
-                            options.ermRest.parse(baseUri + "/*::cfacets::" + blob);
                         }).toThrow(customFacetError);
                     });
 
@@ -966,11 +964,12 @@ exports.execute = function(options) {
                     });
 
                     it ("should handle passing only ermrest_path.", function () {
-                        blob = "N4IgJglgzgDgNgQwJ4DsEFsCmIBcIBuCcArtgDQiYBO6VmUALgPowIMAWuIEYAvAEwgAvkA";
+                        // {"displayname": {"value": "<strong>value</strong>", "isHTML": true}, "ermrest_path": "id=2"}
+                        blob = "N4IgJglgzgDgNgQwJ4DsEFsCmIBcoBuCcArtjiADxQAuATgPYoDmAfISZhQPQ0PMsgANCGgAJACoBZADK46pAL7DMtdLUw0A+jATUAFrhFgAvACYQCoA";
                         testCustomFacets(
                             baseUri + "/*::cfacets::" + blob,
                             blob,
-                            {"displayname": "value", "ermrest_path": "id=2"},
+                            {"displayname": {"value": "<strong>value</strong>", "isHTML": true}, "ermrest_path": "id=2"},
                             "M:=parse_schema:parse_table/id=2"
                         );
                     });

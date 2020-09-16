@@ -476,7 +476,8 @@ Supported JSON payload patterns:
 - `{` ... `"to_comment_display":` _comment_display_ ... `}`: The display mode for the tooltip. Set to `inline` to show it as text or `tooltip` to show as a hover tooltip.
     - Currently the `comment_display` is only supported for foreign key relationships in detailed context when they are part of `visible-columns` or `visible-foreign-keys`.
 - `{` ... `"display": {` _context_`:` _option_ ...`}` ... `}`: Apply each _option_ to the presentation of referenced content for any number of _context_ names.
-- `{` ... `"domain_filter_pattern":` _pattern_ ...`}`: The _pattern_ yields a _filter_ via [Pattern Expansion](#pattern-expansion). The _filter_ is a URL substring using the ERMrest filter language, which can be applied to the referenced table. The defined _filter_ will be appended directly to the reference uri and therefore must be properly url encoded (chaise WILL NOT apply additional url encoding).
+- `{` ... `"domain_filter_pattern":` _pathpattern_ ...`}` (_deprecated_): The _pathpattern_ yields a _filter_ via [Pattern Expansion](#pattern-expansion). The domain filter will be used while selecting a value for this particular foreign key in the entry contexts. This syntax has been deprecated in favor of the next syntax (`domain_filter`). The new syntax allows you to provide the visual presentation of the filter.
+- `{` ... `"domain_filter":` _domainfilter_ ...`}`: The domain filter that will be used while selecting a value for this particular foreign key in the entry contexts. This attribute can be used to limit the available options to the user.
 
 Supported _comment_ syntax:
 
@@ -497,6 +498,36 @@ Supported _columnorder_key_ syntax:
 - `{ "column":` _columnname_ `}`: If omitted, the `"descending"` field defaults to `false` as per above.
 - _columnname_: A bare _columnname_ is a short-hand for `{ "column":` _columnname_ `}`. _columnname_ can be the name of any columns from the table that the foreign key is referring to.
 
+Supported _domainfilter_ syntax:
+- `{ "ermrest_path_pattern":` _pathpattern_ `}`: The _pathpattern_ yields a _filter_ via [Pattern Expansion](#pattern-expansion). With this syntax, the applied filter will be hidden from the user.
+- `{ "ermrest_path_pattern":` _pathpattern_ `, "display_markdown_pattern":` _displaypattern_ `}`: The _pathpattern_ yields a _filter_ via [Pattern Expansion](#pattern-expansion). _displaypattern_ will provide the visual presentation of the filter which will be computed by performing [Pattern Expansion](#pattern-expansion) to obtain a markdown-formatted text value which MAY be rendered using a markdown-aware renderer.
+
+Supported _filter_ syntax:
+
+- The _filter_ is a URL substring that can be applied to the referenced table.
+The defined _filter_ will be appended directly to the reference URI sent to ERMrest. Therefore,
+  - must be properly URL encoded (chaise WILL NOT apply additional URL encoding);
+  - supports any ERMrest-supported [path filters](https://docs.derivacloud.org/ermrest/api-doc/data/naming.html#path-filters) (simple predicate filters, e.g., `col=value`) or [entity links](https://docs.derivacloud.org/ermrest/api-doc/data/naming.html#entity-links) (join with other tables) as long as the projected table stays the same.
+
+    - If using entity links,
+      - cannot use `T#` (where `#` is a number, e.g., T0, T1), `F#` (where `#` is a number, e.g., F0, F1), and `M` aliases. ERMrestJS internally use these aliases.
+
+      - use `M` alias for referring to the referenced table.
+
+    - The following is a summary of supported path filters in ERMrest:
+        - Grouping: `(` _filter_ `)`
+        - Disjunction: _filter_ `;` _filter_
+        - Conjunction: _filter_ `&` _filter_
+        - Negation: `!` _filter_
+        - Unary predicates: _column_ `::null::`
+        - Binary predicates: _column_ _op_ _value_
+          - Equality: `=`
+          - Inequality: `::gt::`, `::lt::`, `::geq::`, `::leq::`
+          - Regular expressions: `::regexp::`, `::ciregexp::`
+
+- The leading and trailing slash that you might have defined
+in _filter_ value will be stripped off and ignored.
+
 Set-naming heuristics (use first applicable rule):
 
 1. A set of "related entities" make foreign key reference to a presentation context:
@@ -515,34 +546,6 @@ Foreign key sorting heuristics (use first applicable rule):
 4. Otherwise, disable sort for psuedo-column.
 
 The first applicable rule MAY cause sorting to be disabled. Consider that determination final and do not continue to search subsequent rules.
-
-Domain value presentation heuristics:
-
-1. If _pattern_ expands to _filter_ and forms a valid filter string, present filtered results as domain values.
-    - With _filter_ `F`, the effective domain query would be `GET /ermrest/catalog/N/entity/S:T/F` or equivalent.
-	- The _filter_ SHOULD be validated according to the syntax summary below.
-	- If a server response suggests the filter is invalid, an application SHOULD retry as if the _pattern_ is not present.
-2. If _filter_ is not a valid filter string, proceed as if _pattern_ is not present.
-3. If _pattern_ is not present, present unfiltered results.
-
-Supported _filter_ language is the subset of ERMrest query path syntax
-allowed in a single path element:
-
-- Grouping: `(` _filter_ `)`
-- Disjunction: _filter_ `;` _filter_
-- Conjunction: _filter_ `&` _filter_
-- Negation: `!` _filter_
-- Unary predicates: _column_ `::null::`
-- Binary predicates: _column_ _op_ _value_
-  - Equality: `=`
-  - Inequality: `::gt::`, `::lt::`, `::geq::`, `::leq::`
-  - Regular expressions: `::regexp::`, `::ciregexp::`
-
-Notably, _filters_ MUST NOT contain the path divider `/` nor any other
-reserved syntax not summarized above. All _column_ names and _value_
-literals MUST be URL-escaped to protect any special characters. All
-_column_ names MUST match columns in the referenced table and MUST NOT
-be qualified with table instance aliases.
 
 ### Tag: 2016 Column Display
 
