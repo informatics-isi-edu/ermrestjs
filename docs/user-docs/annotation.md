@@ -476,6 +476,7 @@ Supported JSON payload patterns:
 - `{` ... `"to_comment_display":` _comment_display_ ... `}`: The display mode for the tooltip. Set to `inline` to show it as text or `tooltip` to show as a hover tooltip.
     - Currently the `comment_display` is only supported for foreign key relationships in detailed context when they are part of `visible-columns` or `visible-foreign-keys`.
 - `{` ... `"display": {` _context_`:` _option_ ...`}` ... `}`: Apply each _option_ to the presentation of referenced content for any number of _context_ names.
+- `{` ... `"domain_filter_pattern":` _pathpattern_ ...`}` (_deprecated_): The _pathpattern_ yields a _filter_ via [Pattern Expansion](#pattern-expansion). This syntax has been deprecated in favor of the next syntax (`domainfilter`). The new syntax allows you to provide the visual presentation of the filter.
 - `{` ... `"domain_filter":` _domainfilter_ ...`}`: The domain filter that will be used while selecting a value for this particular foreign key in the entry contexts. This attribute can be used to limit the available options to the user.
 
 Supported _comment_ syntax:
@@ -503,36 +504,29 @@ Supported _domainfilter_ syntax:
 
 Supported _filter_ syntax:
 
-- The _filter_ is a URL substring using the ERMrest filter language,
-which can be applied to the referenced table.
-The defined _filter_ will be appended directly to the reference uri
-and therefore must be properly url encoded
- (chaise WILL NOT apply additional url encoding).
+- The _filter_ is a URL substring that can be applied to the referenced table.
+The defined _filter_ will be appended directly to the reference URI sent to ERMrest. Therefore,
+  - must be properly URL encoded (chaise WILL NOT apply additional URL encoding);
+  - supports any ERMrest-supported [path filters](https://docs.derivacloud.org/ermrest/api-doc/data/naming.html#path-filters) (simple predicate filters, e.g., `col=value`) or [entity links](https://docs.derivacloud.org/ermrest/api-doc/data/naming.html#entity-links) (join with other tables) as long as the projected table stays the same.
+
+    - If using entity links,
+      - cannot use `T#` (where `#` is a number, e.g., T0, T1), `F#` (where `#` is a number, e.g., F0, F1), and `M` aliases. ERMrestJS internally use these aliases.
+
+      - use `M` alias for referring to the referenced table.
+
+    - The following is a summary of supported path filters in ERMrest:
+        - Grouping: `(` _filter_ `)`
+        - Disjunction: _filter_ `;` _filter_
+        - Conjunction: _filter_ `&` _filter_
+        - Negation: `!` _filter_
+        - Unary predicates: _column_ `::null::`
+        - Binary predicates: _column_ _op_ _value_
+          - Equality: `=`
+          - Inequality: `::gt::`, `::lt::`, `::geq::`, `::leq::`
+          - Regular expressions: `::regexp::`, `::ciregexp::`
 
 - The leading and trailing slash that you might have defined
-in your path will be stripped off and ignored.
-
-- All _column_ names and _value_
-literals MUST be URL-escaped to protect any special characters. All
-_column_ names MUST match columns in the referenced table.
-
-- Since chaise will directly append the given _filter_ in the request for getting the values to the ERMrest request URI, you are free to use any ERMrest-supported [path filters](https://docs.derivacloud.org/ermrest/api-doc/data/naming.html#path-filters) or [entity links](https://docs.derivacloud.org/ermrest/api-doc/data/naming.html#entity-links) as long as the projected table stays the same.
-- The following is a summary of supported path filters in ERMrest:
-    - Grouping: `(` _filter_ `)`
-    - Disjunction: _filter_ `;` _filter_
-    - Conjunction: _filter_ `&` _filter_
-    - Negation: `!` _filter_
-    - Unary predicates: _column_ `::null::`
-    - Binary predicates: _column_ _op_ _value_
-      - Equality: `=`
-      - Inequality: `::gt::`, `::lt::`, `::geq::`, `::leq::`
-      - Regular expressions: `::regexp::`, `::ciregexp::`
-
-- If you're using entity links,
-  - Don't use use `T#` (where `#` is a number, e.g. T0, T1), `F#` (where `#` is a number, e.g. F0, F1), and `M` aliases. These are internally used by ERMrestJS.
-
-  - You can use `M` alias for referring to the referenced table.
-
+in _filter_ value will be stripped off and ignored.
 
 Set-naming heuristics (use first applicable rule):
 
