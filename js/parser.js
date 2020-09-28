@@ -246,7 +246,7 @@
                 if (!prevJoin && index !== 1) {
                     // we're creating this for the previous section, so we should use the previous index
                     // Alias will be T, T1, T2, ... (notice we don't have T0)
-                    alias = JOIN_TABLE_ALIAS_PREFIX + (pathParts.length > 1 ? pathParts.length-1 : "");
+                    alias = JOIN_TABLE_ALIAS_PREFIX + (pathParts.length > 0 ? pathParts.length : "");
                     pathParts.push(new PathPart(alias, joins, schema, table, facets, cfacets, filter, filtersString));
                     filter = undefined; filtersString = undefined; cfacets = undefined; facets = undefined; join = undefined; joins = [];
                 }
