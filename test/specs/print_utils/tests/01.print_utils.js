@@ -548,10 +548,13 @@ exports.execute = function (options) {
                 expect(module.renderHandlebarsTemplate(template, {"type": "txt"})).toBe("other", "missmatch for 02");
             });
 
-            it ('regexString helper', function () {
-                var template = '{{#each (regexString testString "jpg|png")}}{{this}}\n{{/each}}';
+            it ('regexFindAll helper', function () {
+                var template = '{{#each (regexFindAll testString "jpg|png")}}{{this}}\n{{/each}}';
                 expect(module.renderHandlebarsTemplate(template, {"testString": "house-jpg.jpg"}) ).toBe("jpg\njpg\n", "missmatch for 1st test");
                 expect(module.renderHandlebarsTemplate(template, {"testString": "jumpng-fox.jpg"}) ).toBe("png\njpg\n", "missmatch for 2nd test");
+
+                var template2 = '{{#each (regexFindAll testString "^\/(.+\/)*(.+)\.(.+)$")}}{{this}}\n{{/each}}';
+                expect(module.renderHandlebarsTemplate(template, {"testString": "/var/www/html/index.html"}) ).toBe("something", "missmatch for 2nd test");
             });
 
             it('suppressed default helper log', function () {

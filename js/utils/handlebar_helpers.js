@@ -44,20 +44,24 @@
             },
 
             /**
-             * {{#each (regexMatch value regexp)}}
+             * {{#each (regexFindAll value regexp)}}
              *   {{this}}
              * {{/each}}
              *
-             * @returns string that matches the regular expression
+             * @returns array of strings that match the regular expression
              */
-            regexString: function (value, regexp) {
+            regexFindAll: function (value, regexp) {
                 var regexpObj = new RegExp(regexp, 'g');
+                // var parts = value.match("/" + regexp + "/");
 
-                var regexpArray;
                 var matches = [];
+                var regexpArray;
                 while ( (regexpArray = regexpObj.exec(value)) !== null) {
                     matches.push(regexpArray[0]);
                 }
+                // for (var j=1; j<parts.length; j++) {
+                //     matches.push(parts[j]);
+                // }
                 return matches;
             },
 
