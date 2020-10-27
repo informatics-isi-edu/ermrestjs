@@ -1736,7 +1736,7 @@ ForeignKeyPseudoColumn.prototype.filteredRef = function(data, linkedData) {
                     keyValues,
                     baseTable.schema.catalog,
                     {templateEngine: filterPatternTemplate}
-                )
+                );
 
                 if (displaynameMkdn != null && displaynameMkdn.trim() !== '') {
                     displayname = module.renderMarkdown(displaynameMkdn, true);

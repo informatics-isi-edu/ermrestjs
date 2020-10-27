@@ -3062,7 +3062,13 @@
 
                             // in entry mode, pseudo-column, inbound fk, and key are not allowed
                             if (!(isEntry && (refCol.isPathColumn || refCol.isInboundForeignKey || refCol.isKey) )) {
-                                this._referenceColumns.push(refCol);
+                                // NOTE: should I check refCol.hasAggregate ?
+                                // check we are in entry/compact mode before excluding more columns
+                                if (context.startsWith(module._contexts.COMPACT_ENTRY) && (refCol.hasWaitFor || !refCol.isUnique || (refCol.hasPath && refCol.isUnique && refCol.foreignKeys.length > 1)) ) {
+                                    // don't add the pseudo column
+                                } else {
+                                    this._referenceColumns.push(refCol);
+                                }
                             }
                         }
 
@@ -3297,6 +3303,12 @@
                         this._referenceColumns.splice(i, 1);
                         i--;
                     }
+
+                    // TODO: remove columns in COMPACT_ENTRY context:
+                    // if (context.startsWith(module._contexts.COMPACT_ENTRY) && (refCol.hasWaitFor || !refCol.isUnique || (refCol.hasPath && refCol.isUnique && refCol.foreignKeys.length > 1)) ) {
+                    //     this._referenceColumns.splice(i, 1);
+                    // }
+
                 }
             }
 
@@ -4114,6 +4126,14 @@
          */
         get entryEdit() {
             return this._contextualize(module._contexts.EDIT);
+        },
+
+        /**
+         * The _entry/compact_ context of this reference.
+         * @type {ERMrest.Reference}
+         */
+        get compactEntry() {
+            return this._contextualize(module._contexts.COMPACT_ENTRY);
         },
 
         /**
