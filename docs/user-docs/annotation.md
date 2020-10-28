@@ -141,7 +141,7 @@ Supported JSON _context_ patterns:
 - The `"comment"` setting applies *only* to the model element which is annotated.
   - Currently the contextualized `comment` is only supported for tables.
 - The `"table_comment_display"` and `"column_comment_display"` setting applies *only* to the model element which is annotated.
-  - Currently the contextualized `table_comment_display` is only supported for tables in detailed context when they are part of a foreign key relationship in `visible-columns` or `visible-foreign-keys`.
+  - Currently the contextualized `table_comment_display` is supported for `compact` context for the title and the tables in detailed context when they are part of a foreign key relationship in `visible-columns` or `visible-foreign-keys`.
   - `column_comment_display` is accepted as a parameter, but currently doesn't do anything.
 - The `"name"` and `"markdown_name"` setting applies *only* to the model element which is annotated. They bypass the `name_style` controls which only apply to actual model names.
   - The `"markdown_name"` setting takes precedence if both are specified.
