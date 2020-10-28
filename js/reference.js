@@ -1248,7 +1248,7 @@
 
                     var ref = new Reference(module.parse(uri), self._table.schema.catalog);
                     //  make a page of tuples of the results (unless error)
-                    var page = new Page(ref.contextualize.compact, etag, response.data, false, false);
+                    var page = new Page(ref.contextualize.compactEntry, etag, response.data, false, false);
 
                     //  resolve the promise, passing back the page
                     return defer.resolve({
@@ -1839,7 +1839,7 @@
                         }
                     }
 
-                    var ref = new Reference(module.parse(uri), self._table.schema.catalog).contextualize.compact;
+                    var ref = new Reference(module.parse(uri), self._table.schema.catalog).contextualize.compactEntry;
                     var successfulPage = new Page(ref, etag, pageData, false, false);
                     var failedPage = null;
 
@@ -2838,11 +2838,13 @@
                 pseudoNameObj, pseudoName, isHash,
                 hasInbound, isEntity, hasPath, isEntityMode,
                 isEntry,
+                isCompactEntry,
                 colFks,
                 ignore, cols, col, fk, i, j;
 
             var context = this._context;
             isEntry = module._isEntryContext(context);
+            isCompactEntry = context.startsWith(module._contexts.COMPACT_ENTRY);
 
             // check if we should hide some columns or not.
             // NOTE: if the reference is actually an inbound related reference, we should hide the foreign key that created this link.
@@ -3060,15 +3062,16 @@
                                 }
                             }
 
+                            // 2 conditions:
+                            // isEntry && (refCol.isPathColumn || refCol.isInboundForeignKey || refCol.isKey)
+                            // OR
+                            // isCompactEntry && (refCol.hasWaitFor || refCol.hasAggregate || (refCol.isPathColumn && refCol.foreignKeys.length > 1)
+                            var removePseudo = (isEntry && (refCol.isPathColumn || refCol.isInboundForeignKey || refCol.isKey) ) ||
+                                    (isCompactEntry && (refCol.hasWaitFor || refCol.hasAggregate || (refCol.isPathColumn && refCol.foreignKeys.length > 1)) );
+
                             // in entry mode, pseudo-column, inbound fk, and key are not allowed
-                            if (!(isEntry && (refCol.isPathColumn || refCol.isInboundForeignKey || refCol.isKey) )) {
-                                // NOTE: should I check refCol.hasAggregate ?
-                                // check we are in entry/compact mode before excluding more columns
-                                if (context.startsWith(module._contexts.COMPACT_ENTRY) && (refCol.hasWaitFor || !refCol.isUnique || (refCol.hasPath && refCol.isUnique && refCol.foreignKeys.length > 1)) ) {
-                                    // don't add the pseudo column
-                                } else {
-                                    this._referenceColumns.push(refCol);
-                                }
+                            if (!removePseudo) {
+                                this._referenceColumns.push(refCol);
                             }
                         }
 

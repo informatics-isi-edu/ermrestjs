@@ -152,7 +152,7 @@ exports.execute = function (options) {
             "isPathColumn", "isPathColumn", "isAsset", "", "isPathColumn", "isPathColumn"
         ];
 
-        var mainRef, mainRefDetailed, invalidRef, mainRefEntry,
+        var mainRef, mainRefDetailed, invalidRef, mainRefEntry, mainRefCompactEntry,
             detailedCols, detailedColsWTuple, mainTuple, mainPage;
 
         beforeAll(function (done) {
@@ -162,6 +162,7 @@ exports.execute = function (options) {
                 mainRefDetailed = response.contextualize.detailed;
                 detailedCols = mainRefDetailed.columns;
                 mainRefEntry = response.contextualize.entry;
+                mainRefCompactEntry = response.contextualize.compactEntry;
                 return options.ermRest.resolve(invalidEntityUri, {cid: "test"});
             }).then(function (response) {
                 invalidRef = response;
@@ -252,6 +253,28 @@ exports.execute = function (options) {
                     "ref": mainRefEntry,
                     "expected": [
                         "main_table_id_col", "col", ["pseudo_column_schema", "main_fk1"].join("_"), "asset"
+                    ]
+                }]);
+            });
+
+            it ("in compact entry context, should ignore the pseudoColumns that are not supported.", function () {
+                mainRefCompactEntry.columns.forEach(function (col) {
+                    console.log(col._name);
+                });
+
+                expect(mainRefCompactEntry.columns.length).toBe(9, "length missmatch.");
+
+                checkReferenceColumns([{
+                    "ref": mainRefCompactEntry,
+                    "expected": [
+                        "main_table_id_col",
+                        "col",
+                        ["pseudo_column_schema", "main_key1"].join("_"),
+                        ["pseudo_column_schema", "main_fk1"].join("_"),
+                        [{"outbound": ["pseudo_column_schema", "main_fk1"]}, "id"],
+                        "asset", "asset_filename",
+                        "$virtual-column-1",
+                        "$virtual-column-1-1"
                     ]
                 }]);
             });
