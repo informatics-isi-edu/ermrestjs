@@ -2844,7 +2844,7 @@
 
             var context = this._context;
             isEntry = module._isEntryContext(context);
-            isCompactEntry = context.startsWith(module._contexts.COMPACT_ENTRY);
+            isCompactEntry = (typeof context === "string" && context.startsWith(module._contexts.COMPACT_ENTRY));
 
             // check if we should hide some columns or not.
             // NOTE: if the reference is actually an inbound related reference, we should hide the foreign key that created this link.
