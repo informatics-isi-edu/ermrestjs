@@ -3306,12 +3306,6 @@
                         this._referenceColumns.splice(i, 1);
                         i--;
                     }
-
-                    // TODO: remove columns in COMPACT_ENTRY context:
-                    // if (context.startsWith(module._contexts.COMPACT_ENTRY) && (refCol.hasWaitFor || !refCol.isUnique || (refCol.hasPath && refCol.isUnique && refCol.foreignKeys.length > 1)) ) {
-                    //     this._referenceColumns.splice(i, 1);
-                    // }
-
                 }
             }
 

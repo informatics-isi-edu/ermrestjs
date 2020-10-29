@@ -258,10 +258,6 @@ exports.execute = function (options) {
             });
 
             it ("in compact entry context, should ignore the pseudoColumns that are not supported.", function () {
-                mainRefCompactEntry.columns.forEach(function (col) {
-                    console.log(col._name);
-                });
-
                 expect(mainRefCompactEntry.columns.length).toBe(9, "length missmatch.");
 
                 checkReferenceColumns([{
