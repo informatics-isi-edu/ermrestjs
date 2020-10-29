@@ -1247,8 +1247,9 @@
                     }
 
                     var ref = new Reference(module.parse(uri), self._table.schema.catalog);
+                    ref = (response.data.length > 1 ? ref.contextualize.compactEntry : ref.contextualize.compact);
                     //  make a page of tuples of the results (unless error)
-                    var page = new Page(ref.contextualize.compactEntry, etag, response.data, false, false);
+                    var page = new Page(ref, etag, response.data, false, false);
 
                     //  resolve the promise, passing back the page
                     return defer.resolve({
@@ -1840,6 +1841,7 @@
                     }
 
                     var ref = new Reference(module.parse(uri), self._table.schema.catalog).contextualize.compactEntry;
+                    ref = (response.data.length > 1 ? ref.contextualize.compactEntry : ref.contextualize.compact);
                     var successfulPage = new Page(ref, etag, pageData, false, false);
                     var failedPage = null;
 
