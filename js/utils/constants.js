@@ -57,6 +57,7 @@
         COMPACT: 'compact',
         COMPACT_BRIEF: 'compact/brief',
         COMPACT_BRIEF_INLINE: 'compact/brief/inline',
+        COMPACT_ENTRY: 'compact/entry', // post create/edit for multiple rows
         COMPACT_SELECT: 'compact/select',
         CREATE: 'entry/create',
         DETAILED: 'detailed',
@@ -78,10 +79,10 @@
         }
     });
 
-    module._contextArray = ["compact", "compact/brief", "compact/select", "entry/create", "detailed", "entry/edit", "entry", "filter", "*", "row_name", "compact/brief/inline"];
+    module._contextArray = ["compact", "compact/brief", "compact/entry", "compact/select", "entry/create", "detailed", "entry/edit", "entry", "filter", "*", "row_name", "compact/brief/inline"];
 
     module._entryContexts = [module._contexts.CREATE, module._contexts.EDIT, module._contexts.ENTRY];
-    module._compactContexts = [module._contexts.COMPACT, module._contexts.COMPACT_BRIEF, module._contexts.COMPACT_BRIEF_INLINE, module._contexts.COMPACT_SELECT];
+    module._compactContexts = [module._contexts.COMPACT, module._contexts.COMPACT_BRIEF, module._contexts.COMPACT_BRIEF_INLINE, module._contexts.COMPACT_SELECT, module._contexts.COMPACT_ENTRY];
 
     module._tableKinds = Object.freeze({
         TABLE: "table",
