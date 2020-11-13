@@ -3429,7 +3429,7 @@
                 }
 
                 col.waitFor.forEach(function (wf) {
-                    addColToActiveList(wf, true, COLUMN_TYPE, i);
+                    addColToActiveList(wf, true, (isInline(col) ? INLINE_TYPE : COLUMN_TYPE), i);
                 });
             };
 
