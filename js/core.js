@@ -2850,7 +2850,7 @@
                     "preformatConfig": hasPreformat ? annotation.pre_format : null,
                     "isMarkdownPattern": (typeof annotation.markdown_pattern === 'string'),
                     "isMarkdownType" : this.type.name === 'markdown',
-                    "isHTML": (typeof annotation.markdown_pattern === 'string') || this.type.name === 'markdown',
+                    "isHTML": (typeof annotation.markdown_pattern === 'string') || (module._HTMLColumnType.indexOf(this.type.name) != -1),
                     "markdownPattern": annotation.markdown_pattern,
                     "templateEngine": annotation.template_engine,
                     "columnOrder": columnOrder

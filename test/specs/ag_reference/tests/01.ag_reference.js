@@ -558,8 +558,8 @@ exports.execute = function (options) {
                         });
 
                         describe("uniqueId, ", function () {
-                            it ("should return an string based on shortest key values.", function () {
-                                expect(tuples[0].uniqueId).toBe("**test2**_YES");
+                            it ("should return an string based on raw values of shortest key.", function () {
+                                expect(tuples[0].uniqueId).toBe("**test2**_true");
                             });
 
                             it ("should return null if any of the key columns are null.", function (done) {

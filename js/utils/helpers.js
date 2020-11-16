@@ -1721,6 +1721,16 @@
 
             if (options.returnArray) return arr;
             return arr.join(", ");
+        },
+
+        printColor: function (value, options) {
+            options = (typeof options === 'undefined') ? {} : options;
+
+            if (!isStringAndNotEmpty(value) || !(/^#[0-9a-fA-F]{6}$/i.test(value))) {
+                return '';
+            }
+
+            return value + ' :span: :/span:{.' + module._classNames.colorPreview + ' style=background-color:' + value +'}';
         }
     };
 
@@ -1764,6 +1774,9 @@
             case 'json':
             case 'jsonb':
                 data = utils.printJSON(data, options);
+                break;
+            case 'color_rgb_hex':
+                data = utils.printColor(data, options);
                 break;
             default: // includes 'text' and 'longtext' cases
                 data = type.baseType ? _formatValueByType(type.baseType, data, options) : utils.printText(data, options);
@@ -1907,10 +1920,10 @@
                               html = '<span class="' + module._classNames.showInPrintMode + '" style="visibility:hidden">' + videoText + "</span>";
                               iframeTagClasses.push(module._classNames.hideInPrintMode);
                             }
-                            
+
                             // add the iframe tag
                             html += iframeHTML;
-                            
+
                             // attach the iframe tag classes
                             if (iframeTagClasses.length > 0) {
                                 html += 'class="' + iframeTagClasses.join(" ") + '" ';

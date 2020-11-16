@@ -72,9 +72,10 @@ exports.execute = function (options) {
                                         '', // This value is set later by setLinkRID()
                                         '<p>'+catalog_id+': '+catalog_id+'/schema:table</p>\n',
                                         expectedMomentValue,
-                                        '<p>/*::facets::N4IghgdgJiBcAEBteoDOB7ArgJwMYFM54QBLGAGmNwAt0SDUjEAWABnYF14BfeL7oA</p>\n'
+                                        '<p>/*::facets::N4IghgdgJiBcAEBteoDOB7ArgJwMYFM54QBLGAGmNwAt0SDUjEAWABnYF14BfeL7oA</p>\n',
+                                        '<p>#00ff00 <span class="chaise-color-preview" background-color="#00ff00"> </span></p>\n'
                                          ],
-                    "isHTML" : [false, true, true, true, true, true, true, true, true, true, false, true, false, true, true, true]
+                    "isHTML" : [false, true, true, true, true, true, true, true, true, true, false, true, false, true, true, true, true]
                     },
             "test2": {
                 "rowValue" :["id=4001, name=Harold,some_invisible_column= Junior"],
@@ -94,9 +95,10 @@ exports.execute = function (options) {
                                 '',  // This value is set later by setLinkRID()
                                 '',
                                 expectedMomentValue,
-                                '<p>/*::facets::N4IghgdgJiBcAEBteoDOB7ArgJwMYFM54QBLGAGmNwAt0SDUjEAWABlYEYBdeAX3h68gA</p>\n'
+                                '<p>/*::facets::N4IghgdgJiBcAEBteoDOB7ArgJwMYFM54QBLGAGmNwAt0SDUjEAWABlYEYBdeAX3h68gA</p>\n',
+                                '<p>#0000ff <span class="chaise-color-preview" background-color="#0000ff"> </span></p>\n'
                             ],
-                "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true, true, false, true, true]
+                "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true, true, false, true, true, true]
                 },
             "test3": {
                 "rowValue" : ["id=4002, url= https://www.google.com, video_col= http://techslides.com/demos/sample-videos/small.mp4"],
@@ -116,9 +118,10 @@ exports.execute = function (options) {
                                 '', // This value is set later by setLinkRID()
                                 '',
                                 expectedMomentValue,
-                                '<p>/*::facets::N4IghgdgJiBcAEBteoDOB7ArgJwMYFM54QBLGAGmNwAt0SDUjEAWABlYCYBdeAX3h68gA</p>\n'
+                                '<p>/*::facets::N4IghgdgJiBcAEBteoDOB7ArgJwMYFM54QBLGAGmNwAt0SDUjEAWABlYCYBdeAX3h68gA</p>\n',
+                                '<p>#ff3411 <span class="chaise-color-preview" background-color="#ff3411"> </span></p>\n'
                                 ],
-                "isHTML" : [false, false, false, true, true, true, false, true, false, true, false, true, true, false, true, true]
+                "isHTML" : [false, false, false, true, true, true, false, true, false, true, false, true, true, false, true, true, true]
                 },
             "test4": {
                 "rowValue" : ["id=4003 ,some_invisible_column= Freshmen"],
@@ -138,9 +141,10 @@ exports.execute = function (options) {
                                 '', // This value is set later by setLinkRID()
                                 '',
                                 expectedMomentValue,
-                                '<p>/*::facets::N4IghgdgJiBcAEBteoDOB7ArgJwMYFM54QBLGAGmNwAt0SDUjEAWABlYGYBdeAX3h68gA</p>\n'
+                                '<p>/*::facets::N4IghgdgJiBcAEBteoDOB7ArgJwMYFM54QBLGAGmNwAt0SDUjEAWABlYGYBdeAX3h68gA</p>\n',
+                                ''
                                 ],
-                "isHTML" : [false, false, false, true, true, true, false, true, false, true, true, true, true, false, true, true]
+                "isHTML" : [false, false, false, true, true, true, false, true, false, true, true, true, true, false, true, true, false]
                 },
             "test5": {
                 "rowValue" :  ["id=4004, name= weird & HTML < "],
@@ -160,9 +164,10 @@ exports.execute = function (options) {
                                 '', // This value is set later by setLinkRID()
                                 '',
                                 expectedMomentValue,
-                                '<p>/*::facets::N4IghgdgJiBcAEBteoDOB7ArgJwMYFM54QBLGAGmNwAt0SDUjEAWABleYF14BfebnkA</p>\n'
+                                '<p>/*::facets::N4IghgdgJiBcAEBteoDOB7ArgJwMYFM54QBLGAGmNwAt0SDUjEAWABleYF14BfebnkA</p>\n',
+                                ''
                                 ],
-                "isHTML" : [false, true, true, true, true, true, true, true, true, true, false, true, true, false, true, true]
+                "isHTML" : [false, true, true, true, true, true, true, true, true, true, false, true, true, false, true, true, false]
                 },
             "test6": {
                 "rowValue" : ["id=4005, name= <a href='javascript:alert();'></a>, some_invisible_column= Senior"],
@@ -182,9 +187,10 @@ exports.execute = function (options) {
                                 '', // This value is set later by setLinkRID()
                                 '',
                                 expectedMomentValue,
-                                '<p>/*::facets::N4IghgdgJiBcAEBteoDOB7ArgJwMYFM54QBLGAGmNwAt0SDUjEAWABlYFYBdeAX3h68gA</p>\n'
+                                '<p>/*::facets::N4IghgdgJiBcAEBteoDOB7ArgJwMYFM54QBLGAGmNwAt0SDUjEAWABlYFYBdeAX3h68gA</p>\n',
+                                ''
                                 ],
-                "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true, true, false, true, true]
+                "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true, true, false, true, true, false]
                 },
             "test7": {
                 "rowValue" : ["id=4006, name= <script>alert();</script>, some_gene_sequence= GATCGATCGCGTATT, some_invisible_column= Sophomore"],
@@ -204,9 +210,10 @@ exports.execute = function (options) {
                                 '', // This value is set later by setLinkRID()
                                 '',
                                 expectedMomentValue,
-                                '<p>/*::facets::N4IghgdgJiBcAEBteoDOB7ArgJwMYFM54QBLGAGmNwAt0SDUjEAWABlYDYBdeAX3h68gA</p>\n'
+                                '<p>/*::facets::N4IghgdgJiBcAEBteoDOB7ArgJwMYFM54QBLGAGmNwAt0SDUjEAWABlYDYBdeAX3h68gA</p>\n',
+                                ''
                                 ],
-                "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true, true, false, true, true]
+                "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true, true, false, true, true, false]
             }
         };
 
@@ -317,7 +324,7 @@ exports.execute = function (options) {
                     // get the RID value that was set on options.entities[schema_name][table_name]
                     setLinkRID(key);
 
-                    expect(tuples[tupleIndex].values.length).toBe(16);
+                    expect(tuples[tupleIndex].values.length).toBe(17);
                 });
 
                 var columnNames = [
