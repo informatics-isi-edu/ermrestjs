@@ -73,7 +73,7 @@ exports.execute = function (options) {
                                         '<p>'+catalog_id+': '+catalog_id+'/schema:table</p>\n',
                                         expectedMomentValue,
                                         '<p>/*::facets::N4IghgdgJiBcAEBteoDOB7ArgJwMYFM54QBLGAGmNwAt0SDUjEAWABnYF14BfeL7oA</p>\n',
-                                        '<p>#00ff00 <span class="chaise-color-preview" background-color="#00ff00"> </span></p>\n'
+                                        '<p><span class="chaise-color-preview" background-color="#00FF00"> </span> #00FF00</p>\n'
                                          ],
                     "isHTML" : [false, true, true, true, true, true, true, true, true, true, false, true, false, true, true, true, true]
                     },
@@ -96,7 +96,7 @@ exports.execute = function (options) {
                                 '',
                                 expectedMomentValue,
                                 '<p>/*::facets::N4IghgdgJiBcAEBteoDOB7ArgJwMYFM54QBLGAGmNwAt0SDUjEAWABlYEYBdeAX3h68gA</p>\n',
-                                '<p>#0000ff <span class="chaise-color-preview" background-color="#0000ff"> </span></p>\n'
+                                '<p><span class="chaise-color-preview" background-color="#0000FF"> </span> #0000FF</p>\n'
                             ],
                 "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true, true, false, true, true, true]
                 },
@@ -119,7 +119,7 @@ exports.execute = function (options) {
                                 '',
                                 expectedMomentValue,
                                 '<p>/*::facets::N4IghgdgJiBcAEBteoDOB7ArgJwMYFM54QBLGAGmNwAt0SDUjEAWABlYCYBdeAX3h68gA</p>\n',
-                                '<p>#ff3411 <span class="chaise-color-preview" background-color="#ff3411"> </span></p>\n'
+                                '<p><span class="chaise-color-preview" background-color="#FF3411"> </span> #FF3411</p>\n'
                                 ],
                 "isHTML" : [false, false, false, true, true, true, false, true, false, true, false, true, true, false, true, true, true]
                 },

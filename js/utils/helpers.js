@@ -1730,7 +1730,8 @@
                 return '';
             }
 
-            return value + ' :span: :/span:{.' + module._classNames.colorPreview + ' style=background-color:' + value +'}';
+            value = value.toUpperCase();
+            return ':span: :/span:{.' + module._classNames.colorPreview + ' style=background-color:' + value +'} ' + value;
         }
     };
 

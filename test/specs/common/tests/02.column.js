@@ -326,7 +326,7 @@ exports.execute = function(options) {
                         testFormatvalue('table_1_color_rgb_hex', null, '', 'empty value');
                         testFormatvalue('table_1_color_rgb_hex', '00ff00', '', 'invalid value 1');
                         testFormatvalue('table_1_color_rgb_hex', '#00kj00', '', 'invalid value 2');
-                        testFormatvalue('table_1_color_rgb_hex', '#00ff00', '#00ff00 :span: :/span:{.chaise-color-preview style=background-color:#00ff00}', 'valid value');
+                        testFormatvalue('table_1_color_rgb_hex', '#00ff00', ':span: :/span:{.chaise-color-preview style=background-color:#00FF00} #00FF00', 'valid value');
                     });
                 });
 
