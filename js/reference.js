@@ -2502,7 +2502,7 @@
                  }
 
                  self._defaultExportTemplate = {
-                     displayname: "BAG",
+                     displayname: "BDBag",
                      type: "BAG",
                      outputs: outputs
                  };

@@ -336,7 +336,7 @@ exports.execute = function (options) {
                             var templates = noAnnotReference.contextualize.detailed.getExportTemplates(true);
                             expect(templates.length).toBe(1, "length missmatch");
 
-                            expect(templates[0].displayname).toBe("BAG", "displayname missmatch");
+                            expect(templates[0].displayname).toBe("BDBag", "displayname missmatch");
                             expect(templates[0].type).toBe("BAG", "type missmatch");
 
                             var defaultOutput = getDefaultOutputs(schemaName1);
@@ -356,7 +356,7 @@ exports.execute = function (options) {
                             var templates = tableWithLongDefaultReference.contextualize.detailed.getExportTemplates(true);
                             expect(templates.length).toBe(1, "length missmatch");
 
-                            expect(templates[0].displayname).toBe("BAG", "displayname missmatch");
+                            expect(templates[0].displayname).toBe("BDBag", "displayname missmatch");
                             expect(templates[0].type).toBe("BAG", "type missmatch");
 
                             expect(templates[0].outputs.length).toBe(1, "outputs length missmatch");
@@ -427,9 +427,8 @@ exports.execute = function (options) {
                         expect(response.data[0].startsWith("https://dev.isrd.isi.edu/deriva/export/bdbag/")).toBeTruthy();
 
                         done();
-                    }, function(error) {
-                        console.dir(error);
-                        done.fail();
+                    }).catch(function (err) {
+                        done.fail(err);
                     });
                 });
             });
@@ -527,9 +526,8 @@ exports.execute = function (options) {
                         expect(response.data[0].startsWith("https://dev.isrd.isi.edu/deriva/export/file/")).toBeTruthy();
 
                         done();
-                    }, function(error) {
-                        console.dir(error);
-                        done.fail();
+                    }).catch(function (err) {
+                        done.fail(err);
                     });
                 });
             });
