@@ -3484,6 +3484,8 @@ FacetColumn.prototype = {
     getChoiceDisplaynames: function (contextHeaderParams) {
         var defer = module._q.defer(), filters =  [], self = this;
         var table = this._column.table, columnName = this._column.name;
+        // whether the output must be displayed as markdown or not
+        var isHTML = module._HTMLColumnType.indexOf(this._column.type.name) != -1
 
         var createRef = function (filterStrs) {
             var uri = [
@@ -3498,6 +3500,17 @@ FacetColumn.prototype = {
             return ref;
         };
 
+        var convertChoiceFilter = function (f) {
+            return {
+                uniqueId: f.term,
+                displayname: {
+                    value: isHTML ? module.renderMarkdown(f.toString(), true) : f.toString(),
+                    isHTML: isHTML
+                },
+                tuple: null
+            };
+        }
+
         // if no filter, just resolve with empty list.
         if (self.choiceFilters.length === 0) {
             defer.resolve(filters);
@@ -3508,8 +3521,7 @@ FacetColumn.prototype = {
                 // don't return the null filter
                 if (f.term == null) return;
 
-                // we don't have access to the tuple, so we cannot send it.
-                filters.push({uniqueId: f.term, displayname: {value: f.toString(), isHTML:false}, tuple: null});
+                filters.push(convertChoiceFilter(f));
             });
             defer.resolve(filters);
         }
@@ -3547,8 +3559,6 @@ FacetColumn.prototype = {
                     delete filterTerms[t.data[columnName]];
                 });
 
-
-
                 // if there are any filter terms that didn't match any rows, just return the raw value:
                 // NOTE we could merge these two (page and filter) together to make the code easier to follow,
                 //      but we want to keep the selected values ordered based on roworder and
@@ -3561,8 +3571,7 @@ FacetColumn.prototype = {
 
                 // add the terms to filter list
                 filterTermKeys.forEach(function (k) {
-                    var f = self.choiceFilters[filterTerms[k]];
-                    filters.push({uniqueId: f.term, displayname: {value: f.toString(), isHTML:false}, tuple: null});
+                    filters.push(convertChoiceFilter(self.choiceFilters[filterTerms[k]]));
                 });
 
                 defer.resolve(filters);

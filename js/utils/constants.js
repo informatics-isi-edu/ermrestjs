@@ -103,6 +103,9 @@
         "json", "jsonb"
     ];
 
+    // column types that their value should be considered as HTML
+    module._HTMLColumnType = ["markdown", "color_rgb_hex"];
+
     // types we support for our plotly histogram graphs
     module._histogramSupportedTypes = [
         'int2', 'int4', 'int8', 'float', 'float4', 'float8', 'numeric',
@@ -290,7 +293,8 @@
         download: "download-alt",
         postLoad: "-chaise-post-load",
         hideInPrintMode: "hide-in-print",
-        showInPrintMode: "video-info-in-print"
+        showInPrintMode: "video-info-in-print",
+        colorPreview: "chaise-color-preview"
     });
 
     module._specialSourceDefinitions = Object.freeze({

@@ -1474,6 +1474,10 @@
                           }
                       }
                   }
+              },
+              {
+                  "name": "color_rgb_hex_col",
+                  "type": {"typename": "color_rgb_hex"}
               }
             ],
             "annotations": {
@@ -1483,7 +1487,7 @@
                       "iframe","some_markdown", "some_markdown_with_pattern",
                       "some_gene_sequence", "column_using_invisble_column",
                       "video_col", "fkeys_col", "catalog_snapshot",
-                      "moment_col", "encodefacet_col"
+                      "moment_col", "encodefacet_col", "color_rgb_hex_col"
                   ]
                 }
             }

@@ -562,7 +562,7 @@ AttributeGroupReference.prototype = {
             contextHeaderParams[key] = this.defaultLogInfo[key];
         }
 
-        if (isInteger(page_size)) {
+        if (Number.isInteger(page_size)) {
             contextHeaderParams.page_size = page_size;
         }
 
@@ -807,7 +807,7 @@ AttributeGroupTuple.prototype = {
             var data = this._data, hasNull, self = this;
             this._uniqueId = self._page.reference.shortestKey.reduce(function (res, c, index) {
                 hasNull = hasNull || data[c.name] == null;
-                return res + (index > 0 ? "_" : "") + c.formatvalue(data[c.name], self._page.reference._context);
+                return res + (index > 0 ? "_" : "") + data[c.name];
             }, "");
 
             //TODO should be evaluated for composite keys
@@ -844,7 +844,7 @@ AttributeGroupTuple.prototype = {
                 hasNull = hasNull || data[c.name] == null;
                 if (hasNull) return;
 
-                hasMarkdown = hasMarkdown || c.type.name === "markdown";
+                hasMarkdown = hasMarkdown || (module._HTMLColumnType.indexOf(c.type.name) != -1);
                 values.push(c.formatvalue(data[c.name], self._page.reference._context));
             });
 
@@ -1007,7 +1007,7 @@ AttributeGroupColumn.prototype = {
          * are aliases and not the actual column names in the table.
          *
          */
-        if (this.type.name === "markdown") {
+        if (module._HTMLColumnType.indexOf(this.type.name) != -1) {
             return {isHTML: true, value: module.renderMarkdown(formattedValue, true), unformatted: formattedValue};
         }
         return {isHTML: false, value: formattedValue, unformatted: formattedValue};

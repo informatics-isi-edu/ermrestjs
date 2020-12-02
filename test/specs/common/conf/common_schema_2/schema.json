@@ -125,6 +125,10 @@
                     "type": { "typename": "serial4" }
                 },
                 {
+                    "name": "table_1_color_rgb_hex",
+                    "type": { "typename": "color_rgb_hex" }
+                },
+                {
                     "name": "table_1_text_array",
                     "type": {
                         "is_array": true,
