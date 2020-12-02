@@ -377,11 +377,15 @@ ReferenceColumn.prototype = {
     /**
      * Formats a value corresponding to this reference-column definition.
      * @param {Object} data The 'raw' data value.
-     * @param {String} context the context of app
+     * @param {String=} context the context of app (optional)
+     * @param {Object=} options (optional)
      * @returns {string} The formatted value.
      */
     formatvalue: function(data, context, options) {
         if (this._simple) {
+            if (!isStringAndNotEmpty(context)) {
+                context = this._context;
+            }
             return this._baseCols[0].formatvalue(data, context, options);
         }
         return data.toString();
@@ -394,14 +398,18 @@ ReferenceColumn.prototype = {
      *  - rendered value of formatPresentation of underlying columns joined by ":".
      *
      * @param {Object} data the raw data of the table.
-     * @param {String} context the app context
-     * @param {Object} templateVariables the template variables that should be used
-     * @param {Object} options
+     * @param {String=} context the app context (optional)
+     * @param {Object=} templateVariables the template variables that should be used (optional)
+     * @param {Object=} options (optional)
      * @returns {Object} A key value pair containing value and isHTML that detemrines the presentation.
      */
     formatPresentation: function(data, context, templateVariables, options) {
         data = data || {};
         options = options || {};
+
+        if (!isStringAndNotEmpty(context)) {
+            context = this._context;
+        }
 
         // if there's wait_for, this should return null.
         if (this.hasWaitFor && !options.skipWaitFor) {
@@ -778,13 +786,18 @@ module._extends(PseudoColumn, ReferenceColumn);
  * 3. Otherwise return null value.
  *
  * @param {Object} data the raw data of the table
- * @param {String} context the app context
- * @param {Object} options include `templateVariables`
+ * @param {String=} context the app context (optional)
+ * @param {Object=} templateVariables the template variables that should be used (optional)
+ * @param {Object=} options (optional)
  * @returns {Object} A key value pair containing value and isHTML that detemrines the presentation.
  */
 PseudoColumn.prototype.formatPresentation = function(data, context, templateVariables, options) {
     data = data || {};
     options = options || {};
+
+    if (!isStringAndNotEmpty(context)) {
+        context = this._context;
+    }
 
     var nullValue = {
         isHTML: false,
@@ -1876,6 +1889,11 @@ ForeignKeyPseudoColumn.prototype._determineDefaultValue = function () {
 ForeignKeyPseudoColumn.prototype.formatPresentation = function(data, context, templateVariables, options) {
     data = data || {};
     options = options || {};
+
+    if (!isStringAndNotEmpty(context)) {
+        context = this._context;
+    }
+
     var nullValue = {
         isHTML: false,
         value: this._getNullValue(context),
@@ -2162,13 +2180,19 @@ module._extends(KeyPseudoColumn, ReferenceColumn);
  * 3. Otherwise try to generate the value in `col1:col2` format. if it resulted in empty string return null.
  *    - If any of the constituent columnhas markdown don't add self-link, otherwise add the self-link.
  * @param  {Object} data    given raw data for the table columns
- * @param  {String} context the app context
- * @param  {Object} options might include `templateVariables`
+ * @param {String=} context the app context (optional)
+ * @param {Object=} templateVariables the template variables that should be used (optional)
+ * @param {Object=} options (optional)
  * @return {Object} A key value pair containing value and isHTML that detemrines the presentation.
  */
 KeyPseudoColumn.prototype.formatPresentation = function(data, context, templateVariables, options) {
     data = data || {};
     options = options || {};
+
+    if (!isStringAndNotEmpty(context)) {
+        context = this._context;
+    }
+
     var nullValue = {
         isHTML: false,
         value: this._getNullValue(context),
@@ -2456,13 +2480,19 @@ AssetPseudoColumn.prototype.getMetadata = function (data, context, options) {
  * 5. otherwise use getMetadata to genarate caption and origin and return a download button.
  *
  * @param {Object} data the raw data of the table
- * @param {String} context the app context
- * @param {Object} options include `templateVariables`
+ * @param {String=} context the app context (optional)
+ * @param {Object=} templateVariables the template variables that should be used (optional)
+ * @param {Object=} options (optional)
  * @returns {Object} A key value pair containing value and isHTML that detemrines the presentation.
  */
 AssetPseudoColumn.prototype.formatPresentation = function(data, context, templateVariables, options) {
     data = data || {};
     options = options || {};
+
+    if (!isStringAndNotEmpty(context)) {
+        context = this._context;
+    }
+
     var nullValue = {
         isHTML: false,
         value: this._getNullValue(context),
