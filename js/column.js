@@ -3515,7 +3515,7 @@ FacetColumn.prototype = {
         var defer = module._q.defer(), filters =  [], self = this;
         var table = this._column.table, columnName = this._column.name;
         // whether the output must be displayed as markdown or not
-        var isHTML = module._HTMLColumnType.indexOf(this._column.type.name) != -1
+        var isHTML = (module._HTMLColumnType.indexOf(this._column.type.name) != -1);
 
         var createRef = function (filterStrs) {
             var uri = [
@@ -3539,7 +3539,7 @@ FacetColumn.prototype = {
                 },
                 tuple: null
             };
-        }
+        };
 
         // if no filter, just resolve with empty list.
         if (self.choiceFilters.length === 0) {

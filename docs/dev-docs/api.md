@@ -417,8 +417,8 @@ to use for ERMrest JavaScript agents.
         * [.hasWaitFor](#ERMrest.ReferenceColumn+hasWaitFor) ⇒ <code>Boolean</code>
         * [.hasWaitForAggregate](#ERMrest.ReferenceColumn+hasWaitForAggregate) ⇒ <code>Boolean</code>
         * [.waitFor](#ERMrest.ReferenceColumn+waitFor) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
-        * [.formatvalue(data, context)](#ERMrest.ReferenceColumn+formatvalue) ⇒ <code>string</code>
-        * [.formatPresentation(data, context, templateVariables, options)](#ERMrest.ReferenceColumn+formatPresentation) ⇒ <code>Object</code>
+        * [.formatvalue(data, [context], [options])](#ERMrest.ReferenceColumn+formatvalue) ⇒ <code>string</code>
+        * [.formatPresentation(data, [context], [templateVariables], [options])](#ERMrest.ReferenceColumn+formatPresentation) ⇒ <code>Object</code>
         * [.getInputDisabled()](#ERMrest.ReferenceColumn+getInputDisabled) : <code>boolean</code> \| <code>object</code>
         * [._getShowForeignKeyLinks(context)](#ERMrest.ReferenceColumn+_getShowForeignKeyLinks) ⇒ <code>boolean</code>
         * [.sourceFormatPresentation(templateVariables, columnValue, mainTuple)](#ERMrest.ReferenceColumn+sourceFormatPresentation) ⇒ <code>Object</code>
@@ -437,7 +437,7 @@ to use for ERMrest JavaScript agents.
         * [.foreignKeys](#ERMrest.PseudoColumn+foreignKeys) : [<code>Array.&lt;ForeignKeyRef&gt;</code>](#ERMrest.ForeignKeyRef)
         * [.hasAggregate](#ERMrest.PseudoColumn+hasAggregate) : <code>boolean</code>
         * [.reference](#ERMrest.PseudoColumn+reference) : [<code>Reference</code>](#ERMrest.Reference)
-        * [.formatPresentation(data, context, options)](#ERMrest.PseudoColumn+formatPresentation) ⇒ <code>Object</code>
+        * [.formatPresentation(data, [context], [templateVariables], [options])](#ERMrest.PseudoColumn+formatPresentation) ⇒ <code>Object</code>
         * [.getAggregatedValue(page, contextHeaderParams)](#ERMrest.PseudoColumn+getAggregatedValue) ⇒ <code>Promise</code>
     * [.ForeignKeyPseudoColumn](#ERMrest.ForeignKeyPseudoColumn)
         * [new ForeignKeyPseudoColumn(reference, fk)](#new_ERMrest.ForeignKeyPseudoColumn_new)
@@ -454,7 +454,7 @@ to use for ERMrest JavaScript agents.
         * [.isPseudo](#ERMrest.KeyPseudoColumn+isPseudo) : <code>boolean</code>
         * [.isKey](#ERMrest.KeyPseudoColumn+isKey) : <code>boolean</code>
         * [.key](#ERMrest.KeyPseudoColumn+key) : [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)
-        * [.formatPresentation(data, context, options)](#ERMrest.KeyPseudoColumn+formatPresentation) ⇒ <code>Object</code>
+        * [.formatPresentation(data, [context], [templateVariables], [options])](#ERMrest.KeyPseudoColumn+formatPresentation) ⇒ <code>Object</code>
     * [.AssetPseudoColumn](#ERMrest.AssetPseudoColumn)
         * [new AssetPseudoColumn(reference, column)](#new_ERMrest.AssetPseudoColumn_new)
         * [.isPseudo](#ERMrest.AssetPseudoColumn+isPseudo) : <code>boolean</code>
@@ -468,7 +468,7 @@ to use for ERMrest JavaScript agents.
         * [.filenameExtFilter](#ERMrest.AssetPseudoColumn+filenameExtFilter) : [<code>Column</code>](#ERMrest.Column)
         * [._determineInputDisabled(context)](#ERMrest.AssetPseudoColumn+_determineInputDisabled) ⇒ <code>boolean</code> \| <code>object</code>
         * [.getMetadata(data, context, options)](#ERMrest.AssetPseudoColumn+getMetadata) ⇒ <code>Object</code>
-        * [.formatPresentation(data, context, options)](#ERMrest.AssetPseudoColumn+formatPresentation) ⇒ <code>Object</code>
+        * [.formatPresentation(data, [context], [templateVariables], [options])](#ERMrest.AssetPseudoColumn+formatPresentation) ⇒ <code>Object</code>
     * [.InboundForeignKeyPseudoColumn](#ERMrest.InboundForeignKeyPseudoColumn)
         * [new InboundForeignKeyPseudoColumn(reference, fk)](#new_ERMrest.InboundForeignKeyPseudoColumn_new)
         * [.reference](#ERMrest.InboundForeignKeyPseudoColumn+reference) : [<code>Reference</code>](#ERMrest.Reference)
@@ -4026,8 +4026,8 @@ count aggregate representation
     * [.hasWaitFor](#ERMrest.ReferenceColumn+hasWaitFor) ⇒ <code>Boolean</code>
     * [.hasWaitForAggregate](#ERMrest.ReferenceColumn+hasWaitForAggregate) ⇒ <code>Boolean</code>
     * [.waitFor](#ERMrest.ReferenceColumn+waitFor) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
-    * [.formatvalue(data, context)](#ERMrest.ReferenceColumn+formatvalue) ⇒ <code>string</code>
-    * [.formatPresentation(data, context, templateVariables, options)](#ERMrest.ReferenceColumn+formatPresentation) ⇒ <code>Object</code>
+    * [.formatvalue(data, [context], [options])](#ERMrest.ReferenceColumn+formatvalue) ⇒ <code>string</code>
+    * [.formatPresentation(data, [context], [templateVariables], [options])](#ERMrest.ReferenceColumn+formatPresentation) ⇒ <code>Object</code>
     * [.getInputDisabled()](#ERMrest.ReferenceColumn+getInputDisabled) : <code>boolean</code> \| <code>object</code>
     * [._getShowForeignKeyLinks(context)](#ERMrest.ReferenceColumn+_getShowForeignKeyLinks) ⇒ <code>boolean</code>
     * [.sourceFormatPresentation(templateVariables, columnValue, mainTuple)](#ERMrest.ReferenceColumn+sourceFormatPresentation) ⇒ <code>Object</code>
@@ -4150,7 +4150,7 @@ Array of columns that the current column value depends on. It will get the list 
 **Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
 <a name="ERMrest.ReferenceColumn+formatvalue"></a>
 
-#### referenceColumn.formatvalue(data, context) ⇒ <code>string</code>
+#### referenceColumn.formatvalue(data, [context], [options]) ⇒ <code>string</code>
 Formats a value corresponding to this reference-column definition.
 
 **Kind**: instance method of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
@@ -4159,11 +4159,12 @@ Formats a value corresponding to this reference-column definition.
 | Param | Type | Description |
 | --- | --- | --- |
 | data | <code>Object</code> | The 'raw' data value. |
-| context | <code>String</code> | the context of app |
+| [context] | <code>String</code> | the context of app (optional) |
+| [options] | <code>Object</code> | (optional) |
 
 <a name="ERMrest.ReferenceColumn+formatPresentation"></a>
 
-#### referenceColumn.formatPresentation(data, context, templateVariables, options) ⇒ <code>Object</code>
+#### referenceColumn.formatPresentation(data, [context], [templateVariables], [options]) ⇒ <code>Object</code>
 Formats the presentation value corresponding to this reference-column definition.
 It will return:
  - rendered value of sourceMarkdownPattern if exists.
@@ -4175,9 +4176,9 @@ It will return:
 | Param | Type | Description |
 | --- | --- | --- |
 | data | <code>Object</code> | the raw data of the table. |
-| context | <code>String</code> | the app context |
-| templateVariables | <code>Object</code> | the template variables that should be used |
-| options | <code>Object</code> |  |
+| [context] | <code>String</code> | the app context (optional) |
+| [templateVariables] | <code>Object</code> | the template variables that should be used (optional) |
+| [options] | <code>Object</code> | (optional) |
 
 <a name="ERMrest.ReferenceColumn+getInputDisabled"></a>
 
@@ -4263,7 +4264,7 @@ it will append "-<integer>" to it.
     * [.foreignKeys](#ERMrest.PseudoColumn+foreignKeys) : [<code>Array.&lt;ForeignKeyRef&gt;</code>](#ERMrest.ForeignKeyRef)
     * [.hasAggregate](#ERMrest.PseudoColumn+hasAggregate) : <code>boolean</code>
     * [.reference](#ERMrest.PseudoColumn+reference) : [<code>Reference</code>](#ERMrest.Reference)
-    * [.formatPresentation(data, context, options)](#ERMrest.PseudoColumn+formatPresentation) ⇒ <code>Object</code>
+    * [.formatPresentation(data, [context], [templateVariables], [options])](#ERMrest.PseudoColumn+formatPresentation) ⇒ <code>Object</code>
     * [.getAggregatedValue(page, contextHeaderParams)](#ERMrest.PseudoColumn+getAggregatedValue) ⇒ <code>Promise</code>
 
 <a name="new_ERMrest.PseudoColumn_new"></a>
@@ -4375,7 +4376,7 @@ This is how it behaves:
 **Kind**: instance property of [<code>PseudoColumn</code>](#ERMrest.PseudoColumn)  
 <a name="ERMrest.PseudoColumn+formatPresentation"></a>
 
-#### pseudoColumn.formatPresentation(data, context, options) ⇒ <code>Object</code>
+#### pseudoColumn.formatPresentation(data, [context], [templateVariables], [options]) ⇒ <code>Object</code>
 Format the presentation value corresponding to this pseudo-column definition.
 1. If source is not in entity mode: use the column's heuristic
 2. Otherwise if it's not a path, apply the same logic as KeyPseudoColumn presentation based on the key.
@@ -4388,8 +4389,9 @@ Format the presentation value corresponding to this pseudo-column definition.
 | Param | Type | Description |
 | --- | --- | --- |
 | data | <code>Object</code> | the raw data of the table |
-| context | <code>String</code> | the app context |
-| options | <code>Object</code> | include `templateVariables` |
+| [context] | <code>String</code> | the app context (optional) |
+| [templateVariables] | <code>Object</code> | the template variables that should be used (optional) |
+| [options] | <code>Object</code> | (optional) |
 
 <a name="ERMrest.PseudoColumn+getAggregatedValue"></a>
 
@@ -4529,7 +4531,7 @@ annotation doesn't exist, it returns this (reference)
     * [.isPseudo](#ERMrest.KeyPseudoColumn+isPseudo) : <code>boolean</code>
     * [.isKey](#ERMrest.KeyPseudoColumn+isKey) : <code>boolean</code>
     * [.key](#ERMrest.KeyPseudoColumn+key) : [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)
-    * [.formatPresentation(data, context, options)](#ERMrest.KeyPseudoColumn+formatPresentation) ⇒ <code>Object</code>
+    * [.formatPresentation(data, [context], [templateVariables], [options])](#ERMrest.KeyPseudoColumn+formatPresentation) ⇒ <code>Object</code>
 
 <a name="new_ERMrest.KeyPseudoColumn_new"></a>
 
@@ -4563,7 +4565,7 @@ The Foreign key object that this PseudoColumn is created based on
 **Kind**: instance property of [<code>KeyPseudoColumn</code>](#ERMrest.KeyPseudoColumn)  
 <a name="ERMrest.KeyPseudoColumn+formatPresentation"></a>
 
-#### keyPseudoColumn.formatPresentation(data, context, options) ⇒ <code>Object</code>
+#### keyPseudoColumn.formatPresentation(data, [context], [templateVariables], [options]) ⇒ <code>Object</code>
 Return the value that should be presented for this column.
 It usually is a self-link to the given row of data.
 
@@ -4579,8 +4581,9 @@ The following is the logic:
 | Param | Type | Description |
 | --- | --- | --- |
 | data | <code>Object</code> | given raw data for the table columns |
-| context | <code>String</code> | the app context |
-| options | <code>Object</code> | might include `templateVariables` |
+| [context] | <code>String</code> | the app context (optional) |
+| [templateVariables] | <code>Object</code> | the template variables that should be used (optional) |
+| [options] | <code>Object</code> | (optional) |
 
 <a name="ERMrest.AssetPseudoColumn"></a>
 
@@ -4611,7 +4614,7 @@ The following is the logic:
     * [.filenameExtFilter](#ERMrest.AssetPseudoColumn+filenameExtFilter) : [<code>Column</code>](#ERMrest.Column)
     * [._determineInputDisabled(context)](#ERMrest.AssetPseudoColumn+_determineInputDisabled) ⇒ <code>boolean</code> \| <code>object</code>
     * [.getMetadata(data, context, options)](#ERMrest.AssetPseudoColumn+getMetadata) ⇒ <code>Object</code>
-    * [.formatPresentation(data, context, options)](#ERMrest.AssetPseudoColumn+formatPresentation) ⇒ <code>Object</code>
+    * [.formatPresentation(data, [context], [templateVariables], [options])](#ERMrest.AssetPseudoColumn+formatPresentation) ⇒ <code>Object</code>
 
 <a name="new_ERMrest.AssetPseudoColumn_new"></a>
 
@@ -4718,7 +4721,7 @@ The heuristics for origin and caption:
 
 <a name="ERMrest.AssetPseudoColumn+formatPresentation"></a>
 
-#### assetPseudoColumn.formatPresentation(data, context, options) ⇒ <code>Object</code>
+#### assetPseudoColumn.formatPresentation(data, [context], [templateVariables], [options]) ⇒ <code>Object</code>
 Format the presentation value corresponding to this asset definition.
 1. return the raw data in entry contexts.
 2. otherwise if it has wait-for return empty.
@@ -4732,8 +4735,9 @@ Format the presentation value corresponding to this asset definition.
 | Param | Type | Description |
 | --- | --- | --- |
 | data | <code>Object</code> | the raw data of the table |
-| context | <code>String</code> | the app context |
-| options | <code>Object</code> | include `templateVariables` |
+| [context] | <code>String</code> | the app context (optional) |
+| [templateVariables] | <code>Object</code> | the template variables that should be used (optional) |
+| [options] | <code>Object</code> | (optional) |
 
 <a name="ERMrest.InboundForeignKeyPseudoColumn"></a>
 
