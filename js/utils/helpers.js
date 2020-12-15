@@ -1883,7 +1883,7 @@
 
                         // Check If the markdown is a link
                         if (attrs[0].children[0].type == "link_open") {
-                            var iframeHTML = "<iframe ", openingLink = attrs[0].children[0];
+                            var iframeHTML = '<div style="width: 100%; height: 100%"><iframe ', openingLink = attrs[0].children[0];
                             var enlargeLink, posTop = true, captionClass = "", captionStyle = "", iframeClass = "", iframeStyle = "";
                             var isYTlink = false, videoURL = "", iframeTagClasses = [];
 
@@ -1929,7 +1929,7 @@
                             if (iframeTagClasses.length > 0) {
                                 html += 'class="' + iframeTagClasses.join(" ") + '" ';
                             }
-                            html += "></iframe>";
+                            html += "></iframe></div>";
 
                             var captionHTML = "";
 
