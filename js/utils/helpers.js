@@ -3008,7 +3008,7 @@
      * @param  {Object} options
      * @return {Object}          An object with `isHTML` and `value` attributes.
      */
-    module._processMarkdownPattern = function (template, data, table, context, options) {
+    module.processMarkdownPattern = function (template, data, table, context, options) {
         var res = module._renderTemplate(template, data, table.schema.catalog, options);
 
         if (res === null || res.trim() === '') {
