@@ -1883,7 +1883,7 @@
 
                         // Check If the markdown is a link
                         if (attrs[0].children[0].type == "link_open") {
-                            var iframeHTML = '<div style="width: 100%; height: 100%"><iframe ', openingLink = attrs[0].children[0];
+                            var iframeHTML = '<iframe ', openingLink = attrs[0].children[0];
                             var enlargeLink, posTop = true, captionClass = "", captionStyle = "", iframeClass = "", iframeStyle = "";
                             var isYTlink = false, videoURL = "", iframeTagClasses = [];
 
@@ -1929,7 +1929,7 @@
                             if (iframeTagClasses.length > 0) {
                                 html += 'class="' + iframeTagClasses.join(" ") + '" ';
                             }
-                            html += "></iframe></div>";
+                            html += "></iframe>";
 
                             var captionHTML = "";
 
@@ -1962,7 +1962,10 @@
                             }
 
                             // Encapsulate the iframe inside a figure tag
-                            html = '<figure class="embed-block ' + module._classNames.postLoad + (iframeClass.length ? (" "  + iframeClass): "") + '" style="' + (iframeStyle.length ? (" "  + iframeStyle ) : "") + '">' + html + "</figure>";
+                            // if no iframe style is present, add height/width=100% to stretch the iframe to it's container
+                            // NOTE: we may want to change this to add height/width=100% unless either is already a part of iframeStyle
+                            html = '<figure class="embed-block ' + module._classNames.postLoad + (iframeClass.length ? (" "  + iframeClass) : "") + '" style="' + (iframeStyle.length ? (" "  + iframeStyle) : "") + '">' + html + "</figure>";
+                            // html = '<figure class="embed-block ' + module._classNames.postLoad + (iframeClass.length ? (" "  + iframeClass) : "") + '" style="' + (iframeStyle.length ? (" "  + iframeStyle) : "width: 100%; height: 100%;") + '">' + html + "</figure>";
                         }
                     }
                     // if attrs was empty or it didn't find any link simply render the internal markdown
