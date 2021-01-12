@@ -285,8 +285,8 @@ With attributes width=500, height=400 and a linkable caption to open it in new t
 
 This is not part of commonMark specification and it will result in a [block](#inline-vs-block). You have to follow the syntax completely (notice the newline in the closing tag). Some best practices for creating responsive or specifically sized iframes are as follows:
  - For specific iframe display dimensions, specify iframe width and iframe height using `width` and `height`.
- - To expand the iframe width to browser width, define `min-width` on the iframe as part of the `style` and attach the `chaise-fill-available` class.
-   - `chaise-fill-available` will set the appropriate values for height and width based on the user's browser, `-moz-available` and `-webkit-fill-available`.
+ - To expand the iframe width to browser width, define `min-width` on the iframe as part of the `style` and attach the `chaise-autofill` class.
+   - `chaise-autofill` will set the appropriate values for height and width based on the user's browser, `-moz-available` and `-webkit-fill-available`.
    - Also defining `max-height` on the iframe will limit the responsiveness from continually stretching the iframe (and cell) to a height larger than the defined max height.
    - If browser width is less than the cell's width (or max width), a scrollbar will be present in the cell itself to scroll left/right to see the rest of the content.
  - For iframes that are accompanied by a potentially long caption, define `min-height` on the iframe to ensure the cell resizes to fit all of the caption and the iframe.
@@ -434,12 +434,12 @@ To style the whole iframe enclosing block (`<figure>`) you can either specify cl
 If parent container (cell in record app) has no styles, the iframe will only fill the minimum height of the cell
 
 ```html
-::: iframe [CAPTION](https://example.com){class=chaise-fill-available} \n:::
+::: iframe [CAPTION](https://example.com){class=chaise-autofill} \n:::
 
 # OUTPUT:
 <figure class="embed-block">
     <figcaption class="embed-caption">CAPTION</a></figcaption>
-	<iframe src="https://example.com" class="chaise-fill-available"></iframe>
+	<iframe src="https://example.com" class="chaise-autofill"></iframe>
 </figure>
 ```
 
@@ -447,12 +447,12 @@ If parent container (cell in record app) has no styles, the iframe will only fil
 When a min-width value is defined, the parent container will stop resizing once the viewport width forces the container to be smaller than the iframe.
 
 ```html
-::: iframe [CAPTION](https://example.com){class=chaise-fill-available style="min-width: 500px;"} \n:::
+::: iframe [CAPTION](https://example.com){class=chaise-autofill style="min-width: 500px;"} \n:::
 
 # OUTPUT:
 <figure class="embed-block">
     <figcaption class="embed-caption">CAPTION</a></figcaption>
-	<iframe src="https://example.com" class="chaise-fill-available" style="min-width: 500px;"></iframe>
+	<iframe src="https://example.com" class="chaise-autofill" style="min-width: 500px;"></iframe>
 </figure>
 ```
 
@@ -460,12 +460,12 @@ When a min-width value is defined, the parent container will stop resizing once 
 When a min-height value is defined, the parent container will resize to allow for the defined minimum height.
 
 ```html
-::: iframe [CAPTION](https://example.com){class=chaise-fill-available style="min-width: 500px; min-height: 400px;"} \n:::
+::: iframe [CAPTION](https://example.com){class=chaise-autofill style="min-width: 500px; min-height: 400px;"} \n:::
 
 # OUTPUT:
 <figure class="embed-block">
     <figcaption class="embed-caption">CAPTION</a></figcaption>
-	<iframe src="https://example.com" class="chaise-fill-available" style="min-width: 500px; min-height: 400px;"></iframe>
+	<iframe src="https://example.com" class="chaise-autofill" style="min-width: 500px; min-height: 400px;"></iframe>
 </figure>
 ```
 

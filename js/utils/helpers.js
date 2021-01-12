@@ -1912,7 +1912,7 @@
                                         break;
                                     // NOTE: iframe-style will be deprecated but leaving in conditional for backwards compatibility
                                     case "iframe-style":
-                                    case "figure-style"
+                                    case "figure-style":
                                         figureStyle = attr[1];
                                     case "class":
                                         if (attr[1].length > 0) {
