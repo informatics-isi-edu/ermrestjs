@@ -401,7 +401,7 @@ To style the caption of an iframe you can either specify classes using `caption-
 
 #### Iframe with a linkable caption positioned at its bottom with figure class and style
 
-To style the whole iframe enclosing block (<figure>) you can either specify classes using `figure-class` or CSS style using `figure-style`.
+To style the whole iframe enclosing block (`<figure>`) you can either specify classes using `figure-class` or CSS style using `figure-style`.
  - NOTE: `iframe-class` and `iframe-style` are deprecated.
 
 ```html
