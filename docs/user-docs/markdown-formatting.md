@@ -23,7 +23,7 @@ The renderer that we use ([markdown-it](https://github.com/markdown-it/markdown-
       - [Iframe with iframe class, style, caption class and style](#iframe-with-iframe-class-style-caption-class-and-style)
       - [Iframe that stretches to width and height of parent container](#iframe-that-stretches-to-width-and-height-of-parent-container)
       - [Iframe that stretches to width and height of parent container with min-width](#iframe-that-stretches-to-width-and-height-of-parent-container-with-min-width)
-      - [Iframe that stretches to width and height of parent container with min-width and min-height](#iframe-that-stretches-to-width-and-height-of-parent-container-with-min-width-and-min-height)
+      - [Iframe that stretches to width and height of parent container with min-width and min-height](#iframe-that-stretches-to-width-and-height-of-parent-container-with-min-width-and-min-height-and-max-height)
     + [7. Dropdown download button](#7-dropdown-download-button)
     + [8. Vocabulary](#8-vocabulary)
     + [9. Youtube Video](#9-youtube-video)
@@ -285,9 +285,11 @@ With attributes width=500, height=400 and a linkable caption to open it in new t
 
 This is not part of commonMark specification and it will result in a [block](#inline-vs-block). You have to follow the syntax completely (notice the newline in the closing tag). Some best practices for creating responsive or specifically sized iframes are as follows:
  - For specific iframe display dimensions, specify iframe width and iframe height using `width` and `height`.
+   - CAUTION: using `chaise-autofill` will ignore the set `width` or `height`
  - To expand the iframe width to browser width, define `min-width` on the iframe as part of the `style` and attach the `chaise-autofill` class.
    - `chaise-autofill` will set the appropriate values for height and width based on the user's browser, `-moz-available` and `-webkit-fill-available`.
-   - Also defining `max-height` on the iframe will limit the responsiveness from continually stretching the iframe (and cell) to a height larger than the defined max height.
+   - when `chaise-autofill` is defined, also defining `max-height` on the iframe will limit the responsiveness from continually stretching the iframe (and cell) to a height larger than the defined max height.
+     - NOTE: This occurs because of apps that were made to be responsive in their own viewport (a responsive app inside an iframe that is also responsive to the iframe's container).
    - If browser width is less than the cell's width (or max width), a scrollbar will be present in the cell itself to scroll left/right to see the rest of the content.
  - For iframes that are accompanied by a potentially long caption, define `min-height` on the iframe to ensure the cell resizes to fit all of the caption and the iframe.
    - Limiting the cell's height with max height isn't needed since the cell will auto resize to accommodate the long caption and the defined iframe min height.
@@ -456,16 +458,16 @@ When a min-width value is defined, the parent container will stop resizing once 
 </figure>
 ```
 
-#### Iframe that stretches to width and height of parent container with min-width and min-height
+#### Iframe that stretches to width and height of parent container with min-width and min-height and max-height
 When a min-height value is defined, the parent container will resize to allow for the defined minimum height.
 
 ```html
-::: iframe [CAPTION](https://example.com){class=chaise-autofill style="min-width: 500px; min-height: 400px;"} \n:::
+::: iframe [CAPTION](https://example.com){class=chaise-autofill style="min-width: 500px; min-height: 400px; max-height: 800px;"} \n:::
 
 # OUTPUT:
 <figure class="embed-block">
     <figcaption class="embed-caption">CAPTION</a></figcaption>
-	<iframe src="https://example.com" class="chaise-autofill" style="min-width: 500px; min-height: 400px;"></iframe>
+	<iframe src="https://example.com" class="chaise-autofill" style="min-width: 500px; min-height: 400px; max-height: 800px;"></iframe>
 </figure>
 ```
 

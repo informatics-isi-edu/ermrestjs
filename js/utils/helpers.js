@@ -1903,17 +1903,18 @@
                                         break;
                                     case "caption-class":
                                         captionClass = attr[1];
+                                        break;
                                     case "caption-style":
                                         captionStyle = attr[1];
-                                    // NOTE: iframe-class will be deprecated but leaving in conditional for backwards compatibility
-                                    case "iframe-class":
+                                        break;
+                                    case "iframe-class": // NOTE: iframe-class will be deprecated but leaving in conditional for backwards compatibility
                                     case "figure-class":
                                         figureClass = attr[1];
                                         break;
-                                    // NOTE: iframe-style will be deprecated but leaving in conditional for backwards compatibility
-                                    case "iframe-style":
+                                    case "iframe-style": // NOTE: iframe-style will be deprecated but leaving in conditional for backwards compatibility
                                     case "figure-style":
                                         figureStyle = attr[1];
+                                        break;
                                     case "class":
                                         if (attr[1].length > 0) {
                                             iframeClasses.push(attr[1]);
