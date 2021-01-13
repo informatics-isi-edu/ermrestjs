@@ -5269,7 +5269,7 @@
         /**
          * The _display name_ of this tuple. For example, if this tuple is a
          * row from a table, then the display name is defined by the
-         * row_markdown_pattern annotation for the _row name_ context
+         * row_markdown_pattern annotation for the _row_name/title_ context
          * or by the heuristics (title, name, id(text), SHORTESTKEY Concatenation using ':')
          *
          * Usage:
@@ -5283,6 +5283,25 @@
                 this._displayname = module._generateRowName(this._pageRef._table, this._pageRef._context, this._data, this._linkedData, true);
             }
             return this._displayname;
+        },
+
+        /**
+         * The row name_ of this tuple. For example, if this tuple is a
+         * row from a table, then the display name is defined by the
+         * row_markdown_pattern annotation for the _row_name_ context
+         * or by the heuristics (title, name, id(text), SHORTESTKEY Concatenation using ':')
+         *
+         * Usage:
+         * ```
+         * console.log("This tuple has a displayable name of ", tuple.displayname.value);
+         * ```
+         * @type {string}
+         */
+        get rowName() {
+            if (this._rowName === undefined) {
+                this._rowName = module._generateRowName(this._pageRef._table, this._pageRef._context, this._data, this._linkedData);
+            }
+            return this._rowName;
         },
 
         /**
