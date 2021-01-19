@@ -288,15 +288,15 @@ With attributes width=500, height=400 and a linkable caption to open it in new t
 
 This is not part of commonMark specification and it will result in a [block](#inline-vs-block). You have to follow the syntax completely (notice the newline in the closing tag). Some best practices for creating responsive or specifically sized iframes are as follows:
  - Fixed iframe dimensions:
-   - specify iframe width and iframe height using `width` and `height`
-   - CAUTION: using `chaise-autofill` will ignore the set `width` or `height`
+   - Specify iframe width and iframe height using `width` and `height`
  - Responsive iframe dimensions:
-   - To expand the iframe width to browser width, define `min-width` on the iframe as part of the `style` and attach the `chaise-autofill` class.
+   - To expand the iframe width to browser width, attach the `chaise-autofill` class and define `min-width` on the iframe as part of the `style`.
      - `chaise-autofill` will set the appropriate values for height and width based on the user's browser
+       - CAUTION: using `chaise-autofill` will ignore the set `width` or `height`
      - If browser width is less than the cell's width (or max width), a scrollbar will be present in the cell itself to scroll left/right to see the rest of the content.
    - To expand the iframe height to the cell height, attach the `chaise-autofill` class.
-     - specify `min-height` to initialize the iframe height with the min height value without removing the responsiveness from `chaise-autofill`
-     - defining `max-height` on the iframe will limit the responsiveness from continually stretching the iframe
+     - Specify `min-height` to initialize the iframe height with the min height value without removing the responsiveness from `chaise-autofill`
+     - Defining `max-height` on the iframe will limit the responsiveness from continually stretching the iframe
        - NOTE: This occurs because of apps that were made to be responsive in their own viewport.
  - Other cases:
    - For iframes that are accompanied by a potentially long caption, define `min-height` on the iframe to ensure the cell resizes to fit all of the caption and the iframe.
