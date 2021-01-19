@@ -26,7 +26,7 @@ The renderer that we use ([markdown-it](https://github.com/markdown-it/markdown-
         - [Fill container with min-width](#fill-container-with-min-width)
         - [Fill container with min-width and min-height and max-height](#fill-container-with-min-width-and-min-height-and-max-height)
         - [Iframe with figure class and style](#iframe-with-figure-class-and-style)
-        - [Iframe with figure styles and caption styles](#iframe-with-figure-styles-and-caption-styles)
+        - [Iframe with caption styles and figure styles](#iframe-with-caption-styles-and-figure-styles)
     + [7. Dropdown download button](#7-dropdown-download-button)
     + [8. Vocabulary](#8-vocabulary)
     + [9. Youtube Video](#9-youtube-video)
