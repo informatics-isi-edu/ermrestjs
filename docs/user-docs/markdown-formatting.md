@@ -27,6 +27,7 @@ The renderer that we use ([markdown-it](https://github.com/markdown-it/markdown-
         - [Fill container with min-width and min-height and max-height](#fill-container-with-min-width-and-min-height-and-max-height)
         - [Iframe with figure class and style](#iframe-with-figure-class-and-style)
         - [Iframe with caption styles and figure styles](#iframe-with-caption-styles-and-figure-styles)
+        - [Iframe with set height and responsive width](#iframe-with-set-height-and-responsive-width)
     + [7. Dropdown download button](#7-dropdown-download-button)
     + [8. Vocabulary](#8-vocabulary)
     + [9. Youtube Video](#9-youtube-video)
@@ -478,7 +479,7 @@ To style the whole iframe enclosing block (`<figure>`) you can either specify cl
 </figure>
 ```
 
-#### Iframe with caption styles and figure styles
+##### Iframe with caption styles and figure styles
 
 ```html
 ::: iframe [CAPTION](https://example.com){pos="bottom" figure-class="iclass" figure-style="border: 1px solid;" caption-class="cclass" caption-style="font-weight: 500;"  link="https://example.com} \n:::
@@ -489,6 +490,20 @@ To style the whole iframe enclosing block (`<figure>`) you can either specify cl
     <figcaption class="embed-caption cclass" style="font-weight: 500;">
         <a href="https://example.com" target="_blank">CAPTION</a>
     </figcaption>
+</figure>
+```
+
+
+##### Iframe with set height and responsive width
+To have a responsive width and a set height, do not use `chaise-autofill` and set `height` or `min-height` with `width: 100%`.
+
+```html
+::: iframe [CAPTION](https://example.com){width=100% style="min-width: 300px; min-height: 400px;"} \n:::
+
+# OUTPUT:
+<figure class="embed-block">
+    <figcaption class="embed-caption">CAPTION</a></figcaption>
+    <iframe src="https://example.com" width=100% style="min-width: 300px; min-height: 400px;"></iframe>
 </figure>
 ```
 
