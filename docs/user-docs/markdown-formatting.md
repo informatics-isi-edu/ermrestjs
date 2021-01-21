@@ -320,7 +320,7 @@ Some examples of how to apply height and width to iframes and other examples can
 
 #### Styling the Iframe
 
-##### a. Without any attributes
+#### a. Without any attributes
 ```html
 ::: iframe [CAPTION](https://dev.isrd.isi.edu/chaise/search) \n:::
 
@@ -332,7 +332,7 @@ Some examples of how to apply height and width to iframes and other examples can
 ```
 
 
-##### b. With height and width defined
+#### b. With height and width defined
 ```html
 ::: iframe [CAPTION](https://dev.isrd.isi.edu/chaise/search){width="800" height="300"} \n:::
 
@@ -344,7 +344,7 @@ Some examples of how to apply height and width to iframes and other examples can
 ```
 
 
-##### c. Invalid link
+#### c. Invalid link
 If you provide an invalid link then instead of an iframe you will just get the internal markdown rendered
 ```html
 :::iframe *Invalid [CAPTION](https://dev.isrd.isi.edu/chaise/search) \n:::
@@ -358,7 +358,7 @@ If you provide an invalid link then instead of an iframe you will just get the i
 > <p><em>Invalid</em> <a href="https://dev.isrd.isi.edu/chaise/search">CAPTION</a></p>
 
 
-##### d. Iframe without scrolling
+#### d. Iframe without scrolling
 ```html
 ::: iframe [CAPTION](https://dev.isrd.isi.edu/chaise/search){width="800" height="300" scrolling="no"} \n:::
 
@@ -372,7 +372,7 @@ If you provide an invalid link then instead of an iframe you will just get the i
 ```
 
 
-##### e. Class and style attached to the iframe element
+#### e. Class and style attached to the iframe element
 ```html
 ::: iframe [CAPTION](https://example.com){pos="bottom" style="border: 5px solid;" class="iframe-element-class" link="https://example.com} \n:::
 
@@ -386,7 +386,7 @@ If you provide an invalid link then instead of an iframe you will just get the i
 
 #### Captions
 
-##### a. Linkable caption
+#### a. Linkable caption
 ```html
 ::: iframe [CAPTION](https://dev.isrd.isi.edu/chaise/search){width="800" height="300" link="https://dev.isrd.isi.edu/chaise/search"} \n:::
 
@@ -400,7 +400,7 @@ If you provide an invalid link then instead of an iframe you will just get the i
 ```
 
 
-##### b. Caption positioned at the bottom
+#### b. Caption positioned at the bottom
 ```html
 ::: iframe [CAPTION](https://dev.isrd.isi.edu/chaise/search){width="800" height="300" link="https://dev.isrd.isi.edu/chaise/search" pos="bottom" } \n:::
 
@@ -414,7 +414,7 @@ If you provide an invalid link then instead of an iframe you will just get the i
 ```
 
 
-##### c. Caption class and style
+#### c. Caption class and style
 To style the caption of an iframe you can either specify classes using `caption-class` or CSS style using `caption-style`.
 
 ```html
@@ -430,7 +430,7 @@ To style the caption of an iframe you can either specify classes using `caption-
 
 #### Responsiveness and Other Cases
 
-##### a. Stretch to height and width of parent container
+#### a. Stretch to height and width of parent container
 If parent container (cell in record app) has no styles, the iframe will only fill the minimum height of the cell
 
 ```html
@@ -444,7 +444,7 @@ If parent container (cell in record app) has no styles, the iframe will only fil
 ```
 
 
-##### b. Fill container with min-width
+#### b. Fill container with min-width
 When a min-width value is defined, the parent container will stop resizing once the viewport width forces the container to be smaller than the iframe.
 
 ```html
@@ -458,7 +458,7 @@ When a min-width value is defined, the parent container will stop resizing once 
 ```
 
 
-##### c. Fill container with min-width and min-height and max-height
+#### c. Fill container with min-width and min-height and max-height
 When a min-height value is defined, the parent container will resize to allow for the defined minimum height. Max height is defined to limit the iframe from continually stretching as noted in the best practices above.
 
 ```html
@@ -472,7 +472,7 @@ When a min-height value is defined, the parent container will resize to allow fo
 ```
 
 
-##### d. Iframe with figure class and style
+#### d. Iframe with figure class and style
 To style the whole iframe enclosing block (`<figure>`) you can either specify classes using `figure-class` or CSS style using `figure-style`.
  - NOTE: `iframe-class` and `iframe-style` are deprecated.
 
@@ -488,7 +488,7 @@ To style the whole iframe enclosing block (`<figure>`) you can either specify cl
 </figure>
 ```
 
-##### e. Iframe with caption styles and figure styles
+#### e. Iframe with caption styles and figure styles
 
 ```html
 ::: iframe [CAPTION](https://example.com){pos="bottom" figure-class="iclass" figure-style="border: 1px solid;" caption-class="cclass" caption-style="font-weight: 500;"  link="https://example.com} \n:::
@@ -503,7 +503,7 @@ To style the whole iframe enclosing block (`<figure>`) you can either specify cl
 ```
 
 
-##### f. Iframe with set height and responsive width
+#### f. Iframe with set height and responsive width
 To have a responsive width and a set height, do not use `chaise-autofill` and set `height` or `min-height` with `width: 100%`.
 
 ```html
