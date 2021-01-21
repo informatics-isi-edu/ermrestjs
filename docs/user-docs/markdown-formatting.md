@@ -7,7 +7,7 @@ The renderer that we use ([markdown-it](https://github.com/markdown-it/markdown-
   * [Attributes](#attributes)
     + [Special Classes](#special-classes)
   * [Examples](#examples)
-    + [1. Link (Anchor)](#1-link--anchor-)
+    + [1. Link (Anchor)](#1-link-anchor)
     + [2. Download Button](#2-download-button)
     + [3. Image](#3-image)
     + [4. Thumbnail Image With Aspect Ratio and Height](#4-thumbnail-image-with-aspect-ratio-and-height)
@@ -21,10 +21,10 @@ The renderer that we use ([markdown-it](https://github.com/markdown-it/markdown-
         - [d. Iframe without scrolling](#d-iframe-without-scrolling)
         - [e. Class and style attached to the iframe element](#e-class-and-style-attached-to-the-iframe-element)
       - [Captions](#captions)
-        - [a. Linkable caption](#linkable-caption)
-        - [b. Caption positioned at the bottom](#a-caption-positioned-at-the-bottom)
-        - [c. Caption class and style](#b-caption-class-and-style)
-      - [Responsiveness and Other Cases](#c-responsiveness-and-other-cases)
+        - [a. Linkable caption](#a-linkable-caption)
+        - [b. Caption positioned at the bottom](#b-caption-positioned-at-the-bottom)
+        - [c. Caption class and style](#c-caption-class-and-style)
+      - [Responsiveness and Other Cases](#responsiveness-and-other-cases)
         - [a. Stretch to height and width of parent container](#a-stretch-to-height-and-width-of-parent-container)
         - [b. Fill container with min-width](#b-fill-container-with-min-width)
         - [c. Fill container with min-width and min-height and max-height](#c-fill-container-with-min-width-and-min-height-and-max-height)
@@ -37,7 +37,7 @@ The renderer that we use ([markdown-it](https://github.com/markdown-it/markdown-
     + [10. Video](#10-video)
     + [11. Subscript](#11-subscript)
     + [12. Superscript](#12-superscript)
-    + [13. Span (Attach Attributes To Text)](#13-span--attach-attributes-to-text-)
+    + [13. Span (Attach Attributes To Text)](#13-span-attach-attributes-to-text)
     + [14. RID link](#14-rid-link)
 
 
@@ -298,6 +298,8 @@ This is not part of commonMark specification and it will result in a [block](#in
    - the `chaise-autofill` class will set the appropriate values for height and width based on the user's browser
    - CAUTION: using `chaise-autofill` will ignore the set `height` or `width`
  - cell - the `<td>` element that iframe is contained in
+<br />
+<br />
 
 Some best practices for creating responsive or specifically sized iframes are as follows:
  - Fixed iframe dimensions:
@@ -311,6 +313,8 @@ Some best practices for creating responsive or specifically sized iframes are as
  - Other cases:
    - For iframes that are accompanied by a potentially long caption, define `min-height` on the iframe to ensure the cell resizes to fit all of the caption and the iframe.
    - CSS styles can be applied to the `<td>` element with `id="entity-<column_name>"` to set height/width for the cell
+<br />
+<br />
 
 Some examples of how to apply height and width to iframes and other examples can be found below.
 
