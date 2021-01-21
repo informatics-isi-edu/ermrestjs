@@ -288,6 +288,9 @@ With attributes width=500, height=400 and a linkable caption to open it in new t
 
 > <figure class="embed-block" style="display:inline-block;"><a href="https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg" target="\_blank"><figcaption class="embed-caption">Skyscrapers</figcaption><img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" height="200"  /></a></figure>
 
+<br />
+<br />
+
 ### 6. Iframe
 
 This is not part of commonMark specification and it will result in a [block](#inline-vs-block). You have to follow the syntax completely (notice the newline in the closing tag). A list of terms used to describe how iframes can be styled are as follows:
@@ -515,7 +518,8 @@ To have a responsive width and a set height, do not use `chaise-autofill` and se
     <iframe src="https://example.com" width=100% style="min-width: 300px; min-height: 400px;"></iframe>
 </figure>
 ```
-
+<br />
+<br />
 
 ### 7. Dropdown download button
 
