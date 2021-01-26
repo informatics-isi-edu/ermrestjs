@@ -287,7 +287,7 @@ With attributes width=500, height=400 and a linkable caption to open it in new t
 ```
 
 > <figure class="embed-block" style="display:inline-block;"><a href="https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg" target="\_blank"><figcaption class="embed-caption">Skyscrapers</figcaption><img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" height="200"  /></a></figure>
-<br />
+
 
 ### 6. Iframe
 
@@ -304,7 +304,6 @@ The following list of terms are used to describe how to style iframes:
    - any self defined class or classes defined as part of chaise are allowed
    - the `chaise-autofill` class will set the appropriate values for height and width based on the user's browser
    - CAUTION: using `chaise-autofill` will ignore the set `height` or `width`
-<br />
 
 Some best practices for creating responsive or specifically sized iframes are as follows:
  - For fixed iframe dimensions use `height` and `width`.
@@ -317,7 +316,6 @@ Some best practices for creating responsive or specifically sized iframes are as
  - Other cases:
    - For iframes that are accompanied by a potentially long caption, define `min-height` on the iframe to ensure the cell resizes to fit all of the caption and the iframe.
    - CSS styles can be applied to the `<td>` element with `id="entity-<column_name>"` to set height/width for the cell
-<br />
 
 Below are examples of how to apply height, width, style, and class to the iframe and caption.
 
@@ -518,7 +516,7 @@ To have a responsive width and a set height, do not use `chaise-autofill` and se
     <iframe src="https://example.com" width=100% style="min-width: 300px; min-height: 400px;"></iframe>
 </figure>
 ```
-<br />
+
 
 ### 7. Dropdown download button
 
