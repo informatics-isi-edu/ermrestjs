@@ -1884,7 +1884,7 @@
                         // Check If the markdown is a link
                         if (attrs[0].children[0].type == "link_open") {
                             var iframeHTML = "<iframe ", openingLink = attrs[0].children[0];
-                            var enlargeLink, posTop = true, captionClass = "", captionStyle = "", figureClass = "", figureStyle = "";
+                            var enlargeLink, posTop = true, captionClass = "", captionStyle = "", figureClass = "", figureStyle = "", iframeSrc;
                             var isYTlink = false, videoURL = "", iframeClasses = [];
 
                             // Add all attributes to the iframe
@@ -1892,6 +1892,7 @@
                                 switch(attr[0]) {
                                     case "href":
                                         isYTlink  = (attr[1].match("^(http(s)?:\/\/)?((w){3}.)?youtu(be|.be)?(\.com)?\/.+") != null);
+                                        iframeSrc = attr[1];
                                         iframeHTML += 'src="' + attr[1] + '"';
                                         videoText = 'Note: YouTube video ( ' + attr[1] + ' ) is hidden in print';
                                         break;

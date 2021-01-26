@@ -14,23 +14,23 @@ The renderer that we use ([markdown-it](https://github.com/markdown-it/markdown-
       - [Multiple Adjacent Images](#multiple-adjacent-images)
     + [5. Thumbnail With Link To Original Image And A caption](#5-thumbnail-with-link-to-original-image-and-a-caption)
     + [6. Iframe](#6-iframe)
-      - [Styling the Iframe](#styling-the-iframe)
-        - [a. Without any attributes](#a-without-any-attributes)
-        - [b. With height and width defined](#b-with-height-and-width-defined)
-        - [c. Invalid link](#c-invalid-link)
-        - [d. Iframe without scrolling](#d-iframe-without-scrolling)
-        - [e. Class and style attached to the iframe element](#e-class-and-style-attached-to-the-iframe-element)
-      - [Captions](#captions)
-        - [a. Linkable caption](#a-linkable-caption)
-        - [b. Caption positioned at the bottom](#b-caption-positioned-at-the-bottom)
-        - [c. Caption class and style](#c-caption-class-and-style)
-      - [Responsiveness and Other Cases](#responsiveness-and-other-cases)
-        - [a. Stretch to height and width of parent container](#a-stretch-to-height-and-width-of-parent-container)
-        - [b. Fill container with min-width](#b-fill-container-with-min-width)
-        - [c. Fill container with min-width and min-height and max-height](#c-fill-container-with-min-width-and-min-height-and-max-height)
-        - [d. Iframe with figure class and style](#d-iframe-with-figure-class-and-style)
-        - [e. Iframe with caption styles and figure styles](#e-iframe-with-caption-styles-and-figure-styles)
-        - [f. Iframe with set height and responsive width](#f-iframe-with-set-height-and-responsive-width)
+      - [a. Styling the Iframe](#a-styling-the-iframe)
+        - [a.1. Without any attributes](#a1-without-any-attributes)
+        - [a.2. With height and width defined](#a2-with-height-and-width-defined)
+        - [a.3. Invalid link](#a3-invalid-link)
+        - [a.4. Iframe without scrolling](#a4-iframe-without-scrolling)
+        - [a.5. Class and style attached to the iframe element](#a5-class-and-style-attached-to-the-iframe-element)
+      - [b. Captions](#b-captions)
+        - [b.1. Linkable caption](#b1-linkable-caption)
+        - [b.2. Caption positioned at the bottom](#b2-caption-positioned-at-the-bottom)
+        - [b.3. Caption class and style](#b3-caption-class-and-style)
+      - [c. Responsiveness and Other Cases](#c-responsiveness-and-other-cases)
+        - [c.1. Stretch to height and width of parent container](#c1-stretch-to-height-and-width-of-parent-container)
+        - [c.2. Fill container with min-width](#c2-fill-container-with-min-width)
+        - [c.3. Fill container with min-width and min-height and max-height](#c3-fill-container-with-min-width-and-min-height-and-max-height)
+        - [c.4. Iframe with figure class and style](#c4-iframe-with-figure-class-and-style)
+        - [c.5. Iframe with caption styles and figure styles](#c5-iframe-with-caption-styles-and-figure-styles)
+        - [c.6. Iframe with set height and responsive width](#c6-iframe-with-set-height-and-responsive-width)
     + [7. Dropdown download button](#7-dropdown-download-button)
     + [8. Vocabulary](#8-vocabulary)
     + [9. Youtube Video](#9-youtube-video)
@@ -287,26 +287,27 @@ With attributes width=500, height=400 and a linkable caption to open it in new t
 ```
 
 > <figure class="embed-block" style="display:inline-block;"><a href="https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg" target="\_blank"><figcaption class="embed-caption">Skyscrapers</figcaption><img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" height="200"  /></a></figure>
-
-<br />
 <br />
 
 ### 6. Iframe
 
-This is not part of commonMark specification and it will result in a [block](#inline-vs-block). You have to follow the syntax completely (notice the newline in the closing tag). A list of terms used to describe how iframes can be styled are as follows:
- - `height` and `width` - both can be defined as attributes for the iframe
- - `style` - the property used to attach CSS styles directly to the iframe
-   - `min-height`, `min-width`, `max-height`, and `max-width` (and other CSS properties) are defined in this attribute
- - `class` - the property used to attach a class to the iframe
+This is not part of commonMark specification and it will result in a [block](#inline-vs-block). You have to follow the syntax completely (notice the newline in the closing tag). The following is the basic syntax structure:
+```mkdn
+::: iframe [CAPTION](www.link.com) {<attribute>=<value>} \n:::
+```
+
+The following list of terms are used to describe how to style iframes:
+ - `height` and `width` - used to specify iframe width and iframe height
+ - `style` - the attribute used to attach any standard CSS properties directly to the iframe
+   - more commonly used CSS properties for iframes include `min-height`, `min-width`, `max-height`, and `max-width`
+ - `class` - the attribute used to attach a class to the iframe
+   - any self defined class or classes defined as part of chaise are allowed
    - the `chaise-autofill` class will set the appropriate values for height and width based on the user's browser
    - CAUTION: using `chaise-autofill` will ignore the set `height` or `width`
- - cell - the `<td>` element that iframe is contained in
-<br />
 <br />
 
 Some best practices for creating responsive or specifically sized iframes are as follows:
- - Fixed iframe dimensions:
-   - Specify iframe width and iframe height using `width` and `height`
+ - For fixed iframe dimensions use `height` and `width`.
  - Responsive iframe dimensions:
    - To expand the iframe width to browser width, attach the `chaise-autofill` class and define `min-width` on the iframe as part of the `style`.
      - If browser width is less than the cell's width (or max width), a scrollbar will be present in the cell itself to scroll left/right to see the rest of the content.
@@ -317,13 +318,12 @@ Some best practices for creating responsive or specifically sized iframes are as
    - For iframes that are accompanied by a potentially long caption, define `min-height` on the iframe to ensure the cell resizes to fit all of the caption and the iframe.
    - CSS styles can be applied to the `<td>` element with `id="entity-<column_name>"` to set height/width for the cell
 <br />
-<br />
 
-Some examples of how to apply height and width to iframes and other examples can be found below.
+Below are examples of how to apply height, width, style, and class to the iframe and caption.
 
-#### Styling the Iframe
+#### a. Styling the Iframe
 
-#### a. Without any attributes
+#### a.1. Without any attributes
 ```html
 ::: iframe [CAPTION](https://dev.isrd.isi.edu/chaise/search) \n:::
 
@@ -335,7 +335,7 @@ Some examples of how to apply height and width to iframes and other examples can
 ```
 
 
-#### b. With height and width defined
+#### a.2. With height and width defined
 ```html
 ::: iframe [CAPTION](https://dev.isrd.isi.edu/chaise/search){width="800" height="300"} \n:::
 
@@ -347,7 +347,7 @@ Some examples of how to apply height and width to iframes and other examples can
 ```
 
 
-#### c. Invalid link
+#### a.3. Invalid link
 If you provide an invalid link then instead of an iframe you will just get the internal markdown rendered
 ```html
 :::iframe *Invalid [CAPTION](https://dev.isrd.isi.edu/chaise/search) \n:::
@@ -361,7 +361,7 @@ If you provide an invalid link then instead of an iframe you will just get the i
 > <p><em>Invalid</em> <a href="https://dev.isrd.isi.edu/chaise/search">CAPTION</a></p>
 
 
-#### d. Iframe without scrolling
+#### a.4. Iframe without scrolling
 ```html
 ::: iframe [CAPTION](https://dev.isrd.isi.edu/chaise/search){width="800" height="300" scrolling="no"} \n:::
 
@@ -375,7 +375,7 @@ If you provide an invalid link then instead of an iframe you will just get the i
 ```
 
 
-#### e. Class and style attached to the iframe element
+#### a.5. Class and style attached to the iframe element
 ```html
 ::: iframe [CAPTION](https://example.com){pos="bottom" style="border: 5px solid;" class="iframe-element-class" link="https://example.com} \n:::
 
@@ -387,9 +387,9 @@ If you provide an invalid link then instead of an iframe you will just get the i
 ```
 
 
-#### Captions
+#### b. Captions
 
-#### a. Linkable caption
+#### b.1. Linkable caption
 ```html
 ::: iframe [CAPTION](https://dev.isrd.isi.edu/chaise/search){width="800" height="300" link="https://dev.isrd.isi.edu/chaise/search"} \n:::
 
@@ -403,7 +403,7 @@ If you provide an invalid link then instead of an iframe you will just get the i
 ```
 
 
-#### b. Caption positioned at the bottom
+#### b.2. Caption positioned at the bottom
 ```html
 ::: iframe [CAPTION](https://dev.isrd.isi.edu/chaise/search){width="800" height="300" link="https://dev.isrd.isi.edu/chaise/search" pos="bottom" } \n:::
 
@@ -417,7 +417,7 @@ If you provide an invalid link then instead of an iframe you will just get the i
 ```
 
 
-#### c. Caption class and style
+#### b.3. Caption class and style
 To style the caption of an iframe you can either specify classes using `caption-class` or CSS style using `caption-style`.
 
 ```html
@@ -431,9 +431,9 @@ To style the caption of an iframe you can either specify classes using `caption-
 ```
 
 
-#### Responsiveness and Other Cases
+#### c. Responsiveness and Other Cases
 
-#### a. Stretch to height and width of parent container
+#### c.1. Stretch to height and width of parent container
 If parent container (cell in record app) has no styles, the iframe will only fill the minimum height of the cell
 
 ```html
@@ -447,7 +447,7 @@ If parent container (cell in record app) has no styles, the iframe will only fil
 ```
 
 
-#### b. Fill container with min-width
+#### c.2. Fill container with min-width
 When a min-width value is defined, the parent container will stop resizing once the viewport width forces the container to be smaller than the iframe.
 
 ```html
@@ -461,7 +461,7 @@ When a min-width value is defined, the parent container will stop resizing once 
 ```
 
 
-#### c. Fill container with min-width and min-height and max-height
+#### c.3. Fill container with min-width and min-height and max-height
 When a min-height value is defined, the parent container will resize to allow for the defined minimum height. Max height is defined to limit the iframe from continually stretching as noted in the best practices above.
 
 ```html
@@ -475,7 +475,7 @@ When a min-height value is defined, the parent container will resize to allow fo
 ```
 
 
-#### d. Iframe with figure class and style
+#### c.4. Iframe with figure class and style
 To style the whole iframe enclosing block (`<figure>`) you can either specify classes using `figure-class` or CSS style using `figure-style`.
  - NOTE: `iframe-class` and `iframe-style` are deprecated.
 
@@ -491,7 +491,7 @@ To style the whole iframe enclosing block (`<figure>`) you can either specify cl
 </figure>
 ```
 
-#### e. Iframe with caption styles and figure styles
+#### c.5. Iframe with caption styles and figure styles
 
 ```html
 ::: iframe [CAPTION](https://example.com){pos="bottom" figure-class="iclass" figure-style="border: 1px solid;" caption-class="cclass" caption-style="font-weight: 500;"  link="https://example.com} \n:::
@@ -506,7 +506,7 @@ To style the whole iframe enclosing block (`<figure>`) you can either specify cl
 ```
 
 
-#### f. Iframe with set height and responsive width
+#### c.6. Iframe with set height and responsive width
 To have a responsive width and a set height, do not use `chaise-autofill` and set `height` or `min-height` with `width: 100%`.
 
 ```html
@@ -518,7 +518,6 @@ To have a responsive width and a set height, do not use `chaise-autofill` and se
     <iframe src="https://example.com" width=100% style="min-width: 300px; min-height: 400px;"></iframe>
 </figure>
 ```
-<br />
 <br />
 
 ### 7. Dropdown download button
