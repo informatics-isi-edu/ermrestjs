@@ -1884,7 +1884,7 @@
                         // Check If the markdown is a link
                         if (attrs[0].children[0].type == "link_open") {
                             var iframeHTML = "<iframe ", openingLink = attrs[0].children[0];
-                            var enlargeLink, posTop = true, captionClass = "", captionStyle = "", figureClass = "", figureStyle = "", iframeSrc;
+                            var enlargeLink, posTop = true, captionClass = "", captionStyle = "", figureClass = "", figureStyle = "", iframeSrc = "", frameWidth = "";
                             var isYTlink = false, videoURL = "", iframeClasses = [];
 
                             // Add all attributes to the iframe
@@ -1924,8 +1924,12 @@
                                         }
                                         break;
                                     default:
+                                        if (attr[0] == "width") {
+                                            frameWidth = attr[1];
+                                        }
+
                                         // handles `style="some: style;"` case from template
-                                        iframeHTML +=  attr[0] + '="' + attr[1] + '"';
+                                        iframeHTML += attr[0] + '="' + attr[1] + '"';
                                         break;
                                 }
                                 iframeHTML += " ";
@@ -1969,9 +1973,14 @@
                                 captionHTML = '<a href="' + enlargeLink + '" target="_blank">'  + captionHTML + '</a>';
                             }
 
+                            var flexStyles = 'style="display: flex; width: ' + (frameWidth ? (frameWidth + (isNaN(parseInt(frameWidth)) ? "" : "px")) : "100%")+ ';"';
+
+                            // text align to pull button to the right
+                            var buttonHtml = '<div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="' + iframeSrc + '" target="_blank">Full screen <span class="glyphicon glyphicon-fullscreen"></span></a></div>';
+
                             // Encapsulate the captionHTML inside a figcaption tag with class embed-caption
                             if (posTop) {
-                                html = '<figcaption class="embed-caption' + (captionClass.length ? (" " + captionClass) : "") +'" style="' + (captionStyle.length ? (" " + captionStyle) : "") + '">' + captionHTML + "</figcaption>" + html;
+                                html = '<div ' + flexStyles + '><figcaption class="embed-caption' + (captionClass.length ? (" " + captionClass) : "") +'" style="width: 80%;' + (captionStyle.length ? (" " + captionStyle) : "") + '">' + captionHTML + "</figcaption>" + buttonHtml + "</div>" + html;
                             } else {
                                 html += '<figcaption class="embed-caption' + (captionClass.length ? (" " + captionClass) : "") + '" style="' + (captionStyle.length ? (" " + captionStyle) : "") + '">' + captionHTML + "</figcaption>";
                             }
