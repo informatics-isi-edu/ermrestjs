@@ -282,6 +282,13 @@ ReferenceColumn.prototype = {
         return this._commentDisplay;
     },
 
+    get hideColumnHeader() {
+        if (this._hideColumnHeader === undefined) {
+            this._hideColumnHeader = this.display.hideColumnHeader || false;
+        }
+        return this._hideColumnHeader;
+    },
+
     /**
      * @desc Indicates if the input should be disabled
      * true: input must be disabled
@@ -337,6 +344,7 @@ ReferenceColumn.prototype = {
      *  - `columnOrder`: list of columns that this column should be sorted based on
      *  - `isMarkdownPattern`: true|false|undefined Whether it has a markdownPattern or not
      *  - `markdownPattern`: string|undefined
+     *  - `hideColumnHeader`: true|false|null
      *
      * @type {Object}
      */

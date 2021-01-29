@@ -2846,6 +2846,7 @@
                 }
 
                 this._display[context] = {
+                    "hideColumnHeader": annotation.hide_column_header || false, // only hide if the annotation value is true
                     "isPreformat": hasPreformat,
                     "preformatConfig": hasPreformat ? annotation.pre_format : null,
                     "isMarkdownPattern": (typeof annotation.markdown_pattern === 'string'),
