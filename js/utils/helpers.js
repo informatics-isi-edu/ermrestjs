@@ -1884,34 +1884,49 @@
                         // Check If the markdown is a link
                         if (attrs[0].children[0].type == "link_open") {
                             var iframeHTML = "<iframe ", openingLink = attrs[0].children[0];
-                            var enlargeLink, posTop = true, captionClass = "", captionStyle = "", iframeClass = "", iframeStyle = "";
-                            var isYTlink = false, videoURL = "", iframeTagClasses = [];
+                            var enlargeLink, posTop = true, captionClass = "", captionStyle = "", figureClass = "", figureStyle = "", iframeSrc;
+                            var isYTlink = false, videoURL = "", iframeClasses = [];
 
                             // Add all attributes to the iframe
                             openingLink.attrs.forEach(function(attr) {
-                                if (attr[0] == "href") {
-                                    isYTlink  = (attr[1].match("^(http(s)?:\/\/)?((w){3}.)?youtu(be|.be)?(\.com)?\/.+") != null);
-                                    iframeHTML += 'src="' + attr[1] + '"';
-                                    videoText = 'Note: YouTube video ( ' + attr[1] + ' ) is hidden in print';
-                                } else if (attr[0] == "link") {
-                                    enlargeLink = attr[1];
-                                } else if (attr[0] == "pos") {
-                                    posTop = attr[1].toLowerCase() == 'bottom' ? false : true;
-                                } else if (attr[0] == "caption-class") {
-                                    captionClass = attr[1];
-                                } else if (attr[0] == "caption-style") {
-                                    captionStyle = attr[1];
-                                } else if (attr[0] == "iframe-class") {
-                                    iframeClass = attr[1];
-                                } else if (attr[0] == "iframe-style") {
-                                    iframeStyle = attr[1];
-                                } else if (attr[0] == "class") {
-                                    if (attr[1].length > 0) {
-                                        iframeTagClasses.push(attr[1]);
-                                        return; //we're going to add classe at the end
-                                    }
-                                } else {
-                                    iframeHTML +=  attr[0] + '="' + attr[1] + '"';
+                                switch(attr[0]) {
+                                    case "href":
+                                        isYTlink  = (attr[1].match("^(http(s)?:\/\/)?((w){3}.)?youtu(be|.be)?(\.com)?\/.+") != null);
+                                        iframeSrc = attr[1];
+                                        iframeHTML += 'src="' + attr[1] + '"';
+                                        videoText = 'Note: YouTube video ( ' + attr[1] + ' ) is hidden in print';
+                                        break;
+                                    case "link":
+                                        enlargeLink = attr[1];
+                                        break;
+                                    case "pos":
+                                        posTop = attr[1].toLowerCase() == 'bottom' ? false : true;
+                                        break;
+                                    case "caption-class":
+                                        captionClass = attr[1];
+                                        break;
+                                    case "caption-style":
+                                        captionStyle = attr[1];
+                                        break;
+                                    case "iframe-class": // NOTE: iframe-class will be deprecated but leaving in conditional for backwards compatibility
+                                    case "figure-class":
+                                        figureClass = attr[1];
+                                        break;
+                                    case "iframe-style": // NOTE: iframe-style will be deprecated but leaving in conditional for backwards compatibility
+                                    case "figure-style":
+                                        figureStyle = attr[1];
+                                        break;
+                                    case "class":
+                                        if (attr[1].length > 0) {
+                                            iframeClasses.push(attr[1]);
+                                            // NOTE: we return here to avoid adding `" "` to iframeHTML?
+                                            return; //we're going to add classes at the end
+                                        }
+                                        break;
+                                    default:
+                                        // handles `style="some: style;"` case from template
+                                        iframeHTML +=  attr[0] + '="' + attr[1] + '"';
+                                        break;
                                 }
                                 iframeHTML += " ";
                             });
@@ -1919,15 +1934,15 @@
                             //During print we need to display that the iframe with YouTube video is replaced with a note
                             if(isYTlink){
                               html = '<span class="' + module._classNames.showInPrintMode + '" style="visibility:hidden">' + videoText + "</span>";
-                              iframeTagClasses.push(module._classNames.hideInPrintMode);
+                              iframeClasses.push(module._classNames.hideInPrintMode);
                             }
 
                             // add the iframe tag
                             html += iframeHTML;
 
                             // attach the iframe tag classes
-                            if (iframeTagClasses.length > 0) {
-                                html += 'class="' + iframeTagClasses.join(" ") + '" ';
+                            if (iframeClasses.length > 0) {
+                                html += 'class="' + iframeClasses.join(" ") + '" ';
                             }
                             html += "></iframe>";
 
@@ -1962,7 +1977,7 @@
                             }
 
                             // Encapsulate the iframe inside a figure tag
-                            html = '<figure class="embed-block ' + module._classNames.postLoad + (iframeClass.length ? (" "  + iframeClass): "") + '" style="' + (iframeStyle.length ? (" "  + iframeStyle ) : "") + '">' + html + "</figure>";
+                            html = '<figure class="embed-block ' + module._classNames.postLoad + (figureClass.length ? (" "  + figureClass) : "") + '" style="' + (figureStyle.length ? (" "  + figureStyle) : "") + '">' + html + "</figure>";
                         }
                     }
                     // if attrs was empty or it didn't find any link simply render the internal markdown
