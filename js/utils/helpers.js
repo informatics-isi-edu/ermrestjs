@@ -1973,6 +1973,9 @@
                                 captionHTML = '<a href="' + enlargeLink + '" target="_blank">'  + captionHTML + '</a>';
                             }
 
+                            // Checks for a width being defined. If it's defined and not a number, assume it has `px` or `%` appended already and use as is.
+                            // If width is defined and is a number, assume it's in pixels and append `%`.
+                            // If no width, use "100%"
                             var contentsWidth = 'style="width: ' + (frameWidth ? (frameWidth + (isNaN(parseInt(frameWidth)) ? "" : "px")) : "100%")+ ';"';
 
                             // text align to pull button to the right
@@ -1980,6 +1983,7 @@
 
                             // Encapsulate the captionHTML inside a figcaption tag with class embed-caption
                             if (posTop) {
+                                // if caption is at the top, we need to wrap the caption and fullscreen button in a div so the width can be applied and allow the caption to flex around the button
                                 html = '<div class="figcaption-wrapper" ' + contentsWidth + '><figcaption class="embed-caption' + (captionClass.length ? (" " + captionClass) : "") +'" style="' + (captionStyle.length ? (" " + captionStyle) : "") + '">' + captionHTML + "</figcaption>" + buttonHtml + "</div>" + html;
                             } else {
                                 html = buttonHtml + html + '<figcaption class="embed-caption' + (captionClass.length ? (" " + captionClass) : "") + '" style="' + (captionStyle.length ? (" " + captionStyle) : "") + '">' + captionHTML + "</figcaption>";
