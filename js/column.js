@@ -452,7 +452,7 @@ ReferenceColumn.prototype = {
             }
 
             Object.assign(keyValues, templateVariables, selfTemplateVariables);
-            return module._processMarkdownPattern(
+            return module.processMarkdownPattern(
                 this.display.sourceMarkdownPattern,
                 keyValues,
                 this.table,
@@ -683,7 +683,7 @@ ReferenceColumn.prototype = {
             }
 
             Object.assign(keyValues, templateVariables, selfTemplateVariables);
-            return module._processMarkdownPattern(
+            return module.processMarkdownPattern(
                 self.display.sourceMarkdownPattern,
                 keyValues,
                 self.table,
@@ -850,7 +850,7 @@ PseudoColumn.prototype.formatPresentation = function(data, context, templateVari
             "$self": module._getRowTemplateVariables(this.table, context, data)
         };
         Object.assign(keyValues, templateVariables, selfTemplateVariables);
-        return module._processMarkdownPattern(
+        return module.processMarkdownPattern(
             this.display.sourceMarkdownPattern,
             keyValues,
             this.table,
@@ -1918,7 +1918,7 @@ ForeignKeyPseudoColumn.prototype.formatPresentation = function(data, context, te
             "$self": module._getRowTemplateVariables(this.table, context, data)
         };
         Object.assign(keyValues, templateVariables, selfTemplateVariables);
-        return module._processMarkdownPattern(
+        return module.processMarkdownPattern(
             this.display.sourceMarkdownPattern,
             keyValues,
             this.table,
@@ -2215,7 +2215,7 @@ KeyPseudoColumn.prototype.formatPresentation = function(data, context, templateV
             "$self": module._getRowTemplateVariables(this.table, context, data, null, this.key)
         };
         Object.assign(keyValues, templateVariables, selfTemplateVariables);
-        return module._processMarkdownPattern(
+        return module.processMarkdownPattern(
             this.display.sourceMarkdownPattern,
             keyValues,
             this.table,
