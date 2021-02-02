@@ -124,12 +124,13 @@ The following is the list of special class names that you can use:
     - `.chaise-btn-primary`
     - `.chaise-btn-secondary`
     - `.chaise-btn-tertiary`
-- `.download-alt`: Use this class to represent a download button. `.download` is the old and alternative class for it.
+- `.download-alt`: Used to represent a download button. `.download` is the old and alternative class for it.
 - `.asset-permission`: If used on a link element, chaise will validate whether the user can download the asset before a download is attempted.
 - `.external-link`: By adding this to links, chaise shows a notification to the user when they are being navigated away from chaise for external links and assets hosted elsewhere.
 - `.external-link-no-icon`: By default we're going to add a icon to any external links. If you don't want it in a particular link, you can use this class.
-- `.vocab`: Use this to represent a vocabulary.
-- `.chaise-autofill`: Use this to set the height and width to fill the parent container based on the user's browser.
+- `.vocab`: Used to represent a vocabulary.
+- `.chaise-autofill`: Used to set the height and width to fill the parent container based on the user's browser.
+- `.fullscreen-off`: When applied in iframe template, this class hides the full screen button that appears at the top right corner.
 
 
 ## Examples
