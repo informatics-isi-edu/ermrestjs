@@ -92,7 +92,6 @@ jobs:
           sudo npm install
       - name: Install ermrestjs
         run: |
-          git clone https://github.com/informatics-isi-edu/ermrestjs.git
           cd ermrestjs
           sudo make install
       - name: Add tests users
