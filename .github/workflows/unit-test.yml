@@ -92,6 +92,7 @@ jobs:
       - name: Install ermrestjs
         run: |
           cd ermrestjs
+          sudo npm install
           sudo make install
       - name: Add tests users
         run: |
