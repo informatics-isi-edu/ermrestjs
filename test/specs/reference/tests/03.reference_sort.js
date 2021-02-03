@@ -237,7 +237,7 @@ exports.execute = function (options) {
                     checkSort([{"column":"col w space", "descending": false}], "07", done);
                 });
 
-                if (!process.env.TRAVIS) {
+                if (!process.env.CI) {
                     it('should work with columns with slash(`/`) in their name.', function (done) {
                         checkSort([{"column":"col_w_slash/", "descending": false}], "08", done);
                     });
