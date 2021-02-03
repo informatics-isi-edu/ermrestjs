@@ -106,9 +106,14 @@ jobs:
         run: |
           sudo service apache2 restart
       - name: Run test cases
+        id: unit-test
+        continue-on-error: true
         run: |
           cd ermrestjs
           make test
+      - name: Check on test failures
+        if: (${{ steps.unit-test.outcome }} == 'failure')
+        run: exit 1
       - name: Diagnosis after failure
         if: ${{ failure() }}
         run: |
