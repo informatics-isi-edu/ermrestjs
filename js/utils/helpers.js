@@ -1979,7 +1979,7 @@
                             var contentsWidth = 'style="width: ' + (frameWidth ? (frameWidth + (isNaN(parseInt(frameWidth)) ? "" : "px")) : "100%")+ ';"';
 
                             // text align to pull button to the right
-                            var buttonHtml = '<div class="iframe-btn-container pull-right"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="' + iframeSrc + '" target="_blank"><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div>';
+                            var buttonHtml = '<div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="' + iframeSrc + '" target="_blank"><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div>';
 
                             // Encapsulate the captionHTML inside a figcaption tag with class embed-caption
                             if (posTop) {
