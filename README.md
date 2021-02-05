@@ -1,4 +1,4 @@
-# ERMrestJS [![Build Status](https://github.com/informatics-isi-edu/ermrestjs/workflows/ERMrestJS%20tests/badge.svg?branch=master)](https://github.com/informatics-isi-edu/chaise/actions?query=workflow%3A%22ERmrestJS+tests%22+branch%3Amaster)
+# ERMrestJS [![Build Status](https://github.com/informatics-isi-edu/ermrestjs/workflows/ERMrestJS%20tests/badge.svg?branch=master)](https://github.com/informatics-isi-edu/ermrestjs/actions?query=workflow%3A%22ERmrestJS+tests%22+branch%3Amaster)
 
 The ERMrestJS is a javascript client library for interacting with the [ERMrest](http://github.com/informatics-isi-edu/ermrest) service. It provides higher-level, simplified application programming interfaces (APIs) for working with the Entity-Relationship (ER) concepts that are native to ERMrest. The library has been extended to also support [Hatrac](http://github.com/informatics-isi-edu/hatrac)---an object store service, and [ioboxd](http://github.com/informatics-isi-edu/ioboxd)---an export service. ERMrestJS is a part of [Deriva Platform](http://isrd.isi.edu/deriva).
 
