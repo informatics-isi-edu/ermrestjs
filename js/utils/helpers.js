@@ -1884,7 +1884,7 @@
                         // Check If the markdown is a link
                         if (attrs[0].children[0].type == "link_open") {
                             var iframeHTML = "<iframe ", openingLink = attrs[0].children[0];
-                            var enlargeLink, posTop = true, captionClass = "", captionStyle = "", figureClass = "", figureStyle = "", iframeSrc;
+                            var enlargeLink, posTop = true, captionClass = "", captionStyle = "", figureClass = "", figureStyle = "", iframeSrc = "", frameWidth = "";
                             var isYTlink = false, videoURL = "", iframeClasses = [];
 
                             // Add all attributes to the iframe
@@ -1924,8 +1924,12 @@
                                         }
                                         break;
                                     default:
+                                        if (attr[0] == "width") {
+                                            frameWidth = attr[1];
+                                        }
+
                                         // handles `style="some: style;"` case from template
-                                        iframeHTML +=  attr[0] + '="' + attr[1] + '"';
+                                        iframeHTML += attr[0] + '="' + attr[1] + '"';
                                         break;
                                 }
                                 iframeHTML += " ";
@@ -1969,11 +1973,20 @@
                                 captionHTML = '<a href="' + enlargeLink + '" target="_blank">'  + captionHTML + '</a>';
                             }
 
+                            // Checks for a width being defined. If it's defined and not a number, assume it has `px` or `%` appended already and use as is.
+                            // If width is defined and is a number, assume it's in pixels and append `px`.
+                            // If no width, use "100%"
+                            var contentsWidth = 'style="width: ' + (frameWidth ? (frameWidth + (isNaN(parseInt(frameWidth)) ? "" : "px")) : "100%")+ ';"';
+
+                            // fullscreen button html that is attached to the top right corner of the iframe
+                            var buttonHtml = '<div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="' + iframeSrc + '" target="_blank"><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div>';
+
                             // Encapsulate the captionHTML inside a figcaption tag with class embed-caption
                             if (posTop) {
-                                html = '<figcaption class="embed-caption' + (captionClass.length ? (" " + captionClass) : "") +'" style="' + (captionStyle.length ? (" " + captionStyle) : "") + '">' + captionHTML + "</figcaption>" + html;
+                                // if caption is at the top, we need to wrap the caption and fullscreen button in a div so the width can be applied and allow the caption to flex around the button
+                                html = '<div class="figcaption-wrapper" ' + contentsWidth + '><figcaption class="embed-caption' + (captionClass.length ? (" " + captionClass) : "") +'" style="' + (captionStyle.length ? (" " + captionStyle) : "") + '">' + captionHTML + "</figcaption>" + buttonHtml + "</div>" + html;
                             } else {
-                                html += '<figcaption class="embed-caption' + (captionClass.length ? (" " + captionClass) : "") + '" style="' + (captionStyle.length ? (" " + captionStyle) : "") + '">' + captionHTML + "</figcaption>";
+                                html = buttonHtml + html + '<figcaption class="embed-caption' + (captionClass.length ? (" " + captionClass) : "") + '" style="' + (captionStyle.length ? (" " + captionStyle) : "") + '">' + captionHTML + "</figcaption>";
                             }
 
                             // Encapsulate the iframe inside a figure tag
