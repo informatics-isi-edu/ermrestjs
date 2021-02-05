@@ -1974,11 +1974,11 @@
                             }
 
                             // Checks for a width being defined. If it's defined and not a number, assume it has `px` or `%` appended already and use as is.
-                            // If width is defined and is a number, assume it's in pixels and append `%`.
+                            // If width is defined and is a number, assume it's in pixels and append `px`.
                             // If no width, use "100%"
                             var contentsWidth = 'style="width: ' + (frameWidth ? (frameWidth + (isNaN(parseInt(frameWidth)) ? "" : "px")) : "100%")+ ';"';
 
-                            // text align to pull button to the right
+                            // fullscreen button html that is attached to the top right corner of the iframe
                             var buttonHtml = '<div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="' + iframeSrc + '" target="_blank"><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div>';
 
                             // Encapsulate the captionHTML inside a figcaption tag with class embed-caption
