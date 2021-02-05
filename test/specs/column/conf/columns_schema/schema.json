@@ -315,7 +315,14 @@
                     "type" :{
                         "typename": "text"
                     },
-                    "comment": "not part of any FKRs."
+                    "comment": "not part of any FKRs.",
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:column-display": {
+                            "detailed": {
+                                "hide_column_header": true
+                            }
+                        }
+                    }
                 },
                 {
                     "name": "col_1",

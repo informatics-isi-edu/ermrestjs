@@ -389,6 +389,7 @@ to use for ERMrest JavaScript agents.
         * [.values](#ERMrest.Tuple+values) : <code>Array.&lt;string&gt;</code>
         * [.isHTML](#ERMrest.Tuple+isHTML) : <code>Array.&lt;boolean&gt;</code>
         * [.displayname](#ERMrest.Tuple+displayname) : <code>string</code>
+        * [.rowName](#ERMrest.Tuple+rowName) : <code>string</code>
         * [.uniqueId](#ERMrest.Tuple+uniqueId) : <code>string</code>
         * [.citation](#ERMrest.Tuple+citation) : <code>ERMrest.Citation</code>
         * [.templateVariables](#ERMrest.Tuple+templateVariables) : <code>Object</code>
@@ -3758,6 +3759,7 @@ It will return:
     * [.values](#ERMrest.Tuple+values) : <code>Array.&lt;string&gt;</code>
     * [.isHTML](#ERMrest.Tuple+isHTML) : <code>Array.&lt;boolean&gt;</code>
     * [.displayname](#ERMrest.Tuple+displayname) : <code>string</code>
+    * [.rowName](#ERMrest.Tuple+rowName) : <code>string</code>
     * [.uniqueId](#ERMrest.Tuple+uniqueId) : <code>string</code>
     * [.citation](#ERMrest.Tuple+citation) : <code>ERMrest.Citation</code>
     * [.templateVariables](#ERMrest.Tuple+templateVariables) : <code>Object</code>
@@ -3904,7 +3906,21 @@ for (var i=0; len=reference.columns.length; i<len; i++) {
 #### tuple.displayname : <code>string</code>
 The _display name_ of this tuple. For example, if this tuple is a
 row from a table, then the display name is defined by the
-row_markdown_pattern annotation for the _row name_ context
+row_markdown_pattern annotation for the _row_name/title_ context
+or by the heuristics (title, name, id(text), SHORTESTKEY Concatenation using ':')
+
+Usage:
+```
+console.log("This tuple has a displayable name of ", tuple.displayname.value);
+```
+
+**Kind**: instance property of [<code>Tuple</code>](#ERMrest.Tuple)  
+<a name="ERMrest.Tuple+rowName"></a>
+
+#### tuple.rowName : <code>string</code>
+The row name_ of this tuple. For example, if this tuple is a
+row from a table, then the display name is defined by the
+row_markdown_pattern annotation for the _row_name_ context
 or by the heuristics (title, name, id(text), SHORTESTKEY Concatenation using ':')
 
 Usage:
