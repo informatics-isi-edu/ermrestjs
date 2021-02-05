@@ -242,13 +242,13 @@ The `single-test-runner.js` picks and runs the **support/single.spec.js** file. 
 
 ## Other Useful Information
 
-1. You might come across some test cases that are specific to travis environment or local. To enforce some test cases to just run in a specific environment, you can do the following:
+1. You might come across some test cases that are specific to CI environment or local. To enforce some test cases to just run in a specific environment, you can do the following:
 ```javascript
-if (process.env.TRAVIS) {
-  // anything that is specific to TRAVIS
+if (process.env.CI) {
+  // anything that is specific to CI
 }
 
-if (!process.env.TRAVIS) {
-  // these test cases will only run locally and not on travis.
+if (!process.env.CI) {
+  // these test cases will only run locally and not on CI.
 }
 ```

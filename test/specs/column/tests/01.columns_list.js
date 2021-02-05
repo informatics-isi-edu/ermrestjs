@@ -530,7 +530,7 @@ exports.execute = function (options) {
                     });
                 });
 
-                if (!process.env.TRAVIS) {
+                if (!process.env.CI) {
                     it('should handle the columns with slash(`/`) in their names.', function () {
                         checkReferenceColumns([{
                             ref: slashRef.contextualize.compactBrief,
@@ -751,7 +751,7 @@ exports.execute = function (options) {
                     });
                 });
 
-                if (!process.env.TRAVIS) {
+                if (!process.env.CI) {
                     it('should handle the columns with slash(`/`) in their names.', function () {
                         checkReferenceColumns([{
                             ref: slashRef,
@@ -960,7 +960,7 @@ exports.execute = function (options) {
                 });
             });
 
-            if (!process.env.TRAVIS) {
+            if (!process.env.CI) {
                 it('should handle the columns with slash(`/`) in their names.', function (done) {
                     slashRef.read(limit).then(function (page) {
                         var tuples = page.tuples;

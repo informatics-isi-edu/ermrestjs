@@ -386,7 +386,7 @@ exports.execute = function (options) {
         });
 
         // Local Test Cases:
-        if (!process.env.TRAVIS) {
+        if (!process.env.CI) {
             describe("for tables with slash(`/`) in their name,", function () {
                 var reference, page, tuple;
                 var limit = 2;
