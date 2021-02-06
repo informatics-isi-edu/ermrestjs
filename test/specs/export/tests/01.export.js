@@ -1,10 +1,10 @@
 exports.execute = function (options) {
 
-    // don't run these test cases on travis since export is missing.
-    // TODO need to add export to travis
-    if (process.env.TRAVIS) {
+    // don't run these test cases on ci since export is missing.
+    // TODO need to add export to CI
+    if (process.env.CI) {
         describe ("export test cases, ", function () {
-            it ("should be skipped on travis.", function () {
+            it ("should be skipped on CI.", function () {
 
             });
         });

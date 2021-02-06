@@ -337,10 +337,14 @@ AttributeGroupReference.prototype = {
     /**
      *
      * @param  {int=} limit
-     * @param {Object} contextHeaderParams the object that we want to log.
+     * @param {Object=} contextHeaderParams the object that we want to log.
+     * @param {Boolean=} dontCorrectPage whether we should modify the page.
+     * If there's a @before in url and the number of results is less than the
+     * given limit, we will remove the @before and run the read again. Setting
+     * dontCorrectPage to true, will not do this extra check.
      * @return {ERMRest.AttributeGroupPage}
      */
-    read: function (limit, contextHeaderParams) {
+    read: function (limit, contextHeaderParams, dontCorrectPage) {
         try {
             var defer = module._q.defer();
             var hasPaging = (typeof limit === "number" && limit > 0);
@@ -393,7 +397,7 @@ AttributeGroupReference.prototype = {
                 // We are paging based on @before (user navigated backwards in the set of data)
                 // AND there is less data than limit implies (beginning of set)
                 // OR we got the right set of data (tuples.length == pageLimit) but there's no previous set (beginning of set)
-                if ( currRef.location.beforeObject && (response.data.length < limit || !hasPrevious) ) {
+                if (dontCorrectPage !== true && currRef.location.beforeObject && (response.data.length < limit || !hasPrevious) ) {
                     // a new location without paging
                     var newLocation = currRef.location.changePage();
                     var referenceWithoutPaging = new AttributeGroupReference(currRef._keyColumns, currRef._aggregateColumns, newLocation, currRef._catalog, currRef.table, currRef._context);
