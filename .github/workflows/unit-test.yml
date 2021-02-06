@@ -25,8 +25,6 @@ jobs:
           export PATH="$(systemd-path user-binaries):$PATH"
           echo "$SAUCE_USERNAME $SAUCE_ACCESS_KEY $SHARDING"
           sudo apt-get -y install libcurl4-openssl-dev libjson-c-dev
-          curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash -
-          sudo apt-get install -y nodejs
           sudo service postgresql stop || true
           sudo service postgresql start 12
           sudo apt-get install apache2 apache2-dev ssl-cert libapache2-mod-wsgi-py3
