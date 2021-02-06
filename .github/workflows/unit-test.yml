@@ -11,7 +11,7 @@ on:
 
 jobs:
   install-and-test:
-    runs-on: ubuntu-16.04
+    runs-on: ubuntu-20.04
     env:
       PYTHONWARNINGS: ignore:Unverified HTTPS request
     steps:
@@ -28,8 +28,7 @@ jobs:
           curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash -
           sudo apt-get install -y nodejs
           sudo service postgresql stop || true
-          sudo apt-get -y purge postgresql-9.1 postgresql-9.2 postgresql-9.3 postgresql-9.4 postgresql-9.5 postgresql-9.6
-          sudo service postgresql start 10
+          sudo service postgresql start 12
           sudo apt-get install apache2 apache2-dev ssl-cert libapache2-mod-wsgi-py3
           sudo ln -s /etc/apache2/conf-enabled /etc/apache2/conf.d
           sudo a2enmod ssl
