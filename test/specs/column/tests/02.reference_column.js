@@ -466,6 +466,17 @@ exports.execute = function (options) {
             });
         });
 
+        describe('.hideColumnHeader, ', function() {
+            it('should return true if hideColumnHeader set to true in column-display annotation', function() {
+                // "id" column has column-display annotation
+                expect(detailedColumns[0].hideColumnHeader).toBeTruthy();
+            });
+
+            it('should return false if property is not defined in column-display annotation', function() {
+                expect(detailedColumns[1].hideColumnHeader).toBeFalsy();
+            });
+        });
+
         describe('.inputDisabled, ', function () {
             describe('for pseudoColumns, ', function () {
                 it('that are inbound foreignkey should return an error.', function () {
