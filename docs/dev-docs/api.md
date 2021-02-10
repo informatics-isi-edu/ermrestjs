@@ -557,7 +557,7 @@ to use for ERMrest JavaScript agents.
         * [.ermrestPath](#ERMrest.AttributeGroupReference+ermrestPath) : <code>string</code>
         * [.defaultLogInfo](#ERMrest.AttributeGroupReference+defaultLogInfo) : <code>Object</code>
         * [.filterLogInfo](#ERMrest.AttributeGroupReference+filterLogInfo) : <code>Object</code>
-        * [.read([limit], contextHeaderParams)](#ERMrest.AttributeGroupReference+read) ⇒ <code>ERMRest.AttributeGroupPage</code>
+        * [.read([limit], [contextHeaderParams], [dontCorrectPage])](#ERMrest.AttributeGroupReference+read) ⇒ <code>ERMRest.AttributeGroupPage</code>
         * [.getColumnByName(name)](#ERMrest.AttributeGroupReference+getColumnByName) ⇒ <code>ERMrest.AttributeGroupColumn</code>
     * [.AttributeGroupPage](#ERMrest.AttributeGroupPage)
         * [new AttributeGroupPage(reference, data, hasPrevious, hasNext)](#new_ERMrest.AttributeGroupPage_new)
@@ -699,7 +699,7 @@ to use for ERMrest JavaScript agents.
         * [.ermrestPath](#ERMrest.AttributeGroupReference+ermrestPath) : <code>string</code>
         * [.defaultLogInfo](#ERMrest.AttributeGroupReference+defaultLogInfo) : <code>Object</code>
         * [.filterLogInfo](#ERMrest.AttributeGroupReference+filterLogInfo) : <code>Object</code>
-        * [.read([limit], contextHeaderParams)](#ERMrest.AttributeGroupReference+read) ⇒ <code>ERMRest.AttributeGroupPage</code>
+        * [.read([limit], [contextHeaderParams], [dontCorrectPage])](#ERMrest.AttributeGroupReference+read) ⇒ <code>ERMRest.AttributeGroupPage</code>
         * [.getColumnByName(name)](#ERMrest.AttributeGroupReference+getColumnByName) ⇒ <code>ERMrest.AttributeGroupColumn</code>
     * [.AttributeGroupPage](#ERMrest.AttributeGroupPage) : <code>object</code>
         * [new AttributeGroupPage(reference, data, hasPrevious, hasNext)](#new_ERMrest.AttributeGroupPage_new)
@@ -5566,7 +5566,7 @@ parent table (not the end table).
     * [.ermrestPath](#ERMrest.AttributeGroupReference+ermrestPath) : <code>string</code>
     * [.defaultLogInfo](#ERMrest.AttributeGroupReference+defaultLogInfo) : <code>Object</code>
     * [.filterLogInfo](#ERMrest.AttributeGroupReference+filterLogInfo) : <code>Object</code>
-    * [.read([limit], contextHeaderParams)](#ERMrest.AttributeGroupReference+read) ⇒ <code>ERMRest.AttributeGroupPage</code>
+    * [.read([limit], [contextHeaderParams], [dontCorrectPage])](#ERMrest.AttributeGroupReference+read) ⇒ <code>ERMRest.AttributeGroupPage</code>
     * [.getColumnByName(name)](#ERMrest.AttributeGroupReference+getColumnByName) ⇒ <code>ERMrest.AttributeGroupColumn</code>
 
 <a name="new_ERMrest.AttributeGroupReference_new"></a>
@@ -5675,13 +5675,14 @@ Currently only includes the search term.
 **Kind**: instance property of [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)  
 <a name="ERMrest.AttributeGroupReference+read"></a>
 
-#### attributeGroupReference.read([limit], contextHeaderParams) ⇒ <code>ERMRest.AttributeGroupPage</code>
+#### attributeGroupReference.read([limit], [contextHeaderParams], [dontCorrectPage]) ⇒ <code>ERMRest.AttributeGroupPage</code>
 **Kind**: instance method of [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | [limit] | <code>int</code> |  |
-| contextHeaderParams | <code>Object</code> | the object that we want to log. |
+| [contextHeaderParams] | <code>Object</code> | the object that we want to log. |
+| [dontCorrectPage] | <code>Boolean</code> | whether we should modify the page. If there's a @before in url and the number of results is less than the given limit, we will remove the @before and run the read again. Setting dontCorrectPage to true, will not do this extra check. |
 
 <a name="ERMrest.AttributeGroupReference+getColumnByName"></a>
 
@@ -7264,7 +7265,7 @@ Check the sort object. Does not change the `this._location` object.
     * [.ermrestPath](#ERMrest.AttributeGroupReference+ermrestPath) : <code>string</code>
     * [.defaultLogInfo](#ERMrest.AttributeGroupReference+defaultLogInfo) : <code>Object</code>
     * [.filterLogInfo](#ERMrest.AttributeGroupReference+filterLogInfo) : <code>Object</code>
-    * [.read([limit], contextHeaderParams)](#ERMrest.AttributeGroupReference+read) ⇒ <code>ERMRest.AttributeGroupPage</code>
+    * [.read([limit], [contextHeaderParams], [dontCorrectPage])](#ERMrest.AttributeGroupReference+read) ⇒ <code>ERMRest.AttributeGroupPage</code>
     * [.getColumnByName(name)](#ERMrest.AttributeGroupReference+getColumnByName) ⇒ <code>ERMrest.AttributeGroupColumn</code>
 
 <a name="new_ERMrest.AttributeGroupReference_new"></a>
@@ -7373,13 +7374,14 @@ Currently only includes the search term.
 **Kind**: instance property of [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)  
 <a name="ERMrest.AttributeGroupReference+read"></a>
 
-#### attributeGroupReference.read([limit], contextHeaderParams) ⇒ <code>ERMRest.AttributeGroupPage</code>
+#### attributeGroupReference.read([limit], [contextHeaderParams], [dontCorrectPage]) ⇒ <code>ERMRest.AttributeGroupPage</code>
 **Kind**: instance method of [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | [limit] | <code>int</code> |  |
-| contextHeaderParams | <code>Object</code> | the object that we want to log. |
+| [contextHeaderParams] | <code>Object</code> | the object that we want to log. |
+| [dontCorrectPage] | <code>Boolean</code> | whether we should modify the page. If there's a @before in url and the number of results is less than the given limit, we will remove the @before and run the read again. Setting dontCorrectPage to true, will not do this extra check. |
 
 <a name="ERMrest.AttributeGroupReference+getColumnByName"></a>
 
