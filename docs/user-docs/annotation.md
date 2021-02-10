@@ -566,6 +566,7 @@ Supported _option_ syntax:
 - `"markdown_pattern":` _pattern_: The visual presentation of the column SHOULD be computed by performing [Pattern Expansion](#pattern-expansion) on _pattern_ to obtain a markdown-formatted text value which MAY be rendered using a markdown-aware renderer.
 - `"column_order"`: `[` _columnorder_key_ ... `]`: An alternative sort method to apply when a client wants to semantically sort by this column.
 - `"column_order": false`: Sorting by this column should not be offered.
+- `"hide_column_header": true`: Hide the column header (and still show the value).
 
 Supported _columnorder_key_ syntax:
 
@@ -584,6 +585,8 @@ Column sorting heuristics (use first applicable rule):
 2. Sort by presented column value.
 
 The first applicable rule MAY cause sorting to be disabled. Consider that determination final and do not continue to search subsequent rules.
+
+The `hide_column_header` is intended to hide the entity-key in record app for the column this is attached to. This is currently only implemented in record app. 
 
 ### Tag: 2016 Table Display
 
