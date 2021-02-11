@@ -1883,8 +1883,9 @@
 
                         // Check If the markdown is a link
                         if (attrs[0].children[0].type == "link_open") {
-                            var iframeHTML = "<iframe ", openingLink = attrs[0].children[0];
-                            var enlargeLink, posTop = true, captionClass = "", captionStyle = "", figureClass = "", figureStyle = "", iframeSrc = "", frameWidth = "";
+                            var iframeHTML = "<iframe", openingLink = attrs[0].children[0];
+                            var captionLink, captionTarget= "", posTop = true, captionClass = "", captionStyle = "", figureClass = "", figureStyle = "",
+                                iframeSrc = "", frameWidth = "", fullscreenTarget = "";
                             var isYTlink = false, videoURL = "", iframeClasses = [];
 
                             // Add all attributes to the iframe
@@ -1893,14 +1894,22 @@
                                     case "href":
                                         isYTlink  = (attr[1].match("^(http(s)?:\/\/)?((w){3}.)?youtu(be|.be)?(\.com)?\/.+") != null);
                                         iframeSrc = attr[1];
-                                        iframeHTML += 'src="' + attr[1] + '"';
+                                        iframeHTML += ' src="' + attr[1] + '"';
                                         videoText = 'Note: YouTube video ( ' + attr[1] + ' ) is hidden in print';
                                         break;
-                                    case "link":
-                                        enlargeLink = attr[1];
+                                    case "link": // NOTE: link will be deprecated but leaving in conditional for backwards compatibility
+                                    case "caption-link":
+                                        captionLink = attr[1];
                                         break;
                                     case "pos":
                                         posTop = attr[1].toLowerCase() == 'bottom' ? false : true;
+                                        break;
+                                    case "fullscreen-target":
+                                        fullscreenTarget = attr[1];
+                                        break;
+                                    case "target":
+                                    case "caption-target":
+                                        captionTarget = attr[1];
                                         break;
                                     case "caption-class":
                                         captionClass = attr[1];
@@ -1929,10 +1938,9 @@
                                         }
 
                                         // handles `style="some: style;"` case from template
-                                        iframeHTML += attr[0] + '="' + attr[1] + '"';
+                                        iframeHTML += " " + attr[0] + '="' + attr[1] + '"';
                                         break;
                                 }
-                                iframeHTML += " ";
                             });
 
                             //During print we need to display that the iframe with YouTube video is replaced with a note
@@ -1946,7 +1954,7 @@
 
                             // attach the iframe tag classes
                             if (iframeClasses.length > 0) {
-                                html += 'class="' + iframeClasses.join(" ") + '" ';
+                                html += ' class="' + iframeClasses.join(" ") + '"';
                             }
                             html += "></iframe>";
 
@@ -1968,10 +1976,15 @@
                             }
 
                             // If enlarge link is set then add an anchor tag for captionHTML
-                            if (enlargeLink) {
-                                 if (!captionHTML.trim().length) captionHTML = "Enlarge";
-                                captionHTML = '<a href="' + enlargeLink + '" target="_blank">'  + captionHTML + '</a>';
+                            if (captionLink) {
+                                // set the fullscreen target string for the fullscreen button
+                                if (captionTarget) captionTarget = " target=" + captionTarget;
+                                if (!captionHTML.trim().length) captionHTML = "Enlarge";
+                                captionHTML = '<a href="' + captionLink + '"' + captionTarget + '>'  + captionHTML + '</a>';
                             }
+
+                            // set the fullscreen target string for the fullscreen button
+                            if (fullscreenTarget) fullscreenTarget = " target=" + fullscreenTarget;
 
                             // Checks for a width being defined. If it's defined and not a number, assume it has `px` or `%` appended already and use as is.
                             // If width is defined and is a number, assume it's in pixels and append `px`.
@@ -1979,18 +1992,18 @@
                             var contentsWidth = 'style="width: ' + (frameWidth ? (frameWidth + (isNaN(parseInt(frameWidth)) ? "" : "px")) : "100%")+ ';"';
 
                             // fullscreen button html that is attached to the top right corner of the iframe
-                            var buttonHtml = '<div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="' + iframeSrc + '" target="_blank"><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div>';
+                            var buttonHtml = '<div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="' + iframeSrc + '"' + fullscreenTarget + '><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div>';
 
                             // Encapsulate the captionHTML inside a figcaption tag with class embed-caption
                             if (posTop) {
                                 // if caption is at the top, we need to wrap the caption and fullscreen button in a div so the width can be applied and allow the caption to flex around the button
-                                html = '<div class="figcaption-wrapper" ' + contentsWidth + '><figcaption class="embed-caption' + (captionClass.length ? (" " + captionClass) : "") +'" style="' + (captionStyle.length ? (" " + captionStyle) : "") + '">' + captionHTML + "</figcaption>" + buttonHtml + "</div>" + html;
+                                html = '<div class="figcaption-wrapper" ' + contentsWidth + '><figcaption class="embed-caption' + (captionClass.length ? (" " + captionClass) : "") +'"' + (captionStyle.length ? (' style="' + captionStyle) + '"' : "") + '>' + captionHTML + "</figcaption>" + buttonHtml + "</div>" + html;
                             } else {
-                                html = buttonHtml + html + '<figcaption class="embed-caption' + (captionClass.length ? (" " + captionClass) : "") + '" style="' + (captionStyle.length ? (" " + captionStyle) : "") + '">' + captionHTML + "</figcaption>";
+                                html = buttonHtml + html + '<figcaption class="embed-caption' + (captionClass.length ? (" " + captionClass) : "") + '"' + (captionStyle.length ? (' style="' + captionStyle) + '"' : '') + '>' + captionHTML + "</figcaption>";
                             }
 
                             // Encapsulate the iframe inside a figure tag
-                            html = '<figure class="embed-block ' + module._classNames.postLoad + (figureClass.length ? (" "  + figureClass) : "") + '" style="' + (figureStyle.length ? (" "  + figureStyle) : "") + '">' + html + "</figure>";
+                            html = '<figure class="embed-block ' + module._classNames.postLoad + (figureClass.length ? (" "  + figureClass) : "") + '"' + (figureStyle.length ? (' style="' + figureStyle) + '"' : '') + '>' + html + "</figure>";
                         }
                     }
                     // if attrs was empty or it didn't find any link simply render the internal markdown
