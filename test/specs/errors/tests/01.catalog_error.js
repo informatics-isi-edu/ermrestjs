@@ -20,7 +20,8 @@ exports.execute = function (options) {
                 done();
             }, function(err) {
                 expect(err instanceof ermRest[error.type]).toBeTruthy("Error is type: " + err.constructor.name + " , when it should be: " + error.type);
-                expect(err instanceof ermRest.ERMrestError).toBe(true);
+                expect(err instanceof ermRest.ERMrestError).toBe(true, "not an ERMrestError instance");
+                expect(err.status).toBe(error.status, "status missmatch");
                 done();
             }).catch(function (error) {
                 console.dir(error);

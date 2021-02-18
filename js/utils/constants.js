@@ -181,23 +181,31 @@
     });
 
     module._errorStatus = Object.freeze({
-        forbidden: "Forbidden",
-        itemNotFound: "Item Not Found",
-        facetingError: "Invalid Facet Filters",
-        customFacetngError: "Invalid Custom Facet Filteres",
-        invalidFilter: "Invalid Filter",
-        invalidInput: "Invalid Input",
-        invalidURI: "Invalid URI",
-        noDataChanged: "No Data Changed",
-        noConnectionError: "No Connection Error",
-        InvalidSortCriteria: "Invalid Sort Criteria",
-        invalidPageCriteria: "Invalid Page Criteria"
+        TIME_OUT: "Request Timeout",
+        BAD_REQUEST: "Bad Request",
+        UNAUTHORIZED: "Unauthorized",
+        FORBIDDEN: "Forbidden",
+        NOT_FOUND: "Item Not Found",
+        CONFLICT: "Conflict",
+        PRECONDITION_FAILED: "Precondition Failed",
+        INTERNAL_SERVER_ERROR: "Internal Server Error",
+        BAD_GATEWAY: "Bad Gateway",
+        SERVIVE_UNAVAILABLE: "Service Unavailable",
+        INVALID_FACET: "Invalid Facet Filters",
+        INVALID_CUSTOM_FACET: "Invalid Custom Facet Filteres",
+        INVALID_FILTER: "Invalid Filter",
+        INVALID_INPUT: "Invalid Input",
+        INVALID_URI: "Invalid URI",
+        NO_DATA_CHANGED: "No Data Changed",
+        NO_CONNECTION_ERROR: "No Connection Error",
+        INVALID_SORT: "Invalid Sort Criteria",
+        INVALID_PAGE: "Invalid Page Criteria"
     });
 
     module._errorMessage = Object.freeze({
-        facetingError: "Given encoded string for facets is not valid.",
-        customFacetingError: "Given encoded string for cfacets is not valid.",
-        facetOrFilterError: "Given filter or facet is not valid."
+        INVALID_FACET: "Given encoded string for facets is not valid.",
+        INVALID_CUSTOM_FACET: "Given encoded string for cfacets is not valid.",
+        INVALID_FACET_OR_FILTER: "Given filter or facet is not valid."
     });
 
     module._facetingErrors = Object.freeze({

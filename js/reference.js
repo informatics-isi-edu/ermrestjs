@@ -833,7 +833,7 @@
                         var filterCol = checkFacetObject(andFilters[i]);
                         // this means that the facet/filter in url was not valid
                         if (!filterCol) {
-                            throw new module.InvalidFilterOperatorError(module._errorMessage.facetOrFilterError, self.location.path, '');
+                            throw new module.InvalidFilterOperatorError(module._errorMessage.INVALID_FACET_OR_FILTER, self.location.path, '');
                         }
                         facetObjects.push({"obj": andFilters[i], "column": filterCol});
                     }
