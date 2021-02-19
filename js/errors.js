@@ -234,7 +234,7 @@
      * @constructor
      */
     function ServiceUnavailableError(status, message) {
-        status = isStringAndNotEmpty(status) ? status : module._errorStatus.SERVIVE_UNAVAILABLE
+        status = isStringAndNotEmpty(status) ? status : module._errorStatus.SERVIVE_UNAVAILABLE;
         ERMrestError.call(this, module._HTTPErrorCodes.SERVIVE_UNAVAILABLE, status, message);
     }
 
