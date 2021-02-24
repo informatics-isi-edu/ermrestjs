@@ -886,7 +886,7 @@ exports.execute = function (options) {
                     "aggregate": true,
                     "objects": [
                         {"citation": true, "isWaitFor": true},
-                        {"column": true, "index": 4, "isWaitFor": true},
+                        {"inline": true, "index": 4, "isWaitFor": true},
                         {"related": true, "index": 0, "isWaitFor": true}
                     ]
                 },
@@ -905,7 +905,7 @@ exports.execute = function (options) {
                     "column": "entity_set_i5",
                     "entityset": true,
                     "objects": [
-                        {"column": true, "index": 8, "isWaitFor": true},
+                        {"inline": true, "index": 8, "isWaitFor": true},
                         {"related": true, "index": 1, "isWaitFor": true}
                     ]
                 },
@@ -929,7 +929,7 @@ exports.execute = function (options) {
                     "column": "entity_set_i2",
                     "entityset": true,
                     "objects": [
-                        {"column": true, "index": 4, "isWaitFor": true}
+                        {"inline": true, "index": 4, "isWaitFor": true}
                     ]
                 },
                 {

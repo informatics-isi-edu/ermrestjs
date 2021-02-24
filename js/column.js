@@ -282,6 +282,13 @@ ReferenceColumn.prototype = {
         return this._commentDisplay;
     },
 
+    get hideColumnHeader() {
+        if (this._hideColumnHeader === undefined) {
+            this._hideColumnHeader = this.display.hideColumnHeader || false;
+        }
+        return this._hideColumnHeader;
+    },
+
     /**
      * @desc Indicates if the input should be disabled
      * true: input must be disabled
@@ -337,6 +344,7 @@ ReferenceColumn.prototype = {
      *  - `columnOrder`: list of columns that this column should be sorted based on
      *  - `isMarkdownPattern`: true|false|undefined Whether it has a markdownPattern or not
      *  - `markdownPattern`: string|undefined
+     *  - `hideColumnHeader`: true|false|null
      *
      * @type {Object}
      */
@@ -377,11 +385,15 @@ ReferenceColumn.prototype = {
     /**
      * Formats a value corresponding to this reference-column definition.
      * @param {Object} data The 'raw' data value.
-     * @param {String} context the context of app
+     * @param {String=} context the context of app (optional)
+     * @param {Object=} options (optional)
      * @returns {string} The formatted value.
      */
     formatvalue: function(data, context, options) {
         if (this._simple) {
+            if (!isStringAndNotEmpty(context)) {
+                context = this._context;
+            }
             return this._baseCols[0].formatvalue(data, context, options);
         }
         return data.toString();
@@ -394,14 +406,18 @@ ReferenceColumn.prototype = {
      *  - rendered value of formatPresentation of underlying columns joined by ":".
      *
      * @param {Object} data the raw data of the table.
-     * @param {String} context the app context
-     * @param {Object} templateVariables the template variables that should be used
-     * @param {Object} options
+     * @param {String=} context the app context (optional)
+     * @param {Object=} templateVariables the template variables that should be used (optional)
+     * @param {Object=} options (optional)
      * @returns {Object} A key value pair containing value and isHTML that detemrines the presentation.
      */
     formatPresentation: function(data, context, templateVariables, options) {
         data = data || {};
         options = options || {};
+
+        if (!isStringAndNotEmpty(context)) {
+            context = this._context;
+        }
 
         // if there's wait_for, this should return null.
         if (this.hasWaitFor && !options.skipWaitFor) {
@@ -436,7 +452,7 @@ ReferenceColumn.prototype = {
             }
 
             Object.assign(keyValues, templateVariables, selfTemplateVariables);
-            return module._processMarkdownPattern(
+            return module.processMarkdownPattern(
                 this.display.sourceMarkdownPattern,
                 keyValues,
                 this.table,
@@ -667,7 +683,7 @@ ReferenceColumn.prototype = {
             }
 
             Object.assign(keyValues, templateVariables, selfTemplateVariables);
-            return module._processMarkdownPattern(
+            return module.processMarkdownPattern(
                 self.display.sourceMarkdownPattern,
                 keyValues,
                 self.table,
@@ -778,13 +794,18 @@ module._extends(PseudoColumn, ReferenceColumn);
  * 3. Otherwise return null value.
  *
  * @param {Object} data the raw data of the table
- * @param {String} context the app context
- * @param {Object} options include `templateVariables`
+ * @param {String=} context the app context (optional)
+ * @param {Object=} templateVariables the template variables that should be used (optional)
+ * @param {Object=} options (optional)
  * @returns {Object} A key value pair containing value and isHTML that detemrines the presentation.
  */
 PseudoColumn.prototype.formatPresentation = function(data, context, templateVariables, options) {
     data = data || {};
     options = options || {};
+
+    if (!isStringAndNotEmpty(context)) {
+        context = this._context;
+    }
 
     var nullValue = {
         isHTML: false,
@@ -829,7 +850,7 @@ PseudoColumn.prototype.formatPresentation = function(data, context, templateVari
             "$self": module._getRowTemplateVariables(this.table, context, data)
         };
         Object.assign(keyValues, templateVariables, selfTemplateVariables);
-        return module._processMarkdownPattern(
+        return module.processMarkdownPattern(
             this.display.sourceMarkdownPattern,
             keyValues,
             this.table,
@@ -1702,34 +1723,95 @@ module._extends(ForeignKeyPseudoColumn, ReferenceColumn);
  * @returns {ERMrest.Reference} the constrained reference
  */
 ForeignKeyPseudoColumn.prototype.filteredRef = function(data, linkedData) {
-    var uri = this.reference.uri,
-        location;
+    var getFilteredRef = function (self) {
+        var currURI = self.reference.uri,
+            currTable = self.reference.table, // the projected table
+            baseTable = self._baseReference.table, // the main (base) table
+            keyValues, // formated key values used in tempating
+            content, // the annotation content
+            filterPattern, // the filter pattern
+            filterPatternTemplate, // the template used with the pattern
+            uriFilter, // the ermrest path
+            displayname, // the displayname value
+            displaynameMkdn, //capture the unformatted value of displayname
+            location, // the output location (used for creating the output reference)
+            cfacets; // custom facet created based on the filter pattern
 
-    if (this.foreignKey.annotations.contains(module._annotations.FOREIGN_KEY)){
-
-        var keyValues = module._getFormattedKeyValues(this._baseReference.table, this._context, data, linkedData);
-        var content = this.foreignKey.annotations.get(module._annotations.FOREIGN_KEY).content;
-        var uriFilter = module._renderTemplate(
-            content.domain_filter_pattern,
-            keyValues,
-            this._baseReference.table.schema.catalog,
-            {templateEngine: content.template_engine}
-        );
-
-        // should ignore the annotation if it's invalid
-        if (typeof uriFilter === "string" && uriFilter.trim() !== '') {
-            try {
-                location = module.parse(uri + '/' + uriFilter.trim());
-            } catch (exp) {}
+        // if the annotaion didn't exist
+        if (!self.foreignKey.annotations.contains(module._annotations.FOREIGN_KEY)) {
+            return new Reference(module.parse(currURI), currTable.schema.catalog);
         }
-    }
 
-    if (!location) {
-        location = module.parse(uri);
-    }
+        keyValues = module._getFormattedKeyValues(baseTable, self._context, data, linkedData);
+        content = self.foreignKey.annotations.get(module._annotations.FOREIGN_KEY).content;
 
-    // TODO we might need to check the table of location, so it is indeed this.table
-    return new Reference(location, this.table.schema.catalog);
+        // make sure the annotation is properly defined
+        if (isObjectAndNotNull(content.domain_filter) && isStringAndNotEmpty(content.domain_filter.ermrest_path_pattern)) {
+            filterPattern = content.domain_filter.ermrest_path_pattern;
+            filterPatternTemplate = content.domain_filter.template_engine;
+
+            // if displayname is passed, process it
+            if (isStringAndNotEmpty(content.domain_filter.display_markdown_pattern)) {
+                displaynameMkdn = module._renderTemplate(
+                    content.domain_filter.display_markdown_pattern,
+                    keyValues,
+                    baseTable.schema.catalog,
+                    {templateEngine: filterPatternTemplate}
+                );
+
+                if (displaynameMkdn != null && displaynameMkdn.trim() !== '') {
+                    displayname = module.renderMarkdown(displaynameMkdn, true);
+                }
+            }
+        }
+        // backward compatibility
+        else if (typeof content.domain_filter_pattern === "string") {
+            filterPattern = content.domain_filter_pattern;
+            filterPatternTemplate = content.template_engine;
+        }
+
+        // process the filter pattern
+        if (filterPattern) {
+            uriFilter = module._renderTemplate(
+                filterPattern,
+                keyValues,
+                baseTable.schema.catalog,
+                {templateEngine: filterPatternTemplate}
+            );
+        }
+
+        // ignore the annotation if given path is empy
+        if (typeof uriFilter === "string" && uriFilter.trim() !== '') {
+            // create a cfacets based on the given domain filter pattern
+            cfacets = {ermrest_path: uriFilter, removable: false};
+
+            // attach the displayname if it's non empty
+            if (isStringAndNotEmpty(displayname)) {
+                cfacets.displayname = {
+                    value: displayname,
+                    unformatted: displaynameMkdn,
+                    isHTML: true
+                };
+            }
+
+            // see if we can parse the url, otherwise ignore the annotaiton
+            try {
+                location = module.parse(currURI + '/*::cfacets::' + module.encodeFacet(cfacets));
+            } catch (exp) {
+                console.log("given domain_filter throws error, ignoring it. ", exp);
+            }
+        }
+
+        // if the annotation is missing or is invalid, location will be undefined
+        if (!location) {
+            location = module.parse(currURI);
+        }
+
+        return new Reference(location, currTable.schema.catalog);
+    };
+
+    return getFilteredRef(this);
+
 };
 ForeignKeyPseudoColumn.prototype.getDefaultDisplay = function (rowValues) {
     var fkColumns = this.foreignKey.colset.columns,
@@ -1815,6 +1897,11 @@ ForeignKeyPseudoColumn.prototype._determineDefaultValue = function () {
 ForeignKeyPseudoColumn.prototype.formatPresentation = function(data, context, templateVariables, options) {
     data = data || {};
     options = options || {};
+
+    if (!isStringAndNotEmpty(context)) {
+        context = this._context;
+    }
+
     var nullValue = {
         isHTML: false,
         value: this._getNullValue(context),
@@ -1831,7 +1918,7 @@ ForeignKeyPseudoColumn.prototype.formatPresentation = function(data, context, te
             "$self": module._getRowTemplateVariables(this.table, context, data)
         };
         Object.assign(keyValues, templateVariables, selfTemplateVariables);
-        return module._processMarkdownPattern(
+        return module.processMarkdownPattern(
             this.display.sourceMarkdownPattern,
             keyValues,
             this.table,
@@ -2101,13 +2188,19 @@ module._extends(KeyPseudoColumn, ReferenceColumn);
  * 3. Otherwise try to generate the value in `col1:col2` format. if it resulted in empty string return null.
  *    - If any of the constituent columnhas markdown don't add self-link, otherwise add the self-link.
  * @param  {Object} data    given raw data for the table columns
- * @param  {String} context the app context
- * @param  {Object} options might include `templateVariables`
+ * @param {String=} context the app context (optional)
+ * @param {Object=} templateVariables the template variables that should be used (optional)
+ * @param {Object=} options (optional)
  * @return {Object} A key value pair containing value and isHTML that detemrines the presentation.
  */
 KeyPseudoColumn.prototype.formatPresentation = function(data, context, templateVariables, options) {
     data = data || {};
     options = options || {};
+
+    if (!isStringAndNotEmpty(context)) {
+        context = this._context;
+    }
+
     var nullValue = {
         isHTML: false,
         value: this._getNullValue(context),
@@ -2122,7 +2215,7 @@ KeyPseudoColumn.prototype.formatPresentation = function(data, context, templateV
             "$self": module._getRowTemplateVariables(this.table, context, data, null, this.key)
         };
         Object.assign(keyValues, templateVariables, selfTemplateVariables);
-        return module._processMarkdownPattern(
+        return module.processMarkdownPattern(
             this.display.sourceMarkdownPattern,
             keyValues,
             this.table,
@@ -2395,13 +2488,19 @@ AssetPseudoColumn.prototype.getMetadata = function (data, context, options) {
  * 5. otherwise use getMetadata to genarate caption and origin and return a download button.
  *
  * @param {Object} data the raw data of the table
- * @param {String} context the app context
- * @param {Object} options include `templateVariables`
+ * @param {String=} context the app context (optional)
+ * @param {Object=} templateVariables the template variables that should be used (optional)
+ * @param {Object=} options (optional)
  * @returns {Object} A key value pair containing value and isHTML that detemrines the presentation.
  */
 AssetPseudoColumn.prototype.formatPresentation = function(data, context, templateVariables, options) {
     data = data || {};
     options = options || {};
+
+    if (!isStringAndNotEmpty(context)) {
+        context = this._context;
+    }
+
     var nullValue = {
         isHTML: false,
         value: this._getNullValue(context),
@@ -3423,6 +3522,8 @@ FacetColumn.prototype = {
     getChoiceDisplaynames: function (contextHeaderParams) {
         var defer = module._q.defer(), filters =  [], self = this;
         var table = this._column.table, columnName = this._column.name;
+        // whether the output must be displayed as markdown or not
+        var isHTML = (module._HTMLColumnType.indexOf(this._column.type.name) != -1);
 
         var createRef = function (filterStrs) {
             var uri = [
@@ -3437,6 +3538,17 @@ FacetColumn.prototype = {
             return ref;
         };
 
+        var convertChoiceFilter = function (f) {
+            return {
+                uniqueId: f.term,
+                displayname: {
+                    value: isHTML ? module.renderMarkdown(f.toString(), true) : f.toString(),
+                    isHTML: isHTML
+                },
+                tuple: null
+            };
+        };
+
         // if no filter, just resolve with empty list.
         if (self.choiceFilters.length === 0) {
             defer.resolve(filters);
@@ -3447,8 +3559,7 @@ FacetColumn.prototype = {
                 // don't return the null filter
                 if (f.term == null) return;
 
-                // we don't have access to the tuple, so we cannot send it.
-                filters.push({uniqueId: f.term, displayname: {value: f.toString(), isHTML:false}, tuple: null});
+                filters.push(convertChoiceFilter(f));
             });
             defer.resolve(filters);
         }
@@ -3486,8 +3597,6 @@ FacetColumn.prototype = {
                     delete filterTerms[t.data[columnName]];
                 });
 
-
-
                 // if there are any filter terms that didn't match any rows, just return the raw value:
                 // NOTE we could merge these two (page and filter) together to make the code easier to follow,
                 //      but we want to keep the selected values ordered based on roworder and
@@ -3500,8 +3609,7 @@ FacetColumn.prototype = {
 
                 // add the terms to filter list
                 filterTermKeys.forEach(function (k) {
-                    var f = self.choiceFilters[filterTerms[k]];
-                    filters.push({uniqueId: f.term, displayname: {value: f.toString(), isHTML:false}, tuple: null});
+                    filters.push(convertChoiceFilter(self.choiceFilters[filterTerms[k]]));
                 });
 
                 defer.resolve(filters);

@@ -57,6 +57,7 @@
         COMPACT: 'compact',
         COMPACT_BRIEF: 'compact/brief',
         COMPACT_BRIEF_INLINE: 'compact/brief/inline',
+        COMPACT_ENTRY: 'compact/entry', // post create/edit for multiple rows
         COMPACT_SELECT: 'compact/select',
         CREATE: 'entry/create',
         DETAILED: 'detailed',
@@ -78,10 +79,10 @@
         }
     });
 
-    module._contextArray = ["compact", "compact/brief", "compact/select", "entry/create", "detailed", "entry/edit", "entry", "filter", "*", "row_name", "compact/brief/inline"];
+    module._contextArray = ["compact", "compact/brief", "compact/entry", "compact/select", "entry/create", "detailed", "entry/edit", "entry", "filter", "*", "row_name", "compact/brief/inline"];
 
     module._entryContexts = [module._contexts.CREATE, module._contexts.EDIT, module._contexts.ENTRY];
-    module._compactContexts = [module._contexts.COMPACT, module._contexts.COMPACT_BRIEF, module._contexts.COMPACT_BRIEF_INLINE, module._contexts.COMPACT_SELECT];
+    module._compactContexts = [module._contexts.COMPACT, module._contexts.COMPACT_BRIEF, module._contexts.COMPACT_BRIEF_INLINE, module._contexts.COMPACT_SELECT, module._contexts.COMPACT_ENTRY];
 
     module._tableKinds = Object.freeze({
         TABLE: "table",
@@ -101,6 +102,9 @@
     module._nonSortableTypes = [
         "json", "jsonb"
     ];
+
+    // column types that their value should be considered as HTML
+    module._HTMLColumnType = ["markdown", "color_rgb_hex"];
 
     // types we support for our plotly histogram graphs
     module._histogramSupportedTypes = [
@@ -177,23 +181,31 @@
     });
 
     module._errorStatus = Object.freeze({
-        forbidden: "Forbidden",
-        itemNotFound: "Item Not Found",
-        facetingError: "Invalid Facet Filters",
-        customFacetngError: "Invalid Custom Facet Filteres",
-        invalidFilter: "Invalid Filter",
-        invalidInput: "Invalid Input",
-        invalidURI: "Invalid URI",
-        noDataChanged: "No Data Changed",
-        noConnectionError: "No Connection Error",
-        InvalidSortCriteria: "Invalid Sort Criteria",
-        invalidPageCriteria: "Invalid Page Criteria"
+        TIME_OUT: "Request Timeout",
+        BAD_REQUEST: "Bad Request",
+        UNAUTHORIZED: "Unauthorized",
+        FORBIDDEN: "Forbidden",
+        NOT_FOUND: "Item Not Found",
+        CONFLICT: "Conflict",
+        PRECONDITION_FAILED: "Precondition Failed",
+        INTERNAL_SERVER_ERROR: "Internal Server Error",
+        BAD_GATEWAY: "Bad Gateway",
+        SERVIVE_UNAVAILABLE: "Service Unavailable",
+        INVALID_FACET: "Invalid Facet Filters",
+        INVALID_CUSTOM_FACET: "Invalid Custom Facet Filteres",
+        INVALID_FILTER: "Invalid Filter",
+        INVALID_INPUT: "Invalid Input",
+        INVALID_URI: "Invalid URI",
+        NO_DATA_CHANGED: "No Data Changed",
+        NO_CONNECTION_ERROR: "No Connection Error",
+        INVALID_SORT: "Invalid Sort Criteria",
+        INVALID_PAGE: "Invalid Page Criteria"
     });
 
     module._errorMessage = Object.freeze({
-        facetingError: "Given encoded string for facets is not valid.",
-        customFacetingError: "Given encoded string for cfacets is not valid.",
-        facetOrFilterError: "Given filter or facet is not valid."
+        INVALID_FACET: "Given encoded string for facets is not valid.",
+        INVALID_CUSTOM_FACET: "Given encoded string for cfacets is not valid.",
+        INVALID_FACET_OR_FILTER: "Given filter or facet is not valid."
     });
 
     module._facetingErrors = Object.freeze({
@@ -289,7 +301,8 @@
         download: "download-alt",
         postLoad: "-chaise-post-load",
         hideInPrintMode: "hide-in-print",
-        showInPrintMode: "video-info-in-print"
+        showInPrintMode: "video-info-in-print",
+        colorPreview: "chaise-color-preview"
     });
 
     module._specialSourceDefinitions = Object.freeze({

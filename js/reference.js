@@ -833,7 +833,7 @@
                         var filterCol = checkFacetObject(andFilters[i]);
                         // this means that the facet/filter in url was not valid
                         if (!filterCol) {
-                            throw new module.InvalidFilterOperatorError(module._errorMessage.facetOrFilterError, self.location.path, '');
+                            throw new module.InvalidFilterOperatorError(module._errorMessage.INVALID_FACET_OR_FILTER, self.location.path, '');
                         }
                         facetObjects.push({"obj": andFilters[i], "column": filterCol});
                     }
@@ -1247,8 +1247,9 @@
                     }
 
                     var ref = new Reference(module.parse(uri), self._table.schema.catalog);
+                    ref = (response.data.length > 1 ? ref.contextualize.compactEntry : ref.contextualize.compact);
                     //  make a page of tuples of the results (unless error)
-                    var page = new Page(ref.contextualize.compact, etag, response.data, false, false);
+                    var page = new Page(ref, etag, response.data, false, false);
 
                     //  resolve the promise, passing back the page
                     return defer.resolve({
@@ -1839,7 +1840,8 @@
                         }
                     }
 
-                    var ref = new Reference(module.parse(uri), self._table.schema.catalog).contextualize.compact;
+                    var ref = new Reference(module.parse(uri), self._table.schema.catalog).contextualize.compactEntry;
+                    ref = (response.data.length > 1 ? ref.contextualize.compactEntry : ref.contextualize.compact);
                     var successfulPage = new Page(ref, etag, pageData, false, false);
                     var failedPage = null;
 
@@ -2500,7 +2502,7 @@
                  }
 
                  self._defaultExportTemplate = {
-                     displayname: "BAG",
+                     displayname: "BDBag",
                      type: "BAG",
                      outputs: outputs
                  };
@@ -2838,11 +2840,13 @@
                 pseudoNameObj, pseudoName, isHash,
                 hasInbound, isEntity, hasPath, isEntityMode,
                 isEntry,
+                isCompactEntry,
                 colFks,
                 ignore, cols, col, fk, i, j;
 
             var context = this._context;
             isEntry = module._isEntryContext(context);
+            isCompactEntry = (typeof context === "string" && context.startsWith(module._contexts.COMPACT_ENTRY));
 
             // check if we should hide some columns or not.
             // NOTE: if the reference is actually an inbound related reference, we should hide the foreign key that created this link.
@@ -3060,8 +3064,15 @@
                                 }
                             }
 
+                            // 2 conditions:
+                            // isEntry && (refCol.isPathColumn || refCol.isInboundForeignKey || refCol.isKey)
+                            // OR
+                            // isCompactEntry && (refCol.hasWaitFor || refCol.hasAggregate || (refCol.isPathColumn && refCol.foreignKeys.length > 1)
+                            var removePseudo = (isEntry && (refCol.isPathColumn || refCol.isInboundForeignKey || refCol.isKey) ) ||
+                                    (isCompactEntry && (refCol.hasWaitFor || refCol.hasAggregate || (refCol.isPathColumn && refCol.foreignKeys.length > 1)) );
+
                             // in entry mode, pseudo-column, inbound fk, and key are not allowed
-                            if (!(isEntry && (refCol.isPathColumn || refCol.isInboundForeignKey || refCol.isKey) )) {
+                            if (!removePseudo) {
                                 this._referenceColumns.push(refCol);
                             }
                         }
@@ -3418,7 +3429,7 @@
                 }
 
                 col.waitFor.forEach(function (wf) {
-                    addColToActiveList(wf, true, COLUMN_TYPE, i);
+                    addColToActiveList(wf, true, (isInline(col) ? INLINE_TYPE : COLUMN_TYPE), i);
                 });
             };
 
@@ -4114,6 +4125,14 @@
          */
         get entryEdit() {
             return this._contextualize(module._contexts.EDIT);
+        },
+
+        /**
+         * The _entry/compact_ context of this reference.
+         * @type {ERMrest.Reference}
+         */
+        get compactEntry() {
+            return this._contextualize(module._contexts.COMPACT_ENTRY);
         },
 
         /**
@@ -5250,7 +5269,7 @@
         /**
          * The _display name_ of this tuple. For example, if this tuple is a
          * row from a table, then the display name is defined by the
-         * row_markdown_pattern annotation for the _row name_ context
+         * row_markdown_pattern annotation for the _row_name/title_ context
          * or by the heuristics (title, name, id(text), SHORTESTKEY Concatenation using ':')
          *
          * Usage:
@@ -5264,6 +5283,25 @@
                 this._displayname = module._generateRowName(this._pageRef._table, this._pageRef._context, this._data, this._linkedData, true);
             }
             return this._displayname;
+        },
+
+        /**
+         * The row name_ of this tuple. For example, if this tuple is a
+         * row from a table, then the display name is defined by the
+         * row_markdown_pattern annotation for the _row_name_ context
+         * or by the heuristics (title, name, id(text), SHORTESTKEY Concatenation using ':')
+         *
+         * Usage:
+         * ```
+         * console.log("This tuple has a displayable name of ", tuple.displayname.value);
+         * ```
+         * @type {string}
+         */
+        get rowName() {
+            if (this._rowName === undefined) {
+                this._rowName = module._generateRowName(this._pageRef._table, this._pageRef._context, this._data, this._linkedData);
+            }
+            return this._rowName;
         },
 
         /**

@@ -321,6 +321,15 @@ exports.execute = function(options) {
                     });
                 });
 
+                describe('should call printColor() to format,', function () {
+                    it('color_rgb_hex columns correctly.', function () {
+                        testFormatvalue('table_1_color_rgb_hex', null, '', 'empty value');
+                        testFormatvalue('table_1_color_rgb_hex', '00ff00', '', 'invalid value 1');
+                        testFormatvalue('table_1_color_rgb_hex', '#00kj00', '', 'invalid value 2');
+                        testFormatvalue('table_1_color_rgb_hex', '#00ff00', ':span: :/span:{.chaise-color-preview style=background-color:#00FF00} #00FF00', 'valid value');
+                    });
+                });
+
                 describe('should handle array columns.', function () {
                     var cases = [
                         {

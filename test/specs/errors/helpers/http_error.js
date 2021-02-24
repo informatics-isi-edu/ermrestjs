@@ -2,13 +2,13 @@ var nock = require('nock');
 var server, ermRest, ermrestUrl, ops = {allowUnmocked: true};
 
 var errorCodes = {
-    "400" : { type: "BadRequestError" },
-    "401" : { type: "UnauthorizedError" },
-    "403" : { type: "ForbiddenError" },
-    "404" : { type: 'NotFoundError' },
-    "409" : { type: "ConflictError" },
-    "500" : { type: "InternalServerError" },
-    "503" : { type: "ServiceUnavailableError" }
+    "400" : { type: "BadRequestError", status: "Bad Request" },
+    "401" : { type: "UnauthorizedError", status: "Unauthorized" },
+    "403" : { type: "ForbiddenError", status: "Forbidden" },
+    "404" : { type: 'NotFoundError', status: "Not Found" },
+    "409" : { type: "ConflictError", status: "Conflict" },
+    "500" : { type: "InternalServerError", status: "Internal Server Error" },
+    "503" : { type: "ServiceUnavailableError", status: "Service Unavailable" }
 };
 
 exports.setup = function(options) {

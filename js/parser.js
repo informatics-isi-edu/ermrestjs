@@ -246,7 +246,6 @@
                 if (!prevJoin && index !== 1) {
                     // we're creating this for the previous section, so we should use the previous index
                     // Alias will be T, T1, T2, ... (notice we don't have T0)
-                    // alias = JOIN_TABLE_ALIAS_PREFIX + (pathParts.length > 1 ? pathParts.length-1 : "");
                     alias = JOIN_TABLE_ALIAS_PREFIX + (pathParts.length > 0 ? pathParts.length : "");
                     pathParts.push(new PathPart(alias, joins, schema, table, facets, cfacets, filter, filtersString));
                     filter = undefined; filtersString = undefined; cfacets = undefined; facets = undefined; join = undefined; joins = [];
@@ -1751,9 +1750,9 @@
     }
     /**
      * An object that will have the follwoing attributes:
-     *  - displayname: "a markdown displayname",
      *  - facets: "the facet object"
      *  - ermrest_path: "ermrest path string"
+     *  - displayname: {value: "the value", isHTML: boolean} (optional)
      *
      *
      * @param       {String|Object} str Can be blob or json (object).
@@ -1789,7 +1788,7 @@
         }
 
         var obj = this.decoded;
-        if (!obj.hasOwnProperty("displayname") || (!obj.hasOwnProperty("facets") && !obj.hasOwnProperty("ermrest_path"))) {
+        if ((!obj.hasOwnProperty("facets") && !obj.hasOwnProperty("ermrest_path"))) {
             throw error;
         }
 
@@ -1809,9 +1808,26 @@
             this.ermrestPath = module.trimSlashes(obj.ermrest_path);
         }
 
-        /**
-         * The name that should be used to represent the facet value
-         * @type {string}
-         */
-        this.displayname = obj.displayname;
+        this.removable = true;
+        if (typeof obj.removable === "boolean") {
+            /**
+             * Whether user can remove the facet or not
+             * @type {string}
+             */
+            this.removable = obj.removable;
+        }
+
+        if (isStringAndNotEmpty(obj.displayname)) {
+            /**
+             * The name that should be used to represent the facet value (optional)
+             * @type {Object}
+             */
+            this.displayname = {
+                value: obj.displayname,
+                unformatted: obj.displayname,
+                isHTML: false
+            };
+        } else if (isObjectAndNotNull(obj.displayname) && ("value" in obj.displayname)) {
+            this.displayname = obj.displayname;
+        }
     }

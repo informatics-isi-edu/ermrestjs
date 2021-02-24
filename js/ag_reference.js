@@ -337,10 +337,14 @@ AttributeGroupReference.prototype = {
     /**
      *
      * @param  {int=} limit
-     * @param {Object} contextHeaderParams the object that we want to log.
+     * @param {Object=} contextHeaderParams the object that we want to log.
+     * @param {Boolean=} dontCorrectPage whether we should modify the page.
+     * If there's a @before in url and the number of results is less than the
+     * given limit, we will remove the @before and run the read again. Setting
+     * dontCorrectPage to true, will not do this extra check.
      * @return {ERMRest.AttributeGroupPage}
      */
-    read: function (limit, contextHeaderParams) {
+    read: function (limit, contextHeaderParams, dontCorrectPage) {
         try {
             var defer = module._q.defer();
             var hasPaging = (typeof limit === "number" && limit > 0);
@@ -393,7 +397,7 @@ AttributeGroupReference.prototype = {
                 // We are paging based on @before (user navigated backwards in the set of data)
                 // AND there is less data than limit implies (beginning of set)
                 // OR we got the right set of data (tuples.length == pageLimit) but there's no previous set (beginning of set)
-                if ( currRef.location.beforeObject && (response.data.length < limit || !hasPrevious) ) {
+                if (dontCorrectPage !== true && currRef.location.beforeObject && (response.data.length < limit || !hasPrevious) ) {
                     // a new location without paging
                     var newLocation = currRef.location.changePage();
                     var referenceWithoutPaging = new AttributeGroupReference(currRef._keyColumns, currRef._aggregateColumns, newLocation, currRef._catalog, currRef.table, currRef._context);
@@ -562,7 +566,7 @@ AttributeGroupReference.prototype = {
             contextHeaderParams[key] = this.defaultLogInfo[key];
         }
 
-        if (isInteger(page_size)) {
+        if (Number.isInteger(page_size)) {
             contextHeaderParams.page_size = page_size;
         }
 
@@ -807,7 +811,7 @@ AttributeGroupTuple.prototype = {
             var data = this._data, hasNull, self = this;
             this._uniqueId = self._page.reference.shortestKey.reduce(function (res, c, index) {
                 hasNull = hasNull || data[c.name] == null;
-                return res + (index > 0 ? "_" : "") + c.formatvalue(data[c.name], self._page.reference._context);
+                return res + (index > 0 ? "_" : "") + data[c.name];
             }, "");
 
             //TODO should be evaluated for composite keys
@@ -844,7 +848,7 @@ AttributeGroupTuple.prototype = {
                 hasNull = hasNull || data[c.name] == null;
                 if (hasNull) return;
 
-                hasMarkdown = hasMarkdown || c.type.name === "markdown";
+                hasMarkdown = hasMarkdown || (module._HTMLColumnType.indexOf(c.type.name) != -1);
                 values.push(c.formatvalue(data[c.name], self._page.reference._context));
             });
 
@@ -1007,7 +1011,7 @@ AttributeGroupColumn.prototype = {
          * are aliases and not the actual column names in the table.
          *
          */
-        if (this.type.name === "markdown") {
+        if (module._HTMLColumnType.indexOf(this.type.name) != -1) {
             return {isHTML: true, value: module.renderMarkdown(formattedValue, true), unformatted: formattedValue};
         }
         return {isHTML: false, value: formattedValue, unformatted: formattedValue};

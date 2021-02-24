@@ -115,47 +115,47 @@ exports.execute = function (options) {
             it ("should support :::iframe.", function () {
                 // 01: Check for iframe ith height and width
                 expect(printMarkdown('::: iframe [Chaise](https://dev.isrd.isi.edu/chaise/search){width=800 height=300} \n:::'))
-                    .toBe('<figure class="embed-block -chaise-post-load" style=""><figcaption class="embed-caption" style="">Chaise</figcaption><iframe src="https://dev.isrd.isi.edu/chaise/search" width="800" height="300" ></iframe></figure>', "case 01");
+                    .toBe('<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 800px;"><figcaption class="embed-caption">Chaise</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://dev.isrd.isi.edu/chaise/search"><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div></div><iframe src="https://dev.isrd.isi.edu/chaise/search" width="800" height="300"></iframe></figure>', "case 01");
 
                 // 02: Check for iframe tag with a link and caption
                 var iframeMarkdown = '::: iframe [SOME LINK CAPTION](https://dev.isrd.isi.edu/chaise/search){height=400 link=https://dev.isrd.isi.edu/chaise/search} \n:::';
-                var iframeHTML = '<figure class="embed-block -chaise-post-load" style=""><figcaption class="embed-caption" style=""><a href="https://dev.isrd.isi.edu/chaise/search" target="_blank">SOME LINK CAPTION</a></figcaption><iframe src="https://dev.isrd.isi.edu/chaise/search" height="400"  ></iframe></figure>';
+                var iframeHTML = '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 100%;"><figcaption class="embed-caption"><a href="https://dev.isrd.isi.edu/chaise/search">SOME LINK CAPTION</a></figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://dev.isrd.isi.edu/chaise/search"><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div></div><iframe src="https://dev.isrd.isi.edu/chaise/search" height="400"></iframe></figure>';
                 expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML, "case 02");
 
-                // 03: Check for iframe tag with a link and caption at the bottom with no iframe-style and iframe-class
+                // 03: Check for iframe tag with a link and caption at the bottom with no figure-style and figure-class
                 var iframeMarkdown = '::: iframe [CAPTION](https://dev.isrd.isi.edu/chaise/search){link="https://dev.isrd.isi.edu/chaise/search" pos="bottom"} \n:::';
-                var iframeHTML = '<figure class="embed-block -chaise-post-load" style=""><iframe src="https://dev.isrd.isi.edu/chaise/search"   ></iframe><figcaption class="embed-caption" style=""><a href="https://dev.isrd.isi.edu/chaise/search" target="_blank">CAPTION</a></figcaption></figure>';
+                var iframeHTML = '<figure class="embed-block -chaise-post-load"><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://dev.isrd.isi.edu/chaise/search"><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div><iframe src="https://dev.isrd.isi.edu/chaise/search"></iframe><figcaption class="embed-caption"><a href="https://dev.isrd.isi.edu/chaise/search">CAPTION</a></figcaption></figure>';
                 expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML, "case 03");
 
-                // 04: Check for iframe tag with a link and caption at the bottom with iframe-style and iframe-class
-                var iframeMarkdown = '::: iframe [CAPTION](https://dev.isrd.isi.edu/chaise/search){link="https://dev.isrd.isi.edu/chaise/search" pos="bottom" iframe-class="iclass" iframe-style="border:1px solid;"} \n:::';
-                var iframeHTML = '<figure class="embed-block -chaise-post-load iclass" style=" border:1px solid;"><iframe src="https://dev.isrd.isi.edu/chaise/search"     ></iframe><figcaption class="embed-caption" style=""><a href="https://dev.isrd.isi.edu/chaise/search" target="_blank">CAPTION</a></figcaption></figure>';
+                // 04: Check for iframe tag with a link and caption at the bottom with figure-style and figure-class
+                var iframeMarkdown = '::: iframe [CAPTION](https://dev.isrd.isi.edu/chaise/search){link="https://dev.isrd.isi.edu/chaise/search" pos="bottom" figure-class="iclass" figure-style="border:1px solid;"} \n:::';
+                var iframeHTML = '<figure class="embed-block -chaise-post-load iclass" style="border:1px solid;"><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://dev.isrd.isi.edu/chaise/search"><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div><iframe src="https://dev.isrd.isi.edu/chaise/search"></iframe><figcaption class="embed-caption"><a href="https://dev.isrd.isi.edu/chaise/search">CAPTION</a></figcaption></figure>';
                 expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML, "case 04");
 
                 // 05: Check for iframe tag with a caption at the bottom with caption-style and caption-class
                 var iframeMarkdown = '::: iframe [CAPTION](https://dev.isrd.isi.edu/chaise/search){pos="bottom" caption-class="cclass" caption-style="font-weight:500;"} \n:::';
-                var iframeHTML = '<figure class="embed-block -chaise-post-load" style=""><iframe src="https://dev.isrd.isi.edu/chaise/search"    ></iframe><figcaption class="embed-caption cclass" style=" font-weight:500;">CAPTION</figcaption></figure>';
+                var iframeHTML = '<figure class="embed-block -chaise-post-load"><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://dev.isrd.isi.edu/chaise/search"><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div><iframe src="https://dev.isrd.isi.edu/chaise/search"></iframe><figcaption class="embed-caption cclass" style="font-weight:500;">CAPTION</figcaption></figure>';
                 expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML, "case 05");
 
 
-                // 06: Check for iframe tag with a caption at the bottom with iframe-style and caption-class
-                var iframeMarkdown = '::: iframe [CAPTION](https://dev.isrd.isi.edu/chaise/search){pos="bottom" caption-class="cclass" caption-style="font-weight:500;"} \n:::';
-                var iframeHTML = '<figure class="embed-block -chaise-post-load" style=""><iframe src="https://dev.isrd.isi.edu/chaise/search"    ></iframe><figcaption class="embed-caption cclass" style=" font-weight:500;">CAPTION</figcaption></figure>';
+                // 06: Check for iframe tag with a caption at the bottom with figure-style and caption-class
+                var iframeMarkdown = '::: iframe [CAPTION](https://dev.isrd.isi.edu/chaise/search){pos="bottom" caption-class="cclass" figure-style="font-weight:500;"} \n:::';
+                var iframeHTML = '<figure class="embed-block -chaise-post-load" style="font-weight:500;"><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://dev.isrd.isi.edu/chaise/search"><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div><iframe src="https://dev.isrd.isi.edu/chaise/search"></iframe><figcaption class="embed-caption cclass">CAPTION</figcaption></figure>';
                 expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML, "case 06");
 
-                // 07: check for iframe tag with classes
-                var iframeMarkdown = '::: iframe [SOME LINK CAPTION](https://dev.isrd.isi.edu/chaise/search){.class-one .class-two} \n:::';
-                var iframeHTML = '<figure class="embed-block -chaise-post-load" style=""><figcaption class="embed-caption" style="">SOME LINK CAPTION</figcaption><iframe src="https://dev.isrd.isi.edu/chaise/search" class="class-one class-two" ></iframe></figure>';
+                // 07: check for iframe tag with classes and target=_blank for fullscreen button
+                var iframeMarkdown = '::: iframe [SOME LINK CAPTION](https://dev.isrd.isi.edu/chaise/search){.class-one .class-two fullscreen-target=_blank} \n:::';
+                var iframeHTML = '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 100%;"><figcaption class="embed-caption">SOME LINK CAPTION</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://dev.isrd.isi.edu/chaise/search" target=_blank><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div></div><iframe src="https://dev.isrd.isi.edu/chaise/search" class="class-one class-two"></iframe></figure>';
                 expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML, "case 07");
 
                 // 08: Testing for YouTube video with classes
                 var iframeMarkdown = '::: iframe [SOME LINK CAPTION](https://www.youtube.com/embed/op1-Cw_l1Ow){.class-one .class-two} \n:::';
-                var iframeHTML = '<figure class="embed-block -chaise-post-load" style=""><figcaption class="embed-caption" style="">SOME LINK CAPTION</figcaption><span class="video-info-in-print" style="visibility:hidden">Note: YouTube video ( https://www.youtube.com/embed/op1-Cw_l1Ow ) is hidden in print</span><iframe src="https://www.youtube.com/embed/op1-Cw_l1Ow" class="class-one class-two hide-in-print" ></iframe></figure>';
+                var iframeHTML = '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 100%;"><figcaption class="embed-caption">SOME LINK CAPTION</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://www.youtube.com/embed/op1-Cw_l1Ow"><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div></div><span class="video-info-in-print" style="visibility:hidden">Note: YouTube video ( https://www.youtube.com/embed/op1-Cw_l1Ow ) is hidden in print</span><iframe src="https://www.youtube.com/embed/op1-Cw_l1Ow" class="class-one class-two hide-in-print"></iframe></figure>';
                 expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML, "case 08");
 
                 // 09: Testing for YouTube video
                 var iframeMarkdown = '::: iframe [SOME LINK CAPTION](https://www.youtube.com/embed/op1-Cw_l1Ow){width=640 height=480 link=https://www.youtube.com/embed/op1-Cw_l1Ow} \n:::';
-                var iframeHTML = '<figure class="embed-block -chaise-post-load" style=""><figcaption class="embed-caption" style=""><a href="https://www.youtube.com/embed/op1-Cw_l1Ow" target="_blank">SOME LINK CAPTION</a></figcaption><span class="video-info-in-print" style="visibility:hidden">Note: YouTube video ( https://www.youtube.com/embed/op1-Cw_l1Ow ) is hidden in print</span><iframe src="https://www.youtube.com/embed/op1-Cw_l1Ow" width="640" height="480"  class="hide-in-print" ></iframe></figure>';
+                var iframeHTML = '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 640px;"><figcaption class="embed-caption"><a href="https://www.youtube.com/embed/op1-Cw_l1Ow">SOME LINK CAPTION</a></figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://www.youtube.com/embed/op1-Cw_l1Ow"><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div></div><span class="video-info-in-print" style="visibility:hidden">Note: YouTube video ( https://www.youtube.com/embed/op1-Cw_l1Ow ) is hidden in print</span><iframe src="https://www.youtube.com/embed/op1-Cw_l1Ow" width="640" height="480" class="hide-in-print"></iframe></figure>';
                 expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML, "case 09");
 
                 // 10: Check for dropdown tag
@@ -163,7 +163,7 @@ exports.execute = function (options) {
                 var dropdownHTML = '<div class="btn-group markdown-dropdown"><button type="button"  class="btn btn-primary btn-lg">MYCAPTION</button><button type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"  class="btn btn-primary dropdown-toggle btn-lg"><span class="caret"></span><span class="sr-only">Toggle Dropdown</span></button><ul class="dropdown-menu"><li><a href="https://dev.isrd.isi.edu/chaise/search" class="btn btn-danger" >CAPTION1</a></li><li><a href="https://dev.isrd.isi.edu/chaise/search" >CAPTION2</a></li><li><a href="https://dev.isrd.isi.edu/chaise/search" >CAPTION3</a></li></ul></div>';
                 expect(printMarkdown(dropdownMarkdown)).toBe(dropdownHTML, "case 10");
 
-                // 11
+                // 11: Check for iframe followed by a dropdown using markdown for both
                 expect(printMarkdown(iframeMarkdown + "\n" + dropdownMarkdown)).toBe(iframeHTML + dropdownHTML, "case 11");
             });
 

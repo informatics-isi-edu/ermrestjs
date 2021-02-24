@@ -332,13 +332,12 @@ In this section you can find some examples of how you can use this feature. Thes
     "tag:isrd.isi.edu,2016:visible-columns": {
         "compact": [
             {
-                "sourcekey": "min_aggregate-custom-name",
                 "markdown_name": "Range",
                 "comment": "Range of values",
                 "display": {
-                    "markdown_pattern": "{{{min_aggregate-custom-name}}} - max_aggregate-custom-name",
+                    "markdown_pattern": "{{{min_aggregate-custom-name}}} - {{{max_aggregate-custom-name}}}",
                     "template_engine": "handlebars",
-                    "wait_for": ["min_aggregate-custom-name"]
+                    "wait_for": ["min_aggregate-custom-name", "max_aggregate-custom-name"]
                 }
             }
         ]
@@ -373,7 +372,7 @@ In this section you can find some examples of how you can use this feature. Thes
                 "markdown_name": "Integer Col + Array aggregate",
                 "comment": "value",
                 "display": {
-                    "markdown_pattern": "min: {{{min_aggregate-custom-name}}}, alloutbound: {{{ll-outbound-entity-custom-name.rowName}}}, related values: {{#each entity_array_d_aggregate-custom-name}}[{{{this.rowName}}}]({{{this.uri.detailed}}}){{/each}}",
+                    "markdown_pattern": "min: {{{min_aggregate-custom-name}}}, alloutbound: {{{all-outbound-entity-custom-name.rowName}}}, related values: {{#each entity_array_d_aggregate-custom-name}}[{{{this.rowName}}}]({{{this.uri.detailed}}}){{/each}}",
                     "template_engine": "handlebars",
                     "wait_for": ["min_aggregate-custom-name", "all-outbound-entity-custom-name", "entity_array_d_aggregate-custom-name"]
                 }

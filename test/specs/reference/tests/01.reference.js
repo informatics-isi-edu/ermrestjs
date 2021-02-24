@@ -386,7 +386,7 @@ exports.execute = function (options) {
         });
 
         // Local Test Cases:
-        if (!process.env.TRAVIS) {
+        if (!process.env.CI) {
             describe("for tables with slash(`/`) in their name,", function () {
                 var reference, page, tuple;
                 var limit = 2;
@@ -444,7 +444,8 @@ exports.execute = function (options) {
             var testCreate = function (ref, rows, expectedData, done) {
                 createReference.create(rows).then(function (response) {
                     var page = response.successful;
-                    expect(page.reference._context).toEqual("compact", "page reference is not in the correct context.");
+                    var context = (rows.length > 1 ? "compact/entry" : "compact");
+                    expect(page.reference._context).toEqual(context, "page reference is not in the correct context.");
                     expect(page._data.length).toBe(expectedData.length, "data length missmatch.");
                     expectedData.forEach(function (data, i) {
                         for (var k in data) {

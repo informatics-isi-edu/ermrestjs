@@ -1721,6 +1721,17 @@
 
             if (options.returnArray) return arr;
             return arr.join(", ");
+        },
+
+        printColor: function (value, options) {
+            options = (typeof options === 'undefined') ? {} : options;
+
+            if (!isStringAndNotEmpty(value) || !(/^#[0-9a-fA-F]{6}$/i.test(value))) {
+                return '';
+            }
+
+            value = value.toUpperCase();
+            return ':span: :/span:{.' + module._classNames.colorPreview + ' style=background-color:' + value +'} ' + value;
         }
     };
 
@@ -1764,6 +1775,9 @@
             case 'json':
             case 'jsonb':
                 data = utils.printJSON(data, options);
+                break;
+            case 'color_rgb_hex':
+                data = utils.printColor(data, options);
                 break;
             default: // includes 'text' and 'longtext' cases
                 data = type.baseType ? _formatValueByType(type.baseType, data, options) : utils.printText(data, options);
@@ -1869,51 +1883,78 @@
 
                         // Check If the markdown is a link
                         if (attrs[0].children[0].type == "link_open") {
-                            var iframeHTML = "<iframe ", openingLink = attrs[0].children[0];
-                            var enlargeLink, posTop = true, captionClass = "", captionStyle = "", iframeClass = "", iframeStyle = "";
-                            var isYTlink = false, videoURL = "", iframeTagClasses = [];
+                            var iframeHTML = "<iframe", openingLink = attrs[0].children[0];
+                            var captionLink, captionTarget= "", posTop = true, captionClass = "", captionStyle = "", figureClass = "", figureStyle = "",
+                                iframeSrc = "", frameWidth = "", fullscreenTarget = "";
+                            var isYTlink = false, videoURL = "", iframeClasses = [];
 
                             // Add all attributes to the iframe
                             openingLink.attrs.forEach(function(attr) {
-                                if (attr[0] == "href") {
-                                    isYTlink  = (attr[1].match("^(http(s)?:\/\/)?((w){3}.)?youtu(be|.be)?(\.com)?\/.+") != null);
-                                    iframeHTML += 'src="' + attr[1] + '"';
-                                    videoText = 'Note: YouTube video ( ' + attr[1] + ' ) is hidden in print';
-                                } else if (attr[0] == "link") {
-                                    enlargeLink = attr[1];
-                                } else if (attr[0] == "pos") {
-                                    posTop = attr[1].toLowerCase() == 'bottom' ? false : true;
-                                } else if (attr[0] == "caption-class") {
-                                    captionClass = attr[1];
-                                } else if (attr[0] == "caption-style") {
-                                    captionStyle = attr[1];
-                                } else if (attr[0] == "iframe-class") {
-                                    iframeClass = attr[1];
-                                } else if (attr[0] == "iframe-style") {
-                                    iframeStyle = attr[1];
-                                } else if (attr[0] == "class") {
-                                    if (attr[1].length > 0) {
-                                        iframeTagClasses.push(attr[1]);
-                                        return; //we're going to add classe at the end
-                                    }
-                                } else {
-                                    iframeHTML +=  attr[0] + '="' + attr[1] + '"';
+                                switch(attr[0]) {
+                                    case "href":
+                                        isYTlink  = (attr[1].match("^(http(s)?:\/\/)?((w){3}.)?youtu(be|.be)?(\.com)?\/.+") != null);
+                                        iframeSrc = attr[1];
+                                        iframeHTML += ' src="' + attr[1] + '"';
+                                        videoText = 'Note: YouTube video ( ' + attr[1] + ' ) is hidden in print';
+                                        break;
+                                    case "link": // NOTE: link will be deprecated but leaving in conditional for backwards compatibility
+                                    case "caption-link":
+                                        captionLink = attr[1];
+                                        break;
+                                    case "pos":
+                                        posTop = attr[1].toLowerCase() == 'bottom' ? false : true;
+                                        break;
+                                    case "fullscreen-target":
+                                        fullscreenTarget = attr[1];
+                                        break;
+                                    case "target":
+                                    case "caption-target":
+                                        captionTarget = attr[1];
+                                        break;
+                                    case "caption-class":
+                                        captionClass = attr[1];
+                                        break;
+                                    case "caption-style":
+                                        captionStyle = attr[1];
+                                        break;
+                                    case "iframe-class": // NOTE: iframe-class will be deprecated but leaving in conditional for backwards compatibility
+                                    case "figure-class":
+                                        figureClass = attr[1];
+                                        break;
+                                    case "iframe-style": // NOTE: iframe-style will be deprecated but leaving in conditional for backwards compatibility
+                                    case "figure-style":
+                                        figureStyle = attr[1];
+                                        break;
+                                    case "class":
+                                        if (attr[1].length > 0) {
+                                            iframeClasses.push(attr[1]);
+                                            // NOTE: we return here to avoid adding `" "` to iframeHTML?
+                                            return; //we're going to add classes at the end
+                                        }
+                                        break;
+                                    default:
+                                        if (attr[0] == "width") {
+                                            frameWidth = attr[1];
+                                        }
+
+                                        // handles `style="some: style;"` case from template
+                                        iframeHTML += " " + attr[0] + '="' + attr[1] + '"';
+                                        break;
                                 }
-                                iframeHTML += " ";
                             });
 
                             //During print we need to display that the iframe with YouTube video is replaced with a note
                             if(isYTlink){
                               html = '<span class="' + module._classNames.showInPrintMode + '" style="visibility:hidden">' + videoText + "</span>";
-                              iframeTagClasses.push(module._classNames.hideInPrintMode);
+                              iframeClasses.push(module._classNames.hideInPrintMode);
                             }
-                            
+
                             // add the iframe tag
                             html += iframeHTML;
-                            
+
                             // attach the iframe tag classes
-                            if (iframeTagClasses.length > 0) {
-                                html += 'class="' + iframeTagClasses.join(" ") + '" ';
+                            if (iframeClasses.length > 0) {
+                                html += ' class="' + iframeClasses.join(" ") + '"';
                             }
                             html += "></iframe>";
 
@@ -1935,20 +1976,34 @@
                             }
 
                             // If enlarge link is set then add an anchor tag for captionHTML
-                            if (enlargeLink) {
-                                 if (!captionHTML.trim().length) captionHTML = "Enlarge";
-                                captionHTML = '<a href="' + enlargeLink + '" target="_blank">'  + captionHTML + '</a>';
+                            if (captionLink) {
+                                // set the fullscreen target string for the fullscreen button
+                                if (captionTarget) captionTarget = " target=" + captionTarget;
+                                if (!captionHTML.trim().length) captionHTML = "Enlarge";
+                                captionHTML = '<a href="' + captionLink + '"' + captionTarget + '>'  + captionHTML + '</a>';
                             }
+
+                            // set the fullscreen target string for the fullscreen button
+                            if (fullscreenTarget) fullscreenTarget = " target=" + fullscreenTarget;
+
+                            // Checks for a width being defined. If it's defined and not a number, assume it has `px` or `%` appended already and use as is.
+                            // If width is defined and is a number, assume it's in pixels and append `px`.
+                            // If no width, use "100%"
+                            var contentsWidth = 'style="width: ' + (frameWidth ? (frameWidth + (isNaN(parseInt(frameWidth)) ? "" : "px")) : "100%")+ ';"';
+
+                            // fullscreen button html that is attached to the top right corner of the iframe
+                            var buttonHtml = '<div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="' + iframeSrc + '"' + fullscreenTarget + '><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div>';
 
                             // Encapsulate the captionHTML inside a figcaption tag with class embed-caption
                             if (posTop) {
-                                html = '<figcaption class="embed-caption' + (captionClass.length ? (" " + captionClass) : "") +'" style="' + (captionStyle.length ? (" " + captionStyle) : "") + '">' + captionHTML + "</figcaption>" + html;
+                                // if caption is at the top, we need to wrap the caption and fullscreen button in a div so the width can be applied and allow the caption to flex around the button
+                                html = '<div class="figcaption-wrapper" ' + contentsWidth + '><figcaption class="embed-caption' + (captionClass.length ? (" " + captionClass) : "") +'"' + (captionStyle.length ? (' style="' + captionStyle) + '"' : "") + '>' + captionHTML + "</figcaption>" + buttonHtml + "</div>" + html;
                             } else {
-                                html += '<figcaption class="embed-caption' + (captionClass.length ? (" " + captionClass) : "") + '" style="' + (captionStyle.length ? (" " + captionStyle) : "") + '">' + captionHTML + "</figcaption>";
+                                html = buttonHtml + html + '<figcaption class="embed-caption' + (captionClass.length ? (" " + captionClass) : "") + '"' + (captionStyle.length ? (' style="' + captionStyle) + '"' : '') + '>' + captionHTML + "</figcaption>";
                             }
 
                             // Encapsulate the iframe inside a figure tag
-                            html = '<figure class="embed-block ' + module._classNames.postLoad + (iframeClass.length ? (" "  + iframeClass): "") + '" style="' + (iframeStyle.length ? (" "  + iframeStyle ) : "") + '">' + html + "</figure>";
+                            html = '<figure class="embed-block ' + module._classNames.postLoad + (figureClass.length ? (" "  + figureClass) : "") + '"' + (figureStyle.length ? (' style="' + figureStyle) + '"' : '') + '>' + html + "</figure>";
                         }
                     }
                     // if attrs was empty or it didn't find any link simply render the internal markdown
@@ -2994,7 +3049,7 @@
      * @param  {Object} options
      * @return {Object}          An object with `isHTML` and `value` attributes.
      */
-    module._processMarkdownPattern = function (template, data, table, context, options) {
+    module.processMarkdownPattern = function (template, data, table, context, options) {
         var res = module._renderTemplate(template, data, table.schema.catalog, options);
 
         if (res === null || res.trim() === '') {
