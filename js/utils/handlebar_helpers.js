@@ -8,6 +8,13 @@
         return args.reduce(reducer, first);
     };
 
+    var regexpFindAll = function (value, regexp) {
+        var regexpObj = new RegExp(regexp, 'g');
+        var matches = value.match(regexpObj);
+
+        return matches;
+    };
+
     module._injectHandlerbarCompareHelpers = function(Handlebars) {
 
         Handlebars.registerHelper({
@@ -44,25 +51,26 @@
             },
 
             /**
+             * {{#each (regexFindFirst value regexp)}}
+             *   {{this}}
+             * {{/each}}
+             *
+             * @returns first string from value that matches the regular expression or empty string
+             */
+            regexFindFirst: function (value, regexp) {
+                var matches = regexpFindAll(value, regexp);
+                return (matches && matches[0]) || "";
+            },
+
+            /**
              * {{#each (regexFindAll value regexp)}}
              *   {{this}}
              * {{/each}}
              *
-             * @returns array of strings that match the regular expression
+             * @returns array of strings from value that match the regular expression
              */
             regexFindAll: function (value, regexp) {
-                var regexpObj = new RegExp(regexp, 'g');
-                // var parts = value.match("/" + regexp + "/");
-
-                var matches = [];
-                var regexpArray;
-                while ( (regexpArray = regexpObj.exec(value)) !== null) {
-                    matches.push(regexpArray[0]);
-                }
-                // for (var j=1; j<parts.length; j++) {
-                //     matches.push(parts[j]);
-                // }
-                return matches;
+                return regexpFindAll(value, regexp);
             },
 
             /*

@@ -548,13 +548,23 @@ exports.execute = function (options) {
                 expect(module.renderHandlebarsTemplate(template, {"type": "txt"})).toBe("other", "missmatch for 02");
             });
 
+            it ('regexFindFirst helper', function () {
+                var template = '{{#regexFindFirst testString "jpg|png"}}{{this}}{{/regexFindFirst}}';
+                expect(module.renderHandlebarsTemplate(template, {"testString": "house.jpg"}) ).toBe("jpg", "missmatch for 1st test");
+                expect(module.renderHandlebarsTemplate(template, {"testString": "jumpng-fox.jpg"}) ).toBe("png", "missmatch for 2nd test");
+                expect(module.renderHandlebarsTemplate(template, {"testString": "jumping-fox.wav"}) ).toBe("", "missmatch for 3rd test");
+
+                var template2 = '{{#regexFindFirst testString "^\/(.+\/)*(.+)\.(.+)$"}}{{this}}{{/regexFindFirst}}';
+                expect(module.renderHandlebarsTemplate(template2, {"testString": "/var/www/html/index.html"}) ).toBe("/var/www/html/index.html", "missmatch for 4th test");
+            });
+
             it ('regexFindAll helper', function () {
                 var template = '{{#each (regexFindAll testString "jpg|png")}}{{this}}\n{{/each}}';
                 expect(module.renderHandlebarsTemplate(template, {"testString": "house-jpg.jpg"}) ).toBe("jpg\njpg\n", "missmatch for 1st test");
                 expect(module.renderHandlebarsTemplate(template, {"testString": "jumpng-fox.jpg"}) ).toBe("png\njpg\n", "missmatch for 2nd test");
 
                 var template2 = '{{#each (regexFindAll testString "^\/(.+\/)*(.+)\.(.+)$")}}{{this}}\n{{/each}}';
-                expect(module.renderHandlebarsTemplate(template, {"testString": "/var/www/html/index.html"}) ).toBe("something", "missmatch for 2nd test");
+                expect(module.renderHandlebarsTemplate(template2, {"testString": "/var/www/html/index.html"}) ).toBe("/var/www/html/index.html\n", "missmatch for 3rd test");
             });
 
             it('suppressed default helper log', function () {

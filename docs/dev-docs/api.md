@@ -26,6 +26,11 @@ to use for ERMrest JavaScript agents.</p>
   .. content
 {{/if}}</p>
 </dd>
+<dt><a href="#regexFindFirst">regexFindFirst()</a> ⇒</dt>
+<dd><p>{{#each (regexFindFirst value regexp)}}
+  {{this}}
+{{/each}}</p>
+</dd>
 <dt><a href="#regexFindAll">regexFindAll()</a> ⇒</dt>
 <dd><p>{{#each (regexFindAll value regexp)}}
   {{this}}
@@ -7688,6 +7693,15 @@ since the ermrestJS has been available (milliseconds).
 
 **Kind**: global function  
 **Returns**: boolean if the value matches the regexp  
+<a name="regexFindFirst"></a>
+
+## regexFindFirst() ⇒
+{{#each (regexFindFirst value regexp)}}
+  {{this}}
+{{/each}}
+
+**Kind**: global function  
+**Returns**: first string from value that matches the regular expression or empty string  
 <a name="regexFindAll"></a>
 
 ## regexFindAll() ⇒
@@ -7696,7 +7710,7 @@ since the ermrestJS has been available (milliseconds).
 {{/each}}
 
 **Kind**: global function  
-**Returns**: array of strings that match the regular expression  
+**Returns**: array of strings from value that match the regular expression  
 <a name="appLinkFn"></a>
 
 ## appLinkFn : <code>function</code>
