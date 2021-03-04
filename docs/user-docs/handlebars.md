@@ -2,8 +2,8 @@
 
 [Handlebars](http://handlebarsjs.com/) is almost similar to Mustache with some additional benefits. There are some things that you can't do in Mustache (e.g if-else statement) that Handlebars allows us to do easily using `helpers`.
 
-Handlebars supports most of the Mustache syntax. However, there are a few features that are not supported by Handlebars. For example: 
-- Block syntax `{{#name}}...{{/name}}`: This is primarily used in Deriva annoations to perform boolean (or null) check. With handlebars you need to pass the variables to an `if` helper to do the check e.g. `{{#if name}}...{{/if}}`.
+Handlebars supports most of the Mustache syntax. However, there are a few features that are not supported by Handlebars. For example:
+- Block syntax `{{#name}}...{{/name}}`: This is primarily used in Deriva annotations to perform boolean (or null) check. With handlebars you need to pass the variables to an `if` helper to do the check e.g. `{{#if name}}...{{/if}}`.
 
 ```js
 // Mustache
@@ -18,7 +18,7 @@ Handlebars supports most of the Mustache syntax. However, there are a few featur
 {{#if name}}Hello {{name}}{{else}}No name available{{/if}}
 ```
 
-- encode/decode `{{#encode}}...{{/encode}}`/`{{#decode}}...{{/decode}}`: With handlebards the value to be encoded is passed to the `encode`/`decode` helper e.g. `{{#encode ...}}{{/encode}}` or `{{#decode ...}}{{/decode}}`.
+- encode/decode `{{#encode}}...{{/encode}}`/`{{#decode}}...{{/decode}}`: With handlebars the value to be encoded is passed to the `encode`/`decode` helper e.g. `{{#encode ...}}{{/encode}}` or `{{#decode ...}}{{/decode}}`.
 
 ```
 // Mustache
@@ -28,7 +28,7 @@ Handlebars supports most of the Mustache syntax. However, there are a few featur
 {{#encode 'My URL'}}{{/encode}}
 ```
 
-Handlebars supports more complicated expression syntax and allow the comparison to be done at the finer level e.g. null v.s. false comparsion. This document summarizes the key concepts of Handlebars that are relevant to Deriva.
+Handlebars supports more complicated expression syntax and allow the comparison to be done at the finer level e.g. null v.s. false comparison. This document summarizes the key concepts of Handlebars that are relevant to Deriva.
 
 
 * [Handlebar Paths](#handlebars-paths)
@@ -43,6 +43,8 @@ Handlebars supports more complicated expression syntax and allow the comparison 
    * [Encode](#encode-helper)
    * [Escape](#escape-helper)
    * [EncodeFacet](#encodefacet-helper)
+   * [FindFirst](#findfirst-helper)
+   * [FindAll](#findall-helper)
 * [Using Arrays](#using-arrays)
 * [Accessing keys with spaces and special characters](#accessing-keys-with-spaces-and-special-characters)
 * [Subexpressions](#subexpressions)
@@ -242,7 +244,7 @@ Additionally for object iteration, `{{@key}}` references the current key name:
 
 The first and last steps of iteration are noted via the `@first` and `@last` variables when iterating over an array. When iterating over an object only the `@first` is available.
 
-When looping throw items in `each`, you can reference the iterable object usin `../` syntax. The following will allow you to access the array and calculate it's length:
+When looping throw items in `each`, you can reference the iterable object using `../` syntax. The following will allow you to access the array and calculate it's length:
 ```
 {{#each array}}
   {{../array.length}}
@@ -372,6 +374,25 @@ Result:
 ```
 
 As you can see in this example I am escaping all the `"`s. This is because you are usually passing this value in a string in a JSON document. So all the `"`s must be escaped.
+
+### Findfirst helper
+
+The `regexFindFirst` helper will take the input regular expression and return the first matching substring from the supplied string. Will return `""` otherwise.
+
+An example template to extract the filename from a given path with testString = "/var/www/html/index.html":
+```
+{{#regexFindFirst testString "[^\/]+$"}}{{this}}{{/regexFindFirst}}
+```
+
+Result:
+```
+"index.html"
+```
+
+
+### Findall helper
+
+The `regexFindAll` helper will take the input regular expression and return all the matching substrings from the supplied string in an array . Will return `[]` otherwise.
 
 ## Using Arrays
 

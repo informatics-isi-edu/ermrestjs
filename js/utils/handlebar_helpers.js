@@ -67,10 +67,10 @@
              *   {{this}}
              * {{/each}}
              *
-             * @returns array of strings from value that match the regular expression
+             * @returns array of strings from value that match the regular expression or
              */
             regexFindAll: function (value, regexp) {
-                return regexpFindAll(value, regexp);
+                return regexpFindAll(value, regexp) || [];
             },
 
             /*

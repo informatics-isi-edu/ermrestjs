@@ -7710,7 +7710,7 @@ since the ermrestJS has been available (milliseconds).
 {{/each}}
 
 **Kind**: global function  
-**Returns**: array of strings from value that match the regular expression  
+**Returns**: array of strings from value that match the regular expression or  
 <a name="appLinkFn"></a>
 
 ## appLinkFn : <code>function</code>
