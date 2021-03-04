@@ -21,6 +21,21 @@ to use for ERMrest JavaScript agents.</p>
  str
 {{/encodeFacet}}</p>
 </dd>
+<dt><a href="#regexMatch">regexMatch()</a> ⇒</dt>
+<dd><p>{{#if (regexMatch value regexp)}}
+  .. content
+{{/if}}</p>
+</dd>
+<dt><a href="#regexFindFirst">regexFindFirst()</a> ⇒</dt>
+<dd><p>{{#each (regexFindFirst value regexp)}}
+  {{this}}
+{{/each}}</p>
+</dd>
+<dt><a href="#regexFindAll">regexFindAll()</a> ⇒</dt>
+<dd><p>{{#each (regexFindAll value regexp)}}
+  {{this}}
+{{/each}}</p>
+</dd>
 </dl>
 
 ## Typedefs
@@ -7669,6 +7684,33 @@ since the ermrestJS has been available (milliseconds).
 
 **Kind**: global function  
 **Returns**: encoded facet string that can be used in url  
+<a name="regexMatch"></a>
+
+## regexMatch() ⇒
+{{#if (regexMatch value regexp)}}
+  .. content
+{{/if}}
+
+**Kind**: global function  
+**Returns**: boolean if the value matches the regexp  
+<a name="regexFindFirst"></a>
+
+## regexFindFirst() ⇒
+{{#each (regexFindFirst value regexp)}}
+  {{this}}
+{{/each}}
+
+**Kind**: global function  
+**Returns**: first string from value that matches the regular expression or empty string  
+<a name="regexFindAll"></a>
+
+## regexFindAll() ⇒
+{{#each (regexFindAll value regexp)}}
+  {{this}}
+{{/each}}
+
+**Kind**: global function  
+**Returns**: array of strings from value that match the regular expression or  
 <a name="appLinkFn"></a>
 
 ## appLinkFn : <code>function</code>
