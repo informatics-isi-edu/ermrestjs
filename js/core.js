@@ -3300,18 +3300,36 @@
 
         getDisplay: function(context) {
             if (!(context in this._display)) {
-                var annotation = -1, columnOrder;
+                var self = this, annotation = -1, columnOrder = [], showKeyLink =  null;
                 if (this.annotations.contains(module._annotations.KEY_DISPLAY)) {
                     annotation = module._getAnnotationValueByContext(context, this.annotations.get(module._annotations.KEY_DISPLAY).content);
                 }
 
                 columnOrder = _processColumnOrderList(annotation.column_order, this.table);
+                showKeyLink = annotation.show_key_link;
+                if (typeof showFKLink !== "boolean") {
+                    showKeyLink = module._getHierarchicalDisplayAnnotationValue(
+                        self, context, "show_key_link"
+                    );
+
+                    // default:
+                    //   compact/select: false
+                    //   *: true
+                    if (typeof showKeyLink !== "boolean") {
+                        if (context === module._contexts.COMPACT_SELECT) {
+                            showKeyLink = false;
+                        } else {
+                            showKeyLink = true;
+                        }
+                    }
+                }
 
                 this._display[context] = {
                     "columnOrder": columnOrder,
                     "isMarkdownPattern": (typeof annotation.markdown_pattern === 'string'),
                     "templateEngine": annotation.template_engine,
-                    "markdownPattern": annotation.markdown_pattern
+                    "markdownPattern": annotation.markdown_pattern,
+                    "showKeyLink": showKeyLink
                 };
             }
 
@@ -3969,9 +3987,15 @@
                         self, context, "show_foreign_key_link"
                     );
 
-                    // default true for all the contexts
+                    // default:
+                    //   compact/select: false
+                    //   *: true
                     if (typeof showFKLink !== "boolean") {
-                        showFKLink = true;
+                        if (context === module._contexts.COMPACT_SELECT) {
+                            showFKLink = false;
+                        } else {
+                            showFKLink = true;
+                        }
                     }
                 }
 
@@ -3984,7 +4008,7 @@
                     "columnOrder": columnOrder,
                     // "fromComment": fromComment,
                     // "fromCommentDisplay": fromCommentDisplay,
-                    "showForeignKeyLinks": showFKLink,
+                    "showForeignKeyLink": showFKLink,
                     // "toComment": toComment,
                     // "toCommentDisplay": toCommentDisplay
                 };

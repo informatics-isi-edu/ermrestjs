@@ -173,8 +173,7 @@ exports.execute = function (options) {
             });
 
             detailedExpectedValue = [
-                '01', '<p>01: col val 01</p>\n',
-                '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:main/main_table_id_col=01">01</a>',
+                '01', '<p>01: col val 01</p>\n', '01',
                 '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:outbound_1/RID=' + findRID('outbound_1', 'id','01') + '">01</a>',
                 '<p>01: 10</p>\n', '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:outbound_1_outbound_1/RID=' + findRID('outbound_1_outbound_1', 'id', '01') + '">01</a>',
                 '01', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '<p>01 virtual value 01</p>\n', '<p>01 virtual value 1</p>\n'
@@ -717,6 +716,18 @@ exports.execute = function (options) {
                 });
             });
 
+            describe(".hideColumnHeader", function () {
+                it ("should return the `hide_column_header` defined on the source and ignore the column-display", function () {
+                    // column-display says true, but source says false
+                    expect(detailedColsWTuple[1].hideColumnHeader).toBe(false, "missmatch for index=1");
+
+                    // there aren't any column-display and only source def
+                    expect(detailedColsWTuple[2].hideColumnHeader).toBe(true, "missmatch for index=2");
+                });
+
+                // the rest of tests are in 02.referenced_column.js
+            })
+
             describe(".table, ", function () {
                 it ("should return the column's table.", function () {
                     expect(detailedColsWTuple.map(function (col) {
@@ -858,7 +869,7 @@ exports.execute = function (options) {
             });
 
             describe ("formatPresentation, ", function () {
-                it ("in entity mode should return null.", function () {
+                it ("in entry mode should return null.", function () {
                     detailedPseudoColumnIndices.forEach(function (i) {
                         expect(detailedColsWTuple[i].formatPresentation({"id":"1", "col":"1"}, "entry").value).toEqual("", "missmatch for index=" + i);
                     });
@@ -872,6 +883,13 @@ exports.execute = function (options) {
 
                 it ("if it's not a one-to-one path, should return null.", function () {
                     expect(detailedColsWTuple[9].formatPresentation({"main_table_id_col":"1", "col":"1"}, "detailed").value).toEqual("", "missmatch for index=" + i);
+                });
+
+                describe("if it's a self-link (KeyPseudoColumn in entity mode), ", function () {
+                    it ("should honor the given `show_key_link`.", function () {
+                        expect(detailedColsWTuple[2].formatPresentation({"main_table_id_col": "1"},"detailed").value).toEqual('1', "index=5 missmatch.");
+                    });
+                    // the rest of test cases are in 02.reference_column.js
                 });
 
                 describe("if it's a one-to-one path", function () {

@@ -95,6 +95,7 @@ Supported JSON payload patterns:
 - `{`... `"markdown_name"`: _markdown_ `}`: The _markdown_ to use in place of the model element's original name.
 - `{`... `"name_style":` `{` `"underline_space"`: _uspace_ `,` `"title_case":` _tcase_ `,` `"markdown"`: _render_ `}` ...`}`: Element name conversion instructions.
 - `{`... `"show_null":` `{` _context_ `:` _nshow_ `,` ... `}`: How to display NULL data values.
+- `{`... `"show_key_link":` `{` _context_ `:` _keylink_ `,` ... `}`: Whether default display of keys (sel link) should include link to the row.
 - `{`... `"show_foreign_key_link":` `{` _context_ `:` _fklink_ `,` ... `}`: Whether default display of foreign keys should include link to the row.
 
 Supported JSON _ccomment_ patterns:
@@ -133,6 +134,11 @@ Supported JSON _fklink_ patterns:
 - `true`: Present the foreign key values with a link to the referred row.
 - `false`: Present the foreign key values without adding extra links.
 
+Supported JSON _keylink_ patterns:
+
+- `true`: Present the key (self link) values with a link to the referred row.
+- `false`: Present the key (self link) values without adding extra links.
+
 Supported JSON _context_ patterns:
 - See [Context Names](#context-names) section for the list of supported JSON _context_ patterns.
 
@@ -151,11 +157,23 @@ Supported JSON _context_ patterns:
   - The annotation is allowed on schemas in order to set the default for all tables in the schema.
   - Each _context_ `:` _nshow_ instruction overrides the inherited instruction for the same _context_ while still deferring to the inherited annotation for any unspecified _context_. The `"*"` wildcard _context_ allows masking of any inherited instruction.
   - A global default is assumed: `{`... `"show_null": { "detailed": false, "*": true` ... `}`
-- The `"show_foreign_key_link"` settings applies to the annotated model element and is also the default for any nested element.
+- The `"show_foreign_key_link"` and `"show_key_link"`  settings applies to the annotated model element and is also the default for any nested element.
   - The annotation is allowed on catalog in order to set the default for all schemas in the catalog.
   - The annotation is allowed on schemas in order to set the default for all tables in the schema.
   - Each _context_ `:` _fklink_ instruction overrides the inherited instruction for the same _context_ while still deferring to the inherited annotation for any unspecified _context_. The `"*"` wildcard _context_ allows masking of any inherited instruction.
-  - A global default is assumed: `{`... `"show_foreign_key_link": { "*": true` ... `}`
+  - A global default is assumed:
+    ```json
+    {
+        "show_key_link": {
+            "*": true,
+            "compact/select": false
+        },
+        "show_foreign_key_link": {
+            "*": true,
+            "compact/select": false
+        }
+    }
+    ```
 
 This annotation provides an override guidance for Chaise applications using a hierarchical scoping mode:
 
@@ -318,15 +336,17 @@ Supported _columnentry_ patterns:
 
 - _columnname_: A string literal _columnname_ identifies a constituent column of the table. The value of the column SHOULD be presented, possibly with representation guided by other annotations or heuristics.
 - `[` _schemaname_ `,` _constraintname_ `]`: A two-element list of string literal _schemaname_ and _constraintname_ identifies a constituent foreign key of the table. The value of the external entity referenced by the foreign key SHOULD be presented, possibly with representation guided by other annotations or heuristics. If the foreign key is representing an inbound relationship with the current table, it SHOULD be presented in a tabular format since it can represent multiple rows of data.
-- `[` _schemaname_ `,` _constraintname_ `]`: A two-element list of string literal _schemaname_ and _constraintname_ identifies a constituent key of the table. The defined display of the key SHOULD be presented, with a link to the current displayed row of data. It will be served as a self-link.
+- `[` _schemaname_ `,` _constraintname_ `]`: A two-element list of string literal _schemaname_ and _constraintname_ identifies a constituent key of the table. The defined display of the key SHOULD be presented, with a link to the current displayed row of data. It will be served as a self link.
 - `{ "sourcekey": ` _sourcekey_ `}`: Defines a pseudo-column based on the given _sourcekey_. For more information please refer to [pseudo-column document](pseudo-columns.md).
 - `{ "source": ` _sourceentry_ `}`:  Defines a pseudo-column based on the given _sourceentry_. For detailed explanation and examples please refer to [here](pseudo-columns.md#examples). Other optional attributes that this JSON document can have are:
   - `markdown_name`: The markdown to use in place of the default heuristics for title of column.
+  - `"hide_column_header": true`: Hide the column header (and still show the value). This is only supported in `detailed` context.
   - `display`: The display settings for generating the column presentation value. Please refer to [pseudo-columns display document](pseudo-column-display.md) for more information. The available options are:
     - `markdown_pattern`: Markdown pattern that will be used for generating the value.
     - `template_engine`: The template engine that should be used for the `markdown_pattern`.
     - `wait_for`: A list of pseudo-column [`sourcekey`](#tag-2019-source-definitions) that are use in the defined `markdown_pattern`. You should list all the all-outbound, aggregates, and entity sets that you want to use in your `markdown_pattern`. Entity sets (pseudo-columns with `inbound` path and no `aggregate` attribute) are only acceptable in `detailed` context.
-    - `show_foreign_key_link`: It will override the inherited behavior of outbound foreign key displays. Set it to `false` to avoid adding extra link to the foreign key display.
+    - `show_foreign_key_link`: It will override the inherited behavior of outbound foreign key displays. Set it to `false`, to avoid adding extra link to the foreign key display.
+    - `show_key_link`: It will override the inherited behavior of key (self link) displays. Set it to `false`, to avoid adding extra link to the key display.
     - `array_ux_mode`: If you have `"aggregate": "array"` or `"aggregate": "array_d"` in the pseudo-column definition, a comma-seperated value will be presented to the user. You can use `array_ux_mode` attribute to change that. The available options are,
       - `olist` for ordered bullet list.
       - `ulist` for unordered bullet list.
@@ -336,7 +356,7 @@ Supported _columnentry_ patterns:
   - `comment_display`: The display mode for the tooltip. Set to `inline` to show it as text or `tooltip` to show as a hover tooltip.
     - Currently the contextualized `comment_display` is only supported for tables in detailed context when they are part of foreign key relationship.
   - `entity`: If the _sourceentry_ can be treated as entity (the source column is key of the table), setting this attribute to `false` will force the scalar mode.
-  - `self_link`: If the defined source is one of the unique not-null keys of the table, setting this attribute to `true` will switch the display mode to self-link.
+  - `self_link`: If the defined source is one of the unique not-null keys of the table, setting this attribute to `true` will switch the display mode to self link.
   - `aggregate`: The aggregate function that should be used for getting an aggregated result. The available aggregate functions are `min`, `max`, `cnt`, `cnt_d`, `array`, and `array_d`.
     - `array` will return ALL the values including duplicates associated with the specified columns. For data types that are sortable (e.g integer, text), the values will be sorted alphabetically or numerically. Otherwise, it displays values in the order that it receives from ERMrest. There is no paging mechanism to limit what's shown in the aggregate column, therefore please USE WITH CARE as it can incur performance overhead and ugly presentation.
     - `array_d` will return distinct values. It has the same performance overhead as `array`, so pleas USE WITH CARE.
@@ -430,6 +450,8 @@ Supported display _option_ syntax:
 - `"markdown_pattern":` _pattern_: The visual presentation of the key SHOULD be computed by performing [Pattern Expansion](#pattern-expansion) on _pattern_ to obtain a markdown-formatted text value which MAY be rendered using a markdown-aware renderer.
 - `"column_order"`: `[` _columnorder_key_ ... `]`: An alternative sort method to apply when a client wants to semantically sort by key values.
 - `"column_order": false`: Sorting by this key psuedo-column should not be offered.
+- `"show_key_link": true`: Override the inherited behavior of key display and add a link to the referred row.
+- `"show_key_link": false`: Override the inherited behavior of key display by not adding any the extra.
 
 
 Supported _columnorder_key_ syntax:
@@ -586,7 +608,7 @@ Column sorting heuristics (use first applicable rule):
 
 The first applicable rule MAY cause sorting to be disabled. Consider that determination final and do not continue to search subsequent rules.
 
-The `hide_column_header` is intended to hide the entity-key in record app for the column this is attached to. This is currently only implemented in record app. 
+The `hide_column_header` is intended to hide the entity-key in record app for the column this is attached to. This is currently only implemented in record app.
 
 ### Tag: 2016 Table Display
 
@@ -604,7 +626,7 @@ Supported JSON _option_ payload patterns:
 - `"row_order":` `[` _sortkey_ ... `]`: The list of one or more _sortkey_ defines the preferred or default order to present rows from a table. The ordered list of sort keys starts with a primary sort and optionally continues with secondary, tertiary, etc. sort keys. The given _sortkey_ s will be used as is (_columnorder_ SHOULD not be applied recursivly to this).
 - `"page_size":` `_number_`: The default number of rows to be shown on a page.  
 - `"collapse_toc_panel":` `_boolean_`: Controls whether the table of contents panel is collapsed on page load (only supported in `detailed` context).
-- `"hide_column_headers":` `_boolean_`: Controls whether the column names headers and reparators between column values are shown (only supported in `detailed` context).
+- `"hide_column_headers":` `_boolean_`: Controls whether the column names headers and separators between column values are shown (only supported in `detailed` context).
 - `"page_markdown_pattern"`: _pagepattern_: Render the page by composing a markdown representation only when `page_markdown_pattern` is non-null.
   - Expand _pagepattern_ to obtain a markdown representation of whole page of dat via [Pattern Expansion](#pattern-expansion. In the pattern, you have access to a `$page` object that has the following attributes:
       - `values`: An array of values. You can access each column value using the `{{{$page.values.<index>.<column>}}}` where `<index>` is the index of array element that you want (starting with zero), and `<column>` is the column name (`{{{$page.values.0.RID}}}`).
