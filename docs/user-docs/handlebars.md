@@ -379,6 +379,16 @@ As you can see in this example I am escaping all the `"`s. This is because you a
 
 The `regexFindFirst` helper will take the input regular expression and return the first matching substring from the supplied string. Will return `""` otherwise.
 
+A simple example where we try to match the file extension `jpg` or `png` with testString="jumpng-fox.jpg":
+```
+{{#regexFindFirst testString "jpg|png"}}{{this}}{{/regexFindFirst}}
+```
+
+Result:
+```
+"png"
+```
+
 An example template to extract the filename from a given path with testString = "/var/www/html/index.html":
 ```
 {{#regexFindFirst testString "[^\/]+$"}}{{this}}{{/regexFindFirst}}
@@ -393,6 +403,16 @@ Result:
 ### Findall helper
 
 The `regexFindAll` helper will take the input regular expression and return all the matching substrings from the supplied string in an array . Will return `[]` otherwise.
+
+A simple example where we try to match the file extension `jpg` or `png` with testString="jumpng-fox.jpg":
+```
+{{#each (regexFindAll testString "jpg|png")}}{{this}}\n{{/each}}
+```
+
+Result:
+```
+"png\njpg\n"
+```
 
 ## Using Arrays
 
