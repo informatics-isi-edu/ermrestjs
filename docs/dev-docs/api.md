@@ -428,6 +428,7 @@ to use for ERMrest JavaScript agents.
         * [.aggregate](#ERMrest.ReferenceColumn+aggregate) : [<code>ColumnAggregateFn</code>](#ERMrest.ColumnAggregateFn)
         * [.groupAggregate](#ERMrest.ReferenceColumn+groupAggregate) : [<code>ColumnGroupAggregateFn</code>](#ERMrest.ColumnGroupAggregateFn)
         * [.comment](#ERMrest.ReferenceColumn+comment) : <code>string</code>
+        * [.hideColumnHeader](#ERMrest.ReferenceColumn+hideColumnHeader) : <code>boolean</code>
         * [.inputDisabled](#ERMrest.ReferenceColumn+inputDisabled) : <code>boolean</code> \| <code>object</code>
         * [.sortable](#ERMrest.ReferenceColumn+sortable) : <code>boolean</code>
         * [.hasWaitFor](#ERMrest.ReferenceColumn+hasWaitFor) ⇒ <code>Boolean</code>
@@ -436,7 +437,7 @@ to use for ERMrest JavaScript agents.
         * [.formatvalue(data, [context], [options])](#ERMrest.ReferenceColumn+formatvalue) ⇒ <code>string</code>
         * [.formatPresentation(data, [context], [templateVariables], [options])](#ERMrest.ReferenceColumn+formatPresentation) ⇒ <code>Object</code>
         * [.getInputDisabled()](#ERMrest.ReferenceColumn+getInputDisabled) : <code>boolean</code> \| <code>object</code>
-        * [._getShowForeignKeyLinks(context)](#ERMrest.ReferenceColumn+_getShowForeignKeyLinks) ⇒ <code>boolean</code>
+        * [._getShowForeignKeyLink(context)](#ERMrest.ReferenceColumn+_getShowForeignKeyLink) ⇒ <code>boolean</code>
         * [.sourceFormatPresentation(templateVariables, columnValue, mainTuple)](#ERMrest.ReferenceColumn+sourceFormatPresentation) ⇒ <code>Object</code>
     * [.VirtualColumn](#ERMrest.VirtualColumn)
         * [new VirtualColumn(reference, column, sourceObject, name, mainTuple)](#new_ERMrest.VirtualColumn_new)
@@ -4052,6 +4053,7 @@ count aggregate representation
     * [.aggregate](#ERMrest.ReferenceColumn+aggregate) : [<code>ColumnAggregateFn</code>](#ERMrest.ColumnAggregateFn)
     * [.groupAggregate](#ERMrest.ReferenceColumn+groupAggregate) : [<code>ColumnGroupAggregateFn</code>](#ERMrest.ColumnGroupAggregateFn)
     * [.comment](#ERMrest.ReferenceColumn+comment) : <code>string</code>
+    * [.hideColumnHeader](#ERMrest.ReferenceColumn+hideColumnHeader) : <code>boolean</code>
     * [.inputDisabled](#ERMrest.ReferenceColumn+inputDisabled) : <code>boolean</code> \| <code>object</code>
     * [.sortable](#ERMrest.ReferenceColumn+sortable) : <code>boolean</code>
     * [.hasWaitFor](#ERMrest.ReferenceColumn+hasWaitFor) ⇒ <code>Boolean</code>
@@ -4060,7 +4062,7 @@ count aggregate representation
     * [.formatvalue(data, [context], [options])](#ERMrest.ReferenceColumn+formatvalue) ⇒ <code>string</code>
     * [.formatPresentation(data, [context], [templateVariables], [options])](#ERMrest.ReferenceColumn+formatPresentation) ⇒ <code>Object</code>
     * [.getInputDisabled()](#ERMrest.ReferenceColumn+getInputDisabled) : <code>boolean</code> \| <code>object</code>
-    * [._getShowForeignKeyLinks(context)](#ERMrest.ReferenceColumn+_getShowForeignKeyLinks) ⇒ <code>boolean</code>
+    * [._getShowForeignKeyLink(context)](#ERMrest.ReferenceColumn+_getShowForeignKeyLink) ⇒ <code>boolean</code>
     * [.sourceFormatPresentation(templateVariables, columnValue, mainTuple)](#ERMrest.ReferenceColumn+sourceFormatPresentation) ⇒ <code>Object</code>
 
 <a name="new_ERMrest.ReferenceColumn_new"></a>
@@ -4136,6 +4138,12 @@ Returns the aggregate group object
 
 #### referenceColumn.comment : <code>string</code>
 Documentation for this reference-column
+
+**Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
+<a name="ERMrest.ReferenceColumn+hideColumnHeader"></a>
+
+#### referenceColumn.hideColumnHeader : <code>boolean</code>
+Whether the UI should hide the column header or not.
 
 **Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
 <a name="ERMrest.ReferenceColumn+inputDisabled"></a>
@@ -4221,9 +4229,9 @@ object: input msut be disabled (show .message to user)
 TODO should be removed in favor of inputDisabled
 
 **Kind**: instance method of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
-<a name="ERMrest.ReferenceColumn+_getShowForeignKeyLinks"></a>
+<a name="ERMrest.ReferenceColumn+_getShowForeignKeyLink"></a>
 
-#### referenceColumn.\_getShowForeignKeyLinks(context) ⇒ <code>boolean</code>
+#### referenceColumn.\_getShowForeignKeyLink(context) ⇒ <code>boolean</code>
 Whether we should show the link for the foreignkey value.
 this can be based on:
  - sourceObject.display.show_foreign_key_link

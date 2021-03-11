@@ -1042,7 +1042,7 @@
      * (it has `isHTML`, `value`, and `unformatted`).
      * NOTE the function might return `null`.
      */
-    module._generateKeyPresentation = function (key, data, context, templateVariables) {
+    module._generateKeyPresentation = function (key, data, context, templateVariables, addLink) {
         // if data is empty
         if (typeof data === "undefined" || data === null || Object.keys(data).length === 0) {
             return null;
@@ -1097,7 +1097,7 @@
             }
         }
 
-        if (caption.match(/<a\b.+href=/)) {
+        if (!addLink || caption.match(/<a\b.+href=/)) {
             value = caption;
         } else {
             var keyRef = new Reference(module.parse(rowURI), key.table.schema.catalog);

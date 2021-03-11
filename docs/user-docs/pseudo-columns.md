@@ -73,11 +73,13 @@ Note: If the `[<schema name>, <constraint name>]` is an inbound foreign key from
   "self_link": <boolean>
   "markdown_name": <display name>,
   "comment": <tooltip message>,
+  "hide_column_header": <boolean>
   "display": {
       "markdown_pattern": <pattern>,
       "template_engine": <handlebars or mustache>,
       "wait_for": <wait_for list>,
       "show_foreign_key_link": <boolean>,
+      "show_key_link": <boolean>,
       "array_ux_mode": <csv|ulist|olist|raw>
   },
   "array_options": {
@@ -94,11 +96,13 @@ or
   "sourcekey" : <source key>,
   "markdown_name": <display name>,
   "comment": <tooltip message>,
+  "hide_column_header": <boolean>
   "display": {
       "markdown_pattern": <pattern>,
       "template_engine": <handlebars or mustache>,
       "wait_for": <wait_for list>,
       "show_foreign_key_link": <boolean>,
+      "show_key_link": <boolean>,
       "array_ux_mode": <csv|ulist|olist|raw>
   },
   "array_options":{
@@ -158,6 +162,9 @@ In Chaise, comment is displayed as tooltip associated with columns. To change th
     "comment": "New comment"
 
 
+#### hide_column_header
+
+By setting this to `true`, chaise will hide the column header (and still show the value). This is only supported in `detailed` context. If this attribute is missing, we are going to use the inherited behavior from the [column display](annotation.md#tag-2016-column-display) annotation. If that one is missing too, [display annotation](annotation.md#tag-2015-display) will be used.
 
 #### display
 
@@ -171,6 +178,7 @@ By using this attribute you can customize the presented value to the users. The 
         "template_engine": <"handlebars" | "mustache">,
         "wait_for": <wait_for list>,
         "show_foreign_key_link": <boolean>,
+        "show_key_link": <boolean>
         "array_ux_mode": <csv|ulist|olist|raw>
     }
 }
@@ -186,7 +194,11 @@ Used to signal Chaise that this pseudo-column relies on the values of other pseu
 
 ##### show_foreign_key_link
 
-While generating a default presentation for all outbound foreign key paths, ermrestjs will add a link to the referred row. Using this attribute you can modify this behavior. If this attribute is missing, we are going to use the inherited behavior from the [foreign key](https://github.com/informatics-isi-edu/ermrestjs/blob/master/docs/user-docs/annotation.md#tag-2016-foreign-key) annotation defined on the last foreign key in the path. If that one is missing too, [display annotation](annotation.md#tag-2015-display) will be applied.
+While generating a default presentation for all outbound foreign key paths, ermrestjs will add a link to the referred row. Using this attribute you can modify this behavior. If this attribute is missing, we are going to use the inherited behavior from the [foreign key](annotation.md#tag-2016-foreign-key) annotation defined on the last foreign key in the path. If that one is missing too, [display annotation](annotation.md#tag-2015-display) will be applied.
+
+##### show_key_link
+
+While generating a default presentation for key pseudo-columns (self link), ermrestjs will add a link to the referred row. Using this attribute you can modify this behavior. If this attribute is missing, we are going to use the inherited behavior from the [key display](annotation.md#tag-2017-key-display) annotation. If that one is missing too, [display annotation](annotation.md#tag-2015-display) will be applied.
 
 ##### array_ux_mode
 

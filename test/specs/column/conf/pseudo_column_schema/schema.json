@@ -14,7 +14,8 @@
                     },
                     "tag:isrd.isi.edu,2017:key-display": {
                         "*": {
-                            "column_order": ["col"]
+                            "column_order": ["col"],
+                            "show_key_link": true
                         }
                     }
                 }
@@ -71,7 +72,8 @@
                         "tag:isrd.isi.edu,2016:column-display" : {
                             "*" : {
                                 "template_engine": "handlebars",
-                                "markdown_pattern" : "{{{main_table_id_col}}}: {{{col}}}"
+                                "markdown_pattern" : "{{{main_table_id_col}}}: {{{col}}}",
+                                "hide_column_header": true
                             }
                         }
                     }
@@ -117,8 +119,23 @@
                 "tag:isrd.isi.edu,2016:visible-columns": {
                     "compact": "detailed",
                     "detailed": [
-                        "main_table_id_col", {"source": "col", "markdown_name": "new name", "comment": "new comment"},
-                        {"source": "main_table_id_col", "self_link": true, "markdown_name": "main table key", "comment": false},
+                        "main_table_id_col",
+                        {
+                            "source": "col",
+                            "markdown_name": "new name",
+                            "comment": "new comment",
+                            "hide_column_header": false
+                        },
+                        {
+                            "source": "main_table_id_col",
+                            "self_link": true,
+                            "markdown_name": "main table key",
+                            "comment": false,
+                            "display": {
+                                "show_key_link": false
+                            },
+                            "hide_column_header": true
+                        },
                         {"source": [{"outbound": ["pseudo_column_schema", "main_fk1"]}, "id"], "markdown_name": "main fk", "comment": "main fk cm"},
                         {"source": [{"outbound": ["pseudo_column_schema", "main_fk1"]}, "id"], "entity": false},
                         {"source": [

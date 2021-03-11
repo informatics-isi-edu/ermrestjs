@@ -282,6 +282,10 @@ ReferenceColumn.prototype = {
         return this._commentDisplay;
     },
 
+    /**
+     * @desc Whether the UI should hide the column header or not.
+     * @type {boolean}
+     */
     get hideColumnHeader() {
         if (this._hideColumnHeader === undefined) {
             this._hideColumnHeader = this.display.hideColumnHeader || false;
@@ -362,6 +366,10 @@ ReferenceColumn.prototype = {
                     sourceDisplay.sourceMarkdownPattern = displ.markdown_pattern;
                     sourceDisplay.sourceTemplateEngine = displ.template_engine;
                 }
+            }
+
+            if (this.sourceObject && typeof this.sourceObject.hide_column_header === "boolean") {
+                sourceDisplay.hideColumnHeader = this.sourceObject.hide_column_header;
             }
 
             // I'm using assign to avoid changing the original colDisplay
@@ -568,7 +576,7 @@ ReferenceColumn.prototype = {
      * @param {string} context
      * @return {boolean}
      */
-    _getShowForeignKeyLinks: function (context) {
+    _getShowForeignKeyLink: function (context) {
         var self = this;
 
         // not applicable
@@ -582,7 +590,7 @@ ReferenceColumn.prototype = {
         }
 
         // get it from the foreignkey (which might be derived from catalog, schema, or table)
-        return self.foreignKeys[0].obj.getDisplay(context).showForeignKeyLinks;
+        return self.foreignKeys[0].obj.getDisplay(context).showForeignKeyLink;
     },
 
     /**
@@ -860,7 +868,7 @@ PseudoColumn.prototype.formatPresentation = function(data, context, templateVari
     }
 
     // in entity mode, return the foreignkey value
-    var pres = module._generateRowPresentation(this._lastForeignKey.obj.key, data, context, this._getShowForeignKeyLinks(context));
+    var pres = module._generateRowPresentation(this._lastForeignKey.obj.key, data, context, this._getShowForeignKeyLink(context));
     return pres ? pres: nullValue;
 };
 
@@ -965,7 +973,7 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
     // will format a single value
     var getFormattedValue = function (val) {
         if (isRow) {
-            var pres = module._generateRowPresentation(self._key, val, context, self._getShowForeignKeyLinks(context));
+            var pres = module._generateRowPresentation(self._key, val, context, self._getShowForeignKeyLink(context));
             return pres ? pres.unformatted : null;
         }
         if (val == null || val === "") {
@@ -1927,7 +1935,7 @@ ForeignKeyPseudoColumn.prototype.formatPresentation = function(data, context, te
         );
     }
 
-    var pres = module._generateRowPresentation(this.foreignKey.key, data, context, this._getShowForeignKeyLinks(context));
+    var pres = module._generateRowPresentation(this.foreignKey.key, data, context, this._getShowForeignKeyLink(context));
     return pres ? pres: nullValue;
 };
 ForeignKeyPseudoColumn.prototype._determineSortable = function () {
@@ -2109,6 +2117,10 @@ Object.defineProperty(ForeignKeyPseudoColumn.prototype, "display", {
                 }
             }
 
+            if (this.sourceObject && typeof this.sourceObject.hide_column_header === "boolean") {
+                sourceDisplay.hideColumnHeader = this.sourceObject.hide_column_header;
+            }
+
             Object.assign(res, fkDisplay, sourceDisplay);
             this._display_cached = res;
         }
@@ -2224,7 +2236,7 @@ KeyPseudoColumn.prototype.formatPresentation = function(data, context, templateV
         );
     }
 
-    var pres = module._generateKeyPresentation(this.key, data, context, templateVariables);
+    var pres = module._generateKeyPresentation(this.key, data, context, templateVariables, this.display.showKeyLink);
     return pres ? pres : nullValue;
  };
 KeyPseudoColumn.prototype._determineSortable = function () {
@@ -2310,6 +2322,14 @@ Object.defineProperty(KeyPseudoColumn.prototype, "display", {
                     sourceDisplay.sourceMarkdownPattern = displ.markdown_pattern;
                     sourceDisplay.sourceTemplateEngine = displ.template_engine;
                 }
+
+                if (typeof this.sourceObject.display.show_key_link === "boolean") {
+                    sourceDisplay.showKeyLink = displ.show_key_link;
+                }
+            }
+
+            if (this.sourceObject && typeof this.sourceObject.hide_column_header === "boolean") {
+                sourceDisplay.hideColumnHeader = this.sourceObject.hide_column_header;
             }
 
             Object.assign(res, keyDisplay, sourceDisplay);
