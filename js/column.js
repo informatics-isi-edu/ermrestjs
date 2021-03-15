@@ -2579,6 +2579,17 @@ AssetPseudoColumn.prototype.formatPresentation = function(data, context, templat
     return {isHTML: true, value: module.renderMarkdown(unformatted, true), unformatted: unformatted};
 };
 
+AssetPseudoColumn.prototype._determineSortable = function () {
+    AssetPseudoColumn.super._determineSortable.call(this);
+
+    // if column_order is missing and filename is defined, use it
+    var columnOrder = this.display.columnOrder;
+    if (this.filenameColumn && (columnOrder == undefined || columnOrder.length === 0)) {
+        this._sortColumns_cached = [{column: this.filenameColumn}];
+        this._sortable = true;
+    }
+}
+
 /**
  * Returns the template_engine defined in the annotation
  * @member {ERMrest.Refernece} template_engine

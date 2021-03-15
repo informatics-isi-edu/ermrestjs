@@ -969,6 +969,33 @@ exports.execute = function (options) {
                 });
             });
 
+            describe("for assets, ", function () {
+                it ("should return the defined column_order on the column.", function () {
+                    // 9
+                    expect(assetRefCompactCols[9].sortable).toBe(true, "sortable missmatch, index=9.");
+                    expect(assetRefCompactCols[9]._sortColumns.length).toBe(2, "sort column length missmatch, index=9.");
+                    expect(assetRefCompactCols[9]._sortColumns.map(function (col) {
+                        return col.column.name
+                    })).toEqual(['col_asset_2', 'col_filename'], "sort columns missmatch.");
+                });
+
+                it ("otherwise if filename column is defined should return it", function () {
+                    expect(assetRefCompactCols[10].sortable).toBe(true, "sortable missmatch, index=9.");
+                    expect(assetRefCompactCols[10]._sortColumns.length).toBe(1, "sort column length missmatch, index=9.");
+                    expect(assetRefCompactCols[10]._sortColumns.map(function (col) {
+                        return col.column.name
+                    })).toEqual(['col_filename'], "sort columns missmatch.");
+                });
+
+                it ("otherwise should return the url column.", function () {
+                    expect(assetRefCompactCols[8].sortable).toBe(true, "sortable missmatch, index=9.");
+                    expect(assetRefCompactCols[8]._sortColumns.length).toBe(1, "sort column length missmatch, index=9.");
+                    expect(assetRefCompactCols[8]._sortColumns.map(function (col) {
+                        return col.column.name
+                    })).toEqual(['col_asset_1'], "sort columns missmatch.");
+                });
+            });
+
             describe('for other columns, ', function () {
                 it('when `column_order:false` annotation is defined in column, should return false.', function () {
                     // col_3
