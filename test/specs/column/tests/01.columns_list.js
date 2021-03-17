@@ -171,7 +171,7 @@ exports.execute = function (options) {
         ];
 
         var assetEntryExpectedValue = [
-            '1', '1', '1000', '10001', null, 'https://dev.isrd.isi.edu', 'https://dev.isrd.isi.edu', 4
+            '1', '1', '1000', '10001', null, 'https://dev.isrd.isi.edu', 'https://dev.isrd.isi.edu', 'https://dev.isrd.isi.edu', 4
         ];
 
         var compactRefExpectedLinkedValue, assetCompactExpectedValue, tableWSlashData;
@@ -267,9 +267,11 @@ exports.execute = function (options) {
          *  6: col_md5
          *  7: col_sha256
          *  8: col_asset_1 *AssetPseudoColumn* disabeld (no url_pattern)
-         *  9: col_asset_2 *AssetPseudoColumn* (asset with invalid options) has column-display
+         *  9: col_asset_2 *AssetPseudoColumn* (asset with invalid options) has column-display (markdown and order)
          *  10: col_asset_3 *AssetPseudoColumn* (asset with valid options)
-         *  11: col_asset_4 (asset with type not text)
+         *  11: col_asset_4 *AssetPseudoColumn* (asset with url_pattern and filename) has column-display (markdown)
+         *  12: col_asset_4_filename
+         *  13: col_asset_5 (asset with type not text)
          *
          *  ref.columns for entry (no context present):
          *  0: id
@@ -280,6 +282,7 @@ exports.execute = function (options) {
          *  5: col_asset_2 *AssetPseudoColumn*
          *  6: col_asset_3 *AssetPseudoColumn*
          *  7: col_asset_4
+         *  8: col_asset_5
          *
          *
          *  contexts that are used:
@@ -368,6 +371,7 @@ exports.execute = function (options) {
                 '',
                 '<h2>filename</h2>\n',
                 '<a href="https://dev.isrd.isi.edu?uinit=1&amp;cid=test" download="" class="download-alt asset-permission">filename</a>',
+                'filename4',
                 '4'
             ];
 
@@ -698,20 +702,21 @@ exports.execute = function (options) {
                 });
 
                 describe('for asset columns,', function () {
-                    describe('filname, byte, md5, and sha256 columns', function() {
+                    describe('filename, byte, md5, and sha256 columns', function() {
                         it('should be ignored in edit context.', function() {
                             checkReferenceColumns([{
                                 ref: assetRefEntry,
                                 expected: [
                                     "id",
                                     ["columns_schema", "table_w_asset_fk_to_outbound"].join("_"),
-                                    "col_1", "col_2", "col_asset_1", "col_asset_2", "col_asset_3", "col_asset_4"
+                                    "col_1", "col_2",
+                                    "col_asset_1", "col_asset_2", "col_asset_3", "col_asset_4", "col_asset_5"
                                 ]
                             }]);
                         });
 
                         it('should not be ignored in other contexts.', function() {
-                            expect(assetRefCompactCols.length).toBe(17);
+                            expect(assetRefCompactCols.length).toBe(19);
                             expect(assetRefCompactCols[4].name).toBe("col_filename");
                             expect(assetRefCompactCols[4].isPseudo).toBe(false);
                             expect(assetRefCompactCols[5].name).toBe("col_byte");
@@ -734,10 +739,10 @@ exports.execute = function (options) {
                     });
 
                     it("if column type is not `text`, should ignore the asset annotation.", function() {
-                      expect(assetRefCompactCols[11].name).toBe("col_asset_4", "invalid name for compact");
-                      expect(assetRefCompactCols[11].isPseudo).toBe(false, "invalid isPseudo for compact");
-                      expect(assetRefEntry.columns[7].name).toBe("col_asset_4", "invalid name for entry");
-                      expect(assetRefEntry.columns[7].isPseudo).toBe(false, "invalid isPseudo for entry");
+                      expect(assetRefCompactCols[13].name).toBe("col_asset_5", "invalid name for compact");
+                      expect(assetRefCompactCols[13].isPseudo).toBe(false, "invalid isPseudo for compact");
+                      expect(assetRefEntry.columns[8].name).toBe("col_asset_5", "invalid name for entry");
+                      expect(assetRefEntry.columns[8].isPseudo).toBe(false, "invalid isPseudo for entry");
                     });
 
                     it('if columns has been used as the keyReferenceColumn, should ignore the asset annotation.', function () {

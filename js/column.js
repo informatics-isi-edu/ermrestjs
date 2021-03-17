@@ -2580,6 +2580,28 @@ AssetPseudoColumn.prototype.formatPresentation = function(data, context, templat
 };
 
 /**
+ * @private
+ * Modify the default column_order heuristics for the asset, by using the filename
+ * if
+ *  - the filename_column is defined and valid
+ *  - column_order is not defined on the column-display
+ * This has been done to ensure the sorted column is the same as displayed value.
+ * In most default cases, all the conditions will met.
+ */
+AssetPseudoColumn.prototype._determineSortable = function () {
+    AssetPseudoColumn.super._determineSortable.call(this);
+
+    // if column_order is missing and it doesn't have any makrdown_pattern and
+    // filename is defined, use the filename column.
+    var columnOrder = this.display.columnOrder;
+    if (this.filenameColumn && (columnOrder == undefined || columnOrder.length === 0)) {
+        this._sortColumns_cached = [];
+        this._sortColumns_cached = [{column: this.filenameColumn}];
+        this._sortable = true;
+    }
+};
+
+/**
  * Returns the template_engine defined in the annotation
  * @member {ERMrest.Refernece} template_engine
  * @memberof ERMrest.AssetPseudoColumn#
