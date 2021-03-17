@@ -2599,7 +2599,7 @@ AssetPseudoColumn.prototype._determineSortable = function () {
         this._sortColumns_cached = [{column: this.filenameColumn}];
         this._sortable = true;
     }
-}
+};
 
 /**
  * Returns the template_engine defined in the annotation
