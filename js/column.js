@@ -2585,7 +2585,6 @@ AssetPseudoColumn.prototype.formatPresentation = function(data, context, templat
  * if
  *  - the filename_column is defined and valid
  *  - column_order is not defined on the column-display
- *  - markdown_pattern is not defined on the column-display or source definition.
  * This has been done to ensure the sorted column is the same as displayed value.
  * In most default cases, all the conditions will met.
  */
@@ -2595,9 +2594,8 @@ AssetPseudoColumn.prototype._determineSortable = function () {
     // if column_order is missing and it doesn't have any makrdown_pattern and
     // filename is defined, use the filename column.
     var columnOrder = this.display.columnOrder;
-    if (this.filenameColumn && (columnOrder == undefined || columnOrder.length === 0) &&
-        !(this.display.sourceMarkdownPattern || this._baseCol.getDisplay(this._context).isMarkdownPattern)) {
-
+    if (this.filenameColumn && (columnOrder == undefined || columnOrder.length === 0)) {
+        this._sortColumns_cached = [];
         this._sortColumns_cached = [{column: this.filenameColumn}];
         this._sortable = true;
     }

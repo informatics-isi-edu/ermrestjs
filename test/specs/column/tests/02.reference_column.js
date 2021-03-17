@@ -975,31 +975,29 @@ exports.execute = function (options) {
                     expect(assetRefCompactCols[9]._sortColumns.length).toBe(2, "sort column length missmatch, index=9.");
                     expect(assetRefCompactCols[9]._sortColumns.map(function (col) {
                         return col.column.name
-                    })).toEqual(['col_asset_2', 'col_filename'], "sort columns missmatch.");
-                });
-
-                it ("otherwise if markdown_pattern is defined, should not modify the column_order and return url column.", function () {
-                    expect(assetRefCompactCols[11].sortable).toBe(true, "sortable missmatch, index=11.");
-                    expect(assetRefCompactCols[11]._sortColumns.length).toBe(1, "sort column length missmatch, index=9.");
-                    expect(assetRefCompactCols[11]._sortColumns.map(function (col) {
-                        return col.column.name
-                    })).toEqual(['col_asset_4'], "sort columns missmatch.");
+                    })).toEqual(['col_asset_2', 'col_filename'], "sort columns missmatch, index=9.");
                 });
 
                 it ("otherwise if filename column is defined should return it", function () {
                     expect(assetRefCompactCols[10].sortable).toBe(true, "sortable missmatch, index=10.");
-                    expect(assetRefCompactCols[10]._sortColumns.length).toBe(1, "sort column length missmatch, index=9.");
+                    expect(assetRefCompactCols[10]._sortColumns.length).toBe(1, "sort column length missmatch, index=10.");
                     expect(assetRefCompactCols[10]._sortColumns.map(function (col) {
                         return col.column.name
-                    })).toEqual(['col_filename'], "sort columns missmatch.");
+                    })).toEqual(['col_filename'], "sort columns missmatch, index=10.");
+
+                    expect(assetRefCompactCols[11].sortable).toBe(true, "sortable missmatch, index=11.");
+                    expect(assetRefCompactCols[11]._sortColumns.length).toBe(1, "sort column length missmatch, index=11.");
+                    expect(assetRefCompactCols[11]._sortColumns.map(function (col) {
+                        return col.column.name
+                    })).toEqual(['col_asset_4_filename'], "sort columns missmatch, index=11.");
                 });
 
                 it ("otherwise should return the url column.", function () {
                     expect(assetRefCompactCols[8].sortable).toBe(true, "sortable missmatch, index=8.");
-                    expect(assetRefCompactCols[8]._sortColumns.length).toBe(1, "sort column length missmatch, index=9.");
+                    expect(assetRefCompactCols[8]._sortColumns.length).toBe(1, "sort column length missmatch, index=8.");
                     expect(assetRefCompactCols[8]._sortColumns.map(function (col) {
                         return col.column.name
-                    })).toEqual(['col_asset_1'], "sort columns missmatch.");
+                    })).toEqual(['col_asset_1'], "sort columns missmatch, index=8.");
                 });
             });
 
