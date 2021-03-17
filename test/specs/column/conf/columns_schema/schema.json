@@ -1005,17 +1005,41 @@
                 },
                 {
                     "name": "col_asset_4",
+                    "comment":"column with asset annotation",
+                    "type": {
+                        "typename": "text"
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2017:asset": {
+                            "url_pattern": "/hatrac/{{col_asset_4}}",
+                            "filename_column": "col_asset_4_filename"
+                        },
+                        "tag:isrd.isi.edu,2016:column-display" : {
+                            "*" : {
+                                "markdown_pattern" : "{{col_asset_4_filename}}"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "col_asset_4_filename",
+                    "comment": "",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "col_asset_5",
                     "comment": "column with asset annotation",
                     "type": {
                         "typename": "int4"
                     },
                     "annotations": {
                         "tag:isrd.isi.edu,2017:asset": {
-                            "url_pattern": "/hatrac/{{col_asset_4}}"
+                            "url_pattern": "/hatrac/{{col_asset_5}}"
                         }
                     }
                 }
-
             ],
             "annotations": {
                 "tag:isrd.isi.edu,2016:visible-columns": {

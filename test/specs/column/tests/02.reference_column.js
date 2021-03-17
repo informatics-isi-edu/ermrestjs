@@ -155,7 +155,7 @@ exports.execute = function (options) {
                     expect(compactColumns[i].isPseudo).toBe(true, "problem with Outbound FKs, index=" + i);
                 }
 
-                for (i = 9; i < 11; i++) {
+                for (i = 9; i < 12; i++) {
                     expect(assetRefCompactCols[i].isPseudo).toBe(true, "problem with Asset index=" + i);
                 }
 
@@ -201,7 +201,7 @@ exports.execute = function (options) {
 
         describe('.isAsset, ', function () {
             it ('for PseudoColumns that are asset should return true.', function () {
-                for (var i = 8; i < 11; i++) {
+                for (var i = 8; i < 12; i++) {
                     expect(assetRefCompactCols[i].isAsset).toBe(true, "invalid isAsset for index="+ i);
                 }
             });
@@ -252,7 +252,7 @@ exports.execute = function (options) {
                     expect(compactColumns[i].table.name).toBe(tableName);
                 }
 
-                for (var i = 8; i < 11; i++) {
+                for (var i = 8; i < 12; i++) {
                     expect(assetRefCompactCols[i].table.name).toBe(tableWithAsset);
                 }
             });
@@ -365,7 +365,7 @@ exports.execute = function (options) {
                 for (var i = 17; i < 22; i++) {
                     expect(compactColumns[i].type.name).toBe("markdown");
                 }
-                for (var i = 9; i < 11; i++) {
+                for (var i = 9; i < 12; i++) {
                     expect(assetRefCompactCols[i].type.name).toBe('markdown');
                 }
 
@@ -971,7 +971,6 @@ exports.execute = function (options) {
 
             describe("for assets, ", function () {
                 it ("should return the defined column_order on the column.", function () {
-                    // 9
                     expect(assetRefCompactCols[9].sortable).toBe(true, "sortable missmatch, index=9.");
                     expect(assetRefCompactCols[9]._sortColumns.length).toBe(2, "sort column length missmatch, index=9.");
                     expect(assetRefCompactCols[9]._sortColumns.map(function (col) {
@@ -979,8 +978,16 @@ exports.execute = function (options) {
                     })).toEqual(['col_asset_2', 'col_filename'], "sort columns missmatch.");
                 });
 
+                it ("otherwise if markdown_pattern is defined, should not modify the column_order and return url column.", function () {
+                    expect(assetRefCompactCols[11].sortable).toBe(true, "sortable missmatch, index=11.");
+                    expect(assetRefCompactCols[11]._sortColumns.length).toBe(1, "sort column length missmatch, index=9.");
+                    expect(assetRefCompactCols[11]._sortColumns.map(function (col) {
+                        return col.column.name
+                    })).toEqual(['col_asset_4'], "sort columns missmatch.");
+                });
+
                 it ("otherwise if filename column is defined should return it", function () {
-                    expect(assetRefCompactCols[10].sortable).toBe(true, "sortable missmatch, index=9.");
+                    expect(assetRefCompactCols[10].sortable).toBe(true, "sortable missmatch, index=10.");
                     expect(assetRefCompactCols[10]._sortColumns.length).toBe(1, "sort column length missmatch, index=9.");
                     expect(assetRefCompactCols[10]._sortColumns.map(function (col) {
                         return col.column.name
@@ -988,7 +995,7 @@ exports.execute = function (options) {
                 });
 
                 it ("otherwise should return the url column.", function () {
-                    expect(assetRefCompactCols[8].sortable).toBe(true, "sortable missmatch, index=9.");
+                    expect(assetRefCompactCols[8].sortable).toBe(true, "sortable missmatch, index=8.");
                     expect(assetRefCompactCols[8]._sortColumns.length).toBe(1, "sort column length missmatch, index=9.");
                     expect(assetRefCompactCols[8]._sortColumns.map(function (col) {
                         return col.column.name

@@ -2579,12 +2579,25 @@ AssetPseudoColumn.prototype.formatPresentation = function(data, context, templat
     return {isHTML: true, value: module.renderMarkdown(unformatted, true), unformatted: unformatted};
 };
 
+/**
+ * @private
+ * Modify the default column_order heuristics for the asset, by using the filename
+ * if
+ *  - the filename_column is defined and valid
+ *  - column_order is not defined on the column-display
+ *  - markdown_pattern is not defined on the column-display or source definition.
+ * This has been done to ensure the sorted column is the same as displayed value.
+ * In most default cases, all the conditions will met.
+ */
 AssetPseudoColumn.prototype._determineSortable = function () {
     AssetPseudoColumn.super._determineSortable.call(this);
 
-    // if column_order is missing and filename is defined, use it
+    // if column_order is missing and it doesn't have any makrdown_pattern and
+    // filename is defined, use the filename column.
     var columnOrder = this.display.columnOrder;
-    if (this.filenameColumn && (columnOrder == undefined || columnOrder.length === 0)) {
+    if (this.filenameColumn && (columnOrder == undefined || columnOrder.length === 0) &&
+        !(this.display.sourceMarkdownPattern || this._baseCol.getDisplay(this._context).isMarkdownPattern)) {
+
         this._sortColumns_cached = [{column: this.filenameColumn}];
         this._sortable = true;
     }
