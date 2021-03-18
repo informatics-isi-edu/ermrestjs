@@ -1885,7 +1885,7 @@
                         if (attrs[0].children[0].type == "link_open") {
                             var iframeHTML = "<iframe", openingLink = attrs[0].children[0];
                             var captionLink, captionTarget= "", posTop = true, captionClass = "", captionStyle = "", figureClass = "", figureStyle = "",
-                                iframeSrc = "", frameWidth = "", fullscreenTarget = "";
+                                iframeSrc = "", frameWidth = "", widthStyles = "", fullscreenTarget = "";
                             var isYTlink = false, videoURL = "", iframeClasses = [];
 
                             // Add all attributes to the iframe
@@ -1938,6 +1938,19 @@
                                         }
 
                                         // handles `style="some: style;"` case from template
+                                        // min/max width needs to be applied to the wrapper of the caption and fullscreen button for consistent button placement
+                                        // check for min-width style
+                                        var minWidthIdx = attr[1].indexOf("min-width");
+                                        if (minWidthIdx >= 0) {
+                                            widthStyles += attr[1].substring(minWidthIdx, attr[1].indexOf(";", minWidthIdx)+1);
+                                        }
+
+                                        // check for max-width style
+                                        var maxWidthIdx = attr[1].indexOf("max-width");
+                                        if (maxWidthIdx >= 0) {
+                                            widthStyles += (minWidthIdx >= 0 ? " " : "") + attr[1].substring(maxWidthIdx, attr[1].indexOf(";", maxWidthIdx)+1);
+                                        }
+
                                         iframeHTML += " " + attr[0] + '="' + attr[1] + '"';
                                         break;
                                 }
@@ -1989,7 +2002,8 @@
                             // Checks for a width being defined. If it's defined and not a number, assume it has `px` or `%` appended already and use as is.
                             // If width is defined and is a number, assume it's in pixels and append `px`.
                             // If no width, use "100%"
-                            var contentsWidth = 'style="width: ' + (frameWidth ? (frameWidth + (isNaN(parseInt(frameWidth)) ? "" : "px")) : "100%")+ ';"';
+                            // if min/max width are defined for the iframe, apply here as well
+                            var contentsWidth = 'style="width: ' + (frameWidth ? (frameWidth + (isNaN(parseInt(frameWidth)) ? "" : "px")) : "100%") + ';' + (widthStyles ? " " + widthStyles : "" ) + '"';
 
                             // fullscreen button html that is attached to the top right corner of the iframe
                             var buttonHtml = '<div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="' + iframeSrc + '"' + fullscreenTarget + '><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div>';
