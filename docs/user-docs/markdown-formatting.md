@@ -32,8 +32,9 @@ The renderer that we use ([markdown-it](https://github.com/markdown-it/markdown-
         - [c.2. Fill container with min-width](#c2-fill-container-with-min-width)
         - [c.3. Fill container with min-width and min-height and max-height](#c3-fill-container-with-min-width-and-min-height-and-max-height)
         - [c.4. Iframe with set height and responsive width](#c4-iframe-with-set-height-and-responsive-width)
-        - [c.5. Iframe with fullscreen button hidden](#c5-iframe-with-fullscreen-button-hidden)
-        - [c.6. Iframe with fullscreen button open new tab](#c6-iframe-with-fullscreen-button-open-new-tab)
+        - [c.5. Iframe with variable height based on viewport with bounds](#c5-Iframe-with-variable-height-based-on-viewport-with-bounds)
+        - [c.6. Iframe with fullscreen button hidden](#c5-iframe-with-fullscreen-button-hidden)
+        - [c.7. Iframe with fullscreen button open new tab](#c6-iframe-with-fullscreen-button-open-new-tab)
     + [7. Dropdown download button](#7-dropdown-download-button)
     + [8. Vocabulary](#8-vocabulary)
     + [9. Youtube Video](#9-youtube-video)
@@ -587,7 +588,26 @@ To have a responsive width and a set height, do not use `chaise-autofill` and se
 ```
 
 
-#### c.5. Iframe with fullscreen button hidden
+#### c.5. Iframe with variable height based on viewport with bounds
+To create an iframe that responds to the current viewport size, set the height using `vh` units.
+
+```html
+::: iframe [CAPTION](https://example.com){style="min-height: 400px; height: 75vh; max-height: 900px;"} \n:::
+
+# OUTPUT:
+<figure class="embed-block">
+    <div class="figcaption-wrapper" style="width: 100%;">
+        <figcaption class="embed-caption">CAPTION</figcaption>
+        <div class="iframe-btn-container">
+            <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a>
+        </div>
+    </div>
+    <iframe src="https://example.com" style="min-height: 400px; height: 75vh; max-height: 900px;"></iframe>
+</figure>
+```
+
+
+#### c.6. Iframe with fullscreen button hidden
 To hide the fullscreen button, use the `fullscreen-off` class attached to the figure.
 
 ```html
@@ -606,7 +626,7 @@ To hide the fullscreen button, use the `fullscreen-off` class attached to the fi
 ```
 
 
-#### c.6. Iframe with fullscreen button open new tab
+#### c.7. Iframe with fullscreen button open new tab
 To have the fullscreen button open in a new tab, use `fullscreen-target=_blank`.
 
 ```html
