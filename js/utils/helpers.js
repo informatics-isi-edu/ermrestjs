@@ -1937,7 +1937,7 @@
                                             frameWidth = attr[1];
                                         }
 
-                                        var endStyleIdx;
+                                        var endStyleIdx, subStrStyle;
                                         // handles `style="some: style;"` case from template
                                         // min/max width needs to be applied to the wrapper of the caption and fullscreen button for consistent button placement
                                         // check for min-width style
@@ -1945,15 +1945,28 @@
                                         if (minWidthIdx >= 0) {
                                             endStyleIdx = attr[1].indexOf(";", minWidthIdx);
                                             // get the min-width `key: value` pair
-                                            widthStyles.push(attr[1].substring(minWidthIdx, endStyleIdx));
+                                            if (endStyleIdx) {
+                                                subStrStyle = attr[1].substring(minWidthIdx, endStyleIdx);
+                                            } else {
+                                                // if no `;` after min-width, assume end of string
+                                                subStrStyle = attr[1].substring(minWidthIdx);
+                                            }
+                                            widthStyles.push(subStrStyle);
                                         }
 
                                         // check for max-width style
                                         var maxWidthIdx = attr[1].indexOf("max-width");
+
                                         if (maxWidthIdx >= 0) {
                                             endStyleIdx = attr[1].indexOf(";", maxWidthIdx);
                                             // get the max-width `key: value` pair
-                                            widthStyles.push(attr[1].substring(maxWidthIdx, endStyleIdx));
+                                            if (endStyleIdx) {
+                                                subStrStyle = attr[1].substring(maxWidthIdx, endStyleIdx);
+                                            } else {
+                                                // if no `;` after max-width, assume end of string
+                                                subStrStyle = attr[1].substring(maxWidthIdx);
+                                            }
+                                            widthStyles.push(subStrStyle);
                                         }
 
                                         iframeHTML += " " + attr[0] + '="' + attr[1] + '"';
