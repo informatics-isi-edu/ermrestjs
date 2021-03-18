@@ -1885,7 +1885,7 @@
                         if (attrs[0].children[0].type == "link_open") {
                             var iframeHTML = "<iframe", openingLink = attrs[0].children[0];
                             var captionLink, captionTarget= "", posTop = true, captionClass = "", captionStyle = "", figureClass = "", figureStyle = "",
-                                iframeSrc = "", frameWidth = "", widthStyles = "", fullscreenTarget = "";
+                                iframeSrc = "", frameWidth = "", widthStyles = [], fullscreenTarget = "";
                             var isYTlink = false, videoURL = "", iframeClasses = [];
 
                             // Add all attributes to the iframe
@@ -1942,13 +1942,17 @@
                                         // check for min-width style
                                         var minWidthIdx = attr[1].indexOf("min-width");
                                         if (minWidthIdx >= 0) {
-                                            widthStyles += attr[1].substring(minWidthIdx, attr[1].indexOf(";", minWidthIdx)+1);
+                                            var endStyleIdx = attr[1].indexOf(";", minWidthIdx);
+                                            // get the min-width `key: value` pair
+                                            widthStyles.push(attr[1].substring(minWidthIdx, endStyleIdx));
                                         }
 
                                         // check for max-width style
                                         var maxWidthIdx = attr[1].indexOf("max-width");
                                         if (maxWidthIdx >= 0) {
-                                            widthStyles += (minWidthIdx >= 0 ? " " : "") + attr[1].substring(maxWidthIdx, attr[1].indexOf(";", maxWidthIdx)+1);
+                                            var endStyleIdx = attr[1].indexOf(";", maxWidthIdx);
+                                            // get the max-width `key: value` pair
+                                            widthStyles.push(attr[1].substring(maxWidthIdx, endStyleIdx));
                                         }
 
                                         iframeHTML += " " + attr[0] + '="' + attr[1] + '"';
@@ -2000,10 +2004,24 @@
                             if (fullscreenTarget) fullscreenTarget = " target=" + fullscreenTarget;
 
                             // Checks for a width being defined. If it's defined and not a number, assume it has `px` or `%` appended already and use as is.
-                            // If width is defined and is a number, assume it's in pixels and append `px`.
-                            // If no width, use "100%"
-                            // if min/max width are defined for the iframe, apply here as well
-                            var contentsWidth = 'style="width: ' + (frameWidth ? (frameWidth + (isNaN(parseInt(frameWidth)) ? "" : "px")) : "100%") + ';' + (widthStyles ? " " + widthStyles : "" ) + '"';
+                            // If no width, default to "100%"
+                            var captionContainerWidth = "100%";
+                            if (frameWidth) {
+                                captionContainerWidth = frameWidth;
+                                // If width is defined and is a number, assume it's in pixels and append `px`.
+                                captionContainerWidth += (isNaN(parseInt(frameWidth)) ? "" : "px");
+                            }
+
+                            // add separator in case more styles are appended
+                            captionContainerWidth += ";";
+
+                            // if min/max width are defined for the iframe, apply to the captiona nd button container as well
+                            if (widthStyles.length > 0) {
+                                captionContainerWidth += widthStyles.join(";");
+                            }
+
+                            // captionContainerWidth should be "<width-value>; min-width: val; max-width: val"
+                            var contentsWidthStyle = 'style="width: ' + captionContainerWidth + '"';
 
                             // fullscreen button html that is attached to the top right corner of the iframe
                             var buttonHtml = '<div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="' + iframeSrc + '"' + fullscreenTarget + '><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div>';
@@ -2011,7 +2029,7 @@
                             // Encapsulate the captionHTML inside a figcaption tag with class embed-caption
                             if (posTop) {
                                 // if caption is at the top, we need to wrap the caption and fullscreen button in a div so the width can be applied and allow the caption to flex around the button
-                                html = '<div class="figcaption-wrapper" ' + contentsWidth + '><figcaption class="embed-caption' + (captionClass.length ? (" " + captionClass) : "") +'"' + (captionStyle.length ? (' style="' + captionStyle) + '"' : "") + '>' + captionHTML + "</figcaption>" + buttonHtml + "</div>" + html;
+                                html = '<div class="figcaption-wrapper" ' + contentsWidthStyle + '><figcaption class="embed-caption' + (captionClass.length ? (" " + captionClass) : "") +'"' + (captionStyle.length ? (' style="' + captionStyle) + '"' : "") + '>' + captionHTML + "</figcaption>" + buttonHtml + "</div>" + html;
                             } else {
                                 html = buttonHtml + html + '<figcaption class="embed-caption' + (captionClass.length ? (" " + captionClass) : "") + '"' + (captionStyle.length ? (' style="' + captionStyle) + '"' : '') + '>' + captionHTML + "</figcaption>";
                             }
