@@ -1942,10 +1942,10 @@
                                         // min/max width needs to be applied to the wrapper of the caption and fullscreen button for consistent button placement
                                         // check for min-width style
                                         var minWidthIdx = attr[1].indexOf("min-width");
-                                        if (minWidthIdx >= 0) {
+                                        if (minWidthIdx != -1) {
                                             endStyleIdx = attr[1].indexOf(";", minWidthIdx);
                                             // get the min-width `key: value` pair
-                                            if (endStyleIdx) {
+                                            if (endStyleIdx != -1) {
                                                 subStrStyle = attr[1].substring(minWidthIdx, endStyleIdx);
                                             } else {
                                                 // if no `;` after min-width, assume end of string
@@ -1956,11 +1956,10 @@
 
                                         // check for max-width style
                                         var maxWidthIdx = attr[1].indexOf("max-width");
-
-                                        if (maxWidthIdx >= 0) {
+                                        if (maxWidthIdx != -1) {
                                             endStyleIdx = attr[1].indexOf(";", maxWidthIdx);
                                             // get the max-width `key: value` pair
-                                            if (endStyleIdx) {
+                                            if (endStyleIdx != -1) {
                                                 subStrStyle = attr[1].substring(maxWidthIdx, endStyleIdx);
                                             } else {
                                                 // if no `;` after max-width, assume end of string
