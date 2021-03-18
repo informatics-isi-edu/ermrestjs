@@ -1937,12 +1937,13 @@
                                             frameWidth = attr[1];
                                         }
 
+                                        var endStyleIdx;
                                         // handles `style="some: style;"` case from template
                                         // min/max width needs to be applied to the wrapper of the caption and fullscreen button for consistent button placement
                                         // check for min-width style
                                         var minWidthIdx = attr[1].indexOf("min-width");
                                         if (minWidthIdx >= 0) {
-                                            var endStyleIdx = attr[1].indexOf(";", minWidthIdx);
+                                            endStyleIdx = attr[1].indexOf(";", minWidthIdx);
                                             // get the min-width `key: value` pair
                                             widthStyles.push(attr[1].substring(minWidthIdx, endStyleIdx));
                                         }
@@ -1950,7 +1951,7 @@
                                         // check for max-width style
                                         var maxWidthIdx = attr[1].indexOf("max-width");
                                         if (maxWidthIdx >= 0) {
-                                            var endStyleIdx = attr[1].indexOf(";", maxWidthIdx);
+                                            endStyleIdx = attr[1].indexOf(";", maxWidthIdx);
                                             // get the max-width `key: value` pair
                                             widthStyles.push(attr[1].substring(maxWidthIdx, endStyleIdx));
                                         }
