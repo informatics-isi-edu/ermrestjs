@@ -113,7 +113,7 @@ exports.execute = function (options) {
             });
 
             it ("should support :::iframe.", function () {
-                // 01: Check for iframe ith height and width
+                // 01: Check for iframe with height and width
                 expect(printMarkdown('::: iframe [Chaise](https://dev.isrd.isi.edu/chaise/search){width=800 height=300} \n:::'))
                     .toBe('<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 800px;"><figcaption class="embed-caption">Chaise</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://dev.isrd.isi.edu/chaise/search"><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div></div><iframe src="https://dev.isrd.isi.edu/chaise/search" width="800" height="300"></iframe></figure>', "case 01");
 
@@ -137,6 +137,10 @@ exports.execute = function (options) {
                 var iframeHTML = '<figure class="embed-block -chaise-post-load"><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://dev.isrd.isi.edu/chaise/search"><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div><iframe src="https://dev.isrd.isi.edu/chaise/search"></iframe><figcaption class="embed-caption cclass" style="font-weight:500;">CAPTION</figcaption></figure>';
                 expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML, "case 05");
 
+                // 05.1: Check for iframe tag with min/max width applied to the iframe and the container for the caption and fullscreen button
+                var iframeMarkdown = '::: iframe [CAPTION](https://dev.isrd.isi.edu/chaise/search){style="min-width:400px; max-width:900px;"} \n:::';
+                var iframeHTML = '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 100%;min-width:400px;max-width:900px"><figcaption class="embed-caption">CAPTION</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://dev.isrd.isi.edu/chaise/search"><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div></div><iframe src="https://dev.isrd.isi.edu/chaise/search" style="min-width:400px; max-width:900px;"></iframe></figure>';
+                expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML, "case 05.1");
 
                 // 06: Check for iframe tag with a caption at the bottom with figure-style and caption-class
                 var iframeMarkdown = '::: iframe [CAPTION](https://dev.isrd.isi.edu/chaise/search){pos="bottom" caption-class="cclass" figure-style="font-weight:500;"} \n:::';

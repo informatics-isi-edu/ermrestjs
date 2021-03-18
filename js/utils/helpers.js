@@ -1885,7 +1885,7 @@
                         if (attrs[0].children[0].type == "link_open") {
                             var iframeHTML = "<iframe", openingLink = attrs[0].children[0];
                             var captionLink, captionTarget= "", posTop = true, captionClass = "", captionStyle = "", figureClass = "", figureStyle = "",
-                                iframeSrc = "", frameWidth = "", fullscreenTarget = "";
+                                iframeSrc = "", frameWidth = "", widthStyles = [], fullscreenTarget = "";
                             var isYTlink = false, videoURL = "", iframeClasses = [];
 
                             // Add all attributes to the iframe
@@ -1937,7 +1937,37 @@
                                             frameWidth = attr[1];
                                         }
 
+                                        var endStyleIdx, subStrStyle;
                                         // handles `style="some: style;"` case from template
+                                        // min/max width needs to be applied to the wrapper of the caption and fullscreen button for consistent button placement
+                                        // check for min-width style
+                                        var minWidthIdx = attr[1].indexOf("min-width");
+                                        if (minWidthIdx != -1) {
+                                            endStyleIdx = attr[1].indexOf(";", minWidthIdx);
+                                            // get the min-width `key: value` pair
+                                            if (endStyleIdx != -1) {
+                                                subStrStyle = attr[1].substring(minWidthIdx, endStyleIdx);
+                                            } else {
+                                                // if no `;` after min-width, assume end of string
+                                                subStrStyle = attr[1].substring(minWidthIdx);
+                                            }
+                                            widthStyles.push(subStrStyle);
+                                        }
+
+                                        // check for max-width style
+                                        var maxWidthIdx = attr[1].indexOf("max-width");
+                                        if (maxWidthIdx != -1) {
+                                            endStyleIdx = attr[1].indexOf(";", maxWidthIdx);
+                                            // get the max-width `key: value` pair
+                                            if (endStyleIdx != -1) {
+                                                subStrStyle = attr[1].substring(maxWidthIdx, endStyleIdx);
+                                            } else {
+                                                // if no `;` after max-width, assume end of string
+                                                subStrStyle = attr[1].substring(maxWidthIdx);
+                                            }
+                                            widthStyles.push(subStrStyle);
+                                        }
+
                                         iframeHTML += " " + attr[0] + '="' + attr[1] + '"';
                                         break;
                                 }
@@ -1987,9 +2017,24 @@
                             if (fullscreenTarget) fullscreenTarget = " target=" + fullscreenTarget;
 
                             // Checks for a width being defined. If it's defined and not a number, assume it has `px` or `%` appended already and use as is.
-                            // If width is defined and is a number, assume it's in pixels and append `px`.
-                            // If no width, use "100%"
-                            var contentsWidth = 'style="width: ' + (frameWidth ? (frameWidth + (isNaN(parseInt(frameWidth)) ? "" : "px")) : "100%")+ ';"';
+                            // If no width, default to "100%"
+                            var captionContainerWidth = "100%";
+                            if (frameWidth) {
+                                captionContainerWidth = frameWidth;
+                                // If width is defined and is a number, assume it's in pixels and append `px`.
+                                captionContainerWidth += (isNaN(parseInt(frameWidth)) ? "" : "px");
+                            }
+
+                            // add separator in case more styles are appended
+                            captionContainerWidth += ";";
+
+                            // if min/max width are defined for the iframe, apply to the captiona nd button container as well
+                            if (widthStyles.length > 0) {
+                                captionContainerWidth += widthStyles.join(";");
+                            }
+
+                            // captionContainerWidth should be "<width-value>; min-width: val; max-width: val"
+                            var contentsWidthStyle = 'style="width: ' + captionContainerWidth + '"';
 
                             // fullscreen button html that is attached to the top right corner of the iframe
                             var buttonHtml = '<div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="' + iframeSrc + '"' + fullscreenTarget + '><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div>';
@@ -1997,7 +2042,7 @@
                             // Encapsulate the captionHTML inside a figcaption tag with class embed-caption
                             if (posTop) {
                                 // if caption is at the top, we need to wrap the caption and fullscreen button in a div so the width can be applied and allow the caption to flex around the button
-                                html = '<div class="figcaption-wrapper" ' + contentsWidth + '><figcaption class="embed-caption' + (captionClass.length ? (" " + captionClass) : "") +'"' + (captionStyle.length ? (' style="' + captionStyle) + '"' : "") + '>' + captionHTML + "</figcaption>" + buttonHtml + "</div>" + html;
+                                html = '<div class="figcaption-wrapper" ' + contentsWidthStyle + '><figcaption class="embed-caption' + (captionClass.length ? (" " + captionClass) : "") +'"' + (captionStyle.length ? (' style="' + captionStyle) + '"' : "") + '>' + captionHTML + "</figcaption>" + buttonHtml + "</div>" + html;
                             } else {
                                 html = buttonHtml + html + '<figcaption class="embed-caption' + (captionClass.length ? (" " + captionClass) : "") + '"' + (captionStyle.length ? (' style="' + captionStyle) + '"' : '') + '>' + captionHTML + "</figcaption>";
                             }
