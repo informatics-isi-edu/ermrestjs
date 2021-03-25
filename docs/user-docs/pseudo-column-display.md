@@ -53,7 +53,7 @@ Apart from accessing the source definitions, you can access the current pseudo-c
       ]
     }
     ```
-    Example: `{{#each $self}}[{{{this.rowName}}}]({{{this.uri.detailed}}}){{/each}}`
+    Example (using [handlebars](handlebars.md)): `{{#each $self}}[{{{this.rowName}}}]({{{this.uri.detailed}}}){{/each}}`
 
 
 2. **Entity `array` or `array_d` aggregate**
@@ -76,7 +76,7 @@ Apart from accessing the source definitions, you can access the current pseudo-c
       ]
     }
     ```
-    Example: `{{#each $self}}[{{{this.rowName}}}]({{{this.uri.detailed}}}){{/each}}`
+    Example (using [handlebars](handlebars.md)): `{{#each $self}}[{{{this.rowName}}}]({{{this.uri.detailed}}}){{/each}}`
 
 
 3. **All-outbound entity**:
@@ -181,7 +181,7 @@ Assume the following is the ERD and we're writing these annotations for the tabl
     }
     ```
 
-    Examples:
+    Examples (using [handlebars](handlebars.md)):
       - A list of comma-seperated clickable row-names.
         ```
         {{#each $self}}
@@ -219,7 +219,7 @@ Assume the following is the ERD and we're writing these annotations for the tabl
     }
     ```
 
-    Examples:
+    Examples (using [handlebars](handlebars.md)):
 
     - A list of comma-seperated clickable row-names.
       ```
@@ -280,7 +280,7 @@ Assume the following is the ERD and we're writing these annotations for the tabl
     }
     ```
 
-    Examples:
+    Examples (using [handlebars](handlebars.md)):
 
     - Show formatted value with condition:
     ```
@@ -326,7 +326,7 @@ Assume the following is the ERD and we're writing these annotations for the tabl
     }
     ```
 
-    Examples:
+    Examples (using [handlebars](handlebars.md)):
 
     - Check whether at least one value exists in a path (based on first defined column with `"aggregate": "cnt"`).
 
