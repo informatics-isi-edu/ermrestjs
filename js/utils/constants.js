@@ -1,3 +1,8 @@
+    module._ERMrestFeatures = Object.freeze({
+        TABLE_RIGHTS_SUMMARY: "trs",
+        TABLE_COL_RIGHTS_SUMMARY: "tcrs"
+    });
+
     // for more information on url length limit refer to the following issue:
     // https://github.com/informatics-isi-edu/chaise/issues/1669
     module.URL_PATH_LENGTH_LIMIT = 4000;

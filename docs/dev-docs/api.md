@@ -82,6 +82,7 @@ to use for ERMrest JavaScript agents.
         * [.cid](#ERMrest.Server+cid) : <code>string</code>
         * [.pid](#ERMrest.Server+pid) : <code>string</code>
         * [.catalogs](#ERMrest.Server+catalogs) : [<code>Catalogs</code>](#ERMrest.Catalogs)
+        * [.features](#ERMrest.Server+features) : <code>Object</code>
         * [.logClientAction(headers)](#ERMrest.Server+logClientAction)
     * [.Catalogs](#ERMrest.Catalogs)
         * [new Catalogs(server)](#new_ERMrest.Catalogs_new)
@@ -732,7 +733,7 @@ to use for ERMrest JavaScript agents.
         * [.displayname](#ERMrest.AttributeGroupTuple+displayname) : <code>string</code>
     * [.BucketAttributeGroupReference](#ERMrest.BucketAttributeGroupReference) : <code>object</code>
     * [.configure(http, q)](#ERMrest.configure)
-    * [.getServer(uri, [contextHeaderParams])](#ERMrest.getServer) ⇒ [<code>Server</code>](#ERMrest.Server)
+    * [.getServer(uri, [contextHeaderParams])](#ERMrest.getServer) ⇒ <code>Promise</code>
     * [.parse(uri, catalogObject)](#ERMrest.parse) ⇒ <code>ERMrest.Location</code>
     * [.resolve(uri, [contextHeaderParams])](#ERMrest.resolve) ⇒ <code>Promise</code>
     * [.getElapsedTime()](#ERMrest.getElapsedTime) ⇒ <code>integer</code>
@@ -749,6 +750,7 @@ to use for ERMrest JavaScript agents.
     * [.cid](#ERMrest.Server+cid) : <code>string</code>
     * [.pid](#ERMrest.Server+pid) : <code>string</code>
     * [.catalogs](#ERMrest.Server+catalogs) : [<code>Catalogs</code>](#ERMrest.Catalogs)
+    * [.features](#ERMrest.Server+features) : <code>Object</code>
     * [.logClientAction(headers)](#ERMrest.Server+logClientAction)
 
 <a name="new_ERMrest.Server_new"></a>
@@ -787,6 +789,12 @@ page-id: shows the id of the page that this server is being used for
 <a name="ERMrest.Server+catalogs"></a>
 
 #### server.catalogs : [<code>Catalogs</code>](#ERMrest.Catalogs)
+**Kind**: instance property of [<code>Server</code>](#ERMrest.Server)  
+<a name="ERMrest.Server+features"></a>
+
+#### server.features : <code>Object</code>
+The ERMrest features that the server supports
+
 **Kind**: instance property of [<code>Server</code>](#ERMrest.Server)  
 <a name="ERMrest.Server+logClientAction"></a>
 
@@ -7592,13 +7600,14 @@ This function is used to configure the module
 
 <a name="ERMrest.getServer"></a>
 
-### ERMrest.getServer(uri, [contextHeaderParams]) ⇒ [<code>Server</code>](#ERMrest.Server)
+### ERMrest.getServer(uri, [contextHeaderParams]) ⇒ <code>Promise</code>
 ERMrest server factory creates or reuses ERMrest.Server instances. The
 URI should be to the ERMrest _service_. For example,
 `https://www.example.org/ermrest`.
 
 **Kind**: static method of [<code>ERMrest</code>](#ERMrest)  
-**Returns**: [<code>Server</code>](#ERMrest.Server) - Returns a server instance.  
+**Returns**: <code>Promise</code> - A promise resolved with a [Server](#ERMrest.Server) object
+or rejected if the server was not reachable.  
 **Throws**:
 
 - [<code>InvalidInputError</code>](#ERMrest.InvalidInputError) URI is missing

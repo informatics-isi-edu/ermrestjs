@@ -8,7 +8,7 @@ exports.execute = (options) => {
     };
 
     var removeCachedCatalog = function (catalogId) {
-        utils.removeCachedCatalog(options.ermRest, catalogId)
+        return utils.removeCachedCatalog(options.ermRest, catalogId)
     };
 
     describe("For determining reference object permissions,", () => {
@@ -181,9 +181,10 @@ exports.execute = (options) => {
             describe("Table with anonymous context should return false for select, insert, update and delete.,", () => {
 
                 beforeAll((done) => {
-                    removeCachedCatalog(catalogId);
-                    options.ermRest.resetUserCookie();
-                    options.ermRest.resolve(tablePermUri, { cid: "test" }).then((response) => {
+                    removeCachedCatalog(catalogId).then(() => {
+                        options.ermRest.resetUserCookie();
+                        return options.ermRest.resolve(tablePermUri, { cid: "test" });
+                    }).then((response) => {
                         reference = response;
                         done();
                     }, (err) => {
@@ -286,9 +287,10 @@ exports.execute = (options) => {
             describe("Table with anonymous context should return true for select and update, and false for insert and delete,", () => {
 
                 beforeAll((done) => {
-                    removeCachedCatalog(catalogId);
-                    options.ermRest.resetUserCookie();
-                    options.ermRest.resolve(tablePermUri, { cid: "test" }).then((response) => {
+                    removeCachedCatalog(catalogId).then(() => {
+                        options.ermRest.resetUserCookie();
+                        return options.ermRest.resolve(tablePermUri, { cid: "test" });
+                    }).then((response) => {
                         reference = response;
                         done();
                     }, (err) => {
@@ -538,15 +540,14 @@ exports.execute = (options) => {
 
             afterAll((done) => {
                 options.ermRest.setUserCookie(process.env.AUTH_COOKIE);
-                removeCachedCatalog(catalogId);
-
-                utils.resetCatalogAcls(done, {
-                    "catalog": {
-                        "id": catalogId,
-                        "acls": {
-                            "enumerate": ["*"]
-                        },
-                        "schemas" : {
+                removeCachedCatalog(catalogId).then(() => {
+                    utils.resetCatalogAcls(done, {
+                        "catalog": {
+                            "id": catalogId,
+                            "acls": {
+                                "enumerate": ["*"]
+                            },
+                            "schemas" : {
                             "permission_schema": {
                                 "tables" : {
                                     "perm_table": {
@@ -575,7 +576,8 @@ exports.execute = (options) => {
                                 }
                             }
                         }
-                    }
+                        }
+                    });
                 });
             });
         });

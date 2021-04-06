@@ -571,7 +571,8 @@ exports.execute = function (options) {
 
                             // make sure the next test cases are using the correct user
                             options.ermRest.setUserCookie(process.env.AUTH_COOKIE);
-                            utils.removeCachedCatalog(options.ermRest, catalog_id);
+                            return utils.removeCachedCatalog(options.ermRest, catalog_id);
+                        }).then(function () {
                             done();
                         }).catch(function (error) {
                             done.fail(error);

@@ -1,4 +1,5 @@
 var ermrestImport = require(process.env.PWD + '/test/utils/ermrest-import.js');
+var q = require('q');
 
 /**
  * @param {Array} pageData - data returned from update request
@@ -29,7 +30,8 @@ exports.checkPageValues = function(pageData, tuples, sortBy) {
 
 exports.setCatalogAcls = function (ERMrest, done, uri, catalogId, acls, cb, userCookie) {
     ermrestImport.importAcls(acls).then(function () {
-        exports.removeCachedCatalog(ERMrest, catalogId);
+        return exports.removeCachedCatalog(ERMrest, catalogId);
+    }).then(function () {
         if (userCookie) {
             ERMrest.setUserCookie(userCookie);
         } else {
@@ -45,8 +47,14 @@ exports.setCatalogAcls = function (ERMrest, done, uri, catalogId, acls, cb, user
 };
 
 exports.removeCachedCatalog = function (ERMrest, catalogId) {
-    var server = ERMrest.ermrestFactory.getServer(process.env.ERMREST_URL, {cid: "test"});
-    delete server.catalogs._catalogs[catalogId];
+    var defer = q.defer();
+    ERMrest.ermrestFactory.getServer(process.env.ERMREST_URL, {cid: "test"}).then(function (server) {
+        delete server.catalogs._catalogs[catalogId];
+        defer.resolve();
+    }).catch(function (err) {
+        defer.reject(err);
+    });
+    return defer.promise;
 };
 
 exports.resetCatalogAcls = function (done, acls) {

@@ -1,5 +1,5 @@
 var nock = require('nock');
-var server, ermRest, ermrestUrl, ops = {allowUnmocked: true};
+var ops = {allowUnmocked: true};
 
 var errorCodes = {
     "400" : { type: "BadRequestError", status: "Bad Request" },
@@ -11,14 +11,12 @@ var errorCodes = {
     "503" : { type: "ServiceUnavailableError", status: "Service Unavailable" }
 };
 
-exports.setup = function(options) {
-    server = options.server;
-    ermRest = options.ermRest;
-    ermrestUrl = options.url.replace('ermrest', '');
-};
 
-exports.testForErrors = function(method, errorTypes, cb, message, mockUrl) {
+exports.testForErrors = function(testOptions, method, errorTypes, cb, message, mockUrl) {
     if (!cb || typeof cb != 'function' || !message) return;
+
+    var ermRest = testOptions.ermRest;
+    var ermrestUrl = testOptions.url.replace('ermrest', '');
 
     errorTypes.forEach(function(et) {
 
@@ -43,6 +41,9 @@ exports.testForErrors = function(method, errorTypes, cb, message, mockUrl) {
             + (error.code != undefined  ? (error.code + " ") : "")
             + error.type
             + " on " + message, function(done) {
+
+            // must be here
+            var server = testOptions.server;
 
             if (mockUrl) {
                 // the url path to "mock"

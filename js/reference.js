@@ -114,17 +114,19 @@
         try {
             verify(uri, "'uri' must be specified");
             var location;
-
             // make sure all the dependencies are loaded
             module.onload().then(function () {
-            //added try block to make sure it rejects all parse() related error
-            // It should have been taken care by outer try but did not work
-              try{
-                location = module.parse(uri);
-              } catch (error){
-                return defer.reject(error);
-              }
-                var server = module.ermrestFactory.getServer(location.service, contextHeaderParams);
+                //added try block to make sure it rejects all parse() related error
+                // It should have been taken care by outer try but did not work
+                try{
+                    location = module.parse(uri);
+                } catch (error){
+                    return defer.reject(error);
+                }
+
+                // fetch the server
+                return module.ermrestFactory.getServer(location.service, contextHeaderParams);
+            }).then(function (server) {
 
                 // find the catalog
                 return server.catalogs.get(location.catalog);
