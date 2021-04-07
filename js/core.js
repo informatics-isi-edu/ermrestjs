@@ -212,7 +212,7 @@
         this.features = {};
 
         for (var f in module._ERMrestFeatures) {
-            this.features[f] = false;
+            this.features[module._ERMrestFeatures[f]] = false;
         }
 
         /**

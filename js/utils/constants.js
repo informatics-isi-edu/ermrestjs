@@ -272,7 +272,8 @@
         TABLE_IMMUTABLE: "Table is immutable.",
         NO_CREATE: "No permissions to create.",
         NO_UPDATE: "No permissions to update.",
-        DISABLED_COLUMNS: "All columns are disabled."
+        DISABLED_COLUMNS: "All columns are disabled.",
+        NO_UPDATE_ROW: "No row-level permission to update."
     });
 
     module._defaultColumnComment = Object.freeze({

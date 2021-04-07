@@ -1018,9 +1018,10 @@
 
         /**
          * Indicates whether the client has the permission to _create_
-         * the referenced resource(s). In some cases, this permission cannot
-         * be determined and the value will be `undefined`.
-         * @type {(boolean|undefined)}
+         * the referenced resource(s). Reporting a `true` value DOES NOT
+         * guarantee the user right since some policies may be undecidable until
+         * query execution.
+         * @type {boolean}
          */
         get canCreate() {
             if (this._canCreate === undefined) {
@@ -1060,10 +1061,9 @@
         },
 
         /**
-         * Indicates the reason as to why a user cannot create for
-         * the referenced resource(s). In some cases, this won't be set
-         * because the user can create, so the value will be `undefined`.
-         * @type {(String|undefined)}
+         * Indicates the reason as to why a user cannot create the
+         * referenced resource(s).
+         * @type {String}
          */
         get canCreateReason() {
             if (this._canCreateReason === undefined) {
@@ -1075,9 +1075,10 @@
 
         /**
          * Indicates whether the client has the permission to _read_
-         * the referenced resource(s). In some cases, this permission cannot
-         * be determined and the value will be `undefined`.
-         * @type {(boolean|undefined)}
+         * the referenced resource(s). Reporting a `true` value DOES NOT
+         * guarantee the user right since some policies may be undecidable until
+         * query execution.
+         * @type {boolean}
          */
         get canRead() {
             if (this._canRead === undefined) {
@@ -1088,9 +1089,10 @@
 
         /**
          * Indicates whether the client has the permission to _update_
-         * the referenced resource(s). In some cases, this permission cannot
-         * be determined and the value will be `undefined`.
-         * @type {(boolean|undefined)}
+         * the referenced resource(s). Reporting a `true` value DOES NOT
+         * guarantee the user right since some policies may be undecidable until
+         * query execution.
+         * @type {boolean}
          */
         get canUpdate() {
 
@@ -1134,10 +1136,9 @@
         },
 
         /**
-         * Indicates the reason as to why a user cannot update for
-         * the referenced resource(s). In some cases, this won't be set
-         * because the user can update, so the value will be `undefined`.
-         * @type {(String|undefined)}
+         * Indicates the reason as to why a user cannot update the
+         * referenced resource(s).
+         * @type {String}
          */
         get canUpdateReason() {
             if (this._canUpdateReason === undefined) {
@@ -1149,9 +1150,10 @@
 
         /**
          * Indicates whether the client has the permission to _delete_
-         * the referenced resource(s). In some cases, this permission cannot
-         * be determined and the value will be `undefined`.
-         * @type {(boolean|undefined)}
+         * the referenced resource(s). Reporting a `true` value DOES NOT
+         * guarantee the user right since some policies may be undecidable until
+         * query execution.
+         * @type {boolean}
          */
         get canDelete() {
 
@@ -3522,6 +3524,18 @@
             return this._citation;
         },
 
+        get hasTableRightsSummary () {
+            if (this._hasTableRightsSummary === undefined) {
+                var rightKey = module._ERMrestFeatures.TABLE_RIGHTS_SUMMARY;
+                if (this._context === module._contexts.EDIT) {
+                    rightKey = module._ERMrestFeatures.TABLE_COL_RIGHTS_SUMMARY;
+                }
+                var feature = this.table.schema.catalog.server.features[rightKey] === true;
+                this._hasTableRightsSummary = feature && this.table.columns.has("RID");
+            }
+            return this._hasTableRightsSummary;
+        },
+
         /**
          * Generate a related reference given a foreign key and tuple.
          *
@@ -3922,20 +3936,21 @@
             this._location.sortObject = sortObject;
 
             var uri = this._location.ermrestCompactPath; // used for the http request
-            var isAttributeGroup = !useEntity && allOutBounds.length > 0;
+            var isAttributeGroup = !useEntity && ((allOutBounds.length > 0) || this.hasTableRightsSummary);
 
             /** Change api to attributegroup for retrieving extra information
              * These information include:
              * - Values for the foreignkeys.
              * - Value for one-to-one pseudo-columns. These are the columns
              * that their defined path is all in the outbound direction.
+             * - trs and tcrs if features are supported
              *
              * This will just affect the http request and not this._location
              *
              * NOTE:
              * This piece of code is dependent on the same assumptions as the current parser, which are:
-             *   0. There is no table called `T`, `M`, `F1`, `F2`, ..., `P1`, `P2`, ...
-             *   1. There is no alias in url (more precisely `T`, `M`, `F1`, `F2`, `F3`, `P1`, `P2`, ...)
+             *   0. There is no table called `T`, `M`, `F1`, `F2`, ...
+             *   1. There is no alias in url (more precisely `T`, `M`, `F1`, `F2`, `F3`, ...)
              *   2. Filter comes before the link syntax.
              *   3. There is no trailing `/` in uri (as it will break the ermrest too).
              * */
@@ -3945,7 +3960,8 @@
                     aggList = [],
                     sortColumn,
                     addedCols,
-                    aggFn = "array_d";
+                    aggFn = "array_d",
+                    rightSummFn;
 
                 // generate the projection for given pseudo column
                 var getPseudoPath = function (l) {
@@ -3966,6 +3982,15 @@
 
                     // F2:array_d(F2:*),F1:array_d(F1:*)
                     aggList.push("F" + (k+1) + ":=" + aggFn + "(F" + (k+1) + ":*)");
+                }
+
+                // add trs/tcrs
+                if (this.hasTableRightsSummary) {
+                    rightSummFn = module._ERMrestFeatures.TABLE_RIGHTS_SUMMARY;
+                    if (this._context === module._contexts.EDIT) {
+                        rightSummFn = module._ERMrestFeatures.TABLE_COL_RIGHTS_SUMMARY;
+                    }
+                    aggList.push("F" + (allOutBounds.length+1) + ":=" + rightSummFn + "(" + mainTableAlias + ":RID" + ")");
                 }
 
                 // add sort columns (it will include the key)
@@ -3990,7 +4015,7 @@
                     }
                 }
 
-                uri += Object.keys(addedCols).join(",") + ";"+mainTableAlias+":=" + aggFn + "("+mainTableAlias+":*)," + aggList.join(",");
+                uri += Object.keys(addedCols).join(",") + ";" + mainTableAlias + ":=" + aggFn + "(" + mainTableAlias + ":*)," + aggList.join(",");
             }
 
             // insert @sort()
@@ -4528,8 +4553,22 @@
          */
         this._linkedData = [];
         this._data = [];
+        this._rightsSummary = [];
 
-        var allOutBounds = reference.activeList.allOutBounds;
+        var self = this,
+            allOutBounds = reference.activeList.allOutBounds;
+
+        if (reference.hasTableRightsSummary) {
+            try {
+                var key = "F" + (allOutBounds.length);
+                data.forEeach(function (d) {
+                    if (key in d) {
+                        this._rightsSummary.push(d[key]);
+                        delete d[key];
+                    }
+                });
+            } catch (exp) {}
+        }
 
         // linkedData will include foreign key data
         if (allOutBounds.length > 0) {
@@ -4635,7 +4674,7 @@
             if (this._tuples === undefined) {
                 this._tuples = [];
                 for (var i = 0; i < this._data.length; i++) {
-                    this._tuples.push(new Tuple(this._ref, this, this._data[i], this._linkedData[i]));
+                    this._tuples.push(new Tuple(this._ref, this, this._data[i], this._linkedData[i], this._rightsSummary[i]));
                 }
             }
             return this._tuples;
@@ -4925,11 +4964,12 @@
      * this data was acquired.
      * @param {!Object} data The unprocessed tuple of data returned from ERMrest.
      */
-    function Tuple(pageReference, page, data, linkedData) {
+    function Tuple(pageReference, page, data, linkedData, rightsSummary) {
         this._pageRef = pageReference;
         this._page = page;
         this._data = data || {};
         this._linkedData = (typeof linkedData === "object") ? linkedData : {};
+        this._rightsSummary = (typeof rightsSummary === "object") ? rightsSummary : {};
     }
 
     Tuple.prototype = {
@@ -5043,41 +5083,89 @@
             notimplemented();
         },
 
-        /**
-         * Indicates whether the client can update this tuple. Because
-         * some policies may be undecidable until query execution, this
-         * property may also be `undefined`.
-         *
-         * Usage:
-         * ```
-         * if (tuple.canUpdate == true) {
-         *   console.log(tuple.displayname, "can be updated by this client");
-         * }
-         * else if (tuple.canUpdate == false) {
-         *   console.log(tuple.displayname, "cannot be updated by this client");
-         * }
-         * else {
-         *   console.log(tuple.displayname, "update permission cannot be determied");
-         * }
-         * ```
-         * @type {(boolean|undefined)}
-         */
-        get canUpdate() {
-            // catalog/ + id + /meta/content_read_user
-            // content_write_user
-            notimplemented();
+        _checkPermissions: function (permission, colName) {
+            var sum = this._rightsSummary[permission];
+
+            if (permission === "column_update") {
+                if (isObjectAndNotNull(sum) && typeof sum[colName] !== 'boolean') return true;
+                return sum[colName];
+            }
+
+            if (typeof sum !== 'boolean') return true;
+            return this._rightsSummary[permission];
         },
 
         /**
-         * Indicates whether the client can delete this tuple. Because
-         * some policies may be undecidable until query execution, this
-         * property may also be `undefined`.
+         * Indicates whether the client can update this tuple. Reporting a `true`
+         * value DOES NOT guarantee the user right since some policies may be
+         * undecidable until query execution.
          *
-         * See {@link ERMrest.Tuple#canUpdate} for a usage example.
-         * @type {(boolean|undefined)}
+         * Usage:
+         * ```
+         * if (tuple.canUpdate) {
+         *   console.log(tuple.displayname, "may be updated by this client");
+         * }
+         * else {
+         *   console.log(tuple.displayname, "cannot be updated by this client");
+         * }
+         * ```
+         * @type {boolean}
+         */
+        get canUpdate() {
+            if (this._canUpdate === undefined) {
+                var pm = module._permissionMessages;
+
+                this._canUpdate = true;
+
+                // make sure table can be updated
+                if (!this._pageRef.canUpdate) {
+                    this._canUpdate = false;
+                    this._canUpdateReason = this._pageRef.canUpdateReason;
+                }
+                // check row level permission
+                else if (!this._checkPermissions("update")) {
+                    this._canUpdate = false;
+                    this._canUpdateReason = pm.NO_UPDATE_ROW;
+                }
+            }
+            return this._canUpdate;
+         },
+
+         /**
+          * Indicates the reason as to why a user cannot update this tuple.
+          * @type {String}
+          */
+         get canUpdateReason () {
+             if (this._canUpdateReason === undefined) {
+                 // will generate the reason
+                 var bool = this._canUpdate;
+             }
+             return this._canUpdateReason;
+
+         },
+
+        /**
+         * Indicates whether the client can delete this tuple. Reporting a `true`
+         * value DOES NOT guarantee the user right since some policies may be
+         * undecidable until query execution.
+         *
+         * Usage:
+         * ```
+         * if (tuple.canDelete) {
+         *   console.log(tuple.displayname, "may be deleted by this client");
+         * }
+         * else {
+         *   console.log(tuple.displayname, "cannot be deleted by this client");
+         * }
+         * ```
+         * @type {boolean}
          */
         get canDelete() {
-            notimplemented();
+            if (this._canDelete === undefined) {
+                // make sure table and row can be updated
+                this._canDelete = this._pageRef.canDelete && this._checkPermissions("delete");
+            }
+            return this._canDelete;
         },
 
         /**

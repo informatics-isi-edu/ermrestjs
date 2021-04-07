@@ -349,12 +349,12 @@ to use for ERMrest JavaScript agents.
         * [.searchColumns](#ERMrest.Reference+searchColumns) : <code>Array.&lt;ERMRest.ReferenceColumn&gt;</code> \| <code>false</code>
         * [.location](#ERMrest.Reference+location) ⇒ <code>ERMrest.Location</code>
         * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
-        * [.canCreate](#ERMrest.Reference+canCreate) : <code>boolean</code> \| <code>undefined</code>
-        * [.canCreateReason](#ERMrest.Reference+canCreateReason) : <code>String</code> \| <code>undefined</code>
-        * [.canRead](#ERMrest.Reference+canRead) : <code>boolean</code> \| <code>undefined</code>
-        * [.canUpdate](#ERMrest.Reference+canUpdate) : <code>boolean</code> \| <code>undefined</code>
-        * [.canUpdateReason](#ERMrest.Reference+canUpdateReason) : <code>String</code> \| <code>undefined</code>
-        * [.canDelete](#ERMrest.Reference+canDelete) : <code>boolean</code> \| <code>undefined</code>
+        * [.canCreate](#ERMrest.Reference+canCreate) : <code>boolean</code>
+        * [.canCreateReason](#ERMrest.Reference+canCreateReason) : <code>String</code>
+        * [.canRead](#ERMrest.Reference+canRead) : <code>boolean</code>
+        * [.canUpdate](#ERMrest.Reference+canUpdate) : <code>boolean</code>
+        * [.canUpdateReason](#ERMrest.Reference+canUpdateReason) : <code>String</code>
+        * [.canDelete](#ERMrest.Reference+canDelete) : <code>boolean</code>
         * [.display](#ERMrest.Reference+display) : <code>Object</code>
         * [.related](#ERMrest.Reference+related) : [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
         * [.unfilteredReference](#ERMrest.Reference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
@@ -400,8 +400,9 @@ to use for ERMrest JavaScript agents.
         * [.linkedData](#ERMrest.Tuple+linkedData) : <code>Object</code>
         * [.data](#ERMrest.Tuple+data) : <code>Object</code>
         * [.data](#ERMrest.Tuple+data)
-        * [.canUpdate](#ERMrest.Tuple+canUpdate) : <code>boolean</code> \| <code>undefined</code>
-        * [.canDelete](#ERMrest.Tuple+canDelete) : <code>boolean</code> \| <code>undefined</code>
+        * [.canUpdate](#ERMrest.Tuple+canUpdate) : <code>boolean</code>
+        * [.canUpdateReason](#ERMrest.Tuple+canUpdateReason) : <code>String</code>
+        * [.canDelete](#ERMrest.Tuple+canDelete) : <code>boolean</code>
         * [.values](#ERMrest.Tuple+values) : <code>Array.&lt;string&gt;</code>
         * [.isHTML](#ERMrest.Tuple+isHTML) : <code>Array.&lt;boolean&gt;</code>
         * [.displayname](#ERMrest.Tuple+displayname) : <code>string</code>
@@ -669,12 +670,12 @@ to use for ERMrest JavaScript agents.
         * [.searchColumns](#ERMrest.Reference+searchColumns) : <code>Array.&lt;ERMRest.ReferenceColumn&gt;</code> \| <code>false</code>
         * [.location](#ERMrest.Reference+location) ⇒ <code>ERMrest.Location</code>
         * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
-        * [.canCreate](#ERMrest.Reference+canCreate) : <code>boolean</code> \| <code>undefined</code>
-        * [.canCreateReason](#ERMrest.Reference+canCreateReason) : <code>String</code> \| <code>undefined</code>
-        * [.canRead](#ERMrest.Reference+canRead) : <code>boolean</code> \| <code>undefined</code>
-        * [.canUpdate](#ERMrest.Reference+canUpdate) : <code>boolean</code> \| <code>undefined</code>
-        * [.canUpdateReason](#ERMrest.Reference+canUpdateReason) : <code>String</code> \| <code>undefined</code>
-        * [.canDelete](#ERMrest.Reference+canDelete) : <code>boolean</code> \| <code>undefined</code>
+        * [.canCreate](#ERMrest.Reference+canCreate) : <code>boolean</code>
+        * [.canCreateReason](#ERMrest.Reference+canCreateReason) : <code>String</code>
+        * [.canRead](#ERMrest.Reference+canRead) : <code>boolean</code>
+        * [.canUpdate](#ERMrest.Reference+canUpdate) : <code>boolean</code>
+        * [.canUpdateReason](#ERMrest.Reference+canUpdateReason) : <code>String</code>
+        * [.canDelete](#ERMrest.Reference+canDelete) : <code>boolean</code>
         * [.display](#ERMrest.Reference+display) : <code>Object</code>
         * [.related](#ERMrest.Reference+related) : [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
         * [.unfilteredReference](#ERMrest.Reference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
@@ -2874,12 +2875,12 @@ Constructor for a ParsedFilter.
     * [.searchColumns](#ERMrest.Reference+searchColumns) : <code>Array.&lt;ERMRest.ReferenceColumn&gt;</code> \| <code>false</code>
     * [.location](#ERMrest.Reference+location) ⇒ <code>ERMrest.Location</code>
     * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
-    * [.canCreate](#ERMrest.Reference+canCreate) : <code>boolean</code> \| <code>undefined</code>
-    * [.canCreateReason](#ERMrest.Reference+canCreateReason) : <code>String</code> \| <code>undefined</code>
-    * [.canRead](#ERMrest.Reference+canRead) : <code>boolean</code> \| <code>undefined</code>
-    * [.canUpdate](#ERMrest.Reference+canUpdate) : <code>boolean</code> \| <code>undefined</code>
-    * [.canUpdateReason](#ERMrest.Reference+canUpdateReason) : <code>String</code> \| <code>undefined</code>
-    * [.canDelete](#ERMrest.Reference+canDelete) : <code>boolean</code> \| <code>undefined</code>
+    * [.canCreate](#ERMrest.Reference+canCreate) : <code>boolean</code>
+    * [.canCreateReason](#ERMrest.Reference+canCreateReason) : <code>String</code>
+    * [.canRead](#ERMrest.Reference+canRead) : <code>boolean</code>
+    * [.canUpdate](#ERMrest.Reference+canUpdate) : <code>boolean</code>
+    * [.canUpdateReason](#ERMrest.Reference+canUpdateReason) : <code>String</code>
+    * [.canDelete](#ERMrest.Reference+canDelete) : <code>boolean</code>
     * [.display](#ERMrest.Reference+display) : <code>Object</code>
     * [.related](#ERMrest.Reference+related) : [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
     * [.unfilteredReference](#ERMrest.Reference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
@@ -3080,50 +3081,52 @@ console.log("This reference is unique?", (reference.isUnique ? 'yes' : 'no'));
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+canCreate"></a>
 
-#### reference.canCreate : <code>boolean</code> \| <code>undefined</code>
+#### reference.canCreate : <code>boolean</code>
 Indicates whether the client has the permission to _create_
-the referenced resource(s). In some cases, this permission cannot
-be determined and the value will be `undefined`.
+the referenced resource(s). Reporting a `true` value DOES NOT
+guarantee the user right since some policies may be undecidable until
+query execution.
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+canCreateReason"></a>
 
-#### reference.canCreateReason : <code>String</code> \| <code>undefined</code>
-Indicates the reason as to why a user cannot create for
-the referenced resource(s). In some cases, this won't be set
-because the user can create, so the value will be `undefined`.
+#### reference.canCreateReason : <code>String</code>
+Indicates the reason as to why a user cannot create the
+referenced resource(s).
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+canRead"></a>
 
-#### reference.canRead : <code>boolean</code> \| <code>undefined</code>
+#### reference.canRead : <code>boolean</code>
 Indicates whether the client has the permission to _read_
-the referenced resource(s). In some cases, this permission cannot
-be determined and the value will be `undefined`.
+the referenced resource(s). Reporting a `true` value DOES NOT
+guarantee the user right since some policies may be undecidable until
+query execution.
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+canUpdate"></a>
 
-#### reference.canUpdate : <code>boolean</code> \| <code>undefined</code>
+#### reference.canUpdate : <code>boolean</code>
 Indicates whether the client has the permission to _update_
-the referenced resource(s). In some cases, this permission cannot
-be determined and the value will be `undefined`.
+the referenced resource(s). Reporting a `true` value DOES NOT
+guarantee the user right since some policies may be undecidable until
+query execution.
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+canUpdateReason"></a>
 
-#### reference.canUpdateReason : <code>String</code> \| <code>undefined</code>
-Indicates the reason as to why a user cannot update for
-the referenced resource(s). In some cases, this won't be set
-because the user can update, so the value will be `undefined`.
+#### reference.canUpdateReason : <code>String</code>
+Indicates the reason as to why a user cannot update the
+referenced resource(s).
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+canDelete"></a>
 
-#### reference.canDelete : <code>boolean</code> \| <code>undefined</code>
+#### reference.canDelete : <code>boolean</code>
 Indicates whether the client has the permission to _delete_
-the referenced resource(s). In some cases, this permission cannot
-be determined and the value will be `undefined`.
+the referenced resource(s). Reporting a `true` value DOES NOT
+guarantee the user right since some policies may be undecidable until
+query execution.
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+display"></a>
@@ -3778,8 +3781,9 @@ It will return:
     * [.linkedData](#ERMrest.Tuple+linkedData) : <code>Object</code>
     * [.data](#ERMrest.Tuple+data) : <code>Object</code>
     * [.data](#ERMrest.Tuple+data)
-    * [.canUpdate](#ERMrest.Tuple+canUpdate) : <code>boolean</code> \| <code>undefined</code>
-    * [.canDelete](#ERMrest.Tuple+canDelete) : <code>boolean</code> \| <code>undefined</code>
+    * [.canUpdate](#ERMrest.Tuple+canUpdate) : <code>boolean</code>
+    * [.canUpdateReason](#ERMrest.Tuple+canUpdateReason) : <code>String</code>
+    * [.canDelete](#ERMrest.Tuple+canDelete) : <code>boolean</code>
     * [.values](#ERMrest.Tuple+values) : <code>Array.&lt;string&gt;</code>
     * [.isHTML](#ERMrest.Tuple+isHTML) : <code>Array.&lt;boolean&gt;</code>
     * [.displayname](#ERMrest.Tuple+displayname) : <code>string</code>
@@ -3858,33 +3862,44 @@ for proper updating.
 
 <a name="ERMrest.Tuple+canUpdate"></a>
 
-#### tuple.canUpdate : <code>boolean</code> \| <code>undefined</code>
-Indicates whether the client can update this tuple. Because
-some policies may be undecidable until query execution, this
-property may also be `undefined`.
+#### tuple.canUpdate : <code>boolean</code>
+Indicates whether the client can update this tuple. Reporting a `true`
+value DOES NOT guarantee the user right since some policies may be
+undecidable until query execution.
 
 Usage:
 ```
-if (tuple.canUpdate == true) {
-  console.log(tuple.displayname, "can be updated by this client");
-}
-else if (tuple.canUpdate == false) {
-  console.log(tuple.displayname, "cannot be updated by this client");
+if (tuple.canUpdate) {
+  console.log(tuple.displayname, "may be updated by this client");
 }
 else {
-  console.log(tuple.displayname, "update permission cannot be determied");
+  console.log(tuple.displayname, "cannot be updated by this client");
 }
 ```
 
 **Kind**: instance property of [<code>Tuple</code>](#ERMrest.Tuple)  
+<a name="ERMrest.Tuple+canUpdateReason"></a>
+
+#### tuple.canUpdateReason : <code>String</code>
+Indicates the reason as to why a user cannot update this tuple.
+
+**Kind**: instance property of [<code>Tuple</code>](#ERMrest.Tuple)  
 <a name="ERMrest.Tuple+canDelete"></a>
 
-#### tuple.canDelete : <code>boolean</code> \| <code>undefined</code>
-Indicates whether the client can delete this tuple. Because
-some policies may be undecidable until query execution, this
-property may also be `undefined`.
+#### tuple.canDelete : <code>boolean</code>
+Indicates whether the client can delete this tuple. Reporting a `true`
+value DOES NOT guarantee the user right since some policies may be
+undecidable until query execution.
 
-See [canUpdate](#ERMrest.Tuple+canUpdate) for a usage example.
+Usage:
+```
+if (tuple.canDelete) {
+  console.log(tuple.displayname, "may be deleted by this client");
+}
+else {
+  console.log(tuple.displayname, "cannot be deleted by this client");
+}
+```
 
 **Kind**: instance property of [<code>Tuple</code>](#ERMrest.Tuple)  
 <a name="ERMrest.Tuple+values"></a>
@@ -6522,12 +6537,12 @@ get PathColumn object by column name
     * [.searchColumns](#ERMrest.Reference+searchColumns) : <code>Array.&lt;ERMRest.ReferenceColumn&gt;</code> \| <code>false</code>
     * [.location](#ERMrest.Reference+location) ⇒ <code>ERMrest.Location</code>
     * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
-    * [.canCreate](#ERMrest.Reference+canCreate) : <code>boolean</code> \| <code>undefined</code>
-    * [.canCreateReason](#ERMrest.Reference+canCreateReason) : <code>String</code> \| <code>undefined</code>
-    * [.canRead](#ERMrest.Reference+canRead) : <code>boolean</code> \| <code>undefined</code>
-    * [.canUpdate](#ERMrest.Reference+canUpdate) : <code>boolean</code> \| <code>undefined</code>
-    * [.canUpdateReason](#ERMrest.Reference+canUpdateReason) : <code>String</code> \| <code>undefined</code>
-    * [.canDelete](#ERMrest.Reference+canDelete) : <code>boolean</code> \| <code>undefined</code>
+    * [.canCreate](#ERMrest.Reference+canCreate) : <code>boolean</code>
+    * [.canCreateReason](#ERMrest.Reference+canCreateReason) : <code>String</code>
+    * [.canRead](#ERMrest.Reference+canRead) : <code>boolean</code>
+    * [.canUpdate](#ERMrest.Reference+canUpdate) : <code>boolean</code>
+    * [.canUpdateReason](#ERMrest.Reference+canUpdateReason) : <code>String</code>
+    * [.canDelete](#ERMrest.Reference+canDelete) : <code>boolean</code>
     * [.display](#ERMrest.Reference+display) : <code>Object</code>
     * [.related](#ERMrest.Reference+related) : [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
     * [.unfilteredReference](#ERMrest.Reference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
@@ -6728,50 +6743,52 @@ console.log("This reference is unique?", (reference.isUnique ? 'yes' : 'no'));
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+canCreate"></a>
 
-#### reference.canCreate : <code>boolean</code> \| <code>undefined</code>
+#### reference.canCreate : <code>boolean</code>
 Indicates whether the client has the permission to _create_
-the referenced resource(s). In some cases, this permission cannot
-be determined and the value will be `undefined`.
+the referenced resource(s). Reporting a `true` value DOES NOT
+guarantee the user right since some policies may be undecidable until
+query execution.
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+canCreateReason"></a>
 
-#### reference.canCreateReason : <code>String</code> \| <code>undefined</code>
-Indicates the reason as to why a user cannot create for
-the referenced resource(s). In some cases, this won't be set
-because the user can create, so the value will be `undefined`.
+#### reference.canCreateReason : <code>String</code>
+Indicates the reason as to why a user cannot create the
+referenced resource(s).
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+canRead"></a>
 
-#### reference.canRead : <code>boolean</code> \| <code>undefined</code>
+#### reference.canRead : <code>boolean</code>
 Indicates whether the client has the permission to _read_
-the referenced resource(s). In some cases, this permission cannot
-be determined and the value will be `undefined`.
+the referenced resource(s). Reporting a `true` value DOES NOT
+guarantee the user right since some policies may be undecidable until
+query execution.
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+canUpdate"></a>
 
-#### reference.canUpdate : <code>boolean</code> \| <code>undefined</code>
+#### reference.canUpdate : <code>boolean</code>
 Indicates whether the client has the permission to _update_
-the referenced resource(s). In some cases, this permission cannot
-be determined and the value will be `undefined`.
+the referenced resource(s). Reporting a `true` value DOES NOT
+guarantee the user right since some policies may be undecidable until
+query execution.
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+canUpdateReason"></a>
 
-#### reference.canUpdateReason : <code>String</code> \| <code>undefined</code>
-Indicates the reason as to why a user cannot update for
-the referenced resource(s). In some cases, this won't be set
-because the user can update, so the value will be `undefined`.
+#### reference.canUpdateReason : <code>String</code>
+Indicates the reason as to why a user cannot update the
+referenced resource(s).
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+canDelete"></a>
 
-#### reference.canDelete : <code>boolean</code> \| <code>undefined</code>
+#### reference.canDelete : <code>boolean</code>
 Indicates whether the client has the permission to _delete_
-the referenced resource(s). In some cases, this permission cannot
-be determined and the value will be `undefined`.
+the referenced resource(s). Reporting a `true` value DOES NOT
+guarantee the user right since some policies may be undecidable until
+query execution.
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+display"></a>
