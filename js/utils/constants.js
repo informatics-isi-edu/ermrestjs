@@ -3,6 +3,14 @@
         TABLE_COL_RIGHTS_SUMMARY: "tcrs"
     });
 
+    module._ERMrestACLs = Object.freeze({
+        SELECT: "select",
+        INSERT: "insert",
+        DELETE: "delete",
+        UPDATE: "update",
+        COLUMN_UPDATE: "column_update"
+    });
+
     // for more information on url length limit refer to the following issue:
     // https://github.com/informatics-isi-edu/chaise/issues/1669
     module.URL_PATH_LENGTH_LIMIT = 4000;

@@ -2,7 +2,7 @@ var ermrestImport = require(process.env.PWD + '/test/utils/ermrest-import.js');
 
 exports.execute = (options) => {
 
-    describe("For determining reference object permissions,", () => {
+    describe("For permission related annotations, ", () => {
 
         var catalogId = process.env.DEFAULT_CATALOG,
             schemaName = "reference_schema",

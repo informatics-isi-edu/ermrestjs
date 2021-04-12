@@ -1039,7 +1039,7 @@
                 } else if (ref._table._isGenerated) {
                     this._canCreate = false;
                     this._canCreateReason = pm.TABLE_GENERATED;
-                } else if (!ref._checkPermissions("insert")) {
+                } else if (!ref._checkPermissions(module._ERMrestACLs.INSERT)) {
                     this._canCreate = false;
                     this._canCreateReason = pm.NO_CREATE;
                 } else {
@@ -1048,7 +1048,7 @@
 
                 if (this._canCreate === true) {
                     var allColumnsDisabled = ref.columns.every(function (col) {
-                        return (col.getInputDisabled(module._contexts.CREATE) !== false);
+                        return col.inputDisabled !== false;
                     });
 
                     if (allColumnsDisabled) {
@@ -1082,7 +1082,7 @@
          */
         get canRead() {
             if (this._canRead === undefined) {
-                this._canRead = this._checkPermissions("select");
+                this._canRead = this._checkPermissions(module._ERMrestACLs.SELECT);
             }
             return this._canRead;
         },
@@ -1114,7 +1114,7 @@
                 } else if (ref._table._isImmutable) {
                     this._canUpdate = false;
                     this._canUpdateReason = pm.TABLE_IMMUTABLE;
-                } else if (!ref._checkPermissions("update")) {
+                } else if (!ref._checkPermissions(module._ERMrestACLs.UPDATE)) {
                     this._canUpdate = false;
                     this._canUpdateReason = pm.NO_UPDATE;
                 } else {
@@ -1123,7 +1123,7 @@
 
                 if (this._canUpdate) {
                     var allColumnsDisabled = ref.columns.every(function (col) {
-                        return (col.getInputDisabled(module._contexts.EDIT) !== false);
+                        return col.inputDisabled !== false;
                     });
 
                     if (allColumnsDisabled) {
@@ -1161,7 +1161,7 @@
             // 1) table is not non-deletable
             // 2) user has write permission
             if (this._canDelete === undefined) {
-                this._canDelete = this._table.kind !== module._tableKinds.VIEW && !this._table._isNonDeletable && this._checkPermissions("delete");
+                this._canDelete = this._table.kind !== module._tableKinds.VIEW && !this._table._isNonDeletable && this._checkPermissions(module._ERMrestACLs.DELETE);
             }
             return this._canDelete;
         },
@@ -4560,14 +4560,16 @@
 
         if (reference.hasTableRightsSummary) {
             try {
-                var key = "F" + (allOutBounds.length);
-                data.forEeach(function (d) {
+                var key = "F" + (allOutBounds.length + 1);
+                data.forEach(function (d) {
                     if (key in d) {
-                        this._rightsSummary.push(d[key]);
+                        self._rightsSummary.push(d[key]);
                         delete d[key];
                     }
                 });
-            } catch (exp) {}
+            } catch (exp) {
+              console.log(exp);
+            }
         }
 
         // linkedData will include foreign key data
@@ -5086,7 +5088,7 @@
         _checkPermissions: function (permission, colName) {
             var sum = this._rightsSummary[permission];
 
-            if (permission === "column_update") {
+            if (permission === module._ERMrestACLs.COLUMN_UPDATE) {
                 if (isObjectAndNotNull(sum) && typeof sum[colName] !== 'boolean') return true;
                 return sum[colName];
             }
@@ -5123,7 +5125,7 @@
                     this._canUpdateReason = this._pageRef.canUpdateReason;
                 }
                 // check row level permission
-                else if (!this._checkPermissions("update")) {
+                else if (!this._checkPermissions(module._ERMrestACLs.UPDATE)) {
                     this._canUpdate = false;
                     this._canUpdateReason = pm.NO_UPDATE_ROW;
                 }
@@ -5163,7 +5165,7 @@
         get canDelete() {
             if (this._canDelete === undefined) {
                 // make sure table and row can be updated
-                this._canDelete = this._pageRef.canDelete && this._checkPermissions("delete");
+                this._canDelete = this._pageRef.canDelete && this._checkPermissions(module._ERMrestACLs.DELETE);
             }
             return this._canDelete;
         },
@@ -5266,8 +5268,16 @@
 
                 this._values = [];
                 this._isHTML = [];
+                this._canUpdateValues = [];
 
-                var column, presentation;
+                var self = this, column, presentation;
+
+                var checkUpdateColPermission = function (col) {
+                    return !self._checkPermissions(
+                        module._ERMrestACLs.COLUMN_UPDATE,
+                        col.name
+                    );
+                };
 
                 // key value pair of formmated values, to be used in formatPresentation
                 var keyValues = this.templateVariables.values;
@@ -5278,6 +5288,10 @@
                     // Return raw values according to the visibility and sequence of columns
                     for (i = 0; i < this._pageRef.columns.length; i++) {
                         column = this._pageRef.columns[i];
+
+                        // if user cannot update any of the base_columns then the column should be disabled
+                        this._canUpdateValues[i] = column._baseCols.some(checkUpdateColPermission);
+
                         if (column.isPseudo) {
                             if (column.isForeignKey) {
                                 presentation = column.formatPresentation(this._linkedData[column.name], this._pageRef._context, keyValues);
@@ -5322,8 +5336,6 @@
                         }
                     }
 
-                    var self = this;
-
                     values.forEach(function(fv) {
                         self._values.push(fv.value);
                         self._isHTML.push(fv.isHTML);
@@ -5354,6 +5366,17 @@
             }
 
             return this._isHTML;
+        },
+
+        /**
+         * currently only populated in entry context
+         */
+        get canUpdateValues () {
+            if (this._canUpdateValues === undefined) {
+                var value = this.values;
+            }
+
+            return this._canUpdateValues;
         },
 
         /**

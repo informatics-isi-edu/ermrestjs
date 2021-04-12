@@ -405,6 +405,7 @@ to use for ERMrest JavaScript agents.
         * [.canDelete](#ERMrest.Tuple+canDelete) : <code>boolean</code>
         * [.values](#ERMrest.Tuple+values) : <code>Array.&lt;string&gt;</code>
         * [.isHTML](#ERMrest.Tuple+isHTML) : <code>Array.&lt;boolean&gt;</code>
+        * [.canUpdateValues](#ERMrest.Tuple+canUpdateValues)
         * [.displayname](#ERMrest.Tuple+displayname) : <code>string</code>
         * [.rowName](#ERMrest.Tuple+rowName) : <code>string</code>
         * [.uniqueId](#ERMrest.Tuple+uniqueId) : <code>string</code>
@@ -438,7 +439,6 @@ to use for ERMrest JavaScript agents.
         * [.waitFor](#ERMrest.ReferenceColumn+waitFor) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
         * [.formatvalue(data, [context], [options])](#ERMrest.ReferenceColumn+formatvalue) ⇒ <code>string</code>
         * [.formatPresentation(data, [context], [templateVariables], [options])](#ERMrest.ReferenceColumn+formatPresentation) ⇒ <code>Object</code>
-        * [.getInputDisabled()](#ERMrest.ReferenceColumn+getInputDisabled) : <code>boolean</code> \| <code>object</code>
         * [._getShowForeignKeyLink(context)](#ERMrest.ReferenceColumn+_getShowForeignKeyLink) ⇒ <code>boolean</code>
         * [.sourceFormatPresentation(templateVariables, columnValue, mainTuple)](#ERMrest.ReferenceColumn+sourceFormatPresentation) ⇒ <code>Object</code>
     * [.VirtualColumn](#ERMrest.VirtualColumn)
@@ -3786,6 +3786,7 @@ It will return:
     * [.canDelete](#ERMrest.Tuple+canDelete) : <code>boolean</code>
     * [.values](#ERMrest.Tuple+values) : <code>Array.&lt;string&gt;</code>
     * [.isHTML](#ERMrest.Tuple+isHTML) : <code>Array.&lt;boolean&gt;</code>
+    * [.canUpdateValues](#ERMrest.Tuple+canUpdateValues)
     * [.displayname](#ERMrest.Tuple+displayname) : <code>string</code>
     * [.rowName](#ERMrest.Tuple+rowName) : <code>string</code>
     * [.uniqueId](#ERMrest.Tuple+uniqueId) : <code>string</code>
@@ -3940,6 +3941,12 @@ for (var i=0; len=reference.columns.length; i<len; i++) {
 ```
 
 **Kind**: instance property of [<code>Tuple</code>](#ERMrest.Tuple)  
+<a name="ERMrest.Tuple+canUpdateValues"></a>
+
+#### tuple.canUpdateValues
+currently only populated in entry context
+
+**Kind**: instance property of [<code>Tuple</code>](#ERMrest.Tuple)  
 <a name="ERMrest.Tuple+displayname"></a>
 
 #### tuple.displayname : <code>string</code>
@@ -4084,7 +4091,6 @@ count aggregate representation
     * [.waitFor](#ERMrest.ReferenceColumn+waitFor) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
     * [.formatvalue(data, [context], [options])](#ERMrest.ReferenceColumn+formatvalue) ⇒ <code>string</code>
     * [.formatPresentation(data, [context], [templateVariables], [options])](#ERMrest.ReferenceColumn+formatPresentation) ⇒ <code>Object</code>
-    * [.getInputDisabled()](#ERMrest.ReferenceColumn+getInputDisabled) : <code>boolean</code> \| <code>object</code>
     * [._getShowForeignKeyLink(context)](#ERMrest.ReferenceColumn+_getShowForeignKeyLink) ⇒ <code>boolean</code>
     * [.sourceFormatPresentation(templateVariables, columnValue, mainTuple)](#ERMrest.ReferenceColumn+sourceFormatPresentation) ⇒ <code>Object</code>
 
@@ -4242,16 +4248,6 @@ It will return:
 | [templateVariables] | <code>Object</code> | the template variables that should be used (optional) |
 | [options] | <code>Object</code> | (optional) |
 
-<a name="ERMrest.ReferenceColumn+getInputDisabled"></a>
-
-#### referenceColumn.getInputDisabled() : <code>boolean</code> \| <code>object</code>
-Indicates if the input should be disabled, in different contexts
-true: input must be disabled
-false:  input can be enabled
-object: input msut be disabled (show .message to user)
-TODO should be removed in favor of inputDisabled
-
-**Kind**: instance method of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
 <a name="ERMrest.ReferenceColumn+_getShowForeignKeyLink"></a>
 
 #### referenceColumn.\_getShowForeignKeyLink(context) ⇒ <code>boolean</code>
