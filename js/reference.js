@@ -1511,7 +1511,11 @@
          */
         update: function(tuples, contextHeaderParams) {
             try {
-                verify(tuples, "'tuples' must be specified");
+                verify(Array.isArray(tuples), "'tuples' must be specified");
+
+                // ignore the ones that cannot be updated
+                tuples = tuples.filter(function (t) {return t.canUpdate; });
+
                 verify(tuples.length > 0, "'tuples' must have at least one row to update");
                 verify(this._context === module._contexts.EDIT, "reference must be in 'entry/edit' context.");
 
@@ -1569,6 +1573,7 @@
                 // loop through each tuple and the visible columns list for each to determine what columns to add to the projection set
                 // If a column is changed in one tuple but not another, that column's value for every tuple needs to be present in the submission data
                 for (i = 0; i < tuples.length; i++) {
+
                     newData = tuples[i].data;
                     oldData = tuples[i]._oldData;
 
@@ -1583,6 +1588,11 @@
 
                         // if the column is disabled (generated or immutable), no need to add the column name to the projections list
                         if (column.inputDisabled) {
+                            continue;
+                        }
+
+                        // if column cannot be updated, no need to add the column to the projection list
+                        if (!tuples[i].canUpdateValues[m]) {
                             continue;
                         }
 
@@ -1667,6 +1677,16 @@
                     // Loop through the columns, check if it;s in columnProjections, and collect the necessary data for submission
                     for (m = 0; m < this.columns.length; m++) {
                         column = this.columns[m];
+
+                        // if the column is disabled (generated or immutable), skip it
+                        if (column.inputDisabled) {
+                            continue;
+                        }
+
+                        // if column cannot be updated for this tuple, skip it
+                        if (!tuples[i].canUpdateValues[m]) {
+                            continue;
+                        }
 
                         // If columns is a pusedo column
                         if (column.isPseudo) {
@@ -5115,7 +5135,7 @@
          */
         get canUpdate() {
             if (this._canUpdate === undefined) {
-                var pm = module._permissionMessages;
+                var pm = module._permissionMessages, self = this;
 
                 this._canUpdate = true;
 
@@ -5128,6 +5148,16 @@
                 else if (!this._checkPermissions(module._ERMrestACLs.UPDATE)) {
                     this._canUpdate = false;
                     this._canUpdateReason = pm.NO_UPDATE_ROW;
+                } else if (module._isEntryContext(this._pageRef._context)) {
+                    // make sure at least one column can be updated
+                    // (dynamic acl allows it and also it's not disabled)
+                    var canUpdateOneCol = this.canUpdateValues.some(function (canUpdateValue, i) {
+                        return canUpdateValue && !self._pageRef.columns[i].inputDisabled;
+                    });
+                    if (!canUpdateOneCol) {
+                        this._canUpdate = false;
+                        this._canUpdateReason = pm.NO_UPDATE_COLUMN;
+                    }
                 }
             }
             return this._canUpdate;
@@ -5290,7 +5320,7 @@
                         column = this._pageRef.columns[i];
 
                         // if user cannot update any of the base_columns then the column should be disabled
-                        this._canUpdateValues[i] = column._baseCols.some(checkUpdateColPermission);
+                        this._canUpdateValues[i] = !column._baseCols.some(checkUpdateColPermission);
 
                         if (column.isPseudo) {
                             if (column.isForeignKey) {
