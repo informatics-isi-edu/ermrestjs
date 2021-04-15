@@ -30,8 +30,7 @@ exports.checkPageValues = function(pageData, tuples, sortBy) {
 
 exports.setCatalogAcls = function (ERMrest, done, uri, catalogId, acls, cb, userCookie) {
     ermrestImport.importAcls(acls).then(function () {
-        return exports.removeCachedCatalog(ERMrest, catalogId);
-    }).then(function () {
+        exports.removeCachedCatalog(ERMrest, catalogId);
         if (userCookie) {
             ERMrest.setUserCookie(userCookie);
         } else {
@@ -47,14 +46,8 @@ exports.setCatalogAcls = function (ERMrest, done, uri, catalogId, acls, cb, user
 };
 
 exports.removeCachedCatalog = function (ERMrest, catalogId) {
-    var defer = q.defer();
-    ERMrest.ermrestFactory.getServer(process.env.ERMREST_URL, {cid: "test"}).then(function (server) {
-        delete server.catalogs._catalogs[catalogId];
-        defer.resolve();
-    }).catch(function (err) {
-        defer.reject(err);
-    });
-    return defer.promise;
+    var server = ERMrest.ermrestFactory.getServer(process.env.ERMREST_URL, {cid: "test"});
+    delete server.catalogs._catalogs[catalogId];
 };
 
 exports.resetCatalogAcls = function (done, acls) {

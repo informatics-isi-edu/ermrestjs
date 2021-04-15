@@ -124,9 +124,7 @@
                     return defer.reject(error);
                 }
 
-                // fetch the server
-                return module.ermrestFactory.getServer(location.service, contextHeaderParams);
-            }).then(function (server) {
+                var server = module.ermrestFactory.getServer(location.service, contextHeaderParams);
 
                 // find the catalog
                 return server.catalogs.get(location.catalog);
@@ -3550,7 +3548,7 @@
                 if (this._context === module._contexts.EDIT) {
                     rightKey = module._ERMrestFeatures.TABLE_COL_RIGHTS_SUMMARY;
                 }
-                var feature = this.table.schema.catalog.server.features[rightKey] === true;
+                var feature = this.table.schema.catalog.features[rightKey] === true;
                 this._hasTableRightsSummary = feature && this.table.columns.has("RID");
             }
             return this._hasTableRightsSummary;

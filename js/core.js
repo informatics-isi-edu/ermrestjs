@@ -80,8 +80,7 @@
      * @param {string} uri URI of the ERMrest service.
      * @param {Object} [contextHeaderParams={cid:'null'}] An optional server header parameters for context logging
      * appended to the end of any request to the server.
-     * @return {Promise} A promise resolved with a {@link ERMrest.Server} object
-     * or rejected if the server was not reachable.
+     * @return {ERMrest.Server} Returns a server instance.
      * @throws {ERMrest.InvalidInputError} URI is missing
      * @desc
      * ERMrest server factory creates or reuses ERMrest.Server instances. The
@@ -89,7 +88,6 @@
      * `https://www.example.org/ermrest`.
      */
     function getServer(uri, contextHeaderParams) {
-        var self = this, defer = module._q.defer();
 
         if (uri === undefined || uri === null)
             throw new module.InvalidInputError("URI undefined or null");
@@ -102,22 +100,14 @@
         }
 
         var server = _servers[uri];
-        if (server) {
-            return defer.resolve(server), defer.promise;
-        }
+        if (!server) {
+            server = new Server(uri, contextHeaderParams);
 
-        server = new Server(uri, contextHeaderParams);
-
-        server._introspect().then(function () {
             server.catalogs = new Catalogs(server);
             _servers[uri] = server;
+        }
 
-            defer.resolve(server);
-        }).catch(function (err) {
-            defer.reject(err);
-        });
-
-        return defer.promise;
+        return server;
     }
 
 
@@ -199,43 +189,6 @@
                 defer.resolve();
             }, function (error) {
                 defer.reject(error);
-            });
-
-            return defer.promise;
-        };
-
-
-        /**
-         * The ERMrest features that the server supports
-         * @type {Object}
-         */
-        this.features = {};
-
-        for (var f in module._ERMrestFeatures) {
-            this.features[module._ERMrestFeatures[f]] = false;
-        }
-
-        /**
-         * send a request to make sure server is accessible and capture the
-         * supported features
-         * @private
-         */
-        this._introspect = function () {
-            var self = this, defer = module._q.defer();
-            var headers = {};
-            headers[module.contextHeaderName] = {
-                action: ":,server;load"
-            };
-
-            self.http.get(self.uri, {headers: headers}).then(function (response) {
-                if (response.data && "features" in response.data) {
-                    for (var k in self.features) {
-                        self.features[k] = response.data.features[k];
-                    }
-                }
-                defer.resolve();
-            }).catch(function (err) {
-                defer.reject(err);
             });
 
             return defer.promise;
@@ -348,6 +301,16 @@
          * @type {ERMrest.Schemas}
          */
         this.schemas = new Schemas();
+
+        /**
+         * The ERMrest features that the catalog supports
+         * @type {Object}
+         */
+        this.features = {};
+
+        for (var f in module._ERMrestFeatures) {
+            this.features[module._ERMrestFeatures[f]] = false;
+        }
 
         this._jsonCatalog = null;
 
@@ -497,6 +460,12 @@
             // load the catalog (or use the one that is cached)
             this._get().then(function(response) {
                 self.snaptime = response.snaptime;
+
+                if ("features" in response) {
+                    for (var k in self.features) {
+                        self.features[k] = response.features[k];
+                    }
+                }
 
                 self.annotations = new Annotations();
                 for (var uri in response.annotations) {

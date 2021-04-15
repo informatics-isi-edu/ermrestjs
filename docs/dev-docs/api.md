@@ -82,7 +82,6 @@ to use for ERMrest JavaScript agents.
         * [.cid](#ERMrest.Server+cid) : <code>string</code>
         * [.pid](#ERMrest.Server+pid) : <code>string</code>
         * [.catalogs](#ERMrest.Server+catalogs) : [<code>Catalogs</code>](#ERMrest.Catalogs)
-        * [.features](#ERMrest.Server+features) : <code>Object</code>
         * [.logClientAction(headers)](#ERMrest.Server+logClientAction)
     * [.Catalogs](#ERMrest.Catalogs)
         * [new Catalogs(server)](#new_ERMrest.Catalogs_new)
@@ -93,6 +92,7 @@ to use for ERMrest JavaScript agents.
         * [new Catalog(server, id)](#new_ERMrest.Catalog_new)
         * [.id](#ERMrest.Catalog+id) : <code>string</code>
         * [.schemas](#ERMrest.Catalog+schemas) : [<code>Schemas</code>](#ERMrest.Schemas)
+        * [.features](#ERMrest.Catalog+features) : <code>Object</code>
         * [.chaiseConfig](#ERMrest.Catalog+chaiseConfig) ⇒ <code>Object</code>
         * [.currentSnaptime(contextHeaderParams)](#ERMrest.Catalog+currentSnaptime) ⇒ <code>Promise</code>
         * [.constraintByNamePair(pair, subject)](#ERMrest.Catalog+constraintByNamePair) ⇒ <code>Object</code> \| <code>null</code>
@@ -734,7 +734,7 @@ to use for ERMrest JavaScript agents.
         * [.displayname](#ERMrest.AttributeGroupTuple+displayname) : <code>string</code>
     * [.BucketAttributeGroupReference](#ERMrest.BucketAttributeGroupReference) : <code>object</code>
     * [.configure(http, q)](#ERMrest.configure)
-    * [.getServer(uri, [contextHeaderParams])](#ERMrest.getServer) ⇒ <code>Promise</code>
+    * [.getServer(uri, [contextHeaderParams])](#ERMrest.getServer) ⇒ [<code>Server</code>](#ERMrest.Server)
     * [.parse(uri, catalogObject)](#ERMrest.parse) ⇒ <code>ERMrest.Location</code>
     * [.resolve(uri, [contextHeaderParams])](#ERMrest.resolve) ⇒ <code>Promise</code>
     * [.getElapsedTime()](#ERMrest.getElapsedTime) ⇒ <code>integer</code>
@@ -751,7 +751,6 @@ to use for ERMrest JavaScript agents.
     * [.cid](#ERMrest.Server+cid) : <code>string</code>
     * [.pid](#ERMrest.Server+pid) : <code>string</code>
     * [.catalogs](#ERMrest.Server+catalogs) : [<code>Catalogs</code>](#ERMrest.Catalogs)
-    * [.features](#ERMrest.Server+features) : <code>Object</code>
     * [.logClientAction(headers)](#ERMrest.Server+logClientAction)
 
 <a name="new_ERMrest.Server_new"></a>
@@ -790,12 +789,6 @@ page-id: shows the id of the page that this server is being used for
 <a name="ERMrest.Server+catalogs"></a>
 
 #### server.catalogs : [<code>Catalogs</code>](#ERMrest.Catalogs)
-**Kind**: instance property of [<code>Server</code>](#ERMrest.Server)  
-<a name="ERMrest.Server+features"></a>
-
-#### server.features : <code>Object</code>
-The ERMrest features that the server supports
-
 **Kind**: instance property of [<code>Server</code>](#ERMrest.Server)  
 <a name="ERMrest.Server+logClientAction"></a>
 
@@ -863,6 +856,7 @@ Get a catalog by id. This call does catalog introspection.
     * [new Catalog(server, id)](#new_ERMrest.Catalog_new)
     * [.id](#ERMrest.Catalog+id) : <code>string</code>
     * [.schemas](#ERMrest.Catalog+schemas) : [<code>Schemas</code>](#ERMrest.Schemas)
+    * [.features](#ERMrest.Catalog+features) : <code>Object</code>
     * [.chaiseConfig](#ERMrest.Catalog+chaiseConfig) ⇒ <code>Object</code>
     * [.currentSnaptime(contextHeaderParams)](#ERMrest.Catalog+currentSnaptime) ⇒ <code>Promise</code>
     * [.constraintByNamePair(pair, subject)](#ERMrest.Catalog+constraintByNamePair) ⇒ <code>Object</code> \| <code>null</code>
@@ -888,6 +882,12 @@ The catalog identifier.
 <a name="ERMrest.Catalog+schemas"></a>
 
 #### catalog.schemas : [<code>Schemas</code>](#ERMrest.Schemas)
+**Kind**: instance property of [<code>Catalog</code>](#ERMrest.Catalog)  
+<a name="ERMrest.Catalog+features"></a>
+
+#### catalog.features : <code>Object</code>
+The ERMrest features that the catalog supports
+
 **Kind**: instance property of [<code>Catalog</code>](#ERMrest.Catalog)  
 <a name="ERMrest.Catalog+chaiseConfig"></a>
 
@@ -7613,14 +7613,13 @@ This function is used to configure the module
 
 <a name="ERMrest.getServer"></a>
 
-### ERMrest.getServer(uri, [contextHeaderParams]) ⇒ <code>Promise</code>
+### ERMrest.getServer(uri, [contextHeaderParams]) ⇒ [<code>Server</code>](#ERMrest.Server)
 ERMrest server factory creates or reuses ERMrest.Server instances. The
 URI should be to the ERMrest _service_. For example,
 `https://www.example.org/ermrest`.
 
 **Kind**: static method of [<code>ERMrest</code>](#ERMrest)  
-**Returns**: <code>Promise</code> - A promise resolved with a [Server](#ERMrest.Server) object
-or rejected if the server was not reachable.  
+**Returns**: [<code>Server</code>](#ERMrest.Server) - Returns a server instance.  
 **Throws**:
 
 - [<code>InvalidInputError</code>](#ERMrest.InvalidInputError) URI is missing

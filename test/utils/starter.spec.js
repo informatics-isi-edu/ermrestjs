@@ -22,10 +22,10 @@ exports.runTests = function (options) {
 
         // Import the schemas
         beforeAll(function (done) {
-            testOptions.ermRest.ermrestFactory.getServer(testOptions.url, {cid: "test"}).then(function (server) {
-                testOptions.server = server;
-                return importUtils.importSchemas(schemaConfs, process.env.DEFAULT_CATALOG);
-            }).then(function (res) {
+            // create the server object
+            testOptions.server = testOptions.ermRest.ermrestFactory.getServer(testOptions.url, {cid: "test"});
+
+            importUtils.importSchemas(schemaConfs, process.env.DEFAULT_CATALOG).then(function (res) {
                 console.log("Data imported with catalogId " + res.catalogId);
                 testOptions.catalogId = res.catalogId;
                 testOptions.entities = res.entities;

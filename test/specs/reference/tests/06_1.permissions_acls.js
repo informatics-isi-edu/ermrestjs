@@ -8,7 +8,7 @@ exports.execute = (options) => {
     };
 
     var removeCachedCatalog = function (catalogId) {
-        return utils.removeCachedCatalog(options.ermRest, catalogId)
+        utils.removeCachedCatalog(options.ermRest, catalogId)
     };
 
     var checkReferenceACLs = function (ref, canRead, canCreate, canCreateReason, canUpdate, canUpdateReason, canDelete) {
@@ -181,10 +181,9 @@ exports.execute = (options) => {
                 describe("Table with anonymous context should return false for select, insert, update and delete.,", () => {
 
                     beforeAll((done) => {
-                        removeCachedCatalog(catalogId).then(() => {
-                            options.ermRest.resetUserCookie();
-                            return options.ermRest.resolve(tablePermSingleUri, { cid: "test" });
-                        }).then((response) => {
+                        removeCachedCatalog(catalogId);
+                        options.ermRest.resetUserCookie();
+                        options.ermRest.resolve(tablePermSingleUri, { cid: "test" }).then((response) => {
                             reference = response;
                             done();
                         }, (err) => {
@@ -264,10 +263,9 @@ exports.execute = (options) => {
                 describe("Table with anonymous context should return true for select and update, and false for insert and delete,", () => {
 
                     beforeAll((done) => {
-                        removeCachedCatalog(catalogId).then(() => {
-                            options.ermRest.resetUserCookie();
-                            return options.ermRest.resolve(tablePermSingleUri, { cid: "test" });
-                        }).then((response) => {
+                        removeCachedCatalog(catalogId);
+                        options.ermRest.resetUserCookie();
+                        options.ermRest.resolve(tablePermSingleUri, { cid: "test" }).then((response) => {
                             reference = response;
                             done();
                         }, (err) => {
@@ -507,44 +505,43 @@ exports.execute = (options) => {
 
                 afterAll((done) => {
                     options.ermRest.setUserCookie(process.env.AUTH_COOKIE);
-                    removeCachedCatalog(catalogId).then(() => {
-                        utils.resetCatalogAcls(done, {
-                            "catalog": {
-                                "id": catalogId,
-                                "acls": {
-                                    "enumerate": ["*"]
-                                },
-                                "schemas" : {
-                                "permission_schema": {
-                                    "tables" : {
-                                        "perm_table": {
-                                            "acls": {
-                                                "select" : [],
-                                                "update": [],
-                                                "insert": []
+                    removeCachedCatalog(catalogId);
+                    utils.resetCatalogAcls(done, {
+                        "catalog": {
+                            "id": catalogId,
+                            "acls": {
+                                "enumerate": ["*"]
+                            },
+                            "schemas" : {
+                            "permission_schema": {
+                                "tables" : {
+                                    "perm_table": {
+                                        "acls": {
+                                            "select" : [],
+                                            "update": [],
+                                            "insert": []
+                                        },
+                                        "columns": {
+                                            "name": {
+                                                "acls": {
+                                                    "insert" : [],
+                                                    "select": [],
+                                                    "update": []
+                                                }
                                             },
-                                            "columns": {
-                                                "name": {
-                                                    "acls": {
-                                                        "insert" : [],
-                                                        "select": [],
-                                                        "update": []
-                                                    }
-                                                },
-                                                "term": {
-                                                    "acls": {
-                                                        "insert" : [],
-                                                        "select": [],
-                                                        "update": []
-                                                    }
+                                            "term": {
+                                                "acls": {
+                                                    "insert" : [],
+                                                    "select": [],
+                                                    "update": []
                                                 }
                                             }
                                         }
                                     }
                                 }
                             }
-                            }
-                        });
+                        }
+                        }
                     });
                 });
             });
@@ -558,13 +555,13 @@ exports.execute = (options) => {
                     setCatalogAcls(done, tablePermUri, catalogId, {
                         "catalog": {
                             "id": catalogId,
-                            "acls": {
-                                "select": ["*"]
-                            },
                             "schemas" : {
                                 "permission_schema": {
                                     "tables" : {
                                         "perm_table": {
+                                            "acls": {
+                                                "select": ["*"]
+                                            },
                                             "acl_bindings": {
                                                 "can_delete_row": {
                                                     "types": ["delete"],
@@ -604,6 +601,9 @@ exports.execute = (options) => {
                                 "permission_schema": {
                                     "tables" : {
                                         "perm_table": {
+                                            "acls": {
+                                                "select": []
+                                            },
                                             "acl_bindings": {}
                                         }
                                     }
@@ -621,13 +621,13 @@ exports.execute = (options) => {
                     setCatalogAcls(done, tablePermUri, catalogId, {
                         "catalog": {
                             "id": catalogId,
-                            "acls": {
-                                "select": ["*"]
-                            },
                             "schemas" : {
                                 "permission_schema": {
                                     "tables" : {
                                         "perm_table": {
+                                            "acls": {
+                                                "select": ["*"]
+                                            },
                                             "acl_bindings": {
                                                 "can_update_row": {
                                                     "types": ["delete"],
@@ -667,6 +667,9 @@ exports.execute = (options) => {
                                 "permission_schema": {
                                     "tables" : {
                                         "perm_table": {
+                                            "acls": {
+                                                "select": []
+                                            },
                                             "acl_bindings": {}
                                         }
                                     }
