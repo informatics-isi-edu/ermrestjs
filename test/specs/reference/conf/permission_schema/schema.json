@@ -13,7 +13,35 @@
                     ]
                 }
             ],
-            "foreign_keys": [],
+            "foreign_keys": [
+                {
+                    "names": [["permission_schema", "perm_table_fk1"]],
+                    "foreign_key_columns": [
+                        {
+                            "schema_name": "permission_schema",
+                            "table_name": "perm_table",
+                            "column_name": "fk_col_1"
+                        },
+                        {
+                            "schema_name": "permission_schema",
+                            "table_name": "perm_table",
+                            "column_name": "fk_col_2"
+                        }
+                    ],
+                    "referenced_columns": [
+                        {
+                            "schema_name": "reference_schema",
+                            "table_name": "table_w_only_composite_key",
+                            "column_name": "id_1"
+                        },
+                        {
+                            "schema_name": "reference_schema",
+                            "table_name": "table_w_only_composite_key",
+                            "column_name": "id_2"
+                        }
+                    ]
+                }
+            ],
             "table_name": "perm_table",
             "schema_name": "permission_schema",
             "column_definitions": [
@@ -37,9 +65,29 @@
                     "type": {
                         "typename": "text"
                     }
+                },
+                {
+                    "name": "fk_col_1",
+                    "nullok": true,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "fk_col_2",
+                    "nullok": true,
+                    "type": {
+                        "typename": "text"
+                    }
                 }
             ],
-            "annotations": {}
+            "annotations": {
+                "tag:isrd.isi.edu,2016:visible-columns": {
+                    "entry": [
+                        "key", "name", "term", ["permission_schema", "perm_table_fk1"]
+                    ]
+                }
+            }
         },
         "table_w_disabled_columns": {
             "kind": "table",
