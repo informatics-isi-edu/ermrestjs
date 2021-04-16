@@ -1256,7 +1256,8 @@
                     //  resolve the promise, passing back the page
                     return defer.resolve({
                       "successful": page,
-                      "failed": null
+                      "failed": null,
+                      "disabled": null
                     });
                 }).catch(function (error) {
                     return defer.reject(module.responseToError(error, self));
@@ -1501,8 +1502,10 @@
          * tuple.data has the new data
          * tuple._oldData has the data before changes were made
          * @param {Object} contextHeaderParams the object that we want to log.
-         * @returns {Promise} A promise resolved with a object containing `successful` and `failure` attributes.
-         * Both are {@link ERMrest.Page} of results.
+         * @returns {Promise} A promise resolved with a object containing:
+         *  -  `successful`: {@link ERMrest.Page} of results that were stored.
+         *  -  `failed`: {@link ERMrest.Page} of results that failed to be stored.
+         *  -  `disabled`: {@link ERMrest.Page} of results that were not sent to ermrest (because of acl)
          * or rejected with any of these errors:
          * - {@link ERMrest.InvalidInputError}: If `limit` is invalid or reference is not in `entry/edit` context.
          * - ERMrestjs corresponding http errors, if ERMrest returns http error.
@@ -1511,8 +1514,15 @@
             try {
                 verify(Array.isArray(tuples), "'tuples' must be specified");
 
-                // ignore the ones that cannot be updated
-                tuples = tuples.filter(function (t) {return t.canUpdate; });
+                // store the ones that cannot be updated and filter them out
+                // from the tuples list that we use to generate the update request
+                var disabledPageData = [];
+                tuples = tuples.filter(function (t) {
+                    if (!t.canUpdate) {
+                        disabledPageData.push(t.data);
+                    }
+                    return t.canUpdate;
+                });
 
                 verify(tuples.length > 0, "'tuples' must have at least one row to update");
                 verify(this._context === module._contexts.EDIT, "reference must be in 'entry/edit' context.");
@@ -1865,13 +1875,13 @@
                     var ref = new Reference(module.parse(uri), self._table.schema.catalog).contextualize.compactEntry;
                     ref = (response.data.length > 1 ? ref.contextualize.compactEntry : ref.contextualize.compact);
                     var successfulPage = new Page(ref, etag, pageData, false, false);
-                    var failedPage = null;
+                    var failedPage = null, disabledPage = null;
 
 
                     // if the returned page is smaller than the initial page,
                     // then some of the columns failed to update.
                     if (tuples.length > successfulPage.tuples.length) {
-                        var unchangedPageData = [], keyMatch, rowMatch;
+                        var failedPageData = [], keyMatch, rowMatch;
 
                         for (i = 0; i < tuples.length; i++) {
                             rowMatch = false;
@@ -1897,15 +1907,20 @@
 
                             if (!rowMatch) {
                                 // didn't find a match, so add as failed
-                                unchangedPageData.push(tuples[i].data);
+                                failedPageData.push(tuples[i].data);
                             }
                         }
-                        failedPage = new Page(ref, etag, unchangedPageData, false, false);
+                        failedPage = new Page(ref, etag, failedPageData, false, false);
+                    }
+
+                    if (disabledPageData.length > 0) {
+                        disabledPage = new Page(ref, etag, disabledPageData, false, false);
                     }
 
                     defer.resolve({
                         "successful": successfulPage,
-                        "failed": failedPage
+                        "failed": failedPage,
+                        "disabled": disabledPage
                     });
                 }).catch(function (error) {
                     return defer.reject(module.responseToError(error, self));
