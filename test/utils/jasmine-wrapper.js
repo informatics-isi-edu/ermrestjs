@@ -38,8 +38,6 @@ exports.run = function(config) {
 
 	    	process.env.ERMREST_URL = 'http://' + stdout.trim() + '/ermrest';
 
-	    	console.log(process.env.ERMREST_URL);
-
 	    	var setCookie = function(username, password, authCookieEnvName, cb) {
 				require('request')({
 					url:  process.env.ERMREST_URL.replace('ermrest', 'authn') + '/session',
@@ -62,6 +60,11 @@ exports.run = function(config) {
 						 	throw new Error('Unable to retreive ' + authCookieEnvName + ' : ' + error.message);
 						}
 					} else {
+                        console.log("the error is ", error);
+                        console.log("response:");
+                        console.log(response);
+                        console.log("body:");
+                        console.log(body);
 						throw new Error('Unable to retreive ' + authCookieEnvName);
 					}
 				});
