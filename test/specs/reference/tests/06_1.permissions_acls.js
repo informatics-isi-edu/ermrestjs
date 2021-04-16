@@ -643,7 +643,7 @@ exports.execute = (options) => {
                                             "acls": {
                                                 "select": []
                                             },
-                                            "acl_bindings": false
+                                            "acl_bindings": {}
                                         }
                                     }
                                 }
@@ -709,7 +709,7 @@ exports.execute = (options) => {
                                             "acls": {
                                                 "select": []
                                             },
-                                            "acl_bindings": false
+                                            "acl_bindings": {}
                                         }
                                     }
                                 }
@@ -720,99 +720,104 @@ exports.execute = (options) => {
             });
 
             describe ("when update is only allowed for certain columns", function () {
+                var reference, tuples;
 
-                describe ("when all the visible columns cannot be updated", function () {
-                    var reference, tuples;
-
-                    beforeAll((done) => {
-                        setCatalogAcls(done, tablePermUri, catalogId, {
-                            "catalog": {
-                                "id": catalogId,
-                                "schemas" : {
-                                    "permission_schema": {
-                                        "tables" : {
-                                            "perm_table": {
-                                                "acls": {
-                                                    "select": ["*"],
-                                                },
-                                                "acl_bindings": {
-                                                    "can_update_any_valid_rows": {
-                                                        "types": ["update"],
-                                                        "projection": [
-                                                            {"filter": "key", "operand": -9999, "negate": true}, "key"
-                                                        ],
-                                                        "projection_type": "nonnull"
+                beforeAll((done) => {
+                    // all the rows can be updated
+                    // the table dynamic acl are not used for columns
+                    // all the columns can update row with key=9001
+                    // some columns of key=9002 can be updated
+                    // therefore:
+                    //  9000: none of the columns can be updated
+                    //  9001: all the columns can be updated
+                    //  9002: some columns can be updated
+                    setCatalogAcls(done, tablePermUri, catalogId, {
+                        "catalog": {
+                            "id": catalogId,
+                            "schemas" : {
+                                "permission_schema": {
+                                    "tables" : {
+                                        "perm_table": {
+                                            "acls": {
+                                                "select": ["*"],
+                                            },
+                                            "acl_bindings": {
+                                                "can_update_any_valid_rows": {
+                                                    "types": ["update"],
+                                                    "projection": [
+                                                        {"filter": "key", "operand": -9999, "negate": true}, "key"
+                                                    ],
+                                                    "projection_type": "nonnull"
+                                                }
+                                            },
+                                            "columns": {
+                                                "key": {
+                                                    "acl_bindings": {
+                                                        "can_update_any_valid_rows": false,
+                                                        "can_update_col_for_9001": {
+                                                            "types": ["update"],
+                                                            "projection": [
+                                                                {"filter": "key", "operand": 9001}, "key"
+                                                            ],
+                                                            "projection_type": "nonnull"
+                                                        }
                                                     }
                                                 },
-                                                "columns": {
-                                                    "key": {
-                                                        "acl_bindings": {
-                                                            "can_update_any_valid_rows": false,
-                                                            "can_update_col_for_9001": {
-                                                                "types": ["update"],
-                                                                "projection": [
-                                                                    {"filter": "key", "operand": 9001}, "key"
-                                                                ],
-                                                                "projection_type": "nonnull"
-                                                            }
+                                                "name": {
+                                                    "acl_bindings": {
+                                                        "can_update_any_valid_rows": false,
+                                                        "can_update_col_for_9001": {
+                                                            "types": ["update"],
+                                                            "projection": [
+                                                                {"filter": "key", "operand": 9001}, "key"
+                                                            ],
+                                                            "projection_type": "nonnull"
                                                         }
-                                                    },
-                                                    "name": {
-                                                        "acl_bindings": {
-                                                            "can_update_any_valid_rows": false,
-                                                            "can_update_col_for_9001": {
-                                                                "types": ["update"],
-                                                                "projection": [
-                                                                    {"filter": "key", "operand": 9001}, "key"
-                                                                ],
-                                                                "projection_type": "nonnull"
-                                                            }
+                                                    }
+                                                },
+                                                "term": {
+                                                    "acl_bindings": {
+                                                        "can_update_any_valid_rows": false,
+                                                        "can_update_col_for_9001": {
+                                                            "types": ["update"],
+                                                            "projection": [
+                                                                {"filter": "key", "operand": 9001}, "key"
+                                                            ],
+                                                            "projection_type": "nonnull"
                                                         }
-                                                    },
-                                                    "term": {
-                                                        "acl_bindings": {
-                                                            "can_update_any_valid_rows": false,
-                                                            "can_update_col_for_9001": {
-                                                                "types": ["update"],
-                                                                "projection": [
-                                                                    {"filter": "key", "operand": 9001}, "key"
-                                                                ],
-                                                                "projection_type": "nonnull"
-                                                            }
+                                                    }
+                                                },
+                                                "fk_col_1": {
+                                                    "acl_bindings": {
+                                                        "can_update_any_valid_rows": false,
+                                                        "can_update_col_for_9001": {
+                                                            "types": ["update"],
+                                                            "projection": [
+                                                                {"filter": "key", "operand": 9001}, "key"
+                                                            ],
+                                                            "projection_type": "nonnull"
                                                         }
-                                                    },
-                                                    "fk_col_1": {
-                                                        "acl_bindings": {
-                                                            "can_update_any_valid_rows": false,
-                                                            "can_update_col_for_9001": {
-                                                                "types": ["update"],
-                                                                "projection": [
-                                                                    {"filter": "key", "operand": 9001}, "key"
-                                                                ],
-                                                                "projection_type": "nonnull"
-                                                            }
-                                                        }
-                                                    },
-                                                    "fk_col_2": {
-                                                        "acl_bindings": {
-                                                            "can_update_any_valid_rows": false,
-                                                            "can_update_col_for_9001": {
-                                                                "types": ["update"],
-                                                                "projection": [
-                                                                    {"filter": "key", "operand": 9001}, "key"
-                                                                ],
-                                                                "projection_type": "nonnull"
-                                                            },
-                                                            // this column allows for 9002,
-                                                            // but since fk_col_1 doesn't the whole fk doesn't
-                                                            // "can_update_col_for_9002": {
-                                                            //     "types": ["update"],
-                                                            //     "projection": [
-                                                            //         {"filter": "key", "operand": 9002}, "key"
-                                                            //     ],
-                                                            //     "projection_type": "nonnull"
-                                                            // }
-                                                        }
+                                                    }
+                                                },
+                                                "fk_col_2": {
+                                                    "acl_bindings": {
+                                                        "can_update_any_valid_rows": false,
+                                                        "can_update_col_for_9001": {
+                                                            "types": ["update"],
+                                                            "projection": [
+                                                                {"filter": "key", "operand": 9001}, "key"
+                                                            ],
+                                                            "projection_type": "nonnull"
+                                                        },
+                                                        // this column allows for 9002,
+                                                        // but since fk_col_1 doesn't the whole fk doesn't
+                                                        // "can_update_col_for_9002": {
+                                                        //     "types": ["update"],
+                                                        //     "projection": [
+                                                        //         {"filter": "key", "operand": 9002}, "key"
+                                                        //     ],
+                                                        //     "projection_type": "nonnull"
+                                                        // }
                                                     }
                                                 }
                                             }
@@ -820,9 +825,11 @@ exports.execute = (options) => {
                                     }
                                 }
                             }
-                        }, (response) => reference = response.contextualize.entryEdit, restrictedUserCookie);
-                    });
+                        }
+                    }, (response) => reference = response.contextualize.entryEdit, restrictedUserCookie);
+                });
 
+                describe ("when all the visible columns cannot be updated", function () {
                     it ("Tuple should return proper canUpdate values", function (done) {
                         reference.read(3).then(function (page) {
                             expect(page.length).toBe(3, "page length missmatch");
@@ -838,34 +845,11 @@ exports.execute = (options) => {
                             done.fail(err);
                         });
                     });
-
-                    afterAll((done) => {
-                        utils.resetCatalogAcls(done, {
-                            "catalog": {
-                                "id": catalogId,
-                                "schemas" : {
-                                    "permission_schema": {
-                                        "tables" : {
-                                            "perm_table": {
-                                                "acls": { "select": [] },
-                                                "acl_bindings": {},
-                                                "columns": {
-                                                    "key": { "acl_bindings": false },
-                                                    "name": { "acl_bindings": false },
-                                                    "term": { "acl_bindings": false },
-                                                    "fk_col_1": { "acl_bindings": false },
-                                                    "fk_col_2": { "acl_bindings": false }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        });
-                    });
                 });
 
                 describe("when some of the visible columns cannot be updated", function () {
+                    var reference, tuples;
+
                     it ("Tuple should return proper canUpdate values", function () {
 
                     });
@@ -874,7 +858,35 @@ exports.execute = (options) => {
 
                     });
                 });
+
+                afterAll((done) => {
+                    options.ermRest.setUserCookie(process.env.AUTH_COOKIE);
+                    removeCachedCatalog(catalogId);
+                    utils.resetCatalogAcls(done, {
+                        "catalog": {
+                            "id": catalogId,
+                            "schemas" : {
+                                "permission_schema": {
+                                    "tables" : {
+                                        "perm_table": {
+                                            "acls": { "select": [] },
+                                            "acl_bindings": {},
+                                            "columns": {
+                                                "key": { "acl_bindings": {} },
+                                                "name": { "acl_bindings": {} },
+                                                "term": { "acl_bindings": {} },
+                                                "fk_col_1": { "acl_bindings": {} },
+                                                "fk_col_2": { "acl_bindings": {} }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                });
             });
         });
+
     });
 };

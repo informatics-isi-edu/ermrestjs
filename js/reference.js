@@ -4023,7 +4023,7 @@
                     if (this._context === module._contexts.EDIT) {
                         rightSummFn = module._ERMrestFeatures.TABLE_COL_RIGHTS_SUMMARY;
                     }
-                    aggList.push("F" + (allOutBounds.length+1) + ":=" + rightSummFn + "(" + mainTableAlias + ":RID" + ")");
+                    aggList.push("tcrs:=" + rightSummFn + "(" + mainTableAlias + ":RID" + ")");
                 }
 
                 // add sort columns (it will include the key)
@@ -4591,9 +4591,10 @@
         var self = this,
             allOutBounds = reference.activeList.allOutBounds;
 
+        // the rights summary
         if (reference.hasTableRightsSummary) {
             try {
-                var key = "F" + (allOutBounds.length + 1);
+                var key = "tcrs";
                 data.forEach(function (d) {
                     if (key in d) {
                         self._rightsSummary.push(d[key]);
@@ -4606,7 +4607,7 @@
         }
 
         // linkedData will include foreign key data
-        if (allOutBounds.length > 0) {
+        if (allOutBounds.length > 0 || reference.hasTableRightsSummary) {
 
             var fks = reference._table.foreignKeys.all(), i, j, colFKs;
             var mTableAlias = this._ref.location.mainTableAlias;

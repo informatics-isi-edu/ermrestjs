@@ -41,6 +41,7 @@ exports.setCatalogAcls = function (ERMrest, done, uri, catalogId, acls, cb, user
         cb(response);
         done();
     }).catch(function (err) {
+        console.log("failed to set catalog ACLs")
         done.fail(err);
     });
 };
