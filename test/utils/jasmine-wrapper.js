@@ -33,13 +33,16 @@ var setRestrictedUserId = function(config) {
 exports.run = function(config) {
 	if (process.env.CI) {
 
+        console.log("getting the hostname");
 		var exec = require('child_process').exec;
 		exec('hostname', function (error, stdout, stderr) {
 
 	    	process.env.ERMREST_URL = 'http://' + stdout.trim() + '/ermrest';
-
+            console.log("ERMrest URL: " + process.env.ERMREST_URL);
+            console.log("going to set the cookie stuff");
 	    	var setCookie = function(username, password, authCookieEnvName, cb) {
                 if (username == "dummy test") {
+                    console.log("sending the request")
                     require('request')({
     					url:  process.env.ERMREST_URL,
     					method: 'GET',
@@ -93,7 +96,7 @@ exports.run = function(config) {
 	    	var success = function() {
 	    		if (++done == 3) setRestrictedUserId(config);
 	    	}
-            setCookie('dummy test', success);
+            setCookie('dummy test', null, null, success);
 	    	setCookie('test1', 'dummypassword', 'AUTH_COOKIE', success);
 	    	setCookie('test2', 'dummypassword', 'RESTRICTED_AUTH_COOKIE', success);
 	    });
