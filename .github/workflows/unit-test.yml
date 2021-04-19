@@ -113,9 +113,15 @@ jobs:
         run: |
           sudo ls -lR /etc/apache2
           sudo ls -lR /var/run/apache2
+          echo "webauthn.conf:"
           sudo cat /etc/apache2/conf.d/webauthn.conf
+          echo "wsgi_webauthn2.conf:"
           sudo cat /etc/apache2/conf.d/wsgi_webauthn2.conf
+          echo "wsgi_ermrest.conf:"
           sudo cat /etc/apache2/conf.d/wsgi_ermrest.conf
+          echo "Apache error.log:"
           sudo cat /var/log/apache2/error.log
+          echo "Apache access.log:"
           sudo cat /var/log/apache2/access.log
+          echo "webauthn sessions:"
           sudo -H -u webauthn psql -c 'select * from webauthn2_db.session' webauthn
