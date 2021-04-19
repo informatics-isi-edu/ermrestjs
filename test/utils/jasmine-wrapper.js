@@ -37,7 +37,7 @@ exports.run = function(config) {
 		var exec = require('child_process').exec;
 		exec('hostname', function (error, stdout, stderr) {
 
-	    	process.env.ERMREST_URL = 'http://' + stdout.trim() + '/ermrest';
+	    	process.env.ERMREST_URL = 'https://' + stdout.trim() + '/ermrest';
             console.log("ERMrest URL: " + process.env.ERMREST_URL);
             console.log("going to set the cookie stuff");
 	    	var setCookie = function(username, password, authCookieEnvName, cb) {
