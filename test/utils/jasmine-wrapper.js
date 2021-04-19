@@ -39,6 +39,25 @@ exports.run = function(config) {
 	    	process.env.ERMREST_URL = 'http://' + stdout.trim() + '/ermrest';
 
 	    	var setCookie = function(username, password, authCookieEnvName, cb) {
+                if (username == "dummy test") {
+                    require('request')({
+    					url:  process.env.ERMREST_URL,
+    					method: 'GET',
+    				}, function(error, response, body) {
+    					if (!error && response.statusCode == 200) {
+                            console.log("can access ermrest");
+                            cb();
+    					} else {
+                            console.log("the error is ", error);
+                            console.log("response:");
+                            console.log(response);
+                            console.log("body:");
+                            console.log(body);
+    						throw new Error('Unable to retreive access ermrest');
+    					}
+    				});
+                }
+
 				require('request')({
 					url:  process.env.ERMREST_URL.replace('ermrest', 'authn') + '/session',
 					method: 'POST',
@@ -72,8 +91,9 @@ exports.run = function(config) {
 
 	    	var done = 0;
 	    	var success = function() {
-	    		if (++done == 2) setRestrictedUserId(config);
+	    		if (++done == 3) setRestrictedUserId(config);
 	    	}
+            setCookie('dummy test', success);
 	    	setCookie('test1', 'dummypassword', 'AUTH_COOKIE', success);
 	    	setCookie('test2', 'dummypassword', 'RESTRICTED_AUTH_COOKIE', success);
 	    });
