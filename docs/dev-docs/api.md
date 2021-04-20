@@ -3364,8 +3364,10 @@ but I'm not sure how much adding that validation will affect other apis and clie
 Updates a set of resources.
 
 **Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
-**Returns**: <code>Promise</code> - A promise resolved with a object containing `successful` and `failure` attributes.
-Both are [Page](#ERMrest.Page) of results.
+**Returns**: <code>Promise</code> - A promise resolved with a object containing:
+ -  `successful`: [Page](#ERMrest.Page) of results that were stored.
+ -  `failed`: [Page](#ERMrest.Page) of results that failed to be stored.
+ -  `disabled`: [Page](#ERMrest.Page) of results that were not sent to ermrest (because of acl)
 or rejected with any of these errors:
 - [InvalidInputError](#ERMrest.InvalidInputError): If `limit` is invalid or reference is not in `entry/edit` context.
 - ERMrestjs corresponding http errors, if ERMrest returns http error.  
@@ -3671,7 +3673,7 @@ Usage:
 | data | <code>Array.&lt;Object&gt;</code> | The data returned from ERMrest. |
 | hasPrevious | <code>boolean</code> | Whether there is more data before this Page |
 | hasNext | <code>boolean</code> | Whether there is more data after this Page |
-| extraData | <code>Object</code> | if |
+| extraData | <code>Object</code> | based on pagination, the extra data after/before current page |
 
 <a name="ERMrest.Page+reference"></a>
 
@@ -7022,8 +7024,10 @@ but I'm not sure how much adding that validation will affect other apis and clie
 Updates a set of resources.
 
 **Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
-**Returns**: <code>Promise</code> - A promise resolved with a object containing `successful` and `failure` attributes.
-Both are [Page](#ERMrest.Page) of results.
+**Returns**: <code>Promise</code> - A promise resolved with a object containing:
+ -  `successful`: [Page](#ERMrest.Page) of results that were stored.
+ -  `failed`: [Page](#ERMrest.Page) of results that failed to be stored.
+ -  `disabled`: [Page](#ERMrest.Page) of results that were not sent to ermrest (because of acl)
 or rejected with any of these errors:
 - [InvalidInputError](#ERMrest.InvalidInputError): If `limit` is invalid or reference is not in `entry/edit` context.
 - ERMrestjs corresponding http errors, if ERMrest returns http error.  

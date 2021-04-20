@@ -1362,7 +1362,7 @@
          * - {@link ERMrest.NotFoundError}: If asks for sorting based on columns that are not valid.
          * - ERMrestjs corresponding http errors, if ERMrest returns http error.
          */
-        read: function(limit, contextHeaderParams, useEntity, dontCorrectPage) {
+        read: function(limit, contextHeaderParams, useEntity, dontCorrectPage, getUnlinkTRS) {
             var defer = module._q.defer(), self = this;
 
             try {
@@ -1379,7 +1379,7 @@
                 verify(limit > 0, "'limit' must be greater than 0");
 
                 var uri = [this._location.service, "catalog", this._location.catalog].join("/");
-                var readPath = this._getReadPath(useEntity);
+                var readPath = this._getReadPath(useEntity, getUnlinkTRS);
                 if (readPath.isAttributeGroup) {
                     uri += "/attributegroup/" + readPath.value;
                 } else {
@@ -3557,18 +3557,6 @@
             return this._citation;
         },
 
-        get hasTableRightsSummary () {
-            if (this._hasTableRightsSummary === undefined) {
-                var rightKey = module._ERMrestFeatures.TABLE_RIGHTS_SUMMARY;
-                if (this._context === module._contexts.EDIT) {
-                    rightKey = module._ERMrestFeatures.TABLE_COL_RIGHTS_SUMMARY;
-                }
-                var feature = this.table.schema.catalog.features[rightKey] === true;
-                this._hasTableRightsSummary = feature && this.table.columns.has("RID");
-            }
-            return this._hasTableRightsSummary;
-        },
-
         /**
          * Generate a related reference given a foreign key and tuple.
          *
@@ -3641,7 +3629,7 @@
 
             // this name will be used to provide more information about the linkage
             if (fkr.to_name) {
-                newRef.parentDisplayname = { "value": fkr.to_name,  "unformatted": fkr.to_name, "isHTMl" : false };
+                newRef.parentDisplayname = { "value": fkr.to_name,  "unformatted": fkr.to_name, "isHTML" : false };
             } else {
                 newRef.parentDisplayname = this.displayname;
             }
@@ -3704,8 +3692,8 @@
                 newRef.derivedAssociationReference.origFKR = newRef.origFKR;
                 newRef.derivedAssociationReference._secondFKR = otherFK;
 
-                // build the filter source
-                filterSource.push({"inbound": otherFK.constraint_names[0]});
+                // build the filter source (the alias is used in the read function to get the proper acls)
+                filterSource.push({"inbound": otherFK.constraint_names[0], "alias": module._parserAliases.ASSOCIATION_TABLE});
 
                 // buld the data source
                 dataSource.push({"outbound": otherFK.constraint_names[0]});
@@ -3825,7 +3813,7 @@
          * NOTE Might throw an error if modifiers are not valid
          * @type {Object}
          */
-         _getReadPath: function(useEntity) {
+         _getReadPath: function(useEntity, getUnlinkTRS) {
             var allOutBounds = this.activeList.allOutBounds;
             var findAllOutBoundIndex = function (name) {
                 return allOutBounds.findIndex(function (aob) {
@@ -3834,6 +3822,7 @@
             };
             var hasSort = Array.isArray(this._location.sortObject) && (this._location.sortObject.length !== 0),
                 locationPath = this.location.path,
+                fkAliasPreix = module._parserAliases.FOREIGN_KEY_PREFIX,
                 _modifiedSortObject = [], // the sort object that is used for url creation (if location has sort).
                 sortMap = {}, // maps an alias to PseudoColumn, used for sorting
                 sortObject,  // the sort that will be accessible by this._location.sortObject
@@ -3900,8 +3889,8 @@
 
                             // the column must be part of outbounds, so we don't need to check for it
                             fkIndex = findAllOutBoundIndex(col.name);
-                            colName = "F" + (allOutBounds.length + k++);
-                            sortMap[colName] = ["F" + (fkIndex+1), module._fixedEncodeURIComponent(sortCols[j].column.name)].join(":");
+                            colName = fkAliasPreix + (allOutBounds.length + k++);
+                            sortMap[colName] = [fkAliasPreix + (fkIndex+1), module._fixedEncodeURIComponent(sortCols[j].column.name)].join(":");
                         } else {
                             colName = sortCols[j].column.name;
                             if (colName in sortColNames) {
@@ -3969,20 +3958,30 @@
             this._location.sortObject = sortObject;
 
             var uri = this._location.ermrestCompactPath; // used for the http request
-            var isAttributeGroup = !useEntity && ((allOutBounds.length > 0) || this.hasTableRightsSummary);
+
+            var associatonTable = this.derivedAssociationReference ? this.derivedAssociationReference.table : null;
+            var associationTableAlias = module._parserAliases.ASSOCIATION_TABLE;
+
+            var isAttributeGroup = !useEntity;
+            if (isAttributeGroup) {
+                isAttributeGroup = allOutBounds.length > 0 ||
+                                   this.table.supportColumnRightsSummary ||
+                                   this.table.supportRightsSummary ||
+                                   (getUnlinkTRS && associatonTable && associatonTable.supportRightsSummary);
+            }
 
             /** Change api to attributegroup for retrieving extra information
              * These information include:
              * - Values for the foreignkeys.
              * - Value for one-to-one pseudo-columns. These are the columns
              * that their defined path is all in the outbound direction.
-             * - trs and tcrs if features are supported
+             * - tcrs feature is supported
              *
              * This will just affect the http request and not this._location
              *
              * NOTE:
              * This piece of code is dependent on the same assumptions as the current parser, which are:
-             *   0. There is no table called `T`, `M`, `F1`, `F2`, ...
+             *   0. There is no table called `A`, `T`, `M`, `F1`, `F2`, ...
              *   1. There is no alias in url (more precisely `T`, `M`, `F1`, `F2`, `F3`, ...)
              *   2. Filter comes before the link syntax.
              *   3. There is no trailing `/` in uri (as it will break the ermrest too).
@@ -4000,7 +3999,7 @@
                 var getPseudoPath = function (l) {
                     var pseudoPath = [];
                     allOutBounds[l].foreignKeys.forEach(function (f, index, arr) {
-                        pseudoPath.push(((index === arr.length-1) ? ("F" + (k+1) + ":=") : "") + f.obj.toString(!f.isInbound,true));
+                        pseudoPath.push(((index === arr.length-1) ? (fkAliasPreix + (k+1) + ":=") : "") + f.obj.toString(!f.isInbound,true));
                     });
                     return pseudoPath.join("/");
                 };
@@ -4014,16 +4013,22 @@
                     uri += getPseudoPath(k) + "/$" + mainTableAlias + "/";
 
                     // F2:array_d(F2:*),F1:array_d(F1:*)
-                    aggList.push("F" + (k+1) + ":=" + aggFn + "(F" + (k+1) + ":*)");
+                    aggList.push(fkAliasPreix + (k+1) + ":=" + aggFn + "(" + fkAliasPreix + (k+1) + ":*)");
                 }
 
-                // add trs/tcrs
-                if (this.hasTableRightsSummary) {
+                // add trs or tcrs for main table
+                if (this.table.supportColumnRightsSummary || this.table.supportRightsSummary) {
                     rightSummFn = module._ERMrestFeatures.TABLE_RIGHTS_SUMMARY;
-                    if (this._context === module._contexts.EDIT) {
+                    if (this.table.supportColumnRightsSummary) {
                         rightSummFn = module._ERMrestFeatures.TABLE_COL_RIGHTS_SUMMARY;
                     }
-                    aggList.push("tcrs:=" + rightSummFn + "(" + mainTableAlias + ":RID" + ")");
+                    aggList.push(rightSummFn + ":=" + rightSummFn + "(" + mainTableAlias + ":RID" + ")");
+                }
+
+                // add trs for the association table
+                if (getUnlinkTRS && associatonTable && associatonTable.supportRightsSummary) {
+                    rightSummFn = module._ERMrestFeatures.TABLE_RIGHTS_SUMMARY;
+                    aggList.push(associationTableAlias + "_" + rightSummFn + ":=" + rightSummFn + "(" + associationTableAlias + ":RID" + ")");
                 }
 
                 // add sort columns (it will include the key)
@@ -4567,7 +4572,7 @@
      * @param {!Object[]} data The data returned from ERMrest.
      * @param {boolean} hasPrevious Whether there is more data before this Page
      * @param {boolean} hasNext Whether there is more data after this Page
-     * @param {!Object} extraData if
+     * @param {!Object} extraData based on pagination, the extra data after/before current page
      *
      */
     function Page(reference, etag, data, hasPrevious, hasNext, extraData) {
@@ -4587,48 +4592,68 @@
         this._linkedData = [];
         this._data = [];
         this._rightsSummary = [];
+        this._associationRightsSummary = [];
 
         var self = this,
+            table = reference.table,
             allOutBounds = reference.activeList.allOutBounds;
 
-        // the rights summary
-        if (reference.hasTableRightsSummary) {
-            try {
-                var key = "tcrs";
-                data.forEach(function (d) {
-                    if (key in d) {
-                        self._rightsSummary.push(d[key]);
-                        delete d[key];
-                    }
-                });
-            } catch (exp) {
-              console.log(exp);
-            }
-        }
+        var trs = module._ERMrestFeatures.TABLE_RIGHTS_SUMMARY,
+            tcrs = module._ERMrestFeatures.TABLE_COL_RIGHTS_SUMMARY,
+            associationTableAlias = module._parserAliases.ASSOCIATION_TABLE,
+            fkAliasPreix = module._parserAliases.FOREIGN_KEY_PREFIX;
 
-        // linkedData will include foreign key data
-        if (allOutBounds.length > 0 || reference.hasTableRightsSummary) {
+        // for the association rights summary
+        var associatonTable = reference.derivedAssociationReference ? reference.derivedAssociationReference.table : null;
 
-            var fks = reference._table.foreignKeys.all(), i, j, colFKs;
+        // same logic as _readPath to see if it's attributegroup output
+        var hasLinkedData = allOutBounds.length > 0 ||
+                        table.supportColumnRightsSummary ||
+                        table.supportRightsSummary ||
+                        (associatonTable && associatonTable.supportRightsSummary);
+
+        if (hasLinkedData) {
+            var fks = reference._table.foreignKeys.all(), i, j, colFKs, key;
             var mTableAlias = this._ref.location.mainTableAlias;
 
             try {
                 // the attributegroup output
                 for (i = 0; i < data.length; i++) {
+                    // main data
                     this._data.push(data[i][mTableAlias][0]);
 
+                    // fk data
                     this._linkedData.push({});
                     for (j = allOutBounds.length - 1; j >= 0; j--) {
-                        this._linkedData[i][allOutBounds[j].name] = data[i]["F"+ (j+1)][0];
+                        this._linkedData[i][allOutBounds[j].name] = data[i][fkAliasPreix + (j+1)][0];
+                    }
+
+                    // table rights
+                    if (table.supportColumnRightsSummary || table.supportRightsSummary) {
+                        key = table.supportColumnRightsSummary ? tcrs : trs;
+                        if (key in data[i]) {
+                            this._rightsSummary.push(data[i][key]);
+                        }
+                    }
+
+                    // association table rights
+                    if (associatonTable && associatonTable.supportRightsSummary) {
+                        key = associationTableAlias + "_" + trs;
+                        if (key in data[i]) {
+                            this._associationRightsSummary.push(data[i][key]);
+                        }
                     }
                 }
 
                 //extra data
                 if (hasExtraData) {
+                    // main data
                     this._extraData = extraData[mTableAlias][0];
+
+                    // fk data
                     this._extraLinkedData = {};
                     for (j = allOutBounds.length - 1; j >= 0; j--) {
-                        this._extraLinkedData[allOutBounds[j].name] = extraData["F"+ (j+1)][0];
+                        this._extraLinkedData[allOutBounds[j].name] = extraData[fkAliasPreix + (j+1)][0];
                     }
                 }
 
@@ -4678,6 +4703,7 @@
             this._extraData = hasExtraData ? extraData : undefined;
         }
 
+
         this._hasNext = hasNext;
         this._hasPrevious = hasPrevious;
     }
@@ -4710,7 +4736,7 @@
             if (this._tuples === undefined) {
                 this._tuples = [];
                 for (var i = 0; i < this._data.length; i++) {
-                    this._tuples.push(new Tuple(this._ref, this, this._data[i], this._linkedData[i], this._rightsSummary[i]));
+                    this._tuples.push(new Tuple(this._ref, this, this._data[i], this._linkedData[i], this._rightsSummary[i], this._associationRightsSummary[i]));
                 }
             }
             return this._tuples;
@@ -5000,12 +5026,13 @@
      * this data was acquired.
      * @param {!Object} data The unprocessed tuple of data returned from ERMrest.
      */
-    function Tuple(pageReference, page, data, linkedData, rightsSummary) {
+    function Tuple(pageReference, page, data, linkedData, rightsSummary, associationRightsSummary) {
         this._pageRef = pageReference;
         this._page = page;
         this._data = data || {};
         this._linkedData = (typeof linkedData === "object") ? linkedData : {};
         this._rightsSummary = (typeof rightsSummary === "object") ? rightsSummary : {};
+        this._associationRightsSummary = (typeof rightsSummary === "object") ? associationRightsSummary : {};
     }
 
     Tuple.prototype = {
@@ -5119,8 +5146,11 @@
             notimplemented();
         },
 
-        _checkPermissions: function (permission, colName) {
+        _checkPermissions: function (permission, colName, isAssoc) {
             var sum = this._rightsSummary[permission];
+            if (isAssoc) {
+                sum = this._associationRightsSummary[permission];
+            }
 
             if (permission === module._ERMrestACLs.COLUMN_UPDATE) {
                 if (isObjectAndNotNull(sum) && typeof sum[colName] !== 'boolean') return true;
@@ -5128,7 +5158,7 @@
             }
 
             if (typeof sum !== 'boolean') return true;
-            return this._rightsSummary[permission];
+            return sum;
         },
 
         /**
@@ -5149,7 +5179,7 @@
          */
         get canUpdate() {
             if (this._canUpdate === undefined) {
-                var pm = module._permissionMessages, self = this;
+                var pm = module._permissionMessages, self = this, canUpdateOneCol;
 
                 this._canUpdate = true;
 
@@ -5162,12 +5192,29 @@
                 else if (!this._checkPermissions(module._ERMrestACLs.UPDATE)) {
                     this._canUpdate = false;
                     this._canUpdateReason = pm.NO_UPDATE_ROW;
-                } else if (module._isEntryContext(this._pageRef._context)) {
+                } else {
                     // make sure at least one column can be updated
                     // (dynamic acl allows it and also it's not disabled)
-                    var canUpdateOneCol = this.canUpdateValues.some(function (canUpdateValue, i) {
-                        return canUpdateValue && !self._pageRef.columns[i].inputDisabled;
-                    });
+                    canUpdateOneCol = true;
+                    if (this._pageRef._context === module._contexts.EDIT) {
+                        canUpdateOneCol = this.canUpdateValues.some(function (canUpdateValue, i) {
+                            return canUpdateValue && !self._pageRef.columns[i].inputDisabled;
+                        });
+                    } else {
+                        // see if at least one visible column in edit context can be updated
+                        var ref = self._pageRef.contextualize.entryEdit;
+                        if (ref.table == self._pageRef.table) { // make sure not alternative
+                            canUpdateOneCol = ref.columns.some(function (col) {
+                                return !col.inputDisabled && !col._baseCols.some(function (bcol) {
+                                    return !self._checkPermissions(
+                                        module._ERMrestACLs.COLUMN_UPDATE,
+                                        bcol.name
+                                    );
+                                });
+                            });
+                        }
+                    }
+
                     if (!canUpdateOneCol) {
                         this._canUpdate = false;
                         this._canUpdateReason = pm.NO_UPDATE_COLUMN;
@@ -5208,10 +5255,23 @@
          */
         get canDelete() {
             if (this._canDelete === undefined) {
-                // make sure table and row can be updated
+                // make sure table and row can be deleted
                 this._canDelete = this._pageRef.canDelete && this._checkPermissions(module._ERMrestACLs.DELETE);
             }
             return this._canDelete;
+        },
+
+        get canUnlink() {
+            if (this._canUnlink === undefined) {
+                if (!this._pageRef.derivedAssociationReference) {
+                    this._canUnlink = false;
+                } else {
+                    var ref = this._pageRef.derivedAssociationReference;
+                    // make sure association table and row can be deleted
+                    this._canUnlink = ref.canDelete && this._checkPermissions("delete", null, true);
+                }
+            }
+            return this._canUnlink;
         },
 
         /**

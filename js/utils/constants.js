@@ -11,6 +11,13 @@
         COLUMN_UPDATE: "column_update"
     });
 
+    module._parserAliases = Object.freeze({
+        MAIN_TABLE: "M",
+        JOIN_TABLE_PREFIX: "T",
+        FOREIGN_KEY_PREFIX: "F",
+        ASSOCIATION_TABLE: "A"
+    });
+
     // for more information on url length limit refer to the following issue:
     // https://github.com/informatics-isi-edu/chaise/issues/1669
     module.URL_PATH_LENGTH_LIMIT = 4000;

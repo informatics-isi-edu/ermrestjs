@@ -92,9 +92,6 @@
         return module.parse(service + "/catalog/" + catalogId + "/entity/" + compactPath, catalogObject);
     };
 
-    var MAIN_TABLE_ALIAS = "M";
-    var JOIN_TABLE_ALIAS_PREFIX = "T";
-
     /**
      * The parse handles URI in this format
      *  <service>/catalog/<catalog_id>/<api>/<schema>:<table>/[path parts][modifiers][query params]
@@ -246,7 +243,7 @@
                 if (!prevJoin && index !== 1) {
                     // we're creating this for the previous section, so we should use the previous index
                     // Alias will be T, T1, T2, ... (notice we don't have T0)
-                    alias = JOIN_TABLE_ALIAS_PREFIX + (pathParts.length > 0 ? pathParts.length : "");
+                    alias = module._parserAliases.JOIN_TABLE_PREFIX + (pathParts.length > 0 ? pathParts.length : "");
                     pathParts.push(new PathPart(alias, joins, schema, table, facets, cfacets, filter, filtersString));
                     filter = undefined; filtersString = undefined; cfacets = undefined; facets = undefined; join = undefined; joins = [];
                 }
@@ -290,7 +287,7 @@
 
         // this is for the last part of url that might not end with join.
         if (filter || cfacets || facets || joins.length > 0) {
-            pathParts.push(new PathPart(MAIN_TABLE_ALIAS, joins, schema, table, facets, cfacets, filter, filtersString));
+            pathParts.push(new PathPart(module._parserAliases.MAIN_TABLE, joins, schema, table, facets, cfacets, filter, filtersString));
         }
 
         this._pathParts = pathParts;
@@ -702,7 +699,7 @@
          * @type {String}
          */
         get mainTableAlias() {
-            return MAIN_TABLE_ALIAS;
+            return module._parserAliases.MAIN_TABLE;
         },
 
 

@@ -845,6 +845,25 @@ exports.execute = (options) => {
                             done.fail(err);
                         });
                     });
+
+                    // it ("update should ignore the rows that cannot be updated", function (done) {
+                    //     tuples.forEach(function (t) {
+                    //         t.data["name"] = "new name";
+                    //         t.data["term"] = "new term";
+                    //     })
+                    //
+                    //     reference.update(tuples).then(function (res) {
+                    //         var p = res.successful;
+                    //         expect(p.length).toBe(1, "result length missmatch");
+                    //         expect(p.tuples[0].values[0]).toBe(9001, "key missmatch");
+                    //         expect(p.tuples[0].values[1]).toBe("new name", "name missmatch");
+                    //         expect(p.tuples[0].values[2]).toBe("new term", "term missmatch");
+                    //
+                    //         done();
+                    //     }).catch(function (err) {
+                    //         done.fail(err);
+                    //     });
+                    // });
                 });
 
                 describe("when some of the visible columns cannot be updated", function () {
