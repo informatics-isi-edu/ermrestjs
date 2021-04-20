@@ -587,6 +587,7 @@ exports.execute = (options) => {
         });
 
         describe("regarding dynamic ACLs, ", function () {
+
             describe ("when delete is only allowed for certain rows", function () {
                 var reference;
 
@@ -653,6 +654,106 @@ exports.execute = (options) => {
                 });
             });
 
+            describe("when delete is only allowed for certain rows in related entities", function () {
+                var reference;
+
+                beforeAll((done) => {
+                    // the tables are readable
+                    // perm_related_table is deletable
+                    // only row with id_2=2 is deletable for assoc
+                    setCatalogAcls(done, tablePermUri + "/key=9000", catalogId, {
+                        "catalog": {
+                            "id": catalogId,
+                            "schemas" : {
+                                "permission_schema": {
+                                    "tables" : {
+                                        "perm_table": {
+                                            "acls": {
+                                                "select": [restrictedUserId]
+                                            }
+                                        },
+                                        "perm_related_table": {
+                                            "acls": {
+                                                "select": [restrictedUserId],
+                                                "delete": [restrictedUserId]
+                                            }
+                                        },
+                                        "perm_association_table": {
+                                            "acls": {
+                                                "select": [restrictedUserId]
+                                            },
+                                            "acl_bindings": {
+                                                "can_delete_row": {
+                                                    "types": ["delete"],
+                                                    "projection": [
+                                                        {"filter": "id_2", "operand": "2"}, "id_2"
+                                                    ],
+                                                    "projection_type": "nonnull"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }, (response) => reference = response.contextualize.detailed, restrictedUserCookie);
+                });
+
+                it ("should Tuple should return proper canUnlink values", function (done) {
+                    reference.read(1).then(function (page) {
+                        expect(page.length).toBe(1, "main page length missmatch");
+
+                        // will generate the related reference
+                        var activeList = reference.generateActiveList(page.tuples[0]);
+
+                        expect(reference.related.length).toBe(1, "related length missmatch");
+
+                        return reference.related[0].read(2, null, false, false, true);
+                    }).then(function (page) {
+                        expect(page.length).toBe(2, "page length missmatch");
+
+                        expect(page.tuples.map(function (t) {
+                            return t.canUnlink;
+                        })).toEqual([false, true], "canUnlink missmatch");
+
+                        done();
+                    }).catch(function (err) {
+                        done.fail(err);
+                    });
+                });
+
+                afterAll((done) => {
+                    utils.resetCatalogAcls(done, {
+                        "catalog": {
+                            "id": catalogId,
+                            "schemas" : {
+                                "permission_schema": {
+                                    "tables" : {
+                                        "perm_table": {
+                                            "acls": {
+                                                "select": []
+                                            }
+                                        },
+                                        "perm_related_table": {
+                                            "acls": {
+                                                "select": [],
+                                                "delete": []
+                                            }
+                                        },
+                                        "perm_association_table": {
+                                            "acls": {
+                                                "select": []
+                                            },
+                                            "acl_bindings": {}
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                });
+            });
+
             describe ("when update is only allowed for certain rows", function () {
                 var reference;
 
@@ -669,7 +770,7 @@ exports.execute = (options) => {
                                             },
                                             "acl_bindings": {
                                                 "can_update_row": {
-                                                    "types": ["delete"],
+                                                    "types": ["update"],
                                                     "projection": [
                                                         {"filter": "key", "operand": 9002}, "key"
                                                     ],
@@ -684,13 +785,13 @@ exports.execute = (options) => {
                     }, (response) => reference = response, restrictedUserCookie);
                 });
 
-                it ("Tuple should return proper canDelete values", function (done) {
+                it ("Tuple should return proper canUpdate values", function (done) {
                     reference.read(3).then(function (page) {
                         expect(page.length).toBe(3, "page length missmatch");
 
                         expect(page.tuples.map(function (t) {
-                            return t.canDelete;
-                        })).toEqual([false, false, true], "canDelete missmatch");
+                            return t.canUpdate;
+                        })).toEqual([false, false, true], "canUpdate missmatch");
 
                         done();
                     }).catch(function (err) {
@@ -730,7 +831,7 @@ exports.execute = (options) => {
                     // therefore:
                     //  9000: none of the columns can be updated
                     //  9001: all the columns can be updated
-                    //  9002: some columns can be updated
+                    //  9002: some columns can be updated (term, fk_col_2)
                     setCatalogAcls(done, tablePermUri, catalogId, {
                         "catalog": {
                             "id": catalogId,
@@ -739,7 +840,7 @@ exports.execute = (options) => {
                                     "tables" : {
                                         "perm_table": {
                                             "acls": {
-                                                "select": ["*"],
+                                                "select": ["*"]
                                             },
                                             "acl_bindings": {
                                                 "can_update_any_valid_rows": {
@@ -773,7 +874,7 @@ exports.execute = (options) => {
                                                             ],
                                                             "projection_type": "nonnull"
                                                         }
-                                                    }
+                                                },
                                                 },
                                                 "term": {
                                                     "acl_bindings": {
@@ -782,6 +883,13 @@ exports.execute = (options) => {
                                                             "types": ["update"],
                                                             "projection": [
                                                                 {"filter": "key", "operand": 9001}, "key"
+                                                            ],
+                                                            "projection_type": "nonnull"
+                                                        },
+                                                        "can_update_col_for_9002": {
+                                                            "types": ["update"],
+                                                            "projection": [
+                                                                {"filter": "key", "operand": 9002}, "key"
                                                             ],
                                                             "projection_type": "nonnull"
                                                         }
@@ -811,13 +919,13 @@ exports.execute = (options) => {
                                                         },
                                                         // this column allows for 9002,
                                                         // but since fk_col_1 doesn't the whole fk doesn't
-                                                        // "can_update_col_for_9002": {
-                                                        //     "types": ["update"],
-                                                        //     "projection": [
-                                                        //         {"filter": "key", "operand": 9002}, "key"
-                                                        //     ],
-                                                        //     "projection_type": "nonnull"
-                                                        // }
+                                                        "can_update_col_for_9002": {
+                                                            "types": ["update"],
+                                                            "projection": [
+                                                                {"filter": "key", "operand": 9002}, "key"
+                                                            ],
+                                                            "projection_type": "nonnull"
+                                                        }
                                                     }
                                                 }
                                             }
@@ -829,52 +937,91 @@ exports.execute = (options) => {
                     }, (response) => reference = response.contextualize.entryEdit, restrictedUserCookie);
                 });
 
-                describe ("when all the visible columns cannot be updated", function () {
-                    it ("Tuple should return proper canUpdate values", function (done) {
-                        reference.read(3).then(function (page) {
-                            expect(page.length).toBe(3, "page length missmatch");
+                it ("Tuple should return proper canUpdate based on table and column level acls, ", function (done) {
+                    reference.read(3).then(function (page) {
+                        expect(page.length).toBe(3, "page length missmatch");
 
-                            tuples = page.tuples;
+                        tuples = page.tuples;
 
-                            expect(tuples.map(function (t) {
-                                return t.canUpdate;
-                            })).toEqual([false, true, false], "canUpdate missmatch");
+                        expect(tuples[0].data['key']).toBe(9000, "tuple index=0 missmatch");
+                        expect(tuples[0].canUpdate).toBe(false, "none of the columns can be udpated");
 
-                            done();
-                        }).catch(function (err) {
-                            done.fail(err);
-                        });
+                        expect(tuples[1].data['key']).toBe(9001, "tuple index=1 missmatch");
+                        expect(tuples[1].canUpdate).toBe(true, "all columns can be updated");
+
+                        expect(tuples[2].data['key']).toBe(9002, "tuple index=2 missmatch");
+                        expect(tuples[2].canUpdate).toBe(true, "some of the columns can be udpated");
+
+                        done();
+                    }).catch(function (err) {
+                        done.fail(err);
                     });
-
-                    // it ("update should ignore the rows that cannot be updated", function (done) {
-                    //     tuples.forEach(function (t) {
-                    //         t.data["name"] = "new name";
-                    //         t.data["term"] = "new term";
-                    //     })
-                    //
-                    //     reference.update(tuples).then(function (res) {
-                    //         var p = res.successful;
-                    //         expect(p.length).toBe(1, "result length missmatch");
-                    //         expect(p.tuples[0].values[0]).toBe(9001, "key missmatch");
-                    //         expect(p.tuples[0].values[1]).toBe("new name", "name missmatch");
-                    //         expect(p.tuples[0].values[2]).toBe("new term", "term missmatch");
-                    //
-                    //         done();
-                    //     }).catch(function (err) {
-                    //         done.fail(err);
-                    //     });
-                    // });
                 });
 
-                describe("when some of the visible columns cannot be updated", function () {
-                    var reference, tuples;
-
-                    it ("Tuple should return proper canUpdate values", function () {
-
+                it ("Tuple should return proper canUpdateValues based on table and column level acls, ", function () {
+                    // none of the columns can be updated
+                    tuples[0].canUpdateValues.forEach(function (cuv, i) {
+                        expect(cuv).toBe(false, "missmatch for row index=0, col index="+ i);
                     });
 
-                    it ("update should ignore the columns that cannot be updated", function () {
+                    // all of the columns can be updated
+                    tuples[1].canUpdateValues.forEach(function (cuv, i) {
+                        expect(cuv).toBe(true, "missmatch for row index=1, col index="+ i);
+                    });
 
+                    // only term can be updated:
+                    tuples[2].canUpdateValues.forEach(function (cuv, i) {
+                        // term is the third visible column list
+                        expect(cuv).toBe(i == 2, "missmatch for row index=2, col index="+ i);
+                    });
+                });
+
+                it ("update should ignore the rows and columns that cannot be updated", function (done) {
+                    tuples.forEach(function (t) {
+                        t.data["name"] = "new name";
+                        t.data["term"] = "new term";
+                    })
+
+                    reference.update([tuples[0], tuples[1]]).then(function (res) {
+                        var p = res.disabled;
+                        expect(p.length).toBe(1, "disabled length missmatch");
+                        expect(p.tuples[0].values[0]).toBe("9000", "disabled first row key missmatch");
+
+                        p = res.successful;
+                        expect(p.length).toBe(1, "result length missmatch");
+                        expect(p.tuples[0].values[0]).toBe("9001", "successful key missmatch");
+                        expect(p.tuples[0].values[1]).toBe("new name", "successful name missmatch");
+                        expect(p.tuples[0].values[2]).toBe("new term", "successful term missmatch");
+
+                        // NOTE we cannot support multi-edit for this case,
+                        // if we attempt multi-edit, it will throw an error
+                        return reference.update([tuples[2]]);
+                    }).then(function (res) {
+                        p = res.successful;
+                        expect(p.length).toBe(1, "successful 9002 length missmatch");
+                        expect(p.tuples[0].values[0]).toBe("9002", "successful 9002 key missmatch");
+                        // name cannot be updated and therefore ignored
+                        expect(p.tuples[0].values[1]).toBe("one", "successful 9002 name missmatch");
+                        expect(p.tuples[0].values[2]).toBe("new term", "successful 9002 term missmatch");
+                        return reference.read(3);
+                    }).then (function (res) {
+                        expect(res.length).toBe(3, "after update: page length missmatch");
+
+                        var values = [
+                            {"key": 9000, "name": "one", "term": "term one"},
+                            {"key": 9001, "name": "new name", "term": "new term"},
+                            {"key": 9002, "name": "one", "term": "new term"}
+                        ]
+                        values.forEach(function (v, i) {
+                            for (var k in v) {
+                                expect(res.tuples[i].data[k]).toEqual(v[k], "after update: tuple index=" + i  + ", col="+ k +" value missmatch");
+                            }
+                        })
+
+                        done();
+                    }).catch(function (err) {
+                        console.log(err);
+                        done.fail(err);
                     });
                 });
 
@@ -905,6 +1052,7 @@ exports.execute = (options) => {
                     });
                 });
             });
+
         });
 
     });

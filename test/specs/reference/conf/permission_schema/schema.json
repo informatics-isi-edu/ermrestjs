@@ -83,8 +83,13 @@
             ],
             "annotations": {
                 "tag:isrd.isi.edu,2016:visible-columns": {
-                    "entry": [
+                    "*": [
                         "key", "name", "term", ["permission_schema", "perm_table_fk1"]
+                    ]
+                },
+                "tag:isrd.isi.edu,2016:visible-foreign-keys": {
+                    "detailed": [
+                        ["permission_schema", "perm_association_table_fk_1"]
                     ]
                 }
             }
@@ -134,11 +139,101 @@
                     }
                 }
             ]
+        },
+        "perm_association_table": {
+            "kind": "table",
+            "keys": [
+                {
+                    "unique_columns": [
+                        "id_1", "id_2"
+                    ]
+                }
+            ],
+            "foreign_keys": [
+                {
+                    "names": [["permission_schema", "perm_association_table_fk_1"]],
+                    "foreign_key_columns": [
+                        {
+                            "schema_name": "permission_schema",
+                            "table_name": "perm_association_table",
+                            "column_name": "id_1"
+                        }
+                    ],
+                    "referenced_columns": [
+                        {
+                            "schema_name": "permission_schema",
+                            "table_name": "perm_table",
+                            "column_name": "key"
+                        }
+                    ]
+                },
+                {
+                    "names": [["permission_schema", "perm_association_table_fk_2"]],
+                    "foreign_key_columns": [
+                        {
+                            "schema_name": "permission_schema",
+                            "table_name": "perm_association_table",
+                            "column_name": "id_2"
+                        }
+                    ],
+                    "referenced_columns": [
+                        {
+                            "schema_name": "permission_schema",
+                            "table_name": "perm_related_table",
+                            "column_name": "id"
+                        }
+                    ]
+                }
+            ],
+            "table_name": "perm_association_table",
+            "schema_name": "permission_schema",
+            "column_definitions": [
+                {
+                    "name": "id_1",
+                    "nullok": false,
+                    "type": {
+                        "typename": "int"
+                    }
+                },
+                {
+                    "name": "id_2",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2016:visible-columns": {
+                    "*": [
+                        "name"
+                    ]
+                }
+            }
+        },
+        "perm_related_table": {
+            "kind": "table",
+            "keys":  [{"unique_columns": ["id"]}],
+            "foreign_keys": [],
+            "table_name": "perm_related_table",
+            "schema_name": "permission_schema",
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "name",
+                    "type": {
+                        "typename": "text"
+                    }
+                }
+            ]
         }
     },
-    "table_names": [
-        "perm_table"
-    ],
     "comment": null,
     "annotations": {}
 }

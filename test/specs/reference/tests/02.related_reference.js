@@ -69,6 +69,13 @@ exports.execute = function(options) {
             expect(JSON.stringify(ref.location.facets.decoded)).toEqual(JSON.stringify(facet), "facet missmatch.");
         };
 
+        function checkUri (index, expectedTable, expectedFacets) {
+            var loc = relatedWithTuple[index].location;
+            expect(loc.facets).not.toBeNull("facets was null for tuple index=" + index);
+            expect(JSON.stringify(loc.facets.decoded['and'], null, 0)).toEqual(JSON.stringify(expectedFacets, null, 0), "facets was not as expected for tuple index="+ index);
+            expect(loc.tableName).toBe(expectedTable, "table name was not as expected for tuple index="+ index);
+        }
+
         // you should use this function only after options.entities value is populated
         // (in any of jasmine blocks)
         function findRID (currSchema, currTable, keyName, keyValue) {
@@ -299,13 +306,6 @@ exports.execute = function(options) {
                     describe("with tuple defined, ", function () {
                         it('should create the link using faceting (starting from related table with facet based on shortestkey of main table).', function() {
 
-                            var checkUri = function (index, expectedTable, expectedFacets) {
-                                var loc = relatedWithTuple[index].location;
-                                expect(loc.facets).not.toBeNull("facets was null for tuple index=" + index);
-                                expect(JSON.stringify(loc.facets.decoded['and'], null, 0)).toEqual(JSON.stringify(expectedFacets, null, 0), "facets was not as expected for tuple index="+ index);
-                                expect(loc.tableName).toBe(expectedTable, "table name was not as expected for tuple index="+ index);
-                            }
-
                             checkUri(0, "inbound_related_reference_table", [{
                                 "source":[{"outbound":["reference_schema","fromname_fk_inbound_related_to_reference"]},"RID"],
                                 "choices":[findRID(schemaName, tableName, "id", "9003")]
@@ -448,13 +448,37 @@ exports.execute = function(options) {
                 });
 
                 describe('.uri ', function () {
-                    it('.uri should be properly defiend based on schema.', function() {
-                        expect(related[2].uri).toBe(singleEnitityUri + "/(id)=(reference_schema:association_table_with_toname:id_from_ref_table)/(id_from_inbound_related_table)=(reference_schema:inbound_related_reference_table:id)");
+                    describe("without tuple, ", function () {
+                        it('.uri should be properly defiend based on schema.', function() {
+                            expect(related[2].uri).toBe(singleEnitityUri + "/(id)=(reference_schema:association_table_with_toname:id_from_ref_table)/(id_from_inbound_related_table)=(reference_schema:inbound_related_reference_table:id)");
+                        });
+
+                        it('should be encoded.', function() {
+                            expect(related[3].uri).toBe(singleEnitityUri + "/(id)=(reference_schema:association%20table%20with%20id:id%20from%20ref%20table)/(id_from_inbound_related_table)=(reference_schema:inbound_related_reference_table:id)");
+                        });
                     });
 
-                    it('should be encoded.', function() {
-                        expect(related[3].uri).toBe(singleEnitityUri + "/(id)=(reference_schema:association%20table%20with%20id:id%20from%20ref%20table)/(id_from_inbound_related_table)=(reference_schema:inbound_related_reference_table:id)");
-                    });
+                    describe("with tuple, ", function () {
+                        it('should create the link using faceting (starting from related table with facet based on shortestkey of main table).', function() {
+                            checkUri(2, "inbound_related_reference_table", [{
+                                "source":[
+                                    {"inbound":["reference_schema","association_table_with_toname_id_from_inbound_related_table1"], "alias": "A"},
+                                    {"outbound":["reference_schema","toname_fk_association_related_to_reference"]},
+                                    "RID"
+                                ],
+                                "choices":[findRID(schemaName, tableName, "id", "9003")]
+                            }]);
+
+                            checkUri(3, "inbound_related_reference_table", [{
+                                "source":[
+                                    {"inbound":["reference_schema","fk_to_inbound_related_reference_table"], "alias": "A"},
+                                    {"outbound":["reference_schema","id_fk_association_related_to_reference"]},
+                                    "RID"
+                                ],
+                                "choices":[findRID(schemaName, tableName, "id", "9003")]
+                            }]);
+                        });
+                    })
                 });
 
                 it('.derivedAssociationReference should be defined.', function() {

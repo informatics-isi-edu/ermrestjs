@@ -1349,6 +1349,8 @@
          * If there's a @before in url and the number of results is less than the
          * given limit, we will remove the @before and run the read again. Setting
          * dontCorrectPage to true, will not do this extra check.
+         * @param {Boolean} getUnlinkTRS whether we should fetch the acls of association
+         *                  table. Use this only if the association is based on facet syntax
          *
          * NOTE setting useEntity to true, will ignore any sort that is based on
          * pseduo-columns.
@@ -1865,10 +1867,10 @@
                     // NOTE: ermrest returns only some of the column data.
                     // make sure that pageData has all the submitted and updated data
                     for (i = 0; i < tuples.length; i++) {
-                        for (j in tuples[i].data) {
-                            if (!tuples[i].data.hasOwnProperty(j)) continue;
+                        for (j in tuples[i]._oldData) {
+                            if (!tuples[i]._oldData.hasOwnProperty(j)) continue;
                             if (j in pageData[i]) continue; // pageData already has this data
-                            pageData[i][j] =tuples[i].data[j]; // add the missing data
+                            pageData[i][j] =tuples[i]._oldData[j]; // add the missing data
                         }
                     }
 
@@ -4026,6 +4028,7 @@
                 }
 
                 // add trs for the association table
+                // TODO feels hacky! this is assuming that the alias exists
                 if (getUnlinkTRS && associatonTable && associatonTable.supportRightsSummary) {
                     rightSummFn = module._ERMrestFeatures.TABLE_RIGHTS_SUMMARY;
                     aggList.push(associationTableAlias + "_" + rightSummFn + ":=" + rightSummFn + "(" + associationTableAlias + ":RID" + ")");
@@ -4695,6 +4698,9 @@
                     }
                     this._extraLinkedData = tempData;
                 }
+
+                this._rightsSummary = [];
+                this._associationRightsSummary = [];
             }
         }
         // entity output (linkedData is empty)
@@ -5153,7 +5159,7 @@
             }
 
             if (permission === module._ERMrestACLs.COLUMN_UPDATE) {
-                if (isObjectAndNotNull(sum) && typeof sum[colName] !== 'boolean') return true;
+                if (!isObjectAndNotNull(sum) && typeof sum[colName] !== 'boolean') return true;
                 return sum[colName];
             }
 
