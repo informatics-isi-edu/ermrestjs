@@ -5159,7 +5159,7 @@
             }
 
             if (permission === module._ERMrestACLs.COLUMN_UPDATE) {
-                if (!isObjectAndNotNull(sum) && typeof sum[colName] !== 'boolean') return true;
+                if (!isObjectAndNotNull(sum) || typeof sum[colName] !== 'boolean') return true;
                 return sum[colName];
             }
 

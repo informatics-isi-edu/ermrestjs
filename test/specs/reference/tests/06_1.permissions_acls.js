@@ -820,7 +820,7 @@ exports.execute = (options) => {
                 });
             });
 
-            describe ("when update is only allowed for certain columns", function () {
+            describe ("when update is only allowed for certain columns,", function () {
                 var reference, tuples;
 
                 beforeAll((done) => {
@@ -853,6 +853,9 @@ exports.execute = (options) => {
                                             },
                                             "columns": {
                                                 "key": {
+                                                    "acls": {
+                                                        "select": ["*"]
+                                                    },
                                                     "acl_bindings": {
                                                         "can_update_any_valid_rows": false,
                                                         "can_update_col_for_9001": {
@@ -865,6 +868,9 @@ exports.execute = (options) => {
                                                     }
                                                 },
                                                 "name": {
+                                                    "acls": {
+                                                        "select": ["*"]
+                                                    },
                                                     "acl_bindings": {
                                                         "can_update_any_valid_rows": false,
                                                         "can_update_col_for_9001": {
@@ -877,6 +883,9 @@ exports.execute = (options) => {
                                                 },
                                                 },
                                                 "term": {
+                                                    "acls": {
+                                                        "select": ["*"]
+                                                    },
                                                     "acl_bindings": {
                                                         "can_update_any_valid_rows": false,
                                                         "can_update_col_for_9001": {
@@ -896,6 +905,9 @@ exports.execute = (options) => {
                                                     }
                                                 },
                                                 "fk_col_1": {
+                                                    "acls": {
+                                                        "select": ["*"]
+                                                    },
                                                     "acl_bindings": {
                                                         "can_update_any_valid_rows": false,
                                                         "can_update_col_for_9001": {
@@ -908,6 +920,9 @@ exports.execute = (options) => {
                                                     }
                                                 },
                                                 "fk_col_2": {
+                                                    "acls": {
+                                                        "select": ["*"]
+                                                    },
                                                     "acl_bindings": {
                                                         "can_update_any_valid_rows": false,
                                                         "can_update_col_for_9001": {
