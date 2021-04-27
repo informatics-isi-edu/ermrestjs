@@ -1037,7 +1037,7 @@
                 } else if (ref._table._isGenerated) {
                     this._canCreate = false;
                     this._canCreateReason = pm.TABLE_GENERATED;
-                } else if (!ref._checkPermissions(module._ERMrestACLs.INSERT)) {
+                } else if (!ref.checkPermissions(module._ERMrestACLs.INSERT)) {
                     this._canCreate = false;
                     this._canCreateReason = pm.NO_CREATE;
                 } else {
@@ -1080,7 +1080,7 @@
          */
         get canRead() {
             if (this._canRead === undefined) {
-                this._canRead = this._checkPermissions(module._ERMrestACLs.SELECT);
+                this._canRead = this.checkPermissions(module._ERMrestACLs.SELECT);
             }
             return this._canRead;
         },
@@ -1112,7 +1112,7 @@
                 } else if (ref._table._isImmutable) {
                     this._canUpdate = false;
                     this._canUpdateReason = pm.TABLE_IMMUTABLE;
-                } else if (!ref._checkPermissions(module._ERMrestACLs.UPDATE)) {
+                } else if (!ref.checkPermissions(module._ERMrestACLs.UPDATE)) {
                     this._canUpdate = false;
                     this._canUpdateReason = pm.NO_UPDATE;
                 } else {
@@ -1159,7 +1159,7 @@
             // 1) table is not non-deletable
             // 2) user has write permission
             if (this._canDelete === undefined) {
-                this._canDelete = this._table.kind !== module._tableKinds.VIEW && !this._table._isNonDeletable && this._checkPermissions(module._ERMrestACLs.DELETE);
+                this._canDelete = this._table.kind !== module._tableKinds.VIEW && !this._table._isNonDeletable && this.checkPermissions(module._ERMrestACLs.DELETE);
             }
             return this._canDelete;
         },
@@ -1170,7 +1170,7 @@
          * @memberof ERMrest
          * @private
          */
-         _checkPermissions: function (permission) {
+         checkPermissions: function (permission) {
             // Return true if permission is null
             if (this._table.rights[permission] === null) return true;
             return this._table.rights[permission];
@@ -5152,7 +5152,7 @@
             notimplemented();
         },
 
-        _checkPermissions: function (permission, colName, isAssoc) {
+        checkPermissions: function (permission, colName, isAssoc) {
             var sum = this._rightsSummary[permission];
             if (isAssoc) {
                 sum = this._associationRightsSummary[permission];
@@ -5195,7 +5195,7 @@
                     this._canUpdateReason = this._pageRef.canUpdateReason;
                 }
                 // check row level permission
-                else if (!this._checkPermissions(module._ERMrestACLs.UPDATE)) {
+                else if (!this.checkPermissions(module._ERMrestACLs.UPDATE)) {
                     this._canUpdate = false;
                     this._canUpdateReason = pm.NO_UPDATE_ROW;
                 } else {
@@ -5212,7 +5212,7 @@
                         if (ref.table == self._pageRef.table) { // make sure not alternative
                             canUpdateOneCol = ref.columns.some(function (col) {
                                 return !col.inputDisabled && !col._baseCols.some(function (bcol) {
-                                    return !self._checkPermissions(
+                                    return !self.checkPermissions(
                                         module._ERMrestACLs.COLUMN_UPDATE,
                                         bcol.name
                                     );
@@ -5262,7 +5262,7 @@
         get canDelete() {
             if (this._canDelete === undefined) {
                 // make sure table and row can be deleted
-                this._canDelete = this._pageRef.canDelete && this._checkPermissions(module._ERMrestACLs.DELETE);
+                this._canDelete = this._pageRef.canDelete && this.checkPermissions(module._ERMrestACLs.DELETE);
             }
             return this._canDelete;
         },
@@ -5274,7 +5274,7 @@
                 } else {
                     var ref = this._pageRef.derivedAssociationReference;
                     // make sure association table and row can be deleted
-                    this._canUnlink = ref.canDelete && this._checkPermissions("delete", null, true);
+                    this._canUnlink = ref.canDelete && this.checkPermissions("delete", null, true);
                 }
             }
             return this._canUnlink;
@@ -5383,7 +5383,7 @@
                 var self = this, column, presentation;
 
                 var checkUpdateColPermission = function (col) {
-                    return !self._checkPermissions(
+                    return !self.checkPermissions(
                         module._ERMrestACLs.COLUMN_UPDATE,
                         col.name
                     );
