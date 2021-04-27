@@ -194,9 +194,12 @@ Before running the test cases you need to set `ERMREST_URL`, `AUTH_COOKIE`, and 
 
 ```sh
 export ERMREST_URL=YOUR_ERMREST_URL
-export AUTH_COOKIE=YOUR_ERMREST_COOKIE
-export RESTRICTED_AUTH_COOKIE=YOUR_SECOND_USER_ERMREST_COOKIE
+export AUTH_COOKIE=YOUR_WEBAUTHN_COOKIE
+export RESTRICTED_AUTH_COOKIE=YOUR_SECOND_USER_WEBAUTHN_COOKIE
 ```
+- `ERMREST_URL`: the URL to the ERMrest service on a (possibly, remote) host.
+- `AUTH_COOKIE`: a primary user cookie valid to the (possibly, remote) host running the ERMrest service.
+- `RESTRICTED_AUTH_COOKIE`: a secondary user cookie valid to the (possibly, remote) host running the ERMrest service.
 
 The build needs to be generated for the tests to work, which means running the following commands to execute the test cases.
 

@@ -570,10 +570,6 @@ exports.execute = function (options) {
                         }).then(function (newPage) {
                             expect(returnedData(newPage._data[0])).toEqual(expectedData, "read data missmatch.");
 
-                            // make sure the next test cases are using the correct user
-                            options.ermRest.setUserCookie(process.env.AUTH_COOKIE);
-                            return utils.removeCachedCatalog(options.ermRest, catalog_id);
-                        }).then(function () {
                             done();
                         }).catch(function (error) {
                             done.fail(error);
@@ -581,9 +577,11 @@ exports.execute = function (options) {
                     });
 
                     afterAll((done) => {
+                        options.ermRest.setUserCookie(process.env.AUTH_COOKIE);
+                        utils.removeCachedCatalog(options.ermRest, catalog_id);
                         utils.resetCatalogAcls(done, {
                             "catalog": {
-                                "id": catalogId,
+                                "id": catalog_id,
                                 "acls": {
                                     "enumerate": []
                                 },
@@ -611,6 +609,7 @@ exports.execute = function (options) {
                         });
                     });
                 });
+
             });
 
         });

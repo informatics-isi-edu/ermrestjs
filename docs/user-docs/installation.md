@@ -68,14 +68,14 @@ So you don't necessarily need to run `make doc`.
 ## Unit Testing
 
 Before running the test cases you need to set the environment variables.
-- `ERMREST_URL`: the URL to the ermrest service on a (possibly, remote) host.
-- `AUTH_COOKIE`: a primary user cookie valid to the (possibly, remote) host running the ermrest service.
-- `RESTRICTED_AUTH_COOKIE`: a secondary user cookie valid to the (possibly, remote) host running the ermrest service.
+- `ERMREST_URL`: the URL to the ERMrest service on a (possibly, remote) host.
+- `AUTH_COOKIE`: a primary user cookie valid to the (possibly, remote) host running the ERMrest service.
+- `RESTRICTED_AUTH_COOKIE`: a secondary user cookie valid to the (possibly, remote) host running the ERMrest service.
 
 ```
 export ERMREST_URL=https://hostname/ermrest
-export AUTH_COOKIE=YOUR_ERMREST_COOKIE
-export RESTRICTED_AUTH_COOKIE=YOUR_SECOND_USER_ERMREST_COOKIE
+export AUTH_COOKIE=YOUR_WEBAUTHN_COOKIE
+export RESTRICTED_AUTH_COOKIE=YOUR_SECOND_USER_WEBAUTHN_COOKIE
 ```
 
 To execute the tests, run the following command:
