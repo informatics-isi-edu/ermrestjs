@@ -302,6 +302,16 @@
          */
         this.schemas = new Schemas();
 
+        /**
+         * The ERMrest features that the catalog supports
+         * @type {Object}
+         */
+        this.features = {};
+
+        for (var f in module._ERMrestFeatures) {
+            this.features[module._ERMrestFeatures[f]] = false;
+        }
+
         this._jsonCatalog = null;
 
         this._schemaFetched = false;
@@ -450,6 +460,12 @@
             // load the catalog (or use the one that is cached)
             this._get().then(function(response) {
                 self.snaptime = response.snaptime;
+
+                if ("features" in response) {
+                    for (var k in self.features) {
+                        self.features[k] = response.features[k];
+                    }
+                }
 
                 self.annotations = new Annotations();
                 for (var uri in response.annotations) {
@@ -1807,6 +1823,25 @@
                 this._computePureBinaryAssociation();
             }
             return this._pureBinaryForeignKeys_cached;
+        },
+
+
+        get supportRightsSummary() {
+            if (this._supportRightsSummary === undefined) {
+                var rightKey = module._ERMrestFeatures.TABLE_RIGHTS_SUMMARY;
+                var feature = this.schema.catalog.features[rightKey] === true;
+                this._supportRightsSummary = feature && this.columns.has("RID");
+            }
+            return this._supportRightsSummary;
+        },
+
+        get supportColumnRightsSummary() {
+            if (this._supportColumnRightsSummary === undefined) {
+                var rightKey = module._ERMrestFeatures.TABLE_COL_RIGHTS_SUMMARY;
+                var feature = this.schema.catalog.features[rightKey] === true;
+                this._supportColumnRightsSummary = feature && this.columns.has("RID");
+            }
+            return this._supportColumnRightsSummary;
         },
 
         _computePureBinaryAssociation: function () {

@@ -103,7 +103,7 @@
         // returns null if the path is invalid
         // reverse: this will reverse the datasource and adds the root alias to the end
         parseDataSource: function (source, alias, tableName, catalogId, reverse, consNames) {
-            var fks = [], fk, fkObj, i, col, table, isInbound, constraint, schemaName, ignoreFk;
+            var fks = [], fk, fkObj, i, col, table, isInbound, constraint, schemaName, ignoreFk, fkAlias;
 
             var start = 0, end = source.length - 1;
             for (i = start; i < end; i++) {
@@ -117,6 +117,11 @@
                 } else {
                     // given object was invalid
                     return null;
+                }
+
+                fkAlias = null;
+                if ("alias" in source[i] && typeof source[i].alias === "string") {
+                    fkAlias = source[i].alias;
                 }
 
                 fkObj = _renderFacetHelpers.findConsName(catalogId, constraint[0], constraint[1], consNames);
@@ -145,7 +150,7 @@
                 tableName = table.name;
                 schemaName = table.schema.name;
                 // fk.toString((reverse && !isInbound) || (!reverse && isInbound), false)
-                fks.push({obj: fk, isInbound: isInbound});
+                fks.push({obj: fk, isInbound: isInbound, alias: fkAlias});
             }
 
             // if the given facetSource doesn't have any path
@@ -185,7 +190,7 @@
                     // if we have reversed the path, we need to add the alias to the last bit
                     return ((i > 0) ? (fkStr + "/") : (alias + ":=right" + fkStr) ) + prev;
                 } else {
-                    return prev + (i > 0 ? "/" : "") + fkStr;
+                    return prev + (i > 0 ? "/" : "") + (fk.alias ? fk.alias + ":=" : "") + fkStr;
                 }
             }, "");
 

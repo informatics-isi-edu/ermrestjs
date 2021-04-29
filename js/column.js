@@ -485,19 +485,6 @@ ReferenceColumn.prototype = {
         return {isHTML: isHTML, value: value, unformatted: unformatted};
     },
 
-    /**
-     * @desc Indicates if the input should be disabled, in different contexts
-     * true: input must be disabled
-     * false:  input can be enabled
-     * object: input msut be disabled (show .message to user)
-     * TODO should be removed in favor of inputDisabled
-     *
-     * @type {boolean|object}
-     */
-    getInputDisabled: function (context) {
-        return this._determineInputDisabled(context);
-    },
-
     _determineInputDisabled: function(context) {
         if (this._simple) {
             return this._baseCols[0].getInputDisabled(context);

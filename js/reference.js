@@ -114,16 +114,16 @@
         try {
             verify(uri, "'uri' must be specified");
             var location;
-
             // make sure all the dependencies are loaded
             module.onload().then(function () {
-            //added try block to make sure it rejects all parse() related error
-            // It should have been taken care by outer try but did not work
-              try{
-                location = module.parse(uri);
-              } catch (error){
-                return defer.reject(error);
-              }
+                //added try block to make sure it rejects all parse() related error
+                // It should have been taken care by outer try but did not work
+                try{
+                    location = module.parse(uri);
+                } catch (error){
+                    return defer.reject(error);
+                }
+
                 var server = module.ermrestFactory.getServer(location.service, contextHeaderParams);
 
                 // find the catalog
@@ -1016,9 +1016,10 @@
 
         /**
          * Indicates whether the client has the permission to _create_
-         * the referenced resource(s). In some cases, this permission cannot
-         * be determined and the value will be `undefined`.
-         * @type {(boolean|undefined)}
+         * the referenced resource(s). Reporting a `true` value DOES NOT
+         * guarantee the user right since some policies may be undecidable until
+         * query execution.
+         * @type {boolean}
          */
         get canCreate() {
             if (this._canCreate === undefined) {
@@ -1036,7 +1037,7 @@
                 } else if (ref._table._isGenerated) {
                     this._canCreate = false;
                     this._canCreateReason = pm.TABLE_GENERATED;
-                } else if (!ref._checkPermissions("insert")) {
+                } else if (!ref.checkPermissions(module._ERMrestACLs.INSERT)) {
                     this._canCreate = false;
                     this._canCreateReason = pm.NO_CREATE;
                 } else {
@@ -1045,7 +1046,7 @@
 
                 if (this._canCreate === true) {
                     var allColumnsDisabled = ref.columns.every(function (col) {
-                        return (col.getInputDisabled(module._contexts.CREATE) !== false);
+                        return col.inputDisabled !== false;
                     });
 
                     if (allColumnsDisabled) {
@@ -1058,10 +1059,9 @@
         },
 
         /**
-         * Indicates the reason as to why a user cannot create for
-         * the referenced resource(s). In some cases, this won't be set
-         * because the user can create, so the value will be `undefined`.
-         * @type {(String|undefined)}
+         * Indicates the reason as to why a user cannot create the
+         * referenced resource(s).
+         * @type {String}
          */
         get canCreateReason() {
             if (this._canCreateReason === undefined) {
@@ -1073,22 +1073,24 @@
 
         /**
          * Indicates whether the client has the permission to _read_
-         * the referenced resource(s). In some cases, this permission cannot
-         * be determined and the value will be `undefined`.
-         * @type {(boolean|undefined)}
+         * the referenced resource(s). Reporting a `true` value DOES NOT
+         * guarantee the user right since some policies may be undecidable until
+         * query execution.
+         * @type {boolean}
          */
         get canRead() {
             if (this._canRead === undefined) {
-                this._canRead = this._checkPermissions("select");
+                this._canRead = this.checkPermissions(module._ERMrestACLs.SELECT);
             }
             return this._canRead;
         },
 
         /**
          * Indicates whether the client has the permission to _update_
-         * the referenced resource(s). In some cases, this permission cannot
-         * be determined and the value will be `undefined`.
-         * @type {(boolean|undefined)}
+         * the referenced resource(s). Reporting a `true` value DOES NOT
+         * guarantee the user right since some policies may be undecidable until
+         * query execution.
+         * @type {boolean}
          */
         get canUpdate() {
 
@@ -1110,7 +1112,7 @@
                 } else if (ref._table._isImmutable) {
                     this._canUpdate = false;
                     this._canUpdateReason = pm.TABLE_IMMUTABLE;
-                } else if (!ref._checkPermissions("update")) {
+                } else if (!ref.checkPermissions(module._ERMrestACLs.UPDATE)) {
                     this._canUpdate = false;
                     this._canUpdateReason = pm.NO_UPDATE;
                 } else {
@@ -1119,7 +1121,7 @@
 
                 if (this._canUpdate) {
                     var allColumnsDisabled = ref.columns.every(function (col) {
-                        return (col.getInputDisabled(module._contexts.EDIT) !== false);
+                        return col.inputDisabled !== false;
                     });
 
                     if (allColumnsDisabled) {
@@ -1132,10 +1134,9 @@
         },
 
         /**
-         * Indicates the reason as to why a user cannot update for
-         * the referenced resource(s). In some cases, this won't be set
-         * because the user can update, so the value will be `undefined`.
-         * @type {(String|undefined)}
+         * Indicates the reason as to why a user cannot update the
+         * referenced resource(s).
+         * @type {String}
          */
         get canUpdateReason() {
             if (this._canUpdateReason === undefined) {
@@ -1147,9 +1148,10 @@
 
         /**
          * Indicates whether the client has the permission to _delete_
-         * the referenced resource(s). In some cases, this permission cannot
-         * be determined and the value will be `undefined`.
-         * @type {(boolean|undefined)}
+         * the referenced resource(s). Reporting a `true` value DOES NOT
+         * guarantee the user right since some policies may be undecidable until
+         * query execution.
+         * @type {boolean}
          */
         get canDelete() {
 
@@ -1157,7 +1159,7 @@
             // 1) table is not non-deletable
             // 2) user has write permission
             if (this._canDelete === undefined) {
-                this._canDelete = this._table.kind !== module._tableKinds.VIEW && !this._table._isNonDeletable && this._checkPermissions("delete");
+                this._canDelete = this._table.kind !== module._tableKinds.VIEW && !this._table._isNonDeletable && this.checkPermissions(module._ERMrestACLs.DELETE);
             }
             return this._canDelete;
         },
@@ -1168,7 +1170,7 @@
          * @memberof ERMrest
          * @private
          */
-         _checkPermissions: function (permission) {
+         checkPermissions: function (permission) {
             // Return true if permission is null
             if (this._table.rights[permission] === null) return true;
             return this._table.rights[permission];
@@ -1254,7 +1256,8 @@
                     //  resolve the promise, passing back the page
                     return defer.resolve({
                       "successful": page,
-                      "failed": null
+                      "failed": null,
+                      "disabled": null
                     });
                 }).catch(function (error) {
                     return defer.reject(module.responseToError(error, self));
@@ -1346,6 +1349,8 @@
          * If there's a @before in url and the number of results is less than the
          * given limit, we will remove the @before and run the read again. Setting
          * dontCorrectPage to true, will not do this extra check.
+         * @param {Boolean} getUnlinkTRS whether we should fetch the acls of association
+         *                  table. Use this only if the association is based on facet syntax
          *
          * NOTE setting useEntity to true, will ignore any sort that is based on
          * pseduo-columns.
@@ -1359,7 +1364,7 @@
          * - {@link ERMrest.NotFoundError}: If asks for sorting based on columns that are not valid.
          * - ERMrestjs corresponding http errors, if ERMrest returns http error.
          */
-        read: function(limit, contextHeaderParams, useEntity, dontCorrectPage) {
+        read: function(limit, contextHeaderParams, useEntity, dontCorrectPage, getUnlinkTRS) {
             var defer = module._q.defer(), self = this;
 
             try {
@@ -1376,7 +1381,7 @@
                 verify(limit > 0, "'limit' must be greater than 0");
 
                 var uri = [this._location.service, "catalog", this._location.catalog].join("/");
-                var readPath = this._getReadPath(useEntity);
+                var readPath = this._getReadPath(useEntity, getUnlinkTRS);
                 if (readPath.isAttributeGroup) {
                     uri += "/attributegroup/" + readPath.value;
                 } else {
@@ -1499,15 +1504,28 @@
          * tuple.data has the new data
          * tuple._oldData has the data before changes were made
          * @param {Object} contextHeaderParams the object that we want to log.
-         * @returns {Promise} A promise resolved with a object containing `successful` and `failure` attributes.
-         * Both are {@link ERMrest.Page} of results.
+         * @returns {Promise} A promise resolved with a object containing:
+         *  -  `successful`: {@link ERMrest.Page} of results that were stored.
+         *  -  `failed`: {@link ERMrest.Page} of results that failed to be stored.
+         *  -  `disabled`: {@link ERMrest.Page} of results that were not sent to ermrest (because of acl)
          * or rejected with any of these errors:
          * - {@link ERMrest.InvalidInputError}: If `limit` is invalid or reference is not in `entry/edit` context.
          * - ERMrestjs corresponding http errors, if ERMrest returns http error.
          */
         update: function(tuples, contextHeaderParams) {
             try {
-                verify(tuples, "'tuples' must be specified");
+                verify(Array.isArray(tuples), "'tuples' must be specified");
+
+                // store the ones that cannot be updated and filter them out
+                // from the tuples list that we use to generate the update request
+                var disabledPageData = [];
+                tuples = tuples.filter(function (t) {
+                    if (!t.canUpdate) {
+                        disabledPageData.push(t.data);
+                    }
+                    return t.canUpdate;
+                });
+
                 verify(tuples.length > 0, "'tuples' must have at least one row to update");
                 verify(this._context === module._contexts.EDIT, "reference must be in 'entry/edit' context.");
 
@@ -1565,6 +1583,7 @@
                 // loop through each tuple and the visible columns list for each to determine what columns to add to the projection set
                 // If a column is changed in one tuple but not another, that column's value for every tuple needs to be present in the submission data
                 for (i = 0; i < tuples.length; i++) {
+
                     newData = tuples[i].data;
                     oldData = tuples[i]._oldData;
 
@@ -1579,6 +1598,11 @@
 
                         // if the column is disabled (generated or immutable), no need to add the column name to the projections list
                         if (column.inputDisabled) {
+                            continue;
+                        }
+
+                        // if column cannot be updated, no need to add the column to the projection list
+                        if (!tuples[i].canUpdateValues[m]) {
                             continue;
                         }
 
@@ -1663,6 +1687,16 @@
                     // Loop through the columns, check if it;s in columnProjections, and collect the necessary data for submission
                     for (m = 0; m < this.columns.length; m++) {
                         column = this.columns[m];
+
+                        // if the column is disabled (generated or immutable), skip it
+                        if (column.inputDisabled) {
+                            continue;
+                        }
+
+                        // if column cannot be updated for this tuple, skip it
+                        if (!tuples[i].canUpdateValues[m]) {
+                            continue;
+                        }
 
                         // If columns is a pusedo column
                         if (column.isPseudo) {
@@ -1833,23 +1867,23 @@
                     // NOTE: ermrest returns only some of the column data.
                     // make sure that pageData has all the submitted and updated data
                     for (i = 0; i < tuples.length; i++) {
-                        for (j in tuples[i].data) {
-                            if (!tuples[i].data.hasOwnProperty(j)) continue;
+                        for (j in tuples[i]._oldData) {
+                            if (!tuples[i]._oldData.hasOwnProperty(j)) continue;
                             if (j in pageData[i]) continue; // pageData already has this data
-                            pageData[i][j] =tuples[i].data[j]; // add the missing data
+                            pageData[i][j] =tuples[i]._oldData[j]; // add the missing data
                         }
                     }
 
                     var ref = new Reference(module.parse(uri), self._table.schema.catalog).contextualize.compactEntry;
                     ref = (response.data.length > 1 ? ref.contextualize.compactEntry : ref.contextualize.compact);
                     var successfulPage = new Page(ref, etag, pageData, false, false);
-                    var failedPage = null;
+                    var failedPage = null, disabledPage = null;
 
 
                     // if the returned page is smaller than the initial page,
                     // then some of the columns failed to update.
                     if (tuples.length > successfulPage.tuples.length) {
-                        var unchangedPageData = [], keyMatch, rowMatch;
+                        var failedPageData = [], keyMatch, rowMatch;
 
                         for (i = 0; i < tuples.length; i++) {
                             rowMatch = false;
@@ -1875,15 +1909,20 @@
 
                             if (!rowMatch) {
                                 // didn't find a match, so add as failed
-                                unchangedPageData.push(tuples[i].data);
+                                failedPageData.push(tuples[i].data);
                             }
                         }
-                        failedPage = new Page(ref, etag, unchangedPageData, false, false);
+                        failedPage = new Page(ref, etag, failedPageData, false, false);
+                    }
+
+                    if (disabledPageData.length > 0) {
+                        disabledPage = new Page(ref, etag, disabledPageData, false, false);
                     }
 
                     defer.resolve({
                         "successful": successfulPage,
-                        "failed": failedPage
+                        "failed": failedPage,
+                        "disabled": disabledPage
                     });
                 }).catch(function (error) {
                     return defer.reject(module.responseToError(error, self));
@@ -3592,7 +3631,7 @@
 
             // this name will be used to provide more information about the linkage
             if (fkr.to_name) {
-                newRef.parentDisplayname = { "value": fkr.to_name,  "unformatted": fkr.to_name, "isHTMl" : false };
+                newRef.parentDisplayname = { "value": fkr.to_name,  "unformatted": fkr.to_name, "isHTML" : false };
             } else {
                 newRef.parentDisplayname = this.displayname;
             }
@@ -3655,8 +3694,8 @@
                 newRef.derivedAssociationReference.origFKR = newRef.origFKR;
                 newRef.derivedAssociationReference._secondFKR = otherFK;
 
-                // build the filter source
-                filterSource.push({"inbound": otherFK.constraint_names[0]});
+                // build the filter source (the alias is used in the read function to get the proper acls)
+                filterSource.push({"inbound": otherFK.constraint_names[0], "alias": module._parserAliases.ASSOCIATION_TABLE});
 
                 // buld the data source
                 dataSource.push({"outbound": otherFK.constraint_names[0]});
@@ -3776,7 +3815,7 @@
          * NOTE Might throw an error if modifiers are not valid
          * @type {Object}
          */
-         _getReadPath: function(useEntity) {
+         _getReadPath: function(useEntity, getUnlinkTRS) {
             var allOutBounds = this.activeList.allOutBounds;
             var findAllOutBoundIndex = function (name) {
                 return allOutBounds.findIndex(function (aob) {
@@ -3785,6 +3824,7 @@
             };
             var hasSort = Array.isArray(this._location.sortObject) && (this._location.sortObject.length !== 0),
                 locationPath = this.location.path,
+                fkAliasPreix = module._parserAliases.FOREIGN_KEY_PREFIX,
                 _modifiedSortObject = [], // the sort object that is used for url creation (if location has sort).
                 sortMap = {}, // maps an alias to PseudoColumn, used for sorting
                 sortObject,  // the sort that will be accessible by this._location.sortObject
@@ -3851,8 +3891,8 @@
 
                             // the column must be part of outbounds, so we don't need to check for it
                             fkIndex = findAllOutBoundIndex(col.name);
-                            colName = "F" + (allOutBounds.length + k++);
-                            sortMap[colName] = ["F" + (fkIndex+1), module._fixedEncodeURIComponent(sortCols[j].column.name)].join(":");
+                            colName = fkAliasPreix + (allOutBounds.length + k++);
+                            sortMap[colName] = [fkAliasPreix + (fkIndex+1), module._fixedEncodeURIComponent(sortCols[j].column.name)].join(":");
                         } else {
                             colName = sortCols[j].column.name;
                             if (colName in sortColNames) {
@@ -3920,20 +3960,31 @@
             this._location.sortObject = sortObject;
 
             var uri = this._location.ermrestCompactPath; // used for the http request
-            var isAttributeGroup = !useEntity && allOutBounds.length > 0;
+
+            var associatonTable = this.derivedAssociationReference ? this.derivedAssociationReference.table : null;
+            var associationTableAlias = module._parserAliases.ASSOCIATION_TABLE;
+
+            var isAttributeGroup = !useEntity;
+            if (isAttributeGroup) {
+                isAttributeGroup = allOutBounds.length > 0 ||
+                                   this.table.supportColumnRightsSummary ||
+                                   this.table.supportRightsSummary ||
+                                   (getUnlinkTRS && associatonTable && associatonTable.supportRightsSummary);
+            }
 
             /** Change api to attributegroup for retrieving extra information
              * These information include:
              * - Values for the foreignkeys.
              * - Value for one-to-one pseudo-columns. These are the columns
              * that their defined path is all in the outbound direction.
+             * - tcrs feature is supported
              *
              * This will just affect the http request and not this._location
              *
              * NOTE:
              * This piece of code is dependent on the same assumptions as the current parser, which are:
-             *   0. There is no table called `T`, `M`, `F1`, `F2`, ..., `P1`, `P2`, ...
-             *   1. There is no alias in url (more precisely `T`, `M`, `F1`, `F2`, `F3`, `P1`, `P2`, ...)
+             *   0. There is no table called `A`, `T`, `M`, `F1`, `F2`, ...
+             *   1. There is no alias in url (more precisely `T`, `M`, `F1`, `F2`, `F3`, ...)
              *   2. Filter comes before the link syntax.
              *   3. There is no trailing `/` in uri (as it will break the ermrest too).
              * */
@@ -3943,13 +3994,14 @@
                     aggList = [],
                     sortColumn,
                     addedCols,
-                    aggFn = "array_d";
+                    aggFn = "array_d",
+                    rightSummFn;
 
                 // generate the projection for given pseudo column
                 var getPseudoPath = function (l) {
                     var pseudoPath = [];
                     allOutBounds[l].foreignKeys.forEach(function (f, index, arr) {
-                        pseudoPath.push(((index === arr.length-1) ? ("F" + (k+1) + ":=") : "") + f.obj.toString(!f.isInbound,true));
+                        pseudoPath.push(((index === arr.length-1) ? (fkAliasPreix + (k+1) + ":=") : "") + f.obj.toString(!f.isInbound,true));
                     });
                     return pseudoPath.join("/");
                 };
@@ -3963,7 +4015,23 @@
                     uri += getPseudoPath(k) + "/$" + mainTableAlias + "/";
 
                     // F2:array_d(F2:*),F1:array_d(F1:*)
-                    aggList.push("F" + (k+1) + ":=" + aggFn + "(F" + (k+1) + ":*)");
+                    aggList.push(fkAliasPreix + (k+1) + ":=" + aggFn + "(" + fkAliasPreix + (k+1) + ":*)");
+                }
+
+                // add trs or tcrs for main table
+                if (this.table.supportColumnRightsSummary || this.table.supportRightsSummary) {
+                    rightSummFn = module._ERMrestFeatures.TABLE_RIGHTS_SUMMARY;
+                    if (this.table.supportColumnRightsSummary) {
+                        rightSummFn = module._ERMrestFeatures.TABLE_COL_RIGHTS_SUMMARY;
+                    }
+                    aggList.push(rightSummFn + ":=" + rightSummFn + "(" + mainTableAlias + ":RID" + ")");
+                }
+
+                // add trs for the association table
+                // TODO feels hacky! this is assuming that the alias exists
+                if (getUnlinkTRS && associatonTable && associatonTable.supportRightsSummary) {
+                    rightSummFn = module._ERMrestFeatures.TABLE_RIGHTS_SUMMARY;
+                    aggList.push(associationTableAlias + "_" + rightSummFn + ":=" + rightSummFn + "(" + associationTableAlias + ":RID" + ")");
                 }
 
                 // add sort columns (it will include the key)
@@ -3988,7 +4056,7 @@
                     }
                 }
 
-                uri += Object.keys(addedCols).join(",") + ";"+mainTableAlias+":=" + aggFn + "("+mainTableAlias+":*)," + aggList.join(",");
+                uri += Object.keys(addedCols).join(",") + ";" + mainTableAlias + ":=" + aggFn + "(" + mainTableAlias + ":*)," + aggList.join(",");
             }
 
             // insert @sort()
@@ -4507,7 +4575,7 @@
      * @param {!Object[]} data The data returned from ERMrest.
      * @param {boolean} hasPrevious Whether there is more data before this Page
      * @param {boolean} hasNext Whether there is more data after this Page
-     * @param {!Object} extraData if
+     * @param {!Object} extraData based on pagination, the extra data after/before current page
      *
      */
     function Page(reference, etag, data, hasPrevious, hasNext, extraData) {
@@ -4526,32 +4594,69 @@
          */
         this._linkedData = [];
         this._data = [];
+        this._rightsSummary = [];
+        this._associationRightsSummary = [];
 
-        var allOutBounds = reference.activeList.allOutBounds;
+        var self = this,
+            table = reference.table,
+            allOutBounds = reference.activeList.allOutBounds;
 
-        // linkedData will include foreign key data
-        if (allOutBounds.length > 0) {
+        var trs = module._ERMrestFeatures.TABLE_RIGHTS_SUMMARY,
+            tcrs = module._ERMrestFeatures.TABLE_COL_RIGHTS_SUMMARY,
+            associationTableAlias = module._parserAliases.ASSOCIATION_TABLE,
+            fkAliasPreix = module._parserAliases.FOREIGN_KEY_PREFIX;
 
-            var fks = reference._table.foreignKeys.all(), i, j, colFKs;
+        // for the association rights summary
+        var associatonTable = reference.derivedAssociationReference ? reference.derivedAssociationReference.table : null;
+
+        // same logic as _readPath to see if it's attributegroup output
+        var hasLinkedData = allOutBounds.length > 0 ||
+                        table.supportColumnRightsSummary ||
+                        table.supportRightsSummary ||
+                        (associatonTable && associatonTable.supportRightsSummary);
+
+        if (hasLinkedData) {
+            var fks = reference._table.foreignKeys.all(), i, j, colFKs, key;
             var mTableAlias = this._ref.location.mainTableAlias;
 
             try {
                 // the attributegroup output
                 for (i = 0; i < data.length; i++) {
+                    // main data
                     this._data.push(data[i][mTableAlias][0]);
 
+                    // fk data
                     this._linkedData.push({});
                     for (j = allOutBounds.length - 1; j >= 0; j--) {
-                        this._linkedData[i][allOutBounds[j].name] = data[i]["F"+ (j+1)][0];
+                        this._linkedData[i][allOutBounds[j].name] = data[i][fkAliasPreix + (j+1)][0];
+                    }
+
+                    // table rights
+                    if (table.supportColumnRightsSummary || table.supportRightsSummary) {
+                        key = table.supportColumnRightsSummary ? tcrs : trs;
+                        if (key in data[i]) {
+                            this._rightsSummary.push(data[i][key]);
+                        }
+                    }
+
+                    // association table rights
+                    if (associatonTable && associatonTable.supportRightsSummary) {
+                        key = associationTableAlias + "_" + trs;
+                        if (key in data[i]) {
+                            this._associationRightsSummary.push(data[i][key]);
+                        }
                     }
                 }
 
                 //extra data
                 if (hasExtraData) {
+                    // main data
                     this._extraData = extraData[mTableAlias][0];
+
+                    // fk data
                     this._extraLinkedData = {};
                     for (j = allOutBounds.length - 1; j >= 0; j--) {
-                        this._extraLinkedData[allOutBounds[j].name] = extraData["F"+ (j+1)][0];
+                        this._extraLinkedData[allOutBounds[j].name] = extraData[fkAliasPreix + (j+1)][0];
                     }
                 }
 
@@ -4593,6 +4698,9 @@
                     }
                     this._extraLinkedData = tempData;
                 }
+
+                this._rightsSummary = [];
+                this._associationRightsSummary = [];
             }
         }
         // entity output (linkedData is empty)
@@ -4600,6 +4708,7 @@
             this._data = data;
             this._extraData = hasExtraData ? extraData : undefined;
         }
+
 
         this._hasNext = hasNext;
         this._hasPrevious = hasPrevious;
@@ -4633,7 +4742,7 @@
             if (this._tuples === undefined) {
                 this._tuples = [];
                 for (var i = 0; i < this._data.length; i++) {
-                    this._tuples.push(new Tuple(this._ref, this, this._data[i], this._linkedData[i]));
+                    this._tuples.push(new Tuple(this._ref, this, this._data[i], this._linkedData[i], this._rightsSummary[i], this._associationRightsSummary[i]));
                 }
             }
             return this._tuples;
@@ -4923,11 +5032,13 @@
      * this data was acquired.
      * @param {!Object} data The unprocessed tuple of data returned from ERMrest.
      */
-    function Tuple(pageReference, page, data, linkedData) {
+    function Tuple(pageReference, page, data, linkedData, rightsSummary, associationRightsSummary) {
         this._pageRef = pageReference;
         this._page = page;
         this._data = data || {};
         this._linkedData = (typeof linkedData === "object") ? linkedData : {};
+        this._rightsSummary = (typeof rightsSummary === "object") ? rightsSummary : {};
+        this._associationRightsSummary = (typeof rightsSummary === "object") ? associationRightsSummary : {};
     }
 
     Tuple.prototype = {
@@ -5041,41 +5152,132 @@
             notimplemented();
         },
 
-        /**
-         * Indicates whether the client can update this tuple. Because
-         * some policies may be undecidable until query execution, this
-         * property may also be `undefined`.
-         *
-         * Usage:
-         * ```
-         * if (tuple.canUpdate == true) {
-         *   console.log(tuple.displayname, "can be updated by this client");
-         * }
-         * else if (tuple.canUpdate == false) {
-         *   console.log(tuple.displayname, "cannot be updated by this client");
-         * }
-         * else {
-         *   console.log(tuple.displayname, "update permission cannot be determied");
-         * }
-         * ```
-         * @type {(boolean|undefined)}
-         */
-        get canUpdate() {
-            // catalog/ + id + /meta/content_read_user
-            // content_write_user
-            notimplemented();
+        checkPermissions: function (permission, colName, isAssoc) {
+            var sum = this._rightsSummary[permission];
+            if (isAssoc) {
+                sum = this._associationRightsSummary[permission];
+            }
+
+            if (permission === module._ERMrestACLs.COLUMN_UPDATE) {
+                if (!isObjectAndNotNull(sum) || typeof sum[colName] !== 'boolean') return true;
+                return sum[colName];
+            }
+
+            if (typeof sum !== 'boolean') return true;
+            return sum;
         },
 
         /**
-         * Indicates whether the client can delete this tuple. Because
-         * some policies may be undecidable until query execution, this
-         * property may also be `undefined`.
+         * Indicates whether the client can update this tuple. Reporting a `true`
+         * value DOES NOT guarantee the user right since some policies may be
+         * undecidable until query execution.
          *
-         * See {@link ERMrest.Tuple#canUpdate} for a usage example.
-         * @type {(boolean|undefined)}
+         * Usage:
+         * ```
+         * if (tuple.canUpdate) {
+         *   console.log(tuple.displayname, "may be updated by this client");
+         * }
+         * else {
+         *   console.log(tuple.displayname, "cannot be updated by this client");
+         * }
+         * ```
+         * @type {boolean}
+         */
+        get canUpdate() {
+            if (this._canUpdate === undefined) {
+                var pm = module._permissionMessages, self = this, canUpdateOneCol;
+
+                this._canUpdate = true;
+
+                // make sure table can be updated
+                if (!this._pageRef.canUpdate) {
+                    this._canUpdate = false;
+                    this._canUpdateReason = this._pageRef.canUpdateReason;
+                }
+                // check row level permission
+                else if (!this.checkPermissions(module._ERMrestACLs.UPDATE)) {
+                    this._canUpdate = false;
+                    this._canUpdateReason = pm.NO_UPDATE_ROW;
+                } else {
+                    // make sure at least one column can be updated
+                    // (dynamic acl allows it and also it's not disabled)
+                    canUpdateOneCol = true;
+                    if (this._pageRef._context === module._contexts.EDIT) {
+                        canUpdateOneCol = this.canUpdateValues.some(function (canUpdateValue, i) {
+                            return canUpdateValue && !self._pageRef.columns[i].inputDisabled;
+                        });
+                    } else {
+                        // see if at least one visible column in edit context can be updated
+                        var ref = self._pageRef.contextualize.entryEdit;
+                        if (ref.table == self._pageRef.table) { // make sure not alternative
+                            canUpdateOneCol = ref.columns.some(function (col) {
+                                return !col.inputDisabled && !col._baseCols.some(function (bcol) {
+                                    return !self.checkPermissions(
+                                        module._ERMrestACLs.COLUMN_UPDATE,
+                                        bcol.name
+                                    );
+                                });
+                            });
+                        }
+                    }
+
+                    if (!canUpdateOneCol) {
+                        this._canUpdate = false;
+                        this._canUpdateReason = pm.NO_UPDATE_COLUMN;
+                    }
+                }
+            }
+            return this._canUpdate;
+         },
+
+         /**
+          * Indicates the reason as to why a user cannot update this tuple.
+          * @type {String}
+          */
+         get canUpdateReason () {
+             if (this._canUpdateReason === undefined) {
+                 // will generate the reason
+                 var bool = this._canUpdate;
+             }
+             return this._canUpdateReason;
+
+         },
+
+        /**
+         * Indicates whether the client can delete this tuple. Reporting a `true`
+         * value DOES NOT guarantee the user right since some policies may be
+         * undecidable until query execution.
+         *
+         * Usage:
+         * ```
+         * if (tuple.canDelete) {
+         *   console.log(tuple.displayname, "may be deleted by this client");
+         * }
+         * else {
+         *   console.log(tuple.displayname, "cannot be deleted by this client");
+         * }
+         * ```
+         * @type {boolean}
          */
         get canDelete() {
-            notimplemented();
+            if (this._canDelete === undefined) {
+                // make sure table and row can be deleted
+                this._canDelete = this._pageRef.canDelete && this.checkPermissions(module._ERMrestACLs.DELETE);
+            }
+            return this._canDelete;
+        },
+
+        get canUnlink() {
+            if (this._canUnlink === undefined) {
+                if (!this._pageRef.derivedAssociationReference) {
+                    this._canUnlink = false;
+                } else {
+                    var ref = this._pageRef.derivedAssociationReference;
+                    // make sure association table and row can be deleted
+                    this._canUnlink = ref.canDelete && this.checkPermissions("delete", null, true);
+                }
+            }
+            return this._canUnlink;
         },
 
         /**
@@ -5176,8 +5378,16 @@
 
                 this._values = [];
                 this._isHTML = [];
+                this._canUpdateValues = [];
 
-                var column, presentation;
+                var self = this, column, presentation;
+
+                var checkUpdateColPermission = function (col) {
+                    return !self.checkPermissions(
+                        module._ERMrestACLs.COLUMN_UPDATE,
+                        col.name
+                    );
+                };
 
                 // key value pair of formmated values, to be used in formatPresentation
                 var keyValues = this.templateVariables.values;
@@ -5188,6 +5398,10 @@
                     // Return raw values according to the visibility and sequence of columns
                     for (i = 0; i < this._pageRef.columns.length; i++) {
                         column = this._pageRef.columns[i];
+
+                        // if user cannot update any of the base_columns then the column should be disabled
+                        this._canUpdateValues[i] = !column._baseCols.some(checkUpdateColPermission);
+
                         if (column.isPseudo) {
                             if (column.isForeignKey) {
                                 presentation = column.formatPresentation(this._linkedData[column.name], this._pageRef._context, keyValues);
@@ -5232,8 +5446,6 @@
                         }
                     }
 
-                    var self = this;
-
                     values.forEach(function(fv) {
                         self._values.push(fv.value);
                         self._isHTML.push(fv.isHTML);
@@ -5264,6 +5476,17 @@
             }
 
             return this._isHTML;
+        },
+
+        /**
+         * currently only populated in entry context
+         */
+        get canUpdateValues () {
+            if (this._canUpdateValues === undefined) {
+                var value = this.values;
+            }
+
+            return this._canUpdateValues;
         },
 
         /**

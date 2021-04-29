@@ -1,4 +1,5 @@
 var ermrestImport = require(process.env.PWD + '/test/utils/ermrest-import.js');
+var q = require('q');
 
 /**
  * @param {Array} pageData - data returned from update request
@@ -40,6 +41,7 @@ exports.setCatalogAcls = function (ERMrest, done, uri, catalogId, acls, cb, user
         cb(response);
         done();
     }).catch(function (err) {
+        console.log("failed to set catalog ACLs")
         done.fail(err);
     });
 };

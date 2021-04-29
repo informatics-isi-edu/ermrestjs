@@ -524,10 +524,11 @@ exports.execute = function (options) {
                     };
 
                     beforeAll(function (done) {
+                        // @sort(col_id) ensures that the newly generated column is the first row (col_id=1 vs col_id=9000)
                         // make sure the restricted user
                         // - have insert access to the table
-                        // - doesn't have insert access to the table.
-                        utils.setCatalogAcls(options.ermRest, done, entityWithDisabledColumns, catalog_id, {
+                        // - doesn't have insert access to the column.
+                        utils.setCatalogAcls(options.ermRest, done, entityWithDisabledColumns + "@sort(col_id)", catalog_id, {
                             "catalog": {
                                 "id": catalog_id,
                                 "acls": {
@@ -569,15 +570,46 @@ exports.execute = function (options) {
                         }).then(function (newPage) {
                             expect(returnedData(newPage._data[0])).toEqual(expectedData, "read data missmatch.");
 
-                            // make sure the next test cases are using the correct user
-                            options.ermRest.setUserCookie(process.env.AUTH_COOKIE);
-                            utils.removeCachedCatalog(options.ermRest, catalog_id);
                             done();
                         }).catch(function (error) {
                             done.fail(error);
                         });
                     });
+
+                    afterAll((done) => {
+                        options.ermRest.setUserCookie(process.env.AUTH_COOKIE);
+                        utils.removeCachedCatalog(options.ermRest, catalog_id);
+                        utils.resetCatalogAcls(done, {
+                            "catalog": {
+                                "id": catalog_id,
+                                "acls": {
+                                    "enumerate": []
+                                },
+                                "schemas": {
+                                    "permission_schema": {
+                                        "tables": {
+                                            "table_w_disabled_columns": {
+                                                "acls": {
+                                                    "select" : [],
+                                                    "insert": []
+                                                },
+                                                "columns": {
+                                                    "col_no_insert": {
+                                                        "acls": {
+                                                            "select": [],
+                                                            "insert": []
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    });
                 });
+
             });
 
         });
