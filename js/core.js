@@ -69,9 +69,10 @@
      * @param {Object} q Angular $q service object
      * @desc This function is used to configure the module
      */
-    function configure(http, q) {
+    function configure(http, q, isObservable) {
         module._http = http;
         module._q = q;
+        module._httpObservable = isObservable;
     }
 
     /**
@@ -143,7 +144,7 @@
          * @private
          * @type {Object}
          */
-        this.http = module._wrap_http(module._http);
+        this.http = module._wrap_http(module._http, module._httpObservable);
         this.http.contextHeaderParams = contextHeaderParams;
 
         /**

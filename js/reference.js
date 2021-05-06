@@ -1223,7 +1223,7 @@
 
                 //  do the 'post' call
                 this._server.http.post(uri, data, config).then(function(response) {
-                    var etag = response.headers().etag;
+                    var etag = typeof response.headers == "function" ? response.headers().etag : response.headers.etag;
                     //  new page will have a new reference (uri that filters on a disjunction of ids of these tuples)
                     var uri = self._location.compactUri + '/',
                         keyName;
@@ -1402,7 +1402,7 @@
                     headers: this._generateContextHeader(contextHeaderParams, limit)
                 };
                 this._server.http.get(uri, config).then(function (response) {
-                    var etag = response.headers().etag;
+                    var etag = typeof response.headers == "function" ? response.headers().etag : response.headers.etag;
 
                     var hasPrevious, hasNext = false;
                     if (!ownReference._location.paging) { // first page
@@ -1798,7 +1798,7 @@
                         }
                     }
 
-                    var etag = response.headers().etag;
+                    var etag = typeof response.headers == "function" ? response.headers().etag : response.headers.etag;
                     var pageData = [];
 
                     var uri = self._location.service + "/catalog/" + self.table.schema.catalog.id + "/entity/" + urlEncode(self.table.schema.name) + ':' + urlEncode(self.table.name) + '/';

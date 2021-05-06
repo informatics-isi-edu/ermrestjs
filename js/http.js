@@ -143,6 +143,11 @@
                 // now add default headers i
                 config.headers = config.headers || {};
 
+                if (module._httpObservable) {
+                    // get the ful response
+                    config.observe = "response";
+                }
+
                 // if no default contextHeaderParams, then just call the fn
                 if (this.contextHeaderParams) {
                     // Iterate over headers iff they do not collide
@@ -181,13 +186,18 @@
                 var delay = (this.initial_delay !== undefined && this.initial_delay !== null) ? this.initial_delay : _default_initial_delay;
                 var count = 0;
                 function asyncfn() {
-                    fn.apply(scope, args).then(function(response) {
+
+                    var succesFn = function(response) {
+                        if (response.body) {
+                            response.data = response.body;
+                        }
+
                         module._onHTTPSuccess();
                         module.onload().then(function() {
                             deferred.resolve(response);
                         });
-                    },
-                    function(response) {
+                    };
+                    var errorFn = function(response) {
                         response.status = response.status || response.statusCode;
                         // if retry flag is set, skip on -1 and 0
                         var skipRetry = config.skipRetryBrowserError && (response.status == -1 || response.status == 0);
@@ -212,7 +222,8 @@
 
                             // If we get an HTTP error with HTML in it, this means something the server returned as an error.
                             // Ermrest never produces HTML errors, so this was produced by the server itself
-                            if (response.headers()['content-type'] && response.headers()['content-type'].indexOf("html") > -1) {
+                            var contentType = typeof response.headers == "function" ? response.headers()['content-type'] : response.headers['content-type'];
+                            if (contentType && contentType.indexOf("html") > -1) {
                                 response.status = response.statusCode = _http_status_codes.internal_server_error;
                                 response.data = "An unexpected error has occurred. Please report this problem to your system administrators.";
                             } else {
@@ -287,7 +298,13 @@
                                 deferred.reject(response);
                             });
                         }
-                    });
+                    };
+
+                    if (module._httpObservable) {
+                        fn.apply(scope, args).toPromise().then(succesFn).catch(errorFn);
+                    } else {
+                        fn.apply(scope, args).then(succesFn).catch(errorFn);
+                    }
                 }
 
                 // Push the current call to _authorizationDefers by calling _onHttpAuthFlowFn
