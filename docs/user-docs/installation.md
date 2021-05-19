@@ -6,7 +6,7 @@ This pages documents how to install ERMrestJS, a Javascript client API for the
 ## Development Dependencies
 
 1. [make](https://en.wikipedia.org/wiki/Makefile): Make is required for any build or development. With `make` only the non-minified package can be built and installed.
-2. [Node.js](https://www.nodejs.org) (v 6.x): Node is required for most development operations including linting, minifying, and testing.
+2. [Node.js](https://www.nodejs.org): Node is required for most development operations including linting, minifying, and testing.
 3. [ErmrestDataUtils](https://github.com/informatics-isi-edu/ermrestdatautils): This package is only used in test framework. If you just want to install ERMrestJS, you won't need it.
 
 
