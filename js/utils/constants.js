@@ -66,7 +66,8 @@
         TABLE_ALTERNATIVES: "tag:isrd.isi.edu,2016:table-alternatives",
         TABLE_DISPLAY: "tag:isrd.isi.edu,2016:table-display",
         VISIBLE_COLUMNS: "tag:isrd.isi.edu,2016:visible-columns",
-        VISIBLE_FOREIGN_KEYS: "tag:isrd.isi.edu,2016:visible-foreign-keys"
+        VISIBLE_FOREIGN_KEYS: "tag:isrd.isi.edu,2016:visible-foreign-keys",
+        GOOGLE_DATASET_METADATA: "tag:isrd.isi.edu,2021:google-dataset"
     });
 
     /**

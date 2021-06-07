@@ -3560,6 +3560,28 @@
         },
 
         /**
+         * If annotation is defined and has the required attributes, will return
+         * a Metadata object
+         * @type {ERMrest.GoogleDatasetMetadata}
+         */
+         get googleDatasetMetadata() {
+            if (this._gdsMetadata === undefined) {
+                var table = this.table;
+                if (!table.annotations.contains(module._annotations.GOOGLE_DATASET)) {
+                    this._gdsMetadata = null;
+                } else {
+                    var metadataAnnotation = table.annotations.get(module._annotations.GOOGLE_DATASET).content;
+                    if (!metadataAnnotation.name || !metadataAnnotation.description) {
+                        this._gdsMetadata = null;
+                    } else {
+                        this._gdsMetadata = new GoogleDatasetMetadata(this, metadataAnnotation);
+                    }
+                }
+            }
+            return this._gdsMetadata;
+        },
+
+        /**
          * Generate a related reference given a foreign key and tuple.
          *
          * This is the logic:
@@ -5825,3 +5847,67 @@
             return citation;
         }
     };
+
+    /**
+     * Constructs the Google Dataset metadata for the given tuple.
+     * The given metadata must be valid and have the appropriate variables.
+     */
+     function GoogleDatasetMetadata (reference, gdsMetadataAnnotation) {
+        this._reference = reference;
+
+        this._table = reference.table;
+
+        /**
+         * citation specific properties include:
+         *   - name*
+         *   - description*
+         *   - id
+         *   - datePublished
+         *   - dateModified
+         *   - url*
+         *   - provider
+         * other properties:
+         *   - template_engine
+         */
+        this._gdsMetadataAnnotation = gdsMetadataAnnotation;
+    }
+
+    GoogleDatasetMetadata.prototype = {
+        /**
+         * Given the templateVariables variables, will generate the metadata.
+         * @param {ERMrest.Tuple} tuple - the tuple object that this metadata is based on
+         * @param {Object=} templateVariables - if it's not an object, we will use the tuple templateVariables
+         * @return {String|null} if the returned template for required attributes are empty, it will return null.
+         */
+        compute: function (tuple, templateVariables) {
+            var table = this._table, metadataAnnotation = this._metadataAnnotation;
+
+            // make sure required parameters are present
+            if (!metadataAnnotation.name || !metadataAnnotation.description) {
+                return null;
+            }
+
+            if (!templateVariables) {
+                templateVariables = tuple.templateVariables.values;
+            }
+
+            var metadata = {};
+            // other attributes set to null if not defined
+            ["name", "description", "datePublished", "dateModified", "url", "provider", "id"].forEach(function (key) {
+                metadata[key] = module._renderTemplate(
+                    metadataAnnotation[key+"_pattern"],
+                    templateVariables,
+                    table.schema.catalog,
+                    {templateEngine: metadataAnnotation.template_engine}
+                );
+            });
+
+            // if after processing the templates, any of the required fields are null, template is invalid
+            if (!metadata.name || !metadata.description) {
+                return null;
+            }
+
+            return metadata;
+        }
+    };
+
