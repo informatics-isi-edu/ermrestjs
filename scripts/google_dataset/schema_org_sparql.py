@@ -3,13 +3,13 @@ import json
 
 
 def transform(rowElement, attr):
+    return rowElement[attr].toPython().split("/")[-1]
+
+def transformToArray(rowElement, attr):
     individualElements = rowElement[attr].toPython().split(" ")
-    if len(individualElements) == 1:
-        return rowElement[attr].toPython().split("/")[-1]
-    else:
-        for i in range(len(individualElements)):
-            individualElements[i] = individualElements[i].split("/")[-1]
-        return individualElements
+    for i in range(len(individualElements)):
+        individualElements[i] = individualElements[i].split("/")[-1]
+    return individualElements
 
 # load schema.org turtle download into a graph
 
@@ -72,13 +72,13 @@ for row in result2:
 count = 0
 attrMap = {}
 for row in result1:
-    dictValues = {'domain': transform(row, 'dtypes'), 'range': transform(row, 'rtypes')}
+    dictValues = {'domain': transform(row, 'dtypes'), 'range': transformToArray(row, 'rtypes')}
     attrMap[transform(row, 'labels')] = dictValues
     #print("prop=%s\nlabels=%s\ndomain_types=%s\nrange_types=%s\n\n" % row)
     count += 1
 
 
-json_object = json.dumps({"subclasses": subclassMap, "props": attrMap}, indent=4)
+json_object = json.dumps({"subclasses": subclassMap, "props": attrMap, "mandatoryProps": ["name", "description"]}, indent=4)
 f = open("validation.json", "w")
 f.write(json_object)
 f.close()
