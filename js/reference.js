@@ -3567,15 +3567,18 @@
          get googleDatasetMetadata() {
             if (this._gdsMetadata === undefined) {
                 var table = this.table;
-                if (!table.annotations.contains(module._annotations.GOOGLE_DATASET)) {
+                if (!table.annotations.contains(module._annotations.GOOGLE_DATASET_METADATA)) {
                     this._gdsMetadata = null;
                 } else {
-                    var metadataAnnotation = table.annotations.get(module._annotations.GOOGLE_DATASET).content;
-                    if (!metadataAnnotation.name || !metadataAnnotation.description) {
+                    var metadataAnnotation = module._getRecursiveAnnotationValue(this._context, this._table.annotations.get(module._annotations.GOOGLE_DATASET_METADATA).content);
+                    
+                    //var metadataAnnotation = table.annotations.get(module._annotations.GOOGLE_DATASET_METADATA).content;
+                    /* if (!metadataAnnotation.name || !metadataAnnotation.description) {
                         this._gdsMetadata = null;
                     } else {
                         this._gdsMetadata = new GoogleDatasetMetadata(this, metadataAnnotation);
-                    }
+                    } */
+                    this._gdsMetadata = new GoogleDatasetMetadata(this, metadataAnnotation);
                 }
             }
             return this._gdsMetadata;
@@ -5848,6 +5851,18 @@
         }
     };
 
+    function removeEmptyOrNull(obj)  {
+        Object.keys(obj).forEach(function (k) {
+          if (obj[k] && typeof obj[k] === 'object') {
+            removeEmptyOrNull(obj[k])
+          } 
+          else if (obj[k] == null || obj[k] == "") {
+            delete obj[k];
+          }
+        });
+      return obj;
+    }
+
     /**
      * Constructs the Google Dataset metadata for the given tuple.
      * The given metadata must be valid and have the appropriate variables.
@@ -5856,6 +5871,8 @@
         this._reference = reference;
 
         this._table = reference.table;
+        this._subclassMap = require('./props.json')["subclasses"];
+        this._schemaPropMap = require('./props.json')["props"]; 
 
         /**
          * citation specific properties include:
@@ -5880,34 +5897,39 @@
          * @return {String|null} if the returned template for required attributes are empty, it will return null.
          */
         compute: function (tuple, templateVariables) {
-            var table = this._table, metadataAnnotation = this._metadataAnnotation;
-
-            // make sure required parameters are present
-            if (!metadataAnnotation.name || !metadataAnnotation.description) {
-                return null;
-            }
+            var table = this._table, metadataAnnotation = this._gdsMetadataAnnotation;
 
             if (!templateVariables) {
                 templateVariables = tuple.templateVariables.values;
             }
 
             var metadata = {};
-            // other attributes set to null if not defined
-            ["name", "description", "datePublished", "dateModified", "url", "provider", "id"].forEach(function (key) {
+            
+            Object.keys(metadataAnnotation.dataset).forEach(function (key) {
                 metadata[key] = module._renderTemplate(
-                    metadataAnnotation[key+"_pattern"],
+                    metadataAnnotation.dataset[key],
                     templateVariables,
                     table.schema.catalog,
                     {templateEngine: metadataAnnotation.template_engine}
                 );
             });
 
-            // if after processing the templates, any of the required fields are null, template is invalid
+            // remove null attributes so they don't get included in the json
+            metadata = removeEmptyOrNull(metadata);
+            metadata = Object.assign({}, metadata, { "@context": "http://schema.org", "@type": "Dataset" });
+
+            // if after processing the templates, any of the required fields are missing, template is invalid
             if (!metadata.name || !metadata.description) {
                 return null;
             }
 
             return metadata;
+        },
+
+        validate: function (metadata) {
+            console.log(this._schemaPropMap["description"]);
+            console.log(this._schemaPropMap["Dataset"]);
         }
     };
+
 
