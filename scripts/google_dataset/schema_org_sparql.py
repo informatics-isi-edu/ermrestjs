@@ -5,11 +5,13 @@ import json
 def transform(rowElement, attr):
     return rowElement[attr].toPython().split("/")[-1]
 
+
 def transformToArray(rowElement, attr):
     individualElements = rowElement[attr].toPython().split(" ")
     for i in range(len(individualElements)):
         individualElements[i] = individualElements[i].split("/")[-1]
     return individualElements
+
 
 # load schema.org turtle download into a graph
 
@@ -20,20 +22,15 @@ g.parse("schemaorg-current-https.ttl", format="n3")  # query the graph
 result1 = g.query("""
 SELECT 
   ?prop
-  (GROUP_CONCAT(DISTINCT ?label) AS ?labels)
+  (GROUP_CONCAT(DISTINCT ?label) AS ?label)
   (GROUP_CONCAT(DISTINCT ?dtype) AS ?dtypes)
   (GROUP_CONCAT(DISTINCT ?rtype) AS ?rtypes)
 WHERE {
-  { schema:Dataset rdfs:subClassOf* ?dtype .}
-  UNION
-  { schema:Person rdfs:subClassOf* ?dtype . }
-  UNION
-  { schema:Organization rdfs:subClassOf* ?dtype . }
   ?prop a rdf:Property .
   ?prop schema:domainIncludes ?dtype .
   ?prop rdfs:label ?label .
   ?prop schema:rangeIncludes ?rtype .
-  FILTER (
+  FILTER ((
     ?rtype = <https://schema.org/Text>
     || ?rtype = <https://schema.org/URL>
     || ?rtype = <https://schema.org/Boolean>
@@ -47,7 +44,22 @@ WHERE {
     || ?rtype = <https://schema.org/DataCatalog>
     || ?rtype = <https://schema.org/CreativeWork>
     || ?rtype = <https://schema.org/Thing>
-  )
+    || ?rtype = <https://schema.org/Dataset>
+    || ?rtype = <https://schema.org/DataDownload>
+    )  
+    && (
+    ?dtype = <https://schema.org/Comment>
+    || ?dtype = <https://schema.org/Person>
+    || ?dtype = <https://schema.org/Organization>
+    || ?dtype = <https://schema.org/DataCatalog>
+    || ?dtype = <https://schema.org/CreativeWork>
+    || ?dtype = <https://schema.org/Thing>
+    || ?dtype = <https://schema.org/Dataset>
+    || ?dtype = <https://schema.org/DataDownload>
+    || ?dtype = <https://schema.org/MediaObject>
+    )
+    && NOT EXISTS { ?prop schema:supersededBy ?supersede . }
+    )
 }
 GROUP BY ?prop
 ORDER BY ?prop
@@ -65,25 +77,41 @@ GROUP BY ?prop
 ORDER BY ?prop
 """)
 
-subclassMap = {}
-for row in result2:
-    subclassMap[transform(row, 'prop')] = transform(row, 'subclass')
-
+allSchemaOrgTypesDict = {}
 count = 0
 attrMap = {}
 for row in result1:
-    dictValues = {'domain': transform(row, 'dtypes'), 'range': transformToArray(row, 'rtypes')}
-    attrMap[transform(row, 'labels')] = dictValues
-    #print("prop=%s\nlabels=%s\ndomain_types=%s\nrange_types=%s\n\n" % row)
-    count += 1
+    domainArr = transformToArray(row, 'dtypes')
+    label = transform(row, 'label')
+    dataType = transformToArray(row, 'rtypes')
+    for domain in domainArr:
+        if domain not in allSchemaOrgTypesDict:
+            allSchemaOrgTypesDict[domain] = {"properties": {}, "requiredProperties": [], "parent": None}
 
+        schemaClassFromDict = allSchemaOrgTypesDict[domain]
+        schemaClassFromDict["properties"][label] = {"types": dataType}
+        # print("prop=%s\nlabels=%s\ndomain_types=%s\nrange_types=%s\n\n" % row)
+        count += 1
 
-json_object = json.dumps({"subclasses": subclassMap, "props": attrMap, "mandatoryProps": ["name", "description"]}, indent=4)
+subclassMap = {}
+for row in result2:
+    currentType = transform(row, 'prop')
+    if currentType in allSchemaOrgTypesDict:
+        allSchemaOrgTypesDict[currentType]["parent"] = transform(row, 'subclass')
+
+# Hard coded mandatory props -
+allSchemaOrgTypesDict["Dataset"]["requiredProperties"] = ["name", "description"]
+
+# Hard coded jsonld props -
+jsonLdDict = {"properties": {"@context": {"types": ["URL"], "values": ["schema.org"]},
+                             "@type": {"types": ["Text"], "values": ["Dataset"]}},
+              "requiredProperties": ["@context", "@type"]}
+json_object = json.dumps({"jsonld": jsonLdDict, "schema.org": allSchemaOrgTypesDict}, indent=4)
 f = open("validation.json", "w")
 f.write(json_object)
 f.close()
 
-#print("count=%d" % (count,))
+# print("count=%d" % (count,))
 result = g.query("""
 SELECT 
   DISTINCT ?rtype

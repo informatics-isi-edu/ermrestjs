@@ -18281,8 +18281,7 @@ schema:spatialCoverage a rdf:Property ;
     rdfs:subPropertyOf schema:contentLocation ;
     ns2:equivalentProperty <http://purl.org/dc/terms/spatial> ;
     schema:domainIncludes schema:CreativeWork ;
-    schema:rangeIncludes schema:Place,
-        schema:Text.
+    schema:rangeIncludes schema:Place .
 
 schema:step a rdf:Property ;
     rdfs:label "step" ;
