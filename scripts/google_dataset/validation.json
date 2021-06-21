@@ -73,8 +73,8 @@
                 },
                 "acquireLicensePage": {
                     "types": [
-                        "URL",
-                        "CreativeWork"
+                        "CreativeWork",
+                        "URL"
                     ]
                 },
                 "alternativeHeadline": {
@@ -89,8 +89,8 @@
                 },
                 "author": {
                     "types": [
-                        "Person",
-                        "Organization"
+                        "Organization",
+                        "Person"
                     ]
                 },
                 "award": {
@@ -105,8 +105,8 @@
                 },
                 "citation": {
                     "types": [
-                        "Text",
-                        "CreativeWork"
+                        "CreativeWork",
+                        "Text"
                     ]
                 },
                 "comment": {
@@ -136,8 +136,8 @@
                 },
                 "contributor": {
                     "types": [
-                        "Person",
-                        "Organization"
+                        "Organization",
+                        "Person"
                     ]
                 },
                 "copyrightHolder": {
@@ -158,8 +158,8 @@
                 },
                 "correction": {
                     "types": [
-                        "URL",
-                        "Text"
+                        "Text",
+                        "URL"
                     ]
                 },
                 "creativeWorkStatus": {
@@ -192,8 +192,8 @@
                 },
                 "datePublished": {
                     "types": [
-                        "DateTime",
-                        "Date"
+                        "Date",
+                        "DateTime"
                     ]
                 },
                 "discussionUrl": {
@@ -214,8 +214,8 @@
                 },
                 "educationalLevel": {
                     "types": [
-                        "URL",
-                        "Text"
+                        "Text",
+                        "URL"
                     ]
                 },
                 "educationalUse": {
@@ -247,8 +247,8 @@
                 },
                 "genre": {
                     "types": [
-                        "URL",
-                        "Text"
+                        "Text",
+                        "URL"
                     ]
                 },
                 "hasPart": {
@@ -295,8 +295,8 @@
                 },
                 "keywords": {
                     "types": [
-                        "URL",
-                        "Text"
+                        "Text",
+                        "URL"
                     ]
                 },
                 "learningResourceType": {
@@ -317,8 +317,8 @@
                 },
                 "maintainer": {
                     "types": [
-                        "Person",
-                        "Organization"
+                        "Organization",
+                        "Person"
                     ]
                 },
                 "material": {
@@ -350,8 +350,8 @@
                 },
                 "producer": {
                     "types": [
-                        "Person",
-                        "Organization"
+                        "Organization",
+                        "Person"
                     ]
                 },
                 "provider": {
@@ -373,14 +373,14 @@
                 },
                 "publishingPrinciples": {
                     "types": [
-                        "URL",
-                        "CreativeWork"
+                        "CreativeWork",
+                        "URL"
                     ]
                 },
                 "schemaVersion": {
                     "types": [
-                        "URL",
-                        "Text"
+                        "Text",
+                        "URL"
                     ]
                 },
                 "sdDatePublished": {
@@ -423,15 +423,15 @@
                 },
                 "temporal": {
                     "types": [
-                        "Text",
-                        "DateTime"
+                        "DateTime",
+                        "Text"
                     ]
                 },
                 "temporalCoverage": {
                     "types": [
                         "DateTime",
-                        "URL",
-                        "Text"
+                        "Text",
+                        "URL"
                     ]
                 },
                 "text": {
@@ -462,14 +462,14 @@
                 },
                 "usageInfo": {
                     "types": [
-                        "URL",
-                        "CreativeWork"
+                        "CreativeWork",
+                        "URL"
                     ]
                 },
                 "version": {
                     "types": [
-                        "Text",
-                        "Number"
+                        "Number",
+                        "Text"
                     ]
                 },
                 "workExample": {
@@ -537,8 +537,8 @@
                 },
                 "diversityPolicy": {
                     "types": [
-                        "URL",
-                        "CreativeWork"
+                        "CreativeWork",
+                        "URL"
                     ]
                 },
                 "diversityStaffingReport": {
@@ -600,9 +600,9 @@
                 },
                 "knowsAbout": {
                     "types": [
+                        "Text",
                         "Thing",
-                        "URL",
-                        "Text"
+                        "URL"
                     ]
                 },
                 "knowsLanguage": {
@@ -648,9 +648,9 @@
                 },
                 "ownershipFundingInfo": {
                     "types": [
+                        "CreativeWork",
                         "Text",
-                        "URL",
-                        "CreativeWork"
+                        "URL"
                     ]
                 },
                 "parentOrganization": {
@@ -660,8 +660,8 @@
                 },
                 "publishingPrinciples": {
                     "types": [
-                        "URL",
-                        "CreativeWork"
+                        "CreativeWork",
+                        "URL"
                     ]
                 },
                 "slogan": {
@@ -692,8 +692,8 @@
                 },
                 "unnamedSourcesPolicy": {
                     "types": [
-                        "URL",
-                        "CreativeWork"
+                        "CreativeWork",
+                        "URL"
                     ]
                 },
                 "vatID": {
@@ -702,7 +702,9 @@
                     ]
                 }
             },
-            "requiredProperties": [],
+            "requiredProperties": [
+                "name"
+            ],
             "parent": "Thing"
         },
         "Person": {
@@ -836,9 +838,9 @@
                 },
                 "knowsAbout": {
                     "types": [
+                        "Text",
                         "Thing",
-                        "URL",
-                        "Text"
+                        "URL"
                     ]
                 },
                 "knowsLanguage": {
@@ -863,8 +865,8 @@
                 },
                 "publishingPrinciples": {
                     "types": [
-                        "URL",
-                        "CreativeWork"
+                        "CreativeWork",
+                        "URL"
                     ]
                 },
                 "relatedTo": {
@@ -909,7 +911,9 @@
                     ]
                 }
             },
-            "requiredProperties": [],
+            "requiredProperties": [
+                "name"
+            ],
             "parent": "Thing"
         },
         "Thing": {
@@ -947,8 +951,8 @@
                 },
                 "mainEntityOfPage": {
                     "types": [
-                        "URL",
-                        "CreativeWork"
+                        "CreativeWork",
+                        "URL"
                     ]
                 },
                 "name": {
@@ -1056,12 +1060,14 @@
                 },
                 "measurementTechnique": {
                     "types": [
-                        "URL",
-                        "Text"
+                        "Text",
+                        "URL"
                     ]
                 }
             },
-            "requiredProperties": [],
+            "requiredProperties": [
+                "url"
+            ],
             "parent": "CreativeWork"
         },
         "Dataset": {
@@ -1083,8 +1089,8 @@
                 },
                 "measurementTechnique": {
                     "types": [
-                        "URL",
-                        "Text"
+                        "Text",
+                        "URL"
                     ]
                 },
                 "variableMeasured": {
@@ -1124,12 +1130,15 @@
             "properties": {
                 "measurementTechnique": {
                     "types": [
-                        "URL",
-                        "Text"
+                        "Text",
+                        "URL"
                     ]
                 }
             },
-            "requiredProperties": [],
+            "requiredProperties": [
+                "contentUrl",
+                "encodingFormat"
+            ],
             "parent": "MediaObject"
         }
     }

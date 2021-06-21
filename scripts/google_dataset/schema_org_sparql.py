@@ -8,9 +8,10 @@ def transform(rowElement, attr):
 
 def transformToArray(rowElement, attr):
     individualElements = rowElement[attr].toPython().split(" ")
-    for i in range(len(individualElements)):
-        individualElements[i] = individualElements[i].split("/")[-1]
-    return individualElements
+    sortedElements = sorted(individualElements)
+    for i in range(len(sortedElements)):
+        sortedElements[i] = sortedElements[i].split("/")[-1]
+    return sortedElements
 
 
 # load schema.org turtle download into a graph
@@ -101,6 +102,10 @@ for row in result2:
 
 # Hard coded mandatory props -
 allSchemaOrgTypesDict["Dataset"]["requiredProperties"] = ["name", "description"]
+allSchemaOrgTypesDict["DataDownload"]["requiredProperties"] = ["contentUrl", "encodingFormat"]
+allSchemaOrgTypesDict["Person"]["requiredProperties"] = ["name"]
+allSchemaOrgTypesDict["Organization"]["requiredProperties"] = ["name"]
+allSchemaOrgTypesDict["DataCatalog"]["requiredProperties"] = ["url"]
 
 # Hard coded jsonld props -
 jsonLdDict = {"properties": {"@context": {"types": ["URL"], "values": ["schema.org"]},
