@@ -1,4 +1,4 @@
-{
+var jsonldSchemaPropObj = {
     "schema.org": {
         "CreativeWork": {
             "properties": {
@@ -1118,4 +1118,4 @@
             "parent": "MediaObject"
         }
     }
-}
+};

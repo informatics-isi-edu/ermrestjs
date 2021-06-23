@@ -1,6 +1,10 @@
 import rdflib
 import json
 
+requiredProps = 'requiredProperties'
+standardRequiredProps = ['name']
+datasetRequiredProps = ['name', 'description']
+dataDownloadRequiredProps = ['contentUrl', 'encodingFormat']
 
 def transform(rowElement, attr):
     return rowElement[attr].toPython().split("/")[-1]
@@ -66,7 +70,6 @@ GROUP BY ?prop
 ORDER BY ?prop
 """)
 
-typeArray = ['Dataset', 'Person', 'Organization']
 result2 = g.query("""
 SELECT 
   ?prop ?subclass
@@ -101,17 +104,14 @@ for row in result2:
         allSchemaOrgTypesDict[currentType]["parent"] = transform(row, 'subclass')
 
 # Hard coded mandatory props -
-allSchemaOrgTypesDict["Dataset"]["requiredProperties"] = ["name", "description"]
-allSchemaOrgTypesDict["DataDownload"]["requiredProperties"] = ["contentUrl", "encodingFormat"]
-allSchemaOrgTypesDict["Person"]["requiredProperties"] = ["name"]
-allSchemaOrgTypesDict["Organization"]["requiredProperties"] = ["name"]
-allSchemaOrgTypesDict["DataCatalog"]["requiredProperties"] = ["url"]
+allSchemaOrgTypesDict["Dataset"][requiredProps] = datasetRequiredProps
+allSchemaOrgTypesDict["DataDownload"][requiredProps] = dataDownloadRequiredProps
+allSchemaOrgTypesDict["Person"][requiredProps] = standardRequiredProps
+allSchemaOrgTypesDict["Organization"][requiredProps] = standardRequiredProps
+allSchemaOrgTypesDict["DataCatalog"][requiredProps] = standardRequiredProps
 
-# Hard coded jsonld props -
-jsonLdDict = {"properties": {"@context": {"types": ["URL"], "values": ["schema.org"]},
-                             "@type": {"types": ["Text"], "values": ["Dataset"]}},
-              "requiredProperties": ["@context", "@type"]}
-json_object = json.dumps({"jsonld": jsonLdDict, "schema.org": allSchemaOrgTypesDict}, indent=4)
+
+json_object = json.dumps({"schema.org": allSchemaOrgTypesDict}, indent=4)
 f = open("validation.json", "w")
 f.write(json_object)
 f.close()

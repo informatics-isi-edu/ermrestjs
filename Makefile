@@ -51,6 +51,7 @@ SOURCE=$(UTIL)/polyfills.js \
 	   $(JS)/datapath.js \
 	   $(JS)/filters.js \
 	   $(UTIL)/constants.js \
+	   $(UTIL)/jsonldSchema.js \
 	   $(UTIL)/helpers.js \
 	   $(UTIL)/pseudocolumn_helpers.js \
 	   $(UTIL)/handlebar_helpers.js \

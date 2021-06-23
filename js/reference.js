@@ -3571,13 +3571,6 @@
                     this._gdsMetadata = null;
                 } else {
                     var metadataAnnotation = module._getRecursiveAnnotationValue(this._context, this._table.annotations.get(module._annotations.GOOGLE_DATASET_METADATA).content);
-                    
-                    //var metadataAnnotation = table.annotations.get(module._annotations.GOOGLE_DATASET_METADATA).content;
-                    /* if (!metadataAnnotation.name || !metadataAnnotation.description) {
-                        this._gdsMetadata = null;
-                    } else {
-                        this._gdsMetadata = new GoogleDatasetMetadata(this, metadataAnnotation);
-                    } */
                     this._gdsMetadata = new GoogleDatasetMetadata(this, metadataAnnotation);
                 }
             }
@@ -5871,8 +5864,6 @@
         this._reference = reference;
 
         this._table = reference.table;
-        this._subclassMap = require('./props.json')["subclasses"];
-        this._schemaPropMap = require('./props.json')["props"]; 
 
         /**
          * citation specific properties include:
@@ -5890,46 +5881,283 @@
     }
 
     GoogleDatasetMetadata.prototype = {
-        /**
-         * Given the templateVariables variables, will generate the metadata.
-         * @param {ERMrest.Tuple} tuple - the tuple object that this metadata is based on
-         * @param {Object=} templateVariables - if it's not an object, we will use the tuple templateVariables
-         * @return {String|null} if the returned template for required attributes are empty, it will return null.
-         */
-        compute: function (tuple, templateVariables) {
-            var table = this._table, metadataAnnotation = this._gdsMetadataAnnotation;
+      /**
+       * Given the templateVariables variables, will generate the metadata.
+       * @param {ERMrest.Tuple} tuple - the tuple object that this metadata is based on
+       * @param {Object=} templateVariables - if it's not an object, we will use the tuple templateVariables
+       * @return {String|null} if the returned template for required attributes are empty, it will return null.
+       */
+      compute: function (tuple, templateVariables) {
+        var table = this._table,
+          metadataAnnotation = this._gdsMetadataAnnotation;
 
-            if (!templateVariables) {
-                templateVariables = tuple.templateVariables.values;
+        if (!templateVariables) {
+          templateVariables = tuple.templateVariables.values;
+        }
+
+        var metadata = {};
+        setMetadataFromTemplate(metadata, metadataAnnotation.dataset, metadataAnnotation.template_engine, templateVariables, table);
+
+        // remove null attributes so they don't get included in the json
+        metadata = removeEmptyOrNull(metadata);
+
+        if (!isValidMetadata(metadata)) {
+            console.error("JSON-LD not appended as validation errors found.");
+            return null;
+        }
+
+        return metadata;
+      },
+    };
+
+    function setMetadataFromTemplate(metadata, metadataAnnotation, templateEngine, templateVariables, table) {
+        Object.keys(metadataAnnotation).forEach(function (key) {
+            if (typeof metadataAnnotation[key] == "object" && metadataAnnotation[key] != null) {
+                metadata[key] = {}
+                setMetadataFromTemplate(metadata[key], metadataAnnotation[key], templateEngine, templateVariables, table);
             }
-
-            var metadata = {};
-            
-            Object.keys(metadataAnnotation.dataset).forEach(function (key) {
+            else {
                 metadata[key] = module._renderTemplate(
-                    metadataAnnotation.dataset[key],
+                    metadataAnnotation[key],
                     templateVariables,
                     table.schema.catalog,
-                    {templateEngine: metadataAnnotation.template_engine}
-                );
-            });
-
-            // remove null attributes so they don't get included in the json
-            metadata = removeEmptyOrNull(metadata);
-            metadata = Object.assign({}, metadata, { "@context": "http://schema.org", "@type": "Dataset" });
-
-            // if after processing the templates, any of the required fields are missing, template is invalid
-            if (!metadata.name || !metadata.description) {
-                return null;
+                    { templateEngine: templateEngine }
+                  );
             }
+          });
+    }
 
-            return metadata;
-        },
+    var contextForSchemaOrg = "schema.org";
 
-        validate: function (metadata) {
-            console.log(this._schemaPropMap["description"]);
-            console.log(this._schemaPropMap["Dataset"]);
+    function isValidMetadata(jsonLd) {
+      jsonldSchemaPropObj = jsonldSchemaPropObj["schema.org"]
+      if (isJsonLdBaseValid(jsonLd, jsonldSchemaPropObj)) {
+        validateSchemaOrgProps(jsonLd, jsonldSchemaPropObj);
+
+        if (areRequiredPropsDefined(jsonLd, jsonldSchemaPropObj)) {
+          // always return true here as we will simply ignore all attributes that fail validation and are not mandatory
+          return true;
         }
-    };
+      }
+
+      return false;
+    }
+
+    function validateSchemaOrgProps(obj, jsonldSchemaPropObj) {
+        var schemaTypeObj = jsonldSchemaPropObj[obj["@type"]];
+        if (schemaTypeObj) {
+            Object.keys(obj).forEach(function (key) {
+            if (!key.startsWith("@")) {
+                var propDetails = schemaTypeObj.properties[key];
+
+                if (!propDetails) {
+                propDetails = getPropDetailsFromParent(
+                    key,
+                    schemaTypeObj.parent,
+                    jsonldSchemaPropObj
+                );
+                } // incorrect property name
+
+                if (!propDetails) {
+                return removeProp(obj, key);
+                } // datatype not followed
+
+                var isValidDataType = Array.isArray(obj[key])
+                ? obj[key].every(function (element) {
+                    return isValidType(
+                        jsonldSchemaPropObj,
+                        propDetails,
+                        element,
+                        key
+                    );
+                    })
+                : isValidType(jsonldSchemaPropObj, propDetails, obj[key], key);
+
+                if (!isValidDataType) {
+                removeProp(obj, key);
+                }
+            }
+            });
+            return true;
+        }
+    }
+
+    function removeProp(obj, key) {
+      console.warn(
+        "Invalid attribute ignored " +
+          key +
+          " inside type " +
+          obj["@type"] +
+          "\n"
+      );
+      delete obj[key];
+    }
+
+    function isValidType(jsonldSchemaPropObj, propDetails, element, key) {
+      var result = false; // type/range not followed
+
+      if (propDetails !== null && propDetails !== void 0 && propDetails.types) {
+        propDetails.types.every(function (dataType) {
+          switch (dataType) {
+            case "Text":
+              if (typeof element == "string") {
+                result = true; // returning false so we can exit out of every() loop
+
+                return false;
+              }
+
+              break;
+
+            case "URL":
+              if (isValidUrl(element)) {
+                result = true; // returning false so we can exit out of every() loop
+
+                return false;
+              }
+
+              break;
+
+            case "Date":
+            case "DateTime":
+              if (Date.parse(element)) {
+                result = true;
+                return false;
+              }
+
+              break;
+
+            case "Number":
+            case "Integer":
+              if (typeof element == "number") {
+                result = true;
+                return false;
+              }
+
+              break;
+
+            case "Boolean":
+              if (typeof element == "boolean") {
+                result = true;
+                return false;
+              }
+
+              break;
+          }
+
+          return true;
+        });
+
+        if (element["@type"]) {
+          if (jsonldSchemaPropObj[element["@type"]]) {
+            return validateSchemaOrgProps(element, jsonldSchemaPropObj);
+          }
+        }
+      } else {
+        console.warn(
+          "Incorrect validation definition for attribute in ermrestjs" - key
+        );
+      }
+
+      return result;
+    }
+
+    function isJsonLdBaseValid(obj, definitionObj) {
+      var result = true;
+      Object.keys(obj).forEach(function (key) {
+        if (key.startsWith("@")) {
+          switch (key) {
+            case "@context":
+              var contextURL = new URL(obj[key]);
+
+              if (
+                contextURL.host != contextForSchemaOrg &&
+                contextURL.pathname == "/"
+              ) {
+                console.error("Incorrect context defined \n");
+                result = false;
+              }
+
+              break;
+
+            case "@type":
+              if (!definitionObj[obj["@type"]]) {
+                console.error("Incorrect type defined \n");
+                result = false;
+              }
+
+              break;
+
+            default:
+              console.error(
+                "JSON-LD property not defined in ermrestjs - " + key
+              );
+              result = false;
+          }
+        }
+      });
+
+      if (!obj["@context"] || !obj["@type"]) {
+        console.error("Missing context/type in json-ld")
+        return false;
+      }
+
+      return result;
+    }
+
+    function areRequiredPropsDefined(jsonLd, jsonldSchemaPropObj) {
+      var _jsonldSchemaPropObj$jsonLd;
+
+      var result = true;
+      var requiredPropArr =
+        (_jsonldSchemaPropObj$jsonLd = jsonldSchemaPropObj[jsonLd["@type"]]) === null ||
+        _jsonldSchemaPropObj$jsonLd === void 0
+          ? void 0
+          : _jsonldSchemaPropObj$jsonLd.requiredProperties;
+      requiredPropArr === null || requiredPropArr === void 0
+        ? void 0
+        : requiredPropArr.forEach(function (key) {
+            if (!(key in jsonLd)) {
+              console.warn("Missing value for required attribute - " + key);
+              result = false;
+            }
+          });
+      Object.keys(jsonLd).forEach(function (key) {
+        if (jsonLd[key].hasOwnProperty("@type")) {
+          result =
+            result && areRequiredPropsDefined(jsonLd[key], jsonldSchemaPropObj);
+        }
+      });
+      return result;
+    }
+
+    function getPropDetailsFromParent(key, currentType, jsonldSchemaPropObj) {
+      if (key in jsonldSchemaPropObj[currentType].properties) {
+        return jsonldSchemaPropObj[currentType].properties[key];
+      } // checked all ancestors and no match found
+
+      if (!jsonldSchemaPropObj[currentType].parent) {
+        return undefined;
+      }
+
+      return getPropDetailsFromParent(
+        key,
+        jsonldSchemaPropObj[currentType].parent,
+        jsonldSchemaPropObj
+      );
+    }
+
+    function isValidUrl(str) {
+      var pattern = new RegExp(
+        "^(https?:\\/\\/)?" + // protocol
+          "((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|" + // domain name
+          "((\\d{1,3}\\.){3}\\d{1,3}))" + // OR ip (v4) address
+          "(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*" + // port and path
+          "(\\?[;&a-z\\d%_.~+=-]*)?" + // query string
+          "(\\#[-a-z\\d_]*)?$",
+        "i"
+      ); // fragment locator
+
+      return !!pattern.test(str);
+    }
 
 
