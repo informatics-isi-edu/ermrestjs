@@ -220,7 +220,8 @@
         NO_DATA_CHANGED: "No Data Changed",
         NO_CONNECTION_ERROR: "No Connection Error",
         INVALID_SORT: "Invalid Sort Criteria",
-        INVALID_PAGE: "Invalid Page Criteria"
+        INVALID_PAGE: "Invalid Page Criteria",
+        INVALID_SERVER_RESPONSE: "Invalid Server Response"
     });
 
     module._errorMessage = Object.freeze({
