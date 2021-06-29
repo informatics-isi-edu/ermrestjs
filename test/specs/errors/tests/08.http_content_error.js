@@ -18,8 +18,6 @@ exports.execute = function (options) {
                 + '</body>'
             + '</html>';
 
-        var terminalErrorMessage = "An unexpected error has occurred. Please report this problem to your system administrators.";
-
         beforeAll(function () {
             server = options.server;
             catalog = options.catalog;
@@ -35,7 +33,7 @@ exports.execute = function (options) {
 
             server.catalogs.get(id).then(null, function(err) {
                 expect(err.code).toBe(500);
-                expect(err.message).toBe(terminalErrorMessage);
+                expect(err.message).toBe(htmlResponseMessage);
                 done();
             }).catch(function() {
                 expect(false).toBe(true);
