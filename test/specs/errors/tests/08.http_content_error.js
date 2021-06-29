@@ -17,6 +17,9 @@ exports.execute = function (options) {
                     + '<p>The requested URL /t.html was not found on this server.</p>'
                 + '</body>'
             + '</html>';
+        
+        var internalServerErrorMessage = "An unexpected error has occurred. ";
+        internalServerErrorMessage += "Please report this problem to your system administrators."
 
         beforeAll(function () {
             server = options.server;
@@ -33,7 +36,8 @@ exports.execute = function (options) {
 
             server.catalogs.get(id).then(null, function(err) {
                 expect(err.code).toBe(500);
-                expect(err.message).toBe(htmlResponseMessage);
+                expect(err.message).toBe(internalServerErrorMessage, "message missmatch");
+                expect(err.subMessage).toBe(htmlResponseMessage, "subMessage missmatch");
                 done();
             }).catch(function() {
                 expect(false).toBe(true);

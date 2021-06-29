@@ -207,7 +207,8 @@
      */
     function InternalServerError(status, message) {
         status = isStringAndNotEmpty(status) ? status : module._errorStatus.INTERNAL_SERVER_ERROR;
-        ERMrestError.call(this, module._HTTPErrorCodes.INTERNAL_SERVER_ERROR, status, message);
+        // use the message as subMessage and add a generic message instead
+        ERMrestError.call(this, module._HTTPErrorCodes.INTERNAL_SERVER_ERROR, status, module._errorMessage.INTERNAL_SERVER_ERROR, message);
     }
 
     InternalServerError.prototype = Object.create(ERMrestError.prototype);
