@@ -847,7 +847,7 @@ exports.execute = (options) => {
                 });
             });
 
-            xdescribe ("when update is only allowed for certain columns, ", function () {
+            describe ("when update is only allowed for certain columns, ", function () {
                 var reference, tuples;
 
                 beforeAll((done) => {
@@ -979,8 +979,9 @@ exports.execute = (options) => {
                     }, (response) => reference = response.contextualize.entryEdit, restrictedUserCookie);
                 });
 
-                it ("Tuple should return proper canUpdate based on table and column level acls, ", function (done) {
-                    reference.read(3).then(function (page) {
+                it ("Tuple should return proper canUpdate based on table and column level acls when using TCRS, ", function (done) {
+                    // NOTE passing the getTCRS=true option
+                    reference.read(3, null, false, false, false, true).then(function (page) {
                         expect(page.length).toBe(3, "page length missmatch");
 
                         tuples = page.tuples;
@@ -1093,7 +1094,7 @@ exports.execute = (options) => {
                         }
                     });
                 });
-            }).pend("tcrs support removed because of performance issues and requires rework");
+            })
 
         });
 

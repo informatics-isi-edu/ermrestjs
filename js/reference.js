@@ -3859,6 +3859,8 @@
          * @param {Boolean} getTCRS whether we should fetch the table-level and column-level row acls (if table supports it)
          * @param {Boolean} getUnlinkTRS whether we should fetch the acls of association
          *                  table. Use this only if the association is based on facet syntax
+         * 
+         * TODO we might want to add an option to only do TCRS or TRS without the foreignkeys for later
          * @type {Object}
          */
          _getReadPath: function(useEntity, getTRS, getTCRS, getUnlinkTRS) {
@@ -4683,7 +4685,7 @@
                         if (tcrs in data[i]) {
                             this._rightsSummary.push(data[i][tcrs]);
                         }
-                        if (trs in data[i]) {
+                        else if (trs in data[i]) {
                             this._rightsSummary.push(data[i][trs]);
                         }
                     }
