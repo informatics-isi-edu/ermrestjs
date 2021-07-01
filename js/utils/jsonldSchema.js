@@ -1,3 +1,4 @@
+// This JSON was generated with the help of scripts/google_dataset/schema_org_sparql.py
 var jsonldSchemaPropObj = {
     "schema.org": {
         "CreativeWork": {

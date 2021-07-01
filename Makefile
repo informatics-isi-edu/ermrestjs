@@ -58,6 +58,7 @@ SOURCE=$(UTIL)/polyfills.js \
 	   $(JS)/errors.js \
 	   $(JS)/parser.js \
 	   $(JS)/http.js \
+	   $(JS)/googleMetadata.js \
 	   $(JS)/reference.js \
 	   $(JS)/column.js \
 	   $(JS)/ag_reference.js \
@@ -80,7 +81,8 @@ LIB=$(VENDOR)/lz-string.min.js \
 	$(VENDOR)/markdown-it-sup.min.js \
 	$(VENDOR)/markdown-it-span.js \
 	$(VENDOR)/markdown-it-attrs.js \
-	$(VENDOR)/markdown-it-container.min.js
+	$(VENDOR)/markdown-it-container.min.js \
+	$(VENDOR)/loglevel.min.js
 
 
 # Build target

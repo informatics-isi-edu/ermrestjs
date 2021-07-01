@@ -72,7 +72,7 @@
             }
             return JSON.parse(str);
         } catch (exception) {
-            console.log(exception);
+            log.error(exception);
             throw err;
         }
     };
@@ -1595,8 +1595,8 @@
                 }
                 return module._markdownIt.render(value);
             } catch (e) {
-                console.log("Couldn't parse the given markdown value: " + value);
-                console.log(e);
+                log.error("Couldn't parse the given markdown value: " + value);
+                log.error(e);
                 return value;
             }
         },
@@ -1677,8 +1677,8 @@
                 // Run it through renderMarkdown to get the sequence in a fixed-width font
                 return module._markdownIt.renderInline(formattedSeq);
             } catch (e) {
-                console.log("Couldn't parse the given markdown value: " + value);
-                console.log(e);
+                log.error("Couldn't parse the given markdown value: " + value);
+                log.error(e);
                 return value;
             }
 
@@ -2741,8 +2741,8 @@
             } catch (err) {
                 // This should not happen since we're guarding against custom type objects.
                 obj = keyValues;
-                console.log("Could not process the given keyValues in _renderTemplate. Ignoring the _replaceDotWithUnderscore logic.");
-                console.log(err);
+                log.error("Could not process the given keyValues in _renderTemplate. Ignoring the _replaceDotWithUnderscore logic.");
+                log.error(err);
             }
         }
 
@@ -2790,7 +2790,7 @@
         try {
             content = module._mustache.render(template, obj);
         } catch(e) {
-            console.log(e);
+            log.error(e);
             content = null;
         }
 
@@ -2908,7 +2908,7 @@
             // Generate content from the template
             content = _compiledTemplate(obj);
         } catch(e) {
-            console.log(e);
+            log.error(e);
             content = null;
         }
 
