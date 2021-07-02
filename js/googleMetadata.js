@@ -46,8 +46,19 @@ GoogleDatasetMetadata.prototype = {
 function setMetadataFromTemplate(metadata, metadataAnnotation, templateEngine, templateVariables, table) {
     Object.keys(metadataAnnotation).forEach(function (key) {
         if (typeof metadataAnnotation[key] == "object" && metadataAnnotation[key] != null && !Array.isArray(metadataAnnotation[key])) {
-            metadata[key] = {}
+            metadata[key] = {};
             setMetadataFromTemplate(metadata[key], metadataAnnotation[key], templateEngine, templateVariables, table);
+        }
+        else if (Array.isArray(metadataAnnotation[key])) {
+            metadata[key] = [];
+            metadataAnnotation[key].forEach(function(element) {
+                metadata[key].push(module._renderTemplate(
+                    element,
+                    templateVariables,
+                    table.schema.catalog,
+                    { templateEngine: templateEngine }
+                ));
+            });
         }
         else {
             metadata[key] = module._renderTemplate(
@@ -96,7 +107,7 @@ function validateSchemaOrgProps(obj, jsonldSchemaPropObj) {
                 if (Array.isArray(obj[key])) {
                     obj[key].forEach(function (element, index) {
                         if (!isValidType(jsonldSchemaPropObj, propDetails, element, key)) {
-                            console.warn("Deleting invalid entry inside array for " + key + "\n");
+                            console.warn("Deleting invalid element inside array for " + key + "\n");
                             obj[key].splice(index, 1);
                         }
                     });

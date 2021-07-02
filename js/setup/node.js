@@ -62,6 +62,7 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
 
     ERMrest._SparkMD5 = require('spark-md5');
 
+    ERMrest._log = require('loglevel');
     _scriptsLoaded = true;
 
     /*

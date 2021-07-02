@@ -1,5 +1,3 @@
-    // Documentation link - https://www.npmjs.com/package/loglevel
-    log.setDefaultLevel("info");
     
     module.configure = configure;
 
@@ -7,6 +5,8 @@
         getServer: getServer
     };
 
+    // Documentation link - https://www.npmjs.com/package/loglevel
+    module._log.setDefaultLevel("info");
 
     var _servers = {};
 
