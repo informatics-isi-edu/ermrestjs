@@ -61,7 +61,7 @@
             return defer.resolve(), defer.promise;
         }).catch(function (err) {
             // fail silently
-            log.error("couldn't apply the client-config changes");
+            module._log.error("couldn't apply the client-config changes");
             return defer.resolve(), defer.promise;
         });
 
@@ -2921,8 +2921,8 @@
             // make sure generated hash is not the name of any columns in the table
             var nameExistsInTable = function (name, obj) {
                 if (name in tableColumns) {
-                    log.info("Generated Hash `" + name + "` for pseudo-column exists in table `" + self.table.name +"`.");
-                    log.info("Ignoring the following in visible-columns: ", obj);
+                    module._log.info("Generated Hash `" + name + "` for pseudo-column exists in table `" + self.table.name +"`.");
+                    module._log.info("Ignoring the following in visible-columns: ", obj);
                     return true;
                 }
                 return false;
@@ -2932,8 +2932,8 @@
             var wm = module._warningMessages;
             var logCol = function (bool, message, i) {
                 if (bool) {
-                    log.info("columns list for table: " + self.table.name + ", context: " + context + ", column index:" + i);
-                    log.info(message);
+                    module._log.info("columns list for table: " + self.table.name + ", context: " + context + ", column index:" + i);
+                    module._log.info(message);
                 }
                 return bool;
             };

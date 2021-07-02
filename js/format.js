@@ -33,7 +33,7 @@ var ERMrest = (function(module) {
                 if (ph.keys) { // keyword argument
                     for (k = 0; k < ph.keys.length; k++) {
                         if (!arg.hasOwnProperty(ph.keys[k])) {
-                            log.info('[printf] property "' + ph.keys[k] + '" does not exist');
+                            module._log.info('[printf] property "' + ph.keys[k] + '" does not exist');
                         }
                         arg = arg[ph.keys[k]];
 

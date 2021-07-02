@@ -1084,7 +1084,7 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
 
     // make sure table has shortestkey of length 1
     if (mainTable.shortestKey.length > 1) {
-        log.warn("This function only works with tables that have at least a simple key.");
+        module._log.warn("This function only works with tables that have at least a simple key.");
         defer.resolve(values);
         return defer.promise;
     }
@@ -1108,7 +1108,7 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
 
     // make sure just projection and base uri doesn't go over limit.
     if (basePath.length + projection.length >= module.URL_PATH_LENGTH_LIMIT) {
-        log.warn("couldn't generate the requests because of url limitation");
+        module._log.warn("couldn't generate the requests because of url limitation");
         defer.resolve(values);
         return defer.promise;
     }
@@ -1136,7 +1136,7 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
 
     // if adding any of the filters would go over url limit
     if (promises.length === 0) {
-        log.warn("couldn't generate the requests because of url limitation");
+        module._log.warn("couldn't generate the requests because of url limitation");
         defer.resolve(values);
         return defer.promise;
     }
@@ -1793,7 +1793,7 @@ ForeignKeyPseudoColumn.prototype.filteredRef = function(data, linkedData) {
             try {
                 location = module.parse(currURI + '/*::cfacets::' + module.encodeFacet(cfacets));
             } catch (exp) {
-                log.error("given domain_filter throws error, ignoring it. ", exp);
+                module._log.error("given domain_filter throws error, ignoring it. ", exp);
             }
         }
 
@@ -4385,7 +4385,7 @@ ColumnGroupAggregateFn.prototype = {
             sortColumns.forEach(function (sc) {
                 // if column is not sortable
                 if (sc.column && typeof sc.column._getSortColumns(context) === 'undefined') {
-                    log.info("column " + sc.column.name + " is not sortable and we're removing it from sort columns (entityCounts).");
+                    module._log.info("column " + sc.column.name + " is not sortable and we're removing it from sort columns (entityCounts).");
                     return;
                 }
 

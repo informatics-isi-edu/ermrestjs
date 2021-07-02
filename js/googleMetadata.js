@@ -35,7 +35,7 @@ GoogleDatasetMetadata.prototype = {
         metadata = removeEmptyOrNull(metadata);
 
         if (!isValidMetadata(metadata)) {
-            log.error("JSON-LD not appended to <head> as validation errors found.");
+            module._log.error("JSON-LD not appended to <head> as validation errors found.");
             return null;
         }
 
@@ -123,7 +123,7 @@ function validateSchemaOrgProps(obj, jsonldSchemaPropObj) {
 }
 
 function removeProp(obj, key) {
-    log.info("Invalid attribute ignored " + key + " inside type " + obj[typeKeyword] + " in JSON-LD\n");
+    module._log.info("Invalid attribute ignored " + key + " inside type " + obj[typeKeyword] + " in JSON-LD\n");
     delete obj[key];
 }
 
@@ -183,7 +183,7 @@ function isValidType(jsonldSchemaPropObj, propDetails, element, key) {
             }
         }
     } else {
-        log.warn("Incorrect validation definition for attribute in ermrestjs" - key);
+        module._log.warn("Incorrect validation definition for attribute in ermrestjs" - key);
     }
 
     return result;
@@ -201,7 +201,7 @@ function isJsonLdBaseValid(obj, definitionObj) {
                         contextURL.host != contextForSchemaOrg &&
                         contextURL.pathname == "/"
                     ) {
-                        log.error("Incorrect context defined in JSON-LD\n");
+                        module._log.error("Incorrect context defined in JSON-LD\n");
                         result = false;
                     }
 
@@ -209,14 +209,14 @@ function isJsonLdBaseValid(obj, definitionObj) {
 
                 case typeKeyword:
                     if (!definitionObj[obj[typeKeyword]]) {
-                        log.error("Incorrect type defined in JSON-LD\n");
+                        module._log.error("Incorrect type defined in JSON-LD\n");
                         result = false;
                     }
 
                     break;
 
                 default:
-                    log.info("JSON-LD property ignored in ermrestjs - " + key);
+                    module._log.info("JSON-LD property ignored in ermrestjs - " + key);
                     removeProp(obj, key);
             }
         }
@@ -246,7 +246,7 @@ function areRequiredPropsDefined(jsonLd, jsonldSchemaPropObj) {
         ? void 0
         : requiredPropArr.forEach(function (key) {
             if (!(key in jsonLd)) {
-                log.error("Missing value for required attribute - " + key + " inside type " + jsonLd[typeKeyword] + " in JSON-LD\n");
+                module._log.error("Missing value for required attribute - " + key + " inside type " + jsonLd[typeKeyword] + " in JSON-LD\n");
                 result = false;
             }
         });
