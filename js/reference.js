@@ -1402,6 +1402,10 @@
                     headers: this._generateContextHeader(contextHeaderParams, limit)
                 };
                 this._server.http.get(uri, config).then(function (response) {
+                    if (!Array.isArray(response.data)) {
+                        throw new InvalidServerResponse(uri, response.data, action);                    
+                    }
+
                     var etag = response.headers().etag;
 
                     var hasPrevious, hasNext = false;

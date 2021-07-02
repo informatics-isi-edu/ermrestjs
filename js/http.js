@@ -214,7 +214,7 @@
                             // Ermrest never produces HTML errors, so this was produced by the server itself
                             if (response.headers()['content-type'] && response.headers()['content-type'].indexOf("html") > -1) {
                                 response.status = response.statusCode = _http_status_codes.internal_server_error;
-                                response.data = "An unexpected error has occurred. Please report this problem to your system administrators.";
+                                // keep response.data the way it is, so client can provide more info to users
                             } else {
                                 response.status = response.statusCode = _http_status_codes.no_content;
                             }
@@ -280,7 +280,7 @@
                             // Ermrest never produces HTML errors, so this was produced by the server itself
                             if (response.headers()['content-type'] && response.headers()['content-type'].indexOf("html") > -1) {
                                 response.status = response.statusCode = _http_status_codes.internal_server_error;
-                                response.data = "An unexpected error has occurred. Please report this problem to your system administrators.";
+                                // keep response.data the way it is, so client can provide more info to users
                             }
 
                             module.onload().then(function() {

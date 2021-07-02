@@ -330,6 +330,8 @@ to use for ERMrest JavaScript agents.
         * [new InvalidSortCriteria(message, path)](#new_ERMrest.InvalidSortCriteria_new)
     * [.InvalidPageCriteria](#ERMrest.InvalidPageCriteria)
         * [new InvalidPageCriteria(message, path)](#new_ERMrest.InvalidPageCriteria_new)
+    * [.InvalidServerResponse](#ERMrest.InvalidServerResponse)
+        * [new InvalidServerResponse(uri, data, logAction)](#new_ERMrest.InvalidServerResponse_new)
     * [.ParsedFilter](#ERMrest.ParsedFilter)
         * [new ParsedFilter(type)](#new_ERMrest.ParsedFilter_new)
         * [.setFilters(filters)](#ERMrest.ParsedFilter+setFilters)
@@ -2814,6 +2816,22 @@ Invalid page conditions
 | --- | --- | --- |
 | message | <code>string</code> | error message |
 | path | <code>string</code> | path for redirectLink |
+
+<a name="ERMrest.InvalidServerResponse"></a>
+
+### ERMrest.InvalidServerResponse
+**Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
+<a name="new_ERMrest.InvalidServerResponse_new"></a>
+
+#### new InvalidServerResponse(uri, data, logAction)
+Invalid server response
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| uri | <code>string</code> | error message |
+| data | <code>object</code> | the returned data |
+| logAction | <code>string</code> | the log action of the request |
 
 <a name="ERMrest.ParsedFilter"></a>
 

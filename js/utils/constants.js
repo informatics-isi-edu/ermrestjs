@@ -220,13 +220,15 @@
         NO_DATA_CHANGED: "No Data Changed",
         NO_CONNECTION_ERROR: "No Connection Error",
         INVALID_SORT: "Invalid Sort Criteria",
-        INVALID_PAGE: "Invalid Page Criteria"
+        INVALID_PAGE: "Invalid Page Criteria",
+        INVALID_SERVER_RESPONSE: "Invalid Server Response"
     });
 
     module._errorMessage = Object.freeze({
         INVALID_FACET: "Given encoded string for facets is not valid.",
         INVALID_CUSTOM_FACET: "Given encoded string for cfacets is not valid.",
-        INVALID_FACET_OR_FILTER: "Given filter or facet is not valid."
+        INVALID_FACET_OR_FILTER: "Given filter or facet is not valid.",
+        INTERNAL_SERVER_ERROR: "An unexpected error has occurred. Please report this problem to your system administrators."
     });
 
     module._facetingErrors = Object.freeze({
