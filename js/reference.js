@@ -1177,7 +1177,7 @@
             if (this._canUseTRS === undefined) {
                 var rightKey = module._ERMrestFeatures.TABLE_RIGHTS_SUMMARY;
                 this._canUseTRS = (this.table.schema.catalog.features[rightKey] === true) && 
-                                  this.table.rights[module._ERMrestACLs.UPDATE] == null || this.table.rights[module._ERMrestACLs.DELETE] == null && 
+                                  (this.table.rights[module._ERMrestACLs.UPDATE] == null || this.table.rights[module._ERMrestACLs.DELETE] == null) && 
                                   this.table.columns.has("RID") && 
                                   (this.canUpdate || this.canDelete);
             }
@@ -5089,7 +5089,7 @@
         this._data = data || {};
         this._linkedData = (typeof linkedData === "object") ? linkedData : {};
         this._rightsSummary = (typeof rightsSummary === "object") ? rightsSummary : {};
-        this._associationRightsSummary = (typeof rightsSummary === "object") ? associationRightsSummary : {};
+        this._associationRightsSummary = (typeof associationRightsSummary === "object") ? associationRightsSummary : {};
     }
 
     Tuple.prototype = {

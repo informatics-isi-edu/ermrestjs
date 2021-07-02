@@ -449,14 +449,14 @@ exports.execute = (options) => {
                                                 "name": {
                                                     "acls": {
                                                         "insert" : [],
-                                                        "select": [],
+                                                        "select": ["*"],
                                                         "update": []
                                                     }
                                                 },
                                                 "term": {
                                                     "acls": {
                                                         "insert" : [],
-                                                        "select": [],
+                                                        "select": ["*"],
                                                         "update": []
                                                     }
                                                 }
@@ -564,14 +564,14 @@ exports.execute = (options) => {
                                             "name": {
                                                 "acls": {
                                                     "insert" : [],
-                                                    "select": [],
+                                                    "select": ["*"],
                                                     "update": []
                                                 }
                                             },
                                             "term": {
                                                 "acls": {
                                                     "insert" : [],
-                                                    "select": [],
+                                                    "select": ["*"],
                                                     "update": []
                                                 }
                                             }
@@ -722,7 +722,7 @@ exports.execute = (options) => {
 
                         expect(reference.related.length).toBe(1, "related length missmatch");
 
-                        return reference.related[0].read(2, null, false, false, false, false, true);
+                        return reference.related[0].read(2, null, false, false, true, false, true);
                     }).then(function (page) {
                         expect(page.length).toBe(2, "page length missmatch");
 
