@@ -18,7 +18,6 @@ function bindMethod(obj, methodName) {
             try {
                 return Function.prototype.bind.call(method, obj);
             } catch (e) {
-                //fallback to wrapping
                 return function () {
                     return Function.prototype.apply.apply(method, [obj, arguments]);
                 };
@@ -58,7 +57,7 @@ function Logger() {
             currentLevel = level;
             replaceLoggingMethods.call(self, level);
         } else {
-            throw "log.setLevel() called with invalid level: " + level;
+            throw "Logger called with invalid level: " + level;
         }
     };
 
