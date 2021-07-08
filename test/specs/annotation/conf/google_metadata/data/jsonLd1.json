@@ -1,0 +1,24 @@
+{
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Sales of the leading ice cream brands of the U.S. 2020",
+    "description": "This graph shows the sales of the leading ice cream brands of the United States in 2020. Ben &amp;amp; Jerry&amp;#039;s was the top ranked ice cream brand of the United States with about 863.1 million U.S. dollars worth of sales for the 52 weeks ended November 1, 2020. Total ice cream category sales amounted to about 6.97 billion U.S. dollars. Despite being far from the top brand, consumers stated that they regularly purchase Breyers above any other brand. Ice cream is a part of the frozen dessert category and serves as an indulgent snack for those with a sweet tooth. Ice cream comes in a large variety of styles ranging from regular ice cream to low-fat ice cream. There are fruity and creamy options available or a combination of both. In the retail environment, ice cream is sold through several retail channels or specialized ice cream shops or parlors. In the retail aisles, consumers would find them pre-packaged in different sizes, mostly in bulk (gallons or pints) or as bars. Some suppliers offer seasonal ice cream flavors besides their year-round portfolio. Companies shaping the U.S. market in addition to private label products include Nestlé Dreyer’s Ice Cream Co., Good Humor/Breyers, Blue Bell Creameries and Ben &amp;amp; Jerry&amp;#039;s Homemade. At ice cream shops or parlors, consumers can order their favorite flavors as scoops and combine them with further mix-ins. Popular U.S. ice creamery chains include Cold Stone Creamery and Häagen-Dasz. The Cold Stone Creamery was founded in 1988 and is currently headquartered in Scottsdale, Arizona.",
+    "url": "https://www.statista.com/statistics/190426/top-ice-cream-brands-in-the-united-states/",
+    "keywords": [
+        "sales",
+        "ice cream",
+        "ice cream brands",
+        "brands"
+    ],
+    "temporalCoverage": "52 weeks ended Novmeber 1, 2020",
+    "creator": {
+        "name": "Statista",
+        "@type": "Organization",
+        "url": "https://www.statista.com",
+        "address": "los angeles",
+        "logo": {
+            "@type": "ImageObject",
+            "url": "https://cdn.statcdn.com/static/img/Statista-Logo.png"
+        }
+    }
+}

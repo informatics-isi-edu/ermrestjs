@@ -6,7 +6,8 @@
         "path": "test/specs/annotation/conf/google_metadata/schema.json"
     },
     "tables": {
-        "createNew": true
+        "createNew": true,
+        "name": "google_metadata_w_handlebars"
     },
     "entities": {
         "createNew": true,

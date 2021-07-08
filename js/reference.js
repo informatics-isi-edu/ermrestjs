@@ -5844,5 +5844,74 @@
         }
     };
 
+    /**
+     * Constructs the Google Dataset metadata for the given tuple.
+     * The given metadata must be valid and have the appropriate variables.
+     */
+    function GoogleDatasetMetadata(reference, gdsMetadataAnnotation) {
+        this._reference = reference;
+        this._table = reference.table;
+        this._gdsMetadataAnnotation = gdsMetadataAnnotation;
+    }
+
+    GoogleDatasetMetadata.prototype = {
+        /**
+         * Given the templateVariables variables, will generate the metadata.
+         * @param {ERMrest.Tuple} tuple - the tuple object that this metadata is based on
+         * @param {Object=} templateVariables - if it's not an object, we will use the tuple templateVariables
+         * @return {Json-ld|null} if the returned template for required attributes are empty or invalid, it will return null.
+         */
+        compute: function (tuple, templateVariables) {
+            var table = this._table,
+                metadataAnnotation = this._gdsMetadataAnnotation;
+
+            if (!templateVariables) {
+                templateVariables = tuple.templateVariables.values;
+            }
+
+            var metadata = {};
+            setMetadataFromTemplate(metadata, metadataAnnotation.dataset, metadataAnnotation.template_engine, templateVariables, table);
+
+            // remove null attributes so they don't get included in the json
+            metadata = removeEmptyOrNull(metadata);
+            var result = module.performJsonLdValidation(metadata);
+
+            if (!result.isValid) {
+                module._log.error("JSON-LD not appended to <head> as validation errors found.");
+                return null;
+            }
+
+            return result.modifiedJsonLd;
+        },
+    };
+
+    function setMetadataFromTemplate(metadata, metadataAnnotation, templateEngine, templateVariables, table) {
+        Object.keys(metadataAnnotation).forEach(function (key) {
+            if (typeof metadataAnnotation[key] == "object" && metadataAnnotation[key] != null && !Array.isArray(metadataAnnotation[key])) {
+                metadata[key] = {};
+                setMetadataFromTemplate(metadata[key], metadataAnnotation[key], templateEngine, templateVariables, table);
+            }
+            else if (Array.isArray(metadataAnnotation[key])) {
+                metadata[key] = [];
+                metadataAnnotation[key].forEach(function (element) {
+                    metadata[key].push(module._renderTemplate(
+                        element,
+                        templateVariables,
+                        table.schema.catalog,
+                        { templateEngine: templateEngine }
+                    ));
+                });
+            }
+            else {
+                metadata[key] = module._renderTemplate(
+                    metadataAnnotation[key],
+                    templateVariables,
+                    table.schema.catalog,
+                    { templateEngine: templateEngine }
+                );
+            }
+        });
+    }
+
     
 
