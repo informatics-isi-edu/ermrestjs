@@ -11,8 +11,6 @@ module.performJsonLdValidation = function (jsonLdOrig) {
         if(module.jsonldSchemaPropObj) {
             if (isJsonLdBaseValid(jsonLd)) {
                 validateSchemaOrgProps(jsonLd);
-    
-                // always return true here as we will simply ignore all attributes that fail validation and are not required attributes
                 return {isValid: areRequiredPropsDefined(jsonLd), modifiedJsonLd: jsonLd};
             }
         }
@@ -46,11 +44,10 @@ function validateSchemaOrgProps(obj) {
                 }
 
                 // datatype not followed
-                // TODO: Check if support for arrays in templating was achieved
                 if (Array.isArray(obj[key])) {
                     obj[key].forEach(function (element, index) {
                         if (!isValidType(propDetails, element, key)) {
-                            console.warn("Deleting invalid element inside array for " + key + "\n");
+                            module._log.warn("Deleting invalid element inside array for " + key + "\n");
                             obj[key].splice(index, 1);
                         }
                     });
