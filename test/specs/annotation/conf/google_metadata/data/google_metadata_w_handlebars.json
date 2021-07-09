@@ -15,4 +15,21 @@
   "RMT": "2021-06-29 15:16:24",
   "RCB": "https://auth.globus.org/be566e01-83b3-42c3-9fd0-2bd6caac77c3",
   "RMB": "https://auth.globus.org/be566e01-83b3-42c3-9fd0-2bd6caac77c3"
+},
+{
+  "id": "2003",
+  "title": "NH Munich Resort",
+  "website": "http://www.nh-hotels.com/hotels/munich",
+  "category": "Resort",
+  "rating": "3.2000",
+  "description": "",
+  "thumbnail": "3,001",
+  "cover": "3,001",
+  "opened_on": "1976-06-15 00:00:00",
+  "luxurious": "true",
+  "RID": "1Y2",
+  "RCT": "2021-06-29 15:16:24",
+  "RMT": "2021-06-29 15:16:24",
+  "RCB": "https://auth.globus.org/be566e01-83b3-42c3-9fd0-2bd6caac77c3",
+  "RMB": "https://auth.globus.org/be566e01-83b3-42c3-9fd0-2bd6caac77c3"
 }]

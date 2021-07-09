@@ -55,9 +55,8 @@ exports.execute = function (options) {
 
             beforeAll(function (done) {
                 options.ermRest.resolve(handlebarsGoogleMetadataUri, { cid: "test" }).then(function (response) {
-                    reference = response;
-                    //console.log("ref1 " , reference);
-                    return response.read(3);
+                    reference = response.contextualize.detailed;
+                    return response.read(2);
                 }).then(function (response) {
                     tuples = response.tuples;
                     done();
@@ -70,19 +69,21 @@ exports.execute = function (options) {
             it("The google_metadata with all required attributes is successfully generated from the annotation", function (done) {
                 tuple = tuples[0];
                 var metadata = reference.googleDatasetMetadata.compute(tuple);
-                //console.log("ref", metadata);
-                //expect(metadata.template_engine).toBe("handlebars", "Template engine does not match for tuple[0]");
-
+                expect(metadata).toBeObject();
+                expect(JSON.stringify(metadata)).toBeJsonString(JSON.stringify(require("./../conf/google_metadata/data/generatedJsonLd.json")));
                 done();
             });
 
-            it("The google_metadata with missing required attribute 'name' returned as null", function (done) {
-                done(); 
+            it("The google_metadata with missing required attribute 'description' returned as null", function (done) {
+                tuple = tuples[1];
+                var metadata = reference.googleDatasetMetadata.compute(tuple);
+                expect(metadata).toBeNull();
+                done();
             });
         });
 
         describe("validation of structured data", function () {
-            var jsonInputOrig = require("./../conf/google_metadata/data/jsonLd1.json");
+            var jsonInputOrig = require("./../conf/google_metadata/data/inputJsonLd.json");
 
             it("The google_metadata with incorrect attribute 'verson' returned w/o it", function (done) {
                 var jsonInput = Object.assign({}, jsonInputOrig);

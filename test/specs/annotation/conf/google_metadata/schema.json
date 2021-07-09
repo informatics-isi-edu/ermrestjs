@@ -84,6 +84,7 @@
                             "@context": "http://schema.org",
                             "keywords": [
                                 "sales",
+                                "{{{category}}}",
                                 "ice cream",
                                 "ice cream brands",
                                 "brands"

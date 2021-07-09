@@ -3565,16 +3565,16 @@
          * @type {ERMrest.GoogleDatasetMetadata}
          */
          get googleDatasetMetadata() {
-            if (this._gdsMetadata === undefined) {
+            if (this._googleDatasetMetadata === undefined) {
                 var table = this.table;
                 if (!table.annotations.contains(module._annotations.GOOGLE_DATASET_METADATA)) {
-                    this._gdsMetadata = null;
+                    this._googleDatasetMetadata = null;
                 } else {
                     var metadataAnnotation = module._getRecursiveAnnotationValue(this._context, this._table.annotations.get(module._annotations.GOOGLE_DATASET_METADATA).content);
-                    this._gdsMetadata = new GoogleDatasetMetadata(this, metadataAnnotation);
+                    this._googleDatasetMetadata = new GoogleDatasetMetadata(this, metadataAnnotation);
                 }
             }
-            return this._gdsMetadata;
+            return this._googleDatasetMetadata;
         },
 
         /**
