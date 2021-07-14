@@ -1,3 +1,7 @@
+# This script is responsible for generating a validation.json file that contains all attributes
+# and its types for the schema.org classes used as input
+# schemaorg-current-https.ttl is used as input for the data definition
+# Output can be compared against schema.org/CLASS_NAME
 import rdflib
 import json
 

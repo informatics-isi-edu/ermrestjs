@@ -71,6 +71,7 @@ here is a quick matrix to locate them.
 | [2018 Indexing Preferences](#tag-2018-indexing-preferences) | -       | -      | X     | X      | -   | -   | Specify database indexing preferences         |
 | [2019 Chaise Config](#tag-2019-chaise-config)               | X       | -      | -     | -      | -   | -   | Properties to configure chaise app UX         |
 | [2019 Source Definitions](#tag-2019-source-definitions)     | -       | -      | X     | -      | -   | -   | Describe source definitions                   |
+| [2021 Google Dataset](#tag-2021-google-dataset)     | -       | -      | X     | -      | -   | -   | Describe metadata for rich results in Google Dataset                   |
 
 For brevity, the annotation keys are listed above by their section
 name within this documentation. The actual key URI follows the form
@@ -967,6 +968,45 @@ Supported _columns_ patterns:
 - `true`: By setting the value of `"columns"` to `true`, chaise will provide the data for all the outbound foreign keys fo the table in templating environments.
 - _Any other values_ : In this case chaise will not provide any foreign key data in templating environments.
 
+## Tag: 2021 Google Dataset
+`tag:isrd.isi.edu,2018:citation`
+
+This key indicates that the detailed context (record) has a format for defining metadata that will be appended in the JSON-LD format to the record page. Here schema.org dataset https://schema.org/Dataset is the vocabulary that will be used to describe data in the JSON-LD markup format. This is the recommended way by Google to ensure that the record pages pop up in Google Dataset search results. It should only be added to records that are desired to show up in search results.
+
+Example:
+
+```json
+{
+  "tag:isrd.isi.edu,2021:google-dataset": {
+    "detailed": {
+      "dataset": {
+        "@context": "http://schema.org", 
+        "@type": "Dataset", 
+        "name": "{{{title}}}", //mandatory
+        "description": "{{{summary}}}", //mandatory
+        "creator": {
+          "url": "https://data.world/smartcolumbusos",
+          "name": "{{{website}}}",
+          "@type": "Organization",
+          "description": "{{{category}}}",
+          "parentOrganization": "Smart Columbus Operating System"
+        },
+        
+        "dateModified": "{{{RMT}}}",
+        "datePublished": "{{{RCT}}}"
+      },
+      "template_engine": "handlebars"
+    }
+  }
+}
+
+```
+
+Supported parameters inside `detailed.dataset`:
+
+- JSON-LD keywords: `@context` and `@type` are the only JSON-LD keywords supported at this time. The default values given in the example above will be applied if no value is overriden. Full list of keywords is available at https://json-ld.org/spec/latest/json-ld/#syntax-tokens-and-keywords
+
+- Schema.org volabulary: The supported attributes and types are here https://github.com/informatics-isi-edu/ermrestjs/blob/master/js/utils/jsonldSchema.js. This is a subset of the original vocabulary provided by schema.org. Templating is used to plug in the values for the desired attributes.
 ### Context Names
 
 List of _context_ names that are used in ERMrest:
@@ -1006,6 +1046,7 @@ The following matrix illustrates which context is meaningful in which annotation
 | [2016 Visible Foreign Keys](#tag-2016-visible-foreign-keys) | -       | -             | -                    | -              | X        | -     | -          | -            | -      | -      | -        | X |
 | [2016 Table Alternatives](#tag-2016-table-alternatives)     | X       | X             | X                    | X              | X        | X     | X          | X            | -      | -      | -        | X |
 | [2019 Export](#tag-2019-export)                             | X       | -             | -                    | -              | X        | -     | -          | -            | -      | -      | -        | - |
+| [2021 Google Dataset](#tag-2021-google-dataset)                             | -       | -             | -                    | -              | X        | -     | -          | -            | -      | -      | -        | - |
 
 ## Pattern Expansion
 

@@ -4,7 +4,12 @@ var contextKeyword = "@context";
 var typeKeyword = "@type";
 var datasetType = "Dataset";
 
-
+/**
+ * 
+ * @param  jsonLdOrig - the generated jsonLd by templating that needs to be validated
+ * @returns isValid - boolean flag that indicates whether the jsonLd is valid and should be appended to the DOM by Chaise
+ *  modifiedJsonLd - the input object is modified wherever necessary to ensure that the correct properties of the metadata still go through
+ */
 module.performJsonLdValidation = function (jsonLdOrig) {
     var jsonLd = Object.assign({}, jsonLdOrig);
     try {
@@ -22,7 +27,7 @@ module.performJsonLdValidation = function (jsonLdOrig) {
         module._log.error(err);
     }
     return {isValid: false, modifiedJsonLd: jsonLd};
-}
+};
 
 function validateSchemaOrgProps(obj) {
     var schemaTypeObj = module.jsonldSchemaPropObj[obj[typeKeyword]];
@@ -129,6 +134,11 @@ function isValidType(propDetails, element, key) {
     return result;
 }
 
+/**
+ * Here we check if the @ attributes that are jsonLd keywords are valid or not
+ * @param {*} obj - input object
+ * @returns boolean that indicates if it is valid
+ */
 function isJsonLdBaseValid(obj) {
     var definitionObj = module.jsonldSchemaPropObj;
     var result = true;
@@ -180,12 +190,9 @@ function areRequiredPropsDefined(jsonLd) {
     var result = true;
     var requiredPropArr =
         (_jsonldSchemaPropObj$jsonLd = module.jsonldSchemaPropObj[jsonLd[typeKeyword]]) === null ||
-            _jsonldSchemaPropObj$jsonLd === void 0
-            ? void 0
-            : _jsonldSchemaPropObj$jsonLd.requiredProperties;
-    requiredPropArr === null || requiredPropArr === void 0
-        ? void 0
-        : requiredPropArr.forEach(function (key) {
+            _jsonldSchemaPropObj$jsonLd === void 0 ? void 0 : _jsonldSchemaPropObj$jsonLd.requiredProperties;
+    var innerResult = 
+    requiredPropArr === null || requiredPropArr === void 0 ? void 0 : requiredPropArr.forEach(function (key) {
             if (!(key in jsonLd)) {
                 module._log.error("Missing value for required attribute - " + key + " inside type " + jsonLd[typeKeyword] + " in JSON-LD\n");
                 result = false;
@@ -236,7 +243,7 @@ function isValidUrl(str) {
 function removeEmptyOrNull(obj) {
     Object.keys(obj).forEach(function (k) {
         if (obj[k] && typeof obj[k] === 'object') {
-            removeEmptyOrNull(obj[k])
+            removeEmptyOrNull(obj[k]);
         }
         else if (obj[k] == null || obj[k] == "") {
             delete obj[k];
