@@ -73,11 +73,11 @@ here is a quick matrix to locate them.
 | [2019 Source Definitions](#tag-2019-source-definitions)     | -       | -      | X     | -      | -   | -   | Describe source definitions                   |
 
 For brevity, the annotation keys are listed above by their section
-name within this documentation. The actual key URI follows the form
-`tag:misd.isi.edu,` _date_ `:` _key_ where the _key_ part is
-lower-cased with hyphens replacing whitespace. For example, the
-`2015 Display` annotation key URI is actually
-`tag:misd.isi.edu,2015:display`.
+name within this documentation. The actual key URI follows one of these formats:
+- `tag:misd.isi.edu,` _date_ `:` _key_ 
+- `tag:isrd.isi.edu,` _date_ `:` _key_
+
+Where the _key_ part is lower-cased with hyphens replacing whitespace. For example, the `2015 Display` annotation key URI is actually `tag:misd.isi.edu,2015:display`, and `2017 Key Display` is `tag:isrd.isi.edu,2017:key-display`.
 
 ### Tag: 2015 Display
 
@@ -413,15 +413,29 @@ Configuration attributes (optional):
 - `markdown_name`: The markdown to use in place of the default heuristics for facet title.
 - `comment`: The tooltip to be used in place of the default heuristics for the facet. Set this to `false` if you don't want any tooltip.
 - `open`: Setting this attribute to `true`, will force the facet to open by default.
-- `bar_plot`: This attribute is meant to be an object of properties that control the display of the histogram. Setting this attribute to `false` will force the histogram to not be shown in the facet in the facet panel. If unspecified, default is `true` (or show the histogram).
 - `ux_mode`: `choices`, `ranges`, or `check_presence`. If a multi-modal facet control UX is available, it will specify the default UX mode that should be used (If `ux_mode` is defined, the other type of constraint will not be displayed even if you have defined it in the annotation). In `check_presence` mode only two options will be available to the users, "not-null" and "null".
-- `hide_null_choice` and `hide_not_null_choice`: By default, we are going to add `null` and `not-null` options in the choice picker. Setting any of these variables to `true`, will hide its respective option.
+- `hide_null_choice` and `hide_not_null_choice`: By default, we are going to add `null` and `not-null` options in the `choices` UX mode. Setting any of these variables to `true`, will hide its respective option.
+- `bar_plot`: This attribute is meant to be an object of properties that control the display of the histogram in `ranges` UX mode. Setting this attribute to `false` will force the histogram to not be shown in the facet in the facet panel. If unspecified, default is `true` (or show the histogram). If defined as an object, available attributes are:
+  - `n_bins`: Used to define the number of bins the histogram uses to fetch and display data. If undefined, default is 30 bins.
+- `hide_num_occurrences`: Applicaple only to scalar facets in `choices` UX mode. In the facet popup for a scalar facet, we're showing the "Number of occurences" for each individual values. Setting this value to `false` will hide the "Number of occurences" column.
+- `order`: Control how the values in the scalar facets for `choices` UX mode should be sorted. This follows the same syntax as `column_order` and the following is the default value of this attribute:
+  ```json
+  [
+    {
+      "num_occurrences": true, 
+      "descending": true
+    },
+    {
+      "column": "<the scalar facet column name>", 
+      "descending": false
+    }
+  ]
+  ```
+  This means that the values are sorted in a desencing order of "Number of occurences" (frequency), and tie breaking is done based on the ascending value of the scalar column.
+  You can modify this to sort based on other columns of the table that the scalar column belongs to. Or use the `"num_occurrences": true` to refer to the "Number of occurences" column.
 
-`bar_plot` attributes (optional):
-- `n_bins`: Used to define the number of bins the histogram uses to fetch and display data. If undefined, default is 30 bins.
 
-
-The following is an example of visible-columns annotation payload for defining facets. You can find more examples in [here](facet-examples.md).
+The following is an example of visible-columns annotation payload for defining facets. You can find more examples in [here](facet-examples.md) and use [this document](facet-json-structure.md) to learn more about the structure of facet.
 
 ```
 "filter": {
