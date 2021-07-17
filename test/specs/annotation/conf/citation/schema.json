@@ -62,7 +62,7 @@
                     "author_pattern":  "{{#$fkeys.citation_schema.citation_w_mustache_author_fkey}}{{{values.first_name}}} {{{values.last_name}}}{{/$fkeys.citation_schema.citation_w_mustache_author_fkey}}",
                     "title_pattern":   "{{#title}}{{{title}}}{{/title}}{{^title}}No title{{/title}}",
                     "year_pattern":    "2018",
-                    "url_pattern":     "https://dev.isrd.isi.edu/chaise/record/#{{{$catalog.snapshot}}}/citation_schema:citation_w_mustache/id={{{id}}}",
+                    "url_pattern":     "{{{$self.uri.detailed}}}",
                     "id_pattern":      "{{{id}}}"
                 }
             }
@@ -124,12 +124,17 @@
             "annotations": {
                 "tag:isrd.isi.edu,2018:citation": {
                     "template_engine": "handlebars",
-                    "journal_pattern": "{{journal}}",
-                    "author_pattern":  "{{#with $fkeys.citation_schema.citation_w_handlebars_author_fkey}}{{values.first_name}} {{values.last_name}}{{/with}}",
-                    "title_pattern":   "{{#if title}}{{title}}{{else}}No title{{/if}}",
+                    "journal_pattern": "{{{journal}}}",
+                    "author_pattern":  "{{#with $fkeys.citation_schema.citation_w_handlebars_author_fkey}}{{{values.first_name}}} {{values.last_name}}{{/with}}",
+                    "title_pattern":   "{{#if title}}{{{title}}}{{else}}No title{{/if}}",
                     "year_pattern":    "{{formatDate RCT 'YYYY'}}",
-                    "url_pattern":     "https://dev.isrd.isi.edu/chaise/record/#{{$catalog.snapshot}}/citation_schema:citation_w_handlebars/id={{id}}",
-                    "id_pattern":      "{{id}}"
+                    "url_pattern":     "{{{$self.uri.detailed}}}",
+                    "id_pattern":      "{{{$self.rowName}}}"
+                },
+                "tag:isrd.isi.edu,2016:table-display": {
+                    "row_name": {
+                        "row_markdown_pattern": "{{{id}}}"
+                    }
                 }
             }
         },
@@ -372,7 +377,7 @@
                     "author_pattern":  "{{{author}}}",
                     "title_pattern":   "{{#if title}}{{title}}{{else}}No title{{/if}}",
                     "year_pattern":    "{{formatDate RCT 'YYYY'}}",
-                    "url_pattern":     "https://dev.isrd.isi.edu/chaise/record/#{{$catalog.snapshot}}/citation_schema:citation_w_handlebars/id={{id}}",
+                    "url_pattern":     "{{{$self.uri.detailed}}}",
                     "id_pattern":      "{{id}}",
                     "wait_for": ["citation_journal_field"]
                 },
@@ -419,7 +424,7 @@
                     "author_pattern":  "{{#each citation_authors}}{{{this.rowName}}}{{/each}}",
                     "title_pattern":   "{{#if title}}{{title}}{{else}}No title{{/if}}",
                     "year_pattern":    "{{formatDate RCT 'YYYY'}}",
-                    "url_pattern":     "https://dev.isrd.isi.edu/chaise/record/#{{$catalog.snapshot}}/citation_schema:citation_w_handlebars/id={{id}}",
+                    "url_pattern":     "{{{$self.uri.detailed}}}",
                     "id_pattern":      "{{id}}",
                     "wait_for": ["citation_authors"]
                 },

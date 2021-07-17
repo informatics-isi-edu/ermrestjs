@@ -4924,7 +4924,7 @@
 
             if (!self._data || !self._data.length) return null;
 
-            var i, value, pattern, values = [], keyValues;
+            var i, j, value, pattern, values = [], keyValues;
             var display = ref.display;
 
             // markdown_pattern in the source object
@@ -4996,6 +4996,8 @@
 
                     // make sure we have the formatted key values
                     keyValues = self.tuples[i].templateVariables.values;
+
+                    keyValues.$self = self.tuples[i].selfTemplateVariable;
 
                     // render template
                     value = module._renderTemplate(ref.display._rowMarkdownPattern, keyValues, ref.table.schema.catalog, { templateEngine: ref.display.templateEngine});
@@ -5699,6 +5701,26 @@
         },
 
         /**
+         * Should be used for populating $self for this tuple in templating environments
+         * It will have,
+         * - rowName
+         * - uri
+         * @type {Object}
+         */
+        get selfTemplateVariable() {
+            if (this._selfTemplateVariable === undefined) {
+                var $self = {};
+                for (j in this.templateVariables) {
+                    if (this.templateVariables.hasOwnProperty(j) && j != "values") {
+                        $self[j] = this.templateVariables[j];
+                    }
+                }
+                this._selfTemplateVariable = $self;
+            }
+            return this._selfTemplateVariable;
+        },
+
+        /**
          * If the Tuple is derived from an association related table,
          * this function will return a reference to the corresponding
          * entity of this tuple's association table.
@@ -5860,6 +5882,8 @@
             if (!templateVariables) {
                 templateVariables = tuple.templateVariables.values;
             }
+
+            templateVariables.$self = tuple.selfTemplateVariable;
 
             var citation = {};
             // author, title, id set to null if not defined
