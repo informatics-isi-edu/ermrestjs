@@ -4924,7 +4924,7 @@
 
             if (!self._data || !self._data.length) return null;
 
-            var i, j, value, pattern, values = [], keyValues;
+            var i, value, pattern, values = [], keyValues;
             var display = ref.display;
 
             // markdown_pattern in the source object
@@ -5710,7 +5710,7 @@
         get selfTemplateVariable() {
             if (this._selfTemplateVariable === undefined) {
                 var $self = {};
-                for (j in this.templateVariables) {
+                for (var j in this.templateVariables) {
                     if (this.templateVariables.hasOwnProperty(j) && j != "values") {
                         $self[j] = this.templateVariables[j];
                     }
