@@ -1,4 +1,21 @@
-// This JSON was generated with the help of scripts/google_dataset/schema_org_sparql.py
+/**
+ * This JSON was generated with the help of scripts/google_dataset/schema_org_sparql.py
+ * Format : {
+ * SchemaOrgClass: {
+        "properties": {
+           Prop1:{"types":[Type1, Type2, ...]}, 
+           Prop2: {"types":[Type1, Type2, ...]}, 
+           ...}
+       },
+       "requiredProperties": [Prop2,...],
+        "parent": SchemaOrgParentClass
+    }
+    Here parent is a class who properties are inherited by the child class SchemaOrgClass and can be used in the JSON-LD for SchemaOrgClass
+    This JSON consists of a subset of the original list of properties and types provided by schema.org
+    The original list and description of each property can be found by going to schema.org/SchemaOrgClass , for example schema.org/Dataset
+    The details of any property can be found by going to schema.org/Prop , for example schema.org/citation
+    */
+   
 module.jsonldSchemaPropObj = Object.freeze({
     "CreativeWork": {
         "properties": {

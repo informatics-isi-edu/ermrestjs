@@ -5872,9 +5872,7 @@
             var metadata = {};
             setMetadataFromTemplate(metadata, metadataAnnotation.dataset, metadataAnnotation.template_engine, templateVariables, table);
 
-            // remove null attributes so they don't get included in the json
-            metadata = removeEmptyOrNull(metadata);
-            var result = module.performJsonLdValidation(metadata);
+            var result = module.validateJSONLD(metadata);
 
             if (!result.isValid) {
                 module._log.error("JSON-LD not appended to <head> as validation errors found.");

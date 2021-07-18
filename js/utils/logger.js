@@ -1,3 +1,7 @@
+/**
+ * The way the logger works is through levels as explained here https://sematext.com/blog/logging-levels/
+ * Please check dev-guide.md for more details
+ */
 var logMethods = [
     "trace",
     "debug",
@@ -7,6 +11,11 @@ var logMethods = [
 ];
 var noop = function () { };
 
+/**
+ * Bind the console logging methods to the methods of logging exposed by logger
+ * @param {*} obj 
+ * @param {*} methodName trace/debug/info/warn/error
+ */
 function bindMethod(obj, methodName) {
     if (typeof console === "undefined") {
         return false;
@@ -29,6 +38,11 @@ function bindMethod(obj, methodName) {
     }
 }
 
+/**
+ * Methods are bound to console logging methods if the logging level is below the set level of logging else it goes to no-op
+ * For example, if logging level is warn then info logs will be suppressed but error logs will be working
+ * @param {*} level trace/debug/info/warn/error
+ */
 function replaceLoggingMethods(level) {
     for (var i = 0; i < logMethods.length; i++) {
         var methodName = logMethods[i];
@@ -61,10 +75,16 @@ function Logger() {
         }
     };
 
+    /**
+     * Enables all logs no matter what level
+     */
     self.enableAll = function () {
         self.setLevel(self.levels.TRACE);
     };
 
+    /**
+     * Disables all logs no matter what level
+     */
     self.disableAll = function () {
         self.setLevel(self.levels.SILENT);
     };
@@ -73,4 +93,5 @@ function Logger() {
 }
 
 module._log = new Logger();
+// Currently set level is info but eventually this should be coming from chaise-config and set to info only if nothing is setup there
 module._log.setLevel("info");

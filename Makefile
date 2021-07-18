@@ -59,7 +59,7 @@ SOURCE=$(UTIL)/polyfills.js \
 	   $(JS)/errors.js \
 	   $(JS)/parser.js \
 	   $(JS)/http.js \
-	   $(JS)/googleMetadata.js \
+	   $(JS)/json-ld-validator.js \
 	   $(JS)/reference.js \
 	   $(JS)/column.js \
 	   $(JS)/ag_reference.js \

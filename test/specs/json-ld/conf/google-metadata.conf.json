@@ -1,0 +1,16 @@
+{
+    "catalog": {},
+    "schema": {
+        "name": "google-metadata-schema",
+        "createNew": true,
+        "path": "test/specs/json-ld/conf/google_metadata/schema.json"
+    },
+    "tables": {
+        "createNew": true,
+        "name": "google-metadata-w-handlebars"
+    },
+    "entities": {
+        "createNew": true,
+        "path": "test/specs/json-ld/conf/google_metadata/data"
+    }
+}

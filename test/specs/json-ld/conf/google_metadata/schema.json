@@ -1,10 +1,10 @@
 {
-    "schema_name": "google_metadata_schema",
+    "schema_name": "google-metadata-schema",
     "tables": {
-        "google_metadata_w_handlebars": {
+        "google-metadata-w-handlebars": {
             "kind": "table",
-            "table_name": "google_metadata_w_handlebars",
-            "schema_name": "google_metadata_schema",
+            "table_name": "google-metadata-w-handlebars",
+            "schema_name": "google-metadata-schema",
             "column_definitions": [
                 {
                     "name": "id",

@@ -10,10 +10,13 @@ var datasetType = "Dataset";
  * @returns isValid - boolean flag that indicates whether the jsonLd is valid and should be appended to the DOM by Chaise
  *  modifiedJsonLd - the input object is modified wherever necessary to ensure that the correct properties of the metadata still go through
  */
-module.performJsonLdValidation = function (jsonLdOrig) {
+module.validateJSONLD = function (jsonLdOrig) {
     var jsonLd = Object.assign({}, jsonLdOrig);
+    // remove null attributes so they don't get included in the json
+    jsonLd = removeEmptyOrNull(jsonLd);
     try {
         if(module.jsonldSchemaPropObj) {
+            // Verify if JSON-LD keywords 
             if (isJsonLdBaseValid(jsonLd)) {
                 validateSchemaOrgProps(jsonLd);
                 return {isValid: areRequiredPropsDefined(jsonLd), modifiedJsonLd: jsonLd};
@@ -67,15 +70,27 @@ function validateSchemaOrgProps(obj) {
     }
 }
 
+/**
+ * 
+ * @param {*} obj The object from which the key/attribute should be removed
+ * @param {*} key The attribute name
+ */
 function removeProp(obj, key) {
     module._log.info("Invalid attribute ignored " + key + " inside type " + obj[typeKeyword] + " in JSON-LD\n");
     delete obj[key];
 }
 
+/**
+ * 
+ * @param {*} propDetails The acceptable data types for the element extracted from jsonLdSchema.js
+ * @param {*} element The attribute of the JSON-LD that we are currently validating for data type
+ * @param {*} key The attribute name
+ * @returns boolean that indicates if element follows its assigned type
+ */
 function isValidType(propDetails, element, key) {
     var result = false;
 
-    if (propDetails !== null && propDetails !== void 0 && propDetails.types) {
+    if (propDetails !== null && propDetails !== undefined && propDetails.types) {
         propDetails.types.every(function (dataType) {
             switch (dataType) {
                 case "Text":
@@ -175,15 +190,24 @@ function isJsonLdBaseValid(obj) {
 
     if (!obj[contextKeyword]) {
         obj[contextKeyword] = "https://" + contextForSchemaOrg;
+        module._log.warn(contextKeyword + " set as " + obj[contextKeyword]);
     }
 
     if (!obj[typeKeyword]) {
         obj[typeKeyword] = datasetType;
+        module._log.warn(typeKeyword + " set as " + obj[typeKeyword]);
     }
 
     return result;
 }
 
+/**
+ * If the top level required props (name, description) are not defined correctly then we return false else if an inner object
+ * (example : creator) does not have the required props then we simply ignore the inner object altogether by removing it from
+ * JSON-LD
+ * @param {*} jsonLd 
+ * @returns boolean that indicates whether the required props are present as needed
+ */
 function areRequiredPropsDefined(jsonLd) {
     var _jsonldSchemaPropObj$jsonLd;
 
@@ -209,6 +233,11 @@ function areRequiredPropsDefined(jsonLd) {
     return result;
 }
 
+/**
+ * If the original class (in this case - Dataset) does not have the attribute then recursively look for it in the ancestor's list of attributes
+ * @param {*} key attribute
+ * @param {*} currentType schema.org class
+ */
 function getPropDetailsFromParent(key, currentType) {
     if (key in module.jsonldSchemaPropObj[currentType].properties) {
         return module.jsonldSchemaPropObj[currentType].properties[key];

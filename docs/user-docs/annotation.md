@@ -971,19 +971,47 @@ Supported _columns_ patterns:
 ## Tag: 2021 Google Dataset
 `tag:isrd.isi.edu,2018:citation`
 
-This key indicates that the detailed context (record) has a format for defining metadata that will be appended in the JSON-LD format to the record page. Here schema.org dataset https://schema.org/Dataset is the vocabulary that will be used to describe data in the JSON-LD markup format. This is the recommended way by Google to ensure that the record pages pop up in Google Dataset search results. It should only be added to records that are desired to show up in search results.
+This key indicates the metadata that will be converted to valid and well-formed JSON-LD referencing a table. In terms of SEO, JSON-LD is implemented leveraging the Schema.org vocabulary, which is a unified structured data vocabulary for the web. Google Dataset Search discovers datasets when a valid JSON-LD of type [Dataset](https://www.schema.org/Dataset) is added to the <head> tag.
 
-Example:
+
+Supported JSON payload pattern:
+
+- `{` ... _context_ `:` `"dataset":` _jsonld_ ... `}` : Configure JSON-LD to be used for this context.
+- `{` ... _context1_ `:` _context2_ ... `}`: Short-hand to allow context1 to use the same _configuration_ configured for context2.
+
+
+Supported _jsonld_ payload pattern:
+
+
+- JSON-LD keywords: 
+    - `@context`: It is a schema for your data, not only defining the property datatypes but also the classes of json resources. Default applied if none exists is http://schema.org.
+    - `@type`: Used to set the data type of a node or typed value. At the top level, only a value of Dataset is supported. Default applied if none exists is `Dataset`.
+
+- Schema.org volabulary: The supported attributes and types are [here](https://github.com/informatics-isi-edu/ermrestjs/blob/master/js/utils/jsonldSchema.js). This is a subset of the original vocabulary provided by schema.org. All the properties support pattern expansion and the template_engine property should be defined outside the `dataset` definition. 
+
+
+##### Validation: 
+
+Validation is performed on the generated JSON-LD and any incorrect attributes are discarded and the rest is appended to the <head> tag. Validation failures that will lead to JSON-LD not being appended -
+    1. Incorrect value of `@context`
+    2. Incorrect value of `@type`
+    3. Missing or incorrect value of mandatory attribute `name`
+    4. Missing or incorrect value of mandatory attribute `description`
+    
+In all remaining scenarios, the problematic attribute will simply be ignored and the reason for that will be logged in the console.
+
+##### Example of annotation:
 
 ```json
 {
-  "tag:isrd.isi.edu,2021:google-dataset": {
+  "tag:isrd.isi.edu,2021:google-dataset": {  
     "detailed": {
       "dataset": {
         "@context": "http://schema.org", 
         "@type": "Dataset", 
-        "name": "{{{title}}}", //mandatory
-        "description": "{{{summary}}}", //mandatory
+        "name": "{{{title}}}",
+        "description": "{{{summary}}}",
+        "url": "https://www.abc.org/id/Q-3KT2",
         "creator": {
           "url": "https://data.world/smartcolumbusos",
           "name": "{{{website}}}",
@@ -991,7 +1019,6 @@ Example:
           "description": "{{{category}}}",
           "parentOrganization": "Smart Columbus Operating System"
         },
-        
         "dateModified": "{{{RMT}}}",
         "datePublished": "{{{RCT}}}"
       },
@@ -999,14 +1026,7 @@ Example:
     }
   }
 }
-
 ```
-
-Supported parameters inside `detailed.dataset`:
-
-- JSON-LD keywords: `@context` and `@type` are the only JSON-LD keywords supported at this time. The default values given in the example above will be applied if no value is overriden. Full list of keywords is available at https://json-ld.org/spec/latest/json-ld/#syntax-tokens-and-keywords
-
-- Schema.org volabulary: The supported attributes and types are here https://github.com/informatics-isi-edu/ermrestjs/blob/master/js/utils/jsonldSchema.js. This is a subset of the original vocabulary provided by schema.org. Templating is used to plug in the values for the desired attributes.
 ### Context Names
 
 List of _context_ names that are used in ERMrest:
