@@ -73,3 +73,29 @@ If you want the facet to be open by default, you can add `open:true` to any of t
 {"source": "fk_col", "open": true}
 {"source": [{"outbound": ["s", "fk1_cons"]}, "f1_text"], "open": true}
 ```
+
+### Change order of scalar values
+
+In a scalar facet that is using the `choices` UX mode, the values are sorted in a desencing order of "Number of occurences" (frequency), and tie breaking is done based on the ascending value of the scalar column:
+
+
+```js
+// if you just want to hide the "Number of occurences"
+{
+    "source": [{"outbound": ["s", "fk1_cons"]}, "f1_text"],
+    "entity": false,
+    "hide_num_occurrences": true
+}
+
+// if you don't want to show nor sort based on "Number of occurences"
+{
+    "source": [{"outbound": ["s", "fk1_cons"]}, "f1_text"],
+    "entity": false,
+    "hide_num_occurrences": true,
+    "order": [
+        {"column": "f1_text", "descending": false}
+    ]
+}
+
+
+```

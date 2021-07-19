@@ -1164,6 +1164,45 @@
             return this._canDelete;
         },
 
+
+        /**
+         *  Returns true if
+         *   - ermrest supports trs, and
+         *   - table has dynamic acls, and
+         *   - table has RID column, and
+         *   - table is not marked non-deletable non-updatable by annotation
+         * @type {Boolean}
+         */
+        get canUseTRS() {
+            if (this._canUseTRS === undefined) {
+                var rightKey = module._ERMrestFeatures.TABLE_RIGHTS_SUMMARY;
+                this._canUseTRS = (this.table.schema.catalog.features[rightKey] === true) && 
+                                  (this.table.rights[module._ERMrestACLs.UPDATE] == null || this.table.rights[module._ERMrestACLs.DELETE] == null) && 
+                                  this.table.columns.has("RID") && 
+                                  (this.canUpdate || this.canDelete);
+            }
+            return this._canUseTRS;
+        },
+
+        /**
+         *  Returns true if
+         *   - ermrest supports tcrs, and
+         *   - table has dynamic acls, and
+         *   - table has RID column, and
+         *   - table is not marked non-updatable by annotation
+         * @type {Boolean}
+         */
+        get canUseTCRS() {
+            if (this._canUseTCRS === undefined) {
+                var rightKey = module._ERMrestFeatures.TABLE_COL_RIGHTS_SUMMARY;
+                this._canUseTCRS = (this.table.schema.catalog.features[rightKey] === true) && 
+                                  this.table.rights[module._ERMrestACLs.UPDATE] == null && 
+                                  this.table.columns.has("RID") && 
+                                  this.canUpdate;
+            }
+            return this._canUseTCRS;
+        },
+
         /**
          * This is a private funtion that checks the user permissions for modifying the affiliated entity, record or table
          * Sets a property on the reference object used by canCreate/canUpdate/canDelete
@@ -1349,6 +1388,8 @@
          * If there's a @before in url and the number of results is less than the
          * given limit, we will remove the @before and run the read again. Setting
          * dontCorrectPage to true, will not do this extra check.
+         * @param {Boolean} getTRS whether we should fetch the table-level row acls (if table supports it)
+         * @param {Boolean} getTCRS whether we should fetch the table-level and column-level row acls (if table supports it)
          * @param {Boolean} getUnlinkTRS whether we should fetch the acls of association
          *                  table. Use this only if the association is based on facet syntax
          *
@@ -1364,7 +1405,7 @@
          * - {@link ERMrest.NotFoundError}: If asks for sorting based on columns that are not valid.
          * - ERMrestjs corresponding http errors, if ERMrest returns http error.
          */
-        read: function(limit, contextHeaderParams, useEntity, dontCorrectPage, getUnlinkTRS) {
+        read: function(limit, contextHeaderParams, useEntity, dontCorrectPage, getTRS, getTCRS, getUnlinkTRS) {
             var defer = module._q.defer(), self = this;
 
             try {
@@ -1381,7 +1422,7 @@
                 verify(limit > 0, "'limit' must be greater than 0");
 
                 var uri = [this._location.service, "catalog", this._location.catalog].join("/");
-                var readPath = this._getReadPath(useEntity, getUnlinkTRS);
+                var readPath = this._getReadPath(useEntity, getTRS, getTCRS, getUnlinkTRS);
                 if (readPath.isAttributeGroup) {
                     uri += "/attributegroup/" + readPath.value;
                 } else {
@@ -1402,6 +1443,10 @@
                     headers: this._generateContextHeader(contextHeaderParams, limit)
                 };
                 this._server.http.get(uri, config).then(function (response) {
+                    if (!Array.isArray(response.data)) {
+                        throw new InvalidServerResponse(uri, response.data, action);                    
+                    }
+
                     var etag = response.headers().etag;
 
                     var hasPrevious, hasNext = false;
@@ -3831,9 +3876,16 @@
          *   - isAttributeGroup: whether we should use attributegroup api or not.
          *                       (if the reference doesn't have any fks, we don't need to use attributegroup)
          * NOTE Might throw an error if modifiers are not valid
+         * @param {Boolean} useEntity whether we should use entity api or not (if true, we won't get foreignkey data)
+         * @param {Boolean} getTRS whether we should fetch the table-level row acls (if table supports it)
+         * @param {Boolean} getTCRS whether we should fetch the table-level and column-level row acls (if table supports it)
+         * @param {Boolean} getUnlinkTRS whether we should fetch the acls of association
+         *                  table. Use this only if the association is based on facet syntax
+         * 
+         * TODO we might want to add an option to only do TCRS or TRS without the foreignkeys for later
          * @type {Object}
          */
-         _getReadPath: function(useEntity, getUnlinkTRS) {
+         _getReadPath: function(useEntity, getTRS, getTCRS, getUnlinkTRS) {
             var allOutBounds = this.activeList.allOutBounds;
             var findAllOutBoundIndex = function (name) {
                 return allOutBounds.findIndex(function (aob) {
@@ -3979,15 +4031,15 @@
 
             var uri = this._location.ermrestCompactPath; // used for the http request
 
-            var associatonTable = this.derivedAssociationReference ? this.derivedAssociationReference.table : null;
+            var associatonRef = this.derivedAssociationReference;
             var associationTableAlias = module._parserAliases.ASSOCIATION_TABLE;
 
             var isAttributeGroup = !useEntity;
             if (isAttributeGroup) {
                 isAttributeGroup = allOutBounds.length > 0 ||
-                                   this.table.supportColumnRightsSummary ||
-                                   this.table.supportRightsSummary ||
-                                   (getUnlinkTRS && associatonTable && associatonTable.supportRightsSummary);
+                                   (getTCRS && this.canUseTCRS) ||
+                                   ((getTCRS || getTRS) && this.canUseTRS) ||
+                                   (getUnlinkTRS && associatonRef && associatonRef.canUseTRS);
             }
 
             /** Change api to attributegroup for retrieving extra information
@@ -3995,14 +4047,15 @@
              * - Values for the foreignkeys.
              * - Value for one-to-one pseudo-columns. These are the columns
              * that their defined path is all in the outbound direction.
-             * - tcrs feature is supported
+             * - trs or tcrs of main table (if asked for, supported, and needed)
+             * - trs of the associaton table for unlink feature (if asked for, supported, and needed)
              *
              * This will just affect the http request and not this._location
              *
              * NOTE:
              * This piece of code is dependent on the same assumptions as the current parser, which are:
              *   0. There is no table called `A`, `T`, `M`, `F1`, `F2`, ...
-             *   1. There is no alias in url (more precisely `T`, `M`, `F1`, `F2`, `F3`, ...)
+             *   1. There is no alias in url (more precisely `tcrs`, `trs`, `A_trs`, `A`, `T`, `M`, `F1`, `F2`, `F3`, ...)
              *   2. Filter comes before the link syntax.
              *   3. There is no trailing `/` in uri (as it will break the ermrest too).
              * */
@@ -4037,17 +4090,18 @@
                 }
 
                 // add trs or tcrs for main table
-                if (this.table.supportColumnRightsSummary || this.table.supportRightsSummary) {
+                if (getTCRS && this.canUseTCRS) {
+                    rightSummFn = module._ERMrestFeatures.TABLE_COL_RIGHTS_SUMMARY;
+                    aggList.push(rightSummFn + ":=" + rightSummFn + "(" + mainTableAlias + ":RID" + ")");
+                }
+                else if ((getTCRS || getTRS) && this.canUseTRS) {
                     rightSummFn = module._ERMrestFeatures.TABLE_RIGHTS_SUMMARY;
-                    if (this.table.supportColumnRightsSummary) {
-                        rightSummFn = module._ERMrestFeatures.TABLE_COL_RIGHTS_SUMMARY;
-                    }
                     aggList.push(rightSummFn + ":=" + rightSummFn + "(" + mainTableAlias + ":RID" + ")");
                 }
 
                 // add trs for the association table
                 // TODO feels hacky! this is assuming that the alias exists
-                if (getUnlinkTRS && associatonTable && associatonTable.supportRightsSummary) {
+                if (getUnlinkTRS && associatonRef && associatonRef.canUseTRS) {
                     rightSummFn = module._ERMrestFeatures.TABLE_RIGHTS_SUMMARY;
                     aggList.push(associationTableAlias + "_" + rightSummFn + ":=" + rightSummFn + "(" + associationTableAlias + ":RID" + ")");
                 }
@@ -4616,7 +4670,6 @@
         this._associationRightsSummary = [];
 
         var self = this,
-            table = reference.table,
             allOutBounds = reference.activeList.allOutBounds;
 
         var trs = module._ERMrestFeatures.TABLE_RIGHTS_SUMMARY,
@@ -4625,13 +4678,13 @@
             fkAliasPreix = module._parserAliases.FOREIGN_KEY_PREFIX;
 
         // for the association rights summary
-        var associatonTable = reference.derivedAssociationReference ? reference.derivedAssociationReference.table : null;
+        var associatonRef = reference.derivedAssociationReference;
 
         // same logic as _readPath to see if it's attributegroup output
         var hasLinkedData = allOutBounds.length > 0 ||
-                        table.supportColumnRightsSummary ||
-                        table.supportRightsSummary ||
-                        (associatonTable && associatonTable.supportRightsSummary);
+                        reference.canUseTCRS ||
+                        reference.canUseTRS ||
+                        (associatonRef && associatonRef.canUseTRS);
 
         if (hasLinkedData) {
             var fks = reference._table.foreignKeys.all(), i, j, colFKs, key;
@@ -4650,15 +4703,17 @@
                     }
 
                     // table rights
-                    if (table.supportColumnRightsSummary || table.supportRightsSummary) {
-                        key = table.supportColumnRightsSummary ? tcrs : trs;
-                        if (key in data[i]) {
-                            this._rightsSummary.push(data[i][key]);
+                    if (reference.canUseTCRS || reference.canUseTRS) {
+                        if (tcrs in data[i]) {
+                            this._rightsSummary.push(data[i][tcrs]);
+                        }
+                        else if (trs in data[i]) {
+                            this._rightsSummary.push(data[i][trs]);
                         }
                     }
 
                     // association table rights
-                    if (associatonTable && associatonTable.supportRightsSummary) {
+                    if (associatonRef && associatonRef.canUseTRS) {
                         key = associationTableAlias + "_" + trs;
                         if (key in data[i]) {
                             this._associationRightsSummary.push(data[i][key]);
@@ -4960,6 +5015,8 @@
                     // make sure we have the formatted key values
                     keyValues = self.tuples[i].templateVariables.values;
 
+                    keyValues.$self = self.tuples[i].selfTemplateVariable;
+
                     // render template
                     value = module._renderTemplate(ref.display._rowMarkdownPattern, keyValues, ref.table.schema.catalog, { templateEngine: ref.display.templateEngine});
 
@@ -5056,7 +5113,7 @@
         this._data = data || {};
         this._linkedData = (typeof linkedData === "object") ? linkedData : {};
         this._rightsSummary = (typeof rightsSummary === "object") ? rightsSummary : {};
-        this._associationRightsSummary = (typeof rightsSummary === "object") ? associationRightsSummary : {};
+        this._associationRightsSummary = (typeof associationRightsSummary === "object") ? associationRightsSummary : {};
     }
 
     Tuple.prototype = {
@@ -5662,6 +5719,26 @@
         },
 
         /**
+         * Should be used for populating $self for this tuple in templating environments
+         * It will have,
+         * - rowName
+         * - uri
+         * @type {Object}
+         */
+        get selfTemplateVariable() {
+            if (this._selfTemplateVariable === undefined) {
+                var $self = {};
+                for (var j in this.templateVariables) {
+                    if (this.templateVariables.hasOwnProperty(j) && j != "values") {
+                        $self[j] = this.templateVariables[j];
+                    }
+                }
+                this._selfTemplateVariable = $self;
+            }
+            return this._selfTemplateVariable;
+        },
+
+        /**
          * If the Tuple is derived from an association related table,
          * this function will return a reference to the corresponding
          * entity of this tuple's association table.
@@ -5823,6 +5900,8 @@
             if (!templateVariables) {
                 templateVariables = tuple.templateVariables.values;
             }
+
+            templateVariables.$self = tuple.selfTemplateVariable;
 
             var citation = {};
             // author, title, id set to null if not defined

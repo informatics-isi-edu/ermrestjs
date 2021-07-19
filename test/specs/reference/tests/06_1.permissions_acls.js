@@ -449,14 +449,14 @@ exports.execute = (options) => {
                                                 "name": {
                                                     "acls": {
                                                         "insert" : [],
-                                                        "select": [],
+                                                        "select": ["*"],
                                                         "update": []
                                                     }
                                                 },
                                                 "term": {
                                                     "acls": {
                                                         "insert" : [],
-                                                        "select": [],
+                                                        "select": ["*"],
                                                         "update": []
                                                     }
                                                 }
@@ -564,14 +564,14 @@ exports.execute = (options) => {
                                             "name": {
                                                 "acls": {
                                                     "insert" : [],
-                                                    "select": [],
+                                                    "select": ["*"],
                                                     "update": []
                                                 }
                                             },
                                             "term": {
                                                 "acls": {
                                                     "insert" : [],
-                                                    "select": [],
+                                                    "select": ["*"],
                                                     "update": []
                                                 }
                                             }
@@ -588,7 +588,7 @@ exports.execute = (options) => {
 
         describe("regarding dynamic ACLs, ", function () {
 
-            describe ("when delete is only allowed for certain rows", function () {
+            describe ("when delete is only allowed for certain rows, ", function () {
                 var reference;
 
                 beforeAll((done) => {
@@ -619,8 +619,22 @@ exports.execute = (options) => {
                     }, (response) => reference = response, restrictedUserCookie);
                 });
 
-                it ("should Tuple should return proper canDelete values", function (done) {
+                it ("Tuple should should return static ACLs by default", function (done) {
                     reference.read(3).then(function (page) {
+                        expect(page.length).toBe(3, "page length missmatch");
+
+                        expect(page.tuples.map(function (t) {
+                            return t.canDelete;
+                        })).toEqual([true, true, true], "canDelete missmatch");
+
+                        done();
+                    }).catch(function (err) {
+                        done.fail(err);
+                    });
+                });
+
+                it ("Tuple should should return proper canDelete values when asked to use TRS", function (done) {
+                    reference.read(3, null, false, false, true).then(function (page) {
                         expect(page.length).toBe(3, "page length missmatch");
 
                         expect(page.tuples.map(function (t) {
@@ -654,7 +668,7 @@ exports.execute = (options) => {
                 });
             });
 
-            describe("when delete is only allowed for certain rows in related entities", function () {
+            describe("when delete is only allowed for certain rows in related entities, ", function () {
                 var reference;
 
                 beforeAll((done) => {
@@ -708,7 +722,7 @@ exports.execute = (options) => {
 
                         expect(reference.related.length).toBe(1, "related length missmatch");
 
-                        return reference.related[0].read(2, null, false, false, true);
+                        return reference.related[0].read(2, null, false, false, true, false, true);
                     }).then(function (page) {
                         expect(page.length).toBe(2, "page length missmatch");
 
@@ -754,7 +768,7 @@ exports.execute = (options) => {
                 });
             });
 
-            describe ("when update is only allowed for certain rows", function () {
+            describe ("when update is only allowed for certain rows, ", function () {
                 var reference;
 
                 beforeAll((done) => {
@@ -785,8 +799,21 @@ exports.execute = (options) => {
                     }, (response) => reference = response, restrictedUserCookie);
                 });
 
-                it ("Tuple should return proper canUpdate values", function (done) {
+                it ("Tuple should return static ACLs by default", function (done) {
                     reference.read(3).then(function (page) {
+                        expect(page.length).toBe(3, "path length missmatch");
+                        expect(page.tuples.map(function (t) {
+                            return t.canUpdate;
+                        })).toEqual([true, true, true], "canUpdate missmatch");
+
+                        done();
+                    }).catch(function (err) {
+                        done.fail(err);
+                    });
+                });
+
+                it ("Tuple should return proper canUpdate values when asked to use TRS", function (done) {
+                    reference.read(3, {}, false, false, true).then(function (page) {
                         expect(page.length).toBe(3, "page length missmatch");
 
                         expect(page.tuples.map(function (t) {
@@ -820,7 +847,7 @@ exports.execute = (options) => {
                 });
             });
 
-            describe ("when update is only allowed for certain columns,", function () {
+            describe ("when update is only allowed for certain columns, ", function () {
                 var reference, tuples;
 
                 beforeAll((done) => {
@@ -952,8 +979,9 @@ exports.execute = (options) => {
                     }, (response) => reference = response.contextualize.entryEdit, restrictedUserCookie);
                 });
 
-                it ("Tuple should return proper canUpdate based on table and column level acls, ", function (done) {
-                    reference.read(3).then(function (page) {
+                it ("Tuple should return proper canUpdate based on table and column level acls when using TCRS, ", function (done) {
+                    // NOTE passing the getTCRS=true option
+                    reference.read(3, null, false, false, false, true).then(function (page) {
                         expect(page.length).toBe(3, "page length missmatch");
 
                         tuples = page.tuples;
@@ -1066,7 +1094,7 @@ exports.execute = (options) => {
                         }
                     });
                 });
-            });
+            })
 
         });
 

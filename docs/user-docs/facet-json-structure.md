@@ -104,6 +104,9 @@ To change the default displayname of facets, `markdown_name` can be used.
 "markdown_name": "**new name**"
 ```
 
+### comment
+
+The tooltip to be used in place of the default heuristics for the facet. Set this to `false` if you don't want any tooltip.
 #### open
 
 Using `open` you can force the facet to open by default.

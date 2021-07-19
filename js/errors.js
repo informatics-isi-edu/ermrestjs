@@ -22,6 +22,7 @@
     module.DuplicateConflictError = DuplicateConflictError;
     module.InvalidSortCriteria = InvalidSortCriteria;
     module.InvalidPageCriteria = InvalidPageCriteria;
+    module.InvalidServerResponse = InvalidServerResponse;
 
     /**
      * @memberof ERMrest
@@ -206,7 +207,8 @@
      */
     function InternalServerError(status, message) {
         status = isStringAndNotEmpty(status) ? status : module._errorStatus.INTERNAL_SERVER_ERROR;
-        ERMrestError.call(this, module._HTTPErrorCodes.INTERNAL_SERVER_ERROR, status, message);
+        // use the message as subMessage and add a generic message instead
+        ERMrestError.call(this, module._HTTPErrorCodes.INTERNAL_SERVER_ERROR, status, module._errorMessage.INTERNAL_SERVER_ERROR, message);
     }
 
     InternalServerError.prototype = Object.create(ERMrestError.prototype);
@@ -440,6 +442,26 @@
 
     InvalidPageCriteria.prototype = Object.create(ERMrestError.prototype);
     InvalidPageCriteria.prototype.constructor = InvalidPageCriteria;
+
+    /**
+     * @memberof ERMrest
+     * @param {string} uri error message
+     * @param {object} data the returned data
+     * @param {string} logAction the log action of the request
+     * @constructor
+     * @desc Invalid server response
+     */
+     function InvalidServerResponse(uri, data, logAction) {
+        var message = "Request URI: " + uri + "\n";
+        message += "Request action: " + logAction + "\n";
+        message += "returned data:\n" + data;
+        ERMrestError.call(this, '', module._errorStatus.INVALID_SERVER_RESPONSE, message);
+    }
+
+    InvalidServerResponse.prototype = Object.create(ERMrestError.prototype);
+    InvalidServerResponse.prototype.constructor = InvalidServerResponse;
+
+
     /**
      * Log the error object to the given ermrest location.
      * It will generate a put request to the /terminal_error with the correct headers.
@@ -447,16 +469,19 @@
      * @param  {object} err             the error object
      * @param  {string} ermrestLocation the ermrest location
      */
-    module.logError = function (err, ermrestLocation) {
+    module.logError = function (err, ermrestLocation, contextHeaderParams) {
         var defer = module._q.defer();
         var http = module._wrap_http(module._http);
 
+        if (!contextHeaderParams || typeof contextHeaderParams != "object") {
+            contextHeaderParams = {};
+        }
+        contextHeaderParams.e = 1;
+        contextHeaderParams.name = err.constructor.name;
+        contextHeaderParams.message = err.message;
+
         var headers = {};
-        headers[module.contextHeaderName] = {
-            e: 1,
-            name: err.constructor.name,
-            message: err.message
-        };
+        headers[module.contextHeaderName] = contextHeaderParams;
 
         // this http request will fail but will still log the message.
         http.put(ermrestLocation + "/terminal_error", {}, {headers: headers}).then(function () {

@@ -1378,6 +1378,9 @@
      */
     module.responseToError = function (response, reference, actionFlag) {
         var status = response.status || response.statusCode;
+        if (response instanceof module.ERMrestError) {
+            return response;
+        }
         switch(status) {
             case -1:
                 return new module.NoConnectionError(response.data);

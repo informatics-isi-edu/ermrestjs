@@ -1823,25 +1823,6 @@
             return this._pureBinaryForeignKeys_cached;
         },
 
-
-        get supportRightsSummary() {
-            if (this._supportRightsSummary === undefined) {
-                var rightKey = module._ERMrestFeatures.TABLE_RIGHTS_SUMMARY;
-                var feature = this.schema.catalog.features[rightKey] === true;
-                this._supportRightsSummary = feature && this.columns.has("RID");
-            }
-            return this._supportRightsSummary;
-        },
-
-        get supportColumnRightsSummary() {
-            if (this._supportColumnRightsSummary === undefined) {
-                var rightKey = module._ERMrestFeatures.TABLE_COL_RIGHTS_SUMMARY;
-                var feature = this.schema.catalog.features[rightKey] === true;
-                this._supportColumnRightsSummary = feature && this.columns.has("RID");
-            }
-            return this._supportColumnRightsSummary;
-        },
-
         _computePureBinaryAssociation: function () {
             var isSystemCol = function (col) {
                 return module._systemColumns.indexOf(col.name) !== -1;

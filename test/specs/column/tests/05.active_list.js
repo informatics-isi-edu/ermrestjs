@@ -232,6 +232,8 @@ exports.execute = function (options) {
         });
 
         describe("Reference._getReadPath in case of attributegroup", function () {
+            // NOTE since we're using static ACLs here, the readPath should not have trs/tcrs
+            
             it ("should add the allOutBounds.", function () {
                 // the order of defined foreignkeys might change in the schema, and
                 // therefore the order of .fkeys that we get from sourceDefinitions might change.
@@ -254,7 +256,7 @@ exports.execute = function (options) {
                 "F1:=left(fk1_col1,fk1_col2)=(active_list_schema:outbound1:outbound1_id1,outbound1_id2)/$M/" +
                 "main_id;M:=array_d(M:*),F11:=array_d(F11:*),F10:=array_d(F10:*),F9:=array_d(F9:*)," +
                 "F8:=array_d(F8:*),F7:=array_d(F7:*),F6:=array_d(F6:*),F5:=array_d(F5:*)," +
-                "F4:=array_d(F4:*),F3:=array_d(F3:*),F2:=array_d(F2:*),F1:=array_d(F1:*),tcrs:=tcrs(M:RID)@sort(main_id)";
+                "F4:=array_d(F4:*),F3:=array_d(F3:*),F2:=array_d(F2:*),F1:=array_d(F1:*)@sort(main_id)";
 
                 var expectedPath1 = "M:=active_list_schema:main/" +
                 "F11:=left(fk4_col1)=(active_list_schema:outbound3:outbound3_id)/$M/" +
@@ -269,8 +271,8 @@ exports.execute = function (options) {
                 expect([expectedPath1, expectedPath2]).toContain(mainRefCompact.readPath);
             });
 
-            it ("should only add the tcrs if there are no outbound foreignkeys.", function () {
-                expect(mainEmptFkRefCompact.readPath).toEqual("M:=active_list_schema:main_empty_fkeys/main_empty_fkeys_id;M:=array_d(M:*),tcrs:=tcrs(M:RID)@sort(main_empty_fkeys_id)");
+            it ("should fall back to entity no outbound foreignkeys.", function () {
+                expect(mainEmptFkRefCompact.readPath).toEqual("M:=active_list_schema:main_empty_fkeys@sort(main_empty_fkeys_id)");
             });
         });
 
