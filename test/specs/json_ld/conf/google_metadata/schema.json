@@ -1,10 +1,10 @@
 {
-    "schema_name": "google-metadata-schema",
+    "schema_name": "google_metadata_schema",
     "tables": {
         "google_metadata_w_handlebars": {
             "kind": "table",
             "table_name": "google_metadata_w_handlebars",
-            "schema_name": "google-metadata-schema",
+            "schema_name": "google_metadata_schema",
             "column_definitions": [
                 {
                     "name": "id",
@@ -92,7 +92,8 @@
                             "description": "{{{summary}}}",
                             "dateModified": "{{{RMT}}}",
                             "datePublished": "{{{RCT}}}",
-                            "isAccessibleForFree": "{{{luxurious}}}"
+                            "isAccessibleForFree": "{{{luxurious}}}",
+                            "url": "{{{$self.uri.detailed}}}"
                         },
                         "template_engine": "handlebars"
                     }

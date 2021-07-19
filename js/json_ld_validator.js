@@ -94,17 +94,10 @@ function isValidType(propDetails, element, key) {
         propDetails.types.every(function (dataType) {
             switch (dataType) {
                 case "Text":
+                case "URL":
                     if (typeof element == "string") {
                         result = true;
                         // returning false so we can exit out of every() loop
-                        return false;
-                    }
-                    break;
-
-                case "URL":
-                    if (isValidUrl(element)) {
-                        result = true; // returning false so we can exit out of every() loop
-
                         return false;
                     }
                     break;
@@ -253,20 +246,6 @@ function getPropDetailsFromParent(key, currentType) {
         module.jsonldSchemaPropObj[currentType].parent,
         module.jsonldSchemaPropObj
     );
-}
-
-function isValidUrl(str) {
-    var pattern = new RegExp(
-        "^(https?:\\/\\/)?" + // protocol
-        "((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|" + // domain name
-        "((\\d{1,3}\\.){3}\\d{1,3}))" + // OR ip (v4) address
-        "(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*" + // port and path
-        "(\\?[;&a-z\\d%_.~+=-]*)?" + // query string
-        "(\\#[-a-z\\d_]*)?$",
-        "i"
-    ); // fragment locator
-
-    return !!pattern.test(str);
 }
 
 function removeEmptyOrNull(obj) {

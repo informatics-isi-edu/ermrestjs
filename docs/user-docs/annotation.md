@@ -992,36 +992,37 @@ Supported _columns_ patterns:
 ## Tag: 2021 Google Dataset
 `tag:isrd.isi.edu,2018:citation`
 
-This key indicates the metadata that will be converted to valid and well-formed JSON-LD referencing a table. In terms of SEO, JSON-LD is implemented leveraging the Schema.org vocabulary, which is a unified structured data vocabulary for the web. Google Dataset Search discovers datasets when a valid JSON-LD of type [Dataset](https://www.schema.org/Dataset) is added to the <head> tag.
+This key indicates the metadata that will be converted to valid and well-formed JSON-LD referencing a table. In terms of SEO, JSON-LD is implemented leveraging the Schema.org vocabulary, which is a unified structured data vocabulary for the web. [Google Dataset Search](https://datasetsearch.research.google.com/) discovers datasets when a valid JSON-LD of type [Dataset](https://www.schema.org/Dataset) is added to the HTML page.
 
 
 Supported JSON payload pattern:
 
 - `{` ... _context_ `:` `"dataset":` _jsonld_ ... `}` : Configure JSON-LD to be used for this context.
-- `{` ... _context1_ `:` _context2_ ... `}`: Short-hand to allow context1 to use the same _configuration_ configured for context2.
+- `{` ... _context1_ `:` _context2_ ... `}`: Short-hand to allow _context1_ to use the same configuration that is used for _context2_.
 
 
 Supported _jsonld_ payload pattern:
 
 
 - JSON-LD keywords: 
-    - `@context`: It is a schema for your data, not only defining the property datatypes but also the classes of json resources. Default applied if none exists is http://schema.org.
-    - `@type`: Used to set the data type of a node or typed value. At the top level, only a value of Dataset is supported. Default applied if none exists is `Dataset`.
+    - `@context`: It is a schema for your data, not only defining the property datatypes but also the classes of json resources. Default applied if none exists is `http://schema.org`.
+    - `@type`: Used to set the data type of a node or typed value. At the top level, only a value of `Dataset` is supported. Default applied if none exists is `Dataset`. 
+- Schema.org volabulary: The supported attributes and types are [here](https://github.com/informatics-isi-edu/ermrestjs/blob/master/js/utils/jsonldSchema.js). This is a subset of the original vocabulary provided by schema.org. All the properties support [pattern expansion](#pattern-expansion) and the `template_engine` property should be defined outside the `dataset` definition. Apart from the main table data and all-outbound foreignkeys the pattern has access to a `$self` object that has the following attributes:
+  - `rowName`: Row-name of the represented row.
+  - `uri.detailed`: a uri to the row in `detailed` context. 
 
-- Schema.org volabulary: The supported attributes and types are [here](https://github.com/informatics-isi-edu/ermrestjs/blob/master/js/utils/jsonldSchema.js). This is a subset of the original vocabulary provided by schema.org. All the properties support pattern expansion and the template_engine property should be defined outside the `dataset` definition. 
 
-
-##### Validation: 
-
-Validation is performed on the generated JSON-LD and any incorrect attributes are discarded and the rest is appended to the <head> tag. Validation failures that will lead to JSON-LD not being appended -
-    1. Incorrect value of `@context`
-    2. Incorrect value of `@type`
-    3. Missing or incorrect value of mandatory attribute `name`
-    4. Missing or incorrect value of mandatory attribute `description`
+After generating the JSON-LD based on the given specifications, the client will validate it. If the generated JSON-LD has any of the following issues, the given JSON-LD will be completely invalidated and ignored:
+ - Incorrect value of `@context` (Must refer to `schema.org`.)
+ - Incorrect value of `@type` (Must be `Dataset`.)
+ - Missing or empty value of mandatory attribute `name`
+ - Missing or empty value of mandatory attribute `description`
     
-In all remaining scenarios, the problematic attribute will simply be ignored and the reason for that will be logged in the console.
+In all remaining scenarios, the problematic attribute (attributes that don't follow the expected structure or type) will simply be ignored and the reason for that will be logged in the browser console.
 
-##### Example of annotation:
+You can use [this](https://search.google.com/test/rich-results) tool by Google to validate any JSON-LD yourself if needed, it accepts both a URL or a code snippet.
+
+Example of annotation:
 
 ```json
 {
@@ -1032,7 +1033,7 @@ In all remaining scenarios, the problematic attribute will simply be ignored and
         "@type": "Dataset", 
         "name": "{{{title}}}",
         "description": "{{{summary}}}",
-        "url": "https://www.abc.org/id/Q-3KT2",
+        "url": "{{{$self.uri.detailed}}}",
         "creator": {
           "url": "https://data.world/smartcolumbusos",
           "name": "{{{website}}}",
@@ -1047,7 +1048,7 @@ In all remaining scenarios, the problematic attribute will simply be ignored and
     }
   }
 }
-```
+``` 
 ### Context Names
 
 List of _context_ names that are used in ERMrest:

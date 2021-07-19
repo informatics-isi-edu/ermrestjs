@@ -4,12 +4,10 @@ exports.execute = function (options) {
     
     describe('For determining google_metadata annotation, ', function () {
         var catalog_id = process.env.DEFAULT_CATALOG,
-            schemaName = "google-metadata-schema",
-            tableName1 = "google_metadata_w_handlebars",
-            tableName2 = "google_metadata_without_template_engine";
+            schemaName = "google_metadata_schema",
+            tableName1 = "google_metadata_w_handlebars";
 
         var handlebarsGoogleMetadataUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + tableName1 + "/@sort(id)";
-        var noTemplateEngineGoogleMetadataUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + tableName2 + "/@sort(id)";
 
         var chaiseURL = "https://dev.isrd.isi.edu/chaise";
         var recordURL = chaiseURL + "/record";
@@ -71,6 +69,7 @@ exports.execute = function (options) {
                 var metadata = reference.googleDatasetMetadata.compute(tuple);
                 expect(metadata).toBeObject();
                 expect(JSON.stringify(metadata)).toBeJsonString(JSON.stringify(require("../resources/generated_json_ld.json")));
+                expect(metadata.url).toEqual("https://dev.isrd.isi.edu/chaise/record/google_metadata_schema:google_metadata_w_handlebars/RID=1PM");
                 done();
             });
 

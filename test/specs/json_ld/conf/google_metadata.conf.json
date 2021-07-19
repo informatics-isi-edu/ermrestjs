@@ -1,7 +1,7 @@
 {
     "catalog": {},
     "schema": {
-        "name": "google-metadata-schema",
+        "name": "google_metadata_schema",
         "createNew": true,
         "path": "test/specs/json_ld/conf/google_metadata/schema.json"
     },
