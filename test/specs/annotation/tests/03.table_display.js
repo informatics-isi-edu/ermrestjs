@@ -442,7 +442,7 @@ exports.execute = function (options) {
                 expect(display.type).toEqual('markdown');
             });
 
-            var markdownPattern = ":::iframe [{{title}}{{#$fkeys.schema_table_display.table_w_t_disp_annot_w_mp_fkey}}(with {{{rowName}}} from catalog {{{$catalog.snapshot}}}){{/$fkeys.schema_table_display.table_w_t_disp_annot_w_mp_fkey}}](https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id={{_id}}) \n:::";
+            var markdownPattern = ":::iframe [{{{$self.rowName}}}{{#$fkeys.schema_table_display.table_w_t_disp_annot_w_mp_fkey}}(with {{{rowName}}} from catalog {{{$catalog.snapshot}}}){{/$fkeys.schema_table_display.table_w_t_disp_annot_w_mp_fkey}}]({{{$self.uri.detailed}}}) \n:::";
             it("reference.display._rowMarkdownPattern should be '" + markdownPattern + "' ", function() {
                 expect(reference.display._rowMarkdownPattern).toEqual(markdownPattern);
             });
@@ -474,19 +474,34 @@ exports.execute = function (options) {
                     done.fail(err);
                 });
             });
-
-            var content = '<h2>Movie titles</h2>\n' +
-            '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 100%;"><figcaption class="embed-caption">Hamlet(with <strong>William Shakespeare</strong> from catalog '+catalog_id+')</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20001"><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div></div><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20001"></iframe></figure>' +
-            '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 100%;"><figcaption class="embed-caption">The Adventures of Huckleberry Finn(with <strong>Mark Twain</strong> from catalog '+catalog_id+')</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20002"><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div></div><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20002"></iframe></figure>' +
-            '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 100%;"><figcaption class="embed-caption">Alice in Wonderland(with <strong>Lewis Carroll</strong> from catalog '+catalog_id+')</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20003"><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div></div><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20003"></iframe></figure>' +
-            '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 100%;"><figcaption class="embed-caption">Pride and Prejudice(with <strong>Jane Austen</strong> from catalog '+catalog_id+')</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20004"><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div></div><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20004"></iframe></figure>' +
-            '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 100%;"><figcaption class="embed-caption">Great Expectations</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20005"><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div></div><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20005"></iframe></figure>' +
-            '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 100%;"><figcaption class="embed-caption">David Copperfield</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20006"><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div></div><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20006"></iframe></figure>' +
-            '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 100%;"><figcaption class="embed-caption">Emma</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20007"><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div></div><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20007"></iframe></figure>' +
-            '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 100%;"><figcaption class="embed-caption">As You Like It</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20008"><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div></div><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20008"></iframe></figure>' +
-            '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 100%;"><figcaption class="embed-caption">The Adventures of Tom Sawyer</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20009"><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div></div><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20009"></iframe></figure>' +
-            '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 100%;"><figcaption class="embed-caption">Through the Looking Glass</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20010"><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div></div><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20010"></iframe></figure>';
             it('page.content should return HTML for all tuples using row_markdown_pattern and prefix_markdown and separator_markdown', function() {
+                var rowContent = function (id, caption) {
+                    var ridVal = findRID(tableName7, id);
+                    var iframeURL = 'https://dev.isrd.isi.edu/chaise/record/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/RID=' + ridVal;
+                    return '<figure class="embed-block -chaise-post-load">' + 
+                                '<div class="figcaption-wrapper" style="width: 100%;">' + 
+                                    '<figcaption class="embed-caption">' + caption + '</figcaption>' + 
+                                    '<div class="iframe-btn-container">' + 
+                                        '<a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="' + iframeURL + '">' +
+                                            '<span class="glyphicon glyphicon-fullscreen"></span> Full screen' + 
+                                        '</a>' + 
+                                    '</div>' + 
+                                '</div>' + 
+                                '<iframe src="' + iframeURL + '"></iframe>' + 
+                            '</figure>';
+                }
+                var content = '<h2>Movie titles</h2>\n';
+                content += rowContent('20001', 'Hamlet(with <strong>William Shakespeare</strong> from catalog '+catalog_id+')');
+                content += rowContent('20002', 'The Adventures of Huckleberry Finn(with <strong>Mark Twain</strong> from catalog '+catalog_id+')');
+                content += rowContent('20003', 'Alice in Wonderland(with <strong>Lewis Carroll</strong> from catalog '+catalog_id+')');
+                content += rowContent('20004', 'Pride and Prejudice(with <strong>Jane Austen</strong> from catalog '+catalog_id+')');
+                content += rowContent('20005', 'Great Expectations');
+                content += rowContent('20006', 'David Copperfield');
+                content += rowContent('20007', 'Emma');
+                content += rowContent('20008', 'As You Like It');
+                content += rowContent('20009', 'The Adventures of Tom Sawyer');
+                content += rowContent('20010', 'Through the Looking Glass');
+
                 expect(page.content).toEqual(content);
             });
 
