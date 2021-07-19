@@ -4924,7 +4924,7 @@
 
             if (!self._data || !self._data.length) return null;
 
-            var i, value, pattern, values = [], keyValues;
+            var i, value, pattern, values = [], keyValues, tuple;
             var display = ref.display;
 
             // markdown_pattern in the source object
@@ -4932,7 +4932,6 @@
                 var $self = self.tuples.map(function (t) {
                     return t.templateVariables;
                 });
-                //TODO test this
                 keyValues = Object.assign({$self: $self}, templateVariables);
 
                 pattern = module._renderTemplate(
@@ -4994,10 +4993,10 @@
                 // Iterate over all data rows to compute the row values depending on the row_markdown_pattern.
                 for (i = 0; i < self.tuples.length; i++) {
 
-                    // make sure we have the formatted key values
-                    keyValues = self.tuples[i].templateVariables.values;
+                    tuple = self.tuples[i];
 
-                    keyValues.$self = self.tuples[i].selfTemplateVariable;
+                    // make sure we have the formatted key values
+                    keyValues = Object.assign({$self: tuple.selfTemplateVariable}, tuple.templateVariables.values);
 
                     // render template
                     value = module._renderTemplate(ref.display._rowMarkdownPattern, keyValues, ref.table.schema.catalog, { templateEngine: ref.display.templateEngine});
@@ -5018,7 +5017,7 @@
 
             // no markdown_pattern, just return the list of row-names in this context (row_name/<context>)
             for ( i = 0; i < self.tuples.length; i++) {
-                var tuple = self.tuples[i];
+                tuple = self.tuples[i];
                 var url = tuple.reference.contextualize.detailed.appLink;
                 var rowName = module._generateRowName(ref.table, ref._context, tuple._data, tuple._linkedData);
 
@@ -5883,14 +5882,14 @@
                 templateVariables = tuple.templateVariables.values;
             }
 
-            templateVariables.$self = tuple.selfTemplateVariable;
+            var keyValues = Object.assign({$self: tuple.selfTemplateVariable}, templateVariables);
 
             var citation = {};
             // author, title, id set to null if not defined
             ["author", "title", "journal", "year", "url", "id"].forEach(function (key) {
                 citation[key] = module._renderTemplate(
                     citationAnno[key+"_pattern"],
-                    templateVariables,
+                    keyValues,
                     table.schema.catalog,
                     {templateEngine: citationAnno.template_engine}
                 );
