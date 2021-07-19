@@ -1,9 +1,9 @@
 {
     "schema_name": "google-metadata-schema",
     "tables": {
-        "google-metadata-w-handlebars": {
+        "google_metadata_w_handlebars": {
             "kind": "table",
-            "table_name": "google-metadata-w-handlebars",
+            "table_name": "google_metadata_w_handlebars",
             "schema_name": "google-metadata-schema",
             "column_definitions": [
                 {

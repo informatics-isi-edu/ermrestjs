@@ -2,7 +2,7 @@
 exports.execute = function (options) {
     var module = options.includes.ermRest;
     describe("validation of structured data", function () {
-        var jsonInputOrig = require("./../resources/input-json-ld.json");
+        var jsonInputOrig = require("../resources/input_json_ld.json");
 
         it("The google_metadata with incorrect attribute 'verson' returned w/o it", function (done) {
             var jsonInput = Object.assign({}, jsonInputOrig);

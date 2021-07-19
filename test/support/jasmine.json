@@ -13,7 +13,7 @@
       "errors/spec.js",
       "upload/spec.js",
       "export/spec.js",
-      "json-ld/spec.js"
+      "json_ld/spec.js"
   ],
   "helpers": ["../../node_modules/jasmine-expect/index.js"],
   "stopSpecOnExpectationFailure": false,

@@ -5869,6 +5869,7 @@
                 templateVariables = tuple.templateVariables.values;
             }
 
+            templateVariables.$self = tuple.selfTemplateVariable;
             var metadata = {};
             setMetadataFromTemplate(metadata, metadataAnnotation.dataset, metadataAnnotation.template_engine, templateVariables, table);
 

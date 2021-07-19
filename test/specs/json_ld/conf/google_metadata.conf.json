@@ -3,14 +3,14 @@
     "schema": {
         "name": "google-metadata-schema",
         "createNew": true,
-        "path": "test/specs/json-ld/conf/google_metadata/schema.json"
+        "path": "test/specs/json_ld/conf/google_metadata/schema.json"
     },
     "tables": {
         "createNew": true,
-        "name": "google-metadata-w-handlebars"
+        "name": "google_metadata_w_handlebars"
     },
     "entities": {
         "createNew": true,
-        "path": "test/specs/json-ld/conf/google_metadata/data"
+        "path": "test/specs/json_ld/conf/google_metadata/data"
     }
 }

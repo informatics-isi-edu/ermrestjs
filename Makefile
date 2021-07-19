@@ -52,14 +52,14 @@ SOURCE=$(UTIL)/polyfills.js \
 	   $(JS)/datapath.js \
 	   $(JS)/filters.js \
 	   $(UTIL)/constants.js \
-	   $(UTIL)/jsonldSchema.js \
+	   $(UTIL)/json_ld_schema.js \
 	   $(UTIL)/helpers.js \
 	   $(UTIL)/pseudocolumn_helpers.js \
 	   $(UTIL)/handlebar_helpers.js \
 	   $(JS)/errors.js \
 	   $(JS)/parser.js \
 	   $(JS)/http.js \
-	   $(JS)/json-ld-validator.js \
+	   $(JS)/json_ld_validator.js \
 	   $(JS)/reference.js \
 	   $(JS)/column.js \
 	   $(JS)/ag_reference.js \

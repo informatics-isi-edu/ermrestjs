@@ -5,7 +5,7 @@ exports.execute = function (options) {
     describe('For determining google_metadata annotation, ', function () {
         var catalog_id = process.env.DEFAULT_CATALOG,
             schemaName = "google-metadata-schema",
-            tableName1 = "google-metadata-w-handlebars",
+            tableName1 = "google_metadata_w_handlebars",
             tableName2 = "google_metadata_without_template_engine";
 
         var handlebarsGoogleMetadataUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + tableName1 + "/@sort(id)";
@@ -70,7 +70,7 @@ exports.execute = function (options) {
                 tuple = tuples[0];
                 var metadata = reference.googleDatasetMetadata.compute(tuple);
                 expect(metadata).toBeObject();
-                expect(JSON.stringify(metadata)).toBeJsonString(JSON.stringify(require("./../resources/generated-json-ld.json")));
+                expect(JSON.stringify(metadata)).toBeJsonString(JSON.stringify(require("../resources/generated_json_ld.json")));
                 done();
             });
 
