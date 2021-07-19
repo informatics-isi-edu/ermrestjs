@@ -649,7 +649,11 @@ Supported JSON _option_ payload patterns:
         - `table`: the parent table name `{{{$page.parent.table}}}`.
         - `schema`: the parent schema name `{{{$page.parent.schema}}}`.
 - `"row_markdown_pattern":` _rowpattern_: Render the row by composing a markdown representation only when `row_markdown_pattern` is non-null.
-  - Expand _rowpattern_ to obtain a markdown representation of each row via [Pattern Expansion](#pattern-expansion). The pattern has access to column values **after** any processing implied by [2016 Column Display](#column-display).
+  - Expand _rowpattern_ to obtain a markdown representation of each row via [Pattern Expansion](#pattern-expansion). 
+  - The pattern has access to column values **after** any processing implied by [2016 Column Display](#column-display).
+  - If used in any context other than `row_name`, the pattern also has access to a `$self` object that has the following attributes:
+    - `rowName`: Row-name of the represented row.
+    - `uri.detailed`: a uri to the row in `detailed` context. 
 - `"separator_markdown":` _separator_: Insert _separator_ markdown text between each expanded _rowpattern_ when presenting row sets. (Default new-line `"\n"`.)
   - Ignore if `"row_markdown_pattern"` is not also configured.
 - `"prefix_markdown":` _prefix_: Insert _prefix_ markdown before the first _rowpattern_ expansion when presenting row sets. (Default empty string `""`.)
@@ -845,6 +849,9 @@ Supported _waitForList_ pattern:
 - `[` ... _sourcekey_ `,` ... `]`: _sourcekey_ is the string literal that refers to the sources defined in the [`source-definitions` annotation](#tag-2019-source-definitions) of the table.
 
 Default heuristics:
+-  Apart from the main table data, all-outbound foreignkeys, and listed psuedo-columns in the `wait_for`, the pattern has access to a `$self` object that has the following attributes:
+  - `rowName`: Row-name of the represented row.
+  - `uri.detailed`: a uri to the row in `detailed` context. 
 - `journal_pattern`, `year_pattern`, and `url_pattern` MUST be specified for citation. If any of the 3 are not specified or if one of them produces a null value, citation will be disabled.
 - If any of the other values are not present or produce a null value, it is up to the client to decide how to display the citation.
 
