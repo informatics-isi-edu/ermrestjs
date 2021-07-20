@@ -5947,9 +5947,9 @@
                 templateVariables = tuple.templateVariables.values;
             }
 
-            templateVariables.$self = tuple.selfTemplateVariable;
+            var keyValues = Object.assign({$self: tuple.selfTemplateVariable}, templateVariables);
             var metadata = {};
-            setMetadataFromTemplate(metadata, metadataAnnotation.dataset, metadataAnnotation.template_engine, templateVariables, table);
+            setMetadataFromTemplate(metadata, metadataAnnotation.dataset, metadataAnnotation.template_engine, keyValues, table);
 
             var result = module.validateJSONLD(metadata);
 
