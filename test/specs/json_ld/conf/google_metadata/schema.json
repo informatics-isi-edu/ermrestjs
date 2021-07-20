@@ -5,6 +5,13 @@
             "kind": "table",
             "table_name": "google_metadata_w_handlebars",
             "schema_name": "google_metadata_schema",
+            "keys": [
+                {
+                    "unique_columns": [
+                        "id"
+                    ]
+                }
+            ],
             "column_definitions": [
                 {
                     "name": "id",
@@ -36,28 +43,6 @@
                     "name": "summary",
                     "type": {
                         "typename": "text"
-                    }
-                },
-                {
-                    "name": "RMT",
-                    "nullok": false,
-                    "type": {
-                        "typename": "ermrest_rmt",
-                        "is_domain": true,
-                        "base_type": {
-                            "typename": "timestamptz"
-                        }
-                    }
-                },
-                {
-                    "name": "RCT",
-                    "nullok": false,
-                    "type": {
-                        "typename": "ermrest_rct",
-                        "is_domain": true,
-                        "base_type": {
-                            "typename": "timestamptz"
-                        }
                     }
                 },
                 {
