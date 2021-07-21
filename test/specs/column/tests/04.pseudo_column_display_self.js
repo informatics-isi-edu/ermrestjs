@@ -1,3 +1,5 @@
+var jasmineUtils = require('./../../../utils/jasmine-runner-utils.js');
+
 exports.execute = function (options) {
     var catalog_id = process.env.DEFAULT_CATALOG,
         schemaName = "pseudo_column_display_self_schema",
@@ -42,14 +44,6 @@ exports.execute = function (options) {
         return url;
     };
 
-    // you should use this function only after options.entities value is populated
-    // (in any of jasmine blocks)
-    var findRID = function (currTable, keyName, keyValue) {
-        return options.entities[schemaName][currTable].filter(function (e) {
-            return e[keyName] == keyValue;
-        })[0].RID;
-    };
-
     var catchError = function (done) {
         return function (err) {
             done.fail(err);
@@ -57,7 +51,7 @@ exports.execute = function (options) {
     };
 
     var getRecordURL = function (table, keyCol, keyValue) {
-        return recordURL + "/" + schemaName + ":" + table + "/" + "RID=" + findRID(table, keyCol, keyValue);
+        return recordURL + "/" + schemaName + ":" + table + "/" + "RID=" + jasmineUtils.findEntityRID(options, schemaName, table, keyCol, keyValue);
     };
 
     describe("display setting in pseudo-columns while accessing $self, ", function () {
