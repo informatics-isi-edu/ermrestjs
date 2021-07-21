@@ -1,7 +1,7 @@
 /**
  * All the test cases related to the reference.columns logic
  */
- var jasmineUtils = require('./../../../utils/jasmine-runner-utils.js');
+ var utils = require('./../../../utils/utilities.js');
 
 exports.execute = function (options) {
     describe('Regarding column list heuristics and logics, ', function () {
@@ -342,26 +342,26 @@ exports.execute = function (options) {
 
             compactRefExpectedLinkedValue = [
                 '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:columns_table/id=1">1</a>',
-                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key/RID=' + jasmineUtils.findEntityRID(options, schemaName, "table_w_simple_key", "id", "9000") + '">Hank</a>',
+                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key/RID=' + utils.findEntityRID(options, schemaName, "table_w_simple_key", "id", "9000") + '">Hank</a>',
                 '',
-                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key/RID=' + jasmineUtils.findEntityRID(options, schemaName, "table_w_simple_key", "id", "4000") + '">John</a>',
-                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key_2/RID=' + jasmineUtils.findEntityRID(options, schemaName, "table_w_simple_key_2", "id", "4000") + '">Hank</a>',
+                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key/RID=' + utils.findEntityRID(options, schemaName, "table_w_simple_key", "id", "4000") + '">John</a>',
+                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key_2/RID=' + utils.findEntityRID(options, schemaName, "table_w_simple_key_2", "id", "4000") + '">Hank</a>',
                 '4000',
                 '4001',
                 '4002',
                 '4003',
                 '',
                 '<p><a href="http://example.com" class="external-link-icon external-link">12</a></p>\n',
-                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/RID=' + jasmineUtils.findEntityRID(options, schemaName, "table_w_composite_key", "id", "1") + '">4000 , 4001</a>',
+                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/RID=' + utils.findEntityRID(options, schemaName, "table_w_composite_key", "id", "1") + '">4000 , 4001</a>',
                 '<a href="https://dev.isrd.isi.edu/chaise/search">1</a>',
-                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/RID=' + jasmineUtils.findEntityRID(options, schemaName, "table_w_composite_key", "id", "2") + '">4000 , 4002</a>',
-                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/RID=' + jasmineUtils.findEntityRID(options, schemaName, "table_w_composite_key", "id", "4") + '">4001 , 4002</a>',
+                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/RID=' + utils.findEntityRID(options, schemaName, "table_w_composite_key", "id", "2") + '">4000 , 4002</a>',
+                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/RID=' + utils.findEntityRID(options, schemaName, "table_w_composite_key", "id", "4") + '">4001 , 4002</a>',
                 ''
             ];
             var html = "";
             assetCompactExpectedValue = [
                 '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_asset/id=1">1</a>',
-                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:columns_table/RID=' + jasmineUtils.findEntityRID(options, schemaName, "columns_table", "id", "1") + '">1</a>',
+                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:columns_table/RID=' + utils.findEntityRID(options, schemaName, "columns_table", "id", "1") + '">1</a>',
                 '1000', '10001', 'filename', '1,242', 'md5', 'sha256',
                 '',
                 '<h2>filename</h2>\n',
@@ -374,8 +374,8 @@ exports.execute = function (options) {
                 '1',
                 '1',
                 '2',
-                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key/RID=' + jasmineUtils.findEntityRID(options, schemaName, "table_w_simple_key", "id", "9001") + '">Harold</a>',
-                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key/RID=' + jasmineUtils.findEntityRID(options, schemaName, "table_w_simple_key", "id", "9000") + '">Hank</a>'
+                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key/RID=' + utils.findEntityRID(options, schemaName, "table_w_simple_key", "id", "9001") + '">Harold</a>',
+                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key/RID=' + utils.findEntityRID(options, schemaName, "table_w_simple_key", "id", "9000") + '">Hank</a>'
             ];
         });
 

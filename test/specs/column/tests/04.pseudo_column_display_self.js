@@ -1,4 +1,4 @@
-var jasmineUtils = require('./../../../utils/jasmine-runner-utils.js');
+var utils = require('./../../../utils/utilities.js');
 
 exports.execute = function (options) {
     var catalog_id = process.env.DEFAULT_CATALOG,
@@ -51,7 +51,7 @@ exports.execute = function (options) {
     };
 
     var getRecordURL = function (table, keyCol, keyValue) {
-        return recordURL + "/" + schemaName + ":" + table + "/" + "RID=" + jasmineUtils.findEntityRID(options, schemaName, table, keyCol, keyValue);
+        return recordURL + "/" + schemaName + ":" + table + "/" + "RID=" + utils.findEntityRID(options, schemaName, table, keyCol, keyValue);
     };
 
     describe("display setting in pseudo-columns while accessing $self, ", function () {

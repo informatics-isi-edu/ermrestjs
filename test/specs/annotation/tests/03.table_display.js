@@ -1,4 +1,4 @@
-var jasmineUtils = require('./../../../utils/jasmine-runner-utils.js');
+var utils = require('./../../../utils/utilities.js');
 
 exports.execute = function (options) {
 
@@ -472,7 +472,7 @@ exports.execute = function (options) {
             });
             it('page.content should return HTML for all tuples using row_markdown_pattern and prefix_markdown and separator_markdown', function() {
                 var rowContent = function (id, caption) {
-                    var ridVal = jasmineUtils.findEntityRID(options, schemaName, tableName7, "id", id);
+                    var ridVal = utils.findEntityRID(options, schemaName, tableName7, "id", id);
                     var iframeURL = 'https://dev.isrd.isi.edu/chaise/record/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/RID=' + ridVal;
                     return '<figure class="embed-block -chaise-post-load">' + 
                                 '<div class="figcaption-wrapper" style="width: 100%;">' + 
@@ -524,16 +524,16 @@ exports.execute = function (options) {
             describe("when row_markdown_pattern or page_markdown_pattern are not defined for the context, ", function () {
                 it ("should return an unordered list of clickable row-names.", function (done) {
                     var expected = '<ul>\n' +
-                                   '<li><a href="https://dev.isrd.isi.edu/chaise/record/schema_table_display:table_wo_title_wo_annotation/RID=' + jasmineUtils.findEntityRID(options, schemaName, tableName1, "id", "20001") + '">20001</a></li>\n' +
-                                   '<li><a href="https://dev.isrd.isi.edu/chaise/record/schema_table_display:table_wo_title_wo_annotation/RID=' + jasmineUtils.findEntityRID(options, schemaName, tableName1, "id", "20002") + '">20002</a></li>\n' +
+                                   '<li><a href="https://dev.isrd.isi.edu/chaise/record/schema_table_display:table_wo_title_wo_annotation/RID=' + utils.findEntityRID(options, schemaName, tableName1, "id", "20001") + '">20001</a></li>\n' +
+                                   '<li><a href="https://dev.isrd.isi.edu/chaise/record/schema_table_display:table_wo_title_wo_annotation/RID=' + utils.findEntityRID(options, schemaName, tableName1, "id", "20002") + '">20002</a></li>\n' +
                                    '</ul>\n';
                     testPageContent(table1EntityUri, 2, expected, done);
                 });
 
                 it ("row-names should be using the row_name/<context> context format.", function (done) {
                     var expected = '<ul>\n' +
-                                   '<li><a href="https://dev.isrd.isi.edu/chaise/record/schema_table_display:table_w_table_display_annotation_w_row_name_context/RID=' + jasmineUtils.findEntityRID(options, schemaName, tableName6, "id", "10001") + '"><strong>Shakespeare</strong></a></li>\n' +
-                                   '<li><a href="https://dev.isrd.isi.edu/chaise/record/schema_table_display:table_w_table_display_annotation_w_row_name_context/RID=' + jasmineUtils.findEntityRID(options, schemaName, tableName6, "id", "10002") + '"><strong>Twain</strong></a></li>\n' +
+                                   '<li><a href="https://dev.isrd.isi.edu/chaise/record/schema_table_display:table_w_table_display_annotation_w_row_name_context/RID=' + utils.findEntityRID(options, schemaName, tableName6, "id", "10001") + '"><strong>Shakespeare</strong></a></li>\n' +
+                                   '<li><a href="https://dev.isrd.isi.edu/chaise/record/schema_table_display:table_w_table_display_annotation_w_row_name_context/RID=' + utils.findEntityRID(options, schemaName, tableName6, "id", "10002") + '"><strong>Twain</strong></a></li>\n' +
                                    '</ul>\n';
                     testPageContent(table6EntityUri, 2, expected, done);
                 });
@@ -560,7 +560,7 @@ exports.execute = function (options) {
                             val = expected[i];
                         } else {
                             val = '<a href="' + recordURL + '/schema_table_display:table_w_table_display_annotation/RID=' +
-                                  jasmineUtils.findEntityRID(options, schemaName, tableName5, "id", expected[index].id) + '">' + expected[index].rowName + '</a>';
+                                  utils.findEntityRID(options, schemaName, tableName5, "id", expected[index].id) + '">' + expected[index].rowName + '</a>';
                         }
                         expect(t.displayname.value).toEqual(val, "index= " + index + ". displayname missmatch.");
                         expect(t.rowName.value).toEqual(val, "index= " + index + ". rowName missmatch.");

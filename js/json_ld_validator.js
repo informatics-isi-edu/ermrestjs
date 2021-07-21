@@ -32,6 +32,14 @@ module.validateJSONLD = function (jsonLdOrig) {
     return {isValid: false, modifiedJsonLd: jsonLd};
 };
 
+/**
+ * It takes in an object and checks 2 things - 
+ * 1) Attribute name is valid and it belongs to the schema.org class definition
+ * 2) It's data type is valid
+ * It removes any non-required attribute that is found to be invalid
+ * @param {*} obj 
+ * @returns boolean to indicate if object is valid
+ */
 function validateSchemaOrgProps(obj) {
     var schemaTypeObj = module.jsonldSchemaPropObj[obj[typeKeyword]];
     if (schemaTypeObj) {
@@ -76,7 +84,7 @@ function validateSchemaOrgProps(obj) {
  * @param {*} key The attribute name
  */
 function removeProp(obj, key) {
-    module._log.info("Invalid attribute ignored " + key + " inside type " + obj[typeKeyword] + " in JSON-LD\n");
+    module._log.warn("Invalid attribute ignored " + key + " inside type " + obj[typeKeyword] + " in JSON-LD\n");
     delete obj[key];
 }
 
@@ -112,7 +120,7 @@ function isValidType(propDetails, element, key) {
 
                 case "Number":
                 case "Integer":
-                    if (typeof element == "number") {
+                    if (typeof element == "number" || (typeof element == "string" && !isNaN(element))) {
                         result = true;
                         return false;
                     }
@@ -130,6 +138,8 @@ function isValidType(propDetails, element, key) {
             return true;
         });
 
+        // If element is not a primitive but a different class of schema.org then we need to validate it by first getting data type information of its attributes
+        // It is not a primitive if it has a '@type' attribute
         if (element[typeKeyword]) {
             if (module.jsonldSchemaPropObj[element[typeKeyword]]) {
                 return validateSchemaOrgProps(element, module.jsonldSchemaPropObj);
@@ -175,12 +185,13 @@ function isJsonLdBaseValid(obj) {
                     break;
 
                 default:
-                    module._log.info("JSON-LD property ignored in ermrestjs - " + key);
+                    module._log.warn("JSON-LD property ignored in ermrestjs - " + key);
                     removeProp(obj, key);
             }
         }
     });
 
+    // If annotation did not have it at all then add it here as `@context` and `@type` are required
     if (!obj[contextKeyword]) {
         obj[contextKeyword] = "https://" + contextForSchemaOrg;
         module._log.warn(contextKeyword + " set as " + obj[contextKeyword]);

@@ -1,4 +1,4 @@
-var jasmineUtils = require('./../../../utils/jasmine-runner-utils.js');
+var utils = require('./../../../utils/utilities.js');
 
 exports.execute = function (options) {
 
@@ -167,9 +167,9 @@ exports.execute = function (options) {
         var firstRowPathWithRID, secondRowPathWithRID, firstRowPathWithID, secondRowPathWithID;
 
         beforeAll(function () {
-            firstRowPathWithRID = schemaNameEncoded + ":" + baseTable1Encoded + "/RID=" + jasmineUtils.findEntityRID(options, schemaName, baseTable1, "id", "00001");
+            firstRowPathWithRID = schemaNameEncoded + ":" + baseTable1Encoded + "/RID=" + utils.findEntityRID(options, schemaName, baseTable1, "id", "00001");
             firstRowPathWithID = schemaNameEncoded + ":" + baseTable1Encoded + "/id=00001";
-            secondRowPathWithRID = schemaNameEncoded + ":" + baseTable1Encoded + "/RID=" + jasmineUtils.findEntityRID(options, schemaName, baseTable1, "id", "00002");
+            secondRowPathWithRID = schemaNameEncoded + ":" + baseTable1Encoded + "/RID=" + utils.findEntityRID(options, schemaName, baseTable1, "id", "00002");
             secondRowPathWithID = schemaNameEncoded + ":" + baseTable1Encoded + "/id=00002";
 
         });
