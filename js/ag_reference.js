@@ -889,8 +889,8 @@ function AttributeGroupColumn(alias, term, baseColumn, displayname, colType, com
      * The alias might be undefined. If it's aggregate column and it has an aggregate function
      * then this will be required by ermrest, but we're not checking anything here...
      *
-     * @private
      * @type {string}
+     * @private
      */
     this._alias = alias;
 
@@ -1067,8 +1067,8 @@ AttributeGroupColumn.prototype = {
     },
 
     /**
-     * @private
      * sets the context of column
+     * @private
      */
     _setContext: function (context) {
         this._context = context;
@@ -1109,8 +1109,8 @@ function AttributeGroupLocation(service, catalog, path, searchObject, sortObject
 
     /**
      * The search object with "column" and "term".
-     * @private
      * @type {object}
+     * @private
      */
     this.searchObject = searchObject;
 
@@ -1141,16 +1141,16 @@ function AttributeGroupLocation(service, catalog, path, searchObject, sortObject
     /**
     * The sort object. It will be an array of object with the following format:
     * {"column": columnname, "descending": true|false}
-    * @private
     * @type {?Object[]}
+    * @private
     */
     this.sortObject = sortObject;
 
     /**
      * Represents the paging. It will be an array of values.
      * v1, v2, v3.. are in the same order of columns in the sortObject
-     * @private
      * @type {?Object[]}
+     * @private
      */
     this.beforeObject = beforeObject;
 
@@ -1165,8 +1165,8 @@ function AttributeGroupLocation(service, catalog, path, searchObject, sortObject
     /**
      * Represents the paging. It will be an array of values.
      * v1, v2, v3.. are in the same order of columns in the sortObject
-     * @private
      * @type {?Object[]}
+     * @private
      */
     this.afterObject = afterObject;
 

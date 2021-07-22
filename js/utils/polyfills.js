@@ -155,6 +155,19 @@ if (typeof Object.assign != 'function') {
     });
 }
 
+//Object.values
+if (typeof Object.values != 'function') {
+    // TODO
+    Object.defineProperty(Object, "values", {
+        value: function (obj) {
+            return Object.keys(obj).map(function(e) {
+              return obj[e];
+            });
+        },
+        writable: true
+    });
+}
+
 // Array.form polyfill
 if (!Array.from) {
     Array.from = (function() {

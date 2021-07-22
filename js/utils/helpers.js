@@ -95,6 +95,10 @@
         return typeof obj === "object" && obj !== null;
     };
 
+    var isStringAndNotEmpty = function (obj) {
+        return typeof obj === "string" && obj.length > 0;
+    };
+
     /**
      * Returns true if given paramter is object.
      * @param  {*} obj
@@ -685,7 +689,6 @@
     };
 
     /**
-     * @private
      * Process the given list of column order, and return the appropriate list
      * of objects that have:
      * - `column`: The {@link ERMrest.Column} object.
@@ -696,6 +699,7 @@
      * @param  {Object} the extra options:
      *                  - allowNumOccurrences: to allow the specific frequency column_order
      * @return {Array=} If it's undefined, the column_order that is defined is not valid
+     * @private
      */
     _processColumnOrderList = function (columnOrder, table, options) {
         options = options || {};
@@ -748,11 +752,13 @@
     };
 
     /**
-     * @private
      * Given the source object, will return the comment that should be used.
      * - if sourceObject.comment=false: use empty string.
      * - if sourceObject.comment=string: use the defined value
      * - otherwise return null
+     * TODO should be renamed or changed. the name doesn't make sense.
+     * (I wanted to use _processSourceObjectComment but called it this way accidentally)
+     * @private
      */
     _processSourceObjectColumn = function (sourceObject) {
         if (!sourceObject) return null;
@@ -760,11 +766,11 @@
     };
 
     /**
-     * @private
      * Given an input string for the comment, will return the actual strng that should be used.
      *   - if =false : returns empty string.
      *   - if =string: returns the string.
      *   - otherwise returns null
+     * @private
      */
     _processModelComment = function (comment) {
         if (comment === false) return "";
@@ -773,21 +779,21 @@
     };
 
     /**
-     * @private
      * Given an input string for the comment, will return true or false depending if the comment is of a valid type and value
      *   - if =string : returns true.
      *   - if =false: returns true.
      *   - otherwise returns false
+     * @private
      */
     _isValidModelComment = function (comment) {
         return typeof comment === "string" || comment === false;
     };
 
     /**
-     * @private
      * Given an input string for the comment display, will return true or false depending if the display value is of a valid type and value
      *   - if =string && (="tooltip" || ="inline") : returns true.
      *   - otherwise returns false
+     * @private
      */
     _isValidModelCommentDisplay = function (display) {
         return typeof display === "string" && module._commentDisplayModes[display] !== -1;
@@ -795,7 +801,6 @@
 
     /**
      * @function
-     * @private
      * @param {ERMrest.Table} table The object that we want the formatted values for.
      * @param {String} context the context that we want the formatted values for.
      * @param {object} data The object which contains key value pairs of data to be transformed
@@ -804,6 +809,7 @@
      * @desc Returns a formatted keyvalue pairs of object as a result of using `col.formatvalue`.
      * If you want the formatted value of a single column, you should call formatvalue,
      * this function is written for the purpose of being used in markdown.
+     * @private
      */
     module._getFormattedKeyValues = function(table, context, data, linkedData) {
         var keyValues, k, fkData, col, cons, rowname, v;
@@ -875,9 +881,9 @@
     };
 
     /**
-     * @private
      * @param  {string[]} columnNames Array of column names
      * @return {string|false} the column name. if couldn't find any columns will return false.
+     * @private
      */
     module._getCandidateRowNameColumn = function (columnNames) {
         var candidates = [
@@ -928,7 +934,6 @@
 
     /**
      * @function
-     * @private
      * @param {ERMrest.Table} table The table that we want the row name for.
      * @param {String} context Current context.
      * @param {object} data The object which contains key value pairs of data.
@@ -936,6 +941,7 @@
      * @param {boolean} isTitle determines Whether we want rowname for title or not
      * @returns {object} The displayname object for the row. It includes has value, isHTML, and unformatted.
      * @desc Returns the row name (html) using annotation or heuristics.
+     * @private
      */
     module._generateRowName = function (table, context, data, linkedData, isTitle) {
         var annotation, col, template, keyValues, pattern, actualContext;
@@ -1032,7 +1038,6 @@
 
     /**
      * @function
-     * @private
      * @desc Given a key object, will return the presentation object that can bse used for it
      * @param  {ERMrest.Key} key    the key object
      * @param  {object} data        the data for the table that key is from
@@ -1041,6 +1046,7 @@
      * @return {object} the presentation object that can be used for the key
      * (it has `isHTML`, `value`, and `unformatted`).
      * NOTE the function might return `null`.
+     * @private
      */
     module._generateKeyPresentation = function (key, data, context, templateVariables, addLink) {
         // if data is empty

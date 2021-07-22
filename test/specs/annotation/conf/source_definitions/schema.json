@@ -102,10 +102,6 @@
                           "source": [{"inbound": ["source_definitions_schema", "inbound1_fk1"]}, "RID"],
                           "entity": true
                       },
-                      "inbound1_col_invalid": {
-                          "source": [{"inbound": ["source_definitions_schema", "inbound1_fk1"]}, "RID"],
-                          "entity": false
-                      },
                       "agg1_invalid": {
                           "source": [{"inbound": ["source_definitions_schema", "inbound1_fk1"]}, "RID"],
                           "entity": true,

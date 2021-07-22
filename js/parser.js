@@ -601,33 +601,33 @@
         },
 
         /**
-         *
-         * @returns {String} API of the ermrest service.
+         * API of the ermrest service.
          * API includes entity, attribute, aggregate, attributegroup
+         * @type {String}
          */
         get api() {
             return this._api;
         },
 
         /**
-         *
-         * @returns {string} The first schema name in the projection table, null if schema is not specified
+         * The first schema name in the projection table, null if schema is not specified
+         * @type {string}
          */
         get rootSchemaName() {
             return this._rootSchemaName;
         },
 
         /**
-         * Subject to change soon
-         * @returns {string} The first table name in the projection table
+         * The first table name in the projection table
+         * @type {string} 
          */
         get rootTableName() {
             return this._rootTableName;
         },
 
         /**
-         *
-         * @returns {string} the schema name which the uri referres to, null if schema is not specified
+         * the schema name which the uri referres to, null if schema is not specified
+         * @type {string}
          */
         get schemaName() {
             if (this._schemaName === undefined) {
@@ -637,8 +637,8 @@
         },
 
         /**
-         *
-         * @type {string} tablename - the table name which the uri referres to
+         * the table name which the uri referres to
+         * @type {string}
          */
         get tableName() {
             if (this._tableName === undefined) {

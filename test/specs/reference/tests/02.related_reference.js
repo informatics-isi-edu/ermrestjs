@@ -159,7 +159,7 @@ exports.execute = function(options) {
 
                 describe("regarding column objects defining path.", function () {
 
-                    it ('should ignore the invalid (invalid, no path, non-entity, has aggregate) objects.', function () {
+                    it ('should ignore the invalid (invalid, no path, non-entity, has aggregate, all-outbound) objects.', function () {
                         expect(pathRelatedWithTuple.length).toBe(4);
                     });
 
@@ -316,16 +316,6 @@ exports.execute = function(options) {
                                 "choices":[findRID(schemaName, tableName, "id", "9003")]
                             }]);
                         });
-                    });
-                });
-
-                describe(".parentDisplayname", function () {
-                    it('should use to_name when annotation is present.', function () {
-                        expect(related[0].parentDisplayname.value).toBe("to_name_value");
-                    });
-
-                    it("should return current reference displayname when to_name is not defined.", function () {
-                        expect(related[1].parentDisplayname.value).toBe("reference_table");
                     });
                 });
 
