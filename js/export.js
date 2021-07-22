@@ -23,24 +23,24 @@ var ERMrest = (function(module) {
      */
     module.validateExportTemplate = function (template) {
         var errMessage = function (reason) {
-            console.log("export template ignored with name=`" + template.name + "`. Reason: " + reason);
+            module._log.info("export template ignored with name=`" + template.name + "`. Reason: " + reason);
         };
 
         // template is not an object
         if (template !== Object(template) || Array.isArray(template) || !template) {
-            console.log("export template ignored. Reason: it's not an object.");
+            module._log.info("export template ignored. Reason: it's not an object.");
             return false;
         }
 
         // doesn't have the expected attributes
         if (!module.ObjectHasAllKeys(template, ['displayname', 'type'])) {
-            console.log("export template ignored. Reason: first level required attributes are missing.");
+            module._log.info("export template ignored. Reason: first level required attributes are missing.");
             return false;
         }
 
         //type must be either FILE or BAG
         if (["BAG", "FILE"].indexOf(template.type) === -1) {
-            console.log("export template ignored. Reason: template.type must be either `BAG` or `FILE`.");
+            module._log.info("export template ignored. Reason: template.type must be either `BAG` or `FILE`.");
             return false;
         }
 
@@ -193,7 +193,7 @@ var ERMrest = (function(module) {
 
                         var queryStr = queryFrags.join("/");
                         if (queryStr.length > module.URL_PATH_LENGTH_LIMIT) {
-                            console.log("Cannot send the output index `" + index + "` for table `" + table + "` to ermrest (URL LENGTH ERROR). Generated query:", queryStr);
+                            module._log.warn("Cannot send the output index `" + index + "` for table `" + table + "` to ermrest (URL LENGTH ERROR). Generated query:", queryStr);
                             return;
                         }
 
@@ -484,7 +484,7 @@ var ERMrest = (function(module) {
         exportPath += keyList.join(",") + ";" + projectionList.join(",");
 
         if (exportPath.length > module.URL_PATH_LENGTH_LIMIT) {
-            console.log("Cannot use attributegroup  api for exporting `" + ref.table.name + "` because of url limitation.");
+            module._log.warn("Cannot use attributegroup  api for exporting `" + ref.table.name + "` because of url limitation.");
             return module._referenceExportEntityOutput(ref, path);
         }
 

@@ -71,6 +71,7 @@ here is a quick matrix to locate them.
 | [2018 Indexing Preferences](#tag-2018-indexing-preferences) | -       | -      | X     | X      | -   | -   | Specify database indexing preferences         |
 | [2019 Chaise Config](#tag-2019-chaise-config)               | X       | -      | -     | -      | -   | -   | Properties to configure chaise app UX         |
 | [2019 Source Definitions](#tag-2019-source-definitions)     | -       | -      | X     | -      | -   | -   | Describe source definitions                   |
+| [2021 Google Dataset](#tag-2021-google-dataset)     | -       | -      | X     | -      | -   | -   | Describe metadata for rich results in Google Dataset                   |
 
 For brevity, the annotation keys are listed above by their section
 name within this documentation. The actual key URI follows one of these formats:
@@ -988,6 +989,66 @@ Supported _columns_ patterns:
 - `true`: By setting the value of `"columns"` to `true`, chaise will provide the data for all the outbound foreign keys fo the table in templating environments.
 - _Any other values_ : In this case chaise will not provide any foreign key data in templating environments.
 
+## Tag: 2021 Google Dataset
+`tag:isrd.isi.edu,2021:google-dataset`
+
+This key indicates the metadata that will be converted to valid and well-formed JSON-LD referencing a table. In terms of SEO, JSON-LD is implemented leveraging the Schema.org vocabulary, which is a unified structured data vocabulary for the web. [Google Dataset Search](https://datasetsearch.research.google.com/) discovers datasets when a valid JSON-LD of type [Dataset](https://www.schema.org/Dataset) is added to the HTML page.
+
+
+Supported JSON payload pattern:
+
+- `{` ... _context_ `:` `"dataset":` _jsonld_ ... `}` : Configure JSON-LD to be used for this context.
+- `{` ... _context1_ `:` _context2_ ... `}`: Short-hand to allow _context1_ to use the same configuration that is used for _context2_.
+
+
+Supported _jsonld_ payload pattern:
+
+
+- JSON-LD keywords: 
+    - `@context`: It is a schema for your data, not only defining the property datatypes but also the classes of json resources. Default applied if none exists is `http://schema.org`.
+    - `@type`: Used to set the data type of a node or typed value. At the top level, only a value of `Dataset` is supported. Default applied if none exists is `Dataset`. 
+- Schema.org volabulary: The supported attributes and types are [here](https://github.com/informatics-isi-edu/ermrestjs/blob/master/js/utils/jsonldSchema.js). This is a subset of the original vocabulary provided by schema.org. All the properties support [pattern expansion](#pattern-expansion) and the `template_engine` property should be defined outside the `dataset` definition. Apart from the main table data and all-outbound foreignkeys the pattern has access to a `$self` object that has the following attributes:
+  - `rowName`: Row-name of the represented row.
+  - `uri.detailed`: a uri to the row in `detailed` context. 
+
+
+After generating the JSON-LD based on the given specifications, the client will validate it. If the generated JSON-LD has any of the following issues, the given JSON-LD will be completely invalidated and ignored:
+ - Incorrect value of `@context` (Must refer to `schema.org`.)
+ - Incorrect value of `@type` (Must be `Dataset`.)
+ - Missing or empty value of mandatory attribute `name`
+ - Missing or empty value of mandatory attribute `description`
+    
+In all remaining scenarios, the problematic attribute (attributes that don't follow the expected structure or type) will simply be ignored and the reason for that will be logged in the browser console.
+
+You can use [this](https://search.google.com/test/rich-results) tool by Google to validate any JSON-LD yourself if needed, it accepts both a URL or a code snippet.
+
+Example of annotation:
+
+```json
+{
+  "tag:isrd.isi.edu,2021:google-dataset": {  
+    "detailed": {
+      "dataset": {
+        "@context": "http://schema.org", 
+        "@type": "Dataset", 
+        "name": "{{{title}}}",
+        "description": "{{{summary}}}",
+        "url": "{{{$self.uri.detailed}}}",
+        "creator": {
+          "url": "https://data.world/smartcolumbusos",
+          "name": "{{{website}}}",
+          "@type": "Organization",
+          "description": "{{{category}}}",
+          "parentOrganization": "Smart Columbus Operating System"
+        },
+        "dateModified": "{{{RMT}}}",
+        "datePublished": "{{{RCT}}}"
+      },
+      "template_engine": "handlebars"
+    }
+  }
+}
+``` 
 ### Context Names
 
 List of _context_ names that are used in ERMrest:
@@ -1027,6 +1088,7 @@ The following matrix illustrates which context is meaningful in which annotation
 | [2016 Visible Foreign Keys](#tag-2016-visible-foreign-keys) | -       | -             | -                    | -              | X        | -     | -          | -            | -      | -      | -        | X |
 | [2016 Table Alternatives](#tag-2016-table-alternatives)     | X       | X             | X                    | X              | X        | X     | X          | X            | -      | -      | -        | X |
 | [2019 Export](#tag-2019-export)                             | X       | -             | -                    | -              | X        | -     | -          | -            | -      | -      | -        | - |
+| [2021 Google Dataset](#tag-2021-google-dataset)                             | -       | -             | -                    | -              | X        | -     | -          | -            | -      | -      | -        | - |
 
 ## Pattern Expansion
 

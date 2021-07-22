@@ -1,3 +1,5 @@
+var utils = require('./../../../utils/utilities.js');
+
 exports.execute = function(options) {
     describe('.related, ', function() {
         var catalog_id = process.env.DEFAULT_CATALOG,
@@ -74,15 +76,6 @@ exports.execute = function(options) {
             expect(loc.facets).not.toBeNull("facets was null for tuple index=" + index);
             expect(JSON.stringify(loc.facets.decoded['and'], null, 0)).toEqual(JSON.stringify(expectedFacets, null, 0), "facets was not as expected for tuple index="+ index);
             expect(loc.tableName).toBe(expectedTable, "table name was not as expected for tuple index="+ index);
-        }
-
-        // you should use this function only after options.entities value is populated
-        // (in any of jasmine blocks)
-        function findRID (currSchema, currTable, keyName, keyValue) {
-            var row = options.entities[currSchema][currTable].filter(function (e) {
-                return e[keyName] == keyValue;
-            })[0];
-            return row ? row.RID : "";
         }
 
         beforeAll(function(done) {
@@ -166,11 +159,11 @@ exports.execute = function(options) {
                     it ('should create the reference by using facet syntax (starting from related table with facet on shortestkey of main table.).', function () {
                         checkRelated(
                             pathRelatedWithTuple[0], "reference_schema", "association table with id",
-                            {"and": [{"source" :[{"outbound": ["reference_schema","id_fk_association_related_to_reference"]}, "RID"], "choices": [findRID(schemaName, tableName, "id", "9003")]}]});
+                            {"and": [{"source" :[{"outbound": ["reference_schema","id_fk_association_related_to_reference"]}, "RID"], "choices": [utils.findEntityRID(options, schemaName, tableName, "id", "9003")]}]});
 
                         checkRelated(
                             pathRelatedWithTuple[3], "reference_schema", "table_w_linked_rowname_fk1",
-                            {"and": [{"source" :[{"outbound": ["reference_schema","table_w_linked_rowname_fk1"]}, "RID"], "choices": [findRID(schemaName, tableName, "id", "9003")]}]});
+                            {"and": [{"source" :[{"outbound": ["reference_schema","table_w_linked_rowname_fk1"]}, "RID"], "choices": [utils.findEntityRID(options, schemaName, tableName, "id", "9003")]}]});
                     });
 
                     it ('should be able to support path with longer length.', function () {
@@ -181,7 +174,7 @@ exports.execute = function(options) {
                                 {"inbound":["reference_schema","fk_to_inbound_related_reference_table"]},
                                 {"outbound":["reference_schema","id_fk_association_related_to_reference"]},
                                 "RID"
-                            ], "choices":[findRID(schemaName, tableName, "id", "9003")]}]}
+                            ], "choices":[utils.findEntityRID(options, schemaName, tableName, "id", "9003")]}]}
                         );
                     });
 
@@ -192,7 +185,7 @@ exports.execute = function(options) {
                                 {"outbound": ["reference_schema", "reference_outbound_1_inbound_1_fk1"]},
                                 {"inbound": ["reference_schema", "reference_table_fk1"]},
                                 "RID"
-                            ], "choices":[findRID(schemaName, tableName, "id", "9003")]}]}
+                            ], "choices":[utils.findEntityRID(options, schemaName, tableName, "id", "9003")]}]}
                         );
                     });
                 });
@@ -308,12 +301,12 @@ exports.execute = function(options) {
 
                             checkUri(0, "inbound_related_reference_table", [{
                                 "source":[{"outbound":["reference_schema","fromname_fk_inbound_related_to_reference"]},"RID"],
-                                "choices":[findRID(schemaName, tableName, "id", "9003")]
+                                "choices":[utils.findEntityRID(options, schemaName, tableName, "id", "9003")]
                             }]);
 
                             checkUri(1, "inbound_related_reference_table", [{
                                 "source":[{"outbound":["reference_schema","fk_inbound_related_to_reference"]},"RID"],
-                                "choices":[findRID(schemaName, tableName, "id", "9003")]
+                                "choices":[utils.findEntityRID(options, schemaName, tableName, "id", "9003")]
                             }]);
                         });
                     });
@@ -442,14 +435,14 @@ exports.execute = function(options) {
                         expect(related[2].displayname.value).toBe("to_name_value");
                     });
 
-                    it('should use the displayname of assocation table when annotation is not present.', function() {
+                    it('should use the displayname of association table when annotation is not present.', function() {
                         expect(related[3].displayname.value).toBe(associationTableWithIDDisplayname);
                     });
                 });
 
                 describe('.uri ', function () {
                     describe("without tuple, ", function () {
-                        it('.uri should be properly defiend based on schema.', function() {
+                        it('.uri should be properly defined based on schema.', function() {
                             expect(related[2].uri).toBe(singleEnitityUri + "/(id)=(reference_schema:association_table_with_toname:id_from_ref_table)/(id_from_inbound_related_table)=(reference_schema:inbound_related_reference_table:id)");
                         });
 
@@ -466,7 +459,7 @@ exports.execute = function(options) {
                                     {"outbound":["reference_schema","toname_fk_association_related_to_reference"]},
                                     "RID"
                                 ],
-                                "choices":[findRID(schemaName, tableName, "id", "9003")]
+                                "choices":[utils.findEntityRID(options, schemaName, tableName, "id", "9003")]
                             }]);
 
                             checkUri(3, "inbound_related_reference_table", [{
@@ -475,7 +468,7 @@ exports.execute = function(options) {
                                     {"outbound":["reference_schema","id_fk_association_related_to_reference"]},
                                     "RID"
                                 ],
-                                "choices":[findRID(schemaName, tableName, "id", "9003")]
+                                "choices":[utils.findEntityRID(options, schemaName, tableName, "id", "9003")]
                             }]);
                         });
                     })
@@ -615,9 +608,9 @@ exports.execute = function(options) {
 
                 it ("should use the markdown_pattern defined on the visible-foreign-key annotation.", function (done) {
                     var content = '<p>';
-                    content += '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:association%20table%20with%20id/RID=' + findRID(schemaName, associationTableWithID, "ID", "2") + '">2</a>';
+                    content += '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:association%20table%20with%20id/RID=' + utils.findEntityRID(options, schemaName, associationTableWithID, "ID", "2") + '">2</a>';
                     content += ', ';
-                    content += '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:association%20table%20with%20id/RID=' + findRID(schemaName, associationTableWithID, "ID", "3") + '">3</a>';
+                    content += '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:association%20table%20with%20id/RID=' + utils.findEntityRID(options, schemaName, associationTableWithID, "ID", "3") + '">3</a>';
                     content += '</p>\n';
                     testPageContent(pathRelatedWithTuple[0], 5, content, done);
                 })
@@ -632,8 +625,8 @@ exports.execute = function(options) {
 
                 it ("if none of the markdown_patterns are not defined, should return a list of rownames.", function (done) {
                     content = '<ul>\n';
-                    content += '<li><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table/RID=' + findRID(schemaName, tableName, "id", "9002") + '">Heather</a></li>\n';
-                    content += '<li><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table/RID=' + findRID(schemaName, tableName, "id", "9003") + '">Henry</a></li>\n';
+                    content += '<li><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table/RID=' + utils.findEntityRID(options, schemaName, tableName, "id", "9002") + '">Heather</a></li>\n';
+                    content += '<li><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table/RID=' + utils.findEntityRID(options, schemaName, tableName, "id", "9003") + '">Henry</a></li>\n';
                     content += '</ul>\n';
 
                     testPageContent(pathRelatedWithTuple[1], 5, content, done);

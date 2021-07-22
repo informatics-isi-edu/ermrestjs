@@ -357,6 +357,8 @@ to use for ERMrest JavaScript agents.
         * [.canUpdate](#ERMrest.Reference+canUpdate) : <code>boolean</code>
         * [.canUpdateReason](#ERMrest.Reference+canUpdateReason) : <code>String</code>
         * [.canDelete](#ERMrest.Reference+canDelete) : <code>boolean</code>
+        * [.canUseTRS](#ERMrest.Reference+canUseTRS) : <code>Boolean</code>
+        * [.canUseTCRS](#ERMrest.Reference+canUseTCRS) : <code>Boolean</code>
         * [.display](#ERMrest.Reference+display) : <code>Object</code>
         * [.related](#ERMrest.Reference+related) : [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
         * [.unfilteredReference](#ERMrest.Reference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
@@ -366,10 +368,11 @@ to use for ERMrest JavaScript agents.
         * [.filterLogInfo](#ERMrest.Reference+filterLogInfo) : <code>Object</code>
         * [.defaultExportTemplate](#ERMrest.Reference+defaultExportTemplate) : <code>string</code>
         * [.citation](#ERMrest.Reference+citation) : <code>ERMrest.Citation</code>
+        * [.googleDatasetMetadata](#ERMrest.Reference+googleDatasetMetadata) : <code>ERMrest.GoogleDatasetMetadata</code>
         * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
         * [.hideFacets()](#ERMrest.Reference+hideFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
         * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
-        * [.read(limit, contextHeaderParams, useEntity, dontCorrectPage, getUnlinkTRS)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
+        * [.read(limit, contextHeaderParams, useEntity, dontCorrectPage, getTRS, getTCRS, getUnlinkTRS)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
         * [.sort(sort)](#ERMrest.Reference+sort) ⇒ <code>Reference</code>
         * [.update(tuples, contextHeaderParams)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
         * [.delete(contextHeaderParams)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
@@ -383,7 +386,7 @@ to use for ERMrest JavaScript agents.
         * [.getColumnByName(name)](#ERMrest.Reference+getColumnByName) ⇒ [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)
         * [.generateColumnsList(tuple)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
         * [.generateActiveList([tuple])](#ERMrest.Reference+generateActiveList) ⇒ <code>Object</code>
-        * [._getReadPath()](#ERMrest.Reference+_getReadPath) : <code>Object</code>
+        * [._getReadPath(useEntity, getTRS, getTCRS, getUnlinkTRS)](#ERMrest.Reference+_getReadPath) : <code>Object</code>
             * [~processSortObject()](#ERMrest.Reference+_getReadPath..processSortObject)
     * [.Page](#ERMrest.Page)
         * [new Page(reference, etag, data, hasPrevious, hasNext, extraData)](#new_ERMrest.Page_new)
@@ -413,6 +416,7 @@ to use for ERMrest JavaScript agents.
         * [.uniqueId](#ERMrest.Tuple+uniqueId) : <code>string</code>
         * [.citation](#ERMrest.Tuple+citation) : <code>ERMrest.Citation</code>
         * [.templateVariables](#ERMrest.Tuple+templateVariables) : <code>Object</code>
+        * [.selfTemplateVariable](#ERMrest.Tuple+selfTemplateVariable) : <code>Object</code>
         * [.update()](#ERMrest.Tuple+update) ⇒ <code>Promise</code>
         * [.delete()](#ERMrest.Tuple+delete) ⇒ <code>Promise</code>
         * [.getAssociationRef()](#ERMrest.Tuple+getAssociationRef) : [<code>Reference</code>](#ERMrest.Reference)
@@ -678,6 +682,8 @@ to use for ERMrest JavaScript agents.
         * [.canUpdate](#ERMrest.Reference+canUpdate) : <code>boolean</code>
         * [.canUpdateReason](#ERMrest.Reference+canUpdateReason) : <code>String</code>
         * [.canDelete](#ERMrest.Reference+canDelete) : <code>boolean</code>
+        * [.canUseTRS](#ERMrest.Reference+canUseTRS) : <code>Boolean</code>
+        * [.canUseTCRS](#ERMrest.Reference+canUseTCRS) : <code>Boolean</code>
         * [.display](#ERMrest.Reference+display) : <code>Object</code>
         * [.related](#ERMrest.Reference+related) : [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
         * [.unfilteredReference](#ERMrest.Reference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
@@ -687,10 +693,11 @@ to use for ERMrest JavaScript agents.
         * [.filterLogInfo](#ERMrest.Reference+filterLogInfo) : <code>Object</code>
         * [.defaultExportTemplate](#ERMrest.Reference+defaultExportTemplate) : <code>string</code>
         * [.citation](#ERMrest.Reference+citation) : <code>ERMrest.Citation</code>
+        * [.googleDatasetMetadata](#ERMrest.Reference+googleDatasetMetadata) : <code>ERMrest.GoogleDatasetMetadata</code>
         * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
         * [.hideFacets()](#ERMrest.Reference+hideFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
         * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
-        * [.read(limit, contextHeaderParams, useEntity, dontCorrectPage, getUnlinkTRS)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
+        * [.read(limit, contextHeaderParams, useEntity, dontCorrectPage, getTRS, getTCRS, getUnlinkTRS)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
         * [.sort(sort)](#ERMrest.Reference+sort) ⇒ <code>Reference</code>
         * [.update(tuples, contextHeaderParams)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
         * [.delete(contextHeaderParams)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
@@ -704,7 +711,7 @@ to use for ERMrest JavaScript agents.
         * [.getColumnByName(name)](#ERMrest.Reference+getColumnByName) ⇒ [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)
         * [.generateColumnsList(tuple)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
         * [.generateActiveList([tuple])](#ERMrest.Reference+generateActiveList) ⇒ <code>Object</code>
-        * [._getReadPath()](#ERMrest.Reference+_getReadPath) : <code>Object</code>
+        * [._getReadPath(useEntity, getTRS, getTCRS, getUnlinkTRS)](#ERMrest.Reference+_getReadPath) : <code>Object</code>
             * [~processSortObject()](#ERMrest.Reference+_getReadPath..processSortObject)
     * [.AttributeGroupReference](#ERMrest.AttributeGroupReference) : <code>object</code>
         * [new AttributeGroupReference(keyColumns, aggregateColumns, location, catalog, sourceTable, context)](#new_ERMrest.AttributeGroupReference_new)
@@ -2899,6 +2906,8 @@ Constructor for a ParsedFilter.
     * [.canUpdate](#ERMrest.Reference+canUpdate) : <code>boolean</code>
     * [.canUpdateReason](#ERMrest.Reference+canUpdateReason) : <code>String</code>
     * [.canDelete](#ERMrest.Reference+canDelete) : <code>boolean</code>
+    * [.canUseTRS](#ERMrest.Reference+canUseTRS) : <code>Boolean</code>
+    * [.canUseTCRS](#ERMrest.Reference+canUseTCRS) : <code>Boolean</code>
     * [.display](#ERMrest.Reference+display) : <code>Object</code>
     * [.related](#ERMrest.Reference+related) : [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
     * [.unfilteredReference](#ERMrest.Reference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
@@ -2908,10 +2917,11 @@ Constructor for a ParsedFilter.
     * [.filterLogInfo](#ERMrest.Reference+filterLogInfo) : <code>Object</code>
     * [.defaultExportTemplate](#ERMrest.Reference+defaultExportTemplate) : <code>string</code>
     * [.citation](#ERMrest.Reference+citation) : <code>ERMrest.Citation</code>
+    * [.googleDatasetMetadata](#ERMrest.Reference+googleDatasetMetadata) : <code>ERMrest.GoogleDatasetMetadata</code>
     * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
     * [.hideFacets()](#ERMrest.Reference+hideFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
     * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
-    * [.read(limit, contextHeaderParams, useEntity, dontCorrectPage, getUnlinkTRS)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
+    * [.read(limit, contextHeaderParams, useEntity, dontCorrectPage, getTRS, getTCRS, getUnlinkTRS)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
     * [.sort(sort)](#ERMrest.Reference+sort) ⇒ <code>Reference</code>
     * [.update(tuples, contextHeaderParams)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
     * [.delete(contextHeaderParams)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
@@ -2925,7 +2935,7 @@ Constructor for a ParsedFilter.
     * [.getColumnByName(name)](#ERMrest.Reference+getColumnByName) ⇒ [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)
     * [.generateColumnsList(tuple)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
     * [.generateActiveList([tuple])](#ERMrest.Reference+generateActiveList) ⇒ <code>Object</code>
-    * [._getReadPath()](#ERMrest.Reference+_getReadPath) : <code>Object</code>
+    * [._getReadPath(useEntity, getTRS, getTCRS, getUnlinkTRS)](#ERMrest.Reference+_getReadPath) : <code>Object</code>
         * [~processSortObject()](#ERMrest.Reference+_getReadPath..processSortObject)
 
 <a name="new_ERMrest.Reference_new"></a>
@@ -3147,6 +3157,26 @@ guarantee the user right since some policies may be undecidable until
 query execution.
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+canUseTRS"></a>
+
+#### reference.canUseTRS : <code>Boolean</code>
+Returns true if
+  - ermrest supports trs, and
+  - table has dynamic acls, and
+  - table has RID column, and
+  - table is not marked non-deletable non-updatable by annotation
+
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+canUseTCRS"></a>
+
+#### reference.canUseTCRS : <code>Boolean</code>
+Returns true if
+  - ermrest supports tcrs, and
+  - table has dynamic acls, and
+  - table has RID column, and
+  - table is not marked non-updatable by annotation
+
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+display"></a>
 
 #### reference.display : <code>Object</code>
@@ -3280,6 +3310,13 @@ to get the all-outbound foreignkeys which might be in the waitfor of citation an
 In the future we might also want to generate citation based on page and not necessarily tuple.
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+googleDatasetMetadata"></a>
+
+#### reference.googleDatasetMetadata : <code>ERMrest.GoogleDatasetMetadata</code>
+If annotation is defined and has the required attributes, will return
+a Metadata object
+
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+removeAllFacetFilters"></a>
 
 #### reference.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet) ⇒ <code>ERMrest.reference</code>
@@ -3323,7 +3360,7 @@ or rejected with any of the following errors:
 
 <a name="ERMrest.Reference+read"></a>
 
-#### reference.read(limit, contextHeaderParams, useEntity, dontCorrectPage, getUnlinkTRS) ⇒ <code>Promise</code>
+#### reference.read(limit, contextHeaderParams, useEntity, dontCorrectPage, getTRS, getTCRS, getUnlinkTRS) ⇒ <code>Promise</code>
 Reads the referenced resources and returns a promise for a page of
 tuples. The `limit` parameter is required and must be a positive
 integer. The page of tuples returned will be described by the
@@ -3357,6 +3394,8 @@ or rejected with any of these errors:
 | contextHeaderParams | <code>Object</code> | the object that we want to log. |
 | useEntity | <code>Boolean</code> | whether we should use entity api or not (if true, we won't get foreignkey data) |
 | dontCorrectPage | <code>Boolean</code> | whether we should modify the page. If there's a @before in url and the number of results is less than the given limit, we will remove the @before and run the read again. Setting dontCorrectPage to true, will not do this extra check. |
+| getTRS | <code>Boolean</code> | whether we should fetch the table-level row acls (if table supports it) |
+| getTCRS | <code>Boolean</code> | whether we should fetch the table-level and column-level row acls (if table supports it) |
 | getUnlinkTRS | <code>Boolean</code> | whether we should fetch the acls of association                  table. Use this only if the association is based on facet syntax NOTE setting useEntity to true, will ignore any sort that is based on pseduo-columns. TODO we might want to chagne the above statement, so useEntity can be used more generally. |
 
 <a name="ERMrest.Reference+sort"></a>
@@ -3633,7 +3672,7 @@ so if the fk definition is based on fkcolum and and not the RID, it would handle
 
 <a name="ERMrest.Reference+_getReadPath"></a>
 
-#### reference.\_getReadPath() : <code>Object</code>
+#### reference.\_getReadPath(useEntity, getTRS, getTCRS, getUnlinkTRS) : <code>Object</code>
 The actual path that will be used for read request.
  It will return an object that will have:
   - value: the string value of the path
@@ -3642,6 +3681,14 @@ The actual path that will be used for read request.
 NOTE Might throw an error if modifiers are not valid
 
 **Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| useEntity | <code>Boolean</code> | whether we should use entity api or not (if true, we won't get foreignkey data) |
+| getTRS | <code>Boolean</code> | whether we should fetch the table-level row acls (if table supports it) |
+| getTCRS | <code>Boolean</code> | whether we should fetch the table-level and column-level row acls (if table supports it) |
+| getUnlinkTRS | <code>Boolean</code> | whether we should fetch the acls of association                  table. Use this only if the association is based on facet syntax TODO we might want to add an option to only do TCRS or TRS without the foreignkeys for later |
+
 <a name="ERMrest.Reference+_getReadPath..processSortObject"></a>
 
 ##### _getReadPath~processSortObject()
@@ -3813,6 +3860,7 @@ It will return:
     * [.uniqueId](#ERMrest.Tuple+uniqueId) : <code>string</code>
     * [.citation](#ERMrest.Tuple+citation) : <code>ERMrest.Citation</code>
     * [.templateVariables](#ERMrest.Tuple+templateVariables) : <code>Object</code>
+    * [.selfTemplateVariable](#ERMrest.Tuple+selfTemplateVariable) : <code>Object</code>
     * [.update()](#ERMrest.Tuple+update) ⇒ <code>Promise</code>
     * [.delete()](#ERMrest.Tuple+delete) ⇒ <code>Promise</code>
     * [.getAssociationRef()](#ERMrest.Tuple+getAssociationRef) : [<code>Reference</code>](#ERMrest.Reference)
@@ -4016,6 +4064,15 @@ a Citation object that can be used to generate the citation for this tuple.
 An object of what is available in templating environment for this tuple
 it has the following attributes:
 - values
+- rowName
+- uri
+
+**Kind**: instance property of [<code>Tuple</code>](#ERMrest.Tuple)  
+<a name="ERMrest.Tuple+selfTemplateVariable"></a>
+
+#### tuple.selfTemplateVariable : <code>Object</code>
+Should be used for populating $self for this tuple in templating environments
+It will have,
 - rowName
 - uri
 
@@ -6560,6 +6617,8 @@ get PathColumn object by column name
     * [.canUpdate](#ERMrest.Reference+canUpdate) : <code>boolean</code>
     * [.canUpdateReason](#ERMrest.Reference+canUpdateReason) : <code>String</code>
     * [.canDelete](#ERMrest.Reference+canDelete) : <code>boolean</code>
+    * [.canUseTRS](#ERMrest.Reference+canUseTRS) : <code>Boolean</code>
+    * [.canUseTCRS](#ERMrest.Reference+canUseTCRS) : <code>Boolean</code>
     * [.display](#ERMrest.Reference+display) : <code>Object</code>
     * [.related](#ERMrest.Reference+related) : [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
     * [.unfilteredReference](#ERMrest.Reference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
@@ -6569,10 +6628,11 @@ get PathColumn object by column name
     * [.filterLogInfo](#ERMrest.Reference+filterLogInfo) : <code>Object</code>
     * [.defaultExportTemplate](#ERMrest.Reference+defaultExportTemplate) : <code>string</code>
     * [.citation](#ERMrest.Reference+citation) : <code>ERMrest.Citation</code>
+    * [.googleDatasetMetadata](#ERMrest.Reference+googleDatasetMetadata) : <code>ERMrest.GoogleDatasetMetadata</code>
     * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
     * [.hideFacets()](#ERMrest.Reference+hideFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
     * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
-    * [.read(limit, contextHeaderParams, useEntity, dontCorrectPage, getUnlinkTRS)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
+    * [.read(limit, contextHeaderParams, useEntity, dontCorrectPage, getTRS, getTCRS, getUnlinkTRS)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
     * [.sort(sort)](#ERMrest.Reference+sort) ⇒ <code>Reference</code>
     * [.update(tuples, contextHeaderParams)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
     * [.delete(contextHeaderParams)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
@@ -6586,7 +6646,7 @@ get PathColumn object by column name
     * [.getColumnByName(name)](#ERMrest.Reference+getColumnByName) ⇒ [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)
     * [.generateColumnsList(tuple)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
     * [.generateActiveList([tuple])](#ERMrest.Reference+generateActiveList) ⇒ <code>Object</code>
-    * [._getReadPath()](#ERMrest.Reference+_getReadPath) : <code>Object</code>
+    * [._getReadPath(useEntity, getTRS, getTCRS, getUnlinkTRS)](#ERMrest.Reference+_getReadPath) : <code>Object</code>
         * [~processSortObject()](#ERMrest.Reference+_getReadPath..processSortObject)
 
 <a name="new_ERMrest.Reference_new"></a>
@@ -6808,6 +6868,26 @@ guarantee the user right since some policies may be undecidable until
 query execution.
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+canUseTRS"></a>
+
+#### reference.canUseTRS : <code>Boolean</code>
+Returns true if
+  - ermrest supports trs, and
+  - table has dynamic acls, and
+  - table has RID column, and
+  - table is not marked non-deletable non-updatable by annotation
+
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+canUseTCRS"></a>
+
+#### reference.canUseTCRS : <code>Boolean</code>
+Returns true if
+  - ermrest supports tcrs, and
+  - table has dynamic acls, and
+  - table has RID column, and
+  - table is not marked non-updatable by annotation
+
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+display"></a>
 
 #### reference.display : <code>Object</code>
@@ -6941,6 +7021,13 @@ to get the all-outbound foreignkeys which might be in the waitfor of citation an
 In the future we might also want to generate citation based on page and not necessarily tuple.
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+googleDatasetMetadata"></a>
+
+#### reference.googleDatasetMetadata : <code>ERMrest.GoogleDatasetMetadata</code>
+If annotation is defined and has the required attributes, will return
+a Metadata object
+
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+removeAllFacetFilters"></a>
 
 #### reference.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet) ⇒ <code>ERMrest.reference</code>
@@ -6984,7 +7071,7 @@ or rejected with any of the following errors:
 
 <a name="ERMrest.Reference+read"></a>
 
-#### reference.read(limit, contextHeaderParams, useEntity, dontCorrectPage, getUnlinkTRS) ⇒ <code>Promise</code>
+#### reference.read(limit, contextHeaderParams, useEntity, dontCorrectPage, getTRS, getTCRS, getUnlinkTRS) ⇒ <code>Promise</code>
 Reads the referenced resources and returns a promise for a page of
 tuples. The `limit` parameter is required and must be a positive
 integer. The page of tuples returned will be described by the
@@ -7018,6 +7105,8 @@ or rejected with any of these errors:
 | contextHeaderParams | <code>Object</code> | the object that we want to log. |
 | useEntity | <code>Boolean</code> | whether we should use entity api or not (if true, we won't get foreignkey data) |
 | dontCorrectPage | <code>Boolean</code> | whether we should modify the page. If there's a @before in url and the number of results is less than the given limit, we will remove the @before and run the read again. Setting dontCorrectPage to true, will not do this extra check. |
+| getTRS | <code>Boolean</code> | whether we should fetch the table-level row acls (if table supports it) |
+| getTCRS | <code>Boolean</code> | whether we should fetch the table-level and column-level row acls (if table supports it) |
 | getUnlinkTRS | <code>Boolean</code> | whether we should fetch the acls of association                  table. Use this only if the association is based on facet syntax NOTE setting useEntity to true, will ignore any sort that is based on pseduo-columns. TODO we might want to chagne the above statement, so useEntity can be used more generally. |
 
 <a name="ERMrest.Reference+sort"></a>
@@ -7294,7 +7383,7 @@ so if the fk definition is based on fkcolum and and not the RID, it would handle
 
 <a name="ERMrest.Reference+_getReadPath"></a>
 
-#### reference.\_getReadPath() : <code>Object</code>
+#### reference.\_getReadPath(useEntity, getTRS, getTCRS, getUnlinkTRS) : <code>Object</code>
 The actual path that will be used for read request.
  It will return an object that will have:
   - value: the string value of the path
@@ -7303,6 +7392,14 @@ The actual path that will be used for read request.
 NOTE Might throw an error if modifiers are not valid
 
 **Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| useEntity | <code>Boolean</code> | whether we should use entity api or not (if true, we won't get foreignkey data) |
+| getTRS | <code>Boolean</code> | whether we should fetch the table-level row acls (if table supports it) |
+| getTCRS | <code>Boolean</code> | whether we should fetch the table-level and column-level row acls (if table supports it) |
+| getUnlinkTRS | <code>Boolean</code> | whether we should fetch the acls of association                  table. Use this only if the association is based on facet syntax TODO we might want to add an option to only do TCRS or TRS without the foreignkeys for later |
+
 <a name="ERMrest.Reference+_getReadPath..processSortObject"></a>
 
 ##### _getReadPath~processSortObject()

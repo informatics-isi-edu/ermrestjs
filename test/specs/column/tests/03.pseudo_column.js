@@ -61,6 +61,8 @@
  * 1: inbound_3_outbound_1 (association -> fk)
  */
 
+ var utils = require('./../../../utils/utilities.js');
+
 
 exports.execute = function (options) {
     describe('PseudoColumn, ', function () {
@@ -117,14 +119,6 @@ exports.execute = function (options) {
             return url;
         };
 
-        // you should use this function only after options.entities value is populated
-        // (in any of jasmine blocks)
-        var findRID = function (currTable, keyName, keyValue) {
-            return options.entities[schemaName][currTable].filter(function (e) {
-                return e[keyName] == keyValue;
-            })[0].RID;
-        };
-
         // some of the values are depending on RID
         var detailedExpectedValue;
 
@@ -174,8 +168,8 @@ exports.execute = function (options) {
 
             detailedExpectedValue = [
                 '01', '<p>01: col val 01</p>\n', '01',
-                '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:outbound_1/RID=' + findRID('outbound_1', 'id','01') + '">01</a>',
-                '<p>01: 10</p>\n', '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:outbound_1_outbound_1/RID=' + findRID('outbound_1_outbound_1', 'id', '01') + '">01</a>',
+                '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:outbound_1/RID=' + utils.findEntityRID(options, schemaName, 'outbound_1', 'id','01') + '">01</a>',
+                '<p>01: 10</p>\n', '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:outbound_1_outbound_1/RID=' + utils.findEntityRID(options, schemaName, 'outbound_1_outbound_1', 'id', '01') + '">01</a>',
                 '01', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '<p>01 virtual value 01</p>\n', '<p>01 virtual value 1</p>\n'
             ];
         });
@@ -957,7 +951,7 @@ exports.execute = function (options) {
                     ];
 
                     inboundTwoValues = facets.map(function (facet, index) {
-                        return '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:inbound_2/RID=' + findRID("inbound_2","id","0" + (index+1)) + '">0' + (index+1) + ', facet: ' + facet + '</a>'
+                        return '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:inbound_2/RID=' + utils.findEntityRID(options, schemaName, "inbound_2","id","0" + (index+1)) + '">0' + (index+1) + ', facet: ' + facet + '</a>'
                     });
                 })
 
@@ -1102,7 +1096,7 @@ exports.execute = function (options) {
                                 {"inbound":[ 'pseudo_column_schema', 'outbound_1_fk1' ]},
                                 {"inbound":[ 'pseudo_column_schema', 'main_fk1' ]},
                                 "RID"],
-                            "choices": [findRID('main','main_table_id_col', '01')]}
+                            "choices": [utils.findEntityRID(options, schemaName, 'main','main_table_id_col', '01')]}
                         ]},
                         "index=6"
                     );
@@ -1116,7 +1110,7 @@ exports.execute = function (options) {
                                 {"inbound":[ 'pseudo_column_schema', 'main_inbound_2_association_fk2' ]},
                                 {"outbound":[ 'pseudo_column_schema', 'main_inbound_2_association_fk1' ]},
                                 "RID"],
-                            "choices": [findRID('main','main_table_id_col', '01')]}
+                            "choices": [utils.findEntityRID(options, schemaName, 'main','main_table_id_col', '01')]}
                         ]},
                         "index=9"
                     );
@@ -1129,7 +1123,7 @@ exports.execute = function (options) {
                                 {"outbound":[ 'pseudo_column_schema', 'outbound_2_inbound_1_fk1' ]},
                                 {"inbound":[ 'pseudo_column_schema', 'main_fk2' ]},
                                 "RID"],
-                            "choices": [findRID('main','main_table_id_col', '01')]}
+                            "choices": [utils.findEntityRID(options, schemaName, 'main','main_table_id_col', '01')]}
                         ]},
                         "index=9"
                     );
