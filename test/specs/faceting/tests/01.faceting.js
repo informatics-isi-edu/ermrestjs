@@ -394,6 +394,7 @@ exports.execute = function (options) {
                 });
 
                 it ("If the facet exists in the annotation should only add the filter to that facet from uri. (choices)", function (done) {
+                    // the facet definition is based on sourcekey, but facet blob is based on source
                     facetObj = { "and": [ {"source": "id", "choices": ["2"]} ] };
                     options.ermRest.resolve(createURL(tableMain, facetObj)).then(function (ref) {
                         expect(ref.facetColumns.length).toBe(21, "length missmatch.");
@@ -424,6 +425,41 @@ exports.execute = function (options) {
                     }).catch(function (err) {
                         console.log(err);
                         done.fail();
+                    });
+                });
+
+                it ("If the facet exists in the annotation should only add the filter to that facet from uri. (sourcekey)", function (done) {
+                    // both facet definition and facet blob are based on sourcekey
+                    facetObj = { "and": [ {"sourcekey": "text_col_source_definition", "choices": ["val"] } ] };
+                    options.ermRest.resolve(createURL(tableMain, facetObj)).then(function (ref) {
+                        expect(ref.facetColumns.length).toBe(21, "length missmatch.");
+                        expect(ref.facetColumns[5].filters.length).toBe(1, "# of filters defined is incorrect");
+                        expect(ref.location.facets).toBeDefined("facets is undefined.");
+                        expect(ref.location.ermrestCompactPath).toBe(
+                            "M:=faceting_schema:main/text_col=val/$M",
+                            "path missmatch."
+                        );
+                        done();
+                    }).catch(function (err) {
+                        done.fail(err);
+                    });
+                });
+
+                it ("if the facet exists in the annotation and the uri is based on sourcekey, should be able to merge them.", function (done) {
+                    // facet definition is based on source, but facet blob is based on sourcekey
+                    facetObj = { "and": [ {"sourcekey": "f1_source_definition", "choices": ["4"] } ] };
+                    options.ermRest.resolve(createURL(tableMain, facetObj)).then(function (ref) {
+                        expect(ref.facetColumns.length).toBe(21, "length missmatch.");
+                        expect(ref.facetColumns[10].filters.length).toBe(1, "# of filters defined is incorrect");
+                        expect(ref.location.facets).toBeDefined("facets is undefined.");
+                        // parser is optimizing this link
+                        expect(ref.location.ermrestCompactPath).toBe(
+                            "M:=faceting_schema:main/fk_to_f1=4/$M",
+                            "path missmatch."
+                        );
+                        done();
+                    }).catch(function (err) {
+                        done.fail(err);
                     });
                 });
 
@@ -1543,6 +1579,23 @@ exports.execute = function (options) {
                         expect(res.length).toEqual(2, "length missmatch.");
                         checkChoiceDisplayname("index=1", res[0], 2, "<strong>two</strong>", true);
                         checkChoiceDisplayname("index=2", res[1], 3, "<strong>three</strong>", true);
+                        done();
+                    }).catch(function (err) {
+                        console.log(err);
+                        done.fail();
+                    });
+                });
+
+                it ("if the given filters are not in database, should just return the raw values.", function (done) {
+                    var newRef = refMainFilterOnFK.facetColumns[11].addChoiceFilters([8888, 5, 4, 7777]);
+                    newRef.facetColumns[11].getChoiceDisplaynames().then(function (res){
+                        expect(res.length).toEqual(6, "length missmatch.");
+                        checkChoiceDisplayname("index=1", res[0], 2, "<strong>two</strong>", true);
+                        checkChoiceDisplayname("index=2", res[1], 3, "<strong>three</strong>", true);
+                        checkChoiceDisplayname("index=3", res[2], 4, "<strong>four</strong>", true);
+                        checkChoiceDisplayname("index=4", res[3], 5, "<strong>five</strong>", true);
+                        checkChoiceDisplayname("index=5", res[4], 8888, "8888", false);
+                        checkChoiceDisplayname("index=6", res[5], 7777, "7777", false);
                         done();
                     }).catch(function (err) {
                         console.log(err);

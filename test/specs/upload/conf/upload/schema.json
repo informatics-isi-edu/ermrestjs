@@ -189,7 +189,7 @@
                     "comment": null,
                     "name": "file1_name",
                     "default": null,
-                    "nullok": false,
+                    "nullok": true,
                     "type": {
                         "typename": "text"
                     },
@@ -206,7 +206,7 @@
                     "comment": "asset/reference",
                     "name": "file1_uri",
                     "default": null,
-                    "nullok": false,
+                    "nullok": true,
                     "type": {
                         "typename": "text"
                     },

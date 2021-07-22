@@ -5,11 +5,9 @@ exports.runTests = function (options) {
 
 
     var includes = require('./ermrest-init.js').init();
-    var server = includes.server;
     var importUtils = includes.importUtils;
     var testOptions = {
         includes: includes,
-        server: server,
         importUtils: importUtils,
         description: options.description,
         schemaConfs: options.schemaConfigurations,
@@ -24,22 +22,24 @@ exports.runTests = function (options) {
 
         // Import the schemas
         beforeAll(function (done) {
-            importUtils.importSchemas(schemaConfs, process.env.DEFAULT_CATALOG)
-                .then(function (res) {
-                    console.log("Data imported with catalogId " + res.catalogId);
-                    testOptions.catalogId = res.catalogId;
-                    testOptions.entities = res.entities;
-                    return server.catalogs.get(process.env.DEFAULT_CATALOG);
-                }).then(function (response) {
-                    testOptions.catalog = response;
-                    done();
-                }, function (err) {
-                    catalogId = err.catalogId;
-                    done.fail(err);
-                }).catch(function (err) {
-                    console.log(err);
-                    done.fail(err);
-                });
+            // create the server object
+            testOptions.server = testOptions.ermRest.ermrestFactory.getServer(testOptions.url, {cid: "test"});
+
+            importUtils.importSchemas(schemaConfs, process.env.DEFAULT_CATALOG).then(function (res) {
+                console.log("Data imported with catalogId " + res.catalogId);
+                testOptions.catalogId = res.catalogId;
+                testOptions.entities = res.entities;
+                return testOptions.server.catalogs.get(process.env.DEFAULT_CATALOG);
+            }).then(function (response) {
+                testOptions.catalog = response;
+                done();
+            }, function (err) {
+                catalogId = err.catalogId;
+                done.fail(err);
+            }).catch(function (err) {
+                console.log(err);
+                done.fail(err);
+            });
         });
 
         afterAll(function () {

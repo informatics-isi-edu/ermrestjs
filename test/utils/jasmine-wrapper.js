@@ -31,14 +31,12 @@ var setRestrictedUserId = function(config) {
 };
 
 exports.run = function(config) {
-	if (process.env.TRAVIS) {
+	if (process.env.CI) {
 
 		var exec = require('child_process').exec;
 		exec('hostname', function (error, stdout, stderr) {
 
 	    	process.env.ERMREST_URL = 'http://' + stdout.trim() + '/ermrest';
-
-	    	console.log(process.env.ERMREST_URL);
 
 	    	var setCookie = function(username, password, authCookieEnvName, cb) {
 				require('request')({
@@ -52,7 +50,7 @@ exports.run = function(config) {
 						cookies.forEach(function(c) {
 							if (c.name == 'webauthn') {
 							    process.env[authCookieEnvName] = c.name + '=' + c.value + ';';
-							    console.log('Cookie found in TRAVIS ' + c.name + '=' + c.value + '; and set in env variable ' + authCookieEnvName);
+							    console.log('Cookie found in CI ' + c.name + '=' + c.value + '; and set in env variable ' + authCookieEnvName);
 							}
 						});
 

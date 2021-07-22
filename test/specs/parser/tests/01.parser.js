@@ -1,7 +1,11 @@
 exports.execute = function(options) {
     var catalogId = process.env.DEFAULT_CATALOG,
-    schemaName = "parse_schema",
-    tableName = "parse_table";
+        schemaName = "parse_schema",
+        tableName = "parse_table";
+
+    var baseUri = options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ":" + tableName,
+        baseUriWOSchema = options.url + "/catalog/" + catalogId + "/entity/" + tableName;
+
 
     describe("Filters,", function() {
 
@@ -427,8 +431,23 @@ exports.execute = function(options) {
                 ]
             };
 
+            var validBlob3 = "N4IghgdgJiBcDaoDOB7ArgJwMYFM4gBcALASyQFosUAbNAWwhABoQsiUTck54QA3AIwgAugF8mydNjyxCRMAUo16jFkhxhsRHiCQEMI0WKA";
+            var facetObj3 = {
+                "and":[
+                    {"source":"this-column", "choices":["v1"]},
+                    {"source":"that-column", "search":["str"]}
+                ]
+            };
 
-            var baseUri = options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ":" + tableName;
+            // has a null facet
+            var validBlob4 = "N4IghgdgJiBcDaoDOB7ArgJwMYFM4gBcALASyQFosUAbNAWwhABoQsiUTck54I1rqAXQC+TZOmx5YhImAKUa9RiyQ4w2IjxBICGECJFA";
+            var facetObj4 = {
+                "and":[
+                    {"source":"this-column", "choices":[null]},
+                    {"source":"that-column", "search":["str"]}
+                ]
+            };
+
             var facetError = "Given encoded string for facets is not valid.";
             var location, uri;
             var invalidPageConditionErrorObj = {
@@ -601,13 +620,33 @@ exports.execute = function(options) {
                         "ermrestCompactPath missmatch"
                     );
                 });
+
+                it ("parser should handle having multiple layers of join and facets.", function () {
+                    uri = baseUri + "/*::facets::" + validBlob + "/some_col=v1/(id)=(s:otherTable:id)/(id2)=(s:otherTable2:id)" +
+                          "/*::facets::" + validBlob2 + "/some_col2=v2/(id)=(s:yetAnotherTable:id)" + "/*::facets::" + validBlob3;
+                    location = options.ermRest.parse(uri);
+                    expect(location).toBeDefined("location is not defined");
+
+                    expect(location.uri).toEqual(uri, "uri missmatch");
+
+                    expect(location.facets).toBeDefined("facets is not defined.");
+                    expect(location.facets.encoded).toEqual(validBlob3, "facets encoded missmatch.");
+                    expect(JSON.stringify(location.facets.decoded)).toEqual(JSON.stringify(facetObj3), "facets decoded missmatch.");
+
+                    expect(location.ermrestCompactPath).toEqual(
+                        "T:=parse_schema:parse_table/accession=1/$T/some-other-column::ciregexp::test/$T/some_col=v1/(id)=(s:otherTable:id)/T1:=(id2)=(s:otherTable2:id)/accession=2/$T1/some-other-column::ciregexp::test2/$T1/some_col2=v2/M:=(id)=(s:yetAnotherTable:id)/this-column=v1/$M/that-column::ciregexp::str/$M",
+                        "ermrestCompactPath missmatch"
+                    );
+                });
             });
 
+            // relies on the previous test
             describe("for changing facets in location, ", function () {
                 it("Location.facets setter should be able to change the facet and update other APIs.", function() {
                     location.facets = facetObj;
 
-                    uri = baseUri + "/*::facets::" + validBlob + "/(id)=(s:otherTable:id)" + "/*::facets::" + validBlob;
+                    uri = baseUri + "/*::facets::" + validBlob + "/some_col=v1/(id)=(s:otherTable:id)/(id2)=(s:otherTable2:id)" +
+                          "/*::facets::" + validBlob2 + "/some_col2=v2/(id)=(s:yetAnotherTable:id)" + "/*::facets::" + validBlob;
                     expect(location.uri).toBe(uri, "uri missmatch.");
                 });
             });
@@ -623,9 +662,12 @@ exports.execute = function(options) {
                     }).toThrow(errorMessage ? errorMessage : facetError);
                 };
 
-                var expectLocation = function (blob, facetObject, path, errMessage) {
-                    var url = baseUri + "/*::facets::" + blob;
-
+                var expectLocation = function (blob, facetObject, path, errMessage, woSchema) {
+                    var url = baseUri;
+                    if (woSchema) {
+                        url = baseUriWOSchema;
+                    }
+                    url += "/*::facets::" + blob;
                     var loc = options.ermRest.parse(url, options.catalog);
 
                     expect(loc).toBeDefined("location is not defined" + (errMessage ? errMessage : "."));
@@ -635,7 +677,11 @@ exports.execute = function(options) {
                     expect(JSON.stringify(loc.facets.decoded)).toEqual(JSON.stringify(facetObject), "facets decoded missmatch" + (errMessage ? errMessage : "."));
                     expect(loc.facets.encoded).toEqual(blob, "facets encoded missmatch" + (errMessage ? errMessage : "."));
 
-                    expect(loc.ermrestCompactPath).toEqual("M:=parse_schema:parse_table/" + path, "ermrestCompactPath missmatch" + (errMessage ? errMessage : "."));
+                    var st = "M:=parse_schema:parse_table/";
+                    if (woSchema) {
+                        st = "M:=parse_table/";
+                    }
+                    expect(loc.ermrestCompactPath).toEqual(st + path, "ermrestCompactPath missmatch" + (errMessage ? errMessage : "."));
                 };
 
                 describe("regarding source attribute, ", function () {
@@ -685,7 +731,8 @@ exports.execute = function(options) {
 
                     // NOTE extra test cases are in refererence/13.search.js
                     it ("should support search-box.", function () {
-                        expectLocation(searchBlob, searchFacet, "*::ciregexp::term/$M");
+                        expectLocation(searchBlob, searchFacet, "*::ciregexp::term/$M", "with schema");
+                        expectLocation(searchBlob, searchFacet, "*::ciregexp::term/$M", "without schema", true);
                     });
 
                     it ("should handle valid sourcekeys.", function () {
@@ -693,6 +740,16 @@ exports.execute = function(options) {
                             "N4IghgdgJiBcDaoDOB7ArgJwMYFMDWOAnnCOgC4BG60AjAPo4RkCWZxANCFgBYrO5I48EADcaIALoBfaUA",
                             {"and": [ {"sourcekey": "outbound1_entity", "choices": ["v1"]} ]},
                             "(fk1_col1)=(parse_schema:outbound1:id)/RID=v1/$M");
+                    });
+
+                    it ("should handle urls without schema name.", function () {
+                        expectLocation(
+                            "N4IghgdgJiBcDaoDOB7ArgJwMYFMDWOAnnCOgC4BG60AjAPo4RkCWZxANCFgBYrO5I48EADcaIALoBfaUA",
+                            {"and": [ {"sourcekey": "outbound1_entity", "choices": ["v1"]} ]},
+                            "(fk1_col1)=(parse_schema:outbound1:id)/RID=v1/$M",
+                            "without schema",
+                             true
+                        );
                     });
                 });
 
@@ -749,7 +806,7 @@ exports.execute = function(options) {
                             "c::ciregexp::" + options.ermRest._fixedEncodeURIComponent(intRegexPrefix + "1" + intRegexSuffix) + "/$M"
                         );
 
-                        expect(
+                        expectLocation(
                             "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoQkcxsALOecAAgCMQBdAXzaA",
                             {"and": [ {"source": "c", "search": ["a b"]} ]},
                             "c::ciregexp::a&c::ciregexp::b/$M"
@@ -893,7 +950,7 @@ exports.execute = function(options) {
         });
 
         describe("CustomFacets, ", function () {
-            var baseUri = options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ":" + tableName;
+
             var customFacetError = "Given encoded string for cfacets is not valid.", location, blob, cfacets;
             var testCustomFacets = function (uri, blob, cfacets, ermrestPath) {
                 var loc = options.ermRest.parse(uri);
@@ -901,7 +958,13 @@ exports.execute = function(options) {
                 expect(loc.customFacets.encoded).toEqual(blob, "blob missmatch");
                 expect(loc.uri).toEqual(uri, "uri missmatch.");
                 expect(loc.ermrestPath).toEqual(ermrestPath, "ermrestCompactUri missmatch");
-                expect(loc.customFacets.displayname).toEqual(cfacets.displayname, "displayname missmatch");
+                if (typeof cfacets.displayname === "string") {
+                    expect(loc.customFacets.displayname.value).toEqual(cfacets.displayname, "displayname missmatch");
+                    expect(loc.customFacets.displayname.isHTML).toEqual(false, "isHTML missmatch");
+                } else {
+                    expect(loc.customFacets.displayname.value).toEqual(cfacets.displayname.value, "displayname missmatch");
+                    expect(loc.customFacets.displayname.isHTML).toEqual(cfacets.displayname.isHTML, "isHTML missmatch");
+                }
             };
 
             describe("getter, ", function () {
@@ -914,14 +977,6 @@ exports.execute = function(options) {
                     it ("when uri has an invalid cfacests blob, parser should throw an error.", function () {
                         expect(function () {
                             options.ermRest.parse(baseUri + "/*::cfacets::invalidblob");
-                        }).toThrow(customFacetError);
-                    });
-
-                    it ("when uri has a valid cfacets blob but `displayname` is missing, parser should throw an error.", function () {
-                        // {"ermrest_path": "id=2"}
-                        blob = "N4IgpgTgthYM4BcD6AHAhggFiAXCAlgCYC8ATCAL5A";
-                        expect(function () {
-                            options.ermRest.parse(baseUri + "/*::cfacets::" + blob);
                         }).toThrow(customFacetError);
                     });
 
@@ -946,11 +1001,12 @@ exports.execute = function(options) {
                     });
 
                     it ("should handle passing only ermrest_path.", function () {
-                        blob = "N4IgJglgzgDgNgQwJ4DsEFsCmIBcIBuCcArtgDQiYBO6VmUALgPowIMAWuIEYAvAEwgAvkA";
+                        // {"displayname": {"value": "<strong>value</strong>", "isHTML": true}, "ermrest_path": "id=2"}
+                        blob = "N4IgJglgzgDgNgQwJ4DsEFsCmIBcoBuCcArtjiADxQAuATgPYoDmAfISZhQPQ0PMsgANCGgAJACoBZADK46pAL7DMtdLUw0A+jATUAFrhFgAvACYQCoA";
                         testCustomFacets(
                             baseUri + "/*::cfacets::" + blob,
                             blob,
-                            {"displayname": "value", "ermrest_path": "id=2"},
+                            {"displayname": {"value": "<strong>value</strong>", "isHTML": true}, "ermrest_path": "id=2"},
                             "M:=parse_schema:parse_table/id=2"
                         );
                     });

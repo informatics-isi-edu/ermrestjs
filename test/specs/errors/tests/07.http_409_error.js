@@ -44,7 +44,42 @@ exports.execute = function (options) {
           duplicateUpdateUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + duplicate_key_table + "/duplicate%20id=1",
           duplicateCompositeKeyCreateUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + duplicate_composite_key_table;
 
+        var chaiseURL = "https://dev.isrd.isi.edu/chaise";
+        var recordURL = chaiseURL + "/record";
+        var record2URL = chaiseURL + "/record-two";
+        var viewerURL = chaiseURL + "/viewer";
+        var searchURL = chaiseURL + "/search";
+        var recordsetURL = chaiseURL + "/recordset";
+        var appLinkFn = function (tag, location) {
+            var url;
+            switch (tag) {
+                case "tag:isrd.isi.edu,2016:chaise:record":
+                    url = recordURL;
+                    break;
+                case "tag:isrd.isi.edu,2016:chaise:record-two":
+                    url = record2URL;
+                    break;
+                case "tag:isrd.isi.edu,2016:chaise:viewer":
+                    url = viewerURL;
+                    break;
+                case "tag:isrd.isi.edu,2016:chaise:search":
+                    url = searchURL;
+                    break;
+                case "tag:isrd.isi.edu,2016:chaise:recordset":
+                    url = recordsetURL;
+                    break;
+                default:
+                    url = recordURL;
+                    break;
+            }
+
+            url = url + "/" + location.path;
+
+            return url;
+        };
+
         beforeAll(function (done) {
+            options.ermRest.appLinkFn(appLinkFn);
             server = options.server;
             catalog = options.catalog;
             url = options.url.replace('ermrest', '');
@@ -80,6 +115,7 @@ exports.execute = function (options) {
 
         it("if it's an integrity error, we should generate a more readable message.", function (done) {
           reference1.delete().then(null, function (err) {
+              expect(err.status).toBe("Conflict", "invalid error status message");
               expect(err.message).toBe(integrityErrorMappedMessage, "invalid error message");
               done();
           }).catch(function(err) {
@@ -92,6 +128,7 @@ exports.execute = function (options) {
 
         it("if it's an integrity error and no displayName was found then use table name passed by ermrest", function (done) {
           reference2.delete().then(null, function (err) {
+              expect(err.status).toBe("Conflict", "invalid error status message");
               expect(err.message).toBe(integrityErrorMappedMessageWithoutDisplay, "invalid error message");
               done();
           }).catch(function(err) {
@@ -102,6 +139,7 @@ exports.execute = function (options) {
 
         it("if it's an integrity error and pure and binary association then to_name should be displayed", function (done) {
           reference3.delete().then(null, function (err) {
+              expect(err.status).toBe("Conflict", "invalid error status message");
               expect(err.message).toBe(integrityErrorMappedPureBinaryMessage, "invalid error message");
               done();
           }).catch(function(err) {
@@ -112,6 +150,7 @@ exports.execute = function (options) {
 
         it("if it's an integrity error and related table then from_name should be displayed", function (done) {
           reference4.delete().then(null, function (err) {
+              expect(err.status).toBe("Conflict", "invalid error status message");
               expect(err.message).toBe(integrityErrorMappedFromnameMessage, "invalid error message");
               done();
           }).catch(function(err) {
@@ -127,6 +166,7 @@ exports.execute = function (options) {
               .reply(409, integrityErrorServerResponseArb)
               .persist();
           reference2.delete().then(null, function (err) {
+              expect(err.status).toBe("Conflict", "invalid error status message");
               expect(err.message).toBe(integrityErrorMappedSiteAdminMessage, "invalid error message");
               done();
           }).catch(function(err) {
@@ -144,6 +184,7 @@ exports.execute = function (options) {
 
            server.catalogs.get("1234").then(null, function(err) {
                expect(err.code).toBe(409, "invalid error code");
+               expect(err.status).toBe("Conflict", "invalid error status message");
                expect(err.message).toBe(integrityErrorWithoutDelMessage, "invalid error message");
                done();
            }).catch(function(err) {
@@ -155,6 +196,7 @@ exports.execute = function (options) {
         it("on create, if it's a duplicate key error, we should generate a more readable message.", function (done) {
             duplicateReference.create([{"duplicate id": 1}]).then(null, function (err) {
                 expect(err.code).toBe(409, "invalid error code");
+                expect(err.status).toBe("Conflict", "invalid error status message");
                 expect(err.message).toBe(duplicateErrorMappedMessage, "invalid error message");
 
                 var referencePath = schemaName + ":" + duplicate_key_table + "/duplicate%20id=1";
@@ -177,6 +219,7 @@ exports.execute = function (options) {
                 return duplicateReferenceUpdate.update(response.tuples);
             }).then(null, function (err) {
                 expect(err.code).toBe(409, "invalid error code");
+                expect(err.status).toBe("Conflict", "invalid error status message");
                 expect(err.message).toBe(duplicateErrorMappedMessage, "invalid error message");
 
                 var referencePath = schemaName + ":" + duplicate_key_table + "/duplicate%20id=2";
@@ -185,13 +228,14 @@ exports.execute = function (options) {
                 done();
             }).catch(function(err) {
                 console.log(err);
-                done.fail();
+                done.fail(err);
             });
         });
 
         it("on create, if it's a duplicate composite key error, we should generate a more readable message.", function (done) {
             duplicateCompositeKeyReference.create([{duplicate_id: 1, another_id: 2}]).then(null, function (err) {
                 expect(err.code).toBe(409, "invalid error code");
+                expect(err.status).toBe("Conflict", "invalid error status message");
                 expect(err.message).toBe(duplicateCompositeKeyErrorMappedMessage, "invalid error message");
 
                 var referencePath = schemaName + ":" + duplicate_composite_key_table + "/another_id=2&duplicate_id=1";
@@ -212,6 +256,7 @@ exports.execute = function (options) {
 
             server.catalogs.get("1236").then(null, function(err) {
                 expect(err.code).toBe(409, "invalid error code");
+                expect(err.status).toBe("Conflict", "invalid error status message");
                 expect(err.message).toBe(generalConflictMappedMessage, "invalid error message");
                 done();
             }).catch(function(err) {

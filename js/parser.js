@@ -92,9 +92,6 @@
         return module.parse(service + "/catalog/" + catalogId + "/entity/" + compactPath, catalogObject);
     };
 
-    var MAIN_TABLE_ALIAS = "M";
-    var JOIN_TABLE_ALIAS_PREFIX = "T";
-
     /**
      * The parse handles URI in this format
      *  <service>/catalog/<catalog_id>/<api>/<schema>:<table>/[path parts][modifiers][query params]
@@ -217,7 +214,7 @@
             this._rootSchemaName = decodeURIComponent(params[0]);
             this._rootTableName = decodeURIComponent(params[1]);
         } else {
-            this._rootSchemaName = null;
+            this._rootSchemaName = "";
             this._rootTableName = decodeURIComponent(params[0]);
         }
 
@@ -246,7 +243,7 @@
                 if (!prevJoin && index !== 1) {
                     // we're creating this for the previous section, so we should use the previous index
                     // Alias will be T, T1, T2, ... (notice we don't have T0)
-                    alias = JOIN_TABLE_ALIAS_PREFIX + (pathParts.length > 1 ? pathParts.length-1 : "");
+                    alias = module._parserAliases.JOIN_TABLE_PREFIX + (pathParts.length > 0 ? pathParts.length : "");
                     pathParts.push(new PathPart(alias, joins, schema, table, facets, cfacets, filter, filtersString));
                     filter = undefined; filtersString = undefined; cfacets = undefined; facets = undefined; join = undefined; joins = [];
                 }
@@ -290,7 +287,7 @@
 
         // this is for the last part of url that might not end with join.
         if (filter || cfacets || facets || joins.length > 0) {
-            pathParts.push(new PathPart(MAIN_TABLE_ALIAS, joins, schema, table, facets, cfacets, filter, filtersString));
+            pathParts.push(new PathPart(module._parserAliases.MAIN_TABLE, joins, schema, table, facets, cfacets, filter, filtersString));
         }
 
         this._pathParts = pathParts;
@@ -604,33 +601,33 @@
         },
 
         /**
-         *
-         * @returns {String} API of the ermrest service.
+         * API of the ermrest service.
          * API includes entity, attribute, aggregate, attributegroup
+         * @type {String}
          */
         get api() {
             return this._api;
         },
 
         /**
-         *
-         * @returns {string} The first schema name in the projection table, null if schema is not specified
+         * The first schema name in the projection table, null if schema is not specified
+         * @type {string}
          */
         get rootSchemaName() {
             return this._rootSchemaName;
         },
 
         /**
-         * Subject to change soon
-         * @returns {string} The first table name in the projection table
+         * The first table name in the projection table
+         * @type {string} 
          */
         get rootTableName() {
             return this._rootTableName;
         },
 
         /**
-         *
-         * @returns {string} the schema name which the uri referres to, null if schema is not specified
+         * the schema name which the uri referres to, null if schema is not specified
+         * @type {string}
          */
         get schemaName() {
             if (this._schemaName === undefined) {
@@ -640,8 +637,8 @@
         },
 
         /**
-         *
-         * @type {string} tablename - the table name which the uri referres to
+         * the table name which the uri referres to
+         * @type {string}
          */
         get tableName() {
             if (this._tableName === undefined) {
@@ -702,7 +699,7 @@
          * @type {String}
          */
         get mainTableAlias() {
-            return MAIN_TABLE_ALIAS;
+            return module._parserAliases.MAIN_TABLE;
         },
 
 
@@ -1162,7 +1159,7 @@
     function PathPart(alias, joins, schema, table, facets, cfacets, filter, filtersString) {
         this.alias = alias;
         this.joins = Array.isArray(joins) ? joins : [];
-        this.schema = schema;
+        this.schema = (typeof schema === "string") ? schema : "";
         this.table = table;
         this._facets = facets;
         this.searchTerm = (facets && facets.decoded) ? _getSearchTerm(facets.decoded) : null;
@@ -1750,9 +1747,9 @@
     }
     /**
      * An object that will have the follwoing attributes:
-     *  - displayname: "a markdown displayname",
      *  - facets: "the facet object"
      *  - ermrest_path: "ermrest path string"
+     *  - displayname: {value: "the value", isHTML: boolean} (optional)
      *
      *
      * @param       {String|Object} str Can be blob or json (object).
@@ -1788,7 +1785,7 @@
         }
 
         var obj = this.decoded;
-        if (!obj.hasOwnProperty("displayname") || (!obj.hasOwnProperty("facets") && !obj.hasOwnProperty("ermrest_path"))) {
+        if ((!obj.hasOwnProperty("facets") && !obj.hasOwnProperty("ermrest_path"))) {
             throw error;
         }
 
@@ -1808,9 +1805,26 @@
             this.ermrestPath = module.trimSlashes(obj.ermrest_path);
         }
 
-        /**
-         * The name that should be used to represent the facet value
-         * @type {string}
-         */
-        this.displayname = obj.displayname;
+        this.removable = true;
+        if (typeof obj.removable === "boolean") {
+            /**
+             * Whether user can remove the facet or not
+             * @type {string}
+             */
+            this.removable = obj.removable;
+        }
+
+        if (isStringAndNotEmpty(obj.displayname)) {
+            /**
+             * The name that should be used to represent the facet value (optional)
+             * @type {Object}
+             */
+            this.displayname = {
+                value: obj.displayname,
+                unformatted: obj.displayname,
+                isHTML: false
+            };
+        } else if (isObjectAndNotNull(obj.displayname) && ("value" in obj.displayname)) {
+            this.displayname = obj.displayname;
+        }
     }

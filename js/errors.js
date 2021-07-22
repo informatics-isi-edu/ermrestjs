@@ -22,6 +22,7 @@
     module.DuplicateConflictError = DuplicateConflictError;
     module.InvalidSortCriteria = InvalidSortCriteria;
     module.InvalidPageCriteria = InvalidPageCriteria;
+    module.InvalidServerResponse = InvalidServerResponse;
 
     /**
      * @memberof ERMrest
@@ -52,6 +53,7 @@
      * @constructor
      */
     function TimedOutError(status, message) {
+        status = isStringAndNotEmpty(status) ? status : module._errorStatus.TIME_OUT;
         ERMrestError.call(this, 0, status, message);
     }
 
@@ -66,6 +68,7 @@
      * @constructor
      */
     function BadRequestError(status, message) {
+        status = isStringAndNotEmpty(status) ? status : module._errorStatus.BAD_REQUEST;
         ERMrestError.call(this, module._HTTPErrorCodes.BAD_REQUEST, status, message);
     }
 
@@ -79,6 +82,7 @@
      * @constructor
      */
     function QueryTimeoutError(status, message) {
+        status = isStringAndNotEmpty(status) ? status : module._errorStatus.TIME_OUT;
         ERMrestError.call(this, module._HTTPErrorCodes.BAD_REQUEST, status, message);
     }
 
@@ -92,6 +96,7 @@
      * @constructor
      */
     function UnauthorizedError(status, message) {
+        status = isStringAndNotEmpty(status) ? status : module._errorStatus.UNAUTHORIZED;
         ERMrestError.call(this, module._HTTPErrorCodes.UNAUTHORIZED, status, message);
     }
 
@@ -106,7 +111,7 @@
      * @constructor
      */
     function ForbiddenError(status, message) {
-        status = (status != 'undefined' && status != '') ? status: module._errorStatus.forbidden;
+        status = isStringAndNotEmpty(status) ? status : module._errorStatus.FORBIDDEN;
         ERMrestError.call(this, module._HTTPErrorCodes.FORBIDDEN, status, message);
     }
 
@@ -121,7 +126,7 @@
      * @constructor
      */
     function NotFoundError(status, message) {
-        status = (status != 'undefined' && status != '') ? status: module._errorStatus.itemNotFound;
+        status = isStringAndNotEmpty(status) ? status : module._errorStatus.NOT_FOUND;
         ERMrestError.call(this, module._HTTPErrorCodes.NOT_FOUND, status, message);
     }
 
@@ -137,6 +142,7 @@
      * @constructor
      */
     function ConflictError(status, message, subMessage) {
+        status = isStringAndNotEmpty(status) ? status : module._errorStatus.CONFLICT;
         ERMrestError.call(this, module._HTTPErrorCodes.CONFLICT, status, message, subMessage);
     }
 
@@ -153,6 +159,7 @@
      * @constructor
      */
     function IntegrityConflictError(status, message, subMessage) {
+        status = isStringAndNotEmpty(status) ? status : module._errorStatus.CONFLICT;
         ConflictError.call(this, status, message, subMessage);
     }
 
@@ -169,6 +176,7 @@
      * @constructor
      */
     function DuplicateConflictError(status, message, subMessage, duplicateReference) {
+        status = isStringAndNotEmpty(status) ? status : module._errorStatus.CONFLICT;
         ConflictError.call(this, status, message, subMessage);
         this.duplicateReference = duplicateReference;
     }
@@ -183,6 +191,7 @@
      * @constructor
      */
     function PreconditionFailedError(status, message, data) {
+        status = isStringAndNotEmpty(status) ? status : module._errorStatus.PRECONDITION_FAILED;
         ERMrestError.call(this, module._HTTPErrorCodes.PRECONDITION_FAILED, status, message);
     }
 
@@ -197,7 +206,9 @@
      * @constructor
      */
     function InternalServerError(status, message) {
-        ERMrestError.call(this, module._HTTPErrorCodes.INTERNAL_SERVER_ERROR, status, message);
+        status = isStringAndNotEmpty(status) ? status : module._errorStatus.INTERNAL_SERVER_ERROR;
+        // use the message as subMessage and add a generic message instead
+        ERMrestError.call(this, module._HTTPErrorCodes.INTERNAL_SERVER_ERROR, status, module._errorMessage.INTERNAL_SERVER_ERROR, message);
     }
 
     InternalServerError.prototype = Object.create(ERMrestError.prototype);
@@ -211,6 +222,7 @@
      * @constructor
      */
     function BadGatewayError(status, message) {
+        status = isStringAndNotEmpty(status) ? status : module._errorStatus.BAD_GATEWAY;
         ERMrestError.call(this, module._HTTPErrorCodes.BAD_GATEWAY, status, message);
     }
 
@@ -224,6 +236,7 @@
      * @constructor
      */
     function ServiceUnavailableError(status, message) {
+        status = isStringAndNotEmpty(status) ? status : module._errorStatus.SERVIVE_UNAVAILABLE;
         ERMrestError.call(this, module._HTTPErrorCodes.SERVIVE_UNAVAILABLE, status, message);
     }
 
@@ -257,9 +270,9 @@
      * @desc An invalid facet operator
      */
     function InvalidFacetOperatorError(path, subMessage) {
-        var message = module._errorMessage.facetingError;
+        var message = module._errorMessage.INVALID_FACET;
         var redirectPath = removeInvalidFacetFilter(path);
-        ERMrestError.call(this, '', module._errorStatus.facetingError, message, subMessage, redirectPath);
+        ERMrestError.call(this, '', module._errorStatus.INVALID_FACET, message, subMessage, redirectPath);
     }
 
     InvalidFacetOperatorError.prototype = Object.create(ERMrestError.prototype);
@@ -291,9 +304,9 @@
      * @desc An invalid facet operator
      */
     function InvalidCustomFacetOperatorError(path, subMessage) {
-        var message = module._errorMessage.customFacetingError;
+        var message = module._errorMessage.INVALID_CUSTOM_FACET;
         var redirectPath = removeInvalidCustomFacetFilter(path);
-        ERMrestError.call(this, '', module._errorStatus.customFacetingError, message, subMessage, redirectPath);
+        ERMrestError.call(this, '', module._errorStatus.INVALID_CUSTOM_FACET, message, subMessage, redirectPath);
     }
 
     InvalidCustomFacetOperatorError.prototype = Object.create(ERMrestError.prototype);
@@ -323,7 +336,7 @@
      */
     function InvalidFilterOperatorError(message, path, invalidFilter) {
         var redirectPath = removeInvalidFilter(path, invalidFilter);
-        ERMrestError.call(this, '', module._errorStatus.invalidFilter, message, '', redirectPath);
+        ERMrestError.call(this, '', module._errorStatus.INVALID_FILTER, message, '', redirectPath);
     }
 
     InvalidFilterOperatorError.prototype = Object.create(ERMrestError.prototype);
@@ -338,7 +351,7 @@
      */
     function InvalidInputError(message) {
         message = message;
-        ERMrestError.call(this, '', module._errorStatus.invalidInput, message);
+        ERMrestError.call(this, '', module._errorStatus.INVALID_INPUT, message);
     }
 
     InvalidInputError.prototype = Object.create(ERMrestError.prototype);
@@ -353,7 +366,7 @@
      */
     function MalformedURIError(message) {
         this.message = message;
-        ERMrestError.call(this, '', module._errorStatus.invalidURI, message);
+        ERMrestError.call(this, '', module._errorStatus.INVALID_URI, message);
     }
 
     MalformedURIError.prototype = Object.create(ERMrestError.prototype);
@@ -367,7 +380,7 @@
      */
     function NoDataChangedError(message) {
         message = message;
-        ERMrestError.call(this, '', module._errorStatus.noDataChanged, message);
+        ERMrestError.call(this, '', module._errorStatus.NO_DATA_CHANGED, message);
     }
 
     NoDataChangedError.prototype = Object.create(ERMrestError.prototype);
@@ -380,7 +393,7 @@
      * @desc A No Connection or No Internet Connection was passed to the API.
      */
     function NoConnectionError(message) {
-        ERMrestError.call(this, -1, module._errorStatus.noConnectionError, message);
+        ERMrestError.call(this, -1, module._errorStatus.NO_CONNECTION_ERROR, message);
     }
 
     NoConnectionError.prototype = Object.create(Error.prototype);
@@ -409,7 +422,7 @@
      */
     function InvalidSortCriteria(message, path) {
         var newPath = removePageCondition(removeSortCondition(path));
-        ERMrestError.call(this, '', module._errorStatus.InvalidSortCriteria, message, '', newPath);
+        ERMrestError.call(this, '', module._errorStatus.INVALID_SORT, message, '', newPath);
     }
 
     InvalidSortCriteria.prototype = Object.create(ERMrestError.prototype);
@@ -424,11 +437,31 @@
      */
     function InvalidPageCriteria(message, path) {
         var newPath = removePageCondition(path);
-        ERMrestError.call(this, '', module._errorStatus.invalidPageCriteria, message, '', newPath);
+        ERMrestError.call(this, '', module._errorStatus.INVALID_PAGE, message, '', newPath);
     }
 
     InvalidPageCriteria.prototype = Object.create(ERMrestError.prototype);
     InvalidPageCriteria.prototype.constructor = InvalidPageCriteria;
+
+    /**
+     * @memberof ERMrest
+     * @param {string} uri error message
+     * @param {object} data the returned data
+     * @param {string} logAction the log action of the request
+     * @constructor
+     * @desc Invalid server response
+     */
+     function InvalidServerResponse(uri, data, logAction) {
+        var message = "Request URI: " + uri + "\n";
+        message += "Request action: " + logAction + "\n";
+        message += "returned data:\n" + data;
+        ERMrestError.call(this, '', module._errorStatus.INVALID_SERVER_RESPONSE, message);
+    }
+
+    InvalidServerResponse.prototype = Object.create(ERMrestError.prototype);
+    InvalidServerResponse.prototype.constructor = InvalidServerResponse;
+
+
     /**
      * Log the error object to the given ermrest location.
      * It will generate a put request to the /terminal_error with the correct headers.
@@ -436,16 +469,19 @@
      * @param  {object} err             the error object
      * @param  {string} ermrestLocation the ermrest location
      */
-    module.logError = function (err, ermrestLocation) {
+    module.logError = function (err, ermrestLocation, contextHeaderParams) {
         var defer = module._q.defer();
         var http = module._wrap_http(module._http);
 
+        if (!contextHeaderParams || typeof contextHeaderParams != "object") {
+            contextHeaderParams = {};
+        }
+        contextHeaderParams.e = 1;
+        contextHeaderParams.name = err.constructor.name;
+        contextHeaderParams.message = err.message;
+
         var headers = {};
-        headers[module.contextHeaderName] = {
-            e: 1,
-            name: err.constructor.name,
-            message: err.message
-        };
+        headers[module.contextHeaderName] = contextHeaderParams;
 
         // this http request will fail but will still log the message.
         http.put(ermrestLocation + "/terminal_error", {}, {headers: headers}).then(function () {

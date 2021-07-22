@@ -315,7 +315,14 @@
                     "type" :{
                         "typename": "text"
                     },
-                    "comment": "not part of any FKRs."
+                    "comment": "not part of any FKRs.",
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:column-display": {
+                            "detailed": {
+                                "hide_column_header": true
+                            }
+                        }
+                    }
                 },
                 {
                     "name": "col_1",
@@ -432,6 +439,7 @@
             "annotations": {
                 "tag:isrd.isi.edu,2016:visible-columns" : {
                     "detailed": ["id", ["columns_schema","ref_table_outbound_fks_key"], "id", ["columns_schema","outbound_fk_1"], "id", ["columns_schema","outbound_fk_1"], ["columns_schema","ref_table_outbound_fks_key"], ["columns_schema", "inbound_related_to_columns_table_2_fkey"], ["columns_schema", "inbound_related_to_columns_table_2_fkey"]],
+                    "compact/brief/inline": ["id", ["columns_schema", "inbound_related_to_columns_table_2_fkey"]],
                     "compact/brief": [["columns_schema", "ref_table_fks_second_key"], ["columns_schema", "ref_table_fks_third_key"], ["columns_schema", "ref_table_fks_fourth_key"], ["columns_schema", "ref_table_fks_fifth_key"], "col_1"],
                     "compact/select": ["id", ["columns_schema","outbound_fk_1"], ["columns_schema","outbound_fk_1"], "col_1", "col_2", "col_3", "col_4", "col 5", ["columns_schema","outbound_fk_3"],  "col_6", "col_7", ["columns_schema","outbound_fk_5"],  "columns_schema_outbound_fk_7", ["columns_schema","outbound_fk_7"]],
                     "entry/create": [["columns_schema","outbound_fk_1"], ["columns_schema", "table_w_simple_key_key"], ["columns_schema","outbound_fk_9"], ["columns_schema","outbound_fk_8"], "asdasdasdad", 1, [], [1,2], null, false, ["columns_schema", "id_fk_association_related_to_reference"], "id", ["columns_schema", "i dont exist"], ["no schema", "id_fk_association_related_to_reference"], ["columns_schema", "inbound_related_to_columns_table_2_fkey"]],
@@ -969,7 +977,10 @@
                         },
                         "tag:isrd.isi.edu,2016:column-display" : {
                             "*" : {
-                                "markdown_pattern" : "## {{col_filename}}"
+                                "markdown_pattern" : "## {{col_filename}}",
+                                "column_order": [
+                                    "col_asset_2", "col_filename"
+                                ]
                             }
                         }
                     }
@@ -994,17 +1005,41 @@
                 },
                 {
                     "name": "col_asset_4",
+                    "comment":"column with asset annotation",
+                    "type": {
+                        "typename": "text"
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2017:asset": {
+                            "url_pattern": "/hatrac/{{col_asset_4}}",
+                            "filename_column": "col_asset_4_filename"
+                        },
+                        "tag:isrd.isi.edu,2016:column-display" : {
+                            "*" : {
+                                "markdown_pattern" : "{{col_asset_4_filename}}"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "col_asset_4_filename",
+                    "comment": "",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "col_asset_5",
                     "comment": "column with asset annotation",
                     "type": {
                         "typename": "int4"
                     },
                     "annotations": {
                         "tag:isrd.isi.edu,2017:asset": {
-                            "url_pattern": "/hatrac/{{col_asset_4}}"
+                            "url_pattern": "/hatrac/{{col_asset_5}}"
                         }
                     }
                 }
-
             ],
             "annotations": {
                 "tag:isrd.isi.edu,2016:visible-columns": {
@@ -1191,7 +1226,9 @@
                     ],
                     "annotations": {
                         "tag:isrd.isi.edu,2016:foreign-key": {
-                            "domain_filter_pattern": "position_type_col=fixed"
+                            "domain_filter": {
+                                "ermrest_path_pattern": "position_type_col=fixed"
+                            }
                         }
                     },
                     "referenced_columns": [
@@ -1214,7 +1251,10 @@
                     ],
                     "annotations": {
                         "tag:isrd.isi.edu,2016:foreign-key": {
-                            "domain_filter_pattern": "position_type_col={{{_position_text_col}}}"
+                            "domain_filter": {
+                                "ermrest_path_pattern": "position_type_col={{{_position_text_col}}}",
+                                "display_markdown_pattern": "**position_type_col**: {{{_position_text_col}}}"
+                            }
                         }
                     },
                     "referenced_columns": [
@@ -1237,7 +1277,10 @@
                     ],
                     "annotations": {
                         "tag:isrd.isi.edu,2016:foreign-key": {
-                            "domain_filter_pattern": "fk2={{{_fk1}}}&position_col={{{_position_text_col}}}"
+                            "domain_filter": {
+                                "ermrest_path_pattern": "fk2={{{_fk1}}}&position_col={{{_position_text_col}}}",
+                                "display_markdown_pattern": "**fk2**: {{{_fk1}}} and **position_col**:{{{_position_text_col}}}"
+                            }
                         }
                     },
                     "referenced_columns": [
@@ -1260,7 +1303,10 @@
                     ],
                     "annotations": {
                         "tag:isrd.isi.edu,2016:foreign-key": {
-                            "domain_filter_pattern": "fk2={{{$fkeys.columns_schema.fk_position_predefined.values._int_value}}}&position_col={{{$fkeys.columns_schema.fk_position_user_defined.values._int_value}}}&id={{{_fk1}}}"
+                            "domain_filter": {
+                                "ermrest_path_pattern": "fk2={{{$fkeys.columns_schema.fk_position_predefined.values._int_value}}}&position_col={{{$fkeys.columns_schema.fk_position_user_defined.values._int_value}}}&id={{{_fk1}}}",
+                                "display_markdown_pattern": "**fk2**: {{{$fkeys.columns_schema.fk_position_predefined.values._int_value}}} and **position_col**:{{{$fkeys.columns_schema.fk_position_user_defined.values._int_value}}}"
+                            }
                         }
                     },
                     "referenced_columns": [
@@ -1332,7 +1378,7 @@
                     }
                 },
                 {
-                    "column": "used in a foreignkey that its domain_filter_pattern is using other foreignKey data",
+                    "column": "used in a foreignkey that its domain_filter is using other foreignKey data",
                     "name": "fkeys_fk_col",
                     "type": {
                         "typename": "int4"

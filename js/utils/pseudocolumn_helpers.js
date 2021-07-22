@@ -103,8 +103,9 @@
         // returns null if the path is invalid
         // reverse: this will reverse the datasource and adds the root alias to the end
         parseDataSource: function (source, alias, tableName, catalogId, reverse, consNames) {
-            var sourceNodes = [], fk, fkObj, i, col, table, isInbound, constraint, schemaName, ignoreFk;
-
+            // TODO can be refactored to use the sourceObjectWrapper
+            var sourceNodes = [], fk, fkObj, i, col, table, isInbound, constraint, schemaName, ignoreFk, fkAlias;
+                
             var start = 0, end = source.length - 1;
             for (i = start; i < end; i++) {
 
@@ -120,6 +121,11 @@
                 } else {
                     // given object was invalid
                     return null;
+                }
+
+                fkAlias = null;
+                if ("alias" in source[i] && typeof source[i].alias === "string") {
+                    fkAlias = source[i].alias;
                 }
 
                 fkObj = _renderFacetHelpers.findConsName(catalogId, constraint[0], constraint[1], consNames);
@@ -147,8 +153,7 @@
 
                 tableName = table.name;
                 schemaName = table.schema.name;
-                // fk.toString((reverse && !isInbound) || (!reverse && isInbound), false)
-                sourceNodes.push(new SourceObjectNode(fk, false, true, isInbound));
+                sourceNodes.push(new SourceObjectNode(fk, false, true, isInbound, fkAlias));
             }
 
             // if the given facetSource doesn't have any path
@@ -196,7 +201,7 @@
                     // if we have reversed the path, we need to add the alias to the last bit
                     return ((i > 0) ? (fkStr + "/") : (alias + ":=right" + fkStr) ) + prev;
                 } else {
-                    return prev + (i > 0 ? "/" : "") + fkStr;
+                    return prev + (i > 0 ? "/" : "") + (sn.alias ? sn.alias + ":=" : "") + fkStr;
                 }
             }, "");
 
@@ -256,7 +261,7 @@
 
         var rootTable = null;
         try {
-            rootTable = catalogObject.schemas.get(rootSchemaName).tables.get(tableName);
+            rootTable = catalogObject.schemas.findTable(rootTableName, rootSchemaName);
         } catch(exp) {
             // fail silently
         }
@@ -491,12 +496,12 @@
     };
 
     /**
-     * @private
      * @param {Object} source the source array or string
      * @desc
      * Will compress the source that can be used for logging purposes. It will,
      *  - `inbound` to `i`
      *  - `outbound` to `o`
+     * @private
      */
     _compressSource = function (source) {
         if (!source) return source;
@@ -518,7 +523,6 @@
     };
 
     /**
-     * @private
      * @param {Object} facet the facet object
      * Given a facet will compress it so it can be used for logging purposes, it will,
      *  - `inbound` to `i`
@@ -529,6 +533,7 @@
      *  - `ranges` to `r`
      *  - `search` to `s`
      * NOTE: This function supports combination of conjunction and disjunction.
+     * @private
      */
     _compressFacetObject = function (facet) {
         var res = module._simpleDeepCopy(facet),
@@ -562,7 +567,6 @@
     };
 
     /**
-     * @private
      * Process the defined waitfor
      *
      * It will
@@ -578,6 +582,7 @@
      * @param {ERMrest.ReferenceColumn=} currentColumn - if this is defined on a column.
      * @param {ERMrest.Tuple=} mainTable - the main tuple data.
      * @param {String} message - the message that should be appended to warning messages.
+     * @private
      */
     module._processWaitForList = function (waitFor, baseReference, currentTable, currentColumn, mainTuple, message) {
         var wfList = [], hasWaitFor = false, hasWaitForAggregate = false, waitFors = [];
@@ -654,18 +659,16 @@
     };
 
     /**
-     * @ignore
      * The functions that are used in Reference.facetColumns API
+     * @ignore
      */
     _facetColumnHelpers = {
         /**
-         * @private
-         * @ignore
          * Given a ReferenceColumn, InboundForeignKeyPseudoColumn, or ForeignKeyPseudoColumn
          * will return the facet object that should be used.
          * The returned facet will always be entity, if we cannot show
          * entity picker (table didn't have simple key), we're ignoring it.
-         *
+         * @ignore
          */
         refColToFacetObject: function (refCol) {
             var obj;
@@ -732,9 +735,8 @@
         },
 
         /**
-         * @private
-         * @ignore
          * Given a source object wrapper,  do we support the facet for it or not
+         * @ignore
          */
         checkFacetObjectWrapper: function (facetObjectWrapper) {
             var col = facetObjectWrapper.column;
@@ -754,9 +756,9 @@
         },
 
         /**
-         * @ignore
          * Given a referenceColumn, do we support facet for it.
          * if we do, it will return a facetObject that can be used.
+         * @ignore
          */
         checkRefColumn: function (col) {
             // virtual columns are not supported.
@@ -791,9 +793,9 @@
         },
 
         /**
-         * @ignore
          * given two facet definitions, it will merge their filters.
          * only add choices, range, search, and not_null
+         * @ignore
          */
         mergeFacetObjects: function (source, extra) {
             if (extra.not_null === true) {
@@ -837,12 +839,12 @@
         },
 
         /**
-         * @ignore
          * make sure that facetObject is pointing to the correct table.
          * NOTE this is only valid in entity mode.
          * NOTE: facetColumns MUST be only used in COMPACT_SELECT context
          * It doesn't feel right that I am doing contextualization in here,
          * it's something that should be in client.
+         * @ignore
          */
         checkForAlternative: function (facetObjectWrapper, usedAnnotation, table, consNames) {
             var currTable = facetObjectWrapper.column.table;
@@ -930,6 +932,13 @@
             return res;
         },
 
+        /**
+         * Parse the given sourceobject and create the attributes
+         * @param {ERMrest.Table} table 
+         * @param {Object} consNames 
+         * @param {boolean} isFacet  -- validation is differrent if it's a facet
+         * @returns  {Object}
+         */
         _process: function (table, consNames, isFacet) {
             var self = this, sourceObject = this.sourceObject, wm = module._warningMessages;
             var findConsName = function (catalogId, schemaName, constraintName) {
@@ -950,8 +959,8 @@
 
             var colName, col, colTable = table, source = sourceObject.source, sourceObjectNodes = [];
             var hasPath = false, hasInbound = false, isFiltered = false, fkPathLength = 0;
-            var fk, fkIndex = -1, firstFkIndex = -1, i, isInbound, constraint, fkObj;
-
+            var fk, fkIndex = -1, firstFkIndex = -1, i, isInbound, constraint, fkObj, fkAlias;
+            
             // from 0 to source.length-1 we have paths
             if (Array.isArray(source) && source.length === 1 && isStringAndNotEmpty(source[0])) {
                 colName = source[0];
@@ -970,6 +979,11 @@
                     } else {
                         // given object was invalid
                         return returnError("Invalid object in source element index=" + i);
+                    }
+
+                    fkAlias = null;
+                    if ("alias" in source[i] && typeof source[i].alias === "string") {
+                        fkAlias = source[i].alias;
                     }
 
                     fkObj = findConsName(colTable.schema.catalog.id, constraint[0], constraint[1]);
@@ -1001,7 +1015,7 @@
                         return returnError("Invalid constraint name in source element index=" + i);
                     }
 
-                    sourceObjectNodes.push(new SourceObjectNode(fk, false, true, isInbound));
+                    sourceObjectNodes.push(new SourceObjectNode(fk, false, true, isInbound, fkAlias));
                 }
                 colName = source[source.length-1];
             } else if (isStringAndNotEmpty(source)){
@@ -1071,6 +1085,10 @@
             self.sourceObjectNodes = sourceObjectNodes;
 
             return self;
+        },
+
+        toString: function (reverse, outerJoin) {
+            
         }
     };
 
@@ -1152,7 +1170,7 @@
         }
     };
 
-    function SourceObjectNode (nodeObject, isFilter, isForeignKey, isInbound) {
+    function SourceObjectNode (nodeObject, isFilter, isForeignKey, isInbound, alias) {
         this.nodeObject = nodeObject;
 
         this.isFilter = isFilter;
@@ -1160,9 +1178,17 @@
         this.isForeignKey = isForeignKey;
 
         this.isInbound = isInbound;
+
+        this.alias = alias;
     }
 
     SourceObjectNode.prototype = {
+        /**
+         * Return the string representation of this node
+         * @param {boolean=} reverse - whether we should reverse the order (applicable to fk)
+         * @param {boolean=} outerJoin  - whether we want to use outerjoin (applicable to fk)
+         * @returns {String}
+         */
         toString: function (reverse, outerJoin) {
             var self = this;
 
@@ -1174,9 +1200,12 @@
             return _sourceColumnHelpers.parseSourceObjectNodeFilter(self.nodeObject);
         },
 
+        // TOOD what's the point of this???
         // TODO FILTER_IN_SOURCE better name
         get simpleConjunction () {
             if (this._simpleConjunction === undefined) {
+
+                // TODO 
                 var computeValue = function (self) {
                     if (!self.isFilter) return null;
 

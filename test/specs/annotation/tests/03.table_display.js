@@ -123,8 +123,7 @@ exports.execute = function (options) {
 
                     done();
                 }, function (err) {
-                    console.dir(err);
-                    done.fail();
+                    done.fail(err);
                 });
             });
 
@@ -142,17 +141,18 @@ exports.execute = function (options) {
 
                     done();
                 }, function (err) {
-                    console.dir(err);
-                    done.fail();
+                    done.fail(err);
                 });
             });
 
-            it('tuple displayname should return formatted value of id as it is the unique key.', function() {
+            it('tuple displayname and rowName should return formatted value of id as it is the unique key.', function() {
                 var tuples = page.tuples;
                 for(var i = 0; i < limit; i++) {
                     var tuple = tuples[i];
-                    expect(tuple.displayname.value).toBe(tuple.values[0]);
-                    expect(tuple.displayname.unformatted).toBe(tuple.values[0]);
+                    expect(tuple.displayname.value).toBe(tuple.values[0], "displayname value missmatch");
+                    expect(tuple.displayname.unformatted).toBe(tuple.values[0], "displayname unformatted missmatch");
+                    expect(tuple.rowName.value).toBe(tuple.values[0], "rowName value missmatch");
+                    expect(tuple.rowName.unformatted).toBe(tuple.values[0], "rowName unformatted missmatch");
                 }
             });
         });
@@ -174,12 +174,10 @@ exports.execute = function (options) {
 
                         done();
                     }, function (err) {
-                        console.dir(err);
-                        done.fail();
+                        done.fail(err);
                     });
                 }, function (err) {
-                    console.dir(err);
-                    done.fail();
+                    done.fail(err);
                 });
             });
 
@@ -202,31 +200,33 @@ exports.execute = function (options) {
 
                         done();
                     }, function (err) {
-                        console.dir(err);
-                        done.fail();
+                        done.fail(err);
                     });
                 }, function (err) {
-                    console.dir(err);
-                    done.fail();
+                    done.fail(err);
                 });
 
             });
 
-            it('tuple displayname should return title column.', function() {
+            it('tuple displayname and rowName should return title column.', function() {
                 var tuples = page.tuples;
                 for(var i = 0; i < limit; i++) {
                     var tuple = tuples[i];
-                    expect(tuple.displayname.value).toBe(tuple.values[1]);
-                    expect(tuple.displayname.unformatted).toBe(tuple.values[1]);
+                    expect(tuple.displayname.value).toBe(tuple.values[1], "displayname value missmatch");
+                    expect(tuple.displayname.unformatted).toBe(tuple.values[1], "displayname unformatted missmatch");
+                    expect(tuple.rowName.value).toBe(tuple.values[1], "rowName value missmatch");
+                    expect(tuple.rowName.unformatted).toBe(tuple.values[1], "rowName unformatted missmatch");
                 }
             });
 
-            it('tuple displayname should be able to match columns case insensitively and ignore space, underlines, and hyphens.', function () {
+            it('tuple displayname/rowName should be able to match columns case insensitively and ignore space, underlines, and hyphens.', function () {
                 var tuples = page2.tuples;
                 for(var i = 0; i < limit; i++) {
                     var tuple = tuples[i];
-                    expect(tuple.displayname.value).toBe(tuple.values[1]);
-                    expect(tuple.displayname.unformatted).toBe(tuple.values[1]);
+                    expect(tuple.displayname.value).toBe(tuple.values[1], "displayname value missmatch");
+                    expect(tuple.displayname.unformatted).toBe(tuple.values[1], "displayname unformatted missmatch");
+                    expect(tuple.rowName.value).toBe(tuple.values[1], "rowName value missmatch");
+                    expect(tuple.rowName.unformatted).toBe(tuple.values[1], "rowName unformatted missmatch");
                 }
             });
         });
@@ -234,7 +234,7 @@ exports.execute = function (options) {
         describe('table entities without special columns without table-display:row_name annotation, ', function() {
             var limit = 2;
 
-            it('tuple displayname should return the display key.', function(done) {
+            it('tuple displayname/rowName should return the display key.', function(done) {
                 options.ermRest.resolve(tableWoAnnotEntityUri, {cid: "test"}).then(function (reference) {
                     expect(reference.table.name).toBe(tableNameWoAnnot);
 
@@ -243,14 +243,15 @@ exports.execute = function (options) {
                     var tuples = page.tuples;
                     for(var i = 0; i < limit; i++) {
                         var tuple = tuples[i];
-                        expect(tuple.displayname.value).toBe(tuple.data.text_col, "value missmatch for i=" + i);
-                        expect(tuple.displayname.unformatted).toBe(tuple.data.text_col, "unformatted missmatch for i=" + i);
+                        expect(tuple.displayname.value).toBe(tuple.data.text_col, "displayname value missmatch for i=" + i);
+                        expect(tuple.displayname.unformatted).toBe(tuple.data.text_col, "displayname unformatted missmatch for i=" + i);
+                        expect(tuple.rowName.value).toBe(tuple.data.text_col, "rowName value missmatch for i=" + i);
+                        expect(tuple.rowName.unformatted).toBe(tuple.data.text_col, "rowName unformatted missmatch for i=" + i);
                     }
 
                     done();
                 }).catch(function (err) {
-                    console.dir(err);
-                    done.fail();
+                    done.fail(err);
                 });
             });
         });
@@ -267,8 +268,7 @@ exports.execute = function (options) {
 
                     done();
                 }, function (err) {
-                    console.dir(err);
-                    done.fail();
+                    done.fail(err);
                 });
             });
 
@@ -286,8 +286,7 @@ exports.execute = function (options) {
 
                     done();
                 }, function (err) {
-                    console.dir(err);
-                    done.fail();
+                    done.fail(err);
                 });
             });
         });
@@ -304,8 +303,7 @@ exports.execute = function (options) {
 
                     done();
                 }, function (err) {
-                    console.dir(err);
-                    done.fail();
+                    done.fail(err);
                 });
             });
 
@@ -323,18 +321,19 @@ exports.execute = function (options) {
 
                     done();
                 }, function (err) {
-                    console.dir(err);
-                    done.fail();
+                    done.fail(err);
                 });
             });
 
-            it('tuple displayname should return string: firstname lastname', function() {
+            it('tuple displayname/rowName should return string: firstname lastname', function() {
                 var tuples = page.tuples;
                 for(var i = 0; i < limit; i++) {
                     var tuple = tuples[i];
                     var expected = tuple.values[1] + " " + tuple.values[2];
-                    expect(tuple.displayname.value).toBe("<strong>" + expected + "</strong>");
-                    expect(tuple.displayname.unformatted).toBe("**" + expected + "**");
+                    expect(tuple.displayname.value).toBe("<strong>" + expected + "</strong>", "displayname value missmatch");
+                    expect(tuple.displayname.unformatted).toBe("**" + expected + "**", "displayname unformatted missmatch");
+                    expect(tuple.rowName.value).toBe("<strong>" + expected + "</strong>", "rowName value missmatch");
+                    expect(tuple.rowName.unformatted).toBe("**" + expected + "**", "rowName unformatted missmatch");
                 }
             });
         });
@@ -351,8 +350,7 @@ exports.execute = function (options) {
 
                     done();
                 }, function (err) {
-                    console.dir(err);
-                    done.fail();
+                    done.fail(err);
                 });
             });
 
@@ -370,51 +368,56 @@ exports.execute = function (options) {
 
                     done();
                 }, function (err) {
-                    console.dir(err);
-                    done.fail();
+                    done.fail(err);
                 });
             });
 
-            it('tuple displayname should return string: firstname lastname', function() {
+            it('tuple displayname/rowName should return string: firstname lastname', function() {
                 var tuples = page.tuples;
                 for(var i = 0; i < limit; i++) {
                     var tuple = tuples[i];
                     // if no firstname, just show lastname without a space
                     var expected = tuple.values[1] ? (tuple.values[1] + " " + tuple.values[2]) : tuple.values[2];
-                    expect(tuple.displayname.value).toBe(expected);
-                    expect(tuple.displayname.unformatted).toBe(expected);
+                    expect(tuple.displayname.value).toBe(expected, "displayname value missmatch");
+                    expect(tuple.displayname.unformatted).toBe(expected, "displayname unformatted missmatch");
+                    expect(tuple.rowName.value).toBe(expected, "rowName value missmatch");
+                    expect(tuple.rowName.unformatted).toBe(expected, "rowName unformatted missmatch");
                 }
             });
         });
 
         describe('table entities with table-display.row-name/title annotation.', function () {
-            var ref, limit = 5;
+            var ref, limit = 5, tuples;
             beforeAll(function (done) {
                 options.ermRest.resolve(table11EntityUri, {cid: "test"}).then(function (res) {
                     ref = res;
                     done();
                 }).catch(function (err) {
-                    console.log(err);
-                    done.fail();
+                    done.fail(err);
                 });
             });
 
-            describe('tuple displayname, ', function () {
-                it ("should use the row_name/title for getting the rowname.", function(done) {
-                    ref.read(limit).then(function (page) {
-                        for(var i = 0; i < limit; i++) {
-                            var tuple = page.tuples[i];
-                            var expected = tuple.values[2];
-                            expect(tuple.displayname.value).toBe("<span class=\"new-class\">" + expected + "</span>", "value missmatch for tuple index="+i);
-                            expect(tuple.displayname.unformatted).toBe(":span:" + expected + ":/span:{.new-class}", "unformatted missmatch for tuple index="+i);
-                        }
-                        done();
-                    }).catch(function (err) {
-                        console.log(err);
-                        done.fail();
+            it('tuple displayname displayname should use the row_name/title, ', function (done) {
+                ref.read(limit).then(function (page) {
+                    tuples = page.tuples;
+                    tuples.forEach(function (tuple) {
+                        var expected = tuple.values[2];
+                        expect(tuple.displayname.value).toBe("<span class=\"new-class\">" + expected + "</span>", "displayname value missmatch for tuple index="+i);
+                        expect(tuple.displayname.unformatted).toBe(":span:" + expected + ":/span:{.new-class}", "displayname unformatted missmatch for tuple index="+i);
                     });
+                    done();
+                }).catch(function (err) {
+                    done.fail(err);
                 });
             });
+
+            it ("tuple rowName should NOT use row_name/title", function (done) {
+                tuples.forEach(function (tuple) {
+                    expect(tuple.rowName.value).toBe("<strong>" + tuple.values[1] + " " + tuple.values[2] + "</strong>", "rowName value missmatch for tuple index="+i);
+                    expect(tuple.rowName.unformatted).toBe("**" + tuple.values[1] + " " + tuple.values[2] + "**", "rowName unformatted missmatch for tuple index="+i);
+                });
+                done();
+            })
         });
 
         describe('table entities with table-display.row_markdown_pattern annotation', function() {
@@ -429,8 +432,7 @@ exports.execute = function (options) {
 
                     done();
                 }, function (err) {
-                    console.dir(err);
-                    done.fail();
+                    done.fail(err);
                 });
             });
 
@@ -469,22 +471,21 @@ exports.execute = function (options) {
 
                     done();
                 }, function (err) {
-                    console.dir(err);
-                    done.fail();
+                    done.fail(err);
                 });
             });
 
             var content = '<h2>Movie titles</h2>\n' +
-            '<figure class="embed-block -chaise-post-load" style=""><figcaption class="embed-caption" style="">Hamlet(with <strong>William Shakespeare</strong> from catalog '+catalog_id+')</figcaption><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20001" ></iframe></figure>' +
-            '<figure class="embed-block -chaise-post-load" style=""><figcaption class="embed-caption" style="">The Adventures of Huckleberry Finn(with <strong>Mark Twain</strong> from catalog '+catalog_id+')</figcaption><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20002" ></iframe></figure>' +
-            '<figure class="embed-block -chaise-post-load" style=""><figcaption class="embed-caption" style="">Alice in Wonderland(with <strong>Lewis Carroll</strong> from catalog '+catalog_id+')</figcaption><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20003" ></iframe></figure>' +
-            '<figure class="embed-block -chaise-post-load" style=""><figcaption class="embed-caption" style="">Pride and Prejudice(with <strong>Jane Austen</strong> from catalog '+catalog_id+')</figcaption><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20004" ></iframe></figure>' +
-            '<figure class="embed-block -chaise-post-load" style=""><figcaption class="embed-caption" style="">Great Expectations</figcaption><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20005" ></iframe></figure>' +
-            '<figure class="embed-block -chaise-post-load" style=""><figcaption class="embed-caption" style="">David Copperfield</figcaption><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20006" ></iframe></figure>' +
-            '<figure class="embed-block -chaise-post-load" style=""><figcaption class="embed-caption" style="">Emma</figcaption><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20007" ></iframe></figure>' +
-            '<figure class="embed-block -chaise-post-load" style=""><figcaption class="embed-caption" style="">As You Like It</figcaption><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20008" ></iframe></figure>' +
-            '<figure class="embed-block -chaise-post-load" style=""><figcaption class="embed-caption" style="">The Adventures of Tom Sawyer</figcaption><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20009" ></iframe></figure>' +
-            '<figure class="embed-block -chaise-post-load" style=""><figcaption class="embed-caption" style="">Through the Looking Glass</figcaption><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20010" ></iframe></figure>';
+            '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 100%;"><figcaption class="embed-caption">Hamlet(with <strong>William Shakespeare</strong> from catalog '+catalog_id+')</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20001"><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div></div><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20001"></iframe></figure>' +
+            '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 100%;"><figcaption class="embed-caption">The Adventures of Huckleberry Finn(with <strong>Mark Twain</strong> from catalog '+catalog_id+')</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20002"><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div></div><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20002"></iframe></figure>' +
+            '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 100%;"><figcaption class="embed-caption">Alice in Wonderland(with <strong>Lewis Carroll</strong> from catalog '+catalog_id+')</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20003"><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div></div><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20003"></iframe></figure>' +
+            '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 100%;"><figcaption class="embed-caption">Pride and Prejudice(with <strong>Jane Austen</strong> from catalog '+catalog_id+')</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20004"><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div></div><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20004"></iframe></figure>' +
+            '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 100%;"><figcaption class="embed-caption">Great Expectations</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20005"><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div></div><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20005"></iframe></figure>' +
+            '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 100%;"><figcaption class="embed-caption">David Copperfield</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20006"><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div></div><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20006"></iframe></figure>' +
+            '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 100%;"><figcaption class="embed-caption">Emma</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20007"><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div></div><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20007"></iframe></figure>' +
+            '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 100%;"><figcaption class="embed-caption">As You Like It</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20008"><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div></div><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20008"></iframe></figure>' +
+            '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 100%;"><figcaption class="embed-caption">The Adventures of Tom Sawyer</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20009"><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div></div><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20009"></iframe></figure>' +
+            '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 100%;"><figcaption class="embed-caption">Through the Looking Glass</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20010"><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div></div><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20010"></iframe></figure>';
             it('page.content should return HTML for all tuples using row_markdown_pattern and prefix_markdown and separator_markdown', function() {
                 expect(page.content).toEqual(content);
             });
@@ -551,11 +552,11 @@ exports.execute = function (options) {
                                   findRID(tableName5, expected[index].id) + '">' + expected[index].rowName + '</a>';
                         }
                         expect(t.displayname.value).toEqual(val, "index= " + index + ". displayname missmatch.");
+                        expect(t.rowName.value).toEqual(val, "index= " + index + ". rowName missmatch.");
                     });
                     done();
                 }).catch(function (err) {
-                    console.log(err);
-                    done.fail();
+                    done.fail(err);
                 });
             });
 
@@ -573,11 +574,11 @@ exports.execute = function (options) {
                     ];
                     page.tuples.forEach(function (t, index) {
                         expect(t.displayname.value).toEqual(expected[index], "index= " + index + ". displayname missmatch.");
+                        expect(t.rowName.value).toEqual(expected[index], "index= " + index + ". rowName missmatch.");
                     });
                     done();
                 }).catch(function (err) {
-                    console.log(err);
-                    done.fail();
+                    done.fail(err);
                 });
             });
 
@@ -595,6 +596,7 @@ exports.execute = function (options) {
                     ];
                     page.tuples.forEach(function (t, index) {
                         expect(t.displayname.value).toEqual(expected[index], "index= " + index + ". displayname missmatch.");
+                        expect(t.rowName.value).toEqual(expected[index], "index= " + index + ". rowName missmatch.");
                     });
                     done();
                 }).catch(function (err) {
@@ -614,8 +616,7 @@ exports.execute = function (options) {
                     expect(page.tuples[0].displayname.value).toEqual(expected, "catalog snapshot displayname mismatch.");
                     done();
                 }).catch(function (err) {
-                    console.log(err);
-                    done.fail();
+                    done.fail(err);
                 });
             });
         });
@@ -628,8 +629,7 @@ exports.execute = function (options) {
                     expect(ref.display.hideColumnHeaders).toBeTruthy("Hide Column Headers option is not defined");
                     done();
                 }).catch(function (err) {
-                    console.log(err);
-                    done.fail();
+                    done.fail(err);
                 });
             });
         });

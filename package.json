@@ -4,12 +4,11 @@
   "version": "0.0.0",
   "license": "Apache-2.0",
   "private": true,
-  "main": "build/ermrest.js",
+  "main": "build/ermrest.min.js",
   "scripts": {
-    "build": "make build",
-    "pretest": "make build",
-    "test": "make test",
-    "docs": "make doc"
+    "build": "make install",
+    "pretest": "make install",
+    "test": "make test"
   },
   "repository": {
     "type": "git",
@@ -22,34 +21,35 @@
     "library"
   ],
   "dependencies": {
+    "jsdoc": "^3.6.7",
+    "jsdoc-to-markdown": "5.0.3",
+    "jshint": "2.11.1",
+    "uglify-js": "3.9.2"
+  },
+  "devDependencies": {
     "buffer-slice": "0.0.1",
     "file-api": "^0.10.4",
-    "google-closure-compiler": "x",
-    "handlebars": "4.5.3",
-    "just-handlebars-helpers": "^1.0.13",
+    "handlebars": "^4.7.7",
+    "jasmine": "2.5.3",
+    "jasmine-expect": "^3.7.1",
+    "jasmine-spec-reporter": "^2.5.0",
+    "just-handlebars-helpers": "^1.0.18",
     "lz-string": "1.4.4",
-    "markdown-it": "7.0.0",
+    "markdown-it": "7.0.1",
     "markdown-it-attrs": "2.3.1",
     "markdown-it-container": "2.0.0",
     "markdown-it-sub": "1.0.0",
     "markdown-it-sup": "1.0.0",
+    "mime": "1.4.1",
     "moment": "2.19.3",
     "moment-timezone": "0.5.14",
     "mustache": "x",
-    "q": "1.5.0",
-    "request-q": "x",
-    "spark-md5": "^3.0.0"
-  },
-  "devDependencies": {
-    "jasmine": "2.5.3",
-    "jasmine-expect": "^3.7.1",
-    "jasmine-spec-reporter": "^2.5.0",
-    "jsdoc": "x",
-    "jsdoc-to-markdown": "x",
-    "jshint": "x",
     "nock": "9.0.22",
+    "q": "1.5.0",
     "request": "x",
+    "request-q": "x",
     "require-reload": "^0.2.2",
-    "set-cookie-parser": "x"
+    "set-cookie-parser": "x",
+    "spark-md5": "^3.0.0"
   }
 }

@@ -10,10 +10,10 @@
 
     /**
      * Angular $http service object
-     * @type {Object}
-     * @private
      * NOTE: This should not be used. This is the base _http module without our wrapper from http.js
      * When making requests using http, use server.http
+     * @type {Object}
+     * @private
      */
     module._http = null;
 
@@ -234,35 +234,34 @@
 
         /**
          * @param {string} id Catalog ID.
+         * @param {Boolean} dontFetchSchema whether we should fetch the schemas
          * @return {Promise} a promise that returns the catalog  if resolved or
          *     {@link ERMrest.TimedOutError}, {@link ERMrest.InternalServerError}, {@link ERMrest.ServiceUnavailableError},
          *     {@link ERMrest.NotFoundError}, {@link ERMrest.ForbiddenError} or {@link ERMrest.UnauthorizedError} if rejected
          * @desc Get a catalog by id. This call does catalog introspection.
          */
-        get: function (id) {
+        get: function (id, dontFetchSchema) {
             // do introspection here and return a promise
 
-            var self = this;
-            var defer = module._q.defer();
+            var self = this, defer = module._q.defer(), catalog;
 
-            // load catalog only when requested
+            // create a new catalog object if the object has not been created before
             if (id in this._catalogs) {
-
-                defer.resolve(self._catalogs[id]);
-                return defer.promise;
-
+                catalog = self._catalogs[id];
             } else {
-
-                var catalog = new Catalog(self._server, id);
-                catalog._introspect().then(function () {
-                    self._catalogs[id] = catalog;
-                    defer.resolve(catalog);
-                }, function (error) {
-                    defer.reject(error);
-                });
-
-                return defer.promise;
+                catalog = new Catalog(self._server, id);
             }
+
+            // make sure the catalog is introspected.
+            // the introspect function might or might not
+            catalog._introspect(dontFetchSchema).then(function () {
+                self._catalogs[id] = catalog;
+                defer.resolve(catalog);
+            }, function (error) {
+                defer.reject(error);
+            });
+
+            return defer.promise;
         }
     };
 
@@ -279,8 +278,8 @@
 
         /**
          * For internal use only. A reference to the server instance.
-         * @private
          * @type {ERMrest.Server}
+         * @private
          */
         this.server = server;
 
@@ -302,6 +301,20 @@
          * @type {ERMrest.Schemas}
          */
         this.schemas = new Schemas();
+
+        /**
+         * The ERMrest features that the catalog supports
+         * @type {Object}
+         */
+        this.features = {};
+
+        for (var f in module._ERMrestFeatures) {
+            this.features[module._ERMrestFeatures[f]] = false;
+        }
+
+        this._jsonCatalog = null;
+
+        this._schemaFetched = false;
     }
 
     Catalog.prototype = {
@@ -312,30 +325,34 @@
         },
 
         /**
-         * This will return the snapshot from the catalog request instead of schema,
-         * because it will return the snapshot based on the model changes.
+         * Can be used to send a request and get the catalog object from server.
          * @param {Object} contextHeaderParams - properties to log under the dcctx header
-         * @return {Promise} a promise that returns json object or snaptime if resolved or
+         * @param {Boolean} ignoreCache - whether we should ignore the cach and fetch new object
+         * @return {Promise} a promise that returns the catalog json if resolved or
          *      {@link ERMrest.ERMrestError} if rejected
+         * @private
          */
-        currentSnaptime: function (contextHeaderParams) {
+        _get: function (contextHeaderParams, ignoreCache) {
             var self = this, defer = module._q.defer(), headers = {};
+
+            if (ignoreCache !== true && isObjectAndNotNull(self._jsonCatalog)) {
+                return defer.resolve(self._jsonCatalog), defer.promise;
+            }
 
             if (contextHeaderParams) {
                 headers[module.contextHeaderName] = contextHeaderParams;
             } else {
                 headers[module.contextHeaderName] = {
-                    action: ":,catalog/snaptime;load",
+                    action: ":,catalog;load",
                     catalog: self.id
                 };
             }
 
-            var config = {
-                headers: headers
-            };
-
-            this.server.http.get(this._uri, config).then(function (response) {
-                defer.resolve(response.data.snaptime);
+            this.server.http.get(this._uri, {headers: headers}).then(function (response) {
+                if (!isObjectAndNotNull(self._jsonCatalog)) {
+                    self._jsonCatalog = response.data;
+                }
+                defer.resolve(response.data);
             }, function (error) {
                 defer.reject(error);
             });
@@ -344,33 +361,53 @@
         },
 
         /**
-         *
-         * @private
-         * @return {Promise} a promise that returns json object or catalog schema if resolved or
-         *     {@link ERMrest.TimedOutError}, {@link ERMrest.InternalServerError}, {@link ERMrest.ServiceUnavailableError},
-         *     {@link ERMrest.NotFoundError}, {@link ERMrest.ForbiddenError} or {@link ERMrest.UnauthorizedError} if rejected
+         * This will return the snapshot from the catalog request instead of schema,
+         * because it will return the snapshot based on the model changes.
+         * @param {Object} contextHeaderParams - properties to log under the dcctx header
+         * @return {Promise} a promise that returns json object or snaptime if resolved or
+         *      {@link ERMrest.ERMrestError} if rejected
          */
-        _introspect: function () {
-            // load all schemas
-            var self = this;
-            return this.currentSnaptime().then(function(snaptime) {
-                self.snaptime = snaptime;
-                var headers = {};
-                headers[module.contextHeaderName] = {
-                    action: ":,catalog/schema;load",
+        currentSnaptime: function (contextHeaderParams) {
+            var defer = module._q.defer(), self = this;
+            if (!isObjectAndNotNull(contextHeaderParams)) {
+                contextHeaderParams = {
+                    action: ":,catalog/snaptime;load",
                     catalog: self.id
                 };
-                return self.server.http.get(self._uri + "/schema", {headers: headers});
-            }).then(function (response) {
+            }
+
+            self._get(contextHeaderParams, true).then(function (response) {
+                defer.resolve(response.snaptime);
+            }, function (error) {
+                defer.reject(error);
+            });
+
+            return defer.promise;
+        },
+
+        /**
+         * fetch the schemas of the catalog and create the appropriate objects
+         * @private
+         */
+        _fetchSchema: function () {
+            var defer = module._q.defer(), self = this;
+
+            if (self._schemaFetched) {
+                return defer.resolve(), defer.promise;
+            }
+
+            var headers = {};
+            headers[module.contextHeaderName] = {
+                action: ":,catalog/schema;load",
+                catalog: self.id
+            };
+
+            self.server.http.get(self._uri + "/schema", {headers: headers}).then(function (response) {
                 var jsonSchemas = response.data;
 
-                self.rights = jsonSchemas.rights;
+                self._schemaFetched = true;
 
-                self.annotations = new Annotations();
-                for (var uri in jsonSchemas.annotations) {
-                    var jsonAnnotation = jsonSchemas.annotations[uri];
-                    self.annotations._push(new Annotation("catalog", uri, jsonAnnotation));
-                }
+                self.rights = jsonSchemas.rights;
 
                 for (var s in jsonSchemas.schemas) {
                     self.schemas._push(new Schema(self, jsonSchemas.schemas[s]));
@@ -400,11 +437,55 @@
                     }
                 }
 
-                return self.schemas;
+                defer.resolve();
             }, function (response) {
-                var error = module.responseToError(response);
-                return module._q.reject(error);
+                defer.reject(response);
             });
+
+            return defer.promise;
+        },
+
+        /**
+         *
+         * @return {Promise} a promise that returns json object or catalog schema if resolved or
+         *     {@link ERMrest.TimedOutError}, {@link ERMrest.InternalServerError}, {@link ERMrest.ServiceUnavailableError},
+         *     {@link ERMrest.NotFoundError}, {@link ERMrest.ForbiddenError} or {@link ERMrest.UnauthorizedError} if rejected
+         * @private
+         */
+        _introspect: function (dontFetchSchema) {
+            var defer = module._q.defer(), self = this;
+
+            // load the catalog (or use the one that is cached)
+            this._get().then(function(response) {
+                self.snaptime = response.snaptime;
+
+                if ("features" in response) {
+                    for (var k in self.features) {
+                        self.features[k] = response.features[k];
+                    }
+                }
+
+                self.annotations = new Annotations();
+                for (var uri in response.annotations) {
+                    self.annotations._push(new Annotation("catalog", uri, response.annotations[uri]));
+                }
+
+                if (dontFetchSchema === true || self._schemaFetched) {
+                    defer.resolve();
+                } else {
+                    // load all schemas
+                    self._fetchSchema().then(function () {
+                        defer.resolve();
+                    }).catch(function (err) {
+                        throw err;
+                    });
+                }
+
+            }).catch(function (response) {
+                defer.reject(module.responseToError(response));
+            });
+
+            return defer.promise;
         },
 
         /**
@@ -458,9 +539,11 @@
          * @return {Object} the chaise config object from the catalog annotation
          */
         get chaiseConfig () {
-            if (!this._chaiseConfig) {
+            if (this._chaiseConfig === undefined) {
                 if (this.annotations.contains(module._annotations.CHAISE_CONFIG)) {
                     this._chaiseConfig = this.annotations.get(module._annotations.CHAISE_CONFIG).content;
+                } else {
+                    this._chaiseConfig = null;
                 }
             }
             return this._chaiseConfig;
@@ -956,6 +1039,8 @@
         }
 
         this._exportTemplates = {};
+
+        this._display = {};
     }
 
     Table.prototype = {
@@ -963,6 +1048,50 @@
 
         delete: function () {
 
+        },
+
+        getDisplay: function (context) {
+            // check _display for information about current context
+            if (!(context in this._display)) {
+                var comment_annotation = null, comment_display_annotation = null;
+                if (this.annotations.contains(module._annotations.DISPLAY)) {
+                    // comment can be a string or an object
+                    comment_annotation = this.annotations.get(module._annotations.DISPLAY).get("comment");
+                    // point to comment since that is what is contextualized in this annotation
+                    // if it's an object, that means it's contextualized
+                    if (typeof comment_annotation == "object") {
+                        comment_annotation = module._getAnnotationValueByContext(context, comment_annotation);
+                    }
+
+                    comment_display_annotation = module._getAnnotationValueByContext(context, this.annotations.get(module._annotations.DISPLAY).get("comment_display"));
+                }
+
+                var comment = this.comment,
+                    tableCommentDisplay = module._commentDisplayModes.tooltip,
+                    columnCommentDisplay = module._commentDisplayModes.tooltip;
+
+                // comment is contextualized
+                if (_isValidModelComment(comment_annotation)) {
+                    comment = _processModelComment(comment_annotation);
+                }
+
+                // since in the model we cannot define the comment_display settings,
+                // this annotation can be used in conjunction with the model's comments
+                // and we don't need to make sure the comment is coming from annotation
+                if (comment_display_annotation && _isValidModelCommentDisplay(comment_display_annotation.column_comment_display)) {
+                    columnCommentDisplay = comment_display_annotation.column_comment_display;
+                }
+                if (comment_display_annotation && _isValidModelCommentDisplay(comment_display_annotation.table_comment_display)) {
+                    tableCommentDisplay = comment_display_annotation.table_comment_display;
+                }
+
+                this._display[context] = {
+                    "columnCommentDisplay": columnCommentDisplay,
+                    "comment": comment, // coming from the model, or annotation
+                    "tableCommentDisplay": tableCommentDisplay
+                };
+            }
+            return this._display[context];
         },
 
         /**
@@ -1708,20 +1837,30 @@
                 return false; //not binary
             }
 
-
-            // set of foreignkey columns
-            var fkColset = new ColSet(nonSystemColumnFks.reduce(function(res, fk){
-                return res.concat(fk.colset.columns);
-            }, []));
+            // set of foreignkey columns (they might be overlapping so we're not using array)
+            var fkCols = {};
+            nonSystemColumnFks.forEach(function(fk){
+                fk.colset.columns.forEach(function (col) {
+                    fkCols[col] = true;
+                });
+            });
 
             // the key that should contain foreign key columns
             var tempKeys = this.keys.all().filter(function(key) {
                 var keyCols = key.colset.columns;
-                return !(keyCols.length == 1 && (module._serialTypes.indexOf(keyCols[0].type.name) != -1 ||  module._systemColumns.indexOf(keyCols[0].name) != -1) && !(keyCols[0] in fkColset.columns));
+                return !(keyCols.length == 1 && (module._serialTypes.indexOf(keyCols[0].type.name) != -1 ||  module._systemColumns.indexOf(keyCols[0].name) != -1) && !(keyCols[0] in fkCols));
             });
 
-            if (tempKeys.length != 1 || !fkColset._equals(tempKeys[0].colset)) {
+            if (tempKeys.length != 1) {
                 return false; // not binary
+            }
+
+            //make sure the key has all the foreign key columns
+            var keyHasAllCols = tempKeys[0].colset.columns.every(function (col) {
+                return col in fkCols;
+            });
+            if (!keyHasAllCols) {
+                return false; // not pure
             }
 
             // columns that are not part of any keys (excluding system columns).
@@ -2713,11 +2852,12 @@
                 }
 
                 this._display[context] = {
+                    "hideColumnHeader": annotation.hide_column_header || false, // only hide if the annotation value is true
                     "isPreformat": hasPreformat,
                     "preformatConfig": hasPreformat ? annotation.pre_format : null,
                     "isMarkdownPattern": (typeof annotation.markdown_pattern === 'string'),
                     "isMarkdownType" : this.type.name === 'markdown',
-                    "isHTML": (typeof annotation.markdown_pattern === 'string') || this.type.name === 'markdown',
+                    "isHTML": (typeof annotation.markdown_pattern === 'string') || (module._HTMLColumnType.indexOf(this.type.name) != -1),
                     "markdownPattern": annotation.markdown_pattern,
                     "templateEngine": annotation.template_engine,
                     "columnOrder": columnOrder
@@ -3194,18 +3334,36 @@
 
         getDisplay: function(context) {
             if (!(context in this._display)) {
-                var annotation = -1, columnOrder;
+                var self = this, annotation = -1, columnOrder = [], showKeyLink =  null;
                 if (this.annotations.contains(module._annotations.KEY_DISPLAY)) {
                     annotation = module._getAnnotationValueByContext(context, this.annotations.get(module._annotations.KEY_DISPLAY).content);
                 }
 
                 columnOrder = _processColumnOrderList(annotation.column_order, this.table);
+                showKeyLink = annotation.show_key_link;
+                if (typeof showFKLink !== "boolean") {
+                    showKeyLink = module._getHierarchicalDisplayAnnotationValue(
+                        self, context, "show_key_link"
+                    );
+
+                    // default:
+                    //   compact/select: false
+                    //   *: true
+                    if (typeof showKeyLink !== "boolean") {
+                        if (context === module._contexts.COMPACT_SELECT) {
+                            showKeyLink = false;
+                        } else {
+                            showKeyLink = true;
+                        }
+                    }
+                }
 
                 this._display[context] = {
                     "columnOrder": columnOrder,
                     "isMarkdownPattern": (typeof annotation.markdown_pattern === 'string'),
                     "templateEngine": annotation.template_engine,
-                    "markdownPattern": annotation.markdown_pattern
+                    "markdownPattern": annotation.markdown_pattern,
+                    "showKeyLink": showKeyLink
                 };
             }
 
@@ -3695,6 +3853,26 @@
         this.to_name = "";
 
         /**
+         * @type {string}
+         */
+        this.to_comment = "";
+
+        /**
+         * @type {string}
+         */
+        this.from_comment = "";
+
+        /**
+         * @type {string}
+         */
+        this.to_comment_display = module._commentDisplayModes.tooltip;
+
+        /**
+         * @type {string}
+         */
+        this.from_comment_display = module._commentDisplayModes.tooltip;
+
+        /**
          * @type {boolean}
          */
         this.ignore = false;
@@ -3721,6 +3899,18 @@
                 }
                 if(jsonAnnotation.to_name){
                     this.to_name = jsonAnnotation.to_name;
+                }
+
+                if (_isValidModelComment(jsonAnnotation.to_comment)) {
+                    // check for null, false, empty string when digesting comment for first time
+                    this.to_comment = _processModelComment(jsonAnnotation.to_comment);
+                    if (_isValidModelCommentDisplay(jsonAnnotation.to_comment_display)) this.to_comment_display = jsonAnnotation.to_comment_display;
+                }
+
+                if (_isValidModelComment(jsonAnnotation.from_comment)) {
+                    // check for null, false, empty string when digesting comment for first time
+                    this.from_comment = _processModelComment(jsonAnnotation.from_comment);
+                    if (_isValidModelCommentDisplay(jsonAnnotation.from_comment_display)) this.from_comment_display = jsonAnnotation.from_comment_display;
                 }
             }
         }
@@ -3822,6 +4012,8 @@
         getDisplay: function(context) {
             if (!(context in this._display)) {
                 var self = this, annotation = -1, columnOrder = [], showFKLink = true;
+                // NOTE: commenting out contextualized functionality since it isn't being supported just yet
+                // var fromComment = null, fromCommentDisplay = "tooltip", toComment = null, toCommentDisplay = "tooltip";
                 if (this.annotations.contains(module._annotations.FOREIGN_KEY)) {
                     annotation = module._getAnnotationValueByContext(context, this.annotations.get(module._annotations.FOREIGN_KEY).get("display"));
                 }
@@ -3833,15 +4025,30 @@
                         self, context, "show_foreign_key_link"
                     );
 
-                    // default true for all the contexts
+                    // default:
+                    //   compact/select: false
+                    //   *: true
                     if (typeof showFKLink !== "boolean") {
-                        showFKLink = true;
+                        if (context === module._contexts.COMPACT_SELECT) {
+                            showFKLink = false;
+                        } else {
+                            showFKLink = true;
+                        }
                     }
                 }
 
+                // fromComment = _processModelComment(annotation.from_comment);
+                // toComment = _processModelComment(annotation.to_comment);
+                // fromCommentDisplay = (annotation.from_comment && typeof annotation.from_comment_display === "string") ? annotation.from_comment_display : "tooltip";
+                // toCommentDisplay = (annotation.to_comment && typeof annotation.to_comment_display === "string") ? annotation.to_comment_display : "tooltip";
+
                 this._display[context] = {
                     "columnOrder": columnOrder,
-                    "showForeignKeyLinks": showFKLink
+                    // "fromComment": fromComment,
+                    // "fromCommentDisplay": fromCommentDisplay,
+                    "showForeignKeyLink": showFKLink,
+                    // "toComment": toComment,
+                    // "toCommentDisplay": toCommentDisplay
                 };
             }
 
@@ -3888,7 +4095,7 @@
         /**
          * The column name of the base. This goes to the first level which
          * will be a type understandable by database.
-         * @type {string} type name
+         * @type {string}
          */
         get rootName() {
             if (this._rootName === undefined) {

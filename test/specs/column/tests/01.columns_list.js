@@ -171,7 +171,7 @@ exports.execute = function (options) {
         ];
 
         var assetEntryExpectedValue = [
-            '1', '1', '1000', '10001', null, 'https://dev.isrd.isi.edu', 'https://dev.isrd.isi.edu', 4
+            '1', '1', '1000', '10001', null, 'https://dev.isrd.isi.edu', 'https://dev.isrd.isi.edu', 'https://dev.isrd.isi.edu', 4
         ];
 
         var compactRefExpectedLinkedValue, assetCompactExpectedValue, tableWSlashData;
@@ -267,9 +267,11 @@ exports.execute = function (options) {
          *  6: col_md5
          *  7: col_sha256
          *  8: col_asset_1 *AssetPseudoColumn* disabeld (no url_pattern)
-         *  9: col_asset_2 *AssetPseudoColumn* (asset with invalid options) has column-display
+         *  9: col_asset_2 *AssetPseudoColumn* (asset with invalid options) has column-display (markdown and order)
          *  10: col_asset_3 *AssetPseudoColumn* (asset with valid options)
-         *  11: col_asset_4 (asset with type not text)
+         *  11: col_asset_4 *AssetPseudoColumn* (asset with url_pattern and filename) has column-display (markdown)
+         *  12: col_asset_4_filename
+         *  13: col_asset_5 (asset with type not text)
          *
          *  ref.columns for entry (no context present):
          *  0: id
@@ -280,6 +282,7 @@ exports.execute = function (options) {
          *  5: col_asset_2 *AssetPseudoColumn*
          *  6: col_asset_3 *AssetPseudoColumn*
          *  7: col_asset_4
+         *  8: col_asset_5
          *
          *
          *  contexts that are used:
@@ -288,12 +291,13 @@ exports.execute = function (options) {
          *  - entry/create: does not include col_asset_3 -> so no ignore
          *  - entry/edit: includes col_asset_3 and all its contituent columns
          *  - compact/brief: includes col_asset_3 and all its contituent columns
+         *  - compact/brief/inline: inlcudes inline table that should not be visible
          *
          *  3. table_w_composite_key:
          *      has different values for row_name, row_name/compact and row_name/entry.
          */
 
-        var compactRef, compactBriefRef, compactSelectRef, entryRef, entryCreateRef, entryEditRef,
+        var compactRef, compactBriefRef, compactSelectRef, compactBriefInlineRef, entryRef, entryCreateRef, entryEditRef,
             slashRef, assetRef, assetRefEntry, assetRefCompact, assetRefCompactCols,
             compactColumns, compactSelectColumns, table2RefColumns;
 
@@ -308,6 +312,7 @@ exports.execute = function (options) {
                 compactRef = response.contextualize.compact;
                 compactBriefRef = response.contextualize.compactBrief;
                 compactSelectRef = response.contextualize.compactSelect;
+                compactBriefInlineRef = response.contextualize.compactBriefInline;
 
                 detailedRef = response.contextualize.detailed;
 
@@ -366,6 +371,7 @@ exports.execute = function (options) {
                 '',
                 '<h2>filename</h2>\n',
                 '<a href="https://dev.isrd.isi.edu?uinit=1&amp;cid=test" download="" class="download-alt asset-permission">filename</a>',
+                'filename4',
                 '4'
             ];
 
@@ -514,11 +520,13 @@ exports.execute = function (options) {
                 });
 
                 describe("for inbound foreignkey columns, ", function () {
-                    it("in entry context, should ignore them.", function () {
-                        expect(entryCreateRef.columns.length).toBe(4);
+                    it("in non-detailed context, should ignore them.", function () {
+                        expect(entryCreateRef.columns.length).toBe(4, "entry/create missmatch.");
+
+                        expect(compactBriefInlineRef.columns.length).toBe(1, "compact/brief/inline missmatch");
                     });
 
-                    it('in other columns, should create a pseudo-column for those and remove them from related references.', function () {
+                    it('in detailed context, should create a pseudo-column for those and remove them from related references.', function () {
                         expect(detailedRef.columns[3]._constraintName).toBe(["columns_schema", "inbound_related_to_columns_table_2_fkey"].join("_"), "didn't create a pseudo column.");
 
                         expect(detailedRef.related.length).toBe(1, "didn't remove the column from related references");
@@ -526,7 +534,7 @@ exports.execute = function (options) {
                     });
                 });
 
-                if (!process.env.TRAVIS) {
+                if (!process.env.CI) {
                     it('should handle the columns with slash(`/`) in their names.', function () {
                         checkReferenceColumns([{
                             ref: slashRef.contextualize.compactBrief,
@@ -694,20 +702,21 @@ exports.execute = function (options) {
                 });
 
                 describe('for asset columns,', function () {
-                    describe('filname, byte, md5, and sha256 columns', function() {
+                    describe('filename, byte, md5, and sha256 columns', function() {
                         it('should be ignored in edit context.', function() {
                             checkReferenceColumns([{
                                 ref: assetRefEntry,
                                 expected: [
                                     "id",
                                     ["columns_schema", "table_w_asset_fk_to_outbound"].join("_"),
-                                    "col_1", "col_2", "col_asset_1", "col_asset_2", "col_asset_3", "col_asset_4"
+                                    "col_1", "col_2",
+                                    "col_asset_1", "col_asset_2", "col_asset_3", "col_asset_4", "col_asset_5"
                                 ]
                             }]);
                         });
 
                         it('should not be ignored in other contexts.', function() {
-                            expect(assetRefCompactCols.length).toBe(17);
+                            expect(assetRefCompactCols.length).toBe(19);
                             expect(assetRefCompactCols[4].name).toBe("col_filename");
                             expect(assetRefCompactCols[4].isPseudo).toBe(false);
                             expect(assetRefCompactCols[5].name).toBe("col_byte");
@@ -730,10 +739,10 @@ exports.execute = function (options) {
                     });
 
                     it("if column type is not `text`, should ignore the asset annotation.", function() {
-                      expect(assetRefCompactCols[11].name).toBe("col_asset_4", "invalid name for compact");
-                      expect(assetRefCompactCols[11].isPseudo).toBe(false, "invalid isPseudo for compact");
-                      expect(assetRefEntry.columns[7].name).toBe("col_asset_4", "invalid name for entry");
-                      expect(assetRefEntry.columns[7].isPseudo).toBe(false, "invalid isPseudo for entry");
+                      expect(assetRefCompactCols[13].name).toBe("col_asset_5", "invalid name for compact");
+                      expect(assetRefCompactCols[13].isPseudo).toBe(false, "invalid isPseudo for compact");
+                      expect(assetRefEntry.columns[8].name).toBe("col_asset_5", "invalid name for entry");
+                      expect(assetRefEntry.columns[8].isPseudo).toBe(false, "invalid isPseudo for entry");
                     });
 
                     it('if columns has been used as the keyReferenceColumn, should ignore the asset annotation.', function () {
@@ -747,7 +756,7 @@ exports.execute = function (options) {
                     });
                 });
 
-                if (!process.env.TRAVIS) {
+                if (!process.env.CI) {
                     it('should handle the columns with slash(`/`) in their names.', function () {
                         checkReferenceColumns([{
                             ref: slashRef,
@@ -778,13 +787,16 @@ exports.execute = function (options) {
                         mode = true;
                     } else if (context == 'detailed') {
                         mode = ['RCT', 'RMB', 'not_a_col', 'RID', 'col_1'];
+                    } else if (context.indexOf('entry') != -1) {
+                        mode = ['RMB', 'RID', 'RMT'];
                     }
 
                     return mode;
                 }
 
                 var compactSystemColumnsModeRef, compactSystemColumnsModeColumns,
-                    detailedSystemColumnsModeRef, detailedSystemColumnsModeColumns;
+                    detailedSystemColumnsModeRef, detailedSystemColumnsModeColumns,
+                    entrySystemColumnsModeRef, entrySystemColumnsModeColumns;
 
                 beforeAll(function (done) {
                     // set this here so it doesn't affect above columns list tests
@@ -794,9 +806,11 @@ exports.execute = function (options) {
                     }).then(function (response) {
                         compactSystemColumnsModeRef = response.contextualize.compact;
                         detailedSystemColumnsModeRef = response.contextualize.detailed;
+                        entrySystemColumnsModeRef = response.contextualize.entry;
 
                         compactSystemColumnsModeColumns = compactSystemColumnsModeRef.columns;
                         detailedSystemColumnsModeColumns = detailedSystemColumnsModeRef.columns;
+                        entrySystemColumnsModeColumns = entrySystemColumnsModeRef.columns;
 
                         done();
                     }).catch(function (err) {
@@ -805,7 +819,7 @@ exports.execute = function (options) {
                     });
                 });
 
-                it('with config option: `SystemColumnsDisplayCompact=true`, RID should be first, RCB, RMB, RCT, RMT at the end', function () {
+                it('with config option: `systemColumnsDisplayCompact=true`, RID should be first, RCB, RMB, RCT, RMT at the end', function () {
                     areSameColumnList(compactSystemColumnsModeRef.generateColumnsList(), compactSystemColumnsModeColumns);
                     //verify RID is first
                     expect(compactSystemColumnsModeColumns[0]._baseCols[0].name).toBe('RID', 'RID is not fisrt');
@@ -821,7 +835,7 @@ exports.execute = function (options) {
                     expect(compactSystemColumnsModeColumns[7].name).toBe('RMT', 'col index=7 missmatch');
                 });
 
-                it("with config option: `SystemColumnsDisplayDetailed=['RCT', 'RMB', 'not_a_col', 'RID', 'col_1']`, RID should be first, RMB, RCT at the end.", function () {
+                it("with config option: `systemColumnsDisplayDetailed=['RCT', 'RMB', 'not_a_col', 'RID', 'col_1']`, RID should be first, RMB, RCT at the end.", function () {
                     var columnNames = []
                     detailedSystemColumnsModeColumns.forEach(function (col) {
                         columnNames.push(col.name);
@@ -847,6 +861,28 @@ exports.execute = function (options) {
                     expect(columnNames.indexOf('RMT')).toBe(-1, 'RMT in column list');
                     // not_a_col is not in the table definition, and should be ignored
                     expect(columnNames.indexOf('not_a_col')).toBe(-1, 'not_a_col in column list');
+                });
+
+                it("with config option: `systemColumnsDisplayEntry=['RMB', 'RID', 'RMT']`, RID should be first, RMB, RMT at the end", function () {
+                    var columnNames = []
+                    entrySystemColumnsModeColumns.forEach(function (col) {
+                        columnNames.push(col.name);
+                    });
+
+                    areSameColumnList(entrySystemColumnsModeRef.generateColumnsList(), entrySystemColumnsModeColumns);
+                    //verify RID is first
+                    expect(entrySystemColumnsModeColumns[0]._baseCols[0].name).toBe('RID', 'RID is not first');
+                    expect(entrySystemColumnsModeColumns.length).toBe(6, 'length mismatch');
+
+                    // the only system columns, and should be at the end
+                    expect(entrySystemColumnsModeColumns[4].isForeignKey).toBe(true, 'isForeignKey index=4 mismatch');
+                    expect(entrySystemColumnsModeColumns[4].table.name).toBe("person", 'col index=4 mismatch');
+
+                    expect(entrySystemColumnsModeColumns[5].name).toBe('RMT', 'col index=5 mismatch');
+
+                    // other system columns should not be present
+                    expect(columnNames.indexOf('RCB')).toBe(-1, 'RCB in column list');
+                    expect(columnNames.indexOf('RCT')).toBe(-1, 'RMT in column list');
                 });
 
                 afterAll(function () {
@@ -929,7 +965,7 @@ exports.execute = function (options) {
                 });
             });
 
-            if (!process.env.TRAVIS) {
+            if (!process.env.CI) {
                 it('should handle the columns with slash(`/`) in their names.', function (done) {
                     slashRef.read(limit).then(function (page) {
                         var tuples = page.tuples;

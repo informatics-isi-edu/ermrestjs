@@ -63,18 +63,19 @@ exports.execute = function (options) {
                                         '<p><img src="http://example.com/4000.png" alt="image" class="-chaise-post-load"></p>\n',
                                         '<p><img src="https://www.google.com/4000.png" alt="image with size" width="400" height="400" class="-chaise-post-load"></p>\n',
                                         '<p><a href="https://www.google.com" download="">download link</a></p>\n',
-                                        '<figure class="embed-block -chaise-post-load" style=""><figcaption class="embed-caption" style="">Hank caption</figcaption><iframe src="http://example.com/iframe" width="300" ></iframe></figure>',
+                                        '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 300px;"><figcaption class="embed-caption">Hank caption</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="http://example.com/iframe"><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div></div><iframe src="http://example.com/iframe" width="300"></iframe></figure>',
                                         '<p><strong>date is :</strong></p>\n',
                                         '<p><strong>Name is :</strong> Hank<br>\n<strong>date is :</strong></p>\n',
                                         '<code>GATCGATCGC GTATT</code>',
                                         'NA',
-                                        '<video controls class="-chaise-post-load" height=500 width=600 loop ><source src="http://techslides.com/demos/sample-videos/small.mp4" type="video/mp4"></video>',
+                                        '<span class="video-info-in-print" style="visibility:hidden">Note: Video (http://techslides.com/demos/sample-videos/small.mp4) is hidden in print </span><video controls class="-chaise-post-load hide-in-print" height=500 width=600 loop ><source src="http://techslides.com/demos/sample-videos/small.mp4" type="video/mp4"></video>',
                                         '', // This value is set later by setLinkRID()
                                         '<p>'+catalog_id+': '+catalog_id+'/schema:table</p>\n',
                                         expectedMomentValue,
-                                        '<p>/*::facets::N4IghgdgJiBcAEBteoDOB7ArgJwMYFM54QBLGAGmNwAt0SDUjEAWABnYF14BfeL7oA</p>\n'
+                                        '<p>/*::facets::N4IghgdgJiBcAEBteoDOB7ArgJwMYFM54QBLGAGmNwAt0SDUjEAWABnYF14BfeL7oA</p>\n',
+                                        '<p><span class="chaise-color-preview" background-color="#00FF00"> </span> #00FF00</p>\n'
                                          ],
-                    "isHTML" : [false, true, true, true, true, true, true, true, true, true, false, true, false, true, true, true]
+                    "isHTML" : [false, true, true, true, true, true, true, true, true, true, false, true, false, true, true, true, true]
                     },
             "test2": {
                 "rowValue" :["id=4001, name=Harold,some_invisible_column= Junior"],
@@ -85,7 +86,7 @@ exports.execute = function (options) {
                                 '<p><img src="http://example.com/4001.png" alt="image" class="-chaise-post-load"></p>\n',
                                 '<p><img src="/4001.png" alt="image with size" width="400" height="400" class="-chaise-post-load"></p>\n',
                                 '<p><a href="" download="">download link</a></p>\n',
-                                '<figure class="embed-block -chaise-post-load" style=""><figcaption class="embed-caption" style="">Harold caption</figcaption><iframe src="http://example.com/iframe" width="300" ></iframe></figure>',
+                                '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 300px;"><figcaption class="embed-caption">Harold caption</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="http://example.com/iframe"><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div></div><iframe src="http://example.com/iframe" width="300"></iframe></figure>',
                                 '<p><strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
                                 '<p><strong>Name is :</strong> Harold<br>\n<strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
                                 '',
@@ -94,9 +95,10 @@ exports.execute = function (options) {
                                 '',  // This value is set later by setLinkRID()
                                 '',
                                 expectedMomentValue,
-                                '<p>/*::facets::N4IghgdgJiBcAEBteoDOB7ArgJwMYFM54QBLGAGmNwAt0SDUjEAWABlYEYBdeAX3h68gA</p>\n'
+                                '<p>/*::facets::N4IghgdgJiBcAEBteoDOB7ArgJwMYFM54QBLGAGmNwAt0SDUjEAWABlYEYBdeAX3h68gA</p>\n',
+                                '<p><span class="chaise-color-preview" background-color="#0000FF"> </span> #0000FF</p>\n'
                             ],
-                "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true, true, false, true, true]
+                "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true, true, false, true, true, true]
                 },
             "test3": {
                 "rowValue" : ["id=4002, url= https://www.google.com, video_col= http://techslides.com/demos/sample-videos/small.mp4"],
@@ -116,9 +118,10 @@ exports.execute = function (options) {
                                 '', // This value is set later by setLinkRID()
                                 '',
                                 expectedMomentValue,
-                                '<p>/*::facets::N4IghgdgJiBcAEBteoDOB7ArgJwMYFM54QBLGAGmNwAt0SDUjEAWABlYCYBdeAX3h68gA</p>\n'
+                                '<p>/*::facets::N4IghgdgJiBcAEBteoDOB7ArgJwMYFM54QBLGAGmNwAt0SDUjEAWABlYCYBdeAX3h68gA</p>\n',
+                                '<p><span class="chaise-color-preview" background-color="#FF3411"> </span> #FF3411</p>\n'
                                 ],
-                "isHTML" : [false, false, false, true, true, true, false, true, false, true, false, true, true, false, true, true]
+                "isHTML" : [false, false, false, true, true, true, false, true, false, true, false, true, true, false, true, true, true]
                 },
             "test4": {
                 "rowValue" : ["id=4003 ,some_invisible_column= Freshmen"],
@@ -138,9 +141,10 @@ exports.execute = function (options) {
                                 '', // This value is set later by setLinkRID()
                                 '',
                                 expectedMomentValue,
-                                '<p>/*::facets::N4IghgdgJiBcAEBteoDOB7ArgJwMYFM54QBLGAGmNwAt0SDUjEAWABlYGYBdeAX3h68gA</p>\n'
+                                '<p>/*::facets::N4IghgdgJiBcAEBteoDOB7ArgJwMYFM54QBLGAGmNwAt0SDUjEAWABlYGYBdeAX3h68gA</p>\n',
+                                ''
                                 ],
-                "isHTML" : [false, false, false, true, true, true, false, true, false, true, true, true, true, false, true, true]
+                "isHTML" : [false, false, false, true, true, true, false, true, false, true, true, true, true, false, true, true, false]
                 },
             "test5": {
                 "rowValue" :  ["id=4004, name= weird & HTML < "],
@@ -151,7 +155,7 @@ exports.execute = function (options) {
                                 '<p><img src="http://example.com/4004.png" alt="image" class="-chaise-post-load"></p>\n',
                                 '<p><img src="/4004.png" alt="image with size" width="400" height="400" class="-chaise-post-load"></p>\n',
                                 '<p><a href="" download="">download link</a></p>\n',
-                                '<figure class="embed-block -chaise-post-load" style=""><figcaption class="embed-caption" style="">weird &amp; HTML &lt;  caption</figcaption><iframe src="http://example.com/iframe" width="300" ></iframe></figure>',
+                                '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 300px;"><figcaption class="embed-caption">weird &amp; HTML &lt;  caption</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="http://example.com/iframe"><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div></div><iframe src="http://example.com/iframe" width="300"></iframe></figure>',
                                 '<p><strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
                                 '<p><strong>Name is :</strong> weird &amp; HTML &lt;<br>\n<strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
                                 '',
@@ -160,9 +164,10 @@ exports.execute = function (options) {
                                 '', // This value is set later by setLinkRID()
                                 '',
                                 expectedMomentValue,
-                                '<p>/*::facets::N4IghgdgJiBcAEBteoDOB7ArgJwMYFM54QBLGAGmNwAt0SDUjEAWABleYF14BfebnkA</p>\n'
+                                '<p>/*::facets::N4IghgdgJiBcAEBteoDOB7ArgJwMYFM54QBLGAGmNwAt0SDUjEAWABleYF14BfebnkA</p>\n',
+                                ''
                                 ],
-                "isHTML" : [false, true, true, true, true, true, true, true, true, true, false, true, true, false, true, true]
+                "isHTML" : [false, true, true, true, true, true, true, true, true, true, false, true, true, false, true, true, false]
                 },
             "test6": {
                 "rowValue" : ["id=4005, name= <a href='javascript:alert();'></a>, some_invisible_column= Senior"],
@@ -173,7 +178,7 @@ exports.execute = function (options) {
                                 '<p><img src="http://example.com/4005.png" alt="image" class="-chaise-post-load"></p>\n',
                                 '<p><img src="/4005.png" alt="image with size" width="400" height="400" class="-chaise-post-load"></p>\n',
                                 '<p><a href="" download="">download link</a></p>\n',
-                                '<figure class="embed-block -chaise-post-load" style=""><figcaption class="embed-caption" style="">&lt;a href=‘javascript:alert();’&gt;&lt;/a&gt; caption</figcaption><iframe src="http://example.com/iframe" width="300" ></iframe></figure>',
+                                '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 300px;"><figcaption class="embed-caption">&lt;a href=‘javascript:alert();’&gt;&lt;/a&gt; caption</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="http://example.com/iframe"><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div></div><iframe src="http://example.com/iframe" width="300"></iframe></figure>',
                                 '<p><strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
                                 '<p><strong>Name is :</strong> &lt;a href=\'javascript:alert();\'&gt;&lt;/a&gt;<br>\n<strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
                                 '',
@@ -182,9 +187,10 @@ exports.execute = function (options) {
                                 '', // This value is set later by setLinkRID()
                                 '',
                                 expectedMomentValue,
-                                '<p>/*::facets::N4IghgdgJiBcAEBteoDOB7ArgJwMYFM54QBLGAGmNwAt0SDUjEAWABlYFYBdeAX3h68gA</p>\n'
+                                '<p>/*::facets::N4IghgdgJiBcAEBteoDOB7ArgJwMYFM54QBLGAGmNwAt0SDUjEAWABlYFYBdeAX3h68gA</p>\n',
+                                ''
                                 ],
-                "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true, true, false, true, true]
+                "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true, true, false, true, true, false]
                 },
             "test7": {
                 "rowValue" : ["id=4006, name= <script>alert();</script>, some_gene_sequence= GATCGATCGCGTATT, some_invisible_column= Sophomore"],
@@ -195,7 +201,7 @@ exports.execute = function (options) {
                                 '<p><img src="http://example.com/4006.png" alt="image" class="-chaise-post-load"></p>\n',
                                 '<p><img src="/4006.png" alt="image with size" width="400" height="400" class="-chaise-post-load"></p>\n',
                                 '<p><a href="" download="">download link</a></p>\n',
-                                '<figure class="embed-block -chaise-post-load" style=""><figcaption class="embed-caption" style="">&lt;script&gt;alert();&lt;/script&gt; caption</figcaption><iframe src="http://example.com/iframe" width="300" ></iframe></figure>',
+                                '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 300px;"><figcaption class="embed-caption">&lt;script&gt;alert();&lt;/script&gt; caption</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="http://example.com/iframe"><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div></div><iframe src="http://example.com/iframe" width="300"></iframe></figure>',
                                 '<p><strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
                                 '<p><strong>Name is :</strong> &lt;script&gt;alert();&lt;/script&gt;<br>\n<strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
                                 '<code>GATCGATCGC GTATT</code>',
@@ -204,9 +210,10 @@ exports.execute = function (options) {
                                 '', // This value is set later by setLinkRID()
                                 '',
                                 expectedMomentValue,
-                                '<p>/*::facets::N4IghgdgJiBcAEBteoDOB7ArgJwMYFM54QBLGAGmNwAt0SDUjEAWABlYDYBdeAX3h68gA</p>\n'
+                                '<p>/*::facets::N4IghgdgJiBcAEBteoDOB7ArgJwMYFM54QBLGAGmNwAt0SDUjEAWABlYDYBdeAX3h68gA</p>\n',
+                                ''
                                 ],
-                "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true, true, false, true, true]
+                "isHTML" : [false, true, true, true, true, true, true, true, true, true, true, true, true, false, true, true, false]
             }
         };
 
@@ -317,7 +324,7 @@ exports.execute = function (options) {
                     // get the RID value that was set on options.entities[schema_name][table_name]
                     setLinkRID(key);
 
-                    expect(tuples[tupleIndex].values.length).toBe(16);
+                    expect(tuples[tupleIndex].values.length).toBe(17);
                 });
 
                 var columnNames = [

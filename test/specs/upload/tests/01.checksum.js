@@ -24,7 +24,7 @@ exports.execute = function (options) {
             type: "application/pdf",
             hash: "d54ead2fe9e6e2bf801bb62b3af43b91",
             hash_64: "1U6tL+nm4r+AG7YrOvQ7kQ==",
-            doNotRunInTravis: true
+            doNotRunInCI: true
         }, {
             name: "testfile5MB.txt",
             size: 5242880,
@@ -41,7 +41,7 @@ exports.execute = function (options) {
             hash_64: "SxeHAOXzsVznmfLGwUZXQQ=="
         }];
 
-        if (process.env.TRAVIS) files = files.filter(function(f) { if (!f.doNotRunInTravis) return f; });
+        if (process.env.CI) files = files.filter(function(f) { if (!f.doNotRunInCI) return f; });
 
         var baseUri = options.url + "/catalog/" + process.env.DEFAULT_CATALOG + "/entity/"
             + schemaName + ":" + tableName;

@@ -1,3 +1,23 @@
+    module._ERMrestFeatures = Object.freeze({
+        TABLE_RIGHTS_SUMMARY: "trs",
+        TABLE_COL_RIGHTS_SUMMARY: "tcrs"
+    });
+
+    module._ERMrestACLs = Object.freeze({
+        SELECT: "select",
+        INSERT: "insert",
+        DELETE: "delete",
+        UPDATE: "update",
+        COLUMN_UPDATE: "column_update"
+    });
+
+    module._parserAliases = Object.freeze({
+        MAIN_TABLE: "M",
+        JOIN_TABLE_PREFIX: "T",
+        FOREIGN_KEY_PREFIX: "F",
+        ASSOCIATION_TABLE: "A"
+    });
+
     // for more information on url length limit refer to the following issue:
     // https://github.com/informatics-isi-edu/chaise/issues/1669
     module.URL_PATH_LENGTH_LIMIT = 4000;
@@ -57,6 +77,7 @@
         COMPACT: 'compact',
         COMPACT_BRIEF: 'compact/brief',
         COMPACT_BRIEF_INLINE: 'compact/brief/inline',
+        COMPACT_ENTRY: 'compact/entry', // post create/edit for multiple rows
         COMPACT_SELECT: 'compact/select',
         CREATE: 'entry/create',
         DETAILED: 'detailed',
@@ -78,10 +99,10 @@
         }
     });
 
-    module._contextArray = ["compact", "compact/brief", "compact/select", "entry/create", "detailed", "entry/edit", "entry", "filter", "*", "row_name", "compact/brief/inline"];
+    module._contextArray = ["compact", "compact/brief", "compact/entry", "compact/select", "entry/create", "detailed", "entry/edit", "entry", "filter", "*", "row_name", "compact/brief/inline"];
 
     module._entryContexts = [module._contexts.CREATE, module._contexts.EDIT, module._contexts.ENTRY];
-    module._compactContexts = [module._contexts.COMPACT, module._contexts.COMPACT_BRIEF, module._contexts.COMPACT_BRIEF_INLINE, module._contexts.COMPACT_SELECT];
+    module._compactContexts = [module._contexts.COMPACT, module._contexts.COMPACT_BRIEF, module._contexts.COMPACT_BRIEF_INLINE, module._contexts.COMPACT_SELECT, module._contexts.COMPACT_ENTRY];
 
     module._tableKinds = Object.freeze({
         TABLE: "table",
@@ -101,6 +122,9 @@
     module._nonSortableTypes = [
         "json", "jsonb"
     ];
+
+    // column types that their value should be considered as HTML
+    module._HTMLColumnType = ["markdown", "color_rgb_hex"];
 
     // types we support for our plotly histogram graphs
     module._histogramSupportedTypes = [
@@ -159,7 +183,8 @@
         "blockHelperMissing", "each", "if", "helperMissing", "unless", "with",
         // ermrestJS helpers
         "eq", "ne", "lt", "gt", "lte", "gte", "and", "or", "ifCond",
-        "escape", "encode", "formatDate", "encodeFacet", 'regexMatch',
+        "escape", "encode", "formatDate", "encodeFacet",
+        "regexMatch", "regexFindFirst", "regexFindAll",
         // math helpers
         "add", "subtract"
     ];
@@ -177,23 +202,33 @@
     });
 
     module._errorStatus = Object.freeze({
-        forbidden: "Forbidden",
-        itemNotFound: "Item Not Found",
-        facetingError: "Invalid Facet Filters",
-        customFacetngError: "Invalid Custom Facet Filteres",
-        invalidFilter: "Invalid Filter",
-        invalidInput: "Invalid Input",
-        invalidURI: "Invalid URI",
-        noDataChanged: "No Data Changed",
-        noConnectionError: "No Connection Error",
-        InvalidSortCriteria: "Invalid Sort Criteria",
-        invalidPageCriteria: "Invalid Page Criteria"
+        TIME_OUT: "Request Timeout",
+        BAD_REQUEST: "Bad Request",
+        UNAUTHORIZED: "Unauthorized",
+        FORBIDDEN: "Forbidden",
+        NOT_FOUND: "Item Not Found",
+        CONFLICT: "Conflict",
+        PRECONDITION_FAILED: "Precondition Failed",
+        INTERNAL_SERVER_ERROR: "Internal Server Error",
+        BAD_GATEWAY: "Bad Gateway",
+        SERVIVE_UNAVAILABLE: "Service Unavailable",
+        INVALID_FACET: "Invalid Facet Filters",
+        INVALID_CUSTOM_FACET: "Invalid Custom Facet Filteres",
+        INVALID_FILTER: "Invalid Filter",
+        INVALID_INPUT: "Invalid Input",
+        INVALID_URI: "Invalid URI",
+        NO_DATA_CHANGED: "No Data Changed",
+        NO_CONNECTION_ERROR: "No Connection Error",
+        INVALID_SORT: "Invalid Sort Criteria",
+        INVALID_PAGE: "Invalid Page Criteria",
+        INVALID_SERVER_RESPONSE: "Invalid Server Response"
     });
 
     module._errorMessage = Object.freeze({
-        facetingError: "Given encoded string for facets is not valid.",
-        customFacetingError: "Given encoded string for cfacets is not valid.",
-        facetOrFilterError: "Given filter or facet is not valid."
+        INVALID_FACET: "Given encoded string for facets is not valid.",
+        INVALID_CUSTOM_FACET: "Given encoded string for cfacets is not valid.",
+        INVALID_FACET_OR_FILTER: "Given filter or facet is not valid.",
+        INTERNAL_SERVER_ERROR: "An unexpected error has occurred. Please report this problem to your system administrators."
     });
 
     module._facetingErrors = Object.freeze({
@@ -246,7 +281,8 @@
         NO_PATH_IN_ENTRY: "pseudo columns with path are not allowed in entry contexts (only single outbound path is allowed).",
         INVALID_SELF_LINK: "given source is not a valid self-link (must be unique not-null).",
         INVALID_COLUMN_DEF: "column definiton must be an array, object, or string.",
-        INVALID_COLUMN_IN_SOURCE_PATH: "end column in the path is not valid (not available in the end table)"
+        INVALID_COLUMN_IN_SOURCE_PATH: "end column in the path is not valid (not available in the end table)",
+        NO_INBOUND_IN_NON_DETAILED: "inline table is not valid in this context."
     });
 
     module._permissionMessages = Object.freeze({
@@ -255,7 +291,9 @@
         TABLE_IMMUTABLE: "Table is immutable.",
         NO_CREATE: "No permissions to create.",
         NO_UPDATE: "No permissions to update.",
-        DISABLED_COLUMNS: "All columns are disabled."
+        DISABLED_COLUMNS: "All columns are disabled.",
+        NO_UPDATE_ROW: "No row-level permission to update.",
+        NO_UPDATE_COLUMN: "No visible column can be updated"
     });
 
     module._defaultColumnComment = Object.freeze({
@@ -264,6 +302,11 @@
         RMB: "Record last modifier",
         RCT: "Record creation timestamp",
         RMT: "Record last modified timestamp"
+    });
+
+    module._commentDisplayModes = Object.freeze({
+        inline: "inline",
+        tooltip: "tooltip"
     });
 
     /**
@@ -288,7 +331,10 @@
         noExternalLinkIcon: "no-external-link-icon",
         assetPermission: "asset-permission",
         download: "download-alt",
-        postLoad: "-chaise-post-load"
+        postLoad: "-chaise-post-load",
+        hideInPrintMode: "hide-in-print",
+        showInPrintMode: "video-info-in-print",
+        colorPreview: "chaise-color-preview"
     });
 
     module._specialSourceDefinitions = Object.freeze({

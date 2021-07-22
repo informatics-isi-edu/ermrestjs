@@ -114,16 +114,16 @@
         try {
             verify(uri, "'uri' must be specified");
             var location;
-
             // make sure all the dependencies are loaded
             module.onload().then(function () {
-            //added try block to make sure it rejects all parse() related error
-            // It should have been taken care by outer try but did not work
-              try{
-                location = module.parse(uri);
-              } catch (error){
-                return defer.reject(error);
-              }
+                //added try block to make sure it rejects all parse() related error
+                // It should have been taken care by outer try but did not work
+                try{
+                    location = module.parse(uri);
+                } catch (error){
+                    return defer.reject(error);
+                }
+
                 var server = module.ermrestFactory.getServer(location.service, contextHeaderParams);
 
                 // find the catalog
@@ -144,12 +144,12 @@
 
     /**
      * @function
-     * @private
      * @memberof ERMrest
      * @param {ERMrest.Location} location - The location object generated from parsing the URI
      * @param {ERMrest.Catalog} catalog - The catalog object. Since location.catalog is just an id, we need the actual catalog object too.
      * @desc
      * Creates a new Reference based on the given parameters. Other parts of API can access this function and it should only be used internally.
+     * @private
      */
     module._createReference = function (location, catalog) {
         return new Reference(location, catalog);
@@ -165,9 +165,9 @@
      *
      * A simple helper method.
      * @memberof ERMrest
-     * @private
      * @function notimplemented
      * @throws {Error} 'not implemented' error
+     * @private
      */
     function notimplemented() {
         throw new Error('not implemented');
@@ -177,11 +177,11 @@
      * Throws an {@link ERMrest.InvalidInputError} if test is
      * not `True`.
      * @memberof ERMrest
-     * @private
      * @function verify
      * @param {boolean} test The test
      * @param {string} message The message
      * @throws {ERMrest.InvalidInputError} If test is not true.
+     * @private
      */
     verify = function(test, message) {
         if (! test) {
@@ -269,6 +269,45 @@
             if (!this._displayname)
                 this._displayname = this._table.displayname;
             return this._displayname;
+        },
+
+        /**
+         * The comment for this reference.
+         *
+         * @type {String}
+         */
+        get comment () {
+            /* Note that comment is context dependent. For instance,
+             * a reference to an entity set will use the table comment
+             * as the reference comment. However, a 'related' reference
+             * will use the FKR's comment (actually its "to comment" or
+             * "from comment"). Like a Person table might have a FKR to its parent.
+             * In one directoin, the FKR is named "parent" in the other
+             * direction it is named "child".
+             */
+            if (this._comment === undefined)
+                this._comment = this._table.getDisplay(this._context).comment;
+            return this._comment;
+        },
+
+        /**
+         * The comment display property for this reference.
+         * can be either "tooltip" or "inline"
+         *
+         * @type {String}
+         */
+        get commentDisplay () {
+            /* Note that commentDisplay is context dependent. However, a 'related'
+             * reference will use the FKR's commentDisplay (actually its "to comment display" or
+             * "from comment display"). Like a Person table might have a FKR to its parent.
+             * In one directoin, the FKR is named "parent" in the other
+             * direction it is named "child".
+             */
+            if (this._commentDisplay === undefined)
+                // default value is tooltip
+                // NOTE: This is used as part of the conditional check before showing a comment, so getDisplay needs to also be called here
+                this._commentDisplay = this._table.getDisplay(this._context).tableCommentDisplay;
+            return this._commentDisplay;
         },
 
         /**
@@ -503,6 +542,13 @@
                 var j, facetLen = facetObjectWrappers.length, andFilterObject;
                 for (var i = 0; i < andFilters.length; i++) {
                     if (andFilters[i].sourcekey === module._specialSourceDefinitions.SEARCH_BOX) continue;
+                    if (typeof andFilters[i].sourcekey === "string") {
+                        var urlSourceDef = self.table.sourceDefinitions.sources[andFilters[i].sourcekey];
+                        if (!urlSourceDef) continue;
+
+                        // copy the elements that are defined in the source def but not the one already defined
+                        module._shallowCopyExtras(andFilters[i], urlSourceDef.sourceObject, module._sourceDefinitionAttributes);
+                    }
                     if (!andFilters[i].source) continue;
                     if (andFilters[i].hidden) {
                         newFilters.push(andFilters[i]);
@@ -515,7 +561,7 @@
                         // TODO refactor: could be part of parser?
                         andFilterObject = new SourceObjectWrapper(andFilters[i], self.table, module._constraintNames, true);
                     } catch (exp) {
-                        throw new module.InvalidFilterOperatorError(module._errorMessage.facetOrFilterError, self.location.path, '');
+                        throw new module.InvalidFilterOperatorError(module._errorMessage.INVALID_FACET_OR_FILTER, self.location.path, '');
                     }
 
                     // find the facet corresponding to the filter
@@ -719,9 +765,10 @@
 
         /**
          * Indicates whether the client has the permission to _create_
-         * the referenced resource(s). In some cases, this permission cannot
-         * be determined and the value will be `undefined`.
-         * @type {(boolean|undefined)}
+         * the referenced resource(s). Reporting a `true` value DOES NOT
+         * guarantee the user right since some policies may be undecidable until
+         * query execution.
+         * @type {boolean}
          */
         get canCreate() {
             if (this._canCreate === undefined) {
@@ -739,7 +786,7 @@
                 } else if (ref._table._isGenerated) {
                     this._canCreate = false;
                     this._canCreateReason = pm.TABLE_GENERATED;
-                } else if (!ref._checkPermissions("insert")) {
+                } else if (!ref.checkPermissions(module._ERMrestACLs.INSERT)) {
                     this._canCreate = false;
                     this._canCreateReason = pm.NO_CREATE;
                 } else {
@@ -748,7 +795,7 @@
 
                 if (this._canCreate === true) {
                     var allColumnsDisabled = ref.columns.every(function (col) {
-                        return (col.getInputDisabled(module._contexts.CREATE) !== false);
+                        return col.inputDisabled !== false;
                     });
 
                     if (allColumnsDisabled) {
@@ -761,10 +808,9 @@
         },
 
         /**
-         * Indicates the reason as to why a user cannot create for
-         * the referenced resource(s). In some cases, this won't be set
-         * because the user can create, so the value will be `undefined`.
-         * @type {(String|undefined)}
+         * Indicates the reason as to why a user cannot create the
+         * referenced resource(s).
+         * @type {String}
          */
         get canCreateReason() {
             if (this._canCreateReason === undefined) {
@@ -776,22 +822,24 @@
 
         /**
          * Indicates whether the client has the permission to _read_
-         * the referenced resource(s). In some cases, this permission cannot
-         * be determined and the value will be `undefined`.
-         * @type {(boolean|undefined)}
+         * the referenced resource(s). Reporting a `true` value DOES NOT
+         * guarantee the user right since some policies may be undecidable until
+         * query execution.
+         * @type {boolean}
          */
         get canRead() {
             if (this._canRead === undefined) {
-                this._canRead = this._checkPermissions("select");
+                this._canRead = this.checkPermissions(module._ERMrestACLs.SELECT);
             }
             return this._canRead;
         },
 
         /**
          * Indicates whether the client has the permission to _update_
-         * the referenced resource(s). In some cases, this permission cannot
-         * be determined and the value will be `undefined`.
-         * @type {(boolean|undefined)}
+         * the referenced resource(s). Reporting a `true` value DOES NOT
+         * guarantee the user right since some policies may be undecidable until
+         * query execution.
+         * @type {boolean}
          */
         get canUpdate() {
 
@@ -813,7 +861,7 @@
                 } else if (ref._table._isImmutable) {
                     this._canUpdate = false;
                     this._canUpdateReason = pm.TABLE_IMMUTABLE;
-                } else if (!ref._checkPermissions("update")) {
+                } else if (!ref.checkPermissions(module._ERMrestACLs.UPDATE)) {
                     this._canUpdate = false;
                     this._canUpdateReason = pm.NO_UPDATE;
                 } else {
@@ -822,7 +870,7 @@
 
                 if (this._canUpdate) {
                     var allColumnsDisabled = ref.columns.every(function (col) {
-                        return (col.getInputDisabled(module._contexts.EDIT) !== false);
+                        return col.inputDisabled !== false;
                     });
 
                     if (allColumnsDisabled) {
@@ -835,10 +883,9 @@
         },
 
         /**
-         * Indicates the reason as to why a user cannot update for
-         * the referenced resource(s). In some cases, this won't be set
-         * because the user can update, so the value will be `undefined`.
-         * @type {(String|undefined)}
+         * Indicates the reason as to why a user cannot update the
+         * referenced resource(s).
+         * @type {String}
          */
         get canUpdateReason() {
             if (this._canUpdateReason === undefined) {
@@ -850,9 +897,10 @@
 
         /**
          * Indicates whether the client has the permission to _delete_
-         * the referenced resource(s). In some cases, this permission cannot
-         * be determined and the value will be `undefined`.
-         * @type {(boolean|undefined)}
+         * the referenced resource(s). Reporting a `true` value DOES NOT
+         * guarantee the user right since some policies may be undecidable until
+         * query execution.
+         * @type {boolean}
          */
         get canDelete() {
 
@@ -860,9 +908,48 @@
             // 1) table is not non-deletable
             // 2) user has write permission
             if (this._canDelete === undefined) {
-                this._canDelete = this._table.kind !== module._tableKinds.VIEW && !this._table._isNonDeletable && this._checkPermissions("delete");
+                this._canDelete = this._table.kind !== module._tableKinds.VIEW && !this._table._isNonDeletable && this.checkPermissions(module._ERMrestACLs.DELETE);
             }
             return this._canDelete;
+        },
+
+
+        /**
+         *  Returns true if
+         *   - ermrest supports trs, and
+         *   - table has dynamic acls, and
+         *   - table has RID column, and
+         *   - table is not marked non-deletable non-updatable by annotation
+         * @type {Boolean}
+         */
+        get canUseTRS() {
+            if (this._canUseTRS === undefined) {
+                var rightKey = module._ERMrestFeatures.TABLE_RIGHTS_SUMMARY;
+                this._canUseTRS = (this.table.schema.catalog.features[rightKey] === true) && 
+                                  (this.table.rights[module._ERMrestACLs.UPDATE] == null || this.table.rights[module._ERMrestACLs.DELETE] == null) && 
+                                  this.table.columns.has("RID") && 
+                                  (this.canUpdate || this.canDelete);
+            }
+            return this._canUseTRS;
+        },
+
+        /**
+         *  Returns true if
+         *   - ermrest supports tcrs, and
+         *   - table has dynamic acls, and
+         *   - table has RID column, and
+         *   - table is not marked non-updatable by annotation
+         * @type {Boolean}
+         */
+        get canUseTCRS() {
+            if (this._canUseTCRS === undefined) {
+                var rightKey = module._ERMrestFeatures.TABLE_COL_RIGHTS_SUMMARY;
+                this._canUseTCRS = (this.table.schema.catalog.features[rightKey] === true) && 
+                                  this.table.rights[module._ERMrestACLs.UPDATE] == null && 
+                                  this.table.columns.has("RID") && 
+                                  this.canUpdate;
+            }
+            return this._canUseTCRS;
         },
 
         /**
@@ -871,7 +958,7 @@
          * @memberof ERMrest
          * @private
          */
-         _checkPermissions: function (permission) {
+         checkPermissions: function (permission) {
             // Return true if permission is null
             if (this._table.rights[permission] === null) return true;
             return this._table.rights[permission];
@@ -950,13 +1037,15 @@
                     }
 
                     var ref = new Reference(module.parse(uri), self._table.schema.catalog);
+                    ref = (response.data.length > 1 ? ref.contextualize.compactEntry : ref.contextualize.compact);
                     //  make a page of tuples of the results (unless error)
-                    var page = new Page(ref.contextualize.compact, etag, response.data, false, false);
+                    var page = new Page(ref, etag, response.data, false, false);
 
                     //  resolve the promise, passing back the page
                     return defer.resolve({
                       "successful": page,
-                      "failed": null
+                      "failed": null,
+                      "disabled": null
                     });
                 }).catch(function (error) {
                     return defer.reject(module.responseToError(error, self));
@@ -1048,6 +1137,10 @@
          * If there's a @before in url and the number of results is less than the
          * given limit, we will remove the @before and run the read again. Setting
          * dontCorrectPage to true, will not do this extra check.
+         * @param {Boolean} getTRS whether we should fetch the table-level row acls (if table supports it)
+         * @param {Boolean} getTCRS whether we should fetch the table-level and column-level row acls (if table supports it)
+         * @param {Boolean} getUnlinkTRS whether we should fetch the acls of association
+         *                  table. Use this only if the association is based on facet syntax
          *
          * NOTE setting useEntity to true, will ignore any sort that is based on
          * pseduo-columns.
@@ -1061,7 +1154,7 @@
          * - {@link ERMrest.NotFoundError}: If asks for sorting based on columns that are not valid.
          * - ERMrestjs corresponding http errors, if ERMrest returns http error.
          */
-        read: function(limit, contextHeaderParams, useEntity, dontCorrectPage) {
+        read: function(limit, contextHeaderParams, useEntity, dontCorrectPage, getTRS, getTCRS, getUnlinkTRS) {
             var defer = module._q.defer(), self = this;
 
             try {
@@ -1078,7 +1171,7 @@
                 verify(limit > 0, "'limit' must be greater than 0");
 
                 var uri = [this._location.service, "catalog", this._location.catalog].join("/");
-                var readPath = this._getReadPath(useEntity);
+                var readPath = this._getReadPath(useEntity, getTRS, getTCRS, getUnlinkTRS);
                 if (readPath.isAttributeGroup) {
                     uri += "/attributegroup/" + readPath.value;
                 } else {
@@ -1099,6 +1192,10 @@
                     headers: this._generateContextHeader(contextHeaderParams, limit)
                 };
                 this._server.http.get(uri, config).then(function (response) {
+                    if (!Array.isArray(response.data)) {
+                        throw new InvalidServerResponse(uri, response.data, action);                    
+                    }
+
                     var etag = response.headers().etag;
 
                     var hasPrevious, hasNext = false;
@@ -1201,15 +1298,28 @@
          * tuple.data has the new data
          * tuple._oldData has the data before changes were made
          * @param {Object} contextHeaderParams the object that we want to log.
-         * @returns {Promise} A promise resolved with a object containing `successful` and `failure` attributes.
-         * Both are {@link ERMrest.Page} of results.
+         * @returns {Promise} A promise resolved with a object containing:
+         *  -  `successful`: {@link ERMrest.Page} of results that were stored.
+         *  -  `failed`: {@link ERMrest.Page} of results that failed to be stored.
+         *  -  `disabled`: {@link ERMrest.Page} of results that were not sent to ermrest (because of acl)
          * or rejected with any of these errors:
          * - {@link ERMrest.InvalidInputError}: If `limit` is invalid or reference is not in `entry/edit` context.
          * - ERMrestjs corresponding http errors, if ERMrest returns http error.
          */
         update: function(tuples, contextHeaderParams) {
             try {
-                verify(tuples, "'tuples' must be specified");
+                verify(Array.isArray(tuples), "'tuples' must be specified");
+
+                // store the ones that cannot be updated and filter them out
+                // from the tuples list that we use to generate the update request
+                var disabledPageData = [];
+                tuples = tuples.filter(function (t) {
+                    if (!t.canUpdate) {
+                        disabledPageData.push(t.data);
+                    }
+                    return t.canUpdate;
+                });
+
                 verify(tuples.length > 0, "'tuples' must have at least one row to update");
                 verify(this._context === module._contexts.EDIT, "reference must be in 'entry/edit' context.");
 
@@ -1267,6 +1377,7 @@
                 // loop through each tuple and the visible columns list for each to determine what columns to add to the projection set
                 // If a column is changed in one tuple but not another, that column's value for every tuple needs to be present in the submission data
                 for (i = 0; i < tuples.length; i++) {
+
                     newData = tuples[i].data;
                     oldData = tuples[i]._oldData;
 
@@ -1284,28 +1395,43 @@
                             continue;
                         }
 
+                        // if column cannot be updated, no need to add the column to the projection list
+                        if (!tuples[i].canUpdateValues[m]) {
+                            continue;
+                        }
+
                         // If columns is a pusedo column
                         if (column.isPseudo) {
                             // If a column is an asset column then set values for
                             // dependent properties like filename, bytes_count_column, md5 and sha
                             if (column.isAsset) {
+                                var isNull = newData[column.name] === null ? true : false;
+
                                 // If column has a filename column then add it to the projections
                                 if (column.filenameColumn) {
+                                    // If asset url is null then set filename also null
+                                    if (isNull) newData[column.filenameColumn.name] = null;
                                     addProjection(column.filenameColumn.name);
                                 }
 
                                 // If column has a bytecount column thenadd it to the projections
                                 if (column.byteCountColumn) {
+                                    // If asset url is null then set filename also null
+                                    if (isNull) newData[column.byteCountColumn.name] = null;
                                     addProjection(column.byteCountColumn.name);
                                 }
 
                                 // If column has a md5 column then add it to the projections
                                 if (column.md5 && typeof column.md5 === 'object') {
+                                    // If asset url is null then set filename also null
+                                    if (isNull) newData[column.md5.name] = null;
                                     addProjection(column.md5.name);
                                 }
 
                                 // If column has a sha256 column then add it to the projections
                                 if (column.sha256 && typeof column.sha256 === 'object') {
+                                    // If asset url is null then set filename also null
+                                    if (isNull) newData[column.sha256.name] = null;
                                     addProjection(column.sha256.name);
                                 }
 
@@ -1356,39 +1482,40 @@
                     for (m = 0; m < this.columns.length; m++) {
                         column = this.columns[m];
 
+                        // if the column is disabled (generated or immutable), skip it
+                        if (column.inputDisabled) {
+                            continue;
+                        }
+
+                        // if column cannot be updated for this tuple, skip it
+                        if (!tuples[i].canUpdateValues[m]) {
+                            continue;
+                        }
+
                         // If columns is a pusedo column
                         if (column.isPseudo) {
                             // If a column is an asset column then set values for
                             // dependent properties like filename, bytes_count_column, md5 and sha
                             if (column.isAsset) {
-                                var isNull = newData[column.name] === null ? true : false;
                                 /* Populate all values in row depending on column from current asset */
 
                                 // If column has a filename column then populate its value
                                 if (column.filenameColumn) {
-                                    // If asset url is null then set filename also null
-                                    if (isNull) newData[column.filenameColumn.name] = null;
                                     addSubmissionData(i, column.filenameColumn.name);
                                 }
 
                                 // If column has a bytecount column then populate its value
                                 if (column.byteCountColumn) {
-                                    // If asset url is null then set filename also null
-                                    if (isNull) newData[column.byteCountColumn.name] = null;
                                     addSubmissionData(i, column.byteCountColumn.name);
                                 }
 
                                 // If column has a md5 column then populate its value
                                 if (column.md5 && typeof column.md5 === 'object') {
-                                    // If asset url is null then set filename also null
-                                    if (isNull) newData[column.md5.name] = null;
                                     addSubmissionData(i, column.md5.name);
                                 }
 
                                 // If column has a sha256 column then populate its value
                                 if (column.sha256 && typeof column.sha256 === 'object') {
-                                    // If asset url is null then set filename also null
-                                    if (isNull) newData[column.sha256.name] = null;
                                     addSubmissionData(i, column.sha256.name);
                                 }
 
@@ -1534,22 +1661,23 @@
                     // NOTE: ermrest returns only some of the column data.
                     // make sure that pageData has all the submitted and updated data
                     for (i = 0; i < tuples.length; i++) {
-                        for (j in tuples[i].data) {
-                            if (!tuples[i].data.hasOwnProperty(j)) continue;
+                        for (j in tuples[i]._oldData) {
+                            if (!tuples[i]._oldData.hasOwnProperty(j)) continue;
                             if (j in pageData[i]) continue; // pageData already has this data
-                            pageData[i][j] =tuples[i].data[j]; // add the missing data
+                            pageData[i][j] =tuples[i]._oldData[j]; // add the missing data
                         }
                     }
 
-                    var ref = new Reference(module.parse(uri), self._table.schema.catalog).contextualize.compact;
+                    var ref = new Reference(module.parse(uri), self._table.schema.catalog).contextualize.compactEntry;
+                    ref = (response.data.length > 1 ? ref.contextualize.compactEntry : ref.contextualize.compact);
                     var successfulPage = new Page(ref, etag, pageData, false, false);
-                    var failedPage = null;
+                    var failedPage = null, disabledPage = null;
 
 
                     // if the returned page is smaller than the initial page,
                     // then some of the columns failed to update.
                     if (tuples.length > successfulPage.tuples.length) {
-                        var unchangedPageData = [], keyMatch, rowMatch;
+                        var failedPageData = [], keyMatch, rowMatch;
 
                         for (i = 0; i < tuples.length; i++) {
                             rowMatch = false;
@@ -1575,15 +1703,20 @@
 
                             if (!rowMatch) {
                                 // didn't find a match, so add as failed
-                                unchangedPageData.push(tuples[i].data);
+                                failedPageData.push(tuples[i].data);
                             }
                         }
-                        failedPage = new Page(ref, etag, unchangedPageData, false, false);
+                        failedPage = new Page(ref, etag, failedPageData, false, false);
+                    }
+
+                    if (disabledPageData.length > 0) {
+                        disabledPage = new Page(ref, etag, disabledPageData, false, false);
                     }
 
                     defer.resolve({
                         "successful": successfulPage,
-                        "failed": failedPage
+                        "failed": failedPage,
+                        "disabled": disabledPage
                     });
                 }).catch(function (error) {
                     return defer.reject(module.responseToError(error, self));
@@ -2207,7 +2340,7 @@
                  }
 
                  self._defaultExportTemplate = {
-                     displayname: "BAG",
+                     displayname: "BDBag",
                      type: "BAG",
                      outputs: outputs
                  };
@@ -2528,9 +2661,6 @@
 
             var self = this;
 
-            // check if we should hide some columns or not.
-            // NOTE: if the reference is actually an inbound related reference, we should hide the foreign key that created this link.
-            var hasOrigFKR = typeof this.origFKR != "undefined" && this.origFKR !== null && !this.origFKR._table.isPureBinaryAssociation;
 
             var columns = -1,
                 consideredColumns = {}, // to avoid duplicate pseudo columns
@@ -2539,6 +2669,7 @@
                 compositeFKs = [], // to add composite keys at the end of the list
                 assetColumns = [], // columns that have asset annotation
                 hiddenFKR = this.origFKR,
+                hasOrigFKR,
                 refTable = this._table,
                 invalid,
                 colAdded,
@@ -2547,23 +2678,26 @@
                 pseudoNameObj, pseudoName, isHash,
                 hasInbound, isEntity, hasPath, isEntityMode,
                 isEntry,
+                isCompactEntry,
                 colFks,
                 ignore, cols, col, fk, i, j;
 
             var context = this._context;
             isEntry = module._isEntryContext(context);
+            isCompactEntry = (typeof context === "string" && context.startsWith(module._contexts.COMPACT_ENTRY));
+
+            // check if we should hide some columns or not.
+            // NOTE: if the reference is actually an inbound related reference, we should hide the foreign key that created this link.
+            hasOrigFKR = typeof context === "string" && context.startsWith(module._contexts.COMPACT_BRIEF) && isObjectAndNotNull(hiddenFKR);
 
             // should hide the origFKR in case of inbound foreignKey (only in compact/brief)
             var hideFKR = function (fkr) {
-                return typeof context === "string" && context.startsWith(module._contexts.COMPACT_BRIEF) && hasOrigFKR && fkr == hiddenFKR;
-            };
-            var hideFKRByName = function (hash) {
-                return typeof context === "string" && context.startsWith(module._contexts.COMPACT_BRIEF) && hasOrigFKR && hash.name == hiddenFKR.name;
+                return hasOrigFKR && fkr == hiddenFKR;
             };
 
             // should hide the columns that are part of origFKR. (only in compact/brief)
             var hideColumn = function (col) {
-                return typeof context === "string" && context.startsWith(module._contexts.COMPACT_BRIEF) && hasOrigFKR && hiddenFKR.colset.columns.indexOf(col) != -1;
+                return hasOrigFKR && hiddenFKR.colset.columns.indexOf(col) != -1;
             };
 
             // this function will take care of adding column and asset column
@@ -2633,12 +2767,11 @@
                                         }
                                         // inbound foreignkey
                                         else if (fk.key.table == this._table && !isEntry) {
-                                            var relatedRef = this._generateRelatedReference(fk, tuple, true);
                                             // this is inbound foreignkey, so the name must change.
                                             fkName = _generateForeignKeyName(fk, true);
-                                            if (!(fkName in consideredColumns) && !nameExistsInTable(fkName, col)) {
+                                            if (!logCol(fkName in consideredColumns, wm.DUPLICATE_FK, i) && !logCol(context !== module._contexts.DETAILED && context !== module._contexts.EXPORT, wm.NO_INBOUND_IN_NON_DETAILED, i) && !nameExistsInTable(fkName, col)) {
                                                 consideredColumns[fkName] = true;
-                                                this._referenceColumns.push(new InboundForeignKeyPseudoColumn(this, relatedRef, null, fkName));
+                                                this._referenceColumns.push(new InboundForeignKeyPseudoColumn(this, this._generateRelatedReference(fk, tuple, true), null, fkName));
                                             }
                                         } else {
                                             logCol(true, wm.FK_NOT_RELATED, i);
@@ -2717,7 +2850,7 @@
                         // 3. invalid self_link (must be not-null and part of a simple key)
                         // 4. invalid aggregate function
                         ignore = logCol((wrapper.name in consideredColumns), wm.DUPLICATE_PC, i) ||
-                                 hideFKRByName(wrapper.name) ||
+                                 (wrapper.hasPath && !wrapper.hasInbound && wrapper.foreignKeyPathLength == 1 && hideFKR(wrapper.firstForeignKeyNode.nodeObject)) ||
                                  (!wrapper.hasPath && hideColumn(wrapper.column)) ||
                                  logCol(wrapper.sourceObject.self_link === true && !wrapper.column.isUniqueNotNull, wm.INVALID_SELF_LINK, i) ||
                                  logCol((!wrapper.hasAggregate && wrapper.hasInbound && !wrapper.isEntityMode), wm.MULTI_SCALAR_NEED_AGG, i) ||
@@ -2747,8 +2880,15 @@
                                 }
                             }
 
+                            // 2 conditions:
+                            // isEntry && (refCol.isPathColumn || refCol.isInboundForeignKey || refCol.isKey)
+                            // OR
+                            // isCompactEntry && (refCol.hasWaitFor || refCol.hasAggregate || (refCol.isPathColumn && refCol.foreignKeyPathLength > 1)
+                            var removePseudo = (isEntry && (refCol.isPathColumn || refCol.isInboundForeignKey || refCol.isKey) ) ||
+                                    (isCompactEntry && (refCol.hasWaitFor || refCol.hasAggregate || (refCol.isPathColumn && refCol.foreignKeyPathLength > 1)) );
+
                             // in entry mode, pseudo-column, inbound fk, and key are not allowed
-                            if (!(isEntry && (refCol.isPathColumn || refCol.isInboundForeignKey || refCol.isKey) )) {
+                            if (!removePseudo) {
                                 this._referenceColumns.push(refCol);
                             }
                         }
@@ -3120,7 +3260,7 @@
                 }
 
                 col.waitFor.forEach(function (wf) {
-                    addColToActiveList(wf, true, COLUMN_TYPE, i);
+                    addColToActiveList(wf, true, (isInline(col) ? INLINE_TYPE : COLUMN_TYPE), i);
                 });
             };
 
@@ -3237,15 +3377,15 @@
          *          2.3.2 if tuple was given, it will use the value of shortestKey to create the facet
          *
          *
-         * @private
          * @param  {ERMrest.ForeignKeyRef} fkr the relationship between these two reference (this fkr must be from another table to the current table)
          * @param  {ERMrest.Tuple=} tuple the current tuple
          * @param  {boolean} checkForAlternative if it's true, checks p&b association too.
          * @param  {Object=} sourceObject The object that defines the fkr
          * @return {ERMrest.Reference}  a reference which is related to current reference with the given fkr
+         * @private
          */
         _generateRelatedReference: function (fkr, tuple, checkForAssociation, sourceObjectWrapper) {
-            var i, j, sn, col, uri, filterSource = [], dataSource = [];
+            var i, j, sn, col, uri, filterSource = [], dataSource = [], obj;
 
             var useFaceting = isObjectAndNotNull(tuple);
 
@@ -3283,10 +3423,14 @@
             // the main table
             newRef.mainTable = this.table;
 
+            // comment display defaults to "tooltip"
+            newRef._commentDisplay = module._commentDisplayModes.tooltip;
+
             dataSource.push({"inbound": fkr.constraint_names[0]});
 
             var fkrTable = fkr.colset.columns[0].table;
 
+            var display;
             if (checkForAssociation && fkrTable.isPureBinaryAssociation) { // Association Table
 
                 // find the other foreignkey
@@ -3308,6 +3452,22 @@
                     newRef._displayname = otherFK.colset.columns[0].table.displayname;
                 }
 
+                // NOTE: this is for contextualized toComment and toCommentDisplay, to be implemented later
+                // display = otherFK.getDisplay(this._context);
+
+                // comment
+                if (otherFK.to_comment && typeof otherFK.to_comment === "string") {
+                    // use fkr to_comment
+                    newRef._comment = otherFK.to_comment;
+                    newRef._commentDisplay = otherFK.to_comment_display;
+                } else {
+                    // use comment from leaf table diplay annotation or table model comment
+                    display = otherFK.key.colset.columns[0].table.getDisplay(this._context);
+
+                    newRef._comment = display.comment;
+                    newRef._commentDisplay = display.tableCommentDisplay;
+                }
+
                 // uri and location
                 if (!useFaceting) {
                     newRef._location = module.parse(this._location.compactUri + "/" + fkr.toString() + "/" + otherFK.toString(true), catalog);
@@ -3324,8 +3484,8 @@
                 newRef.derivedAssociationReference.origFKR = newRef.origFKR;
                 newRef.derivedAssociationReference._secondFKR = otherFK;
 
-                // build the filter source
-                filterSource.push({"inbound": otherFK.constraint_names[0]});
+                // build the filter source (the alias is used in the read function to get the proper acls)
+                filterSource.push({"inbound": otherFK.constraint_names[0], "alias": module._parserAliases.ASSOCIATION_TABLE});
 
                 // buld the data source
                 dataSource.push({"outbound": otherFK.constraint_names[0]});
@@ -3338,6 +3498,22 @@
                     newRef._displayname = {"isHTML": false, "value": fkr.from_name, "unformatted": fkr.from_name};
                 } else {
                     newRef._displayname = newRef._table.displayname;
+                }
+
+                // NOTE: this is for contextualized toComment and toCommentDisplay, to be implemented later
+                // display = fkr.getDisplay(this._context);
+
+                // comment
+                if (fkr.from_comment && typeof fkr.from_comment === "string") {
+                    // use fkr annotation from_comment
+                    newRef._comment = fkr.from_comment;
+                    newRef._commentDisplay = fkr.from_comment_display;
+                } else {
+                    // use comment from leaf table diplay annotation or table model comment
+                    display = newRef._table.getDisplay(this._context);
+
+                    newRef._comment = display.comment;
+                    newRef._commentDisplay = display.tableCommentDisplay;
                 }
 
                 // uri and location
@@ -3365,6 +3541,14 @@
                 dataSource = dataSource.concat(newRef._table.shortestKey[0].name);
             }
 
+            // if comment|comment_display in source object are defined
+            // comment_display was already set to it's default above
+            if (sourceObject && _isValidModelComment(sourceObject.comment)) {
+                newRef._comment = _processModelComment(sourceObject.comment);
+                // only change commentDisplay if comment and comment_display are both defined
+                if (_isValidModelCommentDisplay(sourceObject.comment_display)) newRef._commentDisplay = sourceObject.comment_display;
+            }
+
             // attach the compressedDataSource
             newRef.compressedDataSource = _compressSource(dataSource);
 
@@ -3372,17 +3556,26 @@
             filterSource.push({"outbound": fkr.constraint_names[0]});
 
             // if the sourceObjectWrapper is passed, filter source is reverse of that.
+            // NOTE the related table might have filters, that's why we have to do this and cannot
+            // just rely on the structure
             if (sourceObjectWrapper) {
                 filterSource = [];
                 for (i = sourceObjectWrapper.sourceObjectNodes.length -1; i >= 0; i--) {
                     sn = sourceObjectWrapper.sourceObjectNodes[i];
                     if (sn.isFilter) {
-                        filterSource.push(sn.nodeObject);
+                        obj = sn.nodeObject;
                     } else if (sn.isForeignKey && sn.isInbound) {
-                        filterSource.push({"outbound": sn.nodeObject.constraint_names[0]});
+                        obj = {"outbound": sn.nodeObject.constraint_names[0]};
                     } else if (sn.isForeignKey && !sn.isInbound){
-                        filterSource.push({"inbound": sn.nodeObject.constraint_names[0]});
+                        obj = {"inbound": sn.nodeObject.constraint_names[0]};
                     }
+
+                    // add the association alias
+                    if (checkForAssociation && !sn.isFilter && fkrTable.isPureBinaryAssociation && sn == sourceObjectWrapper.lastForeignKeyNode) {
+                        obj.alias = module._parserAliases.ASSOCIATION_TABLE;
+                    }
+
+                    filterSource.push(obj);
                 }
             }
 
@@ -3435,9 +3628,16 @@
          *   - isAttributeGroup: whether we should use attributegroup api or not.
          *                       (if the reference doesn't have any fks, we don't need to use attributegroup)
          * NOTE Might throw an error if modifiers are not valid
+         * @param {Boolean} useEntity whether we should use entity api or not (if true, we won't get foreignkey data)
+         * @param {Boolean} getTRS whether we should fetch the table-level row acls (if table supports it)
+         * @param {Boolean} getTCRS whether we should fetch the table-level and column-level row acls (if table supports it)
+         * @param {Boolean} getUnlinkTRS whether we should fetch the acls of association
+         *                  table. Use this only if the association is based on facet syntax
+         * 
+         * TODO we might want to add an option to only do TCRS or TRS without the foreignkeys for later
          * @type {Object}
          */
-         _getReadPath: function(useEntity) {
+         _getReadPath: function(useEntity, getTRS, getTCRS, getUnlinkTRS) {
             var allOutBounds = this.activeList.allOutBounds;
             var findAllOutBoundIndex = function (name) {
                 return allOutBounds.findIndex(function (aob) {
@@ -3446,6 +3646,7 @@
             };
             var hasSort = Array.isArray(this._location.sortObject) && (this._location.sortObject.length !== 0),
                 locationPath = this.location.path,
+                fkAliasPreix = module._parserAliases.FOREIGN_KEY_PREFIX,
                 _modifiedSortObject = [], // the sort object that is used for url creation (if location has sort).
                 sortMap = {}, // maps an alias to PseudoColumn, used for sorting
                 sortObject,  // the sort that will be accessible by this._location.sortObject
@@ -3512,8 +3713,8 @@
 
                             // the column must be part of outbounds, so we don't need to check for it
                             fkIndex = findAllOutBoundIndex(col.name);
-                            colName = "F" + (allOutBounds.length + k++);
-                            sortMap[colName] = ["F" + (fkIndex+1), module._fixedEncodeURIComponent(sortCols[j].column.name)].join(":");
+                            colName = fkAliasPreix + (allOutBounds.length + k++);
+                            sortMap[colName] = [fkAliasPreix + (fkIndex+1), module._fixedEncodeURIComponent(sortCols[j].column.name)].join(":");
                         } else {
                             colName = sortCols[j].column.name;
                             if (colName in sortColNames) {
@@ -3581,20 +3782,32 @@
             this._location.sortObject = sortObject;
 
             var uri = this._location.ermrestCompactPath; // used for the http request
-            var isAttributeGroup = !useEntity && allOutBounds.length > 0;
+
+            var associatonRef = this.derivedAssociationReference;
+            var associationTableAlias = module._parserAliases.ASSOCIATION_TABLE;
+
+            var isAttributeGroup = !useEntity;
+            if (isAttributeGroup) {
+                isAttributeGroup = allOutBounds.length > 0 ||
+                                   (getTCRS && this.canUseTCRS) ||
+                                   ((getTCRS || getTRS) && this.canUseTRS) ||
+                                   (getUnlinkTRS && associatonRef && associatonRef.canUseTRS);
+            }
 
             /** Change api to attributegroup for retrieving extra information
              * These information include:
              * - Values for the foreignkeys.
              * - Value for one-to-one pseudo-columns. These are the columns
              * that their defined path is all in the outbound direction.
+             * - trs or tcrs of main table (if asked for, supported, and needed)
+             * - trs of the associaton table for unlink feature (if asked for, supported, and needed)
              *
              * This will just affect the http request and not this._location
              *
              * NOTE:
              * This piece of code is dependent on the same assumptions as the current parser, which are:
-             *   0. There is no table called `T`, `M`, `F1`, `F2`, ..., `P1`, `P2`, ...
-             *   1. There is no alias in url (more precisely `T`, `M`, `F1`, `F2`, `F3`, `P1`, `P2`, ...)
+             *   0. There is no table called `A`, `T`, `M`, `F1`, `F2`, ...
+             *   1. There is no alias in url (more precisely `tcrs`, `trs`, `A_trs`, `A`, `T`, `M`, `F1`, `F2`, `F3`, ...)
              *   2. Filter comes before the link syntax.
              *   3. There is no trailing `/` in uri (as it will break the ermrest too).
              * */
@@ -3604,14 +3817,16 @@
                     aggList = [],
                     sortColumn,
                     addedCols,
-                    aggFn = "array_d";
+                    aggFn = "array_d",
+                    rightSummFn;
 
                 // generate the projection for given pseudo column
                 var getPseudoPath = function (l) {
                     var pseudoPath = [];
-                    allOutBounds[l].sourceObjectNodes.forEach(function (sn, index, arr) {
+
+                    allOutBounds[l].sourceObjectNodes.forEach(function (f, index, arr) {
                         // NOTE all outbounds cannot have any filter and are just foreignkeys
-                        pseudoPath.push(((index === arr.length-1) ? ("F" + (k+1) + ":=") : "") + sn.toString(false, true));
+                        pseudoPath.push(((index === arr.length-1) ? (fkAliasPreix + (k+1) + ":=") : "") + f.toString(false,true));
                     });
                     return pseudoPath.join("/");
                 };
@@ -3625,7 +3840,24 @@
                     uri += getPseudoPath(k) + "/$" + mainTableAlias + "/";
 
                     // F2:array_d(F2:*),F1:array_d(F1:*)
-                    aggList.push("F" + (k+1) + ":=" + aggFn + "(F" + (k+1) + ":*)");
+                    aggList.push(fkAliasPreix + (k+1) + ":=" + aggFn + "(" + fkAliasPreix + (k+1) + ":*)");
+                }
+
+                // add trs or tcrs for main table
+                if (getTCRS && this.canUseTCRS) {
+                    rightSummFn = module._ERMrestFeatures.TABLE_COL_RIGHTS_SUMMARY;
+                    aggList.push(rightSummFn + ":=" + rightSummFn + "(" + mainTableAlias + ":RID" + ")");
+                }
+                else if ((getTCRS || getTRS) && this.canUseTRS) {
+                    rightSummFn = module._ERMrestFeatures.TABLE_RIGHTS_SUMMARY;
+                    aggList.push(rightSummFn + ":=" + rightSummFn + "(" + mainTableAlias + ":RID" + ")");
+                }
+
+                // add trs for the association table
+                // TODO feels hacky! this is assuming that the alias exists
+                if (getUnlinkTRS && associatonRef && associatonRef.canUseTRS) {
+                    rightSummFn = module._ERMrestFeatures.TABLE_RIGHTS_SUMMARY;
+                    aggList.push(associationTableAlias + "_" + rightSummFn + ":=" + rightSummFn + "(" + associationTableAlias + ":RID" + ")");
                 }
 
                 // add sort columns (it will include the key)
@@ -3650,7 +3882,7 @@
                     }
                 }
 
-                uri += Object.keys(addedCols).join(",") + ";"+mainTableAlias+":=" + aggFn + "("+mainTableAlias+":*)," + aggList.join(",");
+                uri += Object.keys(addedCols).join(",") + ";" + mainTableAlias + ":=" + aggFn + "(" + mainTableAlias + ":*)," + aggList.join(",");
             }
 
             // insert @sort()
@@ -3681,9 +3913,9 @@
     /**
      * This is a private function that makes a copy of a reference object.
      * @memberof ERMrest
-     * @private
      * @param {!ERMrest.Reference} source The source reference to be copied.
      * @returns {ERMrest.Reference} The copy of the reference object.
+     * @private
      */
     function _referenceCopy(source) {
         var referenceCopy = Object.create(Reference.prototype);
@@ -3787,6 +4019,14 @@
          */
         get entryEdit() {
             return this._contextualize(module._contexts.EDIT);
+        },
+
+        /**
+         * The _entry/compact_ context of this reference.
+         * @type {ERMrest.Reference}
+         */
+        get compactEntry() {
+            return this._contextualize(module._contexts.COMPACT_ENTRY);
         },
 
         /**
@@ -4163,7 +4403,7 @@
      * @param {!Object[]} data The data returned from ERMrest.
      * @param {boolean} hasPrevious Whether there is more data before this Page
      * @param {boolean} hasNext Whether there is more data after this Page
-     * @param {!Object} extraData if
+     * @param {!Object} extraData based on pagination, the extra data after/before current page
      *
      */
     function Page(reference, etag, data, hasPrevious, hasNext, extraData) {
@@ -4182,32 +4422,70 @@
          */
         this._linkedData = [];
         this._data = [];
+        this._rightsSummary = [];
+        this._associationRightsSummary = [];
 
-        var allOutBounds = reference.activeList.allOutBounds;
+        var self = this,
+            allOutBounds = reference.activeList.allOutBounds;
 
-        // linkedData will include foreign key data
-        if (allOutBounds.length > 0) {
+        var trs = module._ERMrestFeatures.TABLE_RIGHTS_SUMMARY,
+            tcrs = module._ERMrestFeatures.TABLE_COL_RIGHTS_SUMMARY,
+            associationTableAlias = module._parserAliases.ASSOCIATION_TABLE,
+            fkAliasPreix = module._parserAliases.FOREIGN_KEY_PREFIX;
 
-            var fks = reference._table.foreignKeys.all(), i, j, colFKs;
+        // for the association rights summary
+        var associatonRef = reference.derivedAssociationReference;
+
+        // same logic as _readPath to see if it's attributegroup output
+        var hasLinkedData = allOutBounds.length > 0 ||
+                        reference.canUseTCRS ||
+                        reference.canUseTRS ||
+                        (associatonRef && associatonRef.canUseTRS);
+
+        if (hasLinkedData) {
+            var fks = reference._table.foreignKeys.all(), i, j, colFKs, key;
             var mTableAlias = this._ref.location.mainTableAlias;
 
             try {
                 // the attributegroup output
                 for (i = 0; i < data.length; i++) {
+                    // main data
                     this._data.push(data[i][mTableAlias][0]);
 
+                    // fk data
                     this._linkedData.push({});
                     for (j = allOutBounds.length - 1; j >= 0; j--) {
-                        this._linkedData[i][allOutBounds[j].name] = data[i]["F"+ (j+1)][0];
+                        this._linkedData[i][allOutBounds[j].name] = data[i][fkAliasPreix + (j+1)][0];
+                    }
+
+                    // table rights
+                    if (reference.canUseTCRS || reference.canUseTRS) {
+                        if (tcrs in data[i]) {
+                            this._rightsSummary.push(data[i][tcrs]);
+                        }
+                        else if (trs in data[i]) {
+                            this._rightsSummary.push(data[i][trs]);
+                        }
+                    }
+
+                    // association table rights
+                    if (associatonRef && associatonRef.canUseTRS) {
+                        key = associationTableAlias + "_" + trs;
+                        if (key in data[i]) {
+                            this._associationRightsSummary.push(data[i][key]);
+                        }
                     }
                 }
 
                 //extra data
                 if (hasExtraData) {
+                    // main data
                     this._extraData = extraData[mTableAlias][0];
+
+                    // fk data
                     this._extraLinkedData = {};
                     for (j = allOutBounds.length - 1; j >= 0; j--) {
-                        this._extraLinkedData[allOutBounds[j].name] = extraData["F"+ (j+1)][0];
+                        this._extraLinkedData[allOutBounds[j].name] = extraData[fkAliasPreix + (j+1)][0];
                     }
                 }
 
@@ -4249,6 +4527,9 @@
                     }
                     this._extraLinkedData = tempData;
                 }
+
+                this._rightsSummary = [];
+                this._associationRightsSummary = [];
             }
         }
         // entity output (linkedData is empty)
@@ -4256,6 +4537,7 @@
             this._data = data;
             this._extraData = hasExtraData ? extraData : undefined;
         }
+
 
         this._hasNext = hasNext;
         this._hasPrevious = hasPrevious;
@@ -4289,7 +4571,7 @@
             if (this._tuples === undefined) {
                 this._tuples = [];
                 for (var i = 0; i < this._data.length; i++) {
-                    this._tuples.push(new Tuple(this._ref, this, this._data[i], this._linkedData[i]));
+                    this._tuples.push(new Tuple(this._ref, this, this._data[i], this._linkedData[i], this._rightsSummary[i], this._associationRightsSummary[i]));
                 }
             }
             return this._tuples;
@@ -4369,9 +4651,9 @@
         /**
          * Returns previous or next page
          * Clients should not directly use this. This is used in next and previous getters.
-         * @private
          * @param  {Boolean} next whether we want the next page or previous
          * @return {ERMrest.Reference}
+         * @private
          */
         _getSiblingReference: function(next) {
             var loc = this._ref.location;
@@ -4512,7 +4794,12 @@
                 var url = tuple.reference.contextualize.detailed.appLink;
                 var rowName = module._generateRowName(ref.table, ref._context, tuple._data, tuple._linkedData);
 
-                values.push("* ["+ rowName.unformatted +"](" + url + ") " + ref.display._separator);
+                // don't add link if the rowname already has link
+                if (rowName.value.match(/<a\b.+href=/)) {
+                    values.push("* " + rowName.unformatted + " " + ref.display._separator);
+                } else {
+                    values.push("* ["+ rowName.unformatted +"](" + url + ") " + ref.display._separator);
+                }
             }
             pattern = ref.display._prefix + values.join(" ") + ref.display._suffix;
             return module.renderMarkdown(pattern, false);
@@ -4574,11 +4861,13 @@
      * this data was acquired.
      * @param {!Object} data The unprocessed tuple of data returned from ERMrest.
      */
-    function Tuple(pageReference, page, data, linkedData) {
+    function Tuple(pageReference, page, data, linkedData, rightsSummary, associationRightsSummary) {
         this._pageRef = pageReference;
         this._page = page;
         this._data = data || {};
         this._linkedData = (typeof linkedData === "object") ? linkedData : {};
+        this._rightsSummary = (typeof rightsSummary === "object") ? rightsSummary : {};
+        this._associationRightsSummary = (typeof associationRightsSummary === "object") ? associationRightsSummary : {};
     }
 
     Tuple.prototype = {
@@ -4692,41 +4981,132 @@
             notimplemented();
         },
 
-        /**
-         * Indicates whether the client can update this tuple. Because
-         * some policies may be undecidable until query execution, this
-         * property may also be `undefined`.
-         *
-         * Usage:
-         * ```
-         * if (tuple.canUpdate == true) {
-         *   console.log(tuple.displayname, "can be updated by this client");
-         * }
-         * else if (tuple.canUpdate == false) {
-         *   console.log(tuple.displayname, "cannot be updated by this client");
-         * }
-         * else {
-         *   console.log(tuple.displayname, "update permission cannot be determied");
-         * }
-         * ```
-         * @type {(boolean|undefined)}
-         */
-        get canUpdate() {
-            // catalog/ + id + /meta/content_read_user
-            // content_write_user
-            notimplemented();
+        checkPermissions: function (permission, colName, isAssoc) {
+            var sum = this._rightsSummary[permission];
+            if (isAssoc) {
+                sum = this._associationRightsSummary[permission];
+            }
+
+            if (permission === module._ERMrestACLs.COLUMN_UPDATE) {
+                if (!isObjectAndNotNull(sum) || typeof sum[colName] !== 'boolean') return true;
+                return sum[colName];
+            }
+
+            if (typeof sum !== 'boolean') return true;
+            return sum;
         },
 
         /**
-         * Indicates whether the client can delete this tuple. Because
-         * some policies may be undecidable until query execution, this
-         * property may also be `undefined`.
+         * Indicates whether the client can update this tuple. Reporting a `true`
+         * value DOES NOT guarantee the user right since some policies may be
+         * undecidable until query execution.
          *
-         * See {@link ERMrest.Tuple#canUpdate} for a usage example.
-         * @type {(boolean|undefined)}
+         * Usage:
+         * ```
+         * if (tuple.canUpdate) {
+         *   console.log(tuple.displayname, "may be updated by this client");
+         * }
+         * else {
+         *   console.log(tuple.displayname, "cannot be updated by this client");
+         * }
+         * ```
+         * @type {boolean}
+         */
+        get canUpdate() {
+            if (this._canUpdate === undefined) {
+                var pm = module._permissionMessages, self = this, canUpdateOneCol;
+
+                this._canUpdate = true;
+
+                // make sure table can be updated
+                if (!this._pageRef.canUpdate) {
+                    this._canUpdate = false;
+                    this._canUpdateReason = this._pageRef.canUpdateReason;
+                }
+                // check row level permission
+                else if (!this.checkPermissions(module._ERMrestACLs.UPDATE)) {
+                    this._canUpdate = false;
+                    this._canUpdateReason = pm.NO_UPDATE_ROW;
+                } else {
+                    // make sure at least one column can be updated
+                    // (dynamic acl allows it and also it's not disabled)
+                    canUpdateOneCol = true;
+                    if (this._pageRef._context === module._contexts.EDIT) {
+                        canUpdateOneCol = this.canUpdateValues.some(function (canUpdateValue, i) {
+                            return canUpdateValue && !self._pageRef.columns[i].inputDisabled;
+                        });
+                    } else {
+                        // see if at least one visible column in edit context can be updated
+                        var ref = self._pageRef.contextualize.entryEdit;
+                        if (ref.table == self._pageRef.table) { // make sure not alternative
+                            canUpdateOneCol = ref.columns.some(function (col) {
+                                return !col.inputDisabled && !col._baseCols.some(function (bcol) {
+                                    return !self.checkPermissions(
+                                        module._ERMrestACLs.COLUMN_UPDATE,
+                                        bcol.name
+                                    );
+                                });
+                            });
+                        }
+                    }
+
+                    if (!canUpdateOneCol) {
+                        this._canUpdate = false;
+                        this._canUpdateReason = pm.NO_UPDATE_COLUMN;
+                    }
+                }
+            }
+            return this._canUpdate;
+         },
+
+         /**
+          * Indicates the reason as to why a user cannot update this tuple.
+          * @type {String}
+          */
+         get canUpdateReason () {
+             if (this._canUpdateReason === undefined) {
+                 // will generate the reason
+                 var bool = this._canUpdate;
+             }
+             return this._canUpdateReason;
+
+         },
+
+        /**
+         * Indicates whether the client can delete this tuple. Reporting a `true`
+         * value DOES NOT guarantee the user right since some policies may be
+         * undecidable until query execution.
+         *
+         * Usage:
+         * ```
+         * if (tuple.canDelete) {
+         *   console.log(tuple.displayname, "may be deleted by this client");
+         * }
+         * else {
+         *   console.log(tuple.displayname, "cannot be deleted by this client");
+         * }
+         * ```
+         * @type {boolean}
          */
         get canDelete() {
-            notimplemented();
+            if (this._canDelete === undefined) {
+                // make sure table and row can be deleted
+                this._canDelete = this._pageRef.canDelete && this.checkPermissions(module._ERMrestACLs.DELETE);
+            }
+            return this._canDelete;
+        },
+
+        get canUnlink() {
+            if (this._canUnlink === undefined) {
+                if (!this._pageRef.derivedAssociationReference) {
+                    this._canUnlink = false;
+                } else {
+                    var ref = this._pageRef.derivedAssociationReference;
+                    // make sure association table and row can be deleted
+                    this._canUnlink = ref.canDelete && this.checkPermissions("delete", null, true);
+                }
+            }
+            return this._canUnlink;
         },
 
         /**
@@ -4827,8 +5207,16 @@
 
                 this._values = [];
                 this._isHTML = [];
+                this._canUpdateValues = [];
 
-                var column, presentation;
+                var self = this, column, presentation;
+
+                var checkUpdateColPermission = function (col) {
+                    return !self.checkPermissions(
+                        module._ERMrestACLs.COLUMN_UPDATE,
+                        col.name
+                    );
+                };
 
                 // key value pair of formmated values, to be used in formatPresentation
                 var keyValues = this.templateVariables.values;
@@ -4839,6 +5227,10 @@
                     // Return raw values according to the visibility and sequence of columns
                     for (i = 0; i < this._pageRef.columns.length; i++) {
                         column = this._pageRef.columns[i];
+
+                        // if user cannot update any of the base_columns then the column should be disabled
+                        this._canUpdateValues[i] = !column._baseCols.some(checkUpdateColPermission);
+
                         if (column.isPseudo) {
                             if (column.isForeignKey) {
                                 presentation = column.formatPresentation(this._linkedData[column.name], this._pageRef._context, keyValues);
@@ -4883,8 +5275,6 @@
                         }
                     }
 
-                    var self = this;
-
                     values.forEach(function(fv) {
                         self._values.push(fv.value);
                         self._isHTML.push(fv.isHTML);
@@ -4918,9 +5308,20 @@
         },
 
         /**
+         * currently only populated in entry context
+         */
+        get canUpdateValues () {
+            if (this._canUpdateValues === undefined) {
+                var value = this.values;
+            }
+
+            return this._canUpdateValues;
+        },
+
+        /**
          * The _display name_ of this tuple. For example, if this tuple is a
          * row from a table, then the display name is defined by the
-         * row_markdown_pattern annotation for the _row name_ context
+         * row_markdown_pattern annotation for the _row_name/title_ context
          * or by the heuristics (title, name, id(text), SHORTESTKEY Concatenation using ':')
          *
          * Usage:
@@ -4934,6 +5335,25 @@
                 this._displayname = module._generateRowName(this._pageRef._table, this._pageRef._context, this._data, this._linkedData, true);
             }
             return this._displayname;
+        },
+
+        /**
+         * The row name_ of this tuple. For example, if this tuple is a
+         * row from a table, then the display name is defined by the
+         * row_markdown_pattern annotation for the _row_name_ context
+         * or by the heuristics (title, name, id(text), SHORTESTKEY Concatenation using ':')
+         *
+         * Usage:
+         * ```
+         * console.log("This tuple has a displayable name of ", tuple.displayname.value);
+         * ```
+         * @type {string}
+         */
+        get rowName() {
+            if (this._rowName === undefined) {
+                this._rowName = module._generateRowName(this._pageRef._table, this._pageRef._context, this._data, this._linkedData);
+            }
+            return this._rowName;
         },
 
         /**

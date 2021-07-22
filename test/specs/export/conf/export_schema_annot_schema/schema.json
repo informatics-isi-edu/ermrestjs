@@ -21,7 +21,7 @@
                     "templates": [
                         {
                             "type": "BAG",
-                            "displayname": "BAG",
+                            "displayname": "Customized BDBag",
                             "outputs": [
                                 {
                                     "source": {

@@ -214,7 +214,7 @@
                             // Ermrest never produces HTML errors, so this was produced by the server itself
                             if (response.headers()['content-type'] && response.headers()['content-type'].indexOf("html") > -1) {
                                 response.status = response.statusCode = _http_status_codes.internal_server_error;
-                                response.data = "An unexpected error has occurred. Please report this problem to your system administrators.";
+                                // keep response.data the way it is, so client can provide more info to users
                             } else {
                                 response.status = response.statusCode = _http_status_codes.no_content;
                             }
@@ -248,14 +248,17 @@
                                     // On success set the flag as false and resolve all the authorizationDefers
                                     // So that other calls which failed due to 401 or were trigerred after the 401
                                     // are reexecuted
-                                    module._http401Handler().then(function() {
+                                    // differentUser variable is a boolean variable that states whether the different user logged in after the 401 error was thrown
+                                    module._http401Handler().then(function(differentUser) {
+                                        // if not a different user, continue with retrying previous requests
+                                        // This should handle the case where 'differentUser' is undefined or null as well
+                                        if (!differentUser) {
+                                            _encountered401Error = false;
 
-                                        _encountered401Error = false;
-
-                                        _authorizationDefers.forEach(function(defer) {
-                                            defer.resolve();
-                                        });
-
+                                            _authorizationDefers.forEach(function(defer) {
+                                                defer.resolve();
+                                            });
+                                        }
                                     }, function (response) {
                                         _encountered401Error = false;
                                         deferred.reject(response);
@@ -277,7 +280,7 @@
                             // Ermrest never produces HTML errors, so this was produced by the server itself
                             if (response.headers()['content-type'] && response.headers()['content-type'].indexOf("html") > -1) {
                                 response.status = response.statusCode = _http_status_codes.internal_server_error;
-                                response.data = "An unexpected error has occurred. Please report this problem to your system administrators.";
+                                // keep response.data the way it is, so client can provide more info to users
                             }
 
                             module.onload().then(function() {

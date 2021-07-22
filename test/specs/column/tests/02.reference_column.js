@@ -155,7 +155,7 @@ exports.execute = function (options) {
                     expect(compactColumns[i].isPseudo).toBe(true, "problem with Outbound FKs, index=" + i);
                 }
 
-                for (i = 9; i < 11; i++) {
+                for (i = 9; i < 12; i++) {
                     expect(assetRefCompactCols[i].isPseudo).toBe(true, "problem with Asset index=" + i);
                 }
 
@@ -201,7 +201,7 @@ exports.execute = function (options) {
 
         describe('.isAsset, ', function () {
             it ('for PseudoColumns that are asset should return true.', function () {
-                for (var i = 8; i < 11; i++) {
+                for (var i = 8; i < 12; i++) {
                     expect(assetRefCompactCols[i].isAsset).toBe(true, "invalid isAsset for index="+ i);
                 }
             });
@@ -252,7 +252,7 @@ exports.execute = function (options) {
                     expect(compactColumns[i].table.name).toBe(tableName);
                 }
 
-                for (var i = 8; i < 11; i++) {
+                for (var i = 8; i < 12; i++) {
                     expect(assetRefCompactCols[i].table.name).toBe(tableWithAsset);
                 }
             });
@@ -365,7 +365,7 @@ exports.execute = function (options) {
                 for (var i = 17; i < 22; i++) {
                     expect(compactColumns[i].type.name).toBe("markdown");
                 }
-                for (var i = 9; i < 11; i++) {
+                for (var i = 9; i < 12; i++) {
                     expect(assetRefCompactCols[i].type.name).toBe('markdown');
                 }
 
@@ -466,6 +466,17 @@ exports.execute = function (options) {
             });
         });
 
+        describe('.hideColumnHeader, ', function() {
+            it('should return true if hideColumnHeader set to true in column-display annotation', function() {
+                // "id" column has column-display annotation
+                expect(detailedColumns[0].hideColumnHeader).toBeTruthy();
+            });
+
+            it('should return false if property is not defined in column-display annotation', function() {
+                expect(detailedColumns[1].hideColumnHeader).toBeFalsy();
+            });
+        });
+
         describe('.inputDisabled, ', function () {
             describe('for pseudoColumns, ', function () {
                 it('that are inbound foreignkey should return an error.', function () {
@@ -539,6 +550,25 @@ exports.execute = function (options) {
                 schemaUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":";
                 mainEntityUri = schemaUri  + mainEntityTableName;
 
+            var testFilteredRef = function (ref, tableName, ermrestPath, displayname) {
+                expect(ref.table.name).toBe(tableName, "table name missmatch");
+
+                if (ermrestPath == "" || ermrestPath == null) {
+                    expect(ref.uri).toBe(schemaUri + tableName, "uri missmatch.");
+                } else {
+                    expect(ref.location.filter).not.toBeTruthy("fitler defined.");
+                    expect(ref.location.customFacets).toBeTruthy("custom facet undefiend");
+                    expect(ref.location.customFacets.ermrestPath).toBe(ermrestPath, "ermrestPath missmatch");
+                    if (displayname) {
+                        expect(ref.location.customFacets.displayname.value).toEqual(displayname, "displayname missmatch");
+                    } else {
+                        expect(ref.location.customFacets.displayname).not.toBeDefined("displayname missmatch");
+                    }
+                    expect(ref.location.customFacets.removable).toEqual(false, "removable missmatch");
+                }
+
+            };
+
             describe('for pseudoColumns, ', function() {
                 describe('for foreign keys, ', function() {
 
@@ -550,13 +580,13 @@ exports.execute = function (options) {
 
                             // mainEntityColumns[i] where:
                             // 1=0 - id for table
-                            // i=1 - foreign key to no constraint table this constrains the following col
-                            // i=2 - foreign key to constrained table with domain filter defined with a dynamic value
-                            // i=3 - foreign key to position table with domain filter defined with a static value
-                            // i=4 - text column that constrains the following fk
-                            // i=5 - foreign key to position table with domain filter defined with dynamic value
-                            // i=6 - foreign key to constrained table with domain filter with a conjunction of 2 dynamic values
-                            // i=7 - foreign key to position table with
+                            // i=1 - foreign key to no constraint table this constrains the following col (fk_no_constraint)
+                            // i=2 - foreign key to constrained table with domain filter defined with a dynamic value (fk_constrained)
+                            // i=3 - foreign key to position table with domain filter defined with a static value (fk_position_predefined)
+                            // i=4 - text column that constrains the following fk (position_text_col)
+                            // i=5 - foreign key to position table with domain filter defined with dynamic value (fk_position_user_defined)
+                            // i=6 - foreign key to constrained table with domain filter with a conjunction of 2 dynamic values (fk_multi_constrained)
+                            // i=7 - foreign key to position table with (fk_using_fkeys)
                             mainEntityColumns = response.columns;
 
                             done();
@@ -571,28 +601,40 @@ exports.execute = function (options) {
                             mainEntityData = {}
                             filteredReference = mainEntityColumns[3].filteredRef(mainEntityData);
 
-                            expect(filteredReference.uri).toBe(schemaUri + "position-type-table/position_type_col=fixed");
+                            // doesn't have displayname and therefore should be hidden
+                            testFilteredRef(filteredReference, "position-type-table", "position_type_col=fixed");
                         });
 
                         it('Reference for mainEntityColumns[5], should have proper domain filter.', function() {
                             mainEntityData = {"position_text_col": "relative"};
                             filteredReference = mainEntityColumns[5].filteredRef(mainEntityData);
 
-                            expect(filteredReference.uri).toBe(schemaUri + "position-type-table/position_type_col=" + mainEntityData.position_text_col);
+                            testFilteredRef(
+                                filteredReference,
+                                "position-type-table",
+                                "position_type_col=" + mainEntityData.position_text_col,
+                                 "<strong>position_type_col</strong>: " + mainEntityData.position_text_col
+                             );
                         });
 
                         it('Reference for mainEntityColumns[2], should have proper domain filter.', function() {
                             mainEntityData = {"fk1": 1234};
                             filteredReference = mainEntityColumns[2].filteredRef(mainEntityData);
 
-                            expect(filteredReference.uri).toBe(schemaUri + "fk-constrained-table/fk2=" + mainEntityData.fk1);
+                            // using the old domain_filter_pattern syntax
+                            testFilteredRef(filteredReference, "fk-constrained-table", "fk2=" + mainEntityData.fk1);
                         });
 
                         it('Reference for mainEntityColumns[6], should have proper domain filter.', function() {
                             mainEntityData = {"fk1": 1234, "position_text_col": "relative"};
                             filteredReference = mainEntityColumns[6].filteredRef(mainEntityData);
 
-                            expect(filteredReference.uri).toBe(schemaUri + "fk-constrained-table/fk2=" + mainEntityData.fk1 + "&position_col=" + mainEntityData.position_text_col);
+                            testFilteredRef(
+                                filteredReference,
+                                "fk-constrained-table",
+                                "fk2=" + mainEntityData.fk1 + "&position_col=" + mainEntityData.position_text_col,
+                                "<strong>fk2</strong>: " + mainEntityData.fk1 + " and <strong>position_col</strong>:" + mainEntityData.position_text_col
+                            );
                         });
                     });
 
@@ -601,33 +643,33 @@ exports.execute = function (options) {
                             mainEntityData = {};
                             filteredReference = mainEntityColumns[5].filteredRef(mainEntityData);
 
-                            expect(filteredReference.uri).toBe(schemaUri + "position-type-table");
+                            testFilteredRef(filteredReference, "position-type-table");
                         });
 
                         it('Reference for mainEntityColumns[2], should have no filter defined.', function() {
                             mainEntityData = {};
                             filteredReference = mainEntityColumns[2].filteredRef(mainEntityData);
 
-                            expect(filteredReference.uri).toBe(schemaUri + "fk-constrained-table");
+                            testFilteredRef(filteredReference, "fk-constrained-table");
                         });
 
                         it('Reference for mainEntityColumns[6], should have proper domain filter.', function() {
                             mainEntityData = {};
                             filteredReference = mainEntityColumns[6].filteredRef(mainEntityData);
 
-                            expect(filteredReference.uri).toBe(schemaUri + "fk-constrained-table");
+                            testFilteredRef(filteredReference, "fk-constrained-table");
 
                             // if one value is defined and the other isn't, filter should still be null
                             mainEntityData.fk1 = 1;
                             filteredReference = mainEntityColumns[6].filteredRef(mainEntityData);
 
-                            expect(filteredReference.uri).toBe(schemaUri + "fk-constrained-table");
+                            testFilteredRef(filteredReference, "fk-constrained-table");
 
                             delete mainEntityData.fk1;
                             mainEntityData.position_text_col = "relative";
                             filteredReference = mainEntityColumns[6].filteredRef(mainEntityData);
 
-                            expect(filteredReference.uri).toBe(schemaUri + "fk-constrained-table");
+                            testFilteredRef(filteredReference, "fk-constrained-table");
                         });
                     });
 
@@ -636,7 +678,7 @@ exports.execute = function (options) {
                             mainEntityData = {"fk1": 1234};
                             filteredReference = mainEntityColumns[7].filteredRef(mainEntityData);
 
-                            expect(filteredReference.uri).toBe(schemaUri + "fk-constrained-table");
+                            testFilteredRef(filteredReference, "fk-constrained-table");
                         });
 
                         it("otherwise should use the provided data.", function () {
@@ -656,15 +698,13 @@ exports.execute = function (options) {
                             };
                             filteredReference = mainEntityColumns[7].filteredRef(mainEntityData, foreignKeyData);
 
-                            expect(filteredReference.uri).toBe(schemaUri + "fk-constrained-table/fk2=4321&position_col=1235&id=1234");
+                            testFilteredRef(
+                                filteredReference,
+                                "fk-constrained-table",
+                                "fk2=4321&position_col=1235&id=1234",
+                                "<strong>fk2</strong>: 4321 and <strong>position_col</strong>:1235"
+                            );
                         });
-                    });
-
-                    it("should return the originating reference if the domain_filter_pattern results in an invalid (not understandable by parser) url.", function () {
-                        mainEntityData = {"position_text_col": "a&v&c"};
-                        filteredReference = mainEntityColumns[5].filteredRef(mainEntityData);
-
-                        expect(filteredReference.uri).toBe(schemaUri + "position-type-table");
                     });
                 });
             });
@@ -926,6 +966,38 @@ exports.execute = function (options) {
                 it("when key doesn't have `column_order` annotation and is not simple, should return false.", function () {
                     expect(compactBriefRef.columns[0].sortable).toBe(false);
                     expect(compactBriefRef.columns[0]._sortColumns.length).toBe(0);
+                });
+            });
+
+            describe("for assets, ", function () {
+                it ("should return the defined column_order on the column.", function () {
+                    expect(assetRefCompactCols[9].sortable).toBe(true, "sortable missmatch, index=9.");
+                    expect(assetRefCompactCols[9]._sortColumns.length).toBe(2, "sort column length missmatch, index=9.");
+                    expect(assetRefCompactCols[9]._sortColumns.map(function (col) {
+                        return col.column.name
+                    })).toEqual(['col_asset_2', 'col_filename'], "sort columns missmatch, index=9.");
+                });
+
+                it ("otherwise if filename column is defined should return it", function () {
+                    expect(assetRefCompactCols[10].sortable).toBe(true, "sortable missmatch, index=10.");
+                    expect(assetRefCompactCols[10]._sortColumns.length).toBe(1, "sort column length missmatch, index=10.");
+                    expect(assetRefCompactCols[10]._sortColumns.map(function (col) {
+                        return col.column.name
+                    })).toEqual(['col_filename'], "sort columns missmatch, index=10.");
+
+                    expect(assetRefCompactCols[11].sortable).toBe(true, "sortable missmatch, index=11.");
+                    expect(assetRefCompactCols[11]._sortColumns.length).toBe(1, "sort column length missmatch, index=11.");
+                    expect(assetRefCompactCols[11]._sortColumns.map(function (col) {
+                        return col.column.name
+                    })).toEqual(['col_asset_4_filename'], "sort columns missmatch, index=11.");
+                });
+
+                it ("otherwise should return the url column.", function () {
+                    expect(assetRefCompactCols[8].sortable).toBe(true, "sortable missmatch, index=8.");
+                    expect(assetRefCompactCols[8]._sortColumns.length).toBe(1, "sort column length missmatch, index=8.");
+                    expect(assetRefCompactCols[8]._sortColumns.map(function (col) {
+                        return col.column.name
+                    })).toEqual(['col_asset_1'], "sort columns missmatch, index=8.");
                 });
             });
 

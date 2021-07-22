@@ -194,9 +194,12 @@ Before running the test cases you need to set `ERMREST_URL`, `AUTH_COOKIE`, and 
 
 ```sh
 export ERMREST_URL=YOUR_ERMREST_URL
-export AUTH_COOKIE=YOUR_ERMREST_COOKIE
-export RESTRICTED_AUTH_COOKIE=YOUR_SECOND_USER_ERMREST_COOKIE
+export AUTH_COOKIE=YOUR_WEBAUTHN_COOKIE
+export RESTRICTED_AUTH_COOKIE=YOUR_SECOND_USER_WEBAUTHN_COOKIE
 ```
+- `ERMREST_URL`: the URL to the ERMrest service on a (possibly, remote) host.
+- `AUTH_COOKIE`: a primary user cookie valid to the (possibly, remote) host running the ERMrest service.
+- `RESTRICTED_AUTH_COOKIE`: a secondary user cookie valid to the (possibly, remote) host running the ERMrest service.
 
 The build needs to be generated for the tests to work, which means running the following commands to execute the test cases.
 
@@ -242,13 +245,13 @@ The `single-test-runner.js` picks and runs the **support/single.spec.js** file. 
 
 ## Other Useful Information
 
-1. You might come across some test cases that are specific to travis environment or local. To enforce some test cases to just run in a specific environment, you can do the following:
+1. You might come across some test cases that are specific to CI environment or local. To enforce some test cases to just run in a specific environment, you can do the following:
 ```javascript
-if (process.env.TRAVIS) {
-  // anything that is specific to TRAVIS
+if (process.env.CI) {
+  // anything that is specific to CI
 }
 
-if (!process.env.TRAVIS) {
-  // these test cases will only run locally and not on travis.
+if (!process.env.CI) {
+  // these test cases will only run locally and not on CI.
 }
 ```

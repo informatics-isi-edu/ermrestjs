@@ -152,7 +152,7 @@ exports.execute = function (options) {
             "isPathColumn", "isPathColumn", "isAsset", "", "isPathColumn", "isPathColumn"
         ];
 
-        var mainRef, mainRefDetailed, invalidRef, mainRefEntry,
+        var mainRef, mainRefDetailed, invalidRef, mainRefEntry, mainRefCompactEntry,
             detailedCols, detailedColsWTuple, mainTuple, mainPage;
 
         beforeAll(function (done) {
@@ -162,6 +162,7 @@ exports.execute = function (options) {
                 mainRefDetailed = response.contextualize.detailed;
                 detailedCols = mainRefDetailed.columns;
                 mainRefEntry = response.contextualize.entry;
+                mainRefCompactEntry = response.contextualize.compactEntry;
                 return options.ermRest.resolve(invalidEntityUri, {cid: "test"});
             }).then(function (response) {
                 invalidRef = response;
@@ -172,8 +173,7 @@ exports.execute = function (options) {
             });
 
             detailedExpectedValue = [
-                '01', '<p>01: col val 01</p>\n',
-                '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:main/main_table_id_col=01">01</a>',
+                '01', '<p>01: col val 01</p>\n', '01',
                 '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:outbound_1/RID=' + findRID('outbound_1', 'id','01') + '">01</a>',
                 '<p>01: 10</p>\n', '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:outbound_1_outbound_1/RID=' + findRID('outbound_1_outbound_1', 'id', '01') + '">01</a>',
                 '01', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '<p>01 virtual value 01</p>\n', '<p>01 virtual value 1</p>\n'
@@ -252,6 +252,24 @@ exports.execute = function (options) {
                     "ref": mainRefEntry,
                     "expected": [
                         "main_table_id_col", "col", ["pseudo_column_schema", "main_fk1"].join("_"), "asset"
+                    ]
+                }]);
+            });
+
+            it ("in compact entry context, should ignore the pseudoColumns that are not supported.", function () {
+                expect(mainRefCompactEntry.columns.length).toBe(9, "length missmatch.");
+
+                checkReferenceColumns([{
+                    "ref": mainRefCompactEntry,
+                    "expected": [
+                        "main_table_id_col",
+                        "col",
+                        ["pseudo_column_schema", "main_key1"].join("_"),
+                        ["pseudo_column_schema", "main_fk1"].join("_"),
+                        [{"outbound": ["pseudo_column_schema", "main_fk1"]}, "id"],
+                        "asset", "asset_filename",
+                        "$virtual-column-1",
+                        "$virtual-column-1-1"
                     ]
                 }]);
             });
@@ -698,6 +716,18 @@ exports.execute = function (options) {
                 });
             });
 
+            describe(".hideColumnHeader", function () {
+                it ("should return the `hide_column_header` defined on the source and ignore the column-display", function () {
+                    // column-display says true, but source says false
+                    expect(detailedColsWTuple[1].hideColumnHeader).toBe(false, "missmatch for index=1");
+
+                    // there aren't any column-display and only source def
+                    expect(detailedColsWTuple[2].hideColumnHeader).toBe(true, "missmatch for index=2");
+                });
+
+                // the rest of tests are in 02.referenced_column.js
+            })
+
             describe(".table, ", function () {
                 it ("should return the column's table.", function () {
                     expect(detailedColsWTuple.map(function (col) {
@@ -839,7 +869,7 @@ exports.execute = function (options) {
             });
 
             describe ("formatPresentation, ", function () {
-                it ("in entity mode should return null.", function () {
+                it ("in entry mode should return null.", function () {
                     detailedPseudoColumnIndices.forEach(function (i) {
                         expect(detailedColsWTuple[i].formatPresentation({"id":"1", "col":"1"}, "entry").value).toEqual("", "missmatch for index=" + i);
                     });
@@ -853,6 +883,13 @@ exports.execute = function (options) {
 
                 it ("if it's not a one-to-one path, should return null.", function () {
                     expect(detailedColsWTuple[9].formatPresentation({"main_table_id_col":"1", "col":"1"}, "detailed").value).toEqual("", "missmatch for index=" + i);
+                });
+
+                describe("if it's a self-link (KeyPseudoColumn in entity mode), ", function () {
+                    it ("should honor the given `show_key_link`.", function () {
+                        expect(detailedColsWTuple[2].formatPresentation({"main_table_id_col": "1"},"detailed").value).toEqual('1', "index=5 missmatch.");
+                    });
+                    // the rest of test cases are in 02.reference_column.js
                 });
 
                 describe("if it's a one-to-one path", function () {
@@ -1023,7 +1060,7 @@ exports.execute = function (options) {
                         // vals must be all empty!
                         expect(val.length).toBe(3, "length missmatch");
                         val.forEach(function (v, i) {
-                            expect(v.value).toEqual("", "missmatch for value of index=" + i);
+                            expect(v.value).toEqual("0", "missmatch for value of index=" + i);
                             expect(v.isHTML).toEqual(false, "missmatch for isHTML of index="+ i);
                         });
                         done();

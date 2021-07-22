@@ -185,7 +185,11 @@ exports.execute = function(options) {
                             expect(annotation.contains("tag:isrd.isi.edu,2016:foreign-key")).toBe(true);
                             expect(annotation.get("tag:isrd.isi.edu,2016:foreign-key").content).toEqual({
                                 "from_name": "from_name_value",
-                                "to_name": "to_name_value"
+                                "to_name": "to_name_value",
+                                "from_comment": "from_comment value",
+                                "from_comment_display": "inline",
+                                "to_comment": "to_comment_value",
+                                "to_comment_display": "inline"
                             });
                         } else {
                             expect(table2_schema1.foreignKeys.all()[0].annotations.all()).toHaveSameItems([]);
@@ -227,14 +231,6 @@ exports.execute = function(options) {
                         }
                     });
                 });
-
-                it('should use the value that ermrest automatically generated when it was not explicitly defined in schema.', function() {
-                    // NOTE: ermrest creates a default constraint_name for fks when they are not explicitly defined.
-                    expect(table2_schema1.foreignKeys.all()[0].constraint_names[0].join("|")).toBeAnyOf([
-                        'common_schema_1|table_2_schema_1_fk_1_from_table_1_schema_21',
-                        'common_schema_1|table_2_schema_1_fk_2_from_table_1_schema_21'
-                    ]);
-                });
             });
 
             describe('.from_name and .to_name ', function() {
@@ -251,6 +247,30 @@ exports.execute = function(options) {
                 it('should return empty strings when annotations are not defined.', function() {
                     expect(table2_schema1.foreignKeys.all()[0].from_name).toBe("");
                     expect(table2_schema1.foreignKeys.all()[0].to_name).toBe("");
+                });
+            });
+
+            describe('.from_comment with display and .to_comment with display ', function() {
+                it('should return the values that are defined in foreign-key annotation.', function() {
+                    table1_schema1.foreignKeys.all().forEach(function(fk, index) {
+                        // NOTE: this if statement assumes that only one foreignKey in table1_schema1 has annotation.
+                        if (fk.annotations.length() > 0) {
+                            expect(fk.from_comment).toBe("from_comment_value");
+                            expect(fk.from_comment_display).toBe("inline");
+                            expect(fk.to_comment).toBe("to_comment_value");
+                            expect(fk.to_comment_display).toBe("inline");
+                        }
+                    });
+                });
+
+                it('should return empty strings when annotations are not defined.', function() {
+                    expect(table2_schema1.foreignKeys.all()[0].from_comment).toBe("");
+                    expect(table2_schema1.foreignKeys.all()[0].to_comment).toBe("");
+                });
+
+                it('should return default value when annotations are not defined.', function() {
+                    expect(table2_schema1.foreignKeys.all()[0].from_comment_display).toBe("tooltip");
+                    expect(table2_schema1.foreignKeys.all()[0].to_comment_display).toBe("tooltip");
                 });
             });
 

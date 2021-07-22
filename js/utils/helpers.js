@@ -689,7 +689,6 @@
     };
 
     /**
-     * @private
      * Process the given list of column order, and return the appropriate list
      * of objects that have:
      * - `column`: The {@link ERMrest.Column} object.
@@ -700,6 +699,7 @@
      * @param  {Object} the extra options:
      *                  - allowNumOccurrences: to allow the specific frequency column_order
      * @return {Array=} If it's undefined, the column_order that is defined is not valid
+     * @private
      */
     _processColumnOrderList = function (columnOrder, table, options) {
         options = options || {};
@@ -752,13 +752,13 @@
     };
 
     /**
-     * @private
      * Given the source object, will return the comment that should be used.
      * - if sourceObject.comment=false: use empty string.
      * - if sourceObject.comment=string: use the defined value
      * - otherwise return null
      * TODO should be renamed or changed. the name doesn't make sense.
      * (I wanted to use _processSourceObjectComment but called it this way accidentally)
+     * @private
      */
     _processSourceObjectColumn = function (sourceObject) {
         if (!sourceObject) return null;
@@ -766,11 +766,11 @@
     };
 
     /**
-     * @private
      * Given an input string for the comment, will return the actual strng that should be used.
      *   - if =false : returns empty string.
      *   - if =string: returns the string.
      *   - otherwise returns null
+     * @private
      */
     _processModelComment = function (comment) {
         if (comment === false) return "";
@@ -779,8 +779,28 @@
     };
 
     /**
-     * @function
+     * Given an input string for the comment, will return true or false depending if the comment is of a valid type and value
+     *   - if =string : returns true.
+     *   - if =false: returns true.
+     *   - otherwise returns false
      * @private
+     */
+    _isValidModelComment = function (comment) {
+        return typeof comment === "string" || comment === false;
+    };
+
+    /**
+     * Given an input string for the comment display, will return true or false depending if the display value is of a valid type and value
+     *   - if =string && (="tooltip" || ="inline") : returns true.
+     *   - otherwise returns false
+     * @private
+     */
+    _isValidModelCommentDisplay = function (display) {
+        return typeof display === "string" && module._commentDisplayModes[display] !== -1;
+    };
+
+    /**
+     * @function
      * @param {ERMrest.Table} table The object that we want the formatted values for.
      * @param {String} context the context that we want the formatted values for.
      * @param {object} data The object which contains key value pairs of data to be transformed
@@ -789,6 +809,7 @@
      * @desc Returns a formatted keyvalue pairs of object as a result of using `col.formatvalue`.
      * If you want the formatted value of a single column, you should call formatvalue,
      * this function is written for the purpose of being used in markdown.
+     * @private
      */
     module._getFormattedKeyValues = function(table, context, data, linkedData) {
         var keyValues, k, fkData, col, cons, rowname, v;
@@ -860,9 +881,9 @@
     };
 
     /**
-     * @private
      * @param  {string[]} columnNames Array of column names
      * @return {string|false} the column name. if couldn't find any columns will return false.
+     * @private
      */
     module._getCandidateRowNameColumn = function (columnNames) {
         var candidates = [
@@ -913,7 +934,6 @@
 
     /**
      * @function
-     * @private
      * @param {ERMrest.Table} table The table that we want the row name for.
      * @param {String} context Current context.
      * @param {object} data The object which contains key value pairs of data.
@@ -921,6 +941,7 @@
      * @param {boolean} isTitle determines Whether we want rowname for title or not
      * @returns {object} The displayname object for the row. It includes has value, isHTML, and unformatted.
      * @desc Returns the row name (html) using annotation or heuristics.
+     * @private
      */
     module._generateRowName = function (table, context, data, linkedData, isTitle) {
         var annotation, col, template, keyValues, pattern, actualContext;
@@ -1017,7 +1038,6 @@
 
     /**
      * @function
-     * @private
      * @desc Given a key object, will return the presentation object that can bse used for it
      * @param  {ERMrest.Key} key    the key object
      * @param  {object} data        the data for the table that key is from
@@ -1026,8 +1046,9 @@
      * @return {object} the presentation object that can be used for the key
      * (it has `isHTML`, `value`, and `unformatted`).
      * NOTE the function might return `null`.
+     * @private
      */
-    module._generateKeyPresentation = function (key, data, context, templateVariables) {
+    module._generateKeyPresentation = function (key, data, context, templateVariables, addLink) {
         // if data is empty
         if (typeof data === "undefined" || data === null || Object.keys(data).length === 0) {
             return null;
@@ -1082,7 +1103,7 @@
             }
         }
 
-        if (caption.match(/<a\b.+href=/)) {
+        if (!addLink || caption.match(/<a\b.+href=/)) {
             value = caption;
         } else {
             var keyRef = new Reference(module.parse(rowURI), key.table.schema.catalog);
@@ -1364,6 +1385,9 @@
      */
     module.responseToError = function (response, reference, actionFlag) {
         var status = response.status || response.statusCode;
+        if (response instanceof module.ERMrestError) {
+            return response;
+        }
         switch(status) {
             case -1:
                 return new module.NoConnectionError(response.data);
@@ -1706,6 +1730,17 @@
 
             if (options.returnArray) return arr;
             return arr.join(", ");
+        },
+
+        printColor: function (value, options) {
+            options = (typeof options === 'undefined') ? {} : options;
+
+            if (!isStringAndNotEmpty(value) || !(/^#[0-9a-fA-F]{6}$/i.test(value))) {
+                return '';
+            }
+
+            value = value.toUpperCase();
+            return ':span: :/span:{.' + module._classNames.colorPreview + ' style=background-color:' + value +'} ' + value;
         }
     };
 
@@ -1749,6 +1784,9 @@
             case 'json':
             case 'jsonb':
                 data = utils.printJSON(data, options);
+                break;
+            case 'color_rgb_hex':
+                data = utils.printColor(data, options);
                 break;
             default: // includes 'text' and 'longtext' cases
                 data = type.baseType ? _formatValueByType(type.baseType, data, options) : utils.printText(data, options);
@@ -1854,31 +1892,110 @@
 
                         // Check If the markdown is a link
                         if (attrs[0].children[0].type == "link_open") {
-                            var iframeHTML = "<iframe ", openingLink = attrs[0].children[0];
-                            var enlargeLink, posTop = true, captionClass = "", captionStyle = "", iframeClass = "", iframeStyle = "";
+                            var iframeHTML = "<iframe", openingLink = attrs[0].children[0];
+                            var captionLink, captionTarget= "", posTop = true, captionClass = "", captionStyle = "", figureClass = "", figureStyle = "",
+                                iframeSrc = "", frameWidth = "", widthStyles = [], fullscreenTarget = "";
+                            var isYTlink = false, videoURL = "", iframeClasses = [];
 
                             // Add all attributes to the iframe
                             openingLink.attrs.forEach(function(attr) {
-                                if (attr[0] == "href") {
-                                    iframeHTML += 'src="' + attr[1] + '"';
-                                } else if (attr[0] == "link") {
-                                    enlargeLink = attr[1];
-                                } else if (attr[0] == "pos") {
-                                    posTop = attr[1].toLowerCase() == 'bottom' ? false : true;
-                                } else if (attr[0] == "caption-class") {
-                                    captionClass = attr[1];
-                                } else if (attr[0] == "caption-style") {
-                                    captionStyle = attr[1];
-                                } else if (attr[0] == "iframe-class") {
-                                    iframeClass = attr[1];
-                                } else if (attr[0] == "iframe-style") {
-                                    iframeStyle = attr[1];
-                                } else {
-                                    iframeHTML +=  attr[0] + '="' + attr[1] + '"';
+                                switch(attr[0]) {
+                                    case "href":
+                                        isYTlink  = (attr[1].match("^(http(s)?:\/\/)?((w){3}.)?youtu(be|.be)?(\.com)?\/.+") != null);
+                                        iframeSrc = attr[1];
+                                        iframeHTML += ' src="' + attr[1] + '"';
+                                        videoText = 'Note: YouTube video ( ' + attr[1] + ' ) is hidden in print';
+                                        break;
+                                    case "link": // NOTE: link will be deprecated but leaving in conditional for backwards compatibility
+                                    case "caption-link":
+                                        captionLink = attr[1];
+                                        break;
+                                    case "pos":
+                                        posTop = attr[1].toLowerCase() == 'bottom' ? false : true;
+                                        break;
+                                    case "fullscreen-target":
+                                        fullscreenTarget = attr[1];
+                                        break;
+                                    case "target":
+                                    case "caption-target":
+                                        captionTarget = attr[1];
+                                        break;
+                                    case "caption-class":
+                                        captionClass = attr[1];
+                                        break;
+                                    case "caption-style":
+                                        captionStyle = attr[1];
+                                        break;
+                                    case "iframe-class": // NOTE: iframe-class will be deprecated but leaving in conditional for backwards compatibility
+                                    case "figure-class":
+                                        figureClass = attr[1];
+                                        break;
+                                    case "iframe-style": // NOTE: iframe-style will be deprecated but leaving in conditional for backwards compatibility
+                                    case "figure-style":
+                                        figureStyle = attr[1];
+                                        break;
+                                    case "class":
+                                        if (attr[1].length > 0) {
+                                            iframeClasses.push(attr[1]);
+                                            // NOTE: we return here to avoid adding `" "` to iframeHTML?
+                                            return; //we're going to add classes at the end
+                                        }
+                                        break;
+                                    default:
+                                        if (attr[0] == "width") {
+                                            frameWidth = attr[1];
+                                        }
+
+                                        var endStyleIdx, subStrStyle;
+                                        // handles `style="some: style;"` case from template
+                                        // min/max width needs to be applied to the wrapper of the caption and fullscreen button for consistent button placement
+                                        // check for min-width style
+                                        var minWidthIdx = attr[1].indexOf("min-width");
+                                        if (minWidthIdx != -1) {
+                                            endStyleIdx = attr[1].indexOf(";", minWidthIdx);
+                                            // get the min-width `key: value` pair
+                                            if (endStyleIdx != -1) {
+                                                subStrStyle = attr[1].substring(minWidthIdx, endStyleIdx);
+                                            } else {
+                                                // if no `;` after min-width, assume end of string
+                                                subStrStyle = attr[1].substring(minWidthIdx);
+                                            }
+                                            widthStyles.push(subStrStyle);
+                                        }
+
+                                        // check for max-width style
+                                        var maxWidthIdx = attr[1].indexOf("max-width");
+                                        if (maxWidthIdx != -1) {
+                                            endStyleIdx = attr[1].indexOf(";", maxWidthIdx);
+                                            // get the max-width `key: value` pair
+                                            if (endStyleIdx != -1) {
+                                                subStrStyle = attr[1].substring(maxWidthIdx, endStyleIdx);
+                                            } else {
+                                                // if no `;` after max-width, assume end of string
+                                                subStrStyle = attr[1].substring(maxWidthIdx);
+                                            }
+                                            widthStyles.push(subStrStyle);
+                                        }
+
+                                        iframeHTML += " " + attr[0] + '="' + attr[1] + '"';
+                                        break;
                                 }
-                                iframeHTML += " ";
                             });
-                            html += iframeHTML + "></iframe>";
+
+                            //During print we need to display that the iframe with YouTube video is replaced with a note
+                            if(isYTlink){
+                              html = '<span class="' + module._classNames.showInPrintMode + '" style="visibility:hidden">' + videoText + "</span>";
+                              iframeClasses.push(module._classNames.hideInPrintMode);
+                            }
+
+                            // add the iframe tag
+                            html += iframeHTML;
+
+                            // attach the iframe tag classes
+                            if (iframeClasses.length > 0) {
+                                html += ' class="' + iframeClasses.join(" ") + '"';
+                            }
+                            html += "></iframe>";
 
                             var captionHTML = "";
 
@@ -1898,20 +2015,49 @@
                             }
 
                             // If enlarge link is set then add an anchor tag for captionHTML
-                            if (enlargeLink) {
-                                 if (!captionHTML.trim().length) captionHTML = "Enlarge";
-                                captionHTML = '<a href="' + enlargeLink + '" target="_blank">'  + captionHTML + '</a>';
+                            if (captionLink) {
+                                // set the fullscreen target string for the fullscreen button
+                                if (captionTarget) captionTarget = " target=" + captionTarget;
+                                if (!captionHTML.trim().length) captionHTML = "Enlarge";
+                                captionHTML = '<a href="' + captionLink + '"' + captionTarget + '>'  + captionHTML + '</a>';
                             }
+
+                            // set the fullscreen target string for the fullscreen button
+                            if (fullscreenTarget) fullscreenTarget = " target=" + fullscreenTarget;
+
+                            // Checks for a width being defined. If it's defined and not a number, assume it has `px` or `%` appended already and use as is.
+                            // If no width, default to "100%"
+                            var captionContainerWidth = "100%";
+                            if (frameWidth) {
+                                captionContainerWidth = frameWidth;
+                                // If width is defined and is a number, assume it's in pixels and append `px`.
+                                captionContainerWidth += (isNaN(parseInt(frameWidth)) ? "" : "px");
+                            }
+
+                            // add separator in case more styles are appended
+                            captionContainerWidth += ";";
+
+                            // if min/max width are defined for the iframe, apply to the captiona nd button container as well
+                            if (widthStyles.length > 0) {
+                                captionContainerWidth += widthStyles.join(";");
+                            }
+
+                            // captionContainerWidth should be "<width-value>; min-width: val; max-width: val"
+                            var contentsWidthStyle = 'style="width: ' + captionContainerWidth + '"';
+
+                            // fullscreen button html that is attached to the top right corner of the iframe
+                            var buttonHtml = '<div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="' + iframeSrc + '"' + fullscreenTarget + '><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div>';
 
                             // Encapsulate the captionHTML inside a figcaption tag with class embed-caption
                             if (posTop) {
-                                html = '<figcaption class="embed-caption' + (captionClass.length ? (" " + captionClass) : "") +'" style="' + (captionStyle.length ? (" " + captionStyle) : "") + '">' + captionHTML + "</figcaption>" + html;
+                                // if caption is at the top, we need to wrap the caption and fullscreen button in a div so the width can be applied and allow the caption to flex around the button
+                                html = '<div class="figcaption-wrapper" ' + contentsWidthStyle + '><figcaption class="embed-caption' + (captionClass.length ? (" " + captionClass) : "") +'"' + (captionStyle.length ? (' style="' + captionStyle) + '"' : "") + '>' + captionHTML + "</figcaption>" + buttonHtml + "</div>" + html;
                             } else {
-                                html += '<figcaption class="embed-caption' + (captionClass.length ? (" " + captionClass) : "") + '" style="' + (captionStyle.length ? (" " + captionStyle) : "") + '">' + captionHTML + "</figcaption>";
+                                html = buttonHtml + html + '<figcaption class="embed-caption' + (captionClass.length ? (" " + captionClass) : "") + '"' + (captionStyle.length ? (' style="' + captionStyle) + '"' : '') + '>' + captionHTML + "</figcaption>";
                             }
 
                             // Encapsulate the iframe inside a figure tag
-                            html = '<figure class="embed-block ' + module._classNames.postLoad + (iframeClass.length ? (" "  + iframeClass): "") + '" style="' + (iframeStyle.length ? (" "  + iframeStyle ) : "") + '">' + html + "</figure>";
+                            html = '<figure class="embed-block ' + module._classNames.postLoad + (figureClass.length ? (" "  + figureClass) : "") + '"' + (figureStyle.length ? (' style="' + figureStyle) + '"' : '') + '>' + html + "</figure>";
                         }
                     }
                     // if attrs was empty or it didn't find any link simply render the internal markdown
@@ -2140,8 +2286,10 @@
                     if (attrs && attrs.length == 1 && attrs[0].children) {
                         // Check If the markdown is a link
                         if (attrs[0].children[0].type == "link_open") {
-                            var videoHTML="<video controls ", openingLink = attrs[0].children[0];
-                            var srcHTML="", videoClass='class="' + module._classNames.postLoad, videoAttrs="", flag = true, posTop = true;
+                            var videoHTML="<video controls ", videoClass='class="' + module._classNames.postLoad + " " + module._classNames.hideInPrintMode, openingLink = attrs[0].children[0];
+                            var srcHTML="", videoAttrs="", flag = true, posTop = true;
+                            var videoText="";
+                            var infoHTML = "";
 
                             // Add all attributes to the video
                             openingLink.attrs.forEach(function(attr) {
@@ -2150,6 +2298,7 @@
                                         flag= false;
                                         return "";
                                     }
+                                    videoText = "Note: Video " + "(" + attr[1] + ")" + " is hidden in print ";
                                     srcHTML += '<source src="' + attr[1] + '" type="video/mp4">';
                                 }
                                 else if ( (attr[0] == "width" || attr[0] == "height") && attr[1]!=="") {
@@ -2168,6 +2317,7 @@
                             });
                             // add closing quote
                             videoClass += '"' + " " + videoAttrs;
+                            infoHTML = '<span class="' + module._classNames.showInPrintMode + '" style="visibility:hidden">' + videoText + "</span>";
 
                             var captionHTML="";
                             // If the next attribute is not a closing link then iterate
@@ -2186,11 +2336,11 @@
                             }
 
                             if(captionHTML.trim().length && flag && posTop){
-                                html +=  "<figure><figcaption>"+captionHTML+ "</figcaption>" + videoHTML + videoClass +">"+ srcHTML +"</video></figure>" ;
+                                html +=  "<figure><figcaption>"+captionHTML+ "</figcaption>" + infoHTML + videoHTML + videoClass +">"+ srcHTML +"</video></figure>" ;
                             }else if(captionHTML.trim().length && flag){
-                                html +=  "<figure>"+ videoHTML + videoClass +">"+ srcHTML +"</video><figcaption>"+captionHTML+ "</figcaption></figure>" ;
+                                html +=  "<figure>"+ videoHTML + videoClass +">"+ srcHTML +"</video><figcaption>"+captionHTML+ "</figcaption>" + infoHTML + "</figure>" ;
                             } else if(flag)
-                                html += videoHTML + videoClass +">"+ srcHTML +"</video>";
+                                html += infoHTML + videoHTML + videoClass +">"+ srcHTML +"</video>";
                             else
                                 return '';
                         }
@@ -2953,7 +3103,7 @@
      * @param  {Object} options
      * @return {Object}          An object with `isHTML` and `value` attributes.
      */
-    module._processMarkdownPattern = function (template, data, table, context, options) {
+    module.processMarkdownPattern = function (template, data, table, context, options) {
         var res = module._renderTemplate(template, data, table.schema.catalog, options);
 
         if (res === null || res.trim() === '') {

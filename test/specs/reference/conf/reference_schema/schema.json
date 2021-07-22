@@ -153,7 +153,8 @@
                             "id"
                         ]},
                         ["reference_schema", "system_col_fk_asscoation_related_to_reference"],
-                        ["reference_schema", "extra_fk_association_related_to_reference"]
+                        ["reference_schema", "extra_fk_association_related_to_reference"],
+                        ["reference_schema", "association_table_with_overlapping_col_fk1"]
                     ],
                     "compact/select": [
                         {"invalid": true},
@@ -174,7 +175,11 @@
                             "id"
                         ]},
                         {"sourcekey": "invalid_sourcekey"},
-                        {"sourcekey": "path_all_outbound_1"}
+                        {"sourcekey": "path_all_outbound_1"},
+                        {"source": [
+                            {"inbound": ["reference_schema", "table_w_linked_rowname_fk1"]},
+                            "RID"
+                        ]}
                     ]
                 },
                 "tag:isrd.isi.edu,2016:table-display": {
@@ -350,6 +355,9 @@
                     }]
                 },
                 {
+                    "names": [
+                        ["reference_schema", "association_table_with_toname_id_from_inbound_related_table1"]
+                    ],
                     "comment": "fk to inbound_related_reference_table",
                     "foreign_key_columns": [{
                         "schema_name": "reference_schema",
@@ -444,6 +452,22 @@
                 }
             ],
             "annotations": {
+                "tag:isrd.isi.edu,2016:visible-columns": {
+                    "*": [
+                        {
+                            "source": [{"outbound": ["reference_schema", "id_fk_association_related_to_reference"]}, "RID"],
+                            "markdown_name": "ignored column 01"
+                        },
+                        {
+                            "source": [{"outbound": ["reference_schema", "id_fk_association_related_to_reference"]}, "name"],
+                            "markdown_name": "ignored column 02",
+                            "entity": false
+                        },
+                        {
+                            "source": "ID"
+                        }
+                    ]
+                },
                 "tag:misd.isi.edu,2015:display": {
                     "name": "association table displayname"
                 },
@@ -587,6 +611,67 @@
                 },
                 {
                     "name": "id_from_inbound_related_table",
+                    "nullok": false,
+                    "type": {"typename":"text"}
+                }
+            ]
+        },
+        "association_table_with_overlapping_col": {
+            "comment": "has fk to reference_table and inbound_related_reference_table. the column is overlapping",
+            "kind": "table",
+            "table_name": "association_table_with_overlapping_col",
+            "schema_name": "reference_schema",
+            "keys": [{
+                "unique_columns": ["id_col_1", "id_col_2"]
+            }],
+            "foreign_keys": [
+                {
+                    "names": [
+                        ["reference_schema", "association_table_with_overlapping_col_fk1"]
+                    ],
+                    "foreign_key_columns": [{
+                        "schema_name": "reference_schema",
+                        "table_name": "association_table_with_overlapping_col",
+                        "column_name": "id_col_1"
+                    }],
+                    "referenced_columns": [{
+                        "schema_name": "reference_schema",
+                        "table_name": "reference_table",
+                        "column_name": "id"
+                    }]
+                },
+                {
+                    "names": [
+                        ["reference_schema", "association_table_with_overlapping_col_fk2"]
+                    ],
+                    "foreign_key_columns": [{
+                        "schema_name": "reference_schema",
+                        "table_name": "association_table_with_overlapping_col",
+                        "column_name": "id_col_1"
+                    }, {
+                        "schema_name": "reference_schema",
+                        "table_name": "association_table_with_overlapping_col",
+                        "column_name": "id_col_2"
+                    }],
+                    "referenced_columns": [{
+                        "schema_name": "reference_schema",
+                        "table_name": "table_w_only_composite_key",
+                        "column_name": "id_1"
+                    }, {
+                        "schema_name": "reference_schema",
+                        "table_name": "table_w_only_composite_key",
+                        "column_name": "id_2"
+                    }]
+                }
+            ],
+            "column_definitions": [
+                {
+                    "name": "id_col_1",
+                    "nullok": false,
+                    "type": {"typename":"text"}
+                },
+                {
+                    "name": "id_col_2",
                     "nullok": false,
                     "type": {"typename":"text"}
                 }
@@ -1397,6 +1482,10 @@
                           }
                       }
                   }
+              },
+              {
+                  "name": "color_rgb_hex_col",
+                  "type": {"typename": "color_rgb_hex"}
               }
             ],
             "annotations": {
@@ -1406,7 +1495,7 @@
                       "iframe","some_markdown", "some_markdown_with_pattern",
                       "some_gene_sequence", "column_using_invisble_column",
                       "video_col", "fkeys_col", "catalog_snapshot",
-                      "moment_col", "encodefacet_col"
+                      "moment_col", "encodefacet_col", "color_rgb_hex_col"
                   ]
                 }
             }
@@ -2052,6 +2141,46 @@
                     "nullok": false
                 }
             ]
+        },
+        "table_w_linked_rowname_fk1": {
+            "kind": "table",
+            "schema_name": "reference_schema",
+            "table_name": "table_w_linked_rowname_fk1",
+            "keys": [{"unique_columns": ["name"]}],
+            "foreign_keys": [
+                {
+                    "names": [["reference_schema", "table_w_linked_rowname_fk1"]],
+                    "foreign_key_columns": [{
+                        "schema_name": "reference_schema",
+                        "table_name": "table_w_linked_rowname_fk1",
+                        "column_name": "fk_to_reference"
+                    }],
+                    "referenced_columns": [{
+                        "schema_name": "reference_schema",
+                        "table_name": "reference_table",
+                        "column_name": "id"
+                    }]
+                }
+            ],
+            "column_definitions": [
+                {
+                    "name": "name",
+                    "type": {"typename": "text"},
+                    "nullok": false
+                },
+                {
+                    "name": "fk_to_reference",
+                    "type": {"typename": "text"},
+                    "nullok": false
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2016:table-display": {
+                    "row_name": {
+                        "row_markdown_pattern": "[{{name}}](https://example.com)"
+                    }
+                }
+            }
         }
     },
     "comment": null,

@@ -223,6 +223,35 @@
             "comment": ""
           }
         }
+    },
+    "table_w_contextualized_display_comment": {
+        "comment": "table comment contextualized",
+        "kind": "table",
+        "table_name": "table_w_contextualized_display_comment",
+        "schema_name": "schema_with_comment",
+        "keys": [
+            {"unique_columns": ["id"]}
+        ],
+        "column_definitions": [
+            {
+                "name": "id",
+                "nullok": false,
+                "type": {"typename": "text"}
+            }
+        ],
+        "annotations": {
+          "tag:misd.isi.edu,2015:display": {
+            "comment": {
+                "detailed": "detailed comment"
+            },
+            "comment_display": {
+                "detailed": {
+                    "table_comment_display": "inline",
+                    "column_comment_display": "tooltip"
+                }
+            }
+          }
+        }
     }
   },
   "annotations": {},
