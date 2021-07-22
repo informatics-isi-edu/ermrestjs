@@ -990,7 +990,7 @@ Supported _columns_ patterns:
 - _Any other values_ : In this case chaise will not provide any foreign key data in templating environments.
 
 ## Tag: 2021 Google Dataset
-`tag:isrd.isi.edu,2018:citation`
+`tag:isrd.isi.edu,2021:google-dataset`
 
 This key indicates the metadata that will be converted to valid and well-formed JSON-LD referencing a table. In terms of SEO, JSON-LD is implemented leveraging the Schema.org vocabulary, which is a unified structured data vocabulary for the web. [Google Dataset Search](https://datasetsearch.research.google.com/) discovers datasets when a valid JSON-LD of type [Dataset](https://www.schema.org/Dataset) is added to the HTML page.
 
