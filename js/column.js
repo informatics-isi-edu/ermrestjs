@@ -579,7 +579,7 @@ ReferenceColumn.prototype = {
         }
 
 
-        // TODO FILTER_IN_SOURCE it was the first fk, shouldn't it be the last?
+        // TODO shouldn't it be the last?
         // get it from the foreignkey (which might be derived from catalog, schema, or table)
         return self.firstForeignKeyNode.nodeObject.getDisplay(context).showForeignKeyLink;
     },

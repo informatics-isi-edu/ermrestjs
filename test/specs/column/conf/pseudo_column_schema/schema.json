@@ -179,10 +179,10 @@
                             {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
                             "id"
                         ], "aggregate": "array", "entity": false},
-                        {"sourcekey": "main_inbound_2_association_fk1_fk2_path_id_array", "aggregate": "ignored_agg", "array_display": "csv"},
+                        {"sourcekey": "main_inbound_2_association_fk1_fk2_path_id_array", "aggregate": "cnt", "array_display": "csv"},
                         {
                             "sourcekey": "main_inbound_2_association_fk1_fk2_path_id_array_d",
-                            "aggregate": "ignored_agg",
+                            "aggregate": "cnt_d",
                             "display": {"array_ux_mode": "ulist"},
                             "array_options": {"invalid values": true}
                         },

@@ -518,6 +518,35 @@ exports.execute = function (options) {
                     });
                 });
 
+                it ("should ignore extra attributes in source and just match based on structure.", function (done) {
+                    facetObj = {
+                        "and": [
+                            {
+                                "source":  [
+                                    {"inbound": ["faceting_schema", "secondpath_1_fk1"], "alias": "A"},
+                                    {"inbound": ["faceting_schema", "secondpath_2_fk1"], "alias": "C"},
+                                    "id"
+                                ],
+                                "choices": ["id1"]
+                            }
+                        ]
+                    };
+                    options.ermRest.resolve(createURL(tableMain, facetObj)).then(function (ref) {
+                        expect(ref.facetColumns.length).toBe(21, "length missmatch.");
+                        expect(ref.facetColumns[15].filters.length).toBe(1, "# of filters defined is incorrect");
+                        expect(ref.location.facets).toBeDefined("facets is undefined.");
+                        // this is also testing the optimization where we're removing the last fk node
+                        expect(ref.location.ermrestCompactPath).toBe(
+                            "M:=faceting_schema:main/(id)=(faceting_schema:secondpath_1:id)/id=id1/$M",
+                            "path missmatch."
+                        );
+                        done();
+                    }).catch(function (err) {
+                        console.log(err);
+                        done.fail();
+                    });
+                });
+
                 describe ("should be able to handle and filter on same source", function () {
                     it ("when the facet exists in the annotation.", function (done) {
                         facetObj = { "and": [ {"source": "id", "choices": ["1"]}, {"source": "id", "choices": ["2"]} ] };

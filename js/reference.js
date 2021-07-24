@@ -555,8 +555,6 @@
                         continue;
                     }
 
-                    found = false;
-
                     try {
                         // TODO refactor: could be part of parser?
                         andFilterObject = new SourceObjectWrapper(andFilters[i], self.table, module._constraintNames, true);
@@ -565,6 +563,7 @@
                     }
 
                     // find the facet corresponding to the filter
+                    found = false;
                     for (j = 0; j < facetLen; j++) {
 
                         // it can be merged only once, since in a facet the filter is
@@ -3194,7 +3193,8 @@
                 }
 
                 // unique filtered
-                // TODO FILTER_IN_SOURCE the callers should use this...
+                // TODO FILTER_IN_SOURCE chaise should use this type of column as well?
+                // TODO FILTER_IN_SOURCE should be added to documentation as well
                 if (col.isUniqueFiltered) {
                     // duplicate
                     if (col.name in consideredUniqueFiltered) {
