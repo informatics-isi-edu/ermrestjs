@@ -1,3 +1,5 @@
+var utils = require('./../../../utils/utilities.js');
+
 exports.execute = function (options) {
     var catalog_id = process.env.DEFAULT_CATALOG,
         schemaName = "active_list_schema",
@@ -43,14 +45,6 @@ exports.execute = function (options) {
         return url;
     };
 
-    // you should use this function only after options.entities value is populated
-    // (in any of jasmine blocks)
-    var findRID = function (currTable, keyName, keyValue) {
-        return options.entities[schemaName][currTable].filter(function (e) {
-            return e[keyName] == keyValue;
-        })[0].RID;
-    };
-
     var catchError = function (done) {
         return function (err) {
             done.fail(err);
@@ -58,7 +52,7 @@ exports.execute = function (options) {
     };
 
     var getRecordURL = function (table, keyCol, keyValue) {
-        return recordURL + "/" + schemaName + ":" + table + "/" + "RID=" + findRID(table, keyCol, keyValue);
+        return recordURL + "/" + schemaName + ":" + table + "/" + "RID=" + utils.findEntityRID(options, schemaName, table, keyCol, keyValue);
     };
 
     var mainRef, mainRefCompactPage, mainRefCompact, mainRefDetailed, compactColumns, detailedColumns, compactActiveList, detailedActiveList;
@@ -321,7 +315,7 @@ exports.execute = function (options) {
             it ("should not include outbound fks if they are inivisble and source definitions fkeys is empty.", function () {
                 var res = mainEmptyFkPage.templateVariables[0];
                 expect(res.rowName).toBe("main_empty_fkeys one", "rowname missmatch");
-                expect(res.uri.detailed).toContain("active_list_schema:main_empty_fkeys/RID=" + findRID("main_empty_fkeys", "main_empty_fkeys_id", "01"), "uri missmatch");
+                expect(res.uri.detailed).toContain("active_list_schema:main_empty_fkeys/RID=" + utils.findEntityRID(options, schemaName, "main_empty_fkeys", "main_empty_fkeys_id", "01"), "uri missmatch");
                 var expectedValues = {
                     rowname_col: "main_empty_fkeys one",
                     _rowname_col: "main_empty_fkeys one",

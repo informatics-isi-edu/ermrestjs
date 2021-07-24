@@ -1,3 +1,5 @@
+var utils = require('./../../../utils/utilities.js');
+
 exports.execute = function (options) {
 
     describe("2016:table-display annotation test", function () {
@@ -65,12 +67,6 @@ exports.execute = function (options) {
 
         var tableCompactOptionsEntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" +
             tableNameCompactOptions;
-
-        var findRID = function (tableName, id) {
-            return options.entities[schemaName][tableName].filter(function (e) {
-                return e.id == id;
-            })[0].RID;
-        };
 
         var chaiseURL = "https://dev.isrd.isi.edu/chaise";
         var recordURL = chaiseURL + "/record";
@@ -442,7 +438,7 @@ exports.execute = function (options) {
                 expect(display.type).toEqual('markdown');
             });
 
-            var markdownPattern = ":::iframe [{{title}}{{#$fkeys.schema_table_display.table_w_t_disp_annot_w_mp_fkey}}(with {{{rowName}}} from catalog {{{$catalog.snapshot}}}){{/$fkeys.schema_table_display.table_w_t_disp_annot_w_mp_fkey}}](https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id={{_id}}) \n:::";
+            var markdownPattern = ":::iframe [{{{$self.rowName}}}{{#$fkeys.schema_table_display.table_w_t_disp_annot_w_mp_fkey}}(with {{{rowName}}} from catalog {{{$catalog.snapshot}}}){{/$fkeys.schema_table_display.table_w_t_disp_annot_w_mp_fkey}}]({{{$self.uri.detailed}}}) \n:::";
             it("reference.display._rowMarkdownPattern should be '" + markdownPattern + "' ", function() {
                 expect(reference.display._rowMarkdownPattern).toEqual(markdownPattern);
             });
@@ -474,19 +470,34 @@ exports.execute = function (options) {
                     done.fail(err);
                 });
             });
-
-            var content = '<h2>Movie titles</h2>\n' +
-            '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 100%;"><figcaption class="embed-caption">Hamlet(with <strong>William Shakespeare</strong> from catalog '+catalog_id+')</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20001"><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div></div><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20001"></iframe></figure>' +
-            '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 100%;"><figcaption class="embed-caption">The Adventures of Huckleberry Finn(with <strong>Mark Twain</strong> from catalog '+catalog_id+')</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20002"><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div></div><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20002"></iframe></figure>' +
-            '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 100%;"><figcaption class="embed-caption">Alice in Wonderland(with <strong>Lewis Carroll</strong> from catalog '+catalog_id+')</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20003"><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div></div><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20003"></iframe></figure>' +
-            '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 100%;"><figcaption class="embed-caption">Pride and Prejudice(with <strong>Jane Austen</strong> from catalog '+catalog_id+')</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20004"><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div></div><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20004"></iframe></figure>' +
-            '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 100%;"><figcaption class="embed-caption">Great Expectations</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20005"><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div></div><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20005"></iframe></figure>' +
-            '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 100%;"><figcaption class="embed-caption">David Copperfield</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20006"><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div></div><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20006"></iframe></figure>' +
-            '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 100%;"><figcaption class="embed-caption">Emma</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20007"><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div></div><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20007"></iframe></figure>' +
-            '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 100%;"><figcaption class="embed-caption">As You Like It</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20008"><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div></div><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20008"></iframe></figure>' +
-            '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 100%;"><figcaption class="embed-caption">The Adventures of Tom Sawyer</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20009"><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div></div><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20009"></iframe></figure>' +
-            '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 100%;"><figcaption class="embed-caption">Through the Looking Glass</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20010"><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div></div><iframe src="https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id=20010"></iframe></figure>';
             it('page.content should return HTML for all tuples using row_markdown_pattern and prefix_markdown and separator_markdown', function() {
+                var rowContent = function (id, caption) {
+                    var ridVal = utils.findEntityRID(options, schemaName, tableName7, "id", id);
+                    var iframeURL = 'https://dev.isrd.isi.edu/chaise/record/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/RID=' + ridVal;
+                    return '<figure class="embed-block -chaise-post-load">' + 
+                                '<div class="figcaption-wrapper" style="width: 100%;">' + 
+                                    '<figcaption class="embed-caption">' + caption + '</figcaption>' + 
+                                    '<div class="iframe-btn-container">' + 
+                                        '<a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="' + iframeURL + '">' +
+                                            '<span class="glyphicon glyphicon-fullscreen"></span> Full screen' + 
+                                        '</a>' + 
+                                    '</div>' + 
+                                '</div>' + 
+                                '<iframe src="' + iframeURL + '"></iframe>' + 
+                            '</figure>';
+                }
+                var content = '<h2>Movie titles</h2>\n';
+                content += rowContent('20001', 'Hamlet(with <strong>William Shakespeare</strong> from catalog '+catalog_id+')');
+                content += rowContent('20002', 'The Adventures of Huckleberry Finn(with <strong>Mark Twain</strong> from catalog '+catalog_id+')');
+                content += rowContent('20003', 'Alice in Wonderland(with <strong>Lewis Carroll</strong> from catalog '+catalog_id+')');
+                content += rowContent('20004', 'Pride and Prejudice(with <strong>Jane Austen</strong> from catalog '+catalog_id+')');
+                content += rowContent('20005', 'Great Expectations');
+                content += rowContent('20006', 'David Copperfield');
+                content += rowContent('20007', 'Emma');
+                content += rowContent('20008', 'As You Like It');
+                content += rowContent('20009', 'The Adventures of Tom Sawyer');
+                content += rowContent('20010', 'Through the Looking Glass');
+
                 expect(page.content).toEqual(content);
             });
 
@@ -513,16 +524,16 @@ exports.execute = function (options) {
             describe("when row_markdown_pattern or page_markdown_pattern are not defined for the context, ", function () {
                 it ("should return an unordered list of clickable row-names.", function (done) {
                     var expected = '<ul>\n' +
-                                   '<li><a href="https://dev.isrd.isi.edu/chaise/record/schema_table_display:table_wo_title_wo_annotation/RID=' + findRID(tableName1, "20001") + '">20001</a></li>\n' +
-                                   '<li><a href="https://dev.isrd.isi.edu/chaise/record/schema_table_display:table_wo_title_wo_annotation/RID=' + findRID(tableName1, "20002") + '">20002</a></li>\n' +
+                                   '<li><a href="https://dev.isrd.isi.edu/chaise/record/schema_table_display:table_wo_title_wo_annotation/RID=' + utils.findEntityRID(options, schemaName, tableName1, "id", "20001") + '">20001</a></li>\n' +
+                                   '<li><a href="https://dev.isrd.isi.edu/chaise/record/schema_table_display:table_wo_title_wo_annotation/RID=' + utils.findEntityRID(options, schemaName, tableName1, "id", "20002") + '">20002</a></li>\n' +
                                    '</ul>\n';
                     testPageContent(table1EntityUri, 2, expected, done);
                 });
 
                 it ("row-names should be using the row_name/<context> context format.", function (done) {
                     var expected = '<ul>\n' +
-                                   '<li><a href="https://dev.isrd.isi.edu/chaise/record/schema_table_display:table_w_table_display_annotation_w_row_name_context/RID=' + findRID(tableName6, "10001") + '"><strong>Shakespeare</strong></a></li>\n' +
-                                   '<li><a href="https://dev.isrd.isi.edu/chaise/record/schema_table_display:table_w_table_display_annotation_w_row_name_context/RID=' + findRID(tableName6, "10002") + '"><strong>Twain</strong></a></li>\n' +
+                                   '<li><a href="https://dev.isrd.isi.edu/chaise/record/schema_table_display:table_w_table_display_annotation_w_row_name_context/RID=' + utils.findEntityRID(options, schemaName, tableName6, "id", "10001") + '"><strong>Shakespeare</strong></a></li>\n' +
+                                   '<li><a href="https://dev.isrd.isi.edu/chaise/record/schema_table_display:table_w_table_display_annotation_w_row_name_context/RID=' + utils.findEntityRID(options, schemaName, tableName6, "id", "10002") + '"><strong>Twain</strong></a></li>\n' +
                                    '</ul>\n';
                     testPageContent(table6EntityUri, 2, expected, done);
                 });
@@ -549,7 +560,7 @@ exports.execute = function (options) {
                             val = expected[i];
                         } else {
                             val = '<a href="' + recordURL + '/schema_table_display:table_w_table_display_annotation/RID=' +
-                                  findRID(tableName5, expected[index].id) + '">' + expected[index].rowName + '</a>';
+                                  utils.findEntityRID(options, schemaName, tableName5, "id", expected[index].id) + '">' + expected[index].rowName + '</a>';
                         }
                         expect(t.displayname.value).toEqual(val, "index= " + index + ". displayname missmatch.");
                         expect(t.rowName.value).toEqual(val, "index= " + index + ". rowName missmatch.");

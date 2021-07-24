@@ -1,10 +1,9 @@
-
+    
     module.configure = configure;
 
     module.ermrestFactory = {
         getServer: getServer
     };
-
 
     var _servers = {};
 
@@ -118,7 +117,6 @@
      * @constructor
      */
     function Server(uri, contextHeaderParams) {
-
         /**
          * The URI of the ERMrest service
          * @type {string}
@@ -1352,7 +1350,7 @@
                              addedCols[elIndex] = true;
                          }
                          if (elIndex === -1) {
-                             console.log("invalid source definition, ", (isFkey ? "fkeys" : "columns"), ", index=" + index);
+                             module._log.warn("invalid source definition, ", (isFkey ? "fkeys" : "columns"), ", index=" + index);
                              return;
                          }
                          resultList.push(isFkey ? allForeignKeys[elIndex] : allColumns[elIndex]);
@@ -1391,22 +1389,23 @@
 
                      // TODO why? make sure key is not the same as table columns
                      if (self.columns.has(key)) {
-                         console.log(message +  ": cannot use the table column names.");
+                         module._log.info(message +  ": cannot use the table column names.");
                          continue;
                      }
 
                      // TODO why? make sure key doesn't start with $
                      if (key.startsWith("$")) {
-                         console.log(message + ": key name cannot start with $");
+                         module._log.info(message + ": key name cannot start with $");
                          continue;
                      }
 
+
                      var pSource;
                      try {
-                         pSource = new SourceObjectWrapper(annot.sources[key], self, consNames);
+                        pSource = new SourceObjectWrapper(annot.sources[key], self, consNames);
                      } catch (exp) {
-                         console.log(message + ": " + exp.message);
-                         continue;
+                        module._log.info(message + ": " + exp.message);
+                        continue;
                      }
 
                      // attach to sources
@@ -1458,7 +1457,7 @@
 
                      // make sure it's properly defined as `or` of sources
                      if (!sbDef.hasOwnProperty(orOperator) || !Array.isArray(sbDef[orOperator])) {
-                         console.log(message + ": search-box must be defined as `or` of sources.");
+                         module._log.info(message + ": search-box must be defined as `or` of sources.");
                          return false;
                      }
 
@@ -1469,12 +1468,12 @@
                              // process each individual object
                              pSource = new SourceObjectWrapper(src, self, consNames);
                          } catch (exp) {
-                             console.log(message + ", index=" + index + ":" + exp.message);
+                             module._log.info(message + ", index=" + index + ":" + exp.message);
                              return;
                          }
 
                          if (pSource.hasPath) {
-                             console.log(message + ", index=" + index + ": only table columns are accepted.");
+                             module._log.info(message + ", index=" + index + ": only table columns are accepted.");
                              return;
                          }
 
@@ -1482,7 +1481,7 @@
                      });
 
                      if (res.length === 0) {
-                         console.log(message + ": none of the defined sources were valid, using all the columns.");
+                         module._log.info(message + ": none of the defined sources were valid, using all the columns.");
                          return false;
                      }
                      return res;
@@ -1617,7 +1616,7 @@
                         altTable = this.schema.catalog.schemas.get(schema).tables.get(table);
                     } catch (error) {
                         // schema or table not found
-                        console.log(error.message);
+                        module._log.error(error.message);
                         continue;
                     }
 
@@ -1639,15 +1638,15 @@
 
                     // 1. alt should have no incoming foreign keys
                     if (altTable.referredBy.length() > 0) {
-                        console.log("Invalid schema: " + altTable.name + " is an alternative table with incoming reference");
-                        console.log("Ignoring " + altTable.name);
+                        module._log.info("Invalid schema: " + altTable.name + " is an alternative table with incoming reference");
+                        module._log.info("Ignoring " + altTable.name);
                         continue;
                     }
 
                     // 2. two level only
                     if (altTable.annotations.contains(module._annotations.TABLE_ALTERNATIVES)) {
-                        console.log("Invalid schema: " + altTable.name + " is an alternative table and a base table");
-                        console.log("Ignoring " + altTable.name);
+                        module._log.info("Invalid schema: " + altTable.name + " is an alternative table and a base table");
+                        module._log.info("Ignoring " + altTable.name);
                         continue;
                     }
 
@@ -1655,7 +1654,7 @@
                     if (altTable._baseTable !== altTable) {
                         // base table has previously been set
                         // more than one base table
-                        console.log("Invalid schema: " + altTable.name + " has more than one base table");
+                        module._log.info("Invalid schema: " + altTable.name + " has more than one base table");
                         continue;
                     }
 
@@ -1698,8 +1697,8 @@
                         }
 
                         if (!this._altSharedKey) {
-                            console.log("Invalid schema: alternative table " + altTable.name + " should have a key that is a foreign key to the base table");
-                            console.log(altTable.name + " ignored");
+                            module._log.info("Invalid schema: alternative table " + altTable.name + " should have a key that is a foreign key to the base table");
+                            module._log.info(altTable.name + " ignored");
                             continue;
                         }
                     } else {
@@ -1720,9 +1719,9 @@
                             }
 
                         } catch (error) {
-                            console.log("Invalid schema: base table " + this.name);
-                            console.log("alternative tables should have a key that is a foreign key to the base table, and it shoud be shared among all alternative tables");
-                            console.log("All alternative tables of base table " + this.name + " are ignored");
+                            module._log.error("Invalid schema: base table " + this.name);
+                            module._log.error("alternative tables should have a key that is a foreign key to the base table, and it shoud be shared among all alternative tables");
+                            module._log.error("All alternative tables of base table " + this.name + " are ignored");
 
                             // since alt tables don't share the same key, ignore all the alt tables
                             this._alternatives = {};
@@ -2459,7 +2458,7 @@
                     try {
                         return module._printf(display.preformatConfig, v, self.type.rootName);
                     } catch(e) {
-                        console.log(e);
+                        module._log.error(e);
                     }
                 }
 
@@ -2773,7 +2772,7 @@
                     }
                     this._default = defaultVal;
                 } catch(e) {
-                    console.dir(e.message);
+                    module._log.error(e.message);
                     this._default = null;
                 }
             }
@@ -2845,7 +2844,7 @@
 
                 if (typeof annotation.pre_format === 'object') {
                     if (typeof annotation.pre_format.format !== 'string') {
-                        console.log(" pre_format annotation provided for column " + this.name + " doesn't has format string property");
+                        module._log.info(" pre_format annotation provided for column " + this.name + " doesn't has format string property");
                     } else {
                         hasPreformat = true;
                     }
@@ -3593,8 +3592,8 @@
             var definitions = this._table.sourceDefinitions, wm = module._warningMessages;
             var logErr = function (bool, message, i) {
                 if (bool) {
-                    console.log("inbound foreignkeys list for table: " + self._table.name + ", context: " + context + ", fk index:" + i);
-                    console.log(message);
+                    module._log.info("inbound foreignkeys list for table: " + self._table.name + ", context: " + context + ", fk index:" + i);
+                    module._log.info(message);
                 }
                 return bool;
             };

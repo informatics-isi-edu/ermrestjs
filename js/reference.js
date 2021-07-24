@@ -61,7 +61,7 @@
             return defer.resolve(), defer.promise;
         }).catch(function (err) {
             // fail silently
-            console.log("couldn't apply the client-config changes");
+            module._log.error("couldn't apply the client-config changes");
             return defer.resolve(), defer.promise;
         });
 
@@ -2715,8 +2715,8 @@
             // make sure generated hash is not the name of any columns in the table
             var nameExistsInTable = function (name, obj) {
                 if (name in tableColumns) {
-                    console.log("Generated Hash `" + name + "` for pseudo-column exists in table `" + self.table.name +"`.");
-                    console.log("Ignoring the following in visible-columns: ", obj);
+                    module._log.info("Generated Hash `" + name + "` for pseudo-column exists in table `" + self.table.name +"`.");
+                    module._log.info("Ignoring the following in visible-columns: ", obj);
                     return true;
                 }
                 return false;
@@ -2726,8 +2726,8 @@
             var wm = module._warningMessages;
             var logCol = function (bool, message, i) {
                 if (bool) {
-                    console.log("columns list for table: " + self.table.name + ", context: " + context + ", column index:" + i);
-                    console.log(message);
+                    module._log.info("columns list for table: " + self.table.name + ", context: " + context + ", column index:" + i);
+                    module._log.info(message);
                 }
                 return bool;
             };
@@ -3349,6 +3349,24 @@
                 }
             }
             return this._citation;
+        },
+
+        /**
+         * If annotation is defined and has the required attributes, will return
+         * a Metadata object
+         * @type {ERMrest.GoogleDatasetMetadata}
+         */
+         get googleDatasetMetadata() {
+            if (this._googleDatasetMetadata === undefined) {
+                var table = this.table;
+                if (!table.annotations.contains(module._annotations.GOOGLE_DATASET_METADATA)) {
+                    this._googleDatasetMetadata = null;
+                } else {
+                    var metadataAnnotation = module._getRecursiveAnnotationValue(this._context, this._table.annotations.get(module._annotations.GOOGLE_DATASET_METADATA).content);
+                    this._googleDatasetMetadata = new GoogleDatasetMetadata(this, metadataAnnotation);
+                }
+            }
+            return this._googleDatasetMetadata;
         },
 
         /**
@@ -4698,7 +4716,7 @@
 
             if (!self._data || !self._data.length) return null;
 
-            var i, value, pattern, values = [], keyValues;
+            var i, value, pattern, values = [], keyValues, tuple;
             var display = ref.display;
 
             // markdown_pattern in the source object
@@ -4706,7 +4724,6 @@
                 var $self = self.tuples.map(function (t) {
                     return t.templateVariables;
                 });
-                //TODO test this
                 keyValues = Object.assign({$self: $self}, templateVariables);
 
                 pattern = module._renderTemplate(
@@ -4768,8 +4785,10 @@
                 // Iterate over all data rows to compute the row values depending on the row_markdown_pattern.
                 for (i = 0; i < self.tuples.length; i++) {
 
+                    tuple = self.tuples[i];
+
                     // make sure we have the formatted key values
-                    keyValues = self.tuples[i].templateVariables.values;
+                    keyValues = Object.assign({$self: tuple.selfTemplateVariable}, tuple.templateVariables.values);
 
                     // render template
                     value = module._renderTemplate(ref.display._rowMarkdownPattern, keyValues, ref.table.schema.catalog, { templateEngine: ref.display.templateEngine});
@@ -4790,7 +4809,7 @@
 
             // no markdown_pattern, just return the list of row-names in this context (row_name/<context>)
             for ( i = 0; i < self.tuples.length; i++) {
-                var tuple = self.tuples[i];
+                tuple = self.tuples[i];
                 var url = tuple.reference.contextualize.detailed.appLink;
                 var rowName = module._generateRowName(ref.table, ref._context, tuple._data, tuple._linkedData);
 
@@ -5473,6 +5492,26 @@
         },
 
         /**
+         * Should be used for populating $self for this tuple in templating environments
+         * It will have,
+         * - rowName
+         * - uri
+         * @type {Object}
+         */
+        get selfTemplateVariable() {
+            if (this._selfTemplateVariable === undefined) {
+                var $self = {};
+                for (var j in this.templateVariables) {
+                    if (this.templateVariables.hasOwnProperty(j) && j != "values") {
+                        $self[j] = this.templateVariables[j];
+                    }
+                }
+                this._selfTemplateVariable = $self;
+            }
+            return this._selfTemplateVariable;
+        },
+
+        /**
          * If the Tuple is derived from an association related table,
          * this function will return a reference to the corresponding
          * entity of this tuple's association table.
@@ -5635,12 +5674,14 @@
                 templateVariables = tuple.templateVariables.values;
             }
 
+            var keyValues = Object.assign({$self: tuple.selfTemplateVariable}, templateVariables);
+
             var citation = {};
             // author, title, id set to null if not defined
             ["author", "title", "journal", "year", "url", "id"].forEach(function (key) {
                 citation[key] = module._renderTemplate(
                     citationAnno[key+"_pattern"],
-                    templateVariables,
+                    keyValues,
                     table.schema.catalog,
                     {templateEngine: citationAnno.template_engine}
                 );
@@ -5654,3 +5695,74 @@
             return citation;
         }
     };
+
+    /**
+     * Constructs the Google Dataset metadata for the given tuple.
+     * The given metadata must be valid and have the appropriate variables.
+     */
+    function GoogleDatasetMetadata(reference, gdsMetadataAnnotation) {
+        this._reference = reference;
+        this._table = reference.table;
+        this._gdsMetadataAnnotation = gdsMetadataAnnotation;
+    }
+
+    GoogleDatasetMetadata.prototype = {
+        /**
+         * Given the templateVariables variables, will generate the metadata.
+         * @param {ERMrest.Tuple} tuple - the tuple object that this metadata is based on
+         * @param {Object=} templateVariables - if it's not an object, we will use the tuple templateVariables
+         * @return {Json-ld|null} if the returned template for required attributes are empty or invalid, it will return null.
+         */
+        compute: function (tuple, templateVariables) {
+            var table = this._table,
+                metadataAnnotation = this._gdsMetadataAnnotation;
+
+            if (!templateVariables) {
+                templateVariables = tuple.templateVariables.values;
+            }
+
+            var keyValues = Object.assign({$self: tuple.selfTemplateVariable}, templateVariables);
+            var metadata = {};
+            setMetadataFromTemplate(metadata, metadataAnnotation.dataset, metadataAnnotation.template_engine, keyValues, table);
+
+            var result = module.validateJSONLD(metadata);
+
+            if (!result.isValid) {
+                module._log.error("JSON-LD not appended to <head> as validation errors found.");
+                return null;
+            }
+
+            return result.modifiedJsonLd;
+        },
+    };
+
+    function setMetadataFromTemplate(metadata, metadataAnnotation, templateEngine, templateVariables, table) {
+        Object.keys(metadataAnnotation).forEach(function (key) {
+            if (typeof metadataAnnotation[key] == "object" && metadataAnnotation[key] != null && !Array.isArray(metadataAnnotation[key])) {
+                metadata[key] = {};
+                setMetadataFromTemplate(metadata[key], metadataAnnotation[key], templateEngine, templateVariables, table);
+            }
+            else if (Array.isArray(metadataAnnotation[key])) {
+                metadata[key] = [];
+                metadataAnnotation[key].forEach(function (element) {
+                    metadata[key].push(module._renderTemplate(
+                        element,
+                        templateVariables,
+                        table.schema.catalog,
+                        { templateEngine: templateEngine }
+                    ));
+                });
+            }
+            else {
+                metadata[key] = module._renderTemplate(
+                    metadataAnnotation[key],
+                    templateVariables,
+                    table.schema.catalog,
+                    { templateEngine: templateEngine }
+                );
+            }
+        });
+    }
+
+    
+

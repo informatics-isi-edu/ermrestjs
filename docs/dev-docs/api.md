@@ -370,6 +370,7 @@ to use for ERMrest JavaScript agents.
         * [.filterLogInfo](#ERMrest.Reference+filterLogInfo) : <code>Object</code>
         * [.defaultExportTemplate](#ERMrest.Reference+defaultExportTemplate) : <code>string</code>
         * [.citation](#ERMrest.Reference+citation) : <code>ERMrest.Citation</code>
+        * [.googleDatasetMetadata](#ERMrest.Reference+googleDatasetMetadata) : <code>ERMrest.GoogleDatasetMetadata</code>
         * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
         * [.hideFacets()](#ERMrest.Reference+hideFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
         * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
@@ -417,6 +418,7 @@ to use for ERMrest JavaScript agents.
         * [.uniqueId](#ERMrest.Tuple+uniqueId) : <code>string</code>
         * [.citation](#ERMrest.Tuple+citation) : <code>ERMrest.Citation</code>
         * [.templateVariables](#ERMrest.Tuple+templateVariables) : <code>Object</code>
+        * [.selfTemplateVariable](#ERMrest.Tuple+selfTemplateVariable) : <code>Object</code>
         * [.update()](#ERMrest.Tuple+update) ⇒ <code>Promise</code>
         * [.delete()](#ERMrest.Tuple+delete) ⇒ <code>Promise</code>
         * [.getAssociationRef()](#ERMrest.Tuple+getAssociationRef) : [<code>Reference</code>](#ERMrest.Reference)
@@ -692,6 +694,7 @@ to use for ERMrest JavaScript agents.
         * [.filterLogInfo](#ERMrest.Reference+filterLogInfo) : <code>Object</code>
         * [.defaultExportTemplate](#ERMrest.Reference+defaultExportTemplate) : <code>string</code>
         * [.citation](#ERMrest.Reference+citation) : <code>ERMrest.Citation</code>
+        * [.googleDatasetMetadata](#ERMrest.Reference+googleDatasetMetadata) : <code>ERMrest.GoogleDatasetMetadata</code>
         * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
         * [.hideFacets()](#ERMrest.Reference+hideFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
         * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
@@ -2920,6 +2923,7 @@ Constructor for a ParsedFilter.
     * [.filterLogInfo](#ERMrest.Reference+filterLogInfo) : <code>Object</code>
     * [.defaultExportTemplate](#ERMrest.Reference+defaultExportTemplate) : <code>string</code>
     * [.citation](#ERMrest.Reference+citation) : <code>ERMrest.Citation</code>
+    * [.googleDatasetMetadata](#ERMrest.Reference+googleDatasetMetadata) : <code>ERMrest.GoogleDatasetMetadata</code>
     * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
     * [.hideFacets()](#ERMrest.Reference+hideFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
     * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
@@ -3310,6 +3314,13 @@ a Citation object that can be used to generate citation.
 NOTE I had to move this here because activeList is using this before read,
 to get the all-outbound foreignkeys which might be in the waitfor of citation annotation
 In the future we might also want to generate citation based on page and not necessarily tuple.
+
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+googleDatasetMetadata"></a>
+
+#### reference.googleDatasetMetadata : <code>ERMrest.GoogleDatasetMetadata</code>
+If annotation is defined and has the required attributes, will return
+a Metadata object
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+removeAllFacetFilters"></a>
@@ -3855,6 +3866,7 @@ It will return:
     * [.uniqueId](#ERMrest.Tuple+uniqueId) : <code>string</code>
     * [.citation](#ERMrest.Tuple+citation) : <code>ERMrest.Citation</code>
     * [.templateVariables](#ERMrest.Tuple+templateVariables) : <code>Object</code>
+    * [.selfTemplateVariable](#ERMrest.Tuple+selfTemplateVariable) : <code>Object</code>
     * [.update()](#ERMrest.Tuple+update) ⇒ <code>Promise</code>
     * [.delete()](#ERMrest.Tuple+delete) ⇒ <code>Promise</code>
     * [.getAssociationRef()](#ERMrest.Tuple+getAssociationRef) : [<code>Reference</code>](#ERMrest.Reference)
@@ -4058,6 +4070,15 @@ a Citation object that can be used to generate the citation for this tuple.
 An object of what is available in templating environment for this tuple
 it has the following attributes:
 - values
+- rowName
+- uri
+
+**Kind**: instance property of [<code>Tuple</code>](#ERMrest.Tuple)  
+<a name="ERMrest.Tuple+selfTemplateVariable"></a>
+
+#### tuple.selfTemplateVariable : <code>Object</code>
+Should be used for populating $self for this tuple in templating environments
+It will have,
 - rowName
 - uri
 
@@ -6605,6 +6626,7 @@ get PathColumn object by column name
     * [.filterLogInfo](#ERMrest.Reference+filterLogInfo) : <code>Object</code>
     * [.defaultExportTemplate](#ERMrest.Reference+defaultExportTemplate) : <code>string</code>
     * [.citation](#ERMrest.Reference+citation) : <code>ERMrest.Citation</code>
+    * [.googleDatasetMetadata](#ERMrest.Reference+googleDatasetMetadata) : <code>ERMrest.GoogleDatasetMetadata</code>
     * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
     * [.hideFacets()](#ERMrest.Reference+hideFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
     * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
@@ -6995,6 +7017,13 @@ a Citation object that can be used to generate citation.
 NOTE I had to move this here because activeList is using this before read,
 to get the all-outbound foreignkeys which might be in the waitfor of citation annotation
 In the future we might also want to generate citation based on page and not necessarily tuple.
+
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+googleDatasetMetadata"></a>
+
+#### reference.googleDatasetMetadata : <code>ERMrest.GoogleDatasetMetadata</code>
+If annotation is defined and has the required attributes, will return
+a Metadata object
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+removeAllFacetFilters"></a>

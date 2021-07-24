@@ -58,3 +58,16 @@ exports.resetCatalogAcls = function (done, acls) {
         done.fail(err);
     });
 };
+
+var findEntity = function(options, currSchema, currTable, keyName, keyValue) {
+	return options.entities[currSchema][currTable].filter(function (e) {
+		return e[keyName] == keyValue;
+	})[0];
+}
+exports.findEntity = findEntity;
+
+var findEntityRID = function(options, currSchema, currTable, keyName, keyValue) {
+	var row = findEntity(options, currSchema, currTable, keyName, keyValue);
+	return row ? row.RID : "";
+}
+exports.findEntityRID = findEntityRID;

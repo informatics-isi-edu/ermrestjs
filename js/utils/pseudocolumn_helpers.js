@@ -107,6 +107,7 @@
             var res = _sourceColumnHelpers.processDataSourcePath(source, rootTable, tableName, catalogId, consNames);
 
             if (res.error || res.sourceObjectNodes.length == 0) {
+                // TODO FILTER_IN_SOURCE should we log the error?
                 return null;
             }
 
@@ -558,7 +559,7 @@
         waitFors.forEach(function (wf, index) {
             var errorMessage = "wait_for defined on table=`" + currentTable.name + "`, " + message + "`, index=" + index + ": ";
             if (typeof wf !== "string") {
-                console.log(errorMessage + "must be an string");
+                module._log.warn(errorMessage + "must be an string");
                 return;
             }
 
@@ -580,7 +581,7 @@
 
                 // entitysets are only allowed in detailed
                 if (sd.hasInbound && !sd.sourceObject.aggregate && baseReference._context !== module._contexts.DETAILED) {
-                    console.log(errorMessage + "entity sets are not allowed in non-detailed.");
+                    module._log.warn(errorMessage + "entity sets are not allowed in non-detailed.");
                     return;
                 }
 

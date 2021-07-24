@@ -1,3 +1,5 @@
+var utils = require('./../../../utils/utilities.js');
+
 exports.execute = function (options) {
 
     describe('For determining citation annotation, ', function () {
@@ -85,7 +87,7 @@ exports.execute = function (options) {
                 expect(citation.author).toBe("John Doe", "Author does not match for tuple[0]");
                 expect(citation.title).toBe("The First Data Row", "Title does not match for tuple[0]");
                 expect(citation.year).toBe("2018", "Year does not match for tuple[0]");
-                expect(citation.url).toBe("https://dev.isrd.isi.edu/chaise/record/#" + catalog_id + "/citation_schema:citation_w_mustache/id=1", "Url does not match for tuple[0]");
+                expect(citation.url).toBe("https://dev.isrd.isi.edu/chaise/record/citation_schema:citation_w_mustache/RID=" + utils.findEntityRID(options, schemaName, "citation_w_mustache", "id", "1"), "Url does not match for tuple[0]");
                 expect(citation.id).toBe("1", "Id does not match for tuple[0]");
 
                 done();
@@ -101,7 +103,7 @@ exports.execute = function (options) {
                 expect(citation.author).toBe("John Doe", "Author does not match for tuple[1]");
                 expect(citation.title).toBe("No title", "Title does not match for tuple[1]");
                 expect(citation.year).toBe("2018", "Year does not match for tuple[1]");
-                expect(citation.url).toBe("https://dev.isrd.isi.edu/chaise/record/#" + catalog_id + "/citation_schema:citation_w_mustache/id=2", "Url does not match for tuple[1]");
+                expect(citation.url).toBe("https://dev.isrd.isi.edu/chaise/record/citation_schema:citation_w_mustache/RID=" + utils.findEntityRID(options, schemaName, "citation_w_mustache", "id", "2"), "Url does not match for tuple[0]");
                 expect(citation.id).toBe("2", "Id does not match for tuple[1]");
 
                 done();
@@ -146,7 +148,7 @@ exports.execute = function (options) {
                 expect(citation.author).toBe("John Doe", "Author does not match for tuple[0]");
                 expect(citation.title).toBe("The First Data Row", "Title does not match for tuple[0]");
                 expect(citation.year).toBe(year, "Year does not match for tuple[0]");
-                expect(citation.url).toBe("https://dev.isrd.isi.edu/chaise/record/#" + catalog_id + "/citation_schema:citation_w_handlebars/id=1", "Url does not match for tuple[0]");
+                expect(citation.url).toBe("https://dev.isrd.isi.edu/chaise/record/citation_schema:citation_w_handlebars/RID=" + utils.findEntityRID(options, schemaName, "citation_w_handlebars", "id", "1"), "Url does not match for tuple[0]");
                 expect(citation.id).toBe("1", "Id does not match for tuple[0]");
 
                 done();
@@ -165,7 +167,7 @@ exports.execute = function (options) {
                 expect(citation.author).toBe("John Doe", "Author does not match for tuple[1]");
                 expect(citation.title).toBe("No title", "Title does not match for tuple[1]");
                 expect(citation.year).toBe(year, "Year does not match for tuple[1]");
-                expect(citation.url).toBe("https://dev.isrd.isi.edu/chaise/record/#" + catalog_id + "/citation_schema:citation_w_handlebars/id=2", "Url does not match for tuple[1]");
+                expect(citation.url).toBe("https://dev.isrd.isi.edu/chaise/record/citation_schema:citation_w_handlebars/RID=" + utils.findEntityRID(options, schemaName, "citation_w_handlebars", "id", "2"), "Url does not match for tuple[1]");
                 expect(citation.id).toBe("2", "Id does not match for tuple[1]");
 
                 done();
@@ -220,7 +222,7 @@ exports.execute = function (options) {
                     expect(computedCitation.author).toBe("Record author", "Author missmatch");
                     expect(computedCitation.title).toBe("Record title", "Title missmatch");
                     expect(computedCitation.year).toBe(year, "Year missmatch");
-                    expect(computedCitation.url).toBe("https://dev.isrd.isi.edu/chaise/record/#" + catalog_id + "/citation_schema:citation_w_handlebars/id=1", "Url missmatch");
+                    expect(computedCitation.url).toBe("https://dev.isrd.isi.edu/chaise/record/citation_schema:citation_w_waitfor/RID=" + utils.findEntityRID(options, schemaName, "citation_w_waitfor", "id", "1"), "Url missmatch");
                     expect(computedCitation.id).toBe("1", "id missmatch");
                     done();
                 });
