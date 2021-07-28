@@ -3573,51 +3573,37 @@
             // complete the path
             filterSource.push({"outbound": fkr.constraint_names[0]});
 
-            // if the sourceObjectWrapper is passed, filter source is reverse of that.
-            // NOTE the related table might have filters, that's why we have to do this and cannot
-            // just rely on the structure
-            if (sourceObjectWrapper) {
-                filterSource = [];
-                for (i = sourceObjectWrapper.sourceObjectNodes.length -1; i >= 0; i--) {
-                    sn = sourceObjectWrapper.sourceObjectNodes[i];
-                    if (sn.isFilter) {
-                        obj = sn.nodeObject;
-                    } else if (sn.isForeignKey && sn.isInbound) {
-                        obj = {"outbound": sn.nodeObject.constraint_names[0]};
-                    } else if (sn.isForeignKey && !sn.isInbound){
-                        obj = {"inbound": sn.nodeObject.constraint_names[0]};
-                    }
-
-                    // add the association alias
-                    if (checkForAssociation && !sn.isFilter && fkrTable.isPureBinaryAssociation && sn == sourceObjectWrapper.lastForeignKeyNode) {
-                        obj.alias = module._parserAliases.ASSOCIATION_TABLE;
-                    }
-
-                    filterSource.push(obj);
-                }
-            }
-
-            // this is ignoring the given source completely, it should reverse it if it's available.
             if (useFaceting) {
-                var table = newRef._table;
+                var table = newRef._table, facets;
                 newRef._location = module.parse([
                     catalog.server.uri ,"catalog" ,
                     catalog.id, "entity",
                     module._fixedEncodeURIComponent(table.schema.name) + ":" + module._fixedEncodeURIComponent(table.name)
                 ].join("/"), catalog);
 
-                //filters
-                var filters = [], filter;
-                fkr.key.table.shortestKey.forEach(function (col) {
-                    filter = {
-                        source: filterSource.concat(col.name)
-                    };
-                    filter[module._facetFilterTypes.CHOICE] = [tuple.data[col.name]];
-                    filters.push(filter);
-                });
+                // if the sourceObjectWrapper is passed, filter source is reverse of that.
+                // NOTE the related table might have filters, that's why we have to do this and cannot
+                // just rely on the structure
+                if (isObjectAndNotNull(sourceObjectWrapper)) {
+                    var addAlias = checkForAssociation && fkrTable.isPureBinaryAssociation;
+                    facets = sourceObjectWrapper.getReverseAsFacet(tuple, fkr.key.table, addAlias ? module._parserAliases.ASSOCIATION_TABLE : "");
+                } else {
+                    //filters
+                    var filters = [], filter;
+                    fkr.key.table.shortestKey.forEach(function (col) {
+                        filter = {
+                            source: filterSource.concat(col.name)
+                        };
+                        filter[module._facetFilterTypes.CHOICE] = [tuple.data[col.name]];
+                        filters.push(filter);
+                    });
+                    
+                    facets = {"and": filters};
+                }
 
                 // the facets are basd on the value of shortest key of current table
-                newRef._location.facets = {"and": filters};
+                newRef._location.facets = facets;
+                
             }
 
             return newRef;

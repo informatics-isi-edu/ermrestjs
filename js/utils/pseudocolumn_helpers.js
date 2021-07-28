@@ -1015,9 +1015,58 @@
             return self;
         },
 
-        toString: function (reverse, outerJoin) {
+        toString: function (reverse, outerJoin, outAlias) {
             
-        }
+        },
+
+        /**
+         * Return the reverse path as facet with the value of shortestkey
+         * @param {ERMrest.Tuple} tuple 
+         * @param {ERMrest.Table} rootTable 
+         * @param {String=} outAlias 
+         * @returns 
+         */
+        getReverseAsFacet: function (tuple, rootTable, outAlias) {
+            if (!isObjectAndNotNull(tuple)) return null;
+            var self = this, i, col, filters = [], filterSource = [], sn, obj;
+
+            // create the reverse path
+            for (i = self.sourceObjectNodes.length -1; i >= 0; i--) {
+                sn = self.sourceObjectNodes[i];
+                if (sn.isFilter) {
+                    obj = sn.nodeObject;
+                } else if (sn.isForeignKey && sn.isInbound) {
+                    obj = {"outbound": sn.nodeObject.constraint_names[0]};
+                } else if (sn.isForeignKey && !sn.isInbound){
+                    obj = {"inbound": sn.nodeObject.constraint_names[0]};
+                }
+
+                // add alias to the last element
+                if (isStringAndNotEmpty(outAlias) && sn == self.lastForeignKeyNode){
+                    obj.alias = outAlias;
+                }
+                filterSource.push(obj);
+            }
+
+            // add the filter data
+            for (i = 0; i < rootTable.shortestKey.length; i++) {
+                col = rootTable.shortestKey[i];
+                if (!tuple.data || !tuple.data[col.name]) {
+                    return null;
+                }
+                filter = {
+                    source: filterSource.concat(col.name)
+                };
+                filter[module._facetFilterTypes.CHOICE] = [tuple.data[col.name]];
+                filters.push(filter);
+            }
+
+            if (filters.length == 0) {
+                return null;
+            }
+
+            return {"and": filters};
+        },
     };
 
     _sourceColumnHelpers = {
@@ -1035,16 +1084,22 @@
             };
 
             var i, fkAlias, constraint, isInbound, fkObj, fk, fkIndex, colTable, hasInbound = false,
-                firstFkIndex = -1, fkPathLength = 0, sourceObjectNodes = [], isFiltered = false;
+                firstFkIndex = -1, fkPathLength = 0, sourceObjectNodes = [], isFiltered = false, hasPrefix=  false;
 
             for (i = 0; i < source.length - 1; i++) {
+                if ("sourcekey" in source[i]) {
+                    if (i != 0 || hasPrefix) {
+                        return returnError("`sourcekey` can only be used as prefix and only once");
+                    }
+                    hasPrefix = true;
+                }
                 // TODO FILTER_IN_SOURCE
-                // if ("fitler" in source[i] || "and" in source[i] || "or" in source[i]) {
+                // else if ("fitler" in source[i] || "and" in source[i] || "or" in source[i]) {
                 //     isFiltered = true;
                 //     sourceObjectNodes.push(new SourceObjectNode(source[i], true));
                 //     continue;
-                // } else 
-                if ("inbound" in source[i]) {
+                // }
+                else if ("inbound" in source[i]) {
                     constraint = source[i].inbound;
                     isInbound = true;
                 } else if ("outbound" in source[i]) {
@@ -1090,7 +1145,7 @@
                 }
 
                 tableName = colTable.name;
-                sourceObjectNodes.push(new SourceObjectNode(fk, false, true, isInbound, fkAlias));
+                sourceObjectNodes.push(new SourceObjectNode(fk, false, true, isInbound, false, fkAlias));
             }
 
             try {
@@ -1193,14 +1248,15 @@
         }
     };
 
-    function SourceObjectNode (nodeObject, isFilter, isForeignKey, isInbound, alias) {
+    function SourceObjectNode (nodeObject, isFilter, isForeignKey, isInbound, isPathPrefix, alias) {
         this.nodeObject = nodeObject;
 
         this.isFilter = isFilter;
 
         this.isForeignKey = isForeignKey;
-
         this.isInbound = isInbound;
+
+        this.isPathPrefix = isPathPrefix;
 
         this.alias = alias;
     }
@@ -1218,6 +1274,11 @@
             if (self.isForeignKey) {
                 var rev = ( (reverse && self.isInbound) || (!reverse && !self.isInbound) );
                 return self.nodeObject.toString(rev, outerJoin);
+            }
+
+            if (self.isPathPrefix) {
+                // TODO
+                // return self.nodeObject.sourceObjectNodes.toString();
             }
 
             return _sourceColumnHelpers.parseSourceObjectNodeFilter(self.nodeObject);

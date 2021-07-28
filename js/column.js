@@ -59,11 +59,10 @@ module._createPseudoColumn = function (reference, sourceObjectWrapper, mainTuple
         return new ReferenceColumn(reference, [column], sourceObjectWrapper, name, mainTuple);
     }
 
-    var nodes = sourceObjectWrapper.sourceObjectNodes;
-
     // path, entity, outbound length 1, (cannot have any filters)
-    if (sourceObjectWrapper.isEntityMode && nodes.length === 1 && nodes[0].isForeignKey && !nodes[0].isInbound) {
-        return new ForeignKeyPseudoColumn(reference, nodes[0].nodeObject, sourceObjectWrapper, name);
+    if (sourceObjectWrapper.isEntityMode && !sourceObjectWrapper.isFiltered && sourceObjectWrapper.foreignKeyPathLength === 1 && !sourceObjectWrapper.firstForeignKeyNode.isInbound) {
+        fk = sourceObjectWrapper.firstForeignKeyNode.nodeObject;
+        return new ForeignKeyPseudoColumn(reference, fk, sourceObjectWrapper, name);
     }
 
     // path, entity, inbound length 1 (it can have filter)
@@ -1474,42 +1473,14 @@ Object.defineProperty(PseudoColumn.prototype, "reference", {
             } else {
 
 
-                var source = [], i, sn, columns, noData = false;
-
-                // create the reverse path
-                for (i = self.sourceObjectNodes.length -1; i >= 0; i--) {
-                    sn = self.sourceObjectNodes[i];
-                    if (sn.isFilter) {
-                        source.push(sn.nodeObject);
-                    } else if (sn.isForeignKey && sn.isInbound) {
-                        source.push({"outbound": sn.nodeObject.constraint_names[0]});
-                    } else if (sn.isForeignKey && !sn.isInbound){
-                        source.push({"inbound": sn.nodeObject.constraint_names[0]});
-                    }
-                }
-
-                var filters = [], uri = self.table.uri;
+                var facet;
                 if (self._mainTuple) {
-                    // create the filters based on the given tuple and shortestkey of table
-                    // NOTE we have to use shortest key of table, fk.key columns might not
-                    // be valid because it could be outbound and therefore the relationship
-                    // won't be one-to-one.
-                    self._baseReference.table.shortestKey.forEach(function (col) {
-                        if (noData || (!self._mainTuple.data && !self._mainTuple.data[col.name])) {
-                            noData = true;
-                            return;
-                        }
-
-                        var filter = {
-                            "source": source.concat(col.name)
-                        };
-                        filter[module._facetFilterTypes.CHOICE] = [self._mainTuple.data[col.name]];
-                        filters.push(filter);
-                    });
+                    facet = self.sourceObjectWrapper.getReverseAsFacet(self._mainTuple, self._baseReference.table);
                 }
 
                 // if data didn't exist, we should traverse the path
-                if ((noData || filters.length == 0)) {
+                var uri = self.table.uri;
+                if (!isObjectAndNotNull(facet)) {
                     uri = self._baseReference.location.compactUri + "/" + this.sourceObjectNodes.map(function (sn) {
                         return sn.toString(false, false);
                     }).join("/");
@@ -1518,8 +1489,8 @@ Object.defineProperty(PseudoColumn.prototype, "reference", {
                 self._reference = new Reference(module.parse(uri), self.table.schema.catalog);
 
                 // make sure data exists
-                if (!noData && filters.length > 0) {
-                    self._reference.location.facets = {"and": filters};
+                if (isObjectAndNotNull(facet)) {
+                    self._reference.location.facets = facet;
                 }
             }
 
@@ -1606,8 +1577,9 @@ function ForeignKeyPseudoColumn (reference, fk, sourceObjectWrapper, name) {
 
     // NOTE added for compatibility
     // I cannot simply create a sourceObjectWrapper because it needs a shortestkey of length one.
+    // TODO would this cause issues?
     if (!isObjectAndNotNull(sourceObjectWrapper)) {
-        this.lastForeignKeyNode = new SourceObjectNode(fk, false, true, false);
+        this.lastForeignKeyNode = new SourceObjectNode(fk, false, true);
         this.firstForeignKeyNode = this.lastForeignKeyNode;
         this.sourceObjectNodes = [this.lastForeignKeyNode];
         this.foreignKeyPathLength = 1;

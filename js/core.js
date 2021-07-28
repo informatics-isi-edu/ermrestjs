@@ -424,14 +424,16 @@
                     }
                 }
 
-                // find alternative tables
+                // find alternative tables and populate source definitions
                 // requires foreign keys built
+                // and source definitions need to be populated beforehand
                 for (s = 0; s < schemaNames.length; s++) {
                     schema = self.schemas.get(schemaNames[s]);
                     tables = schema.tables.names();
                     for (t = 0; t < tables.length; t++) {
                         table = schema.tables.get(tables[t]);
                         table._findAlternatives();
+                        // table._populateSourceDefinitions();
                     }
                 }
 
@@ -1296,12 +1298,12 @@
          */
         get sourceDefinitions() {
             if (this._sourceDefinitions === undefined) {
-                this._sourceDefinitions = this._getSourceDefinitions();
+                this._populateSourceDefinitions();
             }
             return this._sourceDefinitions;
          },
 
-         _getSourceDefinitions: function () {
+         _populateSourceDefinitions: function () {
              var self = this;
              var sd = module._annotations.SOURCE_DEFINITIONS;
              var hasAnnot = self.annotations.contains(sd);
@@ -1362,7 +1364,8 @@
              if (!hasAnnot) {
                  res.columns = allColumns;
                  res.fkeys = allForeignKeys;
-                 return res;
+                 self._sourceDefinitions = res;
+                 return;
              }
 
              var annot = self.annotations.get(sd).content;
@@ -1419,7 +1422,7 @@
                  }
              }
 
-             return res;
+             self._sourceDefinitions = res;
          },
 
          /**
