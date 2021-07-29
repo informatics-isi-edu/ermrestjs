@@ -369,7 +369,7 @@
      *   Just pass the object that defines the pseudo-column. It must at least have `source` as an attribute.
      *
      */
-    module._generateSourceObjectHashName = function (colObject, useOnlySource) {
+    module._generateSourceObjectHashName = function (colObject, useOnlySource, rootTable) {
 
         //we cannot create an object and stringify it, since its order can be different
         //instead will create a string of `source + aggregate + entity`
@@ -385,13 +385,21 @@
                 var objCopy = [];
                 colObject.source.forEach(function (node) {
                     var objElCopy = {}, k;
-                    if (typeof node != "object" || !("alias" in node)) {
+                    if (typeof node != "object" || (!("alias" in node) && !("sourcekey" in node))) {
                         objCopy.push(node);
                     } else {
                         for (k in node) {
                             if (!node.hasOwnProperty(k)) continue;
                             if (k == "alias") continue;
-                            objElCopy[k] = node[k];
+                            
+                            // use the raw path instead of sourcekey for hashname
+                            if (k == "sourcekey") {
+                                var wrapper = rootTable.sourceDefinitions.sources[node[k]];
+                                if (!wrapper) return null;
+                                objCopy.push(wrapper.getRawSourcePath());
+                            } else {
+                                objElCopy[k] = node[k];
+                            }
                         }
                         objCopy.push(objElCopy);
                     }
@@ -464,6 +472,12 @@
      * Will compress the source that can be used for logging purposes. It will,
      *  - `inbound` to `i`
      *  - `outbound` to `o`
+     *  - `sourcekey` to `key`
+     *  - `alias` to `a`
+     *  - `filter` to `f`
+     *  - `operand` to `opd`
+     *  - `operator` to `opr`
+     *  - `negate` to `n`
      * @private
      */
     _compressSource = function (source) {
@@ -480,7 +494,7 @@
         if (!_sourceColumnHelpers._sourceHasPath(source)) return res;
 
         for (var i = 0; i < res.length; i++) {
-            ["inbound", "outbound", "filter", "operand", "operator", "negate"].forEach(shorten(res[i]));
+            ["alias", "sourcekey", "inbound", "outbound", "filter", "operand", "operator", "negate"].forEach(shorten(res[i]));
         }
         return res;
     };
@@ -855,13 +869,13 @@
         }
     };
 
-    function SourceObjectWrapper (sourceObject, table, consNames, isFacet) {
+    function SourceObjectWrapper (sourceObject, table, consNames, isFacet, sources) {
         this.sourceObject = sourceObject;
 
         // if the extra objects are not passed, we cannot process
         if (isObjectAndNotNull(table) && isObjectAndNotNull(consNames)) {
-            var res = this._process(table, consNames, isFacet);
-            if (res.error) {
+            var res = this._process(table, consNames, isFacet, sources);
+            if (res.error) { 
                 throw new Error(res.message);
             }
         }
@@ -910,7 +924,7 @@
          * @param {boolean} isFacet  -- validation is differrent if it's a facet
          * @returns  {Object}
          */
-        _process: function (table, consNames, isFacet) {
+        _process: function (table, consNames, isFacet, sources) {
             var self = this, sourceObject = this.sourceObject, wm = module._warningMessages;
 
             var returnError = function (message) {
@@ -934,7 +948,7 @@
                 colName = source[0];
             } 
             else if (Array.isArray(source) && source.length > 1) {
-                var res = _sourceColumnHelpers.processDataSourcePath(source, table, table.name, table.schema.catalog.id, consNames);
+                var res = _sourceColumnHelpers.processDataSourcePath(source, table, table.name, table.schema.catalog.id, consNames, sources);
                 if (res.error) {
                     return res;
                 }
@@ -1015,8 +1029,47 @@
             return self;
         },
 
-        toString: function (reverse, outerJoin, outAlias) {
-            
+        toString: function (reverse, isLeft, outAlias) {
+            //    TODO needs to do the same thing that we're doing in
+            //  - export default
+            //  - column.getAggregate
+            //  - reference.read
+        },
+
+        getRawSourcePath: function (reverse, outAlias) {
+            var path = [], self = this, obj;
+            var len = self.sourceObjectNodes.length;
+            var getNotLast = function (index) {
+                return reverse ? (index >= 0) : (index < len);
+            }
+
+            var i = reverse ? (len-1) : 0;
+            while (getNotLast(i)) {
+                sn = self.sourceObjectNodes[i];
+                if (sn.isPathPrefix) {
+                    // TODO what about alias here?
+                    path = path.concat(sn.nodeObject.getRawSourcePath(reverse));
+                }
+                else if (sn.isFilter) {
+                    path.push(sn.nodeObject);
+                }  else {
+                    if (sn.isInbound) {
+                        obj = {"outbound": sn.nodeObject.constraint_names[0]};
+                    } else {
+                        obj = {"inbound": sn.nodeObject.constraint_names[0]};
+                    }
+
+                    // add alias to the last element
+                    if (isStringAndNotEmpty(outAlias) && sn == self.lastForeignKeyNode){
+                        obj.alias = outAlias;
+                    }
+
+                    path.push(obj);
+                }
+                
+                i = i + (reverse ? -1 : 1);
+            }
+            return path;
         },
 
         /**
@@ -1028,25 +1081,10 @@
          */
         getReverseAsFacet: function (tuple, rootTable, outAlias) {
             if (!isObjectAndNotNull(tuple)) return null;
-            var self = this, i, col, filters = [], filterSource = [], sn, obj;
+            var i, col, filters = [], filterSource = [];
 
             // create the reverse path
-            for (i = self.sourceObjectNodes.length -1; i >= 0; i--) {
-                sn = self.sourceObjectNodes[i];
-                if (sn.isFilter) {
-                    obj = sn.nodeObject;
-                } else if (sn.isForeignKey && sn.isInbound) {
-                    obj = {"outbound": sn.nodeObject.constraint_names[0]};
-                } else if (sn.isForeignKey && !sn.isInbound){
-                    obj = {"inbound": sn.nodeObject.constraint_names[0]};
-                }
-
-                // add alias to the last element
-                if (isStringAndNotEmpty(outAlias) && sn == self.lastForeignKeyNode){
-                    obj.alias = outAlias;
-                }
-                filterSource.push(obj);
-            }
+            filterSource = this.getRawSourcePath(true, outAlias);
 
             // add the filter data
             for (i = 0; i < rootTable.shortestKey.length; i++) {
@@ -1070,7 +1108,7 @@
     };
 
     _sourceColumnHelpers = {
-        processDataSourcePath: function (source, rootTable, tableName, catalogId, consNames) {
+        processDataSourcePath: function (source, rootTable, tableName, catalogId, consNames, sources) {
             var returnError = function (message) {
                 return {error: true, message: message};
             };
@@ -1084,7 +1122,7 @@
             };
 
             var i, fkAlias, constraint, isInbound, fkObj, fk, fkIndex, colTable, hasInbound = false,
-                firstFkIndex = -1, fkPathLength = 0, sourceObjectNodes = [], isFiltered = false, hasPrefix=  false;
+                firstFkIndex = -1, fkPathLength = 0, sourceObjectNodes = [], isFiltered = false, hasPrefix = false, prefix;
 
             for (i = 0; i < source.length - 1; i++) {
                 if ("sourcekey" in source[i]) {
@@ -1092,6 +1130,20 @@
                         return returnError("`sourcekey` can only be used as prefix and only once");
                     }
                     hasPrefix = true;
+
+                    if (isObjectAndNotNull(sources)) {
+                        prefix = sources[source[i].sourcekey];
+                    } else {
+                        if (!isObjectAndNotNull(rootTable)) {
+                            return returnError("Couldn't parse the url since Location doesn't have acccess to the catalog object or main table is invalid.");
+                        }
+                        prefix = rootTable.sourceDefinitions.sources[source[i].sourcekey];
+                    }
+
+                    if (!prefix) {
+                        return returnError("sourcekey is invalid.");
+                    }
+                    sourceObjectNodes.push(new SourceObjectNode(prefix, false, false, false, true));
                 }
                 // TODO FILTER_IN_SOURCE
                 // else if ("fitler" in source[i] || "and" in source[i] || "or" in source[i]) {
@@ -1099,53 +1151,50 @@
                 //     sourceObjectNodes.push(new SourceObjectNode(source[i], true));
                 //     continue;
                 // }
-                else if ("inbound" in source[i]) {
-                    constraint = source[i].inbound;
-                    isInbound = true;
-                } else if ("outbound" in source[i]) {
-                    constraint = source[i].outbound;
-                    isInbound = false;
-                } else {
+                else if (("inbound" in source[i]) || ("outbound" in source[i])) {
+                    isInbound = ("inbound" in source[i]);
+                    constraint = isInbound ? source[i].inbound : source[i].outbound;
+
+                    fkAlias = null;
+                    if ("alias" in source[i] && typeof source[i].alias === "string") {
+                        fkAlias = source[i].alias;
+                    }
+
+                    fkObj = findConsName(constraint[0], constraint[1]);
+
+                    // constraint name was not valid
+                    if (fkObj === null || fkObj.subject !== module._constraintTypes.FOREIGN_KEY) {
+                        return returnError("Invalid data source. fk with the following constraint is not available on catalog: " + constraint.toString());
+                    }
+
+                    fk = fkObj.object;
+                    fkIndex = sourceObjectNodes.length;
+                    fkPathLength++;
+
+                    if (firstFkIndex === -1) {
+                        firstFkIndex = fkIndex;
+                    }
+
+                    // inbound
+                    if (isInbound && fk.key.table.name === tableName) {
+                        hasInbound = true;
+                        colTable = fk._table;
+                    }
+                    // outbound
+                    else if (!isInbound && fk._table.name === tableName) {
+                        colTable = fk.key.table;
+                    }
+                    else {
+                        // the given object was not valid
+                        return returnError("Invalid constraint name in source element index=" + i);
+                    }
+
+                    tableName = colTable.name;
+                    sourceObjectNodes.push(new SourceObjectNode(fk, false, true, isInbound, false, fkAlias));
+                }  else {
                     // given object was invalid
                     return returnError("Invalid object in source element index=" + i);
                 }
-
-                fkAlias = null;
-                if ("alias" in source[i] && typeof source[i].alias === "string") {
-                    fkAlias = source[i].alias;
-                }
-
-                fkObj = findConsName(constraint[0], constraint[1]);
-
-                // constraint name was not valid
-                if (fkObj === null || fkObj.subject !== module._constraintTypes.FOREIGN_KEY) {
-                    return returnError("Invalid data source. fk with the following constraint is not available on catalog: " + constraint.toString());
-                }
-
-                fk = fkObj.object;
-                fkIndex = sourceObjectNodes.length;
-                fkPathLength++;
-
-                if (firstFkIndex === -1) {
-                    firstFkIndex = fkIndex;
-                }
-
-                // inbound
-                if (isInbound && fk.key.table.name === tableName) {
-                    hasInbound = true;
-                    colTable = fk._table;
-                }
-                // outbound
-                else if (!isInbound && fk._table.name === tableName) {
-                    colTable = fk.key.table;
-                }
-                else {
-                    // the given object was not valid
-                    return returnError("Invalid constraint name in source element index=" + i);
-                }
-
-                tableName = colTable.name;
-                sourceObjectNodes.push(new SourceObjectNode(fk, false, true, isInbound, false, fkAlias));
             }
 
             try {
@@ -1161,7 +1210,8 @@
                 column: col,
                 fkPathLength: fkPathLength,
                 isFiltered: isFiltered,
-                hasInbound: hasInbound
+                hasInbound: hasInbound,
+                hasPrefix: hasPrefix
             };
         },
 
@@ -1265,20 +1315,19 @@
         /**
          * Return the string representation of this node
          * @param {boolean=} reverse - whether we should reverse the order (applicable to fk)
-         * @param {boolean=} outerJoin  - whether we want to use outerjoin (applicable to fk)
+         * @param {boolean=} isLeft  - whether we want to use left outer join (applicable to fk)
          * @returns {String}
          */
-        toString: function (reverse, outerJoin) {
+        toString: function (reverse, isLeft, outAlias) {
             var self = this;
 
             if (self.isForeignKey) {
                 var rev = ( (reverse && self.isInbound) || (!reverse && !self.isInbound) );
-                return self.nodeObject.toString(rev, outerJoin);
+                return self.nodeObject.toString(rev, isLeft);
             }
 
             if (self.isPathPrefix) {
-                // TODO
-                // return self.nodeObject.sourceObjectNodes.toString();
+                return self.nodeObject(reverse, isLeft, outAlias);
             }
 
             return _sourceColumnHelpers.parseSourceObjectNodeFilter(self.nodeObject);

@@ -1308,7 +1308,7 @@
              var sd = module._annotations.SOURCE_DEFINITIONS;
              var hasAnnot = self.annotations.contains(sd);
              var res = {columns: [], fkeys: [], sources: {}, sourceMapping: {}};
-             var addedCols = {}, addedFks = {};
+             var addedCols = {}, addedFks = {}, addedSources = {};
              var allColumns = self.columns.all(),
                  allForeignKeys = self.foreignKeys.all();
              var consNames = module._constraintNames;
@@ -1361,6 +1361,74 @@
                  return resultList;
              };
 
+             var addSourceDef = function (key) {
+                if (key in addedSources) return;
+
+                var sourceDef = annot.sources;
+
+                // if the key is special
+                if (Object.keys(module._specialSourceDefinitions).indexOf(key) !== -1) {
+                    return;
+                }
+
+                var message = "source definition, table =" + self.name + ", name=" + key;
+
+                // TODO why? make sure key is not the same as table columns
+                if (self.columns.has(key)) {
+                    module._log.info(message +  ": cannot use the table column names.");
+                    return false;
+                }
+
+                // TODO why? make sure key doesn't start with $
+                if (key.startsWith("$")) {
+                    module._log.info(message + ": key name cannot start with $");
+                    return false;
+                }
+
+                var pSource, hasPrefix, prefixSourcekey;
+                try {
+                    // if it has prefix, we have to make sure the prefix is processed beforehand
+                    hasPrefix = typeof sourceDef === "object" && Array.isArray(sourceDef.source) &&
+                                sourceDef.source.length > 1 && ("sourcekey" in sourceDef.source[0]);
+                    
+                    if (hasPrefix) {
+                        prefixSourcekey = sourceDef.source[0].sourcekey;
+                        if (Object.keys(module._specialSourceDefinitions).indexOf(prefixSourcekey) !== -1) {
+                            module._log.info(message + ": " + "given sourcekey (path prefix) cannot be any of the special keys.");
+                            return false;
+                        }
+
+                        if (!(prefixSourcekey in annot.sources)) {
+                            module._log.info(message + ": " + "given sourcekey (path prefix) is invalid.");
+                            return false;
+                        }
+
+                        // make sure we've processed the prefix
+                        if (!(prefixSourcekey in addedSources)) {
+                            addSourceDef(prefixSourcekey);
+                        }
+                    }
+
+                    // NOTE we're passing the list of processed sources 
+                    //      because some of them might have prefix and need that
+                    pSource = new SourceObjectWrapper(sourceDef, self, consNames, false, res.sources);
+                } catch (exp) {
+                    module._log.info(message + ": " + exp.message);
+                    return false;
+                }
+
+                // attach to sources
+                res.sources[key] = pSource;
+
+                // attach to sourceMapping
+                if (!(pSource.name in res.sourceMapping)) {
+                    res.sourceMapping[pSource.name] = [];
+                }
+                res.sourceMapping[pSource.name].push(key);
+
+                return true;
+             }
+
              if (!hasAnnot) {
                  res.columns = allColumns;
                  res.fkeys = allForeignKeys;
@@ -1384,41 +1452,7 @@
              if (annot.sources && typeof annot.sources === "object") {
                  for (var key in annot.sources) {
                      if (!annot.sources.hasOwnProperty(key)) continue;
-
-                     // if the key is special
-                     if (Object.keys(module._specialSourceDefinitions).indexOf(key) !== -1) continue;
-
-                     var message = "source definition, table =" + self.name + ", name=" + key;
-
-                     // TODO why? make sure key is not the same as table columns
-                     if (self.columns.has(key)) {
-                         module._log.info(message +  ": cannot use the table column names.");
-                         continue;
-                     }
-
-                     // TODO why? make sure key doesn't start with $
-                     if (key.startsWith("$")) {
-                         module._log.info(message + ": key name cannot start with $");
-                         continue;
-                     }
-
-
-                     var pSource;
-                     try {
-                        pSource = new SourceObjectWrapper(annot.sources[key], self, consNames);
-                     } catch (exp) {
-                        module._log.info(message + ": " + exp.message);
-                        continue;
-                     }
-
-                     // attach to sources
-                     res.sources[key] = pSource;
-
-                     // attach to sourceMapping
-                     if (!(pSource.name in res.sourceMapping)) {
-                         res.sourceMapping[pSource.name] = [];
-                     }
-                     res.sourceMapping[pSource.name].push(key);
+                     addSourceDef(annot.sources[key], key);
                  }
              }
 
@@ -3271,7 +3305,7 @@
                 if (this.simple) {
                     obj = {source: this.colset.columns[0].name, self_link: true};
                 }
-                this._name = module._generateSourceObjectHashName(obj);
+                this._name = module._generateSourceObjectHashName(obj, false, this.table);
             }
             return this._name;
         },

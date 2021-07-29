@@ -2948,6 +2948,7 @@ FacetColumn.prototype = {
                 });
             };
 
+            // TODO what about path prefix??
             this._isAllOutboundNotNull = this.sourceObjectNodes.length > 0 && this.sourceObjectNodes.every(function (fk) {
                 return !fk.isForeignKey || (!fk.isInbound && colsetNotNull(fk.nodeObject.colset) && colsetNotNull(fk.nodeObject.key.colset));
             });

@@ -343,6 +343,7 @@
     });
 
     module._shorterVersion = Object.freeze({
+        "alias": "a",
         "inbound": "i",
         "outbound": "o",
         "source": "src",
