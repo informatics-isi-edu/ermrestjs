@@ -384,6 +384,13 @@ exports.execute = function (options) {
 
             });
 
+
+            describe("reference.csvDownloadLink, ", function () {
+                it ("should use the same logic as default export.", function () {
+                    
+                });
+            });
+
             describe("for BDBag template", function () {
                 it("should create an exporter object", function() {
                     exportObj = new ermRest.Exporter(reference, "bag-name", reference.table.getExportTemplates()[0], "/deriva/export/");

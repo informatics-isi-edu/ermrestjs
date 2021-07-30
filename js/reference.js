@@ -2392,9 +2392,26 @@
          * @returns {String} A string representing the url for direct csv download
          **/
         get csvDownloadLink() {
-            var cid = this.table.schema.catalog.server.cid;
-            cid = cid ? ("&cid=" + cid) : "";
-            return this.location.ermrestCompactUri + "?limit=none&accept=csv&uinit=1" + cid + "&download=" + module._fixedEncodeURIComponent(this.displayname.unformatted);
+            if (this._csvDownloadLink === undefined) {
+                var cid = this.table.schema.catalog.server.cid;
+                var qParam = "?limit=none&accept=csv&uinit=1";
+                qParam += cid ? ("&cid=" + cid) : "";
+                qParam += "&download=" + module._fixedEncodeURIComponent(this.displayname.unformatted);
+
+                var defaultExportOutput = module._referenceExportOutput(this, this.location.mainTableAlias);
+
+                var uri = [this.location.service, "catalog", this._location.catalog].join("/");
+
+                if (["attributegroup", "entity"].indexOf(defaultExportOutput.source.api) != -1) {
+                    uri += "/" + [defaultExportOutput.source.api, this.location.ermrestCompactPath, defaultExportOutput.source.path].join("/");
+                } else {
+                    // won't happen with the current code, but to make this future proof
+                    uri = this.location.ermrestCompactUri;
+                }
+
+                this._csvDownloadLink =  uri + qParam;
+            }
+            return this._csvDownloadLink;
         },
 
         /**
