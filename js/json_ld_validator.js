@@ -263,11 +263,13 @@ function removeEmptyOrNull(obj) {
     Object.keys(obj).forEach(function (key) {
         // array
         if (obj[key] && Array.isArray(obj[key])) {
-            obj[key].forEach(function (element, index) {
-                if (obj[key][index] == null || obj[key][index] == "") {
-                    obj[key].splice(index, 1);
+            var resultArray = [];
+            obj[key].forEach(function (element) {
+                if (element) {
+                    resultArray.push(element);
                 }
             });
+            obj[key] = resultArray;
 
             if(obj[key].length == 0) {
                 module._log.warn("Invalid attribute ignored " + key + " inside type " + obj[typeKeyword] + " in JSON-LD\n");
