@@ -2267,13 +2267,7 @@
                      if (rel.pseudoColumn && !rel.pseudoColumn.isInboundForeignKey) {
                          var lastFk = rel.pseudoColumn.sourceObjectWrapper.lastForeignKeyNode;
                          // path from main to the related reference
-                         sourcePath = rel.pseudoColumn.sourceObjectNodes.map(function(sn, i, allNodes) {
-                             if (sn.isFilter) {
-                                 return sn.toString();
-                             } else {
-                                 return ((sn === lastFk) ? (relatedTableAlias + ":=") : "") + sn.toString(false, false);
-                             }
-                         }).join("/");
+                        sourcePath = rel.pseudoColumn.sourceObjectWrapper.toString(false, false, relatedTableAlias);
 
                          // path more than length one, we need to add the main table fkey
                          outputs.push(getTableOutput(rel, relatedTableAlias, sourcePath, rel.pseudoColumn.foreignKeyPathLength >= 2, self));
@@ -3834,6 +3828,8 @@
                     });
                     return pseudoPath.join("/");
                 };
+
+                // see if any of the fks are using prefix
 
                 // create the uri with attributegroup and alias
                 uri = compactPath + "/";

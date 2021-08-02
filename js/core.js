@@ -1363,8 +1363,9 @@
 
              var addSourceDef = function (key) {
                 if (key in addedSources) return;
+                if (!(key in annot.sources)) return;
 
-                var sourceDef = annot.sources;
+                var sourceDef = annot.sources[key];
 
                 // if the key is special
                 if (Object.keys(module._specialSourceDefinitions).indexOf(key) !== -1) {
@@ -1427,7 +1428,7 @@
                 res.sourceMapping[pSource.name].push(key);
 
                 return true;
-             }
+             };
 
              if (!hasAnnot) {
                  res.columns = allColumns;
@@ -1452,7 +1453,7 @@
              if (annot.sources && typeof annot.sources === "object") {
                  for (var key in annot.sources) {
                      if (!annot.sources.hasOwnProperty(key)) continue;
-                     addSourceDef(annot.sources[key], key);
+                     addSourceDef(key);
                  }
              }
 

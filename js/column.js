@@ -1125,12 +1125,11 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
      // T:=pseudoColTable/path-from-pseudo-col-to-current/filters/project
      basePath = currTable + ":=" + module._fixedEncodeURIComponent(self.table.schema.name) + ":" + module._fixedEncodeURIComponent(self.table.name) + "/";
 
-    // add the join (path from pseudoColumn's table to current table)
-    for (i = self.sourceObjectWrapper.sourceObjectNodes.length - 1; i >= 0; i--) {
-        var sn = self.sourceObjectWrapper.sourceObjectNodes[i];
-        if (sn === self.sourceObjectWrapper.firstForeignKeyNode) basePath += baseTable + ":=";
-        basePath += sn.toString(true, true) + "/";
+    var pathToRoot = self.sourceObjectWrapper.toString(true, true, baseTable);
+    if (pathToRoot.length > 0) {
+        pathToRoot += "/";
     }
+    basePath += pathToRoot;
 
     // make sure just projection and base uri doesn't go over limit.
     if (basePath.length + projection.length >= module.URL_PATH_LENGTH_LIMIT) {
@@ -1481,9 +1480,7 @@ Object.defineProperty(PseudoColumn.prototype, "reference", {
                 // if data didn't exist, we should traverse the path
                 var uri = self.table.uri;
                 if (!isObjectAndNotNull(facet)) {
-                    uri = self._baseReference.location.compactUri + "/" + this.sourceObjectNodes.map(function (sn) {
-                        return sn.toString(false, false);
-                    }).join("/");
+                    uri = self._baseReference.location.compactUri + "/" + self.sourceObjectWrapper.toString(false, false);
                 }
 
                 self._reference = new Reference(module.parse(uri), self.table.schema.catalog);
@@ -3096,13 +3093,11 @@ FacetColumn.prototype = {
             }
 
             // create a path from reference to this facetColumn
-            this.sourceObjectNodes.forEach(function (sn) {
-                pathFromSource.push(sn.toString(false, false));
-            });
+            pathFromSource = self._facetObjectWrapper.toString(false, false);
 
             var uri = newLoc.compactUri;
             if (pathFromSource.length > 0) {
-                uri += "/" + pathFromSource.join("/");
+                uri += "/" + pathFromSource;
             }
 
             this._sourceReference = new Reference(module.parse(uri), table.schema.catalog);

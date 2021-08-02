@@ -548,6 +548,19 @@
         },
 
         /**
+         * alias mapping for the last level
+         */
+        get pathPrefixAliasMapping() {
+            if (this._pathPrefixAliasMapping === undefined) {
+                // this API will populate this
+                var dummy = this.ermrestCompactPath;
+                // TODO
+                // this._pathPrefixAliasMapping = th
+            }
+            return this._pathPrefixAliasMapping;
+        },
+
+        /**
          * Array of path parts
          * @type {PathPart[]}
          */

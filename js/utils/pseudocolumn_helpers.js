@@ -103,7 +103,7 @@
          * @param {Object} consNames 
          * @ignore
          */
-        parseDataSource: function (source, alias, rootTable, tableName, catalogId, reverse, consNames) {
+        parseDataSource: function (source, alias, rootTable, tableName, catalogId, reverse, consNames, pathPrefixAliasMapping) {
             var res = _sourceColumnHelpers.processDataSourcePath(source, rootTable, tableName, catalogId, consNames);
 
             if (res.error || res.sourceObjectNodes.length == 0) {
@@ -134,6 +134,7 @@
                     sourceNodes.pop();
                 }
             }
+            var aliasMapping = {};
 
             // if we eliminated all the foreignkeys, then we don't need to reverse anything
             reverse = reverse && sourceNodes.length > 0;
@@ -157,7 +158,8 @@
                 columnName: col.name, // we might optimize the path, so the column could be different
                 tableName: tableName,
                 schemaName: schemaName,
-                reversed: reverse
+                reversed: reverse,
+                aliasMapping: aliasMapping
             };
         },
 
@@ -224,7 +226,7 @@
             rightJoins = [], // if we have null in the filter, we have to use join
             innerJoins = [], // all the other facets that have been parsed
             encode = module._fixedEncodeURIComponent,
-            res, i, term, col, path, ds, constraints, parsed, useRightJoin;
+            res, i, term, col, path, ds, pathPrefixAliasMapping = {}, constraints, parsed, useRightJoin;
 
         // go through list of facets and parse each facet
         for (i = 0; i < and.length; i++) {
@@ -283,7 +285,7 @@
 
                 // if there's a null filter and source has path, we have to use right join
                 // parse the datasource
-                ds = _renderFacetHelpers.parseDataSource(term.source, alias, rootTable, tableName, catalogId, _renderFacetHelpers.hasNullChoice(term), consNames);
+                ds = _renderFacetHelpers.parseDataSource(term.source, alias, rootTable, tableName, catalogId, _renderFacetHelpers.hasNullChoice(term), consNames, pathPrefixAliasMapping);
 
                 // if the data-path was invalid, ignore this facet
                 if (ds === null) {
@@ -351,7 +353,8 @@
         return {
             successful: true, // indicate that we successfully parsed the given facet object
             parsed: rightJoins.concat(innerJoins).join("/"), // the ermrest query
-            rightJoin: rightJoins.length > 0 //whether we used any right outer join or not
+            rightJoin: rightJoins.length > 0, //whether we used any right outer join or not
+            pathPrefixAliasMapping: pathPrefixAliasMapping
         };
     };
 
@@ -937,7 +940,7 @@
 
             var colName, col, colTable = table, source = sourceObject.source, sourceObjectNodes = [];
             var hasPath = false, hasInbound = false, isFiltered = false, fkPathLength = 0;
-            var lastFKIndex = -1, firstFkIndex = -1;
+            var lastForeignKeyNode, firstForeignKeyNode;
             
             // just the column name
             if (isStringAndNotEmpty(source)){
@@ -953,14 +956,15 @@
                     return res;
                 }
                 
-                hasPath = true;
+                hasPath = res.fkPathLength > 0;
                 hasInbound = res.hasInbound;
-                firstFkIndex = res.firstFkIndex;
-                lastFKIndex = res.lastFKIndex;
+                firstForeignKeyNode = res.firstForeignKeyNode;
+                lastForeignKeyNode = res.lastForeignKeyNode;
                 colTable = res.column.table;
                 fkPathLength = res.fkPathLength;
                 sourceObjectNodes = res.sourceObjectNodes;
                 colName = res.column.name;
+                isFiltered = res.isFiltered;
             }  else {
                 return returnError("Invalid source definition");
             }
@@ -991,13 +995,13 @@
             self.isUniqueFiltered = !self.hasAggregate && self.isFiltered && (!hasPath || !hasInbound);
 
             // attach last fk
-            if (lastFKIndex !== -1) {
-                self.lastForeignKeyNode = sourceObjectNodes[lastFKIndex];
+            if (lastForeignKeyNode != null) {
+                self.lastForeignKeyNode = lastForeignKeyNode;
             }
 
             // attach first fk
-            if (firstFkIndex !== -1) {
-                self.firstForeignKeyNode = sourceObjectNodes[firstFkIndex];
+            if (firstForeignKeyNode != null) {
+                self.firstForeignKeyNode = firstForeignKeyNode;
             }
 
             // when generating the url, we might optimize the url and remove the last hop,
@@ -1034,17 +1038,37 @@
             //  - export default
             //  - column.getAggregate
             //  - reference.read
+            var self = this;
+            return self.sourceObjectNodes.reduce(function (prev, sn, i) {
+                if (sn.isFilter || sn.isPathPrefix) {
+                    return prev + (i > 0 ? "/" : "") + sn.toString(reverse, isLeft, self.foreignKeyPathLength == sn.foreignKeyPathLength ? outAlias : null);
+                }
+
+                var fkStr = sn.toString(reverse, isLeft);
+                var addAlias = outAlias && 
+                               (reverse && sn === self.firstForeignKeyNode ||
+                               !reverse && sn === self.lastForeignKeyNode );
+
+                // TODO what about alias on each node??
+                if (reverse) {
+                    return ((i > 0) ? (fkStr + "/") : ((addAlias ? outAlias + ":=" : "") + fkStr) ) + prev;
+                } else {
+                    return prev + (i > 0 ? "/" : "") + (addAlias ? outAlias + ":=" : "") + fkStr;
+                }
+
+            }, "");
+
         },
 
         getRawSourcePath: function (reverse, outAlias) {
             var path = [], self = this, obj;
             var len = self.sourceObjectNodes.length;
-            var getNotLast = function (index) {
+            var isLast = function (index) {
                 return reverse ? (index >= 0) : (index < len);
-            }
+            };
 
             var i = reverse ? (len-1) : 0;
-            while (getNotLast(i)) {
+            while (isLast(i)) {
                 sn = self.sourceObjectNodes[i];
                 if (sn.isPathPrefix) {
                     // TODO what about alias here?
@@ -1077,7 +1101,6 @@
          * @param {ERMrest.Tuple} tuple 
          * @param {ERMrest.Table} rootTable 
          * @param {String=} outAlias 
-         * @returns 
          */
         getReverseAsFacet: function (tuple, rootTable, outAlias) {
             if (!isObjectAndNotNull(tuple)) return null;
@@ -1121,8 +1144,8 @@
                 return (result === undefined) ? null : result;
             };
 
-            var i, fkAlias, constraint, isInbound, fkObj, fk, fkIndex, colTable, hasInbound = false,
-                firstFkIndex = -1, fkPathLength = 0, sourceObjectNodes = [], isFiltered = false, hasPrefix = false, prefix;
+            var i, fkAlias, constraint, isInbound, fkObj, fk, colTable, hasInbound = false, firstForeignKeyNode, lastForeignKeyNode,
+                fkPathLength = 0, sourceObjectNodes = [], isFiltered = false, hasPrefix = false, prefix;
 
             for (i = 0; i < source.length - 1; i++) {
                 if ("sourcekey" in source[i]) {
@@ -1144,6 +1167,15 @@
                         return returnError("sourcekey is invalid.");
                     }
                     sourceObjectNodes.push(new SourceObjectNode(prefix, false, false, false, true));
+
+                    firstForeignKeyNode = prefix.firstForeignKeyNode;
+                    lastForeignKeyNode = prefix.lastForeignKeyNode;
+                    fkPathLength += prefix.fkPathLength;
+                    colTable = prefix.colTable;
+                    tableName = prefix.colTable.name;
+                    hasInbound = hasInbound || prefix.hasInbound;
+                    hasPath = hasPath || prefix.hasPath;
+                    isFiltered = isFiltered || prefix.isFiltered;
                 }
                 // TODO FILTER_IN_SOURCE
                 // else if ("fitler" in source[i] || "and" in source[i] || "or" in source[i]) {
@@ -1168,12 +1200,7 @@
                     }
 
                     fk = fkObj.object;
-                    fkIndex = sourceObjectNodes.length;
                     fkPathLength++;
-
-                    if (firstFkIndex === -1) {
-                        firstFkIndex = fkIndex;
-                    }
 
                     // inbound
                     if (isInbound && fk.key.table.name === tableName) {
@@ -1190,7 +1217,14 @@
                     }
 
                     tableName = colTable.name;
-                    sourceObjectNodes.push(new SourceObjectNode(fk, false, true, isInbound, false, fkAlias));
+
+                    var sn = new SourceObjectNode(fk, false, true, isInbound, false, fkAlias);
+                    sourceObjectNodes.push(sn);
+
+                    if (firstForeignKeyNode == null) {
+                        firstForeignKeyNode = sn;
+                    }
+                    lastForeignKeyNode = sn;
                 }  else {
                     // given object was invalid
                     return returnError("Invalid object in source element index=" + i);
@@ -1205,8 +1239,8 @@
 
             return {
                 sourceObjectNodes: sourceObjectNodes,
-                firstFkIndex: firstFkIndex,
-                lastFKIndex: fkIndex,
+                firstForeignKeyNode: firstForeignKeyNode,
+                lastForeignKeyNode: lastForeignKeyNode,
                 column: col,
                 fkPathLength: fkPathLength,
                 isFiltered: isFiltered,
