@@ -110,7 +110,59 @@ exports.execute = function (options) {
             expect(result.modifiedJsonLd["keywords"][2]).toEqual("ice cream brands");
             expect(result.modifiedJsonLd["keywords"][1]).toEqual("ice cream");
             expect(result.modifiedJsonLd["keywords"][0]).toEqual("sales");
-            delete jsonInput["keywords"][4];
+            jsonInput["keywords"].splice(4, 1);
+            expect(result.modifiedJsonLd).toEqual(jsonInput);
+            done();
+        });
+
+        it("The google_metadata with incorrect element(null) inside array returned with that element excluded", function (done) {
+            var jsonInput = {
+                "@type": "Dataset", "@context": "http://schema.org", "name": "dummy",
+                "description": "lorem ipsum", 
+                "keywords": ["sales",
+                    "ice cream",
+                    "ice cream brands",
+                    "brands",
+                    null
+                ]
+            };
+            expect(jsonInput["keywords"].length).toEqual(5);
+            expect(jsonInput["keywords"][4]).toEqual(null);
+            expect(jsonInput["keywords"][3]).toEqual("brands");
+            expect(jsonInput["keywords"][2]).toEqual("ice cream brands");
+            expect(jsonInput["keywords"][1]).toEqual("ice cream");
+            expect(jsonInput["keywords"][0]).toEqual("sales");
+
+            var result = module.validateJSONLD(jsonInput);
+            expect(result.isValid).toEqual(true);
+            expect(result.modifiedJsonLd["keywords"].length).toEqual(4);
+            expect(result.modifiedJsonLd["keywords"][4]).toEqual(undefined);
+            expect(result.modifiedJsonLd["keywords"][3]).toEqual("brands");
+            expect(result.modifiedJsonLd["keywords"][2]).toEqual("ice cream brands");
+            expect(result.modifiedJsonLd["keywords"][1]).toEqual("ice cream");
+            expect(result.modifiedJsonLd["keywords"][0]).toEqual("sales");
+            jsonInput["keywords"].splice(4, 1);
+            expect(result.modifiedJsonLd).toEqual(jsonInput);
+            done();
+        });
+
+        it("The google_metadata with all incorrect element(null) inside array returned without array", function (done) {
+            var jsonInput = {
+                "@type": "Dataset", "@context": "http://schema.org", "name": "dummy",
+                "description": "lorem ipsum", 
+                "keywords": [
+                    null,
+                    ""
+                ]
+            };
+            expect(jsonInput["keywords"].length).toEqual(2);
+            expect(jsonInput["keywords"][1]).toEqual("");
+            expect(jsonInput["keywords"][0]).toEqual(null);
+
+            var result = module.validateJSONLD(jsonInput);
+            expect(result.isValid).toEqual(true);
+            expect(result.modifiedJsonLd["keywords"]).toBeUndefined();
+            delete jsonInput["keywords"];
             expect(result.modifiedJsonLd).toEqual(jsonInput);
             done();
         });

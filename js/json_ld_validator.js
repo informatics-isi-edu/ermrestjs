@@ -260,12 +260,30 @@ function getPropDetailsFromParent(key, currentType) {
 }
 
 function removeEmptyOrNull(obj) {
-    Object.keys(obj).forEach(function (k) {
-        if (obj[k] && typeof obj[k] === 'object') {
-            removeEmptyOrNull(obj[k]);
+    Object.keys(obj).forEach(function (key) {
+        // array
+        if (obj[key] && Array.isArray(obj[key])) {
+            var resultArray = [];
+            obj[key].forEach(function (element) {
+                if (element) {
+                    resultArray.push(element);
+                }
+            });
+            obj[key] = resultArray;
+
+            if(obj[key].length == 0) {
+                module._log.warn("Invalid attribute ignored " + key + " inside type " + obj[typeKeyword] + " in JSON-LD\n");
+                delete obj[key];
+            }
         }
-        else if (obj[k] == null || obj[k] == "") {
-            delete obj[k];
+        // object
+        else if (obj[key] && typeof obj[key] === 'object') {
+            removeEmptyOrNull(obj[key]);
+        }
+        // primitive
+        else if (obj[key] == null || obj[key] == "") {
+            module._log.warn("Invalid attribute ignored " + key + " inside type " + obj[typeKeyword] + " in JSON-LD\n");
+            delete obj[key];
         }
     });
     return obj;
