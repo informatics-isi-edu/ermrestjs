@@ -2,7 +2,7 @@ var utils = require('./../../../utils/utilities.js');
 
 exports.execute = function (options) {
 
-    describe("2016:table-display annotation test", function () {
+    describe("Reference display related APIs", function () {
 
         var catalog_id = process.env.DEFAULT_CATALOG,
             schemaName = "schema_table_display",
@@ -636,13 +636,57 @@ exports.execute = function (options) {
             it ('should be able to access options in annotation.', function (done) {
                 options.ermRest.resolve(tableCompactOptionsEntityUri, {cid: "test"}).then(function (ref) {
                     var ref = ref.contextualize.compact
-                    expect(ref.display.collapseToc).toBeTruthy("Collapse ToC option is not defined");
-                    expect(ref.display.hideColumnHeaders).toBeTruthy("Hide Column Headers option is not defined");
+                    expect(ref.display.collapseToc).toBeTruthy("Collapse ToC compact missmatch");
+                    expect(ref.display.hideColumnHeaders).toBeTruthy("Hide Column Headers compact missmatch");
+
+                    // other contexts should return false values
+                    ref = ref.contextualize.detailed;
+                    expect(ref.display.collapseToc).toBeFalsy("Collapse ToC detailed missmatch");
+                    expect(ref.display.hideColumnHeaders).toBeFalsy("Hide Column Headers detailed missmatch");
+
                     done();
                 }).catch(function (err) {
                     done.fail(err);
                 });
             });
         });
+
+        describe("display.hideTotalCount", function () {
+            var refWithHideRowCountAnnot, refWithoutHideRowCountAnnot;
+
+            it ("should get it from display annotation on table", function (done) {
+                options.ermRest.resolve(tableCompactOptionsEntityUri, {cid: "test"}).then(function (ref) {
+                    refWithHideRowCountAnnot = ref;
+
+                    expect(ref.contextualize.compact.display.hideRowCount).toBeFalsy("hide Row Count compact missmatch");
+                    expect(ref.contextualize.compactSelect.display.hideRowCount).toBeTruthy("hide Row Count compact/select missmatch");
+                    
+                    done();
+                }).catch(function (err) {
+                    done.fail(err);
+                });
+            });
+
+            it ("otherwise should get it from display annotation on schema", function (done) {
+                options.ermRest.resolve(table1EntityUri, {cid: "test"}).then(function (ref) {
+                    refWithoutHideRowCountAnnot = ref;
+
+                    expect(ref.contextualize.compact.display.hideRowCount).toBeTruthy("hide Row Count compact missmatch");
+                    expect(ref.contextualize.compactSelect.display.hideRowCount).toBeFalsy("hide Row Count compact/select missmatch");
+
+                    done();
+                }).catch(function (err) {
+                    done.fail(err);
+                });
+            });
+
+            it ("should return false if not defined for the context", function () {
+                // both are not defined for detailed
+                expect(refWithHideRowCountAnnot.contextualize.detailed.display.hideRowCount).toBeFalsy("missmatch for first reference");
+                expect(refWithoutHideRowCountAnnot.contextualize.detailed.display.hideRowCount).toBeFalsy("missmatch for second reference");
+            });
+        });
+        
     });
+    
 };
