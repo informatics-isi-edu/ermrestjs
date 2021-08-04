@@ -2387,7 +2387,7 @@
 
         /**
          * Returns a uri that will properly generate the download link for a csv document
-         * NOTE It will not have the same sort and paging as the reference.
+         * NOTE It will honor the visible columns in `export` context
          *
          * @returns {String} A string representing the url for direct csv download
          **/
@@ -2400,16 +2400,23 @@
 
                 var defaultExportOutput = module._referenceExportOutput(this, this.location.mainTableAlias);
 
-                var uri = [this.location.service, "catalog", this._location.catalog].join("/");
-
-                if (["attributegroup", "entity"].indexOf(defaultExportOutput.source.api) != -1) {
-                    uri += "/" + [defaultExportOutput.source.api, this.location.ermrestCompactPath, defaultExportOutput.source.path].join("/");
+                if (defaultExportOutput == null) {
+                    this._csvDownloadLink = "";
                 } else {
-                    // won't happen with the current code, but to make this future proof
-                    uri = this.location.ermrestCompactUri;
-                }
+                    var uri
+                    if (["attributegroup", "entity"].indexOf(defaultExportOutput.source.api) != -1) {
+                        // example.com/ermrest/catalog/<id>/<api>/<current-path>/<vis-col-projection-and-needed-joins>
+                        uri = [
+                            this.location.service, "catalog", this._location.catalog, defaultExportOutput.source.api, 
+                            this.location.ermrestCompactPath, defaultExportOutput.source.path
+                        ].join("/");
+                    } else {
+                        // won't happen with the current code, but to make this future proof
+                        uri = this.location.ermrestCompactUri;
+                    }
 
-                this._csvDownloadLink =  uri + qParam;
+                    this._csvDownloadLink =  uri + qParam;
+                }
             }
             return this._csvDownloadLink;
         },
@@ -2515,6 +2522,12 @@
                  var getTableOutput = module._referenceExportOutput,
                      getAssetOutput = module._getAssetExportOutput;
 
+                 var addOutput = function (output) {
+                    if (output != null) {
+                        outputs.push(output);
+                    }
+                 };
+
                  // given a refernece, will return it in export or detailed context
                  var getExportReference = function (ref) {
                      var res, hasExportColumns = false;
@@ -2540,18 +2553,18 @@
                          }).join("/");
 
                          // path more than length one, we need to add the main table fkey
-                         outputs.push(getTableOutput(rel, relatedTableAlias, sourcePath, rel.pseudoColumn.foreignKeys.length >= 2, self));
+                         addOutput(getTableOutput(rel, relatedTableAlias, sourcePath, rel.pseudoColumn.foreignKeys.length >= 2, self));
                      }
                      // association table
                      else if (rel.derivedAssociationReference) {
                          var assoc = rel.derivedAssociationReference;
                          sourcePath = assoc.origFKR.toString() + "/" + relatedTableAlias + ":=" + assoc._secondFKR.toString(true);
-                         outputs.push(getTableOutput(rel, relatedTableAlias, sourcePath, true, self));
+                         addOutput(getTableOutput(rel, relatedTableAlias, sourcePath, true, self));
                      }
                      // single inbound related
                      else {
                          sourcePath = relatedTableAlias + ":=" + rel.origFKR.toString(false, false);
-                         outputs.push(getTableOutput(rel, relatedTableAlias, sourcePath));
+                         addOutput(getTableOutput(rel, relatedTableAlias, sourcePath));
                      }
 
                      // add asset of the related table
@@ -2562,13 +2575,12 @@
 
                      expRef.columns.forEach(function(col) {
                          var output = getAssetOutput(col, destinationPath, sourcePath);
-                         if (output === null) return;
-                         outputs.push(output);
+                         addOutput(output);
                      });
                  };
 
                  // main entity
-                 outputs.push(getTableOutput(self, self.location.mainTableAlias));
+                 addOutput(getTableOutput(self, self.location.mainTableAlias));
 
                  var exportRef = getExportReference(self);
 
@@ -2577,8 +2589,7 @@
                      // main assets
                      exportRef.columns.forEach(function(col) {
                          var output = getAssetOutput(col, "", "");
-                         if (output === null) return;
-                         outputs.push(output);
+                         addOutput(output);
                      });
 
                      // inline entities

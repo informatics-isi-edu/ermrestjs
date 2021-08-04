@@ -405,6 +405,10 @@ var ERMrest = (function(module) {
         // use export annotation, otherwise fall back to using detailed
         exportRef = hasExportColumns ? ref.contextualize.export : ref.contextualize.detailed;
 
+        if (exportRef.columns.length === 0) {
+            return null;
+        }
+
         exportRef.columns.forEach(function (col) {
             if (!col.isPseudo) {
                 addColumn(col);
