@@ -438,7 +438,7 @@
             if (this._ermrestCompactPath === undefined) {
                 var self = this;
                 var rightJoinIndex = -1, i;
-                var uri = "", alias;
+                var uri = "", alias, lastPathPartAliasMapping = {aliases: {}, lastIndex: 0};
 
                 // returns the proper string presentation of a series of joins
                 // parameters:
@@ -473,6 +473,10 @@
                             }
                             rightJoinIndex = index;
                         }
+                        if (index == self.pathParts.length -1 ) {
+                            lastPathPartAliasMapping = facetRes.pathPrefixAliasMapping;
+                        }
+
                         res.push(facetRes.parsed);
                     }
 
@@ -543,19 +547,27 @@
                 }
 
                 this._ermrestCompactPath = uri;
+                this._pathPrefixAliasMapping = lastPathPartAliasMapping;
             }
             return this._ermrestCompactPath;
         },
 
         /**
-         * alias mapping for the last level
+         * alias mapping for the last path part
+         * can be used for retrieving the existing sourcekey paths
+         * so we can refer to them instead of repeating the path.
+         * 
+         * The returned object has the following attributes:
+         * - aliases: An object of sourcekey name to alis
+         * - lastIndex: The last index used for the aliases,
+         *              aliases are written in format of <mainalias>_<index>
+         *              and the lastIndex will make it easier to generate new ones if needed
+         * @type {Object}
          */
         get pathPrefixAliasMapping() {
             if (this._pathPrefixAliasMapping === undefined) {
                 // this API will populate this
                 var dummy = this.ermrestCompactPath;
-                // TODO
-                // this._pathPrefixAliasMapping = th
             }
             return this._pathPrefixAliasMapping;
         },

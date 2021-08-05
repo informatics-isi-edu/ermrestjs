@@ -3811,22 +3811,31 @@
              * */
             if (isAttributeGroup) {
                 var compactPath = this._location.ermrestCompactPath,
+                    // to ensure we're not modifying the original object, I'm creating a deep copy
+                    pathPrefixAliasMapping = JSON.parse(JSON.stringify(this._location.pathPrefixAliasMapping)),
                     mainTableAlias = this._location.mainTableAlias,
                     aggList = [],
                     sortColumn,
                     addedCols,
                     aggFn = "array_d",
+                    pseudoPathRes,
                     rightSummFn;
 
                 // generate the projection for given pseudo column
-                var getPseudoPath = function (l) {
-                    var pseudoPath = [];
+                var getPseudoPath = function (l, outAlias) {
+                    var sourcekey = "";
 
-                    allOutBounds[l].sourceObjectNodes.forEach(function (f, index, arr) {
-                        // NOTE all outbounds cannot have any filter and are just foreignkeys
-                        pseudoPath.push(((index === arr.length-1) ? (fkAliasPreix + (k+1) + ":=") : "") + f.toString(false,true));
-                    });
-                    return pseudoPath.join("/");
+                    if (isObjectAndNotNull(allOutBounds[l].sourceObject) && isStringAndNotEmpty(allOutBounds[l].sourceObject.sourcekey)) {
+                        sourcekey = allOutBounds[l].sourceObject.sourcekey;
+                    }
+
+                    return _sourceColumnHelpers.parseAllOutBoundNodes(
+                        allOutBounds[l].sourceObjectNodes, 
+                        allOutBounds[l].lastForeignKeyNode,
+                        sourcekey, 
+                        pathPrefixAliasMapping, 
+                        outAlias
+                    );
                 };
 
                 // see if any of the fks are using prefix
@@ -3836,11 +3845,13 @@
 
                 // add all the allOutBounds
                 for (k = allOutBounds.length - 1; k >= 0; k--) {
-                    //F2:=left(id)=(s:t:c)/$M/F1:=left(id2)=(s1:t1:c1)/
-                    uri += getPseudoPath(k) + "/$" + mainTableAlias + "/";
+                    pseudoPathRes = getPseudoPath(k, fkAliasPreix + (k+1));
+
+                    //F2:=left(id)=(s:t:c)/$M/F1:=left(id2)=(s1:t1:c1)/$M/
+                    uri += pseudoPathRes.path + "/$" + mainTableAlias + "/";
 
                     // F2:array_d(F2:*),F1:array_d(F1:*)
-                    aggList.push(fkAliasPreix + (k+1) + ":=" + aggFn + "(" + fkAliasPreix + (k+1) + ":*)");
+                    aggList.push(fkAliasPreix + (k+1) + ":=" + aggFn + "(" + pseudoPathRes.usedOutAlias + ":*)");
                 }
 
                 // add trs or tcrs for main table
