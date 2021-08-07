@@ -117,7 +117,7 @@
                 col = res.column,
                 schemaName = res.column.table.schema.name,
                 lastForeignKeyNode = res.lastForeignKeyNode,
-                fkPathLength = res.fkPathLength,
+                foreignKeyPathLength = res.foreignKeyPathLength,
                 ignoreLastFK = false;
 
             // if the last fk is using the same column that is used in facet,
@@ -135,11 +135,11 @@
                 schemaName = col.table.schema.name;
 
                 ignoreLastFK = true;
-                fkPathLength--;
+                foreignKeyPathLength--;
             }
 
             // if we eliminated all the foreignkeys, then we don't need to reverse anything
-            reverse = reverse && fkPathLength > 0;
+            reverse = reverse && foreignKeyPathLength > 0;
 
             path = _sourceColumnHelpers.parseSourceNodesWithAliasMapping(
                 sourceNodes, lastForeignKeyNode, sourcekey, 
@@ -368,7 +368,7 @@
      *   Just pass the object that defines the pseudo-column. It must at least have `source` as an attribute.
      *
      */
-    module._generateSourceObjectHashName = function (colObject, useOnlySource, rootTable) {
+    module._generateSourceObjectHashName = function (colObject, useOnlySource, rootTable, sources) {
 
         //we cannot create an object and stringify it, since its order can be different
         //instead will create a string of `source + aggregate + entity`
@@ -393,7 +393,12 @@
                             
                             // use the raw path instead of sourcekey for hashname
                             if (k == "sourcekey") {
-                                var wrapper = rootTable.sourceDefinitions.sources[node[k]];
+                                var wrapper
+                                if (isObjectAndNotNull(sources)) {
+                                    wrapper = sources[node[k]];
+                                } else {
+                                    wrapper = rootTable.sourceDefinitions.sources[node[k]];
+                                }
                                 if (!wrapper) return null;
                                 objCopy.push(wrapper.getRawSourcePath());
                             } else {
@@ -438,12 +443,17 @@
     };
 
     _generateForeignKeyName = function (fk, isInbound) {
-        var eTable = isInbound ? fk._table : fk.key.table;
+        var eTable = isInbound ? fk._table : fk.key.table,
+            rootTable = isInbound ?  fk.key.table : fk._table;
 
         if (!isInbound) {
-            return module._generateSourceObjectHashName({
-                source: [{outbound: fk.constraint_names[0]}, eTable.shortestKey[0].name]
-            });
+            return module._generateSourceObjectHashName(
+                {
+                    source: [{outbound: fk.constraint_names[0]}, eTable.shortestKey[0].name]
+                },
+                false,
+                rootTable
+            );
         }
 
         var source = [{inbound: fk.constraint_names[0]}];
@@ -462,7 +472,7 @@
             source.push(eTable.shortestKey[0].name);
         }
 
-        return module._generateSourceObjectHashName({source: source});
+        return module._generateSourceObjectHashName({source: source}, false, rootTable);
     };
 
     /**
@@ -935,7 +945,7 @@
             }
 
             var colName, col, colTable = table, source = sourceObject.source, sourceObjectNodes = [];
-            var hasPath = false, hasInbound = false, isFiltered = false, fkPathLength = 0;
+            var hasPath = false, hasInbound = false, isFiltered = false, foreignKeyPathLength = 0;
             var lastForeignKeyNode, firstForeignKeyNode;
             
             // just the column name
@@ -952,12 +962,12 @@
                     return res;
                 }
                 
-                hasPath = res.fkPathLength > 0;
+                hasPath = res.foreignKeyPathLength > 0;
                 hasInbound = res.hasInbound;
                 firstForeignKeyNode = res.firstForeignKeyNode;
                 lastForeignKeyNode = res.lastForeignKeyNode;
                 colTable = res.column.table;
-                fkPathLength = res.fkPathLength;
+                foreignKeyPathLength = res.foreignKeyPathLength;
                 sourceObjectNodes = res.sourceObjectNodes;
                 colName = res.column.name;
                 isFiltered = res.isFiltered;
@@ -981,7 +991,7 @@
             self.column = col;
 
             self.hasPath = hasPath;
-            self.foreignKeyPathLength = fkPathLength;
+            self.foreignKeyPathLength = foreignKeyPathLength;
             self.hasInbound = hasInbound;
             self.hasAggregate = typeof sourceObject.aggregate === "string";
             self.isFiltered = isFiltered;
@@ -1003,7 +1013,7 @@
             // when generating the url, we might optimize the url and remove the last hop,
             // the following boolean shows whether the end url has path or not
             self.ermrestHasPath = hasPath;
-            if (fkPathLength === 1) {
+            if (foreignKeyPathLength === 1) {
                 var fk = self.lastForeignKeyNode.nodeObject,
                     isInbound = self.lastForeignKeyNode.isInbound;
                 var fkCol = isInbound ? fk.colset.columns[0] : fk.key.colset.columns[0];
@@ -1013,7 +1023,7 @@
             // generate name:
             // TODO maybe we shouldn't even allow aggregate in faceting (for now we're ignoring it)
             if ((sourceObject.self_link === true) || self.hasPath || self.isEntityMode || (isFacet !== false && self.hasAggregate)) {
-                self.name = module._generateSourceObjectHashName(sourceObject, isFacet);
+                self.name = module._generateSourceObjectHashName(sourceObject, isFacet, table, sources);
                 self.isHash = true;
 
                 if (table.columns.has(self.name)) {
@@ -1029,15 +1039,36 @@
             return self;
         },
 
+        /**
+         * Return the string representation of this foreignkey path
+         * used in:
+         *   - export default
+         *   - column.getAggregate
+         *   - reference.read
+         * @param {Boolean} reverse whether we want the reverse path
+         * @param {Boolean} isLeft use left join
+         * @param {String=} outAlias the alias that should be added to the output
+         */
         toString: function (reverse, isLeft, outAlias) {
-            //    TODO needs to do the same thing that we're doing in
-            //  - export default
-            //  - column.getAggregate
-            //  - reference.read
             var self = this;
             return self.sourceObjectNodes.reduce(function (prev, sn, i) {
-                if (sn.isFilter || sn.isPathPrefix) {
-                    return prev + (i > 0 ? "/" : "") + sn.toString(reverse, isLeft, self.foreignKeyPathLength == sn.foreignKeyPathLength ? outAlias : null);
+                if (sn.isFilter) {
+                    if (reverse) {
+                        return (i > 0 ? "/" : "") + sn.toString() + prev;
+                    } else {
+                        return prev + (i > 0 ? "/" : "") + sn.toString();
+                    }
+                }
+
+                // it will always be the first one
+                if (sn.isPathPrefix) {
+                    // if we're reversing, we have to add alias to the first one,
+                    // otherwise we only need to add alias if this object only has a prefix and nothing else
+                    if (reverse) {
+                        return sn.toString(reverse,isLeft, outAlias);
+                    } else {
+                        return sn.toString(reverse, isLeft, self.foreignKeyPathLength == sn.foreignKeyPathLength ? outAlias : null);
+                    }
                 }
 
                 var fkStr = sn.toString(reverse, isLeft);
@@ -1045,7 +1076,9 @@
                                (reverse && sn === self.firstForeignKeyNode ||
                                !reverse && sn === self.lastForeignKeyNode );
 
-                // TODO what about alias on each node??
+                // NOTE alias on each node is ignored!
+                // currently we've added alias only for the association and 
+                // therefore it's not really needed here anyways
                 if (reverse) {
                     return ((i > 0) ? (fkStr + "/") : ((addAlias ? outAlias + ":=" : "") + fkStr) ) + prev;
                 } else {
@@ -1055,7 +1088,18 @@
             }, "");
 
         },
-
+        
+        /**
+         * Turn this into a raw source path without any path prefix
+         * NOTE the returned array is not a complete path as it 
+         *      doesn't include the last column
+         * currently used in two places:
+         *   - generating hashname for a sourcedef that uses path prefix
+         *   - generating the reverse path for a related entitty
+         * @param {Boolean} reverse 
+         * @param {String=} outAlias alias that will be added to the last fk 
+         *                     regardless of reversing or not 
+         */
         getRawSourcePath: function (reverse, outAlias) {
             var path = [], self = this, obj;
             var len = self.sourceObjectNodes.length;
@@ -1067,13 +1111,13 @@
             while (isLast(i)) {
                 sn = self.sourceObjectNodes[i];
                 if (sn.isPathPrefix) {
-                    // TODO what about alias here?
-                    path = path.concat(sn.nodeObject.getRawSourcePath(reverse));
+                    // if this is the last element, we have to add the alias to this
+                    path = path.concat(sn.nodeObject.getRawSourcePath(reverse, self.foreignKeyPathLength == sn.foreignKeyPathLength ? outAlias : null));
                 }
                 else if (sn.isFilter) {
                     path.push(sn.nodeObject);
                 }  else {
-                    if (sn.isInbound) {
+                    if ((reverse && sn.isInbound) || (!reverse && !sn.isInbound)) {
                         obj = {"outbound": sn.nodeObject.constraint_names[0]};
                     } else {
                         obj = {"inbound": sn.nodeObject.constraint_names[0]};
@@ -1094,6 +1138,10 @@
 
         /**
          * Return the reverse path as facet with the value of shortestkey
+         * currently used in two places:
+         *   - column.refernece
+         *   - reference.generateRelatedReference
+         * both are for generating the reverse related entity path
          * @param {ERMrest.Tuple} tuple 
          * @param {ERMrest.Table} rootTable 
          * @param {String=} outAlias 
@@ -1141,7 +1189,7 @@
             };
 
             var i, fkAlias, constraint, isInbound, fkObj, fk, colTable, hasInbound = false, firstForeignKeyNode, lastForeignKeyNode,
-                fkPathLength = 0, sourceObjectNodes = [], isFiltered = false, hasPrefix = false, prefix;
+                foreignKeyPathLength = 0, sourceObjectNodes = [], isFiltered = false, hasPrefix = false, prefix;
 
             for (i = 0; i < source.length - 1; i++) {
                 if ("sourcekey" in source[i]) {
@@ -1166,11 +1214,10 @@
 
                     firstForeignKeyNode = prefix.firstForeignKeyNode;
                     lastForeignKeyNode = prefix.lastForeignKeyNode;
-                    fkPathLength += prefix.fkPathLength;
+                    foreignKeyPathLength += prefix.foreignKeyPathLength;
                     colTable = prefix.column.table;
                     tableName = prefix.column.table.name;
                     hasInbound = hasInbound || prefix.hasInbound;
-                    hasPath = hasPath || prefix.hasPath;
                     isFiltered = isFiltered || prefix.isFiltered;
                 }
                 // TODO FILTER_IN_SOURCE
@@ -1196,7 +1243,7 @@
                     }
 
                     fk = fkObj.object;
-                    fkPathLength++;
+                    foreignKeyPathLength++;
 
                     // inbound
                     if (isInbound && fk.key.table.name === tableName) {
@@ -1238,7 +1285,7 @@
                 firstForeignKeyNode: firstForeignKeyNode,
                 lastForeignKeyNode: lastForeignKeyNode,
                 column: col,
-                fkPathLength: fkPathLength,
+                foreignKeyPathLength: foreignKeyPathLength,
                 isFiltered: isFiltered,
                 hasInbound: hasInbound,
                 hasPrefix: hasPrefix
@@ -1255,7 +1302,6 @@
          * @param {*} mainTableAlias 
          * @param {*} useRightJoin 
          * @param {*} ignoreLastFK 
-         * @returns 
          */
         parseSourceNodesWithAliasMapping: function (sourceNodes, lastForeignKeyNode, sourcekey, pathPrefixAliasMapping, mainTableAlias, useRightJoin, ignoreLastFK) {
             if (!useRightJoin && sourcekey in pathPrefixAliasMapping.aliases) {
@@ -1284,7 +1330,14 @@
                     var prefixAlias = mainTableAlias + "_P" + (++pathPrefixAliasMapping.lastIndex);
 
                     pathPrefixAliasMapping.aliases[sn.pathPrefixSourcekey] = prefixAlias;
-                    return sn.toString(false, false, prefixAlias);
+                    return _sourceColumnHelpers.parseSourceNodesWithAliasMapping(
+                        sn.sourceObjectNodes,
+                        sn.lastForeignKeyNode,
+                        pathPrefixAliasMapping,
+                        mainTableAlias,
+                        false,
+                        false
+                    );
                 }
 
                 // ignore the last fk if we have to
@@ -1311,18 +1364,18 @@
 
         /**
          * Given a list of all-outbound source nodes and last fk, will parse it
+         * TODO could be refactored and merged with the previous function
          * @param {*} sourceNodes 
          * @param {*} lastForeignKeyNode 
          * @param {*} sourcekey 
          * @param {*} pathPrefixAliasMapping 
          * @param {*} outAlias 
-         * @returns 
          */
-        parseAllOutBoundNodes: function (sourceNodes, lastForeignKeyNode, sourcekey, pathPrefixAliasMapping, outAlias) {
+        parseAllOutBoundNodes: function (sourceNodes, lastForeignKeyNode, sourcekey, pathPrefixAliasMapping, outAlias, mainTableAlias) {
             var usedOutAlias;
 
             if (sourcekey in pathPrefixAliasMapping.aliases) {
-                usedOutAlias = pathPrefixAliasMapping.aliases[sn.pathPrefixSourcekey];
+                usedOutAlias = pathPrefixAliasMapping.aliases[sourcekey];
                 return {
                     path: "$" + usedOutAlias,
                     usedOutAlias: usedOutAlias
@@ -1346,10 +1399,21 @@
                         return "$" + pathPrefixAliasMapping.aliases[sn.pathPrefixSourcekey];
                     }
                     var prefixAlias = mainTableAlias + "_P" + (++pathPrefixAliasMapping.lastIndex);
-                    pathPrefixAliasMapping.aliases[sn.pathPrefixSourcekey] = prefixAlias;
 
+                    var res = _sourceColumnHelpers.parseAllOutBoundNodes(
+                        sn.nodeObject.sourceObjectNodes,
+                        sn.nodeObject.lastForeignKeyNode,
+                        sn.pathPrefixSourcekey,
+                        pathPrefixAliasMapping,
+                        prefixAlias,
+                        mainTableAlias
+                    );
+
+                    // we should first parse the existing and then add it to list
+                    pathPrefixAliasMapping.aliases[sn.pathPrefixSourcekey] = prefixAlias;
                     usedOutAlias = prefixAlias;
-                    return sn.toString(false, true, prefixAlias);
+
+                    return res.path;
                 }
 
                 var fkStr = sn.toString(false, true);
@@ -1482,7 +1546,7 @@
             }
 
             if (self.isPathPrefix) {
-                return self.nodeObject(reverse, isLeft, outAlias);
+                return self.nodeObject.toString(reverse, isLeft, outAlias);
             }
 
             return _sourceColumnHelpers.parseSourceObjectNodeFilter(self.nodeObject);

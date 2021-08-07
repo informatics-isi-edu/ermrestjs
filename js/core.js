@@ -1308,7 +1308,7 @@
              var sd = module._annotations.SOURCE_DEFINITIONS;
              var hasAnnot = self.annotations.contains(sd);
              var res = {columns: [], fkeys: [], sources: {}, sourceMapping: {}};
-             var addedCols = {}, addedFks = {}, addedSources = {};
+             var addedCols = {}, addedFks = {}, processedSources = {};
              var allColumns = self.columns.all(),
                  allForeignKeys = self.foreignKeys.all();
              var consNames = module._constraintNames;
@@ -1361,52 +1361,74 @@
                  return resultList;
              };
 
-             var addSourceDef = function (key) {
-                if (key in addedSources) return;
-                if (!(key in annot.sources)) return;
-
-                var sourceDef = annot.sources[key];
-
-                // if the key is special
-                if (Object.keys(module._specialSourceDefinitions).indexOf(key) !== -1) {
-                    return;
-                }
-
+             var addSourceDef = function (key, keysThatDependOnThis) {
                 var message = "source definition, table =" + self.name + ", name=" + key;
 
-                // TODO why? make sure key is not the same as table columns
+                // detec circular dependency
+                keysThatDependOnThis = Array.isArray(keysThatDependOnThis) ? keysThatDependOnThis : [];
+                if (keysThatDependOnThis.indexOf(key) != -1) {
+                    module._log.info(message + ": " + " circular dependency detected.");
+                    return false;
+                }
+
+                // key must be non empty and string
+                if (!isStringAndNotEmpty(key)) {
+                    module._log.info(message + ": " + " `sourcekey` must be string and non-empty.");
+                    return false;
+                }
+
+                // already processed
+                if (key in processedSources) {
+                    return processedSources[key];
+                }
+
+                // key is not in the list of definitions
+                if (!(key in annot.sources)) {
+                    module._log.info(message + ": " + " `sourcekey` didn't exist.");
+                    return false;
+                }
+            
+                // if the key is special
+                if (Object.keys(module._specialSourceDefinitions).indexOf(key) !== -1) {
+                    module._log.info(message + ": " + " `sourcekey` cannot be any of the special keys.");
+                    return false;
+                }
+
+                // why? make sure key is not the same as table columns
                 if (self.columns.has(key)) {
-                    module._log.info(message +  ": cannot use the table column names.");
+                    module._log.info(message +  ": `sourcekey` cannot be any of the table column names.");
                     return false;
                 }
 
-                // TODO why? make sure key doesn't start with $
+                // why? make sure key doesn't start with $
                 if (key.startsWith("$")) {
-                    module._log.info(message + ": key name cannot start with $");
+                    module._log.info(message + ": `sourcekey` cannot start with $");
                     return false;
                 }
 
-                var pSource, hasPrefix, prefixSourcekey;
+                var sourceDef = annot.sources[key], pSource, hasPrefix;
                 try {
                     // if it has prefix, we have to make sure the prefix is processed beforehand
                     hasPrefix = typeof sourceDef === "object" && Array.isArray(sourceDef.source) &&
                                 sourceDef.source.length > 1 && ("sourcekey" in sourceDef.source[0]);
                     
                     if (hasPrefix) {
-                        prefixSourcekey = sourceDef.source[0].sourcekey;
-                        if (Object.keys(module._specialSourceDefinitions).indexOf(prefixSourcekey) !== -1) {
-                            module._log.info(message + ": " + "given sourcekey (path prefix) cannot be any of the special keys.");
+                        // TODO limitation because of other parts of the code which we might want 
+                        //      to allow later
+                        if (sourceDef.source.length < 3) {
+                            module._log.info(message + ": " + "sourcekey (path prefix) can only be used when there's a path after it.");
                             return false;
                         }
 
-                        if (!(prefixSourcekey in annot.sources)) {
-                            module._log.info(message + ": " + "given sourcekey (path prefix) is invalid.");
-                            return false;
-                        }
+                        // keep track of dependencies for cycle detection
+                        keysThatDependOnThis.push(key);
 
                         // make sure we've processed the prefix
-                        if (!(prefixSourcekey in addedSources)) {
-                            addSourceDef(prefixSourcekey);
+                        var valid = addSourceDef(sourceDef.source[0].sourcekey, keysThatDependOnThis);
+                        processedSources[key] = valid;
+                        if (!valid) {
+                            module._log.info(message + ": " + "given sourcekey (path prefix) is invalid.");
+                            return false;
                         }
                     }
 
@@ -1453,7 +1475,8 @@
              if (annot.sources && typeof annot.sources === "object") {
                  for (var key in annot.sources) {
                      if (!annot.sources.hasOwnProperty(key)) continue;
-                     addSourceDef(key);
+                     if (key in processedSources) continue;
+                     processedSources[key] = addSourceDef(key);
                  }
              }
 

@@ -3834,7 +3834,8 @@
                         allOutBounds[l].lastForeignKeyNode,
                         sourcekey, 
                         pathPrefixAliasMapping, 
-                        outAlias
+                        outAlias,
+                        mainTableAlias
                     );
                 };
 
