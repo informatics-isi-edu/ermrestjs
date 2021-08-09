@@ -219,12 +219,12 @@
             rightJoins = [], // if we have null in the filter, we have to use join
             innerJoins = [], // all the other facets that have been parsed
             encode = module._fixedEncodeURIComponent, sourcekey,
-            i, term, col, path, ds, pathPrefixAliasMapping = {aliases: {"whatever": 1}, lastIndex: 0}, constraints, parsed, useRightJoin;
+            i, term, col, path, ds, pathPrefixAliasMapping = {aliases: {}, lastIndex: 0}, constraints, parsed, useRightJoin;
 
         // go through list of facets and parse each facet
         for (i = 0; i < and.length; i++) {
             term = and[i];
-            sourcekey = null;
+            sourcekey = "";
 
             // the given term must be an object
             if (typeof term !== "object") {
@@ -400,7 +400,7 @@
                                     wrapper = rootTable.sourceDefinitions.sources[node[k]];
                                 }
                                 if (!wrapper) return null;
-                                objCopy.push(wrapper.getRawSourcePath());
+                                objElCopy.source = wrapper.getRawSourcePath();
                             } else {
                                 objElCopy[k] = node[k];
                             }
@@ -1303,9 +1303,9 @@
          * @param {*} useRightJoin 
          * @param {*} ignoreLastFK 
          */
-        parseSourceNodesWithAliasMapping: function (sourceNodes, lastForeignKeyNode, sourcekey, pathPrefixAliasMapping, mainTableAlias, useRightJoin, ignoreLastFK) {
-            if (!useRightJoin && sourcekey in pathPrefixAliasMapping.aliases) {
-                return "$" + pathPrefixAliasMapping.aliases[sn.pathPrefixSourcekey];
+        parseSourceNodesWithAliasMapping: function (sourceNodes, lastForeignKeyNode, sourcekey, pathPrefixAliasMapping, mainTableAlias, useRightJoin, ignoreLastFK, outAlias) {
+            if (!useRightJoin && sourcekey && sourcekey in pathPrefixAliasMapping.aliases) {
+                return "$" + pathPrefixAliasMapping.aliases[sourcekey];
             }
 
             return sourceNodes.reduce(function (prev, sn, i) {
@@ -1327,17 +1327,23 @@
                     if (sn.pathPrefixSourcekey in pathPrefixAliasMapping.aliases) {
                         return "$" + pathPrefixAliasMapping.aliases[sn.pathPrefixSourcekey];
                     }
-                    var prefixAlias = mainTableAlias + "_P" + (++pathPrefixAliasMapping.lastIndex);
 
-                    pathPrefixAliasMapping.aliases[sn.pathPrefixSourcekey] = prefixAlias;
-                    return _sourceColumnHelpers.parseSourceNodesWithAliasMapping(
-                        sn.sourceObjectNodes,
-                        sn.lastForeignKeyNode,
+                    var prefixAlias = mainTableAlias + "_P" + (++pathPrefixAliasMapping.lastIndex);
+                    var path = _sourceColumnHelpers.parseSourceNodesWithAliasMapping(
+                        sn.nodeObject.sourceObjectNodes,
+                        sn.nodeObject.lastForeignKeyNode,
+                        sn.pathPrefixSourcekey,
                         pathPrefixAliasMapping,
                         mainTableAlias,
                         false,
-                        false
+                        false,
+                        prefixAlias
                     );
+
+                    // we should first parse the existing and then add it to list
+                    pathPrefixAliasMapping.aliases[sn.pathPrefixSourcekey] = prefixAlias;
+
+                    return path;
                 }
 
                 // ignore the last fk if we have to
@@ -1355,7 +1361,9 @@
 
                 res = prev;
                 res += (i > 0) ? "/" : "";
-                res += sn.alias ? (sn.alias + ":=") : "";
+                // TODO this is hacky! alias is only used for association table now,
+                // and in that case it won't be the last one....
+                res += (sn === lastForeignKeyNode && outAlias) ? (outAlias + ":=") :  (sn.alias ? (sn.alias + ":=") : "");
                 res += fkStr;
 
                 return res;
@@ -1374,7 +1382,9 @@
         parseAllOutBoundNodes: function (sourceNodes, lastForeignKeyNode, sourcekey, pathPrefixAliasMapping, outAlias, mainTableAlias) {
             var usedOutAlias;
 
-            if (sourcekey in pathPrefixAliasMapping.aliases) {
+            // TODO could be improved, we don't need to return any path 
+            // if this the main call and not part of the recursive call
+            if (sourcekey && sourcekey in pathPrefixAliasMapping.aliases) {
                 usedOutAlias = pathPrefixAliasMapping.aliases[sourcekey];
                 return {
                     path: "$" + usedOutAlias,
