@@ -2683,7 +2683,7 @@ InboundForeignKeyPseudoColumn.prototype._determineInputDisabled = function () {
 Object.defineProperty(InboundForeignKeyPseudoColumn.prototype, "name", {
     get: function () {
         if (this._name === undefined) {
-            this._name = _generateForeignKeyName(this.foreignKey, true);
+            this._name = _sourceColumnHelpers.generateForeignKeyName(this.foreignKey, true);
         }
         return this._name;
     }

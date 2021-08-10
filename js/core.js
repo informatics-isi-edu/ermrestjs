@@ -3329,7 +3329,7 @@
                 if (this.simple) {
                     obj = {source: this.colset.columns[0].name, self_link: true};
                 }
-                this._name = module._generateSourceObjectHashName(obj, false, this.table);
+                this._name = _sourceColumnHelpers.generateSourceObjectHashName(obj, false, this.table);
             }
             return this._name;
         },
@@ -3676,7 +3676,7 @@
                     // valid fk
                     fk = this._table.schema.catalog.constraintByNamePair(orders[i], module._constraintTypes.FOREIGN_KEY);
                     if (fk !== null && this._foreignKeys.indexOf(fk.object) !== -1) {
-                        colName = _generateForeignKeyName(fk.object, true);
+                        colName = _sourceColumnHelpers.generateForeignKeyName(fk.object, true);
                         addToList({foreignKey: fk.object, name: colName});
                     } else {
                         logErr(true, wm.INVALID_FK, i);
@@ -4012,7 +4012,7 @@
          */
         get name () {
             if (this._name === undefined) {
-                this._name = _generateForeignKeyName(this);
+                this._name = _sourceColumnHelpers.generateForeignKeyName(this);
             }
             return this._name;
         },

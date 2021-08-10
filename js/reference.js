@@ -2761,7 +2761,7 @@
                                         // inbound foreignkey
                                         else if (fk.key.table == this._table && !isEntry) {
                                             // this is inbound foreignkey, so the name must change.
-                                            fkName = _generateForeignKeyName(fk, true);
+                                            fkName = _sourceColumnHelpers.generateForeignKeyName(fk, true);
                                             if (!logCol(fkName in consideredColumns, wm.DUPLICATE_FK, i) && !logCol(context !== module._contexts.DETAILED && context !== module._contexts.EXPORT, wm.NO_INBOUND_IN_NON_DETAILED, i) && !nameExistsInTable(fkName, col)) {
                                                 consideredColumns[fkName] = true;
                                                 this._referenceColumns.push(new InboundForeignKeyPseudoColumn(this, this._generateRelatedReference(fk, tuple, true), null, fkName));
@@ -3427,7 +3427,7 @@
             newRef.origFKR = fkr; // it will be used to trace back the reference
 
             // TODO should be removed (not needed anymore)
-            newRef.origColumnName = _generateForeignKeyName(fkr);
+            newRef.origColumnName = _sourceColumnHelpers.generateForeignKeyName(fkr);
 
             // the tuple of the main table
             newRef.mainTuple = (typeof tuple === 'object') ? tuple : undefined;

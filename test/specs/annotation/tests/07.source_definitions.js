@@ -5,7 +5,7 @@ exports.execute = function (options) {
         tableNameMainNoAnnot = "main_no_annot",
         tableNameMainTrue = "main_true_col_true_fkeys",
         tableNameMainNoColNoFk = "main_no_col_no_fkeys",
-        tableMain, tableMainNoAnnot, tableMainNoColNoFk, tableMainTrue;
+        tableMain, tableMainNoAnnot, tableMainNoColNoFk, tableMainTrue, tableMainSources;
 
     var testColumns = function (cols, expectedNames) {
         expect(cols.length).toBe(expectedNames.length, "length missmatch");
@@ -19,6 +19,13 @@ exports.execute = function (options) {
         expect(fkeys.map(function (fk) {
             return fk.constraint_names[0];
         })).toEqual(jasmine.arrayContaining(expectedNames), "fkeys elements missmatch.");
+    }
+
+    var testSourceWrapperAPIs = function (obj, reverse, isLeft, outAlias, expectedString, expectedRawSource) {
+        expect(obj.toString(reverse, isLeft, outAlias)).toEqual(expectedString, "toString missmatch");
+
+        var src = obj.getRawSourcePath(reverse, outAlias);
+        expect(JSON.stringify(src)).toEqual(JSON.stringify(expectedRawSource), "rawSource missmatch");
     }
 
     beforeAll(function (done) {
@@ -74,19 +81,22 @@ exports.execute = function (options) {
 
             describe("when annotation is defined, ", function () {
                 it ("should validate the sources and allow all different column types.", function () {
-                    var tableMainSources = tableMain.sourceDefinitions.sources;
+                    tableMainSources = tableMain.sourceDefinitions.sources;
                     var expectedSources = {
                         "new_col": {
                             name: "col",
                             columnName: "col",
+                            tableName: "main",
                             isHash: false,
                             hasPath: false,
                             hasInbound: false,
-                            isEntityMode: false
+                            isEntityMode: false,
+                            foreignKeyPathLength: 0
                         },
                         "new_col_2": {
                             name: "col",
                             columnName: "col",
+                            tableName: "main",
                             isHash: false,
                             hasPath: false,
                             hasInbound: false,
@@ -95,6 +105,7 @@ exports.execute = function (options) {
                         "fk1_col_entity": {
                             name: "DfGbmoqMIfSqDHRJasrtnQ",
                             columnName: "RID",
+                            tableName: "main",
                             isHash: true,
                             hasPath: true,
                             hasInbound: false,
@@ -211,7 +222,66 @@ exports.execute = function (options) {
                             hasPath: true,
                             hasInbound: true,
                             isEntityMode: false
-                        }
+                        },
+                        "path_to_outbound2_outbound1": {
+                            name: "f3s1MZ913ANjVbDks5Xseg",
+                            columnName: "RID",
+                            isHash: true,
+                            hasPath: true,
+                            hasInbound: false,
+                            isEntityMode: true,
+                            foreignKeyPathLength: 2
+                        },
+                        "path_to_outbound2_outbound1_outbound1_w_prefix": {
+                            name: "4MWPsDupi31uxzRz7WpHhQ",
+                            columnName: "RID",
+                            tableName: "outbound2_outbound1_outbound1",
+                            isHash: true,
+                            hasPath: true,
+                            hasInbound: false,
+                            isEntityMode: true,
+                            foreignKeyPathLength: 3
+                        },
+                        "path_to_outbound2_outbound1_outbound1_wo_prefix": {
+                            name: "W5dDGANuLo2PFmh44iiKFQ",
+                            columnName: "RID",
+                            tableName: "outbound2_outbound1_outbound1",
+                            isHash: true,
+                            hasPath: true,
+                            hasInbound: false,
+                            isEntityMode: true,
+                            foreignKeyPathLength: 3
+                        },
+                        "path_to_outbound2_outbound1_inbound1_w_prefix": {
+                            name: "cDnLsfhz-uUPCwYSYAaoog",
+                            columnName: "RID",
+                            tableName: "outbound2_outbound1_inbound1",
+                            isHash: true,
+                            hasPath: true,
+                            hasInbound: true,
+                            isEntityMode: true,
+                            foreignKeyPathLength: 3
+                        },
+                        "path_to_outbound2_outbound1_inbound1_inbound1_w_recursive_prefix": {
+                            name: "_RRNJV5A9U_SyqSVbjDyIA",
+                            columnName: "RID",
+                            tableName: "outbound2_outbound1_inbound1_inbound1",
+                            isHash: true,
+                            hasPath: true,
+                            hasInbound: true,
+                            isEntityMode: true,
+                            foreignKeyPathLength: 4
+                        },
+                        "path_to_outbound2_outbound1_inbound1_inbound1_wo_prefix": {
+                            name: "MeXAc4r6YsX7jA5uTcUzOg",
+                            columnName: "RID",
+                            tableName: "outbound2_outbound1_inbound1_inbound1",
+                            isHash: true,
+                            hasPath: true,
+                            hasInbound: true,
+                            isEntityMode: true,
+                            foreignKeyPathLength: 4
+                        },
                     };
                     for (var key in expectedSources) {
                         if (!(expectedSources.hasOwnProperty(key))) continue;
@@ -220,7 +290,9 @@ exports.execute = function (options) {
                         var s =  tableMainSources[key];
                         var expectedS = expectedSources[key];
                         expect(s.column.name).toBe(expectedS.columnName, "key `" + key + "`: columnName missmatch.");
-                        ["name", "isHash", "hasPath", "hasInbound", "isEntityMode"].forEach(function (attr) {
+                        // expect(s.column.table.name).toBe(expectedS.tableName, "key `" + key + "`: tableName missmatch.")
+                        ["name", "isHash", "hasPath", "hasInbound", "isEntityMode", "foreignKeyPathLength"].forEach(function (attr) {
+                            if (!(attr in expectedS)) return;
                             expect(s[attr]).toBe(expectedS[attr], "key `" + key + "`: " + attr + " missmatch.");
                         })
 
@@ -242,7 +314,13 @@ exports.execute = function (options) {
                         "ii9Jz3vgiw-G00TDffG4ZQ": ["agg1_min"],
                         "W-TwpGoWV0qkZnBXm2O97w": ["agg1_array"],
                         "5KvRCbKSwkHPj74dunY-Xw": ["agg1_array_d_entity"],
-                        "Jb0K5FtG2b6SgdvH0Yud1w": ["agg1_array_d", "agg1_array_d_duplicate"]
+                        "Jb0K5FtG2b6SgdvH0Yud1w": ["agg1_array_d", "agg1_array_d_duplicate"],
+                        "f3s1MZ913ANjVbDks5Xseg": ["path_to_outbound2_outbound1"],
+                        "4MWPsDupi31uxzRz7WpHhQ": ["path_to_outbound2_outbound1_outbound1_w_prefix"],
+                        "W5dDGANuLo2PFmh44iiKFQ": ["path_to_outbound2_outbound1_outbound1_wo_prefix"],
+                        "cDnLsfhz-uUPCwYSYAaoog": ["path_to_outbound2_outbound1_inbound1_w_prefix"],
+                        "_RRNJV5A9U_SyqSVbjDyIA": ["path_to_outbound2_outbound1_inbound1_inbound1_w_recursive_prefix"],
+                        "MeXAc4r6YsX7jA5uTcUzOg": ["path_to_outbound2_outbound1_inbound1_inbound1_wo_prefix"]
                     };
 
                     for (var key in expectedSourceMapping) {
@@ -256,6 +334,143 @@ exports.execute = function (options) {
                     }
 
                     expect(Object.keys(tableMainMapping).length).toBe(Object.keys(expectedSourceMapping).length, "keys length missmatch");
+                });
+
+                describe("regarding SourceObjectWrapper.toString and SourceObjectWrapper.getRawSourcePath", function () {
+                   describe("when reverse=false is passed", function () {
+                        it ("should be able to handle sources without any path", function () {
+                            testSourceWrapperAPIs(tableMainSources["new_col"], false, true, "alias", "", []);
+                        });
+
+                        it ("should be able to handle sources with path", function () {
+                            testSourceWrapperAPIs(
+                                tableMainSources["path_to_outbound2_outbound1_inbound1_inbound1_wo_prefix"], 
+                                false, 
+                                true, 
+                                "alias", 
+                                [
+                                    "left(id)=(source_definitions_schema:outbound2:id)",
+                                    "left(id)=(source_definitions_schema:outbound2_outbound1:id)",
+                                    "left(id)=(source_definitions_schema:outbound2_outbound1_inbound1:id)",
+                                    "alias:=left(id)=(source_definitions_schema:outbound2_outbound1_inbound1_inbound1:id)"
+                                ].join("/"), 
+                                [
+                                    {"outbound": ["source_definitions_schema", "main_fk2"]},
+                                    {"outbound": ["source_definitions_schema", "outbound2_fk1"]},
+                                    {"inbound": ["source_definitions_schema", "outbound2_outbound1_inbound1_fk1"]},
+                                    {"inbound": ["source_definitions_schema", "outbound2_outbound1_inbound1_inbound1_fk1"], "alias": "alias"}
+                                ]
+                            );
+                        });
+
+                        it ("should be able to handle sources with path prefix", function () {
+                            testSourceWrapperAPIs(
+                                tableMainSources["path_to_outbound2_outbound1_inbound1_w_prefix"], 
+                                false, 
+                                true, 
+                                "alias", 
+                                [
+                                    "left(id)=(source_definitions_schema:outbound2:id)",
+                                    "left(id)=(source_definitions_schema:outbound2_outbound1:id)",
+                                    "alias:=left(id)=(source_definitions_schema:outbound2_outbound1_inbound1:id)",
+                                ].join("/"), 
+                                [
+                                    {"outbound": ["source_definitions_schema", "main_fk2"]},
+                                    {"outbound": ["source_definitions_schema", "outbound2_fk1"]},
+                                    {"inbound": ["source_definitions_schema", "outbound2_outbound1_inbound1_fk1"], "alias": "alias"}
+                                ]
+                            );
+                        });
+
+                        it ("should be bale to handle sources with recursive path prefix", function () {
+                            testSourceWrapperAPIs(
+                                tableMainSources["path_to_outbound2_outbound1_inbound1_inbound1_w_recursive_prefix"], 
+                                false, 
+                                true, 
+                                "alias", 
+                                [
+                                    "left(id)=(source_definitions_schema:outbound2:id)",
+                                    "left(id)=(source_definitions_schema:outbound2_outbound1:id)",
+                                    "left(id)=(source_definitions_schema:outbound2_outbound1_inbound1:id)",
+                                    "alias:=left(id)=(source_definitions_schema:outbound2_outbound1_inbound1_inbound1:id)"
+                                ].join("/"), 
+                                [
+                                    {"outbound": ["source_definitions_schema", "main_fk2"]},
+                                    {"outbound": ["source_definitions_schema", "outbound2_fk1"]},
+                                    {"inbound": ["source_definitions_schema", "outbound2_outbound1_inbound1_fk1"]},
+                                    {"inbound": ["source_definitions_schema", "outbound2_outbound1_inbound1_inbound1_fk1"], "alias": "alias"}
+                                ]
+                            );
+                        });
+                   });
+
+                   describe("when reverse=true is passed", function () {
+                        it ("should be able to handle sources without any path", function () {
+                            testSourceWrapperAPIs(tableMainSources["new_col"], true, false, "", "", []);
+                        });
+
+                        it ("should be able to handle sources with path", function () {
+                            testSourceWrapperAPIs(
+                                tableMainSources["path_to_outbound2_outbound1_inbound1_inbound1_wo_prefix"], 
+                                true, 
+                                false, 
+                                "", 
+                                [
+                                    "(id)=(source_definitions_schema:outbound2_outbound1_inbound1:id)/" +
+                                    "(id)=(source_definitions_schema:outbound2_outbound1:id)/" +
+                                    "(id)=(source_definitions_schema:outbound2:id)/" +
+                                    "(id)=(source_definitions_schema:main:id)"
+                                ].join("/"), 
+                                [
+                                    {"outbound": ["source_definitions_schema", "outbound2_outbound1_inbound1_inbound1_fk1"]},
+                                    {"outbound": ["source_definitions_schema", "outbound2_outbound1_inbound1_fk1"]},
+                                    {"inbound": ["source_definitions_schema", "outbound2_fk1"]},
+                                    {"inbound": ["source_definitions_schema", "main_fk2"]}
+                                ]
+                            );
+                        });
+
+                        it ("should be able to handle sources with path prefix", function () {
+                            testSourceWrapperAPIs(
+                                tableMainSources["path_to_outbound2_outbound1_inbound1_w_prefix"], 
+                                true, 
+                                false, 
+                                "", 
+                                [
+                                    "(id)=(source_definitions_schema:outbound2_outbound1:id)/" +
+                                    "(id)=(source_definitions_schema:outbound2:id)/" +
+                                    "(id)=(source_definitions_schema:main:id)"
+                                ].join("/"), 
+                                [
+                                    {"outbound": ["source_definitions_schema", "outbound2_outbound1_inbound1_fk1"]},
+                                    {"inbound": ["source_definitions_schema", "outbound2_fk1"]},
+                                    {"inbound": ["source_definitions_schema", "main_fk2"]}
+                                ]
+                            );
+                        });
+
+                        it ("should be bale to handle sources with recursive path prefix", function () {
+                            testSourceWrapperAPIs(
+                                tableMainSources["path_to_outbound2_outbound1_inbound1_inbound1_w_recursive_prefix"], 
+                                true, 
+                                false   , 
+                                "", 
+                                [
+                                    "(id)=(source_definitions_schema:outbound2_outbound1_inbound1:id)/" +
+                                    "(id)=(source_definitions_schema:outbound2_outbound1:id)/" +
+                                    "(id)=(source_definitions_schema:outbound2:id)/" +
+                                    "(id)=(source_definitions_schema:main:id)"
+                                ].join("/"), 
+                                [
+                                    {"outbound": ["source_definitions_schema", "outbound2_outbound1_inbound1_inbound1_fk1"]},
+                                    {"outbound": ["source_definitions_schema", "outbound2_outbound1_inbound1_fk1"]},
+                                    {"inbound": ["source_definitions_schema", "outbound2_fk1"]},
+                                    {"inbound": ["source_definitions_schema", "main_fk2"]}
+                                ]
+                            );
+                        });
+                   });
+
                 });
             });
 

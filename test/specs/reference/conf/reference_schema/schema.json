@@ -179,7 +179,12 @@
                         {"source": [
                             {"inbound": ["reference_schema", "table_w_linked_rowname_fk1"]},
                             "RID"
-                        ]}
+                        ]},
+                        {
+                            "source": [
+                                {                          }
+                            ]
+                        }
                     ]
                 },
                 "tag:isrd.isi.edu,2016:table-display": {
@@ -2094,6 +2099,43 @@
             ]
         },
         "reference_outbound_1_inbound_1": {
+            "kind": "table",
+            "table_name": "reference_outbound_1_inbound_1",
+            "schema_name": "reference_schema",
+            "keys": [{"unique_columns": ["id"]}],
+            "foreign_keys": [{
+                "names": [["reference_schema", "reference_outbound_1_inbound_1_fk1"]],
+                "foreign_key_columns": [{
+                    "schema_name": "reference_schema",
+                    "table_name": "reference_outbound_1_inbound_1",
+                    "column_name": "fk1"
+                }],
+                "referenced_columns": [{
+                    "schema_name": "reference_schema",
+                    "table_name": "reference_outbound_1",
+                    "column_name": "id"
+                }]
+            }],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {"typename": "text"}
+                },
+                {
+                    "name": "fk1",
+                    "type": {"typename": "text"}
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2016:table-display": {
+                    "*": {
+                        "row_markdown_pattern": "{{{id}}}, {{{_fk1}}}"
+                    }
+                }
+            }
+        },
+        "reference_outbound_1_inbound_2": {
             "kind": "table",
             "table_name": "reference_outbound_1_inbound_1",
             "schema_name": "reference_schema",

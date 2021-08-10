@@ -355,127 +355,6 @@
     };
 
     /**
-     * @param {string|object} colObject if the foreignkey/key is compund, this should be the constraint name. otherwise the source syntax for pseudo-column.
-     * @param {boolean} useOnlySource whether we should ignore other attributes other than source or not
-     * @desc return the name that should be used for pseudoColumn. This function makes sure that the returned name is unique.
-     * This function can be used to get the name that we're using for :
-     *
-     * - Composite key/foreignkeys:
-     *   In this case, if the constraint name is [`s`, `c`], you should pass `s_c` to this function.
-     * - Simple foiregnkey/key:
-     *   Pass the equivalent pseudo-column definition of them. It must at least have `source` as an attribute.
-     * - Pseudo-Columns:
-     *   Just pass the object that defines the pseudo-column. It must at least have `source` as an attribute.
-     *
-     */
-    module._generateSourceObjectHashName = function (colObject, useOnlySource, rootTable, sources) {
-
-        //we cannot create an object and stringify it, since its order can be different
-        //instead will create a string of `source + aggregate + entity`
-        var str = "";
-
-        // it should have source
-        if (typeof colObject === "object") {
-            if (!colObject.source) return null;
-
-            if (_sourceColumnHelpers._sourceHasPath(colObject.source)) {
-                // TODO can we improve this?
-                // this to make sure we're not using `alias` for hashname
-                var objCopy = [];
-                colObject.source.forEach(function (node) {
-                    var objElCopy = {}, k;
-                    if (typeof node != "object" || (!("alias" in node) && !("sourcekey" in node))) {
-                        objCopy.push(node);
-                    } else {
-                        for (k in node) {
-                            if (!node.hasOwnProperty(k)) continue;
-                            if (k == "alias") continue;
-                            
-                            // use the raw path instead of sourcekey for hashname
-                            if (k == "sourcekey") {
-                                var wrapper
-                                if (isObjectAndNotNull(sources)) {
-                                    wrapper = sources[node[k]];
-                                } else {
-                                    wrapper = rootTable.sourceDefinitions.sources[node[k]];
-                                }
-                                if (!wrapper) return null;
-                                objElCopy.source = wrapper.getRawSourcePath();
-                            } else {
-                                objElCopy[k] = node[k];
-                            }
-                        }
-                        objCopy.push(objElCopy);
-                    }
-                });
-                // since it's an array, it will preserve the order
-                str += JSON.stringify(objCopy);
-            } else {
-                str += _sourceColumnHelpers._getSourceColumnStr(colObject.source);
-            }
-
-            if (useOnlySource !== true && typeof colObject.aggregate === "string") {
-                str += colObject.aggregate;
-            }
-
-            // entity true doesn't change anything
-            if (useOnlySource !== true && colObject.entity === false) {
-                str += colObject.entity;
-            }
-
-            if (useOnlySource !== true && colObject.self_link === true) {
-                str += colObject.self_link;
-            }
-        } else if (typeof colObject === "string"){
-            str = colObject;
-        } else {
-            return null;
-        }
-
-        // md5
-        str = ERMrest._SparkMD5.hash(str);
-
-        // base64
-        str = _hexToBase64(str);
-
-        // url safe
-        return _urlEncodeBase64(str);
-    };
-
-    _generateForeignKeyName = function (fk, isInbound) {
-        var eTable = isInbound ? fk._table : fk.key.table,
-            rootTable = isInbound ?  fk.key.table : fk._table;
-
-        if (!isInbound) {
-            return module._generateSourceObjectHashName(
-                {
-                    source: [{outbound: fk.constraint_names[0]}, eTable.shortestKey[0].name]
-                },
-                false,
-                rootTable
-            );
-        }
-
-        var source = [{inbound: fk.constraint_names[0]}];
-        if (eTable.isPureBinaryAssociation) {
-            var otherFK, pureBinaryFKs = eTable.pureBinaryForeignKeys;
-            for (j = 0; j < pureBinaryFKs.length; j++) {
-                if(pureBinaryFKs[j] !== fk) {
-                    otherFK = pureBinaryFKs[j];
-                    break;
-                }
-            }
-
-            source.push({outbound: otherFK.constraint_names[0]});
-            source.push(otherFK.key.table.shortestKey[0].name);
-        } else {
-            source.push(eTable.shortestKey[0].name);
-        }
-
-        return module._generateSourceObjectHashName({source: source}, false, rootTable);
-    };
-
-    /**
      * @param {Object} source the source array or string
      * @desc
      * Will compress the source that can be used for logging purposes. It will,
@@ -1023,7 +902,7 @@
             // generate name:
             // TODO maybe we shouldn't even allow aggregate in faceting (for now we're ignoring it)
             if ((sourceObject.self_link === true) || self.hasPath || self.isEntityMode || (isFacet !== false && self.hasAggregate)) {
-                self.name = module._generateSourceObjectHashName(sourceObject, isFacet, table, sources);
+                self.name = _sourceColumnHelpers.generateSourceObjectHashName(sourceObject, isFacet, table, sources);
                 self.isHash = true;
 
                 if (table.columns.has(self.name)) {
@@ -1174,6 +1053,10 @@
         },
     };
 
+    /**
+     * Helper functions related to source syntax
+     * @ignore
+     */
     _sourceColumnHelpers = {
         processDataSourcePath: function (source, rootTable, tableName, catalogId, consNames, sources) {
             var returnError = function (message) {
@@ -1523,6 +1406,116 @@
          */
         _getSourceColumnStr: function (source) {
             return Array.isArray(source) ? source[source.length-1] : source;
+        },
+
+        /**
+         * @param {string|object} colObject if the foreignkey/key is compund, this should be the constraint name. otherwise the source syntax for pseudo-column.
+         * @param {boolean} useOnlySource whether we should ignore other attributes other than source or not
+         * @desc return the name that should be used for pseudoColumn. This function makes sure that the returned name is unique.
+         * This function can be used to get the name that we're using for :
+         *
+         * - Composite key/foreignkeys:
+         *   In this case, if the constraint name is [`s`, `c`], you should pass `s_c` to this function.
+         * - Simple foiregnkey/key:
+         *   Pass the equivalent pseudo-column definition of them. It must at least have `source` as an attribute.
+         * - Pseudo-Columns:
+         *   - Just pass the object that defines the pseudo-column. It must at least have `source` as an attribute.
+         *   - The given source will be hashed as is, so we should remove the alias and change to raw source (instead of prefix) beforehand
+         *
+         */
+        generateSourceObjectHashName: function (colObject, useOnlySource) {
+
+            //we cannot create an object and stringify it, since its order can be different
+            //instead will create a string of `source + aggregate + entity`
+            var str = "";
+
+            // it should have source
+            if (typeof colObject === "object") {
+                if (!colObject.source) return null;
+
+                if (_sourceColumnHelpers._sourceHasPath(colObject.source)) {
+                    // TODO can we improve this?
+                    // this to make sure we're not using `alias` for hashname
+                    var objCopy = [];
+                    colObject.source.forEach(function (node) {
+                        var objElCopy = {}, k;
+                        if (typeof node != "object" || !("alias" in node)) {
+                            objCopy.push(node);
+                        } else {
+                            for (k in node) {
+                                if (!node.hasOwnProperty(k)) continue;
+                                if (k == "alias") continue;
+                                objElCopy[k] = node[k];
+                            }
+                            objCopy.push(objElCopy);
+                        }
+                    });
+
+                    // since it's an array, it will preserve the order
+                    str += JSON.stringify(objCopy);
+                } else {
+                    str += _sourceColumnHelpers._getSourceColumnStr(colObject.source);
+                }
+
+                if (useOnlySource !== true && typeof colObject.aggregate === "string") {
+                    str += colObject.aggregate;
+                }
+
+                // entity true doesn't change anything
+                if (useOnlySource !== true && colObject.entity === false) {
+                    str += colObject.entity;
+                }
+
+                if (useOnlySource !== true && colObject.self_link === true) {
+                    str += colObject.self_link;
+                }
+            } else if (typeof colObject === "string"){
+                str = colObject;
+            } else {
+                return null;
+            }
+
+            // md5
+            str = ERMrest._SparkMD5.hash(str);
+
+            // base64
+            str = _hexToBase64(str);
+
+            // url safe
+            return _urlEncodeBase64(str);
+        },
+
+        generateForeignKeyName: function (fk, isInbound) {
+            var eTable = isInbound ? fk._table : fk.key.table,
+                rootTable = isInbound ?  fk.key.table : fk._table;
+    
+            if (!isInbound) {
+                return _sourceColumnHelpers.generateSourceObjectHashName(
+                    {
+                        source: [{outbound: fk.constraint_names[0]}, eTable.shortestKey[0].name]
+                    },
+                    false,
+                    rootTable
+                );
+            }
+    
+            var source = [{inbound: fk.constraint_names[0]}];
+            if (eTable.isPureBinaryAssociation) {
+                var otherFK, pureBinaryFKs = eTable.pureBinaryForeignKeys;
+                for (j = 0; j < pureBinaryFKs.length; j++) {
+                    if(pureBinaryFKs[j] !== fk) {
+                        otherFK = pureBinaryFKs[j];
+                        break;
+                    }
+                }
+    
+                source.push({outbound: otherFK.constraint_names[0]});
+                source.push(otherFK.key.table.shortestKey[0].name);
+            } else {
+                source.push(eTable.shortestKey[0].name);
+            }
+    
+            return _sourceColumnHelpers.generateSourceObjectHashName({source: source}, false, rootTable);
         }
     };
 

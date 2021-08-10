@@ -1145,6 +1145,6 @@ exports.execute = function(options) {
             });
         });
 
-        // NOTE: search test cases are in refererence/13.search.js
-        // NOTE: more facet test cases are in faceting test specs
-    };
+    // NOTE: search test cases are in refererence/13.search.js
+    // NOTE: more facet test cases are in faceting test specs
+};
