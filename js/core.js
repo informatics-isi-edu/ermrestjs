@@ -1,4 +1,4 @@
-    
+
     module.configure = configure;
 
     module.ermrestFactory = {
@@ -470,6 +470,11 @@
                     self.annotations._push(new Annotation("catalog", uri, response.annotations[uri]));
                 }
 
+                self._showSavedQuery = null;
+                if (self.annotations.contains(module._annotations.DISPLAY)) {
+                    self._showSavedQuery = self.annotations.get(module._annotations.DISPLAY).content.show_saved_query;
+                }
+
                 if (dontFetchSchema === true || self._schemaFetched) {
                     defer.resolve();
                 } else {
@@ -761,11 +766,20 @@
          * @type {string}
          */
         this.comment = jsonSchema.comment;
+
+        /**
+         * @type {boolean}
+         */
+        this._showSavedQuery = null;
         if (this.annotations.contains(module._annotations.DISPLAY)) {
-            var cm = _processModelComment(this.annotations.get(module._annotations.DISPLAY).content.comment);
+            var displayAnnotationSchema = this.annotations.get(module._annotations.DISPLAY);
+            var cm = _processModelComment(displayAnnotation.content.comment);
             if (typeof cm === "string") {
                 this.comment = cm;
             }
+
+            // may set to undefined which reference API will know how to deal with
+            this._showSavedQuery = displayAnnotationSchema.content.show_saved_query;
         }
 
         if (this.annotations.contains(module._annotations.APP_LINKS)) {
@@ -1021,11 +1035,20 @@
          * @type {string}
          */
         this.comment = jsonTable.comment;
+
+        /**
+         * @type {boolean}
+         */
+        this._showSavedQuery = null;
         if (this.annotations.contains(module._annotations.DISPLAY)) {
-            var cm = _processModelComment(this.annotations.get(module._annotations.DISPLAY).content.comment);
+            var displayAnnotationTable = this.annotations.get(module._annotations.DISPLAY);
+            var cm = _processModelComment(.content.comment);
             if (typeof cm === "string") {
                 this.comment = cm;
             }
+
+            // may set to undefined which reference API will know how to deal with
+            this._showSavedQuery = displayAnnotationTable.content.show_saved_query;
         }
 
         /**
