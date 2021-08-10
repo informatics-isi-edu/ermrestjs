@@ -658,6 +658,12 @@
             }
         ],
         "annotations": {
+            "tag:misd.isi.edu,2015:display": {
+              "hide_row_count": {
+                  "compact": false,
+                  "compact/select": true
+              }
+            },
             "tag:isrd.isi.edu,2016:table-display": {
                 "compact": {
                     "collapse_toc_panel": true,
@@ -667,5 +673,13 @@
         }
     }
   },
-  "schema_name": "schema_table_display"
+  "schema_name": "schema_table_display",
+  "annotations": {
+      "tag:misd.isi.edu,2015:display": {
+          "hide_row_count": {
+              "compact": true,
+              "compact/select": false
+          }
+      }
+  }
 }
