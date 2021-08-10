@@ -902,7 +902,25 @@
             // generate name:
             // TODO maybe we shouldn't even allow aggregate in faceting (for now we're ignoring it)
             if ((sourceObject.self_link === true) || self.hasPath || self.isEntityMode || (isFacet !== false && self.hasAggregate)) {
-                self.name = _sourceColumnHelpers.generateSourceObjectHashName(sourceObject, isFacet, table, sources);
+                var rawSourceObject = JSON.parse(JSON.stringify(sourceObject));
+
+                // if the source has path, we should make sure the given sourceObject for hash is raw (not using alias or pathprefix)
+                if (self.hasPath) {
+                    rawSourceObject.source = [];
+                    sourceObject.source.forEach(function (sn, index) {
+                        if (index < sourceObjectNodes.length && sourceObjectNodes[index].isPathPrefix) {
+                            rawSourceObject.source = rawSourceObject.source.concat(sourceObjectNodes[index].nodeObject.getRawSourcePath());
+                        } else {
+                            rawSourceObject.source.push(sn);
+
+                            // remove alias property
+                            if (typeof sn === "object" && "alias" in sn) {
+                                delete rawSourceObject.source[rawSourceObject.source.length-1].alias;
+                            }
+                        }
+                    });
+                }
+                self.name = _sourceColumnHelpers.generateSourceObjectHashName(rawSourceObject, isFacet);
                 self.isHash = true;
 
                 if (table.columns.has(self.name)) {
@@ -1421,7 +1439,6 @@
          * - Pseudo-Columns:
          *   - Just pass the object that defines the pseudo-column. It must at least have `source` as an attribute.
          *   - The given source will be hashed as is, so we should remove the alias and change to raw source (instead of prefix) beforehand
-         *
          */
         generateSourceObjectHashName: function (colObject, useOnlySource) {
 
@@ -1434,25 +1451,8 @@
                 if (!colObject.source) return null;
 
                 if (_sourceColumnHelpers._sourceHasPath(colObject.source)) {
-                    // TODO can we improve this?
-                    // this to make sure we're not using `alias` for hashname
-                    var objCopy = [];
-                    colObject.source.forEach(function (node) {
-                        var objElCopy = {}, k;
-                        if (typeof node != "object" || !("alias" in node)) {
-                            objCopy.push(node);
-                        } else {
-                            for (k in node) {
-                                if (!node.hasOwnProperty(k)) continue;
-                                if (k == "alias") continue;
-                                objElCopy[k] = node[k];
-                            }
-                            objCopy.push(objElCopy);
-                        }
-                    });
-
                     // since it's an array, it will preserve the order
-                    str += JSON.stringify(objCopy);
+                    str += JSON.stringify(colObject.source);
                 } else {
                     str += _sourceColumnHelpers._getSourceColumnStr(colObject.source);
                 }
@@ -1486,16 +1486,13 @@
         },
 
         generateForeignKeyName: function (fk, isInbound) {
-            var eTable = isInbound ? fk._table : fk.key.table,
-                rootTable = isInbound ?  fk.key.table : fk._table;
-    
+            var eTable = isInbound ? fk._table : fk.key.table;    
             if (!isInbound) {
                 return _sourceColumnHelpers.generateSourceObjectHashName(
                     {
                         source: [{outbound: fk.constraint_names[0]}, eTable.shortestKey[0].name]
                     },
-                    false,
-                    rootTable
+                    false
                 );
             }
     
@@ -1515,7 +1512,7 @@
                 source.push(eTable.shortestKey[0].name);
             }
     
-            return _sourceColumnHelpers.generateSourceObjectHashName({source: source}, false, rootTable);
+            return _sourceColumnHelpers.generateSourceObjectHashName({source: source}, false);
         }
     };
 

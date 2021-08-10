@@ -3329,7 +3329,7 @@
                 if (this.simple) {
                     obj = {source: this.colset.columns[0].name, self_link: true};
                 }
-                this._name = _sourceColumnHelpers.generateSourceObjectHashName(obj, false, this.table);
+                this._name = _sourceColumnHelpers.generateSourceObjectHashName(obj, false);
             }
             return this._name;
         },

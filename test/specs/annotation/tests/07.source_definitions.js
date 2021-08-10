@@ -233,7 +233,7 @@ exports.execute = function (options) {
                             foreignKeyPathLength: 2
                         },
                         "path_to_outbound2_outbound1_outbound1_w_prefix": {
-                            name: "4MWPsDupi31uxzRz7WpHhQ",
+                            name: "W5dDGANuLo2PFmh44iiKFQ",
                             columnName: "RID",
                             tableName: "outbound2_outbound1_outbound1",
                             isHash: true,
@@ -253,7 +253,7 @@ exports.execute = function (options) {
                             foreignKeyPathLength: 3
                         },
                         "path_to_outbound2_outbound1_inbound1_w_prefix": {
-                            name: "cDnLsfhz-uUPCwYSYAaoog",
+                            name: "CDEmeAy5bMfHEbHAKpaisQ",
                             columnName: "RID",
                             tableName: "outbound2_outbound1_inbound1",
                             isHash: true,
@@ -263,7 +263,7 @@ exports.execute = function (options) {
                             foreignKeyPathLength: 3
                         },
                         "path_to_outbound2_outbound1_inbound1_inbound1_w_recursive_prefix": {
-                            name: "_RRNJV5A9U_SyqSVbjDyIA",
+                            name: "MeXAc4r6YsX7jA5uTcUzOg",
                             columnName: "RID",
                             tableName: "outbound2_outbound1_inbound1_inbound1",
                             isHash: true,
@@ -316,11 +316,9 @@ exports.execute = function (options) {
                         "5KvRCbKSwkHPj74dunY-Xw": ["agg1_array_d_entity"],
                         "Jb0K5FtG2b6SgdvH0Yud1w": ["agg1_array_d", "agg1_array_d_duplicate"],
                         "f3s1MZ913ANjVbDks5Xseg": ["path_to_outbound2_outbound1"],
-                        "4MWPsDupi31uxzRz7WpHhQ": ["path_to_outbound2_outbound1_outbound1_w_prefix"],
-                        "W5dDGANuLo2PFmh44iiKFQ": ["path_to_outbound2_outbound1_outbound1_wo_prefix"],
-                        "cDnLsfhz-uUPCwYSYAaoog": ["path_to_outbound2_outbound1_inbound1_w_prefix"],
-                        "_RRNJV5A9U_SyqSVbjDyIA": ["path_to_outbound2_outbound1_inbound1_inbound1_w_recursive_prefix"],
-                        "MeXAc4r6YsX7jA5uTcUzOg": ["path_to_outbound2_outbound1_inbound1_inbound1_wo_prefix"]
+                        "W5dDGANuLo2PFmh44iiKFQ": ["path_to_outbound2_outbound1_outbound1_w_prefix", "path_to_outbound2_outbound1_outbound1_wo_prefix"],
+                        "CDEmeAy5bMfHEbHAKpaisQ": ["path_to_outbound2_outbound1_inbound1_w_prefix"],
+                        "MeXAc4r6YsX7jA5uTcUzOg": ["path_to_outbound2_outbound1_inbound1_inbound1_w_recursive_prefix", "path_to_outbound2_outbound1_inbound1_inbound1_wo_prefix"]
                     };
 
                     for (var key in expectedSourceMapping) {
