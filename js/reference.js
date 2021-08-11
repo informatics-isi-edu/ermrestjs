@@ -3848,8 +3848,12 @@
                 for (k = allOutBounds.length - 1; k >= 0; k--) {
                     pseudoPathRes = getPseudoPath(k, fkAliasPreix + (k+1));
 
-                    //F2:=left(id)=(s:t:c)/$M/F1:=left(id2)=(s1:t1:c1)/$M/
-                    uri += pseudoPathRes.path + "/$" + mainTableAlias + "/";
+                    // TODO could be improved by adding $M to the begining?
+                    // if the result is just the alias, we don't need to add it at all
+                    if (pseudoPathRes.path != ("$" + pseudoPathRes.usedOutAlias)) {
+                        //F2:=left(id)=(s:t:c)/$M/F1:=left(id2)=(s1:t1:c1)/$M/
+                        uri += pseudoPathRes.path + "/$" + mainTableAlias + "/";
+                    }
 
                     // F2:array_d(F2:*),F1:array_d(F1:*)
                     aggList.push(fkAliasPreix + (k+1) + ":=" + aggFn + "(" + pseudoPathRes.usedOutAlias + ":*)");
