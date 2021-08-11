@@ -1574,7 +1574,6 @@ function ForeignKeyPseudoColumn (reference, fk, sourceObjectWrapper, name) {
 
     // NOTE added for compatibility
     // I cannot simply create a sourceObjectWrapper because it needs a shortestkey of length one.
-    // TODO would this cause issues?
     if (!isObjectAndNotNull(sourceObjectWrapper)) {
         this.lastForeignKeyNode = new SourceObjectNode(fk, false, true);
         this.firstForeignKeyNode = this.lastForeignKeyNode;
@@ -2750,7 +2749,6 @@ Object.defineProperty(InboundForeignKeyPseudoColumn.prototype, "compressedDataSo
  * Based on facets JSON structure we can have joins that result in facets
  * on columns that are not part of reference column.
  *
- * TODO This is just experimental, the arguments might change eventually.
  *
  * If the ReferenceColumn is not provided, then the FacetColumn is for reference
  *

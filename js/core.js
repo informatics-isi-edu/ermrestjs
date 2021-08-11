@@ -1413,7 +1413,7 @@
                                 sourceDef.source.length > 1 && ("sourcekey" in sourceDef.source[0]);
                     
                     if (hasPrefix) {
-                        // TODO limitation because of other parts of the code which we might want 
+                        // NOTE limitation because of other parts of the code which we might want 
                         //      to allow later
                         if (sourceDef.source.length < 3) {
                             module._log.info(message + ": " + "sourcekey (path prefix) can only be used when there's a path after it.");
@@ -2460,9 +2460,6 @@
     /**
      * Constructs a Column.
      *
-     * TODO: The Column will need to change. We need to be able to use the
-     * column in the context the new {@link ERMrest.Reference+columns} where
-     * a Column _may not_ be a part of a Table.
      * @memberof ERMrest
      * @constructor
      * @param {ERMrest.Table} table the table object.

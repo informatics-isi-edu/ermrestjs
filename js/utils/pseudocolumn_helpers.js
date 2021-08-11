@@ -780,17 +780,6 @@
                 delete sourceObject[attr];
             });
 
-            // TODO alternative solution:
-            // if it has any of the source def attributes, remove the sourcekey attr
-            // var hasSourceDefAttrs = false;
-            // if () {
-
-            // }
-            // if (hasSourceDefAttrs) {
-            //     // the sourcekey doesn't associate with this anymore
-            //     delete sourceObject.sourcekey;
-            // }
-
             for (key in self.sourceObject) {
                 if (!self.sourceObject.hasOwnProperty(key)) continue;
 

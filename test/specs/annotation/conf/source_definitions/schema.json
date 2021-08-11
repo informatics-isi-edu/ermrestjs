@@ -206,25 +206,29 @@
                               {"inbound": ["source_definitions_schema", "outbound2_outbound1_inbound1_inbound1_fk1"]},
                               "RID"
                           ]
+                      },
+                      "path_w_invalid_prefix": {
+                          "source": [
+                              {"sourcekey": "path_that_doesnt_exist"},
+                              {"outbound": ["source_definitions_schema", "main_fk1"]},
+                              "RID"
+                          ]
+                      },
+                      "circular_path_1": {
+                          "source": [
+                              {"sourcekey": "circular_path_2"},
+                              {"outbound": ["source_definitions_schema", "main_fk1"]},
+                              "RID"
+                          ]
+                      },
+                      "circular_path_2": {
+                          "source": [
+                              {"sourcekey": "circular_path_1"},
+                              {"outbound": ["source_definitions_schema", "main_fk1"]},
+                              "RID"
+                          ]
                       }
                   }
-              },
-              "tag:isrd.isi.edu,2016:visible-columns": {
-                "*": [
-                  {"sourcekey": "path_to_outbound2_outbound1"},
-                  {"sourcekey": "path_to_outbound2_outbound1_outbound1_wo_prefix"},
-                  {"sourcekey": "path_to_outbound2_outbound1_outbound1_w_prefix"},
-                  {
-                      "sourcekey": "path_to_outbound2_outbound1_inbound1_inbound1_w_recursive_prefix"
-                  },
-                  {
-                    "source": [
-                      {"sourcekey": "path_to_outbound2_outbound1_outbound1_w_prefix"},
-                      {"outbound": ["source_definitions_schema", "outbound2_outbound1_outbound1_fk1"]},
-                      "RID"
-                    ]
-                  }
-                ]
               }
           }
       },
