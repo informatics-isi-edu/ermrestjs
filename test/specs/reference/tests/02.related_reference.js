@@ -153,7 +153,7 @@ exports.execute = function(options) {
                 describe("regarding column objects defining path.", function () {
 
                     it ('should ignore the invalid (invalid, no path, non-entity, has aggregate, all-outbound) objects.', function () {
-                        expect(pathRelatedWithTuple.length).toBe(4);
+                        expect(pathRelatedWithTuple.length).toBe(6);
                     });
 
                     it ('should create the reference by using facet syntax (starting from related table with facet on shortestkey of main table.).', function () {
@@ -188,6 +188,31 @@ exports.execute = function(options) {
                             ], "choices":[utils.findEntityRID(options, schemaName, tableName, "id", "9003")]}]}
                         );
                     });
+
+                    it ("should be able to support paths that have prefix.", function () {
+                        checkRelated(
+                            pathRelatedWithTuple[4], "reference_schema", "reference_outbound1_inbound1_outbound1",
+                            {"and":[{"source": [
+                                {"inbound": ["reference_schema", "reference_outbound_1_inbound_1_fk2"]},
+                                {"outbound": ["reference_schema", "reference_outbound_1_inbound_1_fk1"]},
+                                {"inbound": ["reference_schema", "reference_table_fk1"]},
+                                "RID"
+                            ], "choices":[utils.findEntityRID(options, schemaName, tableName, "id", "9003")]}]}
+                        );
+                    });
+
+                    it ("should be able to support paths that have recursive prefix.", function () {
+                        checkRelated(
+                            pathRelatedWithTuple[5], "reference_schema", "reference_outbound1_inbound1_outbound1_inbound1",
+                            {"and":[{"source": [
+                                {"outbound": ["reference_schema", "reference_outbound1_inbound1_outbound1_inbound1_fk1"]},
+                                {"inbound": ["reference_schema", "reference_outbound_1_inbound_1_fk2"]},
+                                {"outbound": ["reference_schema", "reference_outbound_1_inbound_1_fk1"]},
+                                {"inbound": ["reference_schema", "reference_table_fk1"]},
+                                "RID"
+                            ], "choices":[utils.findEntityRID(options, schemaName, tableName, "id", "9003")]}]}
+                        );
+                    });
                 });
             });
         });
@@ -209,7 +234,7 @@ exports.execute = function(options) {
                     [{"i": ["reference_schema", "fromname_fk_inbound_related_to_reference"]}, "RID"],
                     [{"i": ["reference_schema", "fk_inbound_related_to_reference"]}, "id"],
                     [
-                        {"i": ["reference_schema", "toname_fk_association_related_to_reference"]},
+                        {"key": "path_to_association_table_with_toname"},
                         {"o": ["reference_schema", "association_table_with_toname_id_from_inbound_related_table1"]},
                         "RID"
                     ],
@@ -256,6 +281,16 @@ exports.execute = function(options) {
                         ],
                         [
                             {"i": ["reference_schema", "table_w_linked_rowname_fk1"]},
+                            "RID"
+                        ],
+                        [
+                            {"key": "path_to_outbound1_inbound1"},
+                            {"o": ["reference_schema", "reference_outbound_1_inbound_1_fk2"]},
+                            "RID"
+                        ],
+                        [
+                            {"key": "path_to_outbound1_inbound1_outbound1"},
+                            {"i": ["reference_schema", "reference_outbound1_inbound1_outbound1_inbound1_fk1"]},
                             "RID"
                         ]
                     ];
@@ -443,6 +478,7 @@ exports.execute = function(options) {
 
                     describe("with tuple, ", function () {
                         it('should create the link using faceting (starting from related table with facet based on shortestkey of main table).', function() {
+                            // eventhough the path is defined with prefix, the revese one is using proper raw path with alias
                             checkUri(2, "inbound_related_reference_table", [{
                                 "source":[
                                     {"inbound":["reference_schema","association_table_with_toname_id_from_inbound_related_table1"], "alias": "A"},
@@ -610,7 +646,7 @@ exports.execute = function(options) {
                 });
 
                 it ("otherwise should use the row_markdown_pattern.", function (done) {
-                    testPageContent(pathRelatedWithTuple[2], 1, '<p>01, 1</p>\n', done);
+                    testPageContent(pathRelatedWithTuple[2], 1, '<p>01, 1, 1</p>\n', done);
                 });
 
                 it ("if none of the markdown_patterns are not defined, should return a list of rownames.", function (done) {
