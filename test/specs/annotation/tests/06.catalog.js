@@ -25,7 +25,7 @@ exports.execute = function (options) {
 
                 expect(reference).toEqual(jasmine.any(Object));
 
-                expect(reference.show_saved_query).toBeTruthy("display annotation not set properly");
+                expect(reference.display.show_saved_query).toBeTruthy("display annotation not set properly");
 
                 done();
             }, function (err) {
