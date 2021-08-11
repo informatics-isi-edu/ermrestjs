@@ -2244,6 +2244,24 @@
                     this._display.sourceWaitFor = [];
                     this._display.sourceHasWaitFor = false;
                 }
+
+                /**
+                 * Check the catalog, schema, and table to see if the saved query UI should show
+                 *  1. check the table to see if the value is a boolean
+                 *    a. if true or false, we are done and use that value
+                 *    b. if undefined, display annotation defined but show_saved_query property was undefined
+                 *    c. if null, display annotation was not defined (initial value)
+                 *  2. check the schema to see if the value is a boolean
+                 *    a. if true or false, we are done and use that value
+                 *    b. if undefined, display annotation defined but show_saved_query property was undefined
+                 *    c. if null, display annotation was not defined (initial value)
+                 *  3. check the catalog to see if the value is a boolean
+                 *    a. if true or false, we are done and use that value
+                 *    b. if undefined, display annotation defined but show_saved_query property was undefined
+                 *    c. if null, display annotation was not defined (initial value)
+                 *  4. default to false if not defined on any of the above
+                 */
+                this._display.showSavedQuery = this.table._showSavedQuery;
             }
 
             return this._display;
@@ -3624,41 +3642,6 @@
                 }
             }
             return this._googleDatasetMetadata;
-        },
-
-        /**
-         * Check the catalog, schema, and table to see if the saved query UI should show
-         *  1. check the table to see if the value is a boolean
-         *    a. if true or false, we are done and use that value
-         *    b. if undefined, display annotation defined but show_saved_query property was undefined
-         *    c. if null, display annotation was not defined (initial value)
-         *  2. check the schema to see if the value is a boolean
-         *    a. if true or false, we are done and use that value
-         *    b. if undefined, display annotation defined but show_saved_query property was undefined
-         *    c. if null, display annotation was not defined (initial value)
-         *  3. check the catalog to see if the value is a boolean
-         *    a. if true or false, we are done and use that value
-         *    b. if undefined, display annotation defined but show_saved_query property was undefined
-         *    c. if null, display annotation was not defined (initial value)
-         *  4. default to false if not defined on any of the above
-         */
-        get showSavedQuery() {
-            if (this._showSavedQuery === undefined) {
-                if (typeof this.table._showSavedQuery === "boolean") {
-                    // if we have a boolean value, data modeler set a value for show_saved_query in the display annotation for this table
-                    this._showSavedQuery = this.table._showSavedQuery;
-                } else if (typeof this.table.schema._showSavedQuery === "boolean") {
-                    // if we have a boolean value, data modeler set a value for show_saved_query in the display annotation for this schema
-                    this._showSavedQuery = this.table.schema._showSavedQuery;
-                } else if (typeof this.table.schema.catalog._showSavedQuery === "boolean") {
-                    // if we have a boolean value, data modeler set a value for show_saved_query in the display annotation for this catalog
-                    this._showSavedQuery = this.table.schema._showSavedQuery;
-                } else {
-                    // default to false if show_saved_query is not defined on the table, schema, or catalog
-                    this._showSavedQuery = false;
-                }
-            }
-            return this._showSavedQuery;
         },
 
         /**
