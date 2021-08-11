@@ -1028,8 +1028,8 @@
             }
         }
 
-        var _getHierarchicalDisplayAnnotationValue = function (annotKey) {
-            var hierarchy = [this], table = this, annot, value = -1;
+        var _getHierarchicalDisplayAnnotationValue = function (table, annotKey) {
+            var hierarchy = [table], annot, value = -1;
             var displayAnnot = module._annotations.DISPLAY;
 
             // hierarchy should be an array of [table, schema, catalog]
@@ -1040,7 +1040,7 @@
                 if (!hierarchy[i].annotations.contains(displayAnnot)) continue;
 
                 annot = hierarchy[i].annotations.get(displayAnnot);
-                if (annot && annot.content && annot.content[annotKey]) {
+                if (annot && annot.content && typeof annot.content[annotKey] === "boolean") {
                     value = annot.content[annotKey];
                     if (value !== -1) break;
                 }
@@ -1053,7 +1053,7 @@
         /**
          * @type {boolean}
          */
-        this._showSavedQuery = _getHierarchicalDisplayAnnotationValue("show_saved_query");
+        this._showSavedQuery = _getHierarchicalDisplayAnnotationValue(this, "show_saved_query");
 
         /**
          * @desc The type of this table
