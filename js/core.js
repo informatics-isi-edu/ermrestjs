@@ -1449,6 +1449,7 @@
                 }
                 res.sourceMapping[pSource.name].push(key);
 
+                processedSources[key] = true;
                 return true;
              };
 

@@ -1097,6 +1097,10 @@
                         prefix = rootTable.sourceDefinitions.sources[source[i].sourcekey];
                     }
 
+                    if (!prefix.hasPath) {
+                        return returnError("referrred `sourcekey` must be a foreign key path.");
+                    }
+
                     if (!prefix) {
                         return returnError("sourcekey is invalid.");
                     }

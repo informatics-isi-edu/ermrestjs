@@ -235,6 +235,13 @@
                             {"outbound": ["source_definitions_schema", "main_fk1"]},
                             "RID"
                         ]
+                      },
+                      "use_normal_column_prefix": {
+                          "source": [
+                              {"sourcekey": "new_col"},
+                              {"outbound": ["source_definitions_schema", "main_fk1"]},
+                              "RID"
+                          ]
                       }
                   }
               }
