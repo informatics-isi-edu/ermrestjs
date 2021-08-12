@@ -21,6 +21,26 @@ to use for ERMrest JavaScript agents.</p>
  str
 {{/encodeFacet}}</p>
 </dd>
+<dt><a href="#jsonParse">jsonParse()</a> ⇒</dt>
+<dd><p>{{#jsonParse}}
+ string
+{{/jsonParse}}</p>
+</dd>
+<dt><a href="#jsonStringify">jsonStringify()</a> ⇒</dt>
+<dd><p>{{#jsonStringify}}
+ JSON Object
+{{/jsonStringify}}</p>
+</dd>
+<dt><a href="#toTitleCase">toTitleCase()</a> ⇒</dt>
+<dd><p>{{#toTitleCase}}
+ string
+{{/toTitleCase}}</p>
+</dd>
+<dt><a href="#regexReplace">regexReplace()</a> ⇒</dt>
+<dd><p>{{#regexReplace regexp newSubstr}}
+ string
+{{/replace}}</p>
+</dd>
 <dt><a href="#regexMatch">regexMatch()</a> ⇒</dt>
 <dd><p>{{#if (regexMatch value regexp)}}
   .. content
@@ -7834,6 +7854,42 @@ since the ermrestJS has been available (milliseconds).
 
 **Kind**: global function  
 **Returns**: encoded facet string that can be used in url  
+<a name="jsonParse"></a>
+
+## jsonParse() ⇒
+{{#jsonParse}}
+ string
+{{/jsonParse}}
+
+**Kind**: global function  
+**Returns**: JSON object representation of the given string  
+<a name="jsonStringify"></a>
+
+## jsonStringify() ⇒
+{{#jsonStringify}}
+ JSON Object
+{{/jsonStringify}}
+
+**Kind**: global function  
+**Returns**: string representation of the given JSON object  
+<a name="toTitleCase"></a>
+
+## toTitleCase() ⇒
+{{#toTitleCase}}
+ string
+{{/toTitleCase}}
+
+**Kind**: global function  
+**Returns**: string representation of the given JSON object  
+<a name="regexReplace"></a>
+
+## regexReplace() ⇒
+{{#regexReplace regexp newSubstr}}
+ string
+{{/replace}}
+
+**Kind**: global function  
+**Returns**: replaces each match of the regexp with newSubstr  
 <a name="regexMatch"></a>
 
 ## regexMatch() ⇒

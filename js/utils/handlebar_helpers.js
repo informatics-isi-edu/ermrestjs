@@ -39,6 +39,46 @@
             },
 
             /**
+             * {{#jsonStringify}}
+             *  JSON Object
+             * {{/jsonStringify}}
+             *
+             * @returns string representation of the given JSON object
+             */
+            jsonStringify: function (options) {
+                return JSON.stringify(options.fn(this));
+            },
+
+            /**
+             * {{#toTitleCase}}
+             *  string
+             * {{/toTitleCase}}
+             *
+             * @returns string representation of the given JSON object
+             */
+            toTitleCase: function (options) {
+                var str = options.fn(this);
+                // \w matches any word character
+                // \S matches any non-whitespace character
+                return str.replace(/\w\S*/g, function(txt) {
+                    return txt.charAt(0).toUpperCase() + txt.substr(1);
+                });
+            },
+
+            /**
+             * {{#replace substr newSubstr}}
+             *  string
+             * {{/replace}}
+             *
+             * @returns replaces each match of the regexp with newSubstr
+             */
+            replace: function (substr, newSubstr, options) {
+                var regexpObj = new RegExp(substr, 'g');
+
+                return options.fn(this).replace(regexpObj, newSubstr);
+            },
+
+            /**
              * {{#if (regexMatch value regexp)}}
              *   .. content
              * {{/if}}
