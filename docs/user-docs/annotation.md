@@ -98,6 +98,7 @@ Supported JSON payload patterns:
 - `{`... `"show_null":` `{` _context_ `:` _nshow_ `,` ... `}`: How to display NULL data values.
 - `{`... `"show_key_link":` `{` _context_ `:` _keylink_ `,` ... `}`: Whether default display of keys (sel link) should include link to the row.
 - `{`... `"show_foreign_key_link":` `{` _context_ `:` _fklink_ `,` ... `}`: Whether default display of foreign keys should include link to the row.
+- `{`... `"hide_row_count":` `{` _context_ `:` _rowcount_ `,` ... `}`: Whether we should display the total row count. Since the request to fetch total row count is expensive, you can use this to signal to client to skip the request (and therefore do not display it to users.)
 
 Supported JSON _ccomment_ patterns:
 
@@ -139,6 +140,11 @@ Supported JSON _keylink_ patterns:
 
 - `true`: Present the key (self link) values with a link to the referred row.
 - `false`: Present the key (self link) values without adding extra links.
+
+Supported JSON _rowcount_ patterns:
+
+- `true`: Don't display the total row count.
+- `false`: Display the total row count to users.
 
 Supported JSON _context_ patterns:
 - See [Context Names](#context-names) section for the list of supported JSON _context_ patterns.
@@ -1031,7 +1037,7 @@ Supported _jsonld_ payload pattern:
 - JSON-LD keywords: 
     - `@context`: It is a schema for your data, not only defining the property datatypes but also the classes of json resources. Default applied if none exists is `http://schema.org`.
     - `@type`: Used to set the data type of a node or typed value. At the top level, only a value of `Dataset` is supported. Default applied if none exists is `Dataset`. 
-- Schema.org volabulary: The supported attributes and types are [here](https://github.com/informatics-isi-edu/ermrestjs/blob/master/js/utils/jsonldSchema.js). This is a subset of the original vocabulary provided by schema.org. All the properties support [pattern expansion](#pattern-expansion) and the `template_engine` property should be defined outside the `dataset` definition. Apart from the main table data and all-outbound foreignkeys the pattern has access to a `$self` object that has the following attributes:
+- Schema.org volabulary: The supported attributes and types are [here](https://github.com/informatics-isi-edu/ermrestjs/blob/master/js/utils/json_ld_schema.js). This is a subset of the original vocabulary provided by schema.org. All the properties support [pattern expansion](#pattern-expansion) and the `template_engine` property should be defined outside the `dataset` definition. Apart from the main table data and all-outbound foreignkeys the pattern has access to a `$self` object that has the following attributes:
   - `rowName`: Row-name of the represented row.
   - `uri.detailed`: a uri to the row in `detailed` context. 
 

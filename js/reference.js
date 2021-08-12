@@ -1915,6 +1915,10 @@
                     annotation = module._getRecursiveAnnotationValue(this._context, this._table.annotations.get(module._annotations.TABLE_DISPLAY).content);
                 }
 
+                // get the hide_row_count from display annotation
+                var hideRowCount = module._getHierarchicalDisplayAnnotationValue(this._table, this._context, "hide_row_count", true);
+                this._display.hideRowCount = (typeof hideRowCount == "boolean") ? hideRowCount : false;
+
                 // If annotation is defined then parse it
                 if (annotation) {
 
