@@ -1977,7 +1977,12 @@
 
                             //During print we need to display that the iframe with YouTube video is replaced with a note
                             if(isYTlink){
-                              html = '<span class="' + module._classNames.showInPrintMode + '" style="visibility:hidden">' + videoText + "</span>";
+                              /*
+                               * NOTE: we're using display:none because visibility:hidden had aligment issues.
+                               * With visibility hidden eventhough the element is invisibile, it will still take up space,
+                               * and will add extra unnecessary space between the iframe and fullscreen button.
+                               */
+                              html = '<span class="' + module._classNames.showInPrintMode + '" style="display:none;">' + videoText + "</span>";
                               iframeClasses.push(module._classNames.hideInPrintMode);
                             }
 
@@ -2310,7 +2315,12 @@
                             });
                             // add closing quote
                             videoClass += '"' + " " + videoAttrs;
-                            infoHTML = '<span class="' + module._classNames.showInPrintMode + '" style="visibility:hidden">' + videoText + "</span>";
+                            /*
+                            * NOTE: we're using display:none because visibility:hidden had aligment issues.
+                            * With visibility hidden eventhough the element is invisibile, it will still take up space,
+                            * and will add extra unnecessary space between the iframe and fullscreen button.
+                            */
+                            infoHTML = '<span class="' + module._classNames.showInPrintMode + '" style="display:none;">' + videoText + "</span>";
 
                             var captionHTML="";
                             // If the next attribute is not a closing link then iterate

@@ -68,7 +68,7 @@ exports.execute = function (options) {
                                         '<p><strong>Name is :</strong> Hank<br>\n<strong>date is :</strong></p>\n',
                                         '<code>GATCGATCGC GTATT</code>',
                                         'NA',
-                                        '<span class="video-info-in-print" style="visibility:hidden">Note: Video (http://techslides.com/demos/sample-videos/small.mp4) is hidden in print </span><video controls class="-chaise-post-load hide-in-print" height=500 width=600 loop ><source src="http://techslides.com/demos/sample-videos/small.mp4" type="video/mp4"></video>',
+                                        '<span class="video-info-in-print" style="display:none;">Note: Video (http://techslides.com/demos/sample-videos/small.mp4) is hidden in print </span><video controls class="-chaise-post-load hide-in-print" height=500 width=600 loop ><source src="http://techslides.com/demos/sample-videos/small.mp4" type="video/mp4"></video>',
                                         '', // This value is set later by setLinkRID()
                                         '<p>'+catalog_id+': '+catalog_id+'/schema:table</p>\n',
                                         expectedMomentValue,
