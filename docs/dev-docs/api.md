@@ -21,11 +21,6 @@ to use for ERMrest JavaScript agents.</p>
  str
 {{/encodeFacet}}</p>
 </dd>
-<dt><a href="#jsonParse">jsonParse()</a> ⇒</dt>
-<dd><p>{{#jsonParse}}
- string
-{{/jsonParse}}</p>
-</dd>
 <dt><a href="#jsonStringify">jsonStringify()</a> ⇒</dt>
 <dd><p>{{#jsonStringify}}
  JSON Object
@@ -36,8 +31,8 @@ to use for ERMrest JavaScript agents.</p>
  string
 {{/toTitleCase}}</p>
 </dd>
-<dt><a href="#regexReplace">regexReplace()</a> ⇒</dt>
-<dd><p>{{#regexReplace regexp newSubstr}}
+<dt><a href="#replace">replace()</a> ⇒</dt>
+<dd><p>{{#replace substr newSubstr}}
  string
 {{/replace}}</p>
 </dd>
@@ -7854,15 +7849,6 @@ since the ermrestJS has been available (milliseconds).
 
 **Kind**: global function  
 **Returns**: encoded facet string that can be used in url  
-<a name="jsonParse"></a>
-
-## jsonParse() ⇒
-{{#jsonParse}}
- string
-{{/jsonParse}}
-
-**Kind**: global function  
-**Returns**: JSON object representation of the given string  
 <a name="jsonStringify"></a>
 
 ## jsonStringify() ⇒
@@ -7881,10 +7867,10 @@ since the ermrestJS has been available (milliseconds).
 
 **Kind**: global function  
 **Returns**: string representation of the given JSON object  
-<a name="regexReplace"></a>
+<a name="replace"></a>
 
-## regexReplace() ⇒
-{{#regexReplace regexp newSubstr}}
+## replace() ⇒
+{{#replace substr newSubstr}}
  string
 {{/replace}}
 
