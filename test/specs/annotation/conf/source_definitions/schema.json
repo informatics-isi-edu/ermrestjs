@@ -227,6 +227,14 @@
                               {"outbound": ["source_definitions_schema", "main_fk1"]},
                               "RID"
                           ]
+                      },
+                      "invalid_path_w_two_prefix": {
+                        "source": [
+                            {"sourcekey": "path_to_outbound2_outbound1"},
+                            {"sourcekey": "inbound1_col"},
+                            {"outbound": ["source_definitions_schema", "main_fk1"]},
+                            "RID"
+                        ]
                       }
                   }
               }

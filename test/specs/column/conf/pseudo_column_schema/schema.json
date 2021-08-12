@@ -250,6 +250,14 @@
                                 "template_engine": "handlebars",
                                 "markdown_pattern": "{{{main_table_id_col}}} virtual value 1"
                             }
+                        },
+                        {
+                            "source": [
+                                {"sourcekey": "path_to_inbound_1_outbound_1_w_prefix"},
+                                {"outbound": ["pseudo_column_schema", "inbound_1_outbound_1_fk1"]},
+                                "id"
+                            ],
+                            "aggregate": "array"
                         }
                     ],
                     "entry": "detailed",
@@ -315,6 +323,19 @@
                                 "id"
                             ],
                             "aggregate": "array_d"
+                        },
+                        "path_to_inbound_1": {
+                            "source": [
+                                {"inbound": ["pseudo_column_schema", "inbound_1_fk1"]},
+                                "RID"
+                            ]
+                        },
+                        "path_to_inbound_1_outbound_1_w_prefix": {
+                            "source": [
+                                {"sourcekey": "path_to_inbound_1"},
+                                {"outbound": ["pseudo_column_schema", "inbound_1_fk2"]},
+                                "RID"
+                            ]
                         }
                     }
                 }
@@ -566,8 +587,70 @@
                             "to_name": "inbound_1 to_name"
                         }
                     }
+                },
+                {
+                    "names": [["pseudo_column_schema", "inbound_1_fk2"]],
+                    "foreign_key_columns": [{
+                        "column_name": "id",
+                        "table_name": "inbound_1",
+                        "schema_name": "pseudo_column_schema"
+                    }],
+                    "referenced_columns": [{
+                        "column_name": "id",
+                        "table_name": "inbound_1_outbound_1",
+                        "schema_name": "pseudo_column_schema"
+                    }]
                 }
             ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {"typename": "text"}
+                },
+                {
+                    "name": "col",
+                    "type": {"typename": "text"}
+                }
+            ]
+        },
+        "inbound_1_outbound_1": {
+            "table_name": "inbound_1_outbound_1",
+            "schema_name": "pseudo_column_schema",
+            "kind": "table",
+            "keys": [{"unique_columns": ["id"]}],
+            "foreign_keys": [
+                {
+                    "names": [["pseudo_column_schema", "inbound_1_outbound_1_fk1"]],
+                    "foreign_key_columns": [{
+                        "column_name": "id",
+                        "table_name": "inbound_1_outbound_1",
+                        "schema_name": "pseudo_column_schema"
+                    }],
+                    "referenced_columns": [{
+                        "column_name": "id",
+                        "table_name": "inbound_1_outbound_1_outbound_1",
+                        "schema_name": "pseudo_column_schema"
+                    }]
+                }
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {"typename": "text"}
+                },
+                {
+                    "name": "col",
+                    "type": {"typename": "text"}
+                }
+            ]
+        },
+        "inbound_1_outbound_1_outbound_1": {
+            "table_name": "inbound_1_outbound_1_outbound_1",
+            "schema_name": "pseudo_column_schema",
+            "kind": "table",
+            "keys": [{"unique_columns": ["id"]}],
             "column_definitions": [
                 {
                     "name": "id",
