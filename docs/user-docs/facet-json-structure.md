@@ -12,6 +12,8 @@ The overall structure of filters is as follows. Each facet term combines a data 
 <TERM>:     { <logical-operator>: <TERMSET> }
             or
             { "source": <data-source>, <constraint(s)>, <extra-attribute(s)> }
+            or 
+            { "sourcekey": <source-key>, <constraint(s)>, <extra-attribute(s)> }
 ```
 
 In the following sections each of location operators, data source, constraints, and extra attributes are explained. You can also find some examples at the end of this document.
@@ -26,40 +28,108 @@ We want the structure to be as general as possible, so we don't need to redesign
 
 The current implementation of faceting in Chaise only supports `and`. The rest of logical operators are currently not supported.
 
-## Data Source
+## Data source
 
-The difference between base table columns and columns in related entities is just a difference in data source. It shouldn't involve a completely different set of filter structures. Instead, the single filter structure should conceptually allow various forms of data source specification
+Data source captures the source of filter. It can either be
+- one of current table's column.
+- a column in a table that has a valid foreign key relationship with the current table.
 
-    "Column1"
-    [{"inbound": ["S1", "FK1"]}, "Column2"]
-    [{"inbound": ["S1", "FK1"]}, {"outbound": ["S2", "FK2"]}, "Column3"]
-
-The simple form `"Column1"` might be allowed as a short-hand for `["Column1"]` since it isn't ambiguous. But any foreign key path also needs to end with the actual column that will be projected and filtered. The _direction_ field labels `"inbound"` and `"outbound"` remove any ambiguity for self-referencing table navigation scenarios. The constraint name pairs `["S1", "FK1"]` etc. reuse the same names appearing in the ERMrest model introspection document.
-
-Even if we are faceting on a vocabulary concept and just want the user to pick values by displayed *row name* and we substitute the actual entity keys in the ERMrest query, we must record this column choice explicitly in the facet spec, e.g. `[{"inbound": ["S1", "Fk1"]}, "id"]` so that the resulting faceting app URL is unambiguous even if there have been subtle model changes in the interim, which might change the default key selection heuristics etc.
+Even if we are faceting on a vocabulary concept and just want the user to pick values by displayed *row name* and we substitute the actual entity keys in the ERMrest query, we must record this column choice explicitly in the facet spec so that the resulting faceting app URL is unambiguous even if there have been subtle model changes in the interim, which might change the default key selection heuristics etc.
 
 > Based on this, we are not supporting filtering on foreign keys with composite keys.
 
+Therefore the following are acceptable ways of defining data source:
+- A column name string literal (an array of one string is also acceptable):
+  ```
+  {"source": "column"}
+  {"source": ["column"]}
+  ```
+- An array of _foreign key path_ that ends with a _columnname_ that will be projected and filtered. _foreign key path_ must be in the following format:
+  ```
+  { <direction>: [ <schema-name>, <constraint-name> ]  }
+  ```
+  Where
+  - `<direction>` is either `"inbound"` or `"outbound"`. These labels remove any ambiguity for self-referencing table navigation scenarios.
+  - The constraint pairs `[ <schema-name>, <constraint-name> ]` represent a foreign key relationship which reuses the same names appearing in the ERMrest model introspection document.
+  
+  The following are some examples of defining data source:
+  ```
+  [{"inbound": ["S1", "FK1"]}, "Column2"]
+  [{"inbound": ["S1", "FK1"]}, {"outbound": ["S2", "FK2"]}, "Column3"]
+  ```
+### Data source with reusable prefix
 
-<!-- TODO this has not been implemented yet
-### Specific occurrences of rows
+ In some cases, the defined foreign key paths for different columns/facets might be sharing the same prefix. In those cases, reusing the prefix allows sharing certain joined table instances rather than introducing more "copies" as each facet is activated which in turn will increase the performance.
 
-If we ever need to model a set of constraints where the same related entity  row must simultaneously satisfy multiple facet constraints, we could add these optional instance identifier to the path elements:
+ To do this, you would have to use [`2019:source-definitions`](annotation.md#tag-2019-source-definitions) annotation and define the shared prefix. Then you can use `sourcekey` to refer to this shared prefix in the data source. For example if the following are the source definitions on the table:
 
-- `"context"` which can reference a table instance alias other than the default which is the one immediately left of it in the path.  This is analogous to the `$Alias` path reset notation in ERMrest join paths.
+ ```json
+"tag:isrd.isi.edu,2019:source-definitions`": {
+  "sources": [
+    "path_1": {
+      "source": [
+        {"outbound": ["schema", "const1"]},
+        "RID"
+      ]
+    },
+    "path_2": {
+      "source": [
+        {"sourcekey": "path_1"},
+        {"inbound": ["schema", "const2"]},
+        "RID"
+      ]
+    },
+    "path_3": {
+      "source": [
+        {"sourcekey": "path_2"},
+        {"inbound": ["schema", "const3"]},
+        "RID"
+      ]
+    }
+  ]
+}
+```
 
-- `"alias"` which can assign an alias to the newly joined table instance.  This is analogous to the `Alias:=` binding notation in ERMrest join paths.
+Then this is a valid facet blob:
+```json
+{
+  "and": [
+    {
+      "source": [
+        {"sourcekey": "path_1"},
+        {"outbound": ["schema", "const4"]},
+        "RID"
+      ],
+      "choices": ["v1"]
+    },
+    {
+      "source": [
+        {"sourcekey": "path_2"},
+        {"inbound": ["schema", "const5"]},
+        {"outbound": ["schema", "const6"]},
+        "RID"
+      ],
+      "choices": ["v2"]
+    }
 
-So, a completely explicit path example might look like this in the future:
+  ]
+}
+```
 
-    [{"inbound": ["S1", "FK1"], "alias": "A"}, {"context": "A", "outbound": ["S2", "FK2"]}, "My Column"]
+- When using a prefix, the prefix's last column and all the other extra attributes on it will be ignored for the purpose of prefix.
+- You can use recursive prefixes. If we detect a circular dependency, we're going to invalidate the given definition.
+- While using prefix, you MUST add extra foreign key paths to the relationship. The following is not an acceptable source:
+  ```
+  [ {"sourcekey": "path_2"}, "RID" ]
+  ```
 
-the binding and use of "A" above wouldn't actually change the meaning unless another facet definition also included the same first element, in which case they would both share the same table instance "A" instead of each one joining on a separate copy via the same foreign key.
+## Source key
 
-When querying ERMrest, we would detect that the same instance ID is in use and map these to constrain the *same* joined table instance in the query. By default, each path element without a pre-assigned ID should get a new, unique ID assigned. Thus, every source path would imply a different joined table instance for each separate constraint.
+Instead of defining a new `source`, you can refer to the sources that are defined in [`2019:source-definitions`](annotation.md#tag-2019-source-definitions) by using `sourcekey` attribute. For instance, assuming `path_to_table_1` is a valid source definition, you can do
 
-Some extra validation work may be needed once we introduce specific occurrence IDs. For example, the same instance ID cannot be assigned to elements at different depths in a source path nor to elements with different constraints. All paths with shared IDs must be identical in structure for the shared components, but may branch off with unshared suffixes.
--->
+```
+{"sourcekey": "path_to_table_1"}
+```
 
 ## Constraints
 
@@ -78,7 +148,7 @@ Conceptually, this should correspond to three possible syntactic forms:
 
 A half-open range might be `{"min" lower}` or `{"max": upper}`. By default both `min` and `max` are inclusive. To use exclusive ranges you can use `min_exclusive:true` or `max_exclusive: true`.
 
-## Extra Attributes
+## Extra attributes
 
 #### entity v.s. scalar facet
  If the facet can be treated as entity (the column that is being used for facet is key of the table), setting `entity` attribute to `false` will force the facet to show scalar mode.
