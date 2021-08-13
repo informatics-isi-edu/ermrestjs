@@ -1134,6 +1134,7 @@
             delete this._ermrestPath;
             delete this._ermrestCompactUri;
             delete this._ermrestCompactPath;
+            delete this._pathPrefixAliasMapping;
         },
 
         /**
