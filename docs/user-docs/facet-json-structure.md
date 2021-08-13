@@ -80,7 +80,7 @@ And the following is source-definition and visible-columns annotation:
 
  ```json
 "tag:isrd.isi.edu,2019:source-definitions`": {
-  "sources": [
+  "sources": {
     "path_to_o1": {
         "source": [
             {"outbound": ["schema", "const1"]},
@@ -94,7 +94,7 @@ And the following is source-definition and visible-columns annotation:
             "o1_o1_col"
         ]
     }
-  ]
+  }
 },
 "tag:isrd.isi.edu,2016:visible-columns": {
   "compact": [
