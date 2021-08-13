@@ -43,8 +43,11 @@ Handlebars supports more complicated expression syntax and allow the comparison 
    * [Encode](#encode-helper)
    * [Escape](#escape-helper)
    * [EncodeFacet](#encodefacet-helper)
+   * [JsonStringify](#jsonstringify-helper)
    * [FindFirst](#findfirst-helper)
    * [FindAll](#findall-helper)
+   * [Replace](#replace-helper)
+   * [ToTitleCase](#totitlecase-helper)
 * [Using Arrays](#using-arrays)
 * [Accessing keys with spaces and special characters](#accessing-keys-with-spaces-and-special-characters)
 * [Subexpressions](#subexpressions)
@@ -358,14 +361,14 @@ You can use the `encodeFacet` helper to compress a JSON object. The compressed s
 Template:
 ```
 [caption](example.com/chaise/recordset/#1/S:T/*::facets::{{#encodeFacet}}
-{
+"{
   \"and\": [
     {
       \"source\": [{\"inbound\": [\"schema\", \"fk_1\"]}]}, \"RID\"],
       \"choices\": [\"{{{RID}}}\"]
     }
   ]
-}
+}"
 {{/encodeFacet}})
 ```
 Result:
@@ -374,6 +377,30 @@ Result:
 ```
 
 As you can see in this example I am escaping all the `"`s. This is because you are usually passing this value in a string in a JSON document. So all the `"`s must be escaped.
+
+### JsonStringify helper
+
+The `jsonStringify` helper will convert the supplied JSON object into a string representation of the JSON object. This helper behaves the same way as the `JSON.stringify` function in javascript. This can be used in conjunction with the `encodeFacet` helper for creating facet url strings.
+
+Template:
+```
+[caption](example.com/chaise/recordset/#1/S:T/*::facets::{{#encodeFacet}}
+    {{#jsonStringify}}
+    {
+      "and": [
+        {
+          "source": [{"inbound": ["schema", "fk_1"]}]}, "RID"],
+          "choices": ["{{{RID}}}"]
+        }
+      ]
+    }
+    {{/jsonStringify}}
+{{/encodeFacet}}
+```
+Result:
+```
+<a href="example.com/chaise/recordset/#1/S:T/*::facets::FSADAUczxcafd">caption</a>
+```
 
 ### Findfirst helper
 
@@ -412,6 +439,34 @@ A simple example where we try to match the file extension `jpg` or `png` with te
 Result:
 ```
 "png\njpg\n"
+```
+
+### Replace helper
+
+The `replace` helper will take the input regular expression (first argument) and replace all matches in the supplied string with the supplied substring (second argument). This helper behaves the same way as the `replace` function for Strings in javascript. One example would be to replace all underscores with whitespace characters for table name display.
+
+Template:
+```
+{{#replace "_" " "}}table_name_with_underscores{{/replace}}
+```
+
+Result:
+```
+table name with underscores
+```
+
+### ToTitleCase helper
+
+The `toTitleCase` helper will change the first character of each word (split by whitespace) in the string to a capital letter. The rest of the case of the string will remain unchanged.
+
+Template:
+```
+{{#toTitleCase}}this is the title of my page{{/toTitleCase}}
+```
+
+Result:
+```
+This Is The Title Of My Page
 ```
 
 ## Using Arrays

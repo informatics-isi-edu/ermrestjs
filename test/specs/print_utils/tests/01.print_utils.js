@@ -597,6 +597,9 @@ exports.execute = function (options) {
                 var template = '{{#jsonStringify}}{{{json}}}{{/jsonStringify}}';
 
                 expect(module.renderHandlebarsTemplate(template, {json: json})).toBe(JSON.stringify(json), "missmatch for 1st test");
+
+                var template2 = '{{#encodeFacet}}{{#jsonStringify}}{{{json}}}{{/jsonStringify}}{{/encodeFacet}}';
+                expect(module.renderHandlebarsTemplate(template2, {json: json})).toBe(options.ermRest.encodeFacetString(JSON.stringify(json)), "missmatch for 2nd test");
             });
 
             it ('toTitleCase helper', function () {
@@ -608,7 +611,7 @@ exports.execute = function (options) {
                 var string2 = "HellO world miXed case titleCase string"
                 var template2 = '{{#toTitleCase}}{{{string}}}{{/toTitleCase}}'
 
-                expect(module.renderHandlebarsTemplate(template2, {string: string2})).toBe("HellO World MiXed Case TitleCase String", "missmatch for 1st test");
+                expect(module.renderHandlebarsTemplate(template2, {string: string2})).toBe("HellO World MiXed Case TitleCase String", "missmatch for 2nd test");
             });
 
             it('suppressed default helper log', function () {
