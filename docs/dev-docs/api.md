@@ -1696,10 +1696,6 @@ Constructor for Columns.
 #### new Column(table, jsonColumn)
 Constructs a Column.
 
-TODO: The Column will need to change. We need to be able to use the
-column in the context the new [ERMrest.Reference+columns](ERMrest.Reference+columns) where
-a Column _may not_ be a part of a Table.
-
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -4989,7 +4985,6 @@ NOTE:
 Based on facets JSON structure we can have joins that result in facets
 on columns that are not part of reference column.
 
-TODO This is just experimental, the arguments might change eventually.
 
 If the ReferenceColumn is not provided, then the FacetColumn is for reference
 

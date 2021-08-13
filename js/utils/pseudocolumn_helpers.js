@@ -843,7 +843,7 @@
                 return returnError("Invalid source definition");
             }
 
-            // we need this check here to make sure the column is 
+            // we need this check here to make sure the column is in the table 
             try {
                 col = colTable.columns.get(colName);
             } catch (exp) {
@@ -1305,6 +1305,8 @@
             }
 
             var path = sourceNodes.reduce(function (prev, sn, i) {
+                var res;
+
                 usedOutAlias = outAlias;
 
                 if (sn.isFilter) {
@@ -1322,7 +1324,7 @@
                     }
                     var prefixAlias = mainTableAlias + "_P" + (++pathPrefixAliasMapping.lastIndex);
 
-                    var res = _sourceColumnHelpers.parseAllOutBoundNodes(
+                    res = _sourceColumnHelpers.parseAllOutBoundNodes(
                         sn.nodeObject.sourceObjectNodes,
                         sn.nodeObject.lastForeignKeyNode,
                         sn.pathPrefixSourcekey,
