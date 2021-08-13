@@ -1,0 +1,36 @@
+{
+    "schema_name": "show_saved_queries_catalog",
+    "tables": {
+        "show_queries": {
+            "comment": "Table with NO display annotation so the display annotation on catalog should be used for determining showing saved queries",
+            "kind": "table",
+            "keys": [
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": [
+                        "id"
+                    ]
+                }
+            ],
+            "foreign_keys": [],
+            "table_name": "show_queries",
+            "schema_name": "show_saved_queries_catalog",
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "int"
+                    }
+                }
+            ],
+            "annotations": {}
+        }
+    },
+    "table_names": [
+        "show_queries"
+    ],
+    "comment": null,
+    "annotations": {}
+}

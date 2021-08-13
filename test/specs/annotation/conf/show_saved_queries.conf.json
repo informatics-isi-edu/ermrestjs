@@ -3,7 +3,7 @@
     "schema": {
         "name": "show_saved_queries",
         "createNew": true,
-        "path": "test/specs/reference/conf/show_saved_queries/schema.json"
+        "path": "test/specs/annotation/conf/show_saved_queries/schema.json"
     },
     "tables": {
         "createNew": true
