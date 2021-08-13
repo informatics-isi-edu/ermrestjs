@@ -927,6 +927,10 @@
 
         /**
          * Return the string representation of this foreignkey path
+         * returned format:
+         * if not isLeft and outAlias is not passed: ()=()/.../()=()
+         * if isLeft: left()=()/.../left()=()
+         * if outAlias defined: ()=()/.../outAlias:=()/()
          * used in:
          *   - export default
          *   - column.getAggregate
@@ -1188,9 +1192,15 @@
 
         /**
          * Given a list of source nodes and lastFK, will parse it
-         * TODO could be refactored 
-         * @param {*} sourceNodes 
-         * @param {*} lastForeignKeyNode 
+         * - This function will modify the given pathPrefixAliasMapping by adding new aliases
+         * - it's always using inner join
+         * - outAlias is currently used only in recursive calls (not the initial call)
+         * - since we're calling this in parseDataSource where we don't have sourceObjectWrapper,
+         *   this function is using sourceNodes instead. it could be refactored to use sourceObjectWrapper instead.
+         * 
+         * TODO could be refactored  and merged with parseAllOutBoundNodes
+         * @param {*} sourceNodes - array of source nodes
+         * @param {*} lastForeignKeyNode  - the last foreign key node
          * @param {*} sourcekey 
          * @param {*} pathPrefixAliasMapping 
          * @param {*} mainTableAlias 
@@ -1266,6 +1276,14 @@
 
         /**
          * Given a list of all-outbound source nodes and last fk, will parse it
+         * - This function will modify the given pathPrefixAliasMapping by adding new aliases
+         * - it's always using left join
+         * - Returned object has `path` and `usedOutAlias`. where `usedOutAlias`
+         *   can be used to findout what is the alias that is used for the projected table.
+         *   (depending on the usage of prefix, we might ignore the given outAlias and use a prefix from pathPrefixAliasMapping)
+         * - since we don't support composite keys in source-def, the ForeignKeyPseudoColumn cannot use 
+         *   sourceObjectWrapper and instead we're creating sourceNodes for it. that's why this function is using sourceNodes
+         *   and not sourceObjectWrapper.
          * TODO could be refactored and merged with the previous function
          * @param {*} sourceNodes 
          * @param {*} lastForeignKeyNode 

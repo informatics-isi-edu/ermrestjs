@@ -61,32 +61,59 @@ Therefore the following are acceptable ways of defining data source:
 
  In some cases, the defined foreign key paths for different columns/facets might be sharing the same prefix. In those cases, reusing the prefix allows sharing certain joined table instances rather than introducing more "copies" as each facet is activated which in turn will increase the performance.
 
- To do this, you would have to use [`2019:source-definitions`](annotation.md#tag-2019-source-definitions) annotation and define the shared prefix. Then you can use `sourcekey` to refer to this shared prefix in the data source. For example if the following are the source definitions on the table:
+ To do this, you would have to use [`2019:source-definitions`](annotation.md#tag-2019-source-definitions) annotation and define the shared prefix. Then you can use `sourcekey` to refer to this shared prefix in the data source. 
+ 
+ - When using a prefix, the prefix's last column and all the other extra attributes on it will be ignored for the purpose of prefix.
+- You can use recursive prefixes. If we detect a circular dependency, we're going to invalidate the given definition.
+- While using prefix, you MUST add extra foreign key paths to the relationship. The following is not an acceptable source:
+  ```
+  [ {"sourcekey": "path_2"}, "RID" ]
+  ```
+ - Since our goal is to reuse the join instance as much as we can, all-outbound foreign keys can also share the same join instances.
+
+
+ For example, assume the following is the ERD of table:
+
+![erd_01](https://raw.githubusercontent.com/informatics-isi-edu/ermrestjs/master/docs/resources/facet-json-structure-path-prefix-erd-01.png) 
+
+And the following is source-definition and visible-columns annotation:
 
  ```json
 "tag:isrd.isi.edu,2019:source-definitions`": {
   "sources": [
-    "path_1": {
-      "source": [
-        {"outbound": ["schema", "const1"]},
-        "RID"
-      ]
+    "path_to_o1": {
+        "source": [
+            {"outbound": ["schema", "const1"]},
+            "o1_col"
+        ]
     },
-    "path_2": {
-      "source": [
-        {"sourcekey": "path_1"},
-        {"inbound": ["schema", "const2"]},
-        "RID"
-      ]
+    "path_to_o1_o1": {
+        "source": [
+            {"sourcekey": "path_to_path_prefix_o1"},
+            {"outbound": ["schema", "const2"]},
+            "o1_o1_col"
+        ]
+    }
+  ]
+},
+"tag:isrd.isi.edu,2016:visible-columns": {
+  "compact": [
+    "id",
+    {
+      "sourcekey": "path_to_o1",
     },
-    "path_3": {
+    {
+      "sourcekey": "path_to_o1_o1",
+    },
+    {
       "source": [
-        {"sourcekey": "path_2"},
-        {"inbound": ["schema", "const3"]},
-        "RID"
+        {"sourcekey": "path_to_o1"},
+        {"outbound": ["schema", "const3"]},
+        "o1_o1_o1_col"
       ]
     }
   ]
+
 }
 ```
 
@@ -95,34 +122,32 @@ Then this is a valid facet blob:
 {
   "and": [
     {
-      "source": [
-        {"sourcekey": "path_1"},
-        {"outbound": ["schema", "const4"]},
-        "RID"
-      ],
-      "choices": ["v1"]
+        "source":  [
+            {"sourcekey": "path_to_o1_o1"},
+            {"inbound": ["faceting_schema", "const4"]},
+            "o1_o1_i1_col"
+        ],
+        "choices": ["v1"]
     },
     {
-      "source": [
-        {"sourcekey": "path_2"},
-        {"inbound": ["schema", "const5"]},
-        {"outbound": ["schema", "const6"]},
-        "RID"
-      ],
-      "choices": ["v2"]
+        "sourcekey": "path_to_o1_o1",
+        "choices": ["v2"]
     }
-
   ]
 }
 ```
+Which is roughly translated to the following ERMrest query:
 
-- When using a prefix, the prefix's last column and all the other extra attributes on it will be ignored for the purpose of prefix.
-- You can use recursive prefixes. If we detect a circular dependency, we're going to invalidate the given definition.
-- While using prefix, you MUST add extra foreign key paths to the relationship. The following is not an acceptable source:
-  ```
-  [ {"sourcekey": "path_2"}, "RID" ]
-  ```
+```
+M:=schema:main/
+M_P2:=(fk_col)=(schema:o1:RID)/M_P1:=(fk_col)=(schema:o1_o1:RID)/
+(RID)=(schema:o1_o1_i1:fk_col)/o1_o1_i1_col=v1/$M/
 
+$M_P1/o1_o1_col=v2/$M/
+
+$M_P1/F3:=left(fk_col)=(schema:o1_o1_o1:RID)/$M/
+RID;M:=array_d(M:*),F3:=array_d(F3:*),F2:=array_d(M_P1:*),F1:=array_d(M_P2:*)@sort(RID)
+```
 ## Source key
 
 Instead of defining a new `source`, you can refer to the sources that are defined in [`2019:source-definitions`](annotation.md#tag-2019-source-definitions) by using `sourcekey` attribute. For instance, assuming `path_to_table_1` is a valid source definition, you can do
