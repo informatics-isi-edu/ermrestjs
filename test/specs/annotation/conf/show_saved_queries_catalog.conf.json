@@ -1,11 +1,5 @@
 {
-    "catalog": {
-        "annotations": {
-            "tag:misd.isi.edu,2015:display": {
-                "show_saved_query": true
-            }
-        }
-    },
+    "catalog": {},
     "schema": {
         "name": "show_saved_queries_catalog",
         "createNew": true,

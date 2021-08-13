@@ -13,15 +13,14 @@ exports.execute = function (options) {
         var reference, referenceNoTableAnnotation;
 
         // configuration:
-        //   - no annotation on catalog
-        //   - annotation to true on schema
-        //   - one table has annotation but false
-        it("should have show_saved_query set to false with display annotation on the table", function (done) {
+        //   - annotation to false on schema
+        //   - one table has annotation but true
+        it("should have show_saved_query set to true with display annotation on the table (overrides schema annotation set to false)", function (done) {
             options.ermRest.resolve(tableUri, {cid: "test"}).then(function (response) {
                 reference = response;
                 expect(reference).toEqual(jasmine.any(Object));
 
-                expect(reference.display.showSavedQuery).toBeFalsy("display annotation not set properly on table hide_queries");
+                expect(reference.display.showSavedQuery).toBeTruthy("display annotation not set properly on table hide_queries");
 
                 done();
             }, function (err) {
@@ -30,12 +29,12 @@ exports.execute = function (options) {
             });
         });
 
-        it("should have show_saved_query set to true with display annotation on the schema", function (done) {
+        it("should have show_saved_query set to false with display annotation on the schema (overrides catalog annotation set to true)", function (done) {
             options.ermRest.resolve(tableNoAnnotationUri, {cid: "test"}).then(function (response) {
                 referenceNoTableAnnotation = response;
                 expect(referenceNoTableAnnotation).toEqual(jasmine.any(Object));
 
-                expect(referenceNoTableAnnotation.display.showSavedQuery).toBeTruthy("display annotation not set properly on schema show_saved_queries");
+                expect(referenceNoTableAnnotation.display.showSavedQuery).toBeFalsy("display annotation not set properly on schema show_saved_queries");
 
                 done();
             }, function (err) {
