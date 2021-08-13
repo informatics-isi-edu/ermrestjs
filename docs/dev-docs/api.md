@@ -21,6 +21,21 @@ to use for ERMrest JavaScript agents.</p>
  str
 {{/encodeFacet}}</p>
 </dd>
+<dt><a href="#jsonStringify">jsonStringify()</a> ⇒</dt>
+<dd><p>{{#jsonStringify}}
+ JSON Object
+{{/jsonStringify}}</p>
+</dd>
+<dt><a href="#toTitleCase">toTitleCase()</a> ⇒</dt>
+<dd><p>{{#toTitleCase}}
+ string
+{{/toTitleCase}}</p>
+</dd>
+<dt><a href="#replace">replace()</a> ⇒</dt>
+<dd><p>{{#replace substr newSubstr}}
+ string
+{{/replace}}</p>
+</dd>
 <dt><a href="#regexMatch">regexMatch()</a> ⇒</dt>
 <dd><p>{{#if (regexMatch value regexp)}}
   .. content
@@ -7834,6 +7849,33 @@ since the ermrestJS has been available (milliseconds).
 
 **Kind**: global function  
 **Returns**: encoded facet string that can be used in url  
+<a name="jsonStringify"></a>
+
+## jsonStringify() ⇒
+{{#jsonStringify}}
+ JSON Object
+{{/jsonStringify}}
+
+**Kind**: global function  
+**Returns**: string representation of the given JSON object  
+<a name="toTitleCase"></a>
+
+## toTitleCase() ⇒
+{{#toTitleCase}}
+ string
+{{/toTitleCase}}
+
+**Kind**: global function  
+**Returns**: string representation of the given JSON object  
+<a name="replace"></a>
+
+## replace() ⇒
+{{#replace substr newSubstr}}
+ string
+{{/replace}}
+
+**Kind**: global function  
+**Returns**: replaces each match of the regexp with newSubstr  
 <a name="regexMatch"></a>
 
 ## regexMatch() ⇒

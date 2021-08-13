@@ -186,6 +186,7 @@
         "eq", "ne", "lt", "gt", "lte", "gte", "and", "or", "ifCond",
         "escape", "encode", "formatDate", "encodeFacet",
         "regexMatch", "regexFindFirst", "regexFindAll",
+        "jsonStringify", "toTitleCase", "replace",
         // math helpers
         "add", "subtract"
     ];

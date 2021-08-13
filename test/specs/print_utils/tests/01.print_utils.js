@@ -578,6 +578,42 @@ exports.execute = function (options) {
                 expect(module.renderHandlebarsTemplate(template3, {"testString": "/var/www/html/index.html"}) ).toBe("index.html\n", "missmatch for 5th test");
             });
 
+            it ('replace helper', function () {
+                var underscoreToWhitespace = "change_this_table_name";
+
+                var template = '{{#replace "_" " "}}{{{string}}}{{/replace}}'
+
+                expect(module.renderHandlebarsTemplate(template, {string: underscoreToWhitespace})).toEqual("change this table name", "missmatch for 1st test");
+            });
+
+            it ('jsonStringify helper', function () {
+                var json = {
+                    "testString": "test",
+                    "testArray": ["string1", "string2"],
+                    "testBool": true,
+                    "testInt": 4
+                };
+
+                var template = '{{#jsonStringify}}{{{json}}}{{/jsonStringify}}';
+
+                expect(module.renderHandlebarsTemplate(template, {json: json})).toBe(JSON.stringify(json), "missmatch for 1st test");
+
+                var template2 = '{{#encodeFacet}}{{#jsonStringify}}{{{json}}}{{/jsonStringify}}{{/encodeFacet}}';
+                expect(module.renderHandlebarsTemplate(template2, {json: json})).toBe(options.ermRest.encodeFacetString(JSON.stringify(json)), "missmatch for 2nd test");
+            });
+
+            it ('toTitleCase helper', function () {
+                var string = "Hello world title case string"
+                var template = '{{#toTitleCase}}{{{string}}}{{/toTitleCase}}'
+
+                expect(module.renderHandlebarsTemplate(template, {string: string})).toBe("Hello World Title Case String", "missmatch for 1st test");
+
+                var string2 = "HellO world miXed case titleCase string"
+                var template2 = '{{#toTitleCase}}{{{string}}}{{/toTitleCase}}'
+
+                expect(module.renderHandlebarsTemplate(template2, {string: string2})).toBe("HellO World MiXed Case TitleCase String", "missmatch for 2nd test");
+            });
+
             it('suppressed default helper log', function () {
                 try {
                     module.renderHandlebarsTemplate("{{log 'Hello World'}}", {});
