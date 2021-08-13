@@ -1,0 +1,71 @@
+{
+    "schema_name": "show_saved_queries",
+    "tables": {
+        "hide_queries": {
+            "comment": "Table with display annotation to hide the saved query UI",
+            "kind": "table",
+            "keys": [
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": [
+                        "id"
+                    ]
+                }
+            ],
+            "foreign_keys": [],
+            "table_name": "hide_queries",
+            "schema_name": "show_saved_queries",
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "int"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:misd.isi.edu,2015:display": {
+                    "show_saved_query": true
+                }
+            }
+        },
+        "show_queries": {
+            "comment": "Table with NO display annotation so the display annotation on schema should be used for determining showing saved queries",
+            "kind": "table",
+            "keys": [
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": [
+                        "id"
+                    ]
+                }
+            ],
+            "foreign_keys": [],
+            "table_name": "show_queries",
+            "schema_name": "show_saved_queries",
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "int"
+                    }
+                }
+            ],
+            "annotations": {}
+        }
+    },
+    "table_names": [
+        "hide_queries",
+        "show_queries"
+    ],
+    "comment": null,
+    "annotations": {
+        "tag:misd.isi.edu,2015:display": {
+            "show_saved_query": false
+        }
+    }
+}

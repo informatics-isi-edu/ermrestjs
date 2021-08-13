@@ -924,9 +924,9 @@
         get canUseTRS() {
             if (this._canUseTRS === undefined) {
                 var rightKey = module._ERMrestFeatures.TABLE_RIGHTS_SUMMARY;
-                this._canUseTRS = (this.table.schema.catalog.features[rightKey] === true) && 
-                                  (this.table.rights[module._ERMrestACLs.UPDATE] == null || this.table.rights[module._ERMrestACLs.DELETE] == null) && 
-                                  this.table.columns.has("RID") && 
+                this._canUseTRS = (this.table.schema.catalog.features[rightKey] === true) &&
+                                  (this.table.rights[module._ERMrestACLs.UPDATE] == null || this.table.rights[module._ERMrestACLs.DELETE] == null) &&
+                                  this.table.columns.has("RID") &&
                                   (this.canUpdate || this.canDelete);
             }
             return this._canUseTRS;
@@ -943,9 +943,9 @@
         get canUseTCRS() {
             if (this._canUseTCRS === undefined) {
                 var rightKey = module._ERMrestFeatures.TABLE_COL_RIGHTS_SUMMARY;
-                this._canUseTCRS = (this.table.schema.catalog.features[rightKey] === true) && 
-                                  this.table.rights[module._ERMrestACLs.UPDATE] == null && 
-                                  this.table.columns.has("RID") && 
+                this._canUseTCRS = (this.table.schema.catalog.features[rightKey] === true) &&
+                                  this.table.rights[module._ERMrestACLs.UPDATE] == null &&
+                                  this.table.columns.has("RID") &&
                                   this.canUpdate;
             }
             return this._canUseTCRS;
@@ -1192,7 +1192,7 @@
                 };
                 this._server.http.get(uri, config).then(function (response) {
                     if (!Array.isArray(response.data)) {
-                        throw new InvalidServerResponse(uri, response.data, action);                    
+                        throw new InvalidServerResponse(uri, response.data, action);
                     }
 
                     var etag = response.headers().etag;
@@ -1992,6 +1992,24 @@
                     this._display.sourceWaitFor = [];
                     this._display.sourceHasWaitFor = false;
                 }
+
+                /**
+                 * Check the catalog, schema, and table to see if the saved query UI should show
+                 *  1. check the table to see if the value is a boolean
+                 *    a. if true or false, we are done and use that value
+                 *    b. if undefined, display annotation defined but show_saved_query property was undefined
+                 *    c. if null, display annotation was not defined (initial value)
+                 *  2. check the schema to see if the value is a boolean
+                 *    a. if true or false, we are done and use that value
+                 *    b. if undefined, display annotation defined but show_saved_query property was undefined
+                 *    c. if null, display annotation was not defined (initial value)
+                 *  3. check the catalog to see if the value is a boolean
+                 *    a. if true or false, we are done and use that value
+                 *    b. if undefined, display annotation defined but show_saved_query property was undefined
+                 *    c. if null, display annotation was not defined (initial value)
+                 *  4. default to false if not defined on any of the above
+                 */
+                this._display.showSavedQuery = this.table._showSavedQuery;
             }
 
             return this._display;
@@ -3635,7 +3653,7 @@
          * @param {Boolean} getTCRS whether we should fetch the table-level and column-level row acls (if table supports it)
          * @param {Boolean} getUnlinkTRS whether we should fetch the acls of association
          *                  table. Use this only if the association is based on facet syntax
-         * 
+         *
          * TODO we might want to add an option to only do TCRS or TRS without the foreignkeys for later
          * @type {Object}
          */
@@ -5765,6 +5783,3 @@
             }
         });
     }
-
-    
-

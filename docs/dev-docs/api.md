@@ -154,6 +154,7 @@ to use for ERMrest JavaScript agents.
             * [.foreignKeys](#ERMrest.Table+foreignKeys) : [<code>ForeignKeys</code>](#ERMrest.ForeignKeys)
             * [.referredBy](#ERMrest.Table+referredBy) : [<code>ForeignKeys</code>](#ERMrest.ForeignKeys)
             * [.comment](#ERMrest.Table+comment) : <code>string</code>
+            * [._showSavedQuery](#ERMrest.Table+_showSavedQuery) : <code>boolean</code>
             * [.kind](#ERMrest.Table+kind) : <code>string</code>
             * [.shortestKey](#ERMrest.Table+shortestKey)
             * [.displayKey](#ERMrest.Table+displayKey) : [<code>Array.&lt;Column&gt;</code>](#ERMrest.Column)
@@ -1186,6 +1187,7 @@ get table by table name
         * [.foreignKeys](#ERMrest.Table+foreignKeys) : [<code>ForeignKeys</code>](#ERMrest.ForeignKeys)
         * [.referredBy](#ERMrest.Table+referredBy) : [<code>ForeignKeys</code>](#ERMrest.ForeignKeys)
         * [.comment](#ERMrest.Table+comment) : <code>string</code>
+        * [._showSavedQuery](#ERMrest.Table+_showSavedQuery) : <code>boolean</code>
         * [.kind](#ERMrest.Table+kind) : <code>string</code>
         * [.shortestKey](#ERMrest.Table+shortestKey)
         * [.displayKey](#ERMrest.Table+displayKey) : [<code>Array.&lt;Column&gt;</code>](#ERMrest.Column)
@@ -1288,6 +1290,10 @@ All the FKRs to this table.
 #### table.comment : <code>string</code>
 Documentation for this table
 
+**Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
+<a name="ERMrest.Table+_showSavedQuery"></a>
+
+#### table.\_showSavedQuery : <code>boolean</code>
 **Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
 <a name="ERMrest.Table+kind"></a>
 
