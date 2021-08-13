@@ -662,7 +662,7 @@ exports.execute = function(options) {
                     }).toThrow(errorMessage ? errorMessage : facetError);
                 };
 
-                var expectLocation = function (blob, facetObject, path, errMessage, woSchema) {
+                var expectLocation = function (blob, facetObject, path, errMessage, woSchema, aliases) {
                     var url = baseUri;
                     if (woSchema) {
                         url = baseUriWOSchema;
@@ -682,6 +682,10 @@ exports.execute = function(options) {
                         st = "M:=parse_table/";
                     }
                     expect(loc.ermrestCompactPath).toEqual(st + path, "ermrestCompactPath missmatch" + (errMessage ? errMessage : "."));
+
+                    if (aliases != null) {
+                        expect(JSON.stringify(loc.pathPrefixAliasMapping.aliases)).toEqual(JSON.stringify(aliases), "alias mapping missmatch " + (errMessage ? errMessage : "."))
+                    }
                 };
 
                 describe("regarding source attribute, ", function () {
@@ -712,7 +716,46 @@ exports.execute = function(options) {
                         );
                     });
 
-                    // array for source test cases are in faceting spec.
+                    it ("should propery handle sourcekey path prefix.", function () {
+                        expectLocation(
+                            "N4IghgdgJiBcDaoDOB7ArgJwMYFM6JFU1wGscBPOEdAFwCN1oBGAfRwhoEsbKBfAGlCcIDNNHwgADmAxIcLJFgAWOALZgQ-amnqMorYaOYsAZiSYgAugJAAlAJIARK1uUpOuJBIvXrQA",
+                            {"and": [
+                                {
+                                    "source": [
+                                        {"sourcekey": "outbound1_entity"},
+                                        {"inbound": ["parse_schema", "outbound1_inbound1_fk1"]},
+                                        "RID"
+                                    ],
+                                    "choices": ["1"]
+                                }
+                            ]},
+                            "M_P1:=(fk1_col1)=(parse_schema:outbound1:id)/(id)=(parse_schema:outbound1_inbound1:id)/RID=1/$M",
+                            " case 1",
+                            false,
+                            {"outbound1_entity":"M_P1"}
+                        );
+
+                        // recursive path
+                        expectLocation(
+                            "N4IghgdgJiBcDaoDOB7ArgJwMYFM6JFU1wGscBPOEdAFwCN1oBGAfQEsIG1mWB3FgA4YcAMzYAPFjgg02NSgF8ANKA5do+EALAYkOFkiwALHAFswIJdTT1GUVmrsPOTliJJMQAXWUgASgCSACLeVsYobLhImp4+PkA",
+                            {"and": [
+                                {
+                                    "source": [
+                                        {"sourcekey": "outbound1_inbound1_w_prefix_entity"},
+                                        {"inbound": ["parse_schema", "outbound1_inbound1_inbound1_fk1"]}, 
+                                        "RID"
+                                    ],
+                                    "choices": ["1"]
+                                }
+                            ]},
+                            "M_P2:=(fk1_col1)=(parse_schema:outbound1:id)/M_P1:=(id)=(parse_schema:outbound1_inbound1:id)/(id)=(parse_schema:outbound1_inbound1_inbound1:id)/RID=1/$M",
+                            " case 2",
+                            false,
+                            {"outbound1_entity":"M_P2","outbound1_inbound1_w_prefix_entity":"M_P1"}
+                        );
+                    });
+
+                    // other array for source test cases are in faceting spec.
                 });
 
                 describe("regarding sourcekey attribute, ", function () {
@@ -736,10 +779,41 @@ exports.execute = function(options) {
                     });
 
                     it ("should handle valid sourcekeys.", function () {
+                        // normal sourcekey
                         expectLocation(
                             "N4IghgdgJiBcDaoDOB7ArgJwMYFMDWOAnnCOgC4BG60AjAPo4RkCWZxANCFgBYrO5I48EADcaIALoBfaUA",
                             {"and": [ {"sourcekey": "outbound1_entity", "choices": ["v1"]} ]},
-                            "(fk1_col1)=(parse_schema:outbound1:id)/RID=v1/$M");
+                            "(fk1_col1)=(parse_schema:outbound1:id)/RID=v1/$M",
+                            " case 1"
+                        );
+
+                        // sourcekey with path prefix
+                        expectLocation(
+                            "N4IghgdgJiBcDaoDOB7ArgJwMYFMDWOAnnCOgC4BG60AjAPoCWEVatjz1U9A7nRjlkxIGANxx0ADvwBmDAB50cEMgzLEANCCwALFA1xI48ECJogAugF8rQA",
+                            {"and": [ {"sourcekey": "outbound1_inbound1_inbound1_w_recursive_prefix_entity", "choices": ["v1"]} ]},
+                            "M_P2:=(fk1_col1)=(parse_schema:outbound1:id)/M_P1:=(id)=(parse_schema:outbound1_inbound1:id)/(id)=(parse_schema:outbound1_inbound1_inbound1:id)/RID=v1/$M",
+                            " case 2 (with path prefix)",
+                            false,
+                            {"outbound1_entity":"M_P2","outbound1_inbound1_w_prefix_entity":"M_P1"}
+                        );
+
+                        // multiple sourcekeys using the same prefix
+                        expectLocation(
+                            "N4IghgdgJiBcDaoDOB7ArgJwMYFMDWOAnnCOgC4BG60AjAPo4RkCWZxANCFgBYrO5I48EADcaIALoBfdsnTZ8REuSppadZhFXrN2qPQDudDDiyYkzETjoAHEwDNmADwZNWHLr345BCUQGZJGTlMXAJiWFI0Smp9DS1Yw1sHZ1cWNhBOHj4BIVEAJiDpIA",
+                            {"and": [ 
+                                {"sourcekey": "outbound1_entity", "choices": ["v1"]},
+                                {"sourcekey": "outbound1_inbound1_inbound1_w_recursive_prefix_entity", "choices": ["v3"]},
+                                {"sourcekey": "outbound1_inbound1_w_prefix_entity", "choices": ["v2"]}
+                            ]},
+                            [
+                                "(fk1_col1)=(parse_schema:outbound1:id)/RID=v1/$M",
+                                "M_P2:=(fk1_col1)=(parse_schema:outbound1:id)/M_P1:=(id)=(parse_schema:outbound1_inbound1:id)/(id)=(parse_schema:outbound1_inbound1_inbound1:id)/RID=v3/$M",
+                                "$M_P1/RID=v2/$M"
+                            ].join("/"),
+                            " case 3 (multiple sourcekeys with path prefix)",
+                            false,
+                            {"outbound1_entity":"M_P2","outbound1_inbound1_w_prefix_entity":"M_P1"}
+                        )
                     });
 
                     it ("should handle urls without schema name.", function () {
@@ -1145,6 +1219,6 @@ exports.execute = function(options) {
             });
         });
 
-        // NOTE: search test cases are in refererence/13.search.js
-        // NOTE: more facet test cases are in faceting test specs
-    };
+    // NOTE: search test cases are in refererence/13.search.js
+    // NOTE: more facet test cases are in faceting test specs
+};

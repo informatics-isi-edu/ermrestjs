@@ -30,6 +30,7 @@
  * 25: main -> outbound_2 -> outbound_2_outbound_2 (entity) -  (PseudoColumn)
  * 26: virtual-column
  * 27: virtual-column-1-1
+ * 28: array aggregate using recursive path prefix (end table: inbound_1_outbound_1_outbound_1)
  *
  * Only the following indeces are PseudoColumn:
  * 4 (outbound len 1, scalar)
@@ -48,6 +49,7 @@
  * 20 (same as 8 ending with timestamp_col, agg array_d, scalar)
  * 21 (has lots of rows)
  * 24 (main -> outbound_2, outbound_2_inbound_1, entity)
+ * 28 (main -> inbound_1 -> inbound_1_outbound_1 -> inbound_1_outbound_1_outbound_1, col, agg array)
  *
  * For entry:
  * 0: main_table_id_col
@@ -131,11 +133,11 @@ exports.execute = function (options) {
              'ZJll4WjE6eMk_g5e9WE1rg', 'GFBydDhuUocHxUlF894ntQ', 'vd-zzWca-ApLn2yvu7fx1w',
              '8siu02fMCXJ2DfB4GLv93Q', 'OLbAesieGW5dpAhzqTSzqw', 'MJVZnQ5mBRdCFPfjIOMvkA',
              "asset", "asset_filename", 'IKxB9JkO83__MmKlV0Nnow', 'wjUK75uqILcMMo85UxnPnQ',
-             "$virtual-column-1", "$virtual-column-1-1"
+             "$virtual-column-1", "$virtual-column-1-1", "_bT9FV3XrFj0H474R9sg3Q"
         ];
 
         var detailedPseudoColumnIndices = [
-            4, 5, 6, 9, 11,12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 24, 25
+            4, 5, 6, 9, 11,12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 24, 25, 28
         ];
 
         var detailedColumnTypes = [
@@ -143,7 +145,8 @@ exports.execute = function (options) {
             "isPathColumn", "isInboundForeignKey", "isInboundForeignKey", "isPathColumn",
             "isInboundForeignKey", "isPathColumn", "isPathColumn", "isPathColumn", "isPathColumn",
             "isPathColumn", "isPathColumn", "isPathColumn", "isPathColumn", "isPathColumn",
-            "isPathColumn", "isPathColumn", "isAsset", "", "isPathColumn", "isPathColumn"
+            "isPathColumn", "isPathColumn", "isAsset", "", "isPathColumn", "isPathColumn",
+            "isVirtualColumn", "isVirtualColumn", "isPathColumn"
         ];
 
         var mainRef, mainRefDetailed, invalidRef, mainRefEntry, mainRefCompactEntry,
@@ -170,7 +173,7 @@ exports.execute = function (options) {
                 '01', '<p>01: col val 01</p>\n', '01',
                 '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:outbound_1/RID=' + utils.findEntityRID(options, schemaName, 'outbound_1', 'id','01') + '">01</a>',
                 '<p>01: 10</p>\n', '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:outbound_1_outbound_1/RID=' + utils.findEntityRID(options, schemaName, 'outbound_1_outbound_1', 'id', '01') + '">01</a>',
-                '01', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '<p>01 virtual value 01</p>\n', '<p>01 virtual value 1</p>\n'
+                '01', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '<p>01 virtual value 01</p>\n', '<p>01 virtual value 1</p>\n', ''
             ];
         });
 
@@ -269,7 +272,7 @@ exports.execute = function (options) {
             });
 
             it ("should create the correct columns for valid list of sources.", function () {
-                expect(mainRefDetailed.columns.length).toBe(28, "length missmatch");
+                expect(mainRefDetailed.columns.length).toBe(29, "length missmatch");
                 checkReferenceColumns([{
                     "ref": mainRefDetailed,
                     "expected": [
@@ -352,7 +355,12 @@ exports.execute = function (options) {
                             "id"
                         ],
                         "$virtual-column-1",
-                        "$virtual-column-1-1"
+                        "$virtual-column-1-1",
+                        [
+                            {"sourcekey": "path_to_inbound_1_outbound_1_w_prefix"},
+                            {"outbound": ["pseudo_column_schema", "inbound_1_outbound_1_fk1"]},
+                            "id"
+                        ]
                     ]
                 }]);
             });
@@ -735,7 +743,7 @@ exports.execute = function (options) {
                         'main', 'inbound_2', 'inbound_2', 'inbound_2', 'inbound_2',
                         'inbound_2', 'inbound_2', 'inbound 4 long table name',
                         'main', 'main', 'outbound_2_inbound_1', 'outbound_2_outbound_2',
-                        'main', 'main'
+                        'main', 'main', 'inbound_1_outbound_1_outbound_1'
                     ]);
                 });
             });
@@ -833,7 +841,12 @@ exports.execute = function (options) {
                         "id"
                     ], //25
                     null, // 26
-                    null // 27
+                    null, // 27
+                    [
+                        { "key": 'path_to_inbound_1_outbound_1_w_prefix' },
+                        { "o": ['pseudo_column_schema', 'inbound_1_outbound_1_fk1']},
+                        "id"
+                    ]
                 ];
                 it ("should return the data source of the pseudo-column.", function () {
                     detailedColsWTuple.forEach(function (col, index) {
@@ -996,6 +1009,14 @@ exports.execute = function (options) {
                     testGetAggregatedValue(14, "col val 01", false, done);
                 });
 
+                it ("should handle aggregates with prefix.", function (done) {
+                    var RIDval = utils.findEntityRID(options, schemaName, "inbound_1_outbound_1_outbound_1", "id", "01");
+                    var url = "https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:inbound_1_outbound_1_outbound_1/RID=" + RIDval;
+                    var value = '<p><a href="' + url + '">01</a></p>\n';
+
+                    testGetAggregatedValue(28, value, true, done);
+                });
+
                 it ("should handle array aggregate in entity mode.", function (done) {
                     var value = "<p>" + inboundTwoValues.join(", ") + "</p>\n";
 
@@ -1146,16 +1167,16 @@ exports.execute = function (options) {
                 });
             });
 
-            describe("foreignKeys, ", function () {
+            describe("sourceObjectNodes, ", function () {
                 it ("if there's no path it should return an empty array.", function () {
-                    checkForeignKeys(detailedColsWTuple[14], [], "index="+ i);
+                    checkSourceObjectNodes(detailedColsWTuple[14], [], "index="+ i);
                 });
 
                 it ("otherwise it should return a list of objects that have fk and its direction", function () {
-                    checkForeignKeys(detailedColsWTuple[9], [
-                        {"const": ["pseudo_column_schema", "main_inbound_2_association_fk1"].join("_"), "isInbound": true},
-                        {"const": ["pseudo_column_schema", "main_inbound_2_association_fk2"].join("_"), "isInbound": false},
-                        {"const": ["pseudo_column_schema", "inbound_2_fk1"].join("_"), "isInbound": false},
+                    checkSourceObjectNodes(detailedColsWTuple[9], [
+                        {"isForeignKey": true, "const": ["pseudo_column_schema", "main_inbound_2_association_fk1"].join("_"), "isInbound": true},
+                        {"isForeignKey": true, "const": ["pseudo_column_schema", "main_inbound_2_association_fk2"].join("_"), "isInbound": false},
+                        {"isForeignKey": true, "const": ["pseudo_column_schema", "inbound_2_fk1"].join("_"), "isInbound": false},
                     ]);
                 });
             });
@@ -1237,11 +1258,11 @@ exports.execute = function (options) {
         }
     }
 
-    function checkForeignKeys (col, fks, colStr) {
-        expect(col.foreignKeys.length).toBe(fks.length, "length missmatch"  +  (colStr ? (" for " + colStr) : "."));
-        expect(col.foreignKeys.map(function (fk) {
-            return {"const": fk.obj._constraintName, "isInbound": fk.isInbound};
-        })).toEqual(fks, "fks missmatch" + (colStr ? (" for " + colStr) : "."));
+    function checkSourceObjectNodes (col, sns, colStr) {
+        expect(col.sourceObjectNodes.length).toBe(sns.length, "length missmatch"  +  (colStr ? (" for " + colStr) : "."));
+        expect(col.sourceObjectNodes.map(function (sn) {
+            return {"isForeignKey": sn.isForeignKey, "const": sn.nodeObject._constraintName, "isInbound": sn.isInbound};
+        })).toEqual(sns, "sns missmatch" + (colStr ? (" for " + colStr) : "."));
     }
 
     function checkReference (ref, table, facets, colStr) {

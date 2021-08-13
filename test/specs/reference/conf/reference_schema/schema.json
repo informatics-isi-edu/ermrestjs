@@ -146,7 +146,14 @@
                     "detailed": [
                         ["reference_schema", "fromname_fk_inbound_related_to_reference"],
                         {"source": [{"inbound": ["reference_schema", "fk_inbound_related_to_reference"]}, "id"]},
-                        ["reference_schema", "toname_fk_association_related_to_reference"],
+                        {
+                            "source": [
+                                {"sourcekey": "path_to_association_table_with_toname"},
+                                {"outbound": ["reference_schema", "association_table_with_toname_id_from_inbound_related_table1"]},
+                                "RID"
+                            ],
+                            "comment": "should be treated as a association table"
+                        },
                         {"source": [
                             {"inbound": ["reference_schema", "id_fk_association_related_to_reference"]},
                             {"outbound": ["reference_schema", "fk_to_inbound_related_reference_table"]},
@@ -174,10 +181,32 @@
                             {"inbound": ["reference_schema", "reference_outbound_1_inbound_1_fk1"]},
                             "id"
                         ]},
+                        {"sourcekey": "invalid_sourcekey"},
+                        {"sourcekey": "path_to_outbound1"},
                         {"source": [
                             {"inbound": ["reference_schema", "table_w_linked_rowname_fk1"]},
                             "RID"
-                        ]}
+                        ]},
+                        {
+                            "sourcekey": "path_to_outbound1_inbound1_outbound1",
+                            "comment": "using path prefix"
+                        },
+                        {
+                            "source": [
+                                {"outbound": ["reference_schema", "reference_table_fk1"]},
+                                {"inbound": ["reference_schema", "reference_outbound_1_inbound_1_fk1"]},
+                                {"outbound": ["reference_schema", "reference_outbound_1_inbound_1_fk2"]}
+                            ],
+                            "comment": "same as above but without prefix, should be ignored because of duplicate"
+                        },
+                        {
+                            "source": [
+                                {"sourcekey": "path_to_outbound1_inbound1_outbound1"},
+                                {"inbound": ["reference_schema", "reference_outbound1_inbound1_outbound1_inbound1_fk1"]},
+                                "RID"
+                            ],
+                            "comment": "recursive path prefix"
+                        }
                     ]
                 },
                 "tag:isrd.isi.edu,2016:table-display": {
@@ -214,6 +243,32 @@
                                 "id"
                             ],
                             "aggregate": "cnt"
+                        },
+                        "path_to_outbound1": {
+                            "source": [
+                                {"outbound": ["reference_schema", "reference_table_fk1"]},
+                                "RID"
+                            ]
+                        },
+                        "path_to_association_table_with_toname": {
+                            "source": [
+                                {"inbound": ["reference_schema", "toname_fk_association_related_to_reference"]},
+                                "RID"
+                            ]
+                        },
+                        "path_to_outbound1_inbound1": {
+                            "source": [
+                                {"outbound": ["reference_schema", "reference_table_fk1"]},
+                                {"inbound": ["reference_schema", "reference_outbound_1_inbound_1_fk1"]},
+                                "RID"
+                            ]
+                        },
+                        "path_to_outbound1_inbound1_outbound1": {
+                            "source": [
+                                {"sourcekey": "path_to_outbound1_inbound1"},
+                                {"outbound": ["reference_schema", "reference_outbound_1_inbound_1_fk2"]},
+                                "RID"
+                            ]
                         }
                     }
                 }
@@ -2090,19 +2145,90 @@
             "table_name": "reference_outbound_1_inbound_1",
             "schema_name": "reference_schema",
             "keys": [{"unique_columns": ["id"]}],
-            "foreign_keys": [{
-                "names": [["reference_schema", "reference_outbound_1_inbound_1_fk1"]],
-                "foreign_key_columns": [{
-                    "schema_name": "reference_schema",
-                    "table_name": "reference_outbound_1_inbound_1",
-                    "column_name": "fk1"
-                }],
-                "referenced_columns": [{
-                    "schema_name": "reference_schema",
-                    "table_name": "reference_outbound_1",
-                    "column_name": "id"
-                }]
-            }],
+            "foreign_keys": [
+                {
+                    "names": [["reference_schema", "reference_outbound_1_inbound_1_fk1"]],
+                    "foreign_key_columns": [{
+                        "schema_name": "reference_schema",
+                        "table_name": "reference_outbound_1_inbound_1",
+                        "column_name": "fk1"
+                    }],
+                    "referenced_columns": [{
+                        "schema_name": "reference_schema",
+                        "table_name": "reference_outbound_1",
+                        "column_name": "id"
+                    }]
+                },
+                {
+                    "names": [["reference_schema", "reference_outbound_1_inbound_1_fk2"]],
+                    "foreign_key_columns": [{
+                        "schema_name": "reference_schema",
+                        "table_name": "reference_outbound_1_inbound_1",
+                        "column_name": "fk2"
+                    }],
+                    "referenced_columns": [{
+                        "schema_name": "reference_schema",
+                        "table_name": "reference_outbound1_inbound1_outbound1",
+                        "column_name": "id"
+                    }]
+                }
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {"typename": "text"}
+                },
+                {
+                    "name": "fk1",
+                    "type": {"typename": "text"}
+                },
+                {
+                    "name": "fk2",
+                    "type": {"typename": "text"}
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2016:table-display": {
+                    "*": {
+                        "row_markdown_pattern": "{{{id}}}, {{{_fk1}}}, {{{_fk2}}}"
+                    }
+                }
+            }
+        },
+        "reference_outbound1_inbound1_outbound1": {
+            "kind": "table",
+            "table_name": "reference_outbound1_inbound1_outbound1",
+            "schema_name": "reference_schema",
+            "keys": [{"unique_columns": ["id"]}],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {"typename": "text"}
+                }
+            ]
+        },
+        "reference_outbound1_inbound1_outbound1_inbound1": {
+            "kind": "table",
+            "table_name": "reference_outbound1_inbound1_outbound1_inbound1",
+            "schema_name": "reference_schema",
+            "keys": [{"unique_columns": ["id"]}],
+            "foreign_keys": [
+                {
+                    "names": [["reference_schema", "reference_outbound1_inbound1_outbound1_inbound1_fk1"]],
+                    "foreign_key_columns": [{
+                        "schema_name": "reference_schema",
+                        "table_name": "reference_outbound1_inbound1_outbound1_inbound1",
+                        "column_name": "fk1"
+                    }],
+                    "referenced_columns": [{
+                        "schema_name": "reference_schema",
+                        "table_name": "reference_outbound1_inbound1_outbound1",
+                        "column_name": "id"
+                    }]
+                }
+            ],
             "column_definitions": [
                 {
                     "name": "id",
@@ -2117,7 +2243,7 @@
             "annotations": {
                 "tag:isrd.isi.edu,2016:table-display": {
                     "*": {
-                        "row_markdown_pattern": "{{{id}}}, {{{_fk1}}}"
+                        "row_markdown_pattern": "{{{id}}}, {{{_fk1}}}, {{{_fk2}}}"
                     }
                 }
             }

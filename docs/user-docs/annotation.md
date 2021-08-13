@@ -345,7 +345,7 @@ Supported _columnentry_ patterns:
 - `[` _schemaname_ `,` _constraintname_ `]`: A two-element list of string literal _schemaname_ and _constraintname_ identifies a constituent foreign key of the table. The value of the external entity referenced by the foreign key SHOULD be presented, possibly with representation guided by other annotations or heuristics. If the foreign key is representing an inbound relationship with the current table, it SHOULD be presented in a tabular format since it can represent multiple rows of data.
 - `[` _schemaname_ `,` _constraintname_ `]`: A two-element list of string literal _schemaname_ and _constraintname_ identifies a constituent key of the table. The defined display of the key SHOULD be presented, with a link to the current displayed row of data. It will be served as a self link.
 - `{ "sourcekey": ` _sourcekey_ `}`: Defines a pseudo-column based on the given _sourcekey_. For more information please refer to [pseudo-column document](pseudo-columns.md).
-- `{ "source": ` _sourceentry_ `}`:  Defines a pseudo-column based on the given _sourceentry_. For detailed explanation and examples please refer to [here](pseudo-columns.md#examples). Other optional attributes that this JSON document can have are:
+- `{ "source": ` _sourceentry_ `}`:  Defines a pseudo-column based on the given _sourceentry_. For detailed explanation and examples please refer to [here](pseudo-columns.md). Other optional attributes that this JSON document can have are:
   - `markdown_name`: The markdown to use in place of the default heuristics for title of column.
   - `"hide_column_header": true`: Hide the column header (and still show the value). This is only supported in `detailed` context.
   - `display`: The display settings for generating the column presentation value. Please refer to [pseudo-columns display document](pseudo-column-display.md) for more information. The available options are:
@@ -386,8 +386,13 @@ Supported _sourceentry_ pattern:
 - _columnname_: : A string literal. _columnname_ identifies a constituent column of the table.
 - _path_: An array of _foreign key path_ that ends with a _columnname_ that will be projected. _foreign key path_ is in the following format:
 
-        "`{` _direction_ `:[` *schema name*`,` *constraint name* `]}` "
+        "`{` _direction_ `:[` <schema-name> `,` <constraint-name> `]}` "
     Where _direction_ is either `inbound`, or `outbound`.
+- *path_w_prefix*: An array that starts with a _sourcekey prefix_ and MUST have one or more _foreign key path_s and end with a _columnname_. _sourcekey prefix_ is in the following format:
+
+        "`{"sourcekey":` <source-key-name> `}` "
+    Where <source-key-name> is a string literal that refers to any of the defined sources in [`source-definitions` annotations](#tag-2019-source-definitions).
+
 
 Supported _sourcekey_ pattern in here:
   - A string literal that refers to any of the defined sources in [`source-definitions` annotations](#tag-2019-source-definitions).
@@ -721,8 +726,12 @@ Supported _fkeylist_ patterns:
 Supported _sourceentry_ pattern in here:
   - _path_: An array of _foreign key path_ that ends with a _columnname_ that will be projected. _foreign key path_ is in the following format:
 
-          "`{` _direction_ `:[` *schema name*`,` *constraint name* `]}` "
-      Where _direction_ is either `inbound`, or `outbound`.
+        "`{` _direction_ `:[` <schema-name>,` <constraint-name> `]}` "
+    Where _direction_ is either `inbound`, or `outbound`.
+- *path_w_prefix*: An array that starts with a _sourcekey prefix_ and MUST have one or more _foreign key path_s and end with a _columnname_. _sourcekey prefix_ is in the following format:
+
+        "`{"sourcekey":` <source-key-name> `}` "
+    Where <source-key-name> is a string literal that refers to any of the defined sources in [`source-definitions` annotations](#tag-2019-source-definitions).
 
 Supported _sourcekey_ pattern in here:
   - A string literal that refers to any of the defined sources in [`source-definitions` annotations](#tag-2019-source-definitions).
@@ -940,6 +949,17 @@ Example:
             "entity": true,
             "aggregate": "array_d"
         },
+        "source-2": {
+            "source": "column",
+            "markdown_name": "Column displayname"
+        },
+        "source-3": {
+            "source": [
+                {"sourcekey": "source-1"},
+                {"outbound": ["schema", "fk2"]},
+                "RID"
+            ]
+        },
         "search-box": {
             "or": [
                 {"source": "column1", "markdown_name": "another name"},
@@ -976,8 +996,12 @@ Supported _sourceentry_ pattern:
   - _columnname_: : A string literal. _columnname_ identifies a constituent column of the table.
   - _path_: An array of _foreign key path_ that ends with a _columnname_ that will be projected. _foreign key path_ is in the following format:
 
-          "`{` _direction_ `:[` *schema name*`,` *constraint name* `]}` "
-      Where _direction_ is either `inbound`, or `outbound`.
+        "`{` _direction_ `:[` <schema-name> `,` <constraint-name> `]}` "
+    Where _direction_ is either `inbound`, or `outbound`.
+- *path_w_prefix*: An array that starts with a _sourcekey prefix_ and MUST have one or more _foreign key path_s and end with a _columnname_. _sourcekey prefix_ is in the following format:
+
+        "`{"sourcekey":` <source-key-name> `}` "
+    Where <source-key-name> is a string literal that refers to any of the source definitions.
 
 Supported _searchcolumn_ pattern:
  - `{ "source":` _columnname_  `}`: Defines a search column based on the given string literal of _columnname_. Other optional attributes that this JSON document can have are:

@@ -1,0 +1,5 @@
+[
+  {"id": "1", "path_prefix_o1_o1_col": "one_o1_o1", "fk_to_path_prefix_o1_o1_o1": "1"},
+  {"id": "2", "path_prefix_o1_o1_col": "two_o1_o1", "fk_to_path_prefix_o1_o1_o1": "2"},
+  {"id": "3", "path_prefix_o1_o1_col": "three_o1_o1", "fk_to_path_prefix_o1_o1_o1": "1"}
+]

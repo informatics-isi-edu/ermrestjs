@@ -5,32 +5,32 @@
         "boolean_col": true, "jsonb_col": {"key": "one"}
     },
     {
-        "id": "2", "fk_to_f1": "1", "fk_to_f2": "1",
+        "id": "2", "fk_to_f1": "1", "fk_to_f2": "1", "fk_to_path_prefix_o1": "1",
         "int_col": 11, "float_col": 11.11, "date_col": "2001-01-01", "timestamp_col": "2001-01-01 01:01:01", "text_col": "one", "shorttext_col": "one", "longtext_col": "one", "markdown_col": "**one**",
         "boolean_col": true, "jsonb_col": {"key": "one"}
     },
     {
-        "id": "3", "fk_to_f1": "1", "fk_to_f2": "1",
+        "id": "3", "fk_to_f1": "1", "fk_to_f2": "1", "fk_to_path_prefix_o1": "1",
         "int_col": 11, "float_col": 11.11, "date_col": "2001-01-01", "timestamp_col": "2001-01-01 01:01:01", "text_col": "one", "shorttext_col": "one", "longtext_col": "one", "markdown_col": "**one**",
         "boolean_col": true, "jsonb_col": {"key": "one"}
     },
     {
-        "id": "4", "fk_to_f1": "1", "fk_to_f2": "1",
+        "id": "4", "fk_to_f1": "1", "fk_to_f2": "1", "fk_to_path_prefix_o1": "2",
         "int_col": 11, "float_col": 11.11, "date_col": "2001-01-01", "timestamp_col": "2001-01-01 01:01:01", "text_col": "one", "shorttext_col": "one", "longtext_col": "one", "markdown_col": "**one**",
         "boolean_col": true, "jsonb_col": {"key": "one"}
     },
     {
-        "id": "5", "fk_to_f1": "1", "fk_to_f2": "1",
+        "id": "5", "fk_to_f1": "1", "fk_to_f2": "1", "fk_to_path_prefix_o1": "3",
         "int_col": 11, "float_col": 11.11, "date_col": "2001-01-01", "timestamp_col": "2001-01-01 01:01:01", "text_col": "one", "shorttext_col": "one", "longtext_col": "one", "markdown_col": "**one**",
         "boolean_col": true, "jsonb_col": {"key": "one"}
     },
     {
-        "id": "6", "fk_to_f1": "1", "fk_to_f2": "1",
+        "id": "6", "fk_to_f1": "1", "fk_to_f2": "1", "fk_to_path_prefix_o1": "3",
         "int_col": 22, "float_col": 22.22, "date_col": "2002-02-02", "timestamp_col": "2002-02-02 02:02:02", "text_col": "two", "shorttext_col": "two", "longtext_col": "two", "markdown_col": "**two**",
         "boolean_col": true, "jsonb_col": {"key": "two"}
     },
     {
-        "id": "7", "fk_to_f1": "1", "fk_to_f2": "1",
+        "id": "7", "fk_to_f1": "1", "fk_to_f2": "1", "fk_to_path_prefix_o1": "4",
         "int_col": 22, "float_col": 22.22, "date_col": "2002-02-02", "timestamp_col": "2002-02-02 02:02:02", "text_col": "two", "shorttext_col": "two", "longtext_col": "two", "markdown_col": "**two**",
         "boolean_col": true, "jsonb_col": {"key": "two"}
     },

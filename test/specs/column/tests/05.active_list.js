@@ -335,13 +335,6 @@ exports.execute = function (options) {
     });
 
 // ----------------------- helpers
-    function checkForeignKeys (col, fks, colStr) {
-        expect(col.foreignKeys.length).toBe(fks.length, "length missmatch"  +  (colStr ? (" for " + colStr) : "."));
-        expect(col.foreignKeys.map(function (fk) {
-            return {"const": fk.obj._constraintName, "isInbound": fk.isInbound};
-        })).toEqual(fks, "fks missmatch" + (colStr ? (" for " + colStr) : "."));
-    }
-
     function testColumnList (list, expected) {
         expect(list.length).toBe(expected.length, "length missmatch");
         expected.forEach(function (col, index) {

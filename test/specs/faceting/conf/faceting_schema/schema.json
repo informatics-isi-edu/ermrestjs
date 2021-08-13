@@ -52,6 +52,23 @@
                             "to_name": "to_name"
                         }
                     }
+                },
+                {
+                    "names": [["faceting_schema", "main_fk3"]],
+                    "foreign_key_columns": [
+                        {
+                            "column_name": "fk_to_path_prefix_o1",
+                            "table_name": "main",
+                            "schema_name": "faceting_schema"
+                        }
+                    ],
+                    "referenced_columns": [
+                        {
+                            "column_name": "id",
+                            "table_name": "path_prefix_o1",
+                            "schema_name": "faceting_schema"
+                        }
+                    ]
                 }
             ],
             "column_definitions": [
@@ -157,6 +174,14 @@
                     "nullok": false
                 },
                 {
+                    "name": "fk_to_path_prefix_o1",
+                    "type": {
+                        "typename": "int4"
+                    },
+                    "nullok": true,
+                    "default": null
+                },
+                {
                     "name": "unfaceted_column",
                     "type": {
                         "typename": "text"
@@ -165,7 +190,28 @@
             ],
             "annotations": {
                 "tag:isrd.isi.edu,2016:visible-columns" : {
-                    "compact": ["id"],
+                    "compact": [
+                        "id",
+                        {
+                            "sourcekey": "path_to_path_prefix_o1",
+                            "comment": "added to test integration with read logic",
+                            "display": {"show_foreign_key_link":false}
+                        },
+                        {
+                            "sourcekey": "path_to_path_prefix_o1_o1",
+                            "comment": "added to test integration with read logic",
+                            "display": {"show_foreign_key_link":false}
+                        },
+                        {
+                            "source": [
+                                {"sourcekey": "path_to_path_prefix_o1_o1"},
+                                {"outbound": ["faceting_schema", "path_prefix_o1_o1_fk1"]},
+                                "path_prefix_o1_o1_o1_col"
+                            ],
+                            "comment": "added to test integration with read logic",
+                            "display": {"show_foreign_key_link":false}
+                        }
+                    ],
                     "filter": {
                         "and": [
                             {"sourcekey": "search-box", "choices": ["test"]},
@@ -208,13 +254,19 @@
                             },
                             {"source": [{"inbound": ["faceting_schema", "main_f3_assoc_fk1"]}, {"outbound": ["faceting_schema", "main_f3_assoc_fk2"]}, "id"]},
                             {"source": "numeric_col"},
-                            {"source": [{"inbound": ["faceting_schema", "f4_fk1"]}, "int_col"], "entity": false}
+                            {"source": [{"inbound": ["faceting_schema", "f4_fk1"]}, "int_col"], "entity": false},
+                            {"sourcekey": "path_to_path_prefix_o1_o1"},
+                            {"source": [
+                                {"sourcekey": "path_to_path_prefix_o1_o1"},
+                                {"inbound": ["faceting_schema", "path_prefix_o1_o1_i1_fk1"]},
+                                "path_prefix_o1_o1_i1_col"
+                            ]}
                         ]
                     }
                 },
                 "tag:isrd.isi.edu,2019:source-definitions": {
                     "columns": true,
-                    "fkeys": true,
+                    "fkeys": false,
                     "sources": {
                         "id_source_definition": {
                             "source": "id",
@@ -235,6 +287,19 @@
                         "f1_source_definition": {
                             "source": [{"outbound": ["faceting_schema", "main_fk1"]}, "id"],
                             "entity": true
+                        },
+                        "path_to_path_prefix_o1": {
+                            "source": [
+                                {"outbound": ["faceting_schema", "main_fk3"]},
+                                "path_prefix_o1_col"
+                            ]
+                        },
+                        "path_to_path_prefix_o1_o1": {
+                            "source": [
+                                {"sourcekey": "path_to_path_prefix_o1"},
+                                {"outbound": ["faceting_schema", "path_prefix_o1_fk1"]},
+                                "path_prefix_o1_o1_col"
+                            ]
                         }
                     }
                 }
@@ -1185,7 +1250,8 @@
             ],
             "annotations": {
                 "tag:isrd.isi.edu,2016:table-alternatives": {
-                    "compact": ["faceting_schema", "f7_compact_alt"]
+                    "compact": ["faceting_schema", "f7_compact_alt"],
+                    "detailed": ["faceting_schema", "f7_detailed_alt"]
                 }
             }
         },
@@ -1200,6 +1266,37 @@
                     "foreign_key_columns": [{
                         "column_name": "id",
                         "table_name": "f7_compact_alt",
+                        "schema_name": "faceting_schema"
+                    }],
+                    "referenced_columns": [{
+                        "column_name": "id_f7",
+                        "table_name": "f7_w_alt",
+                        "schema_name": "faceting_schema"
+                    }]
+                }
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "serial4"
+                    }
+                }
+            ],
+            "annotations": {}
+        },
+        "f7_detailed_alt": {
+            "kind": "table",
+            "table_name": "f7_detailed_alt",
+            "schema_name": "faceting_schema",
+            "keys": [{"unique_columns": ["id"]}],
+            "foreign_keys": [
+                {
+                    "names": [["faceting_schema", "f7_detailed_alt_fk1"]],
+                    "foreign_key_columns": [{
+                        "column_name": "id",
+                        "table_name": "f7_detailed_alt",
                         "schema_name": "faceting_schema"
                     }],
                     "referenced_columns": [{
@@ -1434,6 +1531,173 @@
                     }
                 }
             }
+        },
+        "path_prefix_o1": {
+            "kind": "table",
+            "table_name": "path_prefix_o1",
+            "schema_name": "parse_schema",
+            "keys": [
+                {"unique_columns": ["id"]}
+            ],
+            "foreign_keys": [
+                {
+                    "names": [["faceting_schema", "path_prefix_o1_fk1"]],
+                    "foreign_key_columns": [
+                        {
+                            "column_name": "fk_to_path_prefix_o1_o1",
+                            "table_name": "path_prefix_o1",
+                            "schema_name": "faceting_schema"
+                        }
+                    ],
+                    "referenced_columns": [
+                        {
+                            "column_name": "id",
+                            "table_name": "path_prefix_o1_o1",
+                            "schema_name": "faceting_schema"
+                        }
+                    ]
+                }
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {"typename": "int4"}
+                },
+                {
+                    "name": "fk_to_path_prefix_o1_o1",
+                    "type": {"typename": "int4"}
+                },
+                {
+                    "name": "path_prefix_o1_col",
+                    "type": {"typename": "text"}
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2016:table-display": {
+                    "row_name": {
+                        "row_markdown_pattern": "**{{path_prefix_o1_col}}**"
+                    }
+                }
+            }
+        },
+        "path_prefix_o1_o1": {
+            "kind": "table",
+            "table_name": "path_prefix_o1_o1",
+            "schema_name": "parse_schema",
+            "keys": [
+                {"unique_columns": ["id"]}
+            ],
+            "foreign_keys": [
+                {
+                    "names": [["faceting_schema", "path_prefix_o1_o1_fk1"]],
+                    "foreign_key_columns": [
+                        {
+                            "column_name": "fk_to_path_prefix_o1_o1_o1",
+                            "table_name": "path_prefix_o1_o1",
+                            "schema_name": "faceting_schema"
+                        }
+                    ],
+                    "referenced_columns": [
+                        {
+                            "column_name": "id",
+                            "table_name": "path_prefix_o1_o1_o1",
+                            "schema_name": "faceting_schema"
+                        }
+                    ]
+                }
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {"typename": "int4"}
+                },
+                {
+                    "name": "fk_to_path_prefix_o1_o1_o1",
+                    "type": {"typename": "serial4"}
+                },
+                {
+                    "name": "path_prefix_o1_o1_col",
+                    "type": {"typename": "text"}
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2016:table-display": {
+                    "row_name": {
+                        "row_markdown_pattern": "**{{path_prefix_o1_o1_col}}**"
+                    }
+                }
+            }
+        },
+        "path_prefix_o1_o1_o1": {
+            "kind": "table",
+            "table_name": "path_prefix_o1_o1_o1",
+            "schema_name": "parse_schema",
+            "keys": [
+                {"unique_columns": ["id"]}
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {"typename": "int4"}
+                },
+                {
+                    "name": "path_prefix_o1_o1_o1_col",
+                    "type": {"typename": "text"}
+                }
+            ]
+        },
+        "path_prefix_o1_o1_i1": {
+            "kind": "table",
+            "table_name": "path_prefix_o1_o1_i1",
+            "schema_name": "parse_schema",
+            "keys": [
+                {"unique_columns": ["id"]}
+            ],
+            "foreign_keys": [
+                {
+                    "names": [["faceting_schema", "path_prefix_o1_o1_i1_fk1"]],
+                    "foreign_key_columns": [
+                        {
+                            "column_name": "fk_to_path_prefix_o1_o1",
+                            "table_name": "path_prefix_o1_o1_i1",
+                            "schema_name": "faceting_schema"
+                        }
+                    ],
+                    "referenced_columns": [
+                        {
+                            "column_name": "id",
+                            "table_name": "path_prefix_o1_o1",
+                            "schema_name": "faceting_schema"
+                        }
+                    ]
+                }
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {"typename": "int4"}
+                },
+                {
+                    "name": "fk_to_path_prefix_o1_o1",
+                    "type": {"typename": "int4"}
+                },
+                {
+                    "name": "path_prefix_o1_o1_i1_col",
+                    "type": {"typename": "text"}
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2016:table-display": {
+                    "row_name": {
+                        "row_markdown_pattern": "**{{path_prefix_o1_o1_i1_col}}**"
+                    }
+                }
+            }
         }
+        
     }
 }
