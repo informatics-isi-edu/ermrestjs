@@ -1144,6 +1144,7 @@
      */
     _sourceColumnHelpers = {
         processDataSourcePath: function (source, rootTable, tableName, catalogId, consNames, sources) {
+            var wm = module._warningMessages;
             var returnError = function (message) {
                 return {error: true, message: message};
             };
