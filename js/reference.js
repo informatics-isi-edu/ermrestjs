@@ -381,6 +381,14 @@
         },
 
         /**
+         * Must call generateFacetColumns to generate the facets before using this
+         * @return {ERMrest.FacetColumn[]}
+         */
+        get facetColumns() {
+            return this._facetColumns;
+        },
+
+        /**
          * Facets that should be represented to the user.
          * Heuristics:
          *  - All the visible columns in compact context.
@@ -401,194 +409,134 @@
          *
          * @return {ERMrest.FacetColumn[]}
          */
-        get facetColumns() {
-            if (this._facetColumns === undefined) {
-                this._facetColumns = [];
-                var self = this;
-                var andOperator = module._FacetsLogicalOperators.AND;
-                var searchTerm =  this.location.searchTerm;
-                var helpers = _facetColumnHelpers;
+        generateFacetColumns: function () {
+            this._facetColumns = [];
 
-                // if location has facet or filter, we should honor it and we should not add preselected facets in annotation
-                var hasFilterOrFacet = this.location.facets || this.location.filter || this.location.customFacets;
+            var defer = module._q.defer(), self = this;
 
-                var andFilters = this.location.facets ? this.location.facets.andFilters : [];
-                // change filters to facet NOTE can be optimized to actually merge instead of just appending to list
-                if (this.location.filter && this.location.filter.depth === 1 && Array.isArray(this.location.filter.facet.and)) {
-                    Array.prototype.push.apply(andFilters, this.location.filter.facet.and);
-                    this._location.removeFilters();
+            var andOperator = module._FacetsLogicalOperators.AND;
+            var searchTerm =  this.location.searchTerm;
+            var helpers = _facetColumnHelpers;
+
+            // if location has facet or filter, we should honor it and we should not add preselected facets in annotation
+            var hasFilterOrFacet = this.location.facets || this.location.filter || this.location.customFacets;
+
+            var andFilters = this.location.facets ? this.location.facets.andFilters : [];
+            // change filters to facet NOTE can be optimized to actually merge instead of just appending to list
+            if (this.location.filter && this.location.filter.depth === 1 && Array.isArray(this.location.filter.facet.and)) {
+                Array.prototype.push.apply(andFilters, this.location.filter.facet.and);
+                this._location.removeFilters();
+            }
+
+            var annotationCols = -1, usedAnnotation = false;
+            var facetObjectWrappers = [];
+
+            // get column orders from annotation
+            if (this._table.annotations.contains(module._annotations.VISIBLE_COLUMNS)) {
+                annotationCols = module._getAnnotationValueByContext(module._contexts.FILTER, this._table.annotations.get(module._annotations.VISIBLE_COLUMNS).content);
+                if (annotationCols.hasOwnProperty(andOperator) && Array.isArray(annotationCols[andOperator])) {
+                    annotationCols = annotationCols[andOperator];
+                } else {
+                    annotationCols = -1;
                 }
+            }
 
-                var annotationCols = -1, usedAnnotation = false;
-                var facetObjectWrappers = [];
-
-                // get column orders from annotation
-                if (this._table.annotations.contains(module._annotations.VISIBLE_COLUMNS)) {
-                    annotationCols = module._getAnnotationValueByContext(module._contexts.FILTER, this._table.annotations.get(module._annotations.VISIBLE_COLUMNS).content);
-                    if (annotationCols.hasOwnProperty(andOperator) && Array.isArray(annotationCols[andOperator])) {
-                        annotationCols = annotationCols[andOperator];
-                    } else {
-                        annotationCols = -1;
+            if (annotationCols !== -1) {
+                usedAnnotation = true;
+                //NOTE We're allowing duplicates in annotation.
+                annotationCols.forEach(function (obj) {
+                    // if we have filters in the url, we will get the filters only from url
+                    if (obj.sourcekey === module._specialSourceDefinitions.SEARCH_BOX && andFilters.length === 0) {
+                        if (!searchTerm) {
+                            searchTerm = _getSearchTerm({"and": [obj]});
+                        }
+                        return;
                     }
-                }
 
-                if (annotationCols !== -1) {
-                    usedAnnotation = true;
-                    //NOTE We're allowing duplicates in annotation.
-                    annotationCols.forEach(function (obj) {
-                        // if we have filters in the url, we will get the filters only from url
-                        if (obj.sourcekey === module._specialSourceDefinitions.SEARCH_BOX && andFilters.length === 0) {
-                            if (!searchTerm) {
-                                searchTerm = _getSearchTerm({"and": [obj]});
-                            }
+                    // make sure it's not referring to the annotation object.
+                    obj = module._simpleDeepCopy(obj);
+
+                    var sd, wrapper;
+                    if (obj.sourcekey) {
+                        sd = self.table.sourceDefinitions.sources[obj.sourcekey];
+                        if (!sd) return;
+
+                        wrapper = sd.clone(obj, self._table, module._constraintNames, true);
+                    } else {
+                        try {
+                            wrapper = new SourceObjectWrapper(obj, self._table, module._constraintNames, true);
+                        } catch(exp) {
+                            console.log("facet definition: " + exp);
+                            // invalid definition or not unsupported
+                            // TODO could show the error message
                             return;
                         }
-
-                        // make sure it's not referring to the annotation object.
-                        obj = module._simpleDeepCopy(obj);
-
-                        var sd, wrapper;
-                        if (obj.sourcekey) {
-                            sd = self.table.sourceDefinitions.sources[obj.sourcekey];
-                            if (!sd) return;
-
-                            wrapper = sd.clone(obj, self._table, module._constraintNames, true);
-                        } else {
-                            try {
-                                wrapper = new SourceObjectWrapper(obj, self._table, module._constraintNames, true);
-                            } catch(exp) {
-                                console.log("facet definition: " + exp);
-                                // invalid definition or not unsupported
-                                // TODO could show the error message
-                                return;
-                            }
-                        }
-
-                        var supported = helpers.checkFacetObjectWrapper(wrapper);
-                        if (!supported) return;
-
-                        // if we have filters in the url, we will get the filters only from url
-                        if (hasFilterOrFacet) {
-                            delete wrapper.sourceObject.not_null;
-                            delete wrapper.sourceObject.choices;
-                            delete wrapper.sourceObject.search;
-                            delete wrapper.sourceObject.ranges;
-                        }
-
-                        facetObjectWrappers.push(wrapper);
-                    });
-                }
-                // annotation didn't exist, so we are going to use the
-                // visible columns in detailed and related entities in detailed
-                else {
-                    // this reference should be only used for getting the list,
-                    var detailedRef = (this._context === module._contexts.DETAILED) ? this : this.contextualize.detailed;
-                    var compactRef = (this._context === module._contexts.COMPACT) ? this : this.contextualize.compact;
-
-
-                    // all the visible columns in compact context
-                    compactRef.columns.forEach(function (col) {
-                        var fcObj = helpers.checkRefColumn(col);
-                        if (!fcObj) return;
-
-                        facetObjectWrappers.push(new SourceObjectWrapper(fcObj, self._table, module._constraintNames, true));
-                    });
-
-                    // all the realted in detailed context
-                    detailedRef.related.forEach(function (relRef) {
-                        var fcObj;
-                        if (relRef.pseudoColumn && !relRef.pseudoColumn.isInboundForeignKey) {
-                            fcObj = module._simpleDeepCopy(relRef.pseudoColumn.sourceObject);
-                        } else {
-                            fcObj = helpers.checkRefColumn(new InboundForeignKeyPseudoColumn(self, relRef));
-                        }
-                        if (!fcObj) return;
-
-                        /*
-                         * Because of alternative logic, the table that detailed is referring to
-                         * might be different than compact.
-                         * Since we're using the detailed just for its related entities api,
-                         * if detailed is actually an alternative table, it won't have any
-                         * related entities. Therefore we don't need to handle that case.
-                         * The only case we need to cover are:
-                         * deatiled is main, compact is alternative
-                         *    - Add the linkage from main to alternative to all the detailed related entities.
-                         * NOTE: If we change the related logic, to return the
-                         * related entities to the main table instead of alternative, this should be changed.
-                         */
-                        if (detailedRef.table !== compactRef.table &&
-                            !detailedRef.table._isAlternativeTable() && compactRef.table._isAlternativeTable()) {
-                            fcObj.source.unshift({"outbound": compactRef.table._altForeignKey.constraint_names[0]});
-                        }
-                        facetObjectWrappers.push(new SourceObjectWrapper(fcObj, self._table, module._constraintNames, true));
-                    });
-                }
-
-                // we should have facetObjectWrappers untill here, now we should combine it with andFilters
-                var checkedObjects = {};
-
-                /*
-                 * In some cases we are updating the given sources and therefore the
-                 * filter will change, so we must make sure that we update the url
-                 * to reflect those changes. These chagnes are
-                 * 1. When annotation is used and we have preselected filters.
-                 * 2. When the main table has an alternative table.
-                 * 3. When facet tables have alternative table
-                 * This is just to make sure the facet filters and url are in sync.
-                 */
-                var newFilters = [];
-
-                // if we have filters in the url, we should just get the structure from annotation
-                var j, facetLen = facetObjectWrappers.length, andFilterObject;
-                for (var i = 0; i < andFilters.length; i++) {
-                    if (andFilters[i].sourcekey === module._specialSourceDefinitions.SEARCH_BOX) continue;
-                    if (typeof andFilters[i].sourcekey === "string") {
-                        var urlSourceDef = self.table.sourceDefinitions.sources[andFilters[i].sourcekey];
-                        if (!urlSourceDef) continue;
-
-                        // copy the elements that are defined in the source def but not the one already defined
-                        module._shallowCopyExtras(andFilters[i], urlSourceDef.sourceObject, module._sourceDefinitionAttributes);
-                    }
-                    if (!andFilters[i].source) continue;
-                    if (andFilters[i].hidden) {
-                        newFilters.push(andFilters[i]);
-                        continue;
                     }
 
-                    try {
-                        // TODO refactor: could be part of parser?
-                        andFilterObject = new SourceObjectWrapper(andFilters[i], self.table, module._constraintNames, true);
-                    } catch (exp) {
-                        throw new module.InvalidFilterOperatorError(module._errorMessage.INVALID_FACET_OR_FILTER, self.location.path, '');
+                    var supported = helpers.checkFacetObjectWrapper(wrapper);
+                    if (!supported) return;
+
+                    // if we have filters in the url, we will get the filters only from url
+                    if (hasFilterOrFacet) {
+                        delete wrapper.sourceObject.not_null;
+                        delete wrapper.sourceObject.choices;
+                        delete wrapper.sourceObject.search;
+                        delete wrapper.sourceObject.ranges;
                     }
 
-                    // find the facet corresponding to the filter
-                    found = false;
-                    for (j = 0; j < facetLen; j++) {
+                    facetObjectWrappers.push(wrapper);
+                });
+            }
+            // annotation didn't exist, so we are going to use the
+            // visible columns in detailed and related entities in detailed
+            else {
+                // this reference should be only used for getting the list,
+                var detailedRef = (this._context === module._contexts.DETAILED) ? this : this.contextualize.detailed;
+                var compactRef = (this._context === module._contexts.COMPACT) ? this : this.contextualize.compact;
 
-                        // it can be merged only once, since in a facet the filter is
-                        // `or` and outside it's `and`.
-                        if (checkedObjects[j]) continue;
 
-                        // we want to make sure these two sources are exactly the same
-                        // so we can compare their hashnames
-                        if (facetObjectWrappers[j].name === andFilterObject.name) {
-                            checkedObjects[j] = true;
-                            found = true;
-                            // merge facet objects
-                            helpers.mergeFacetObjects(facetObjectWrappers[j].sourceObject, andFilters[i]);
-                        }
+                // all the visible columns in compact context
+                compactRef.columns.forEach(function (col) {
+                    var fcObj = helpers.checkRefColumn(col);
+                    if (!fcObj) return;
+
+                    facetObjectWrappers.push(new SourceObjectWrapper(fcObj, self._table, module._constraintNames, true));
+                });
+
+                // all the realted in detailed context
+                detailedRef.related.forEach(function (relRef) {
+                    var fcObj;
+                    if (relRef.pseudoColumn && !relRef.pseudoColumn.isInboundForeignKey) {
+                        fcObj = module._simpleDeepCopy(relRef.pseudoColumn.sourceObject);
+                    } else {
+                        fcObj = helpers.checkRefColumn(new InboundForeignKeyPseudoColumn(self, relRef));
                     }
+                    if (!fcObj) return;
 
-                    // couldn't find the facet, create a new facet object
-                    if (!found) {
-                        facetObjectWrappers.push(andFilterObject);
+                    /*
+                        * Because of alternative logic, the table that detailed is referring to
+                        * might be different than compact.
+                        * Since we're using the detailed just for its related entities api,
+                        * if detailed is actually an alternative table, it won't have any
+                        * related entities. Therefore we don't need to handle that case.
+                        * The only case we need to cover are:
+                        * deatiled is main, compact is alternative
+                        *    - Add the linkage from main to alternative to all the detailed related entities.
+                        * NOTE: If we change the related logic, to return the
+                        * related entities to the main table instead of alternative, this should be changed.
+                        */
+                    if (detailedRef.table !== compactRef.table &&
+                        !detailedRef.table._isAlternativeTable() && compactRef.table._isAlternativeTable()) {
+                        fcObj.source.unshift({"outbound": compactRef.table._altForeignKey.constraint_names[0]});
                     }
-                }
+                    facetObjectWrappers.push(new SourceObjectWrapper(fcObj, self._table, module._constraintNames, true));
+                });
+            }
 
-
-                // turn facetObjectWrappers into facetColumn
-                facetObjectWrappers.forEach(function(fo, index) {
+            // if we have filters in the url, we should just get the structure from annotation
+            self.validateFacetsFilters(andFilters ,facetObjectWrappers, searchTerm).then(function (res) {
+                 // turn facetObjectWrappers into facetColumn
+                 res.facetObjectWrappers.forEach(function(fo, index) {
                     // if the function returns false, it couldn't handle that case,
                     // and therefore we are ignoring it.
                     // it might change the fo
@@ -596,25 +544,230 @@
                     self._facetColumns.push(new FacetColumn(self, index, fo));
                 });
 
-                 // get the existing facets on the columns (coming from annotation)
+                // get the existing facets on the columns (coming from annotation)
                 self._facetColumns.forEach(function(fc) {
                     if (fc.filters.length !== 0) {
-                        newFilters.push(fc.toJSON());
+                        res.newFilters.push(fc.toJSON());
+                    }
+                });
+
+                if (res.newFilters.length > 0) {
+                    //TODO we should make sure this is being called before read.
+                    self._location.facets = {"and": res.newFilters};
+                } else {
+                    self._location.facets = null;
+                }
+                
+                // make sure we're generating the facetColumns from scratch
+                defer.resolve({
+                    facets: self._facetColumns,
+                    issues: res.issues
+                });
+            }).catch(function (err) {
+                defer.reject(err);
+            });
+
+            return defer.promise;
+        },
+        
+        /**
+         * This will go over all the facets and make sure they are fine
+         * if not, will try to transform or remove them and 
+         * in the end will update the list
+         * @param {*} facetObjectWrappers 
+         * @param {*} facetAndFilters 
+         */
+        validateFacetsFilters: function (facetAndFilters, facetObjectWrappers, searchTerm, changeLocation) {
+            var defer = module._q.defer(), 
+                self = this, 
+                helpers = _facetColumnHelpers,
+                promises = [],
+                checkedObjects = {},
+                j, facetLen = facetObjectWrappers.length, andFilterObject;
+            /*
+            * In some cases we are updating the given sources and therefore the
+            * filter will change, so we must make sure that we update the url
+            * to reflect those changes. These chagnes are
+            * 1. When annotation is used and we have preselected filters.
+            * 2. When the main table has an alternative table.
+            * 3. When facet tables have alternative table
+            * This is just to make sure the facet filters and url are in sync.
+            */
+            var res = {
+                facetObjectWrappers: facetObjectWrappers,
+                newFilters: [],
+                issues: []
+            };
+        
+            var addToIssues = function (obj, message) {
+                var msg = "";
+                if (obj.markdown_name) {
+                    msg += obj.markdown_name  + ": ";
+                }
+                msg += message;
+                res.issues.push(msg);
+            };
+
+            searchTerm =  searchTerm || this.location.searchTerm;
+
+            if (facetAndFilters == null || !Array.isArray(facetAndFilters)) {
+                facetAndFilters = this.location.facets ? this.location.facets.andFilters : [];
+            }
+
+            // if there wasn't any facets in the url, just return
+            if (facetAndFilters.length == 0) {
+                return defer.resolve(res), defer.promise;
+            }
+
+            // go over the list of facets in the url and process them if needed
+            facetAndFilters.forEach(function (facetAndFilter, i) {
+                if (facetAndFilter.sourcekey === module._specialSourceDefinitions.SEARCH_BOX) {
+                    return;
+                }
+
+                if (typeof facetAndFilter.sourcekey === "string") {
+                    var urlSourceDef = self.table.sourceDefinitions.sources[facetAndFilter.sourcekey];
+
+                    // invalid sourcekey
+                    if (!urlSourceDef) {
+                        addToIssues(facetAndFilter, "`" + facetAndFilter.sourcekey + "` is not a valid sourcekey.");
+                        return;
+                    }
+
+                    // copy the elements that are defined in the source def but not the one already defined
+                    module._shallowCopyExtras(facetAndFilter, urlSourceDef.sourceObject, module._sourceDefinitionAttributes);
+                }
+
+                if (facetAndFilter.hidden) {
+                    // NOTE does this make sense?
+                    res.newFilters.push(facetAndFilter);
+                    return;
+                }
+
+                // validate the source definition
+                try {
+                    andFilterObject = new SourceObjectWrapper(facetAndFilter, self.table, module._constraintNames, true);
+                } catch (exp) {
+                    addToIssues(facetAndFilter, exp.message);
+                    return;
+                }
+
+                // validate source_domain
+                if (isObjectAndNotNull(facetAndFilter.source_domain)) {
+                    var col = andFilterObject.column;
+                    if (isStringAndNotEmpty(facetAndFilter.source_domain.schema) && col.table.schema.name !== facetAndFilter.source_domain.schema) {
+                        // make sure the schema name is valid
+                        if (col.table.schema.catalog.schemas.has(facetAndFilter.source_domain.schema)) {
+                            addToIssues(facetAndFilter, "The state of facet has changed (schema missmatch).");
+                            return;
+                        }
+                    }
+
+                    if (isStringAndNotEmpty(facetAndFilter.source_domain.table) && col.table.name !== facetAndFilter.source_domain.table) {
+                        // make sure the table name is valid
+                        if (col.table.schema.tables.has(facetAndFilter.source_domain.table)) {
+                            addToIssues(facetAndFilter, "The state of facet has changed (table missmatch).");
+                            return;
+                        }                        
+                    }
+
+                    // validate the given column name
+                    if (isStringAndNotEmpty(facetAndFilter.source_domain.column) && !col.table.columns.has(facetAndFilter.source_domain.column)) {
+                        delete facetAndFilter.source_domain.column; 
+                    }
+
+                    // modify the last column name to be the one in source_domain in scalar mode
+                    if (!andFilterObject.isEntityMode && isStringAndNotEmpty(facetAndFilter.source_domain.column) && col.name !== facetAndFilter.source_domain.column) {
+                        if (isArray(facetAndFilter.source)) {
+                            facetAndFilter.source[facetAndFilter.source.length-1] = facetAndFilter.source_domain.column;
+                        } else {
+                            facetAndFilter.source = facetAndFilter.source_domain.column;
+                        }
+                        facetAndFilter.entity = false;
+                        andFilterObject = new SourceObjectWrapper(facetAndFilter, self.table, module._constraintNames, true);
+                    }
+                }
+
+                // in case of entity choice picker we have to translate the given choices
+                if (andFilterObject.isEntityMode && Array.isArray(facetAndFilter.choices)) {
+                    promises.push(helpers.getEntityChoiceRows(andFilterObject));
+                } else {
+                    promises.push({
+                        andFilterObject: andFilterObject
+                    });
+                }
+            });
+
+            // TODO what if there are a lot of them?
+            module._q.all(promises).then(function (response, index) {
+                response.forEach(function (resp) {
+
+                    // if in entity mode some choices were invalid
+                    if (Array.isArray(resp.invalidChoices) && resp.invalidChoices.length > 0) {
+                        addToIssues(resp.andFilterObject, "The following encoded choices were not available: " + resp.invalidChoices.join(", "));
+
+                        // if no choices was left, then we don't need to merge it with anything and we should ignore it
+                        if (resp.andFilterObject.entityChoiceFilterPage.length === 0) {
+                            return;
+                        }
+                    }
+
+                    // if facetObjectWrappers is passed, we have to create a facet or merge with existing
+                    if (res.facetObjectWrappers) {
+                        // find the facet corresponding to the filter
+                        var found = false;
+                        for (j = 0; j < facetLen; j++) {
+
+                            // it can be merged only once, since in a facet the filter is
+                            // `or` and outside it's `and`.
+                            if (checkedObjects[j]) continue;
+
+                            // we want to make sure these two sources are exactly the same
+                            // so we can compare their hashnames
+                            if (res.facetObjectWrappers[j].name === resp.andFilterObject.name) {
+                                checkedObjects[j] = true;
+                                found = true;
+                                // merge facet objects
+                                helpers.mergeFacetObjects(res.facetObjectWrappers[j].sourceObject, resp.andFilterObject.sourceObject);
+
+                                // make sure the page object is stored
+                                if (resp.andFilterObject.entityChoiceFilterPage) {
+                                    res.facetObjectWrappers[j].entityChoiceFilterPage = resp.andFilterObject.entityChoiceFilterPage;
+                                }
+                            }
+                        }
+
+                        // couldn't find the facet, create a new facet object
+                        if (!found) {
+                            res.facetObjectWrappers.push(resp.andFilterObject);
+                        }
+                    } 
+                    // otherwise just capture the filters in url
+                    else {
+                        res.newFilters.push(res.andFilterObject);
                     }
                 });
 
                 // add the search term
                 if (typeof searchTerm === "string") {
-                    newFilters.push({"sourcekey": module._specialSourceDefinitions.SEARCH_BOX, "search": [searchTerm]});
+                    res.newFilters.push({"sourcekey": module._specialSourceDefinitions.SEARCH_BOX, "search": [searchTerm]});
                 }
 
-                if (newFilters.length > 0) {
-                    //TODO we should make sure this is being called before read.
-                    this._location.facets = {"and": newFilters};
+                if (changeLocation) {
+                    if (res.newFilters.length > 0) {
+                        this._location.facets = {"and": res.newFilters};
+                    } else {
+                        this._location.facets = null;
+                    }
                 }
 
-            }
-            return this._facetColumns;
+                defer.resolve(res);
+            }).catch(function (error) {
+                defer.reject(error);
+            });
+
+            
+            return defer.promise;
         },
 
         /**

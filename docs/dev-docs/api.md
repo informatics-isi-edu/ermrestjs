@@ -364,7 +364,6 @@ to use for ERMrest JavaScript agents.
         * [.table](#ERMrest.Reference+table) : [<code>Table</code>](#ERMrest.Table)
         * [.facetBaseTable](#ERMrest.Reference+facetBaseTable) : [<code>Table</code>](#ERMrest.Table)
         * [.columns](#ERMrest.Reference+columns) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
-        * [.facetColumns](#ERMrest.Reference+facetColumns) ⇒ [<code>Array.&lt;FacetColumn&gt;</code>](#ERMrest.FacetColumn)
         * [.searchColumns](#ERMrest.Reference+searchColumns) : <code>Array.&lt;ERMRest.ReferenceColumn&gt;</code> \| <code>false</code>
         * [.location](#ERMrest.Reference+location) ⇒ <code>ERMrest.Location</code>
         * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
@@ -386,6 +385,8 @@ to use for ERMrest JavaScript agents.
         * [.defaultExportTemplate](#ERMrest.Reference+defaultExportTemplate) : <code>string</code>
         * [.citation](#ERMrest.Reference+citation) : <code>ERMrest.Citation</code>
         * [.googleDatasetMetadata](#ERMrest.Reference+googleDatasetMetadata) : <code>ERMrest.GoogleDatasetMetadata</code>
+        * [.generateFacetColumns()](#ERMrest.Reference+generateFacetColumns) ⇒ [<code>Array.&lt;FacetColumn&gt;</code>](#ERMrest.FacetColumn)
+        * [.validateFacetsFilters(facetObjectWrappers, facetAndFilters)](#ERMrest.Reference+validateFacetsFilters)
         * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
         * [.hideFacets()](#ERMrest.Reference+hideFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
         * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
@@ -688,7 +689,6 @@ to use for ERMrest JavaScript agents.
         * [.table](#ERMrest.Reference+table) : [<code>Table</code>](#ERMrest.Table)
         * [.facetBaseTable](#ERMrest.Reference+facetBaseTable) : [<code>Table</code>](#ERMrest.Table)
         * [.columns](#ERMrest.Reference+columns) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
-        * [.facetColumns](#ERMrest.Reference+facetColumns) ⇒ [<code>Array.&lt;FacetColumn&gt;</code>](#ERMrest.FacetColumn)
         * [.searchColumns](#ERMrest.Reference+searchColumns) : <code>Array.&lt;ERMRest.ReferenceColumn&gt;</code> \| <code>false</code>
         * [.location](#ERMrest.Reference+location) ⇒ <code>ERMrest.Location</code>
         * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
@@ -710,6 +710,8 @@ to use for ERMrest JavaScript agents.
         * [.defaultExportTemplate](#ERMrest.Reference+defaultExportTemplate) : <code>string</code>
         * [.citation](#ERMrest.Reference+citation) : <code>ERMrest.Citation</code>
         * [.googleDatasetMetadata](#ERMrest.Reference+googleDatasetMetadata) : <code>ERMrest.GoogleDatasetMetadata</code>
+        * [.generateFacetColumns()](#ERMrest.Reference+generateFacetColumns) ⇒ [<code>Array.&lt;FacetColumn&gt;</code>](#ERMrest.FacetColumn)
+        * [.validateFacetsFilters(facetObjectWrappers, facetAndFilters)](#ERMrest.Reference+validateFacetsFilters)
         * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
         * [.hideFacets()](#ERMrest.Reference+hideFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
         * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
@@ -2913,7 +2915,6 @@ Constructor for a ParsedFilter.
     * [.table](#ERMrest.Reference+table) : [<code>Table</code>](#ERMrest.Table)
     * [.facetBaseTable](#ERMrest.Reference+facetBaseTable) : [<code>Table</code>](#ERMrest.Table)
     * [.columns](#ERMrest.Reference+columns) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
-    * [.facetColumns](#ERMrest.Reference+facetColumns) ⇒ [<code>Array.&lt;FacetColumn&gt;</code>](#ERMrest.FacetColumn)
     * [.searchColumns](#ERMrest.Reference+searchColumns) : <code>Array.&lt;ERMRest.ReferenceColumn&gt;</code> \| <code>false</code>
     * [.location](#ERMrest.Reference+location) ⇒ <code>ERMrest.Location</code>
     * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
@@ -2935,6 +2936,8 @@ Constructor for a ParsedFilter.
     * [.defaultExportTemplate](#ERMrest.Reference+defaultExportTemplate) : <code>string</code>
     * [.citation](#ERMrest.Reference+citation) : <code>ERMrest.Citation</code>
     * [.googleDatasetMetadata](#ERMrest.Reference+googleDatasetMetadata) : <code>ERMrest.GoogleDatasetMetadata</code>
+    * [.generateFacetColumns()](#ERMrest.Reference+generateFacetColumns) ⇒ [<code>Array.&lt;FacetColumn&gt;</code>](#ERMrest.FacetColumn)
+    * [.validateFacetsFilters(facetObjectWrappers, facetAndFilters)](#ERMrest.Reference+validateFacetsFilters)
     * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
     * [.hideFacets()](#ERMrest.Reference+hideFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
     * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
@@ -3059,28 +3062,6 @@ for (var i=0, len=reference.columns.length; i<len; i++) {
   var col = reference.columns[i];
   console.log("Column name:", col.name, "has display name:", col.displayname);
 }
-```
-
-**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
-<a name="ERMrest.Reference+facetColumns"></a>
-
-#### reference.facetColumns ⇒ [<code>Array.&lt;FacetColumn&gt;</code>](#ERMrest.FacetColumn)
-Facets that should be represented to the user.
-Heuristics:
- - All the visible columns in compact context.
- - All the related entities in detailed context.
-
-Usage:
-```
- var facets = reference.facetColumns;
- var newRef = reference.facetColumns[0].addChoiceFilters(['value']);
- var newRef2 = newRef.facetColumns[1].addSearchFilter('text 1');
- var newRef3 = newRef2.facetColumns[2].addRangeFilter(1, 2);
- var newRef4 = newRef3.facetColumns[3].removeAllFilters();
- for (var i=0, len=newRef4.facetColumns.length; i<len; i++) {
-   var fc = reference.facetColumns[i];
-   console.log("Column name:", fc.column.name, "has following facets:", fc.filters);
- }
 ```
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
@@ -3334,6 +3315,42 @@ If annotation is defined and has the required attributes, will return
 a Metadata object
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+generateFacetColumns"></a>
+
+#### reference.generateFacetColumns() ⇒ [<code>Array.&lt;FacetColumn&gt;</code>](#ERMrest.FacetColumn)
+Facets that should be represented to the user.
+Heuristics:
+ - All the visible columns in compact context.
+ - All the related entities in detailed context.
+
+Usage:
+```
+ var facets = reference.facetColumns;
+ var newRef = reference.facetColumns[0].addChoiceFilters(['value']);
+ var newRef2 = newRef.facetColumns[1].addSearchFilter('text 1');
+ var newRef3 = newRef2.facetColumns[2].addRangeFilter(1, 2);
+ var newRef4 = newRef3.facetColumns[3].removeAllFilters();
+ for (var i=0, len=newRef4.facetColumns.length; i<len; i++) {
+   var fc = reference.facetColumns[i];
+   console.log("Column name:", fc.column.name, "has following facets:", fc.filters);
+ }
+```
+
+**Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+validateFacetsFilters"></a>
+
+#### reference.validateFacetsFilters(facetObjectWrappers, facetAndFilters)
+This will go over all the facets and make sure they are fine
+if not, will try to transform or remove them and 
+in the end will update the list
+
+**Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
+
+| Param | Type |
+| --- | --- |
+| facetObjectWrappers | <code>\*</code> | 
+| facetAndFilters | <code>\*</code> | 
+
 <a name="ERMrest.Reference+removeAllFacetFilters"></a>
 
 #### reference.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet) ⇒ <code>ERMrest.reference</code>
@@ -6615,7 +6632,6 @@ get PathColumn object by column name
     * [.table](#ERMrest.Reference+table) : [<code>Table</code>](#ERMrest.Table)
     * [.facetBaseTable](#ERMrest.Reference+facetBaseTable) : [<code>Table</code>](#ERMrest.Table)
     * [.columns](#ERMrest.Reference+columns) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
-    * [.facetColumns](#ERMrest.Reference+facetColumns) ⇒ [<code>Array.&lt;FacetColumn&gt;</code>](#ERMrest.FacetColumn)
     * [.searchColumns](#ERMrest.Reference+searchColumns) : <code>Array.&lt;ERMRest.ReferenceColumn&gt;</code> \| <code>false</code>
     * [.location](#ERMrest.Reference+location) ⇒ <code>ERMrest.Location</code>
     * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
@@ -6637,6 +6653,8 @@ get PathColumn object by column name
     * [.defaultExportTemplate](#ERMrest.Reference+defaultExportTemplate) : <code>string</code>
     * [.citation](#ERMrest.Reference+citation) : <code>ERMrest.Citation</code>
     * [.googleDatasetMetadata](#ERMrest.Reference+googleDatasetMetadata) : <code>ERMrest.GoogleDatasetMetadata</code>
+    * [.generateFacetColumns()](#ERMrest.Reference+generateFacetColumns) ⇒ [<code>Array.&lt;FacetColumn&gt;</code>](#ERMrest.FacetColumn)
+    * [.validateFacetsFilters(facetObjectWrappers, facetAndFilters)](#ERMrest.Reference+validateFacetsFilters)
     * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
     * [.hideFacets()](#ERMrest.Reference+hideFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
     * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
@@ -6761,28 +6779,6 @@ for (var i=0, len=reference.columns.length; i<len; i++) {
   var col = reference.columns[i];
   console.log("Column name:", col.name, "has display name:", col.displayname);
 }
-```
-
-**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
-<a name="ERMrest.Reference+facetColumns"></a>
-
-#### reference.facetColumns ⇒ [<code>Array.&lt;FacetColumn&gt;</code>](#ERMrest.FacetColumn)
-Facets that should be represented to the user.
-Heuristics:
- - All the visible columns in compact context.
- - All the related entities in detailed context.
-
-Usage:
-```
- var facets = reference.facetColumns;
- var newRef = reference.facetColumns[0].addChoiceFilters(['value']);
- var newRef2 = newRef.facetColumns[1].addSearchFilter('text 1');
- var newRef3 = newRef2.facetColumns[2].addRangeFilter(1, 2);
- var newRef4 = newRef3.facetColumns[3].removeAllFilters();
- for (var i=0, len=newRef4.facetColumns.length; i<len; i++) {
-   var fc = reference.facetColumns[i];
-   console.log("Column name:", fc.column.name, "has following facets:", fc.filters);
- }
 ```
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
@@ -7036,6 +7032,42 @@ If annotation is defined and has the required attributes, will return
 a Metadata object
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+generateFacetColumns"></a>
+
+#### reference.generateFacetColumns() ⇒ [<code>Array.&lt;FacetColumn&gt;</code>](#ERMrest.FacetColumn)
+Facets that should be represented to the user.
+Heuristics:
+ - All the visible columns in compact context.
+ - All the related entities in detailed context.
+
+Usage:
+```
+ var facets = reference.facetColumns;
+ var newRef = reference.facetColumns[0].addChoiceFilters(['value']);
+ var newRef2 = newRef.facetColumns[1].addSearchFilter('text 1');
+ var newRef3 = newRef2.facetColumns[2].addRangeFilter(1, 2);
+ var newRef4 = newRef3.facetColumns[3].removeAllFilters();
+ for (var i=0, len=newRef4.facetColumns.length; i<len; i++) {
+   var fc = reference.facetColumns[i];
+   console.log("Column name:", fc.column.name, "has following facets:", fc.filters);
+ }
+```
+
+**Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+validateFacetsFilters"></a>
+
+#### reference.validateFacetsFilters(facetObjectWrappers, facetAndFilters)
+This will go over all the facets and make sure they are fine
+if not, will try to transform or remove them and 
+in the end will update the list
+
+**Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
+
+| Param | Type |
+| --- | --- |
+| facetObjectWrappers | <code>\*</code> | 
+| facetAndFilters | <code>\*</code> | 
+
 <a name="ERMrest.Reference+removeAllFacetFilters"></a>
 
 #### reference.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet) ⇒ <code>ERMrest.reference</code>
