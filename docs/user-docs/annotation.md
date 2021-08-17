@@ -99,6 +99,7 @@ Supported JSON payload patterns:
 - `{`... `"show_key_link":` `{` _context_ `:` _keylink_ `,` ... `}`: Whether default display of keys (sel link) should include link to the row.
 - `{`... `"show_foreign_key_link":` `{` _context_ `:` _fklink_ `,` ... `}`: Whether default display of foreign keys should include link to the row.
 - `{`... `"hide_row_count":` `{` _context_ `:` _rowcount_ `,` ... `}`: Whether we should display the total row count. Since the request to fetch total row count is expensive, you can use this to signal to client to skip the request (and therefore do not display it to users.)
+- `{`... `"show_saved_query":` _savedquery_ ...`}`: Whether we want to display the saved query UI features or not. By default, this feature is turned off (set to false).
 
 Supported JSON _ccomment_ patterns:
 
@@ -146,6 +147,11 @@ Supported JSON _rowcount_ patterns:
 - `true`: Don't display the total row count.
 - `false`: Display the total row count to users.
 
+Supported JSON _savedquery_ patterns:
+
+- `true`: Display the saved query UI features.
+- `false`: Don't display the saved query UI features.
+
 Supported JSON _context_ patterns:
 - See [Context Names](#context-names) section for the list of supported JSON _context_ patterns.
 
@@ -181,6 +187,9 @@ Supported JSON _context_ patterns:
         }
     }
     ```
+- The `"show_saved_query"` settings applies to the annotated model element and is also the default for any nested element.
+  - The annotation is allowed on catalog in order to set the default for all schemas in the catalog.
+  - The annotation is allowed on schemas in order to set the default for all tables in the schema.
 
 This annotation provides an override guidance for Chaise applications using a hierarchical scoping mode:
 

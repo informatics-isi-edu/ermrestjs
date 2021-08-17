@@ -1,4 +1,4 @@
-    
+
     module.configure = configure;
 
     module.ermrestFactory = {
@@ -1027,6 +1027,33 @@
                 this.comment = cm;
             }
         }
+
+        var _getHierarchicalDisplayAnnotationValue = function (table, annotKey) {
+            var hierarchy = [table], annot, value = -1;
+            var displayAnnot = module._annotations.DISPLAY;
+
+            // hierarchy should be an array of [table, schema, catalog]
+            hierarchy.push(table.schema, table.schema.catalog);
+
+            for (var i = 0; i < hierarchy.length; i++) {
+                // if the display annotation is not defined, skip this model element
+                if (!hierarchy[i].annotations.contains(displayAnnot)) continue;
+
+                annot = hierarchy[i].annotations.get(displayAnnot);
+                if (annot && annot.content && typeof annot.content[annotKey] === "boolean") {
+                    value = annot.content[annotKey];
+                    if (value !== -1) break;
+                }
+            }
+
+            // no match was found, turn off the feature
+            if (value === -1) value = false;
+            return value;
+        };
+        /**
+         * @type {boolean}
+         */
+        this._showSavedQuery = _getHierarchicalDisplayAnnotationValue(this, "show_saved_query");
 
         /**
          * @desc The type of this table
