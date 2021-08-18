@@ -351,6 +351,8 @@ to use for ERMrest JavaScript agents.
         * [new InvalidPageCriteria(message, path)](#new_ERMrest.InvalidPageCriteria_new)
     * [.InvalidServerResponse](#ERMrest.InvalidServerResponse)
         * [new InvalidServerResponse(uri, data, logAction)](#new_ERMrest.InvalidServerResponse_new)
+    * [.FacetFiltersNotImplemented](#ERMrest.FacetFiltersNotImplemented)
+        * [new FacetFiltersNotImplemented(discardedFacets, partialyDiscardedFacets)](#new_ERMrest.FacetFiltersNotImplemented_new)
     * [.ParsedFilter](#ERMrest.ParsedFilter)
         * [new ParsedFilter(type)](#new_ERMrest.ParsedFilter_new)
         * [.setFilters(filters)](#ERMrest.ParsedFilter+setFilters)
@@ -2874,6 +2876,21 @@ Invalid server response
 | uri | <code>string</code> | error message |
 | data | <code>object</code> | the returned data |
 | logAction | <code>string</code> | the log action of the request |
+
+<a name="ERMrest.FacetFiltersNotImplemented"></a>
+
+### ERMrest.FacetFiltersNotImplemented
+**Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
+<a name="new_ERMrest.FacetFiltersNotImplemented_new"></a>
+
+#### new FacetFiltersNotImplemented(discardedFacets, partialyDiscardedFacets)
+Invalid server response
+
+
+| Param | Type |
+| --- | --- |
+| discardedFacets | <code>Array.&lt;Object&gt;</code> | 
+| partialyDiscardedFacets | <code>Array.&lt;Object&gt;</code> | 
 
 <a name="ERMrest.ParsedFilter"></a>
 

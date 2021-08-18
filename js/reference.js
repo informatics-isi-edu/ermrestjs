@@ -596,16 +596,26 @@
             var res = {
                 facetObjectWrappers: facetObjectWrappers,
                 newFilters: [],
-                issues: []
+                issues: null
             };
-        
-            var addToIssues = function (obj, message) {
-                var msg = "- ";
-                if (obj.markdown_name) {
-                    msg += obj.markdown_name  + ": ";
+
+            var discardedFacets = [], partialyDiscardedFacets = [];
+            var addToIssues = function (obj, message, discardedChoices) {
+                module._log.warn("invalid facet " + (obj.markdown_name ? obj.markdown_name : "") + ": " + message);
+                if (Array.isArray(discardedChoices) && discardedChoices.length > 0) {
+                    partialyDiscardedFacets.push({
+                        markdown_name: obj.markdown_name,
+                        choices: discardedChoices,
+                        total_choice_count: obj.choices.length + discardedChoices.length
+                    });
+                } else {
+                    discardedFacets.push({
+                        markdown_name: obj.markdown_name,
+                        choices: obj.choices,
+                        ranges: obj.ranges,
+                        not_null: obj.not_null
+                    });
                 }
-                msg += message;
-                res.issues.push(msg);
             };
 
             searchTerm =  searchTerm || this.location.searchTerm;
@@ -699,16 +709,17 @@
             });
 
             // TODO what if there are a lot of them?
-            module._q.all(promises).then(function (response, index) {
+            module._q.all(promises).then(function (response) {
                 response.forEach(function (resp) {
 
                     // if in entity mode some choices were invalid
                     if (Array.isArray(resp.invalidChoices) && resp.invalidChoices.length > 0) {
-                        addToIssues(resp.andFilterObject.sourceObject, "The following encoded choices were not available: " + resp.invalidChoices.join(", "));
-
                         // if no choices was left, then we don't need to merge it with anything and we should ignore it
                         if (resp.andFilterObject.entityChoiceFilterPage.length === 0) {
+                            addToIssues(resp.andFilterObject.sourceObject, "None of the encoded choices were available");
                             return;
+                        } else {
+                            addToIssues(resp.andFilterObject.sourceObject, "The following encoded choices were not available: " + resp.invalidChoices.join(", "), resp.invalidChoices);
                         }
                     }
 
@@ -761,6 +772,9 @@
                     }
                 }
 
+                if (discardedFacets.length > 0 || partialyDiscardedFacets.length > 0) {
+                    res.issues = new module.FacetFiltersNotImplemented(discardedFacets, partialyDiscardedFacets);
+                }
                 defer.resolve(res);
             }).catch(function (error) {
                 defer.reject(error);
