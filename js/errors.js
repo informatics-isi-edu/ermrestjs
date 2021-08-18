@@ -462,6 +462,41 @@
     InvalidServerResponse.prototype = Object.create(ERMrestError.prototype);
     InvalidServerResponse.prototype.constructor = InvalidServerResponse;
 
+
+    function _createDiscardedFacetSubMessage(obj, onlyChoices) {
+        var sum = [];
+        if (Array.isArray(obj.choices) && obj.choices.length > 0) {
+            tempSum = obj.choices.length;
+            if (obj.total_choice_count) {
+                tempSum += "/" + obj.total_choice_count;
+            }
+            tempSum += " choice" + (obj.choices.length > 1 ? "s" : "");
+            sum.push(tempSum);
+        }
+
+        if (!onlyChoices && Array.isArray(obj.ranges) && obj.ranges.length > 0) {
+            sum.push(obj.ranges.length + " range" + (obj.ranges.length > 1 ? "s" : ""));
+        }
+
+        if (!onlyChoices && obj.not_null) {
+            sum.push("not null");
+        }
+
+        var values = [];
+        if (Array.isArray(obj.choices) && obj.choices.length > 0) {
+            values = values.concat(obj.choices.map(function (ch) { return "  - " + ch;}));
+        }
+        if (!onlyChoices && Array.isArray(obj.ranges) && obj.ranges.length > 0) {
+            values = values.concat(obj.ranges.map(function (r) { return "  - " + JSON.stringify(r);}));
+        }
+        if (!onlyChoices && obj.not_null) {
+            values = values.concat("  - not null");
+        }
+
+
+        return "- " + obj.markdown_name + " (" + sum.join(",") + "):\n" + values.join("\n");
+    }
+
     /**
      * @memberof ERMrest
      * @param {Object[]} discardedFacets
@@ -470,45 +505,25 @@
      * @desc Invalid server response
      */
     function FacetFiltersNotImplemented(discardedFacets, partialyDiscardedFacets) {
-        var message = module._errorMessage.FACET_FILTERS_NOT_IMPLEMENTED + "\n";
-        var subMessage = "";
-    
-        var getSumm = function (obj) {
-            var sum = [], tempSum;
-            if (Array.isArray(obj.choices) && obj.choices.length > 0) {
-                tempSum = obj.choices.length;
-                if (obj.total_choice_count) {
-                    tempSum += "/" + obj.total_choice_count;
-                }
-                tempSum += " choice" + (obj.choices.length > 1 ? "s" : "");
-                sum.push(tempSum);
-            }
 
-            if (Array.isArray(obj.ranges) && obj.ranges.length > 0) {
-                sum.push(obj.ranges.length + " range" + (obj.ranges.length > 1 ? "s" : ""));
-            }
-
-            if (obj.not_null) {
-                sum.push("not null");
-            }
-
-            return sum.join(",");
-        }
-
-        // add discarded message
+        // process discarded facets
         var discardedFacetMsg = [], discardedFacetSubMsg = [];
         discardedFacets.forEach(function (f) {
             if (!f.markdown_name) return;
-            // TODO process markdown
             discardedFacetMsg.push(f.markdown_name);
-            var temp = "- " + f.markdown_name;
-            temp += " (" + getSumm(f) + ")";
-            if (Array.isArray(f.choices) && f.choices.length > 0) {
-                temp += ": " + f.choices.join(", ");
-            }
-
-            discardedFacetSubMsg.push(temp);
+            discardedFacetSubMsg.push(_createDiscardedFacetSubMessage(f));
         });
+        // process partialy discarded facets
+        var partDiscardedFacetMsg = [], partDiscardedFacetSubMsg = [];
+        partialyDiscardedFacets.forEach(function (f) {
+            if (!f.markdown_name) return;
+            partDiscardedFacetMsg.push(f.markdown_name);
+            partDiscardedFacetSubMsg.push(_createDiscardedFacetSubMessage(f, true));
+        });
+
+        // create the messages:
+        var message = module._errorMessage.FACET_FILTERS_NOT_IMPLEMENTED + "\n";
+        var subMessage = "";
         if (discardedFacetMsg.length > 0) {
             message += "<br/><br/> Discarded facets: " + discardedFacetMsg.join(", ");
         }
@@ -516,17 +531,6 @@
             subMessage += "Discarded facets:\n\n";
             subMessage += discardedFacetSubMsg.join("\n") + "\n\n";
         }
-
-        // add partialy discarded message
-        var partDiscardedFacetMsg = [], partDiscardedFacetSubMsg = [];
-        partialyDiscardedFacets.forEach(function (f) {
-            if (!f.markdown_name) return;
-            // TODO process markdown
-            partDiscardedFacetMsg.push(f.markdown_name);
-            if (Array.isArray(f.choices) && f.choices.length > 0) {
-                partDiscardedFacetSubMsg.push("- " + f.markdown_name + " (" + f.choices.length + "/" + f.total_choice_count  + " choices): " + f.choices.join(", "));
-            }
-        });
         if (partDiscardedFacetMsg.length > 0) {
             message += "<br/> Facets with some discarded choices facets: " + partDiscardedFacetMsg.join(", ");
         }
