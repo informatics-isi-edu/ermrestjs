@@ -765,16 +765,22 @@
             };
 
             // if there's source_domain use it
-            var projectedColumnName = filterColumnName = andFilterObject.column.name;
+            var projectedColumnName = andFilterObject.column.name,
+                filterColumnName = andFilterObject.column.name;
             if (isObjectAndNotNull(sourceObject.source_domain) && isStringAndNotEmpty(sourceObject.source_domain.column)) {
                 filterColumnName = sourceObject.source_domain.column;
             }
 
-            var filterStrs = [], filterTerms = {};
+            var filterStrs = [], filterTerms = {}, hasNullChoice = false;
             sourceObject.choices.forEach(function (ch, index) {
-                if (ch == null || ch in filterTerms) {
+                if (ch in filterTerms) {
                     return;
                 }
+                if (ch== null) {
+                    hasNullChoice = true;
+                    return;
+                }
+
                 filterStrs.push(
                     module._fixedEncodeURIComponent(filterColumnName) + "=" + module._fixedEncodeURIComponent(ch)
                 );
@@ -814,6 +820,11 @@
                         // keep track of choices that we invalidated so we 
                         // can create a proper error message
                         res.invalidChoices = Object.keys(filterTerms);
+
+
+                        if (hasNullChoice) {
+                            newChoices.push(null);
+                        }
     
                         // kinda hacky
                         // make sure the choices only include the valid ones (might be empty)

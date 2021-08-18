@@ -1233,6 +1233,66 @@
         },
 
         /**
+         * The columns that create the stable key
+         * 
+         * @type {ERMrest.Column[]}
+         */
+        get stableKey() {
+            if (this._stabelKey === undefined) {
+                var getStableKey = function (self) {
+                    // find the table config annot
+                    if (!self.annotations.contains(module._annotations.TABLE_CONFIG)) {
+                        return null;
+                    }
+                    var annot = self.annotations.get(module._annotations.TABLE_CONFIG).content;
+
+                    // make sure it's defined and is an object
+                    if (!isObjectAndNotNull(annot)) {
+                        return null;
+                    }
+
+                    // get it from the stable_key_cols attribute
+                    if (Array.isArray(annot.stable_key_cols) && annot.stable_key_cols.length > 0) {
+                        var keyCols = [];
+
+                        // make sure all the columns are valid
+                        var allValid = annot.stable_key_cols.every(function (col) {
+                            try {
+                                keyCols.push(self.columns.get(col));
+                                return true;
+                            } catch(err) {
+                                return false;
+                            }
+                        });
+                        
+                        if (allValid) {
+                            return keyCols;
+                        }
+                    }
+
+                    // get it from the stable_key attribute
+                    if (Array.isArray(annot.stable_key) && annot.stable_key.length == 2) {
+                        var obj = self.schema.catalog.constraintByNamePair(annot.stable_key, module._constraintTypes.KEY);
+                        if (obj) {
+                            return obj.object.colset.columns;
+                        }
+                    }
+
+                    return null;
+                };
+
+                var stableKey = getStableKey(this);
+
+                if (stableKey == null) {
+                    stableKey = this.shortestKey;
+                }
+
+                this._stabelKey = stableKey;
+            }
+            return this._stabelKey;
+        },
+
+        /**
          * @param {string} context used to figure out if the column has markdown_pattern annoation or not.
          * @returns{Column[]|undefined} list of columns. If couldn't find a suitable columns will return undefined.
          * @desc

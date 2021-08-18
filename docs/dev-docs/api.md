@@ -158,6 +158,7 @@ to use for ERMrest JavaScript agents.
             * [.kind](#ERMrest.Table+kind) : <code>string</code>
             * [.shortestKey](#ERMrest.Table+shortestKey)
             * [.displayKey](#ERMrest.Table+displayKey) : [<code>Array.&lt;Column&gt;</code>](#ERMrest.Column)
+            * [.stableKey](#ERMrest.Table+stableKey) : [<code>Array.&lt;Column&gt;</code>](#ERMrest.Column)
             * [.uri](#ERMrest.Table+uri) : <code>string</code>
             * [.sourceDefinitions](#ERMrest.Table+sourceDefinitions) : <code>Object</code>
             * [.searchSourceDefinition](#ERMrest.Table+searchSourceDefinition) : <code>Array.&lt;Object&gt;</code> \| <code>false</code>
@@ -365,6 +366,7 @@ to use for ERMrest JavaScript agents.
         * [.table](#ERMrest.Reference+table) : [<code>Table</code>](#ERMrest.Table)
         * [.facetBaseTable](#ERMrest.Reference+facetBaseTable) : [<code>Table</code>](#ERMrest.Table)
         * [.columns](#ERMrest.Reference+columns) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
+        * [.facetColumns](#ERMrest.Reference+facetColumns) ⇒ [<code>Array.&lt;FacetColumn&gt;</code>](#ERMrest.FacetColumn)
         * [.searchColumns](#ERMrest.Reference+searchColumns) : <code>Array.&lt;ERMRest.ReferenceColumn&gt;</code> \| <code>false</code>
         * [.location](#ERMrest.Reference+location) ⇒ <code>ERMrest.Location</code>
         * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
@@ -690,6 +692,7 @@ to use for ERMrest JavaScript agents.
         * [.table](#ERMrest.Reference+table) : [<code>Table</code>](#ERMrest.Table)
         * [.facetBaseTable](#ERMrest.Reference+facetBaseTable) : [<code>Table</code>](#ERMrest.Table)
         * [.columns](#ERMrest.Reference+columns) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
+        * [.facetColumns](#ERMrest.Reference+facetColumns) ⇒ [<code>Array.&lt;FacetColumn&gt;</code>](#ERMrest.FacetColumn)
         * [.searchColumns](#ERMrest.Reference+searchColumns) : <code>Array.&lt;ERMRest.ReferenceColumn&gt;</code> \| <code>false</code>
         * [.location](#ERMrest.Reference+location) ⇒ <code>ERMrest.Location</code>
         * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
@@ -1193,6 +1196,7 @@ get table by table name
         * [.kind](#ERMrest.Table+kind) : <code>string</code>
         * [.shortestKey](#ERMrest.Table+shortestKey)
         * [.displayKey](#ERMrest.Table+displayKey) : [<code>Array.&lt;Column&gt;</code>](#ERMrest.Column)
+        * [.stableKey](#ERMrest.Table+stableKey) : [<code>Array.&lt;Column&gt;</code>](#ERMrest.Column)
         * [.uri](#ERMrest.Table+uri) : <code>string</code>
         * [.sourceDefinitions](#ERMrest.Table+sourceDefinitions) : <code>Object</code>
         * [.searchSourceDefinition](#ERMrest.Table+searchSourceDefinition) : <code>Array.&lt;Object&gt;</code> \| <code>false</code>
@@ -1314,6 +1318,12 @@ The columns that create the shortest key
 
 #### table.displayKey : [<code>Array.&lt;Column&gt;</code>](#ERMrest.Column)
 The columns that create the shortest key that can be used for display purposes.
+
+**Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
+<a name="ERMrest.Table+stableKey"></a>
+
+#### table.stableKey : [<code>Array.&lt;Column&gt;</code>](#ERMrest.Column)
+The columns that create the stable key
 
 **Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
 <a name="ERMrest.Table+uri"></a>
@@ -2921,6 +2931,7 @@ Constructor for a ParsedFilter.
     * [.table](#ERMrest.Reference+table) : [<code>Table</code>](#ERMrest.Table)
     * [.facetBaseTable](#ERMrest.Reference+facetBaseTable) : [<code>Table</code>](#ERMrest.Table)
     * [.columns](#ERMrest.Reference+columns) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
+    * [.facetColumns](#ERMrest.Reference+facetColumns) ⇒ [<code>Array.&lt;FacetColumn&gt;</code>](#ERMrest.FacetColumn)
     * [.searchColumns](#ERMrest.Reference+searchColumns) : <code>Array.&lt;ERMRest.ReferenceColumn&gt;</code> \| <code>false</code>
     * [.location](#ERMrest.Reference+location) ⇒ <code>ERMrest.Location</code>
     * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
@@ -3069,6 +3080,12 @@ for (var i=0, len=reference.columns.length; i<len; i++) {
   console.log("Column name:", col.name, "has display name:", col.displayname);
 }
 ```
+
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+facetColumns"></a>
+
+#### reference.facetColumns ⇒ [<code>Array.&lt;FacetColumn&gt;</code>](#ERMrest.FacetColumn)
+Must call generateFacetColumns to generate the facets before using this
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+searchColumns"></a>
@@ -6638,6 +6655,7 @@ get PathColumn object by column name
     * [.table](#ERMrest.Reference+table) : [<code>Table</code>](#ERMrest.Table)
     * [.facetBaseTable](#ERMrest.Reference+facetBaseTable) : [<code>Table</code>](#ERMrest.Table)
     * [.columns](#ERMrest.Reference+columns) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
+    * [.facetColumns](#ERMrest.Reference+facetColumns) ⇒ [<code>Array.&lt;FacetColumn&gt;</code>](#ERMrest.FacetColumn)
     * [.searchColumns](#ERMrest.Reference+searchColumns) : <code>Array.&lt;ERMRest.ReferenceColumn&gt;</code> \| <code>false</code>
     * [.location](#ERMrest.Reference+location) ⇒ <code>ERMrest.Location</code>
     * [.isUnique](#ERMrest.Reference+isUnique) : <code>boolean</code>
@@ -6786,6 +6804,12 @@ for (var i=0, len=reference.columns.length; i<len; i++) {
   console.log("Column name:", col.name, "has display name:", col.displayname);
 }
 ```
+
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+facetColumns"></a>
+
+#### reference.facetColumns ⇒ [<code>Array.&lt;FacetColumn&gt;</code>](#ERMrest.FacetColumn)
+Must call generateFacetColumns to generate the facets before using this
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+searchColumns"></a>

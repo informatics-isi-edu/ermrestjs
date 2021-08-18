@@ -600,7 +600,7 @@
             };
         
             var addToIssues = function (obj, message) {
-                var msg = "";
+                var msg = "- ";
                 if (obj.markdown_name) {
                     msg += obj.markdown_name  + ": ";
                 }
@@ -704,7 +704,7 @@
 
                     // if in entity mode some choices were invalid
                     if (Array.isArray(resp.invalidChoices) && resp.invalidChoices.length > 0) {
-                        addToIssues(resp.andFilterObject, "The following encoded choices were not available: " + resp.invalidChoices.join(", "));
+                        addToIssues(resp.andFilterObject.sourceObject, "The following encoded choices were not available: " + resp.invalidChoices.join(", "));
 
                         // if no choices was left, then we don't need to merge it with anything and we should ignore it
                         if (resp.andFilterObject.entityChoiceFilterPage.length === 0) {
