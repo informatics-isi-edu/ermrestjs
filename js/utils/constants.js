@@ -85,6 +85,8 @@
         EDIT: 'entry/edit',
         ENTRY: 'entry',
         EXPORT: 'export',
+        EXPORT_COMPACT: 'export/compact',
+        EXPORT_DETAILED: 'export/detailed',
         FILTER: 'filter',
         DEFAULT: '*',
         ROWNAME: 'row_name'

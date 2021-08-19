@@ -2168,7 +2168,8 @@
                 qParam += cid ? ("&cid=" + cid) : "";
                 qParam += "&download=" + module._fixedEncodeURIComponent(this.displayname.unformatted);
 
-                var defaultExportOutput = module._referenceExportOutput(this, this.location.mainTableAlias);
+                var isCompact = this._context === module._contexts.COMPACT;
+                var defaultExportOutput = module._referenceExportOutput(this, this.location.mainTableAlias, null, false, null, isCompact);
 
                 if (defaultExportOutput == null) {
                     this._csvDownloadLink = "";
@@ -2275,6 +2276,7 @@
 
         /**
          * Returns a object, that can be used as a default export template.
+         * NOTE SHOULD ONLY BE USED IN DETAILED CONTEXT
          * It will include:
          * - csv of the main table.
          * - csv of all the related entities
@@ -2296,18 +2298,6 @@
                     if (output != null) {
                         outputs.push(output);
                     }
-                 };
-
-                 // given a refernece, will return it in export or detailed context
-                 var getExportReference = function (ref) {
-                     var res, hasExportColumns = false;
-                     if (ref.table.annotations.contains(module._annotations.VISIBLE_COLUMNS)) {
-                         var exportColumns = module._getRecursiveAnnotationValue(module._contexts.EXPORT, ref.table.annotations.get(module._annotations.VISIBLE_COLUMNS).content, true);
-                         hasExportColumns = exportColumns !== -1 && Array.isArray(exportColumns);
-                     }
-
-                     // use export annotation, otherwise fall back to using detailed
-                     return hasExportColumns ? ref.contextualize.export : (ref._context === module._contexts.DETAILED ? ref : ref.contextualize.detailed);
                  };
 
                  // create a csv + fetch all the assets
@@ -2337,7 +2327,7 @@
                      }
 
                      // add asset of the related table
-                     var expRef = getExportReference(rel);
+                     var expRef = module._getExportReference(rel);
 
                      // alternative table, don't add asset
                      if (expRef.table !== rel.table) return;
@@ -2351,7 +2341,7 @@
                  // main entity
                  addOutput(getTableOutput(self, self.location.mainTableAlias));
 
-                 var exportRef = getExportReference(self);
+                 var exportRef = module._getExportReference(self);
 
                  // we're not supporting alternative tables
                  if (exportRef.table.name === self.table.name) {
@@ -4109,6 +4099,22 @@
          */
         get export() {
             return this._contextualize(module._contexts.EXPORT);
+        },
+
+        /**
+         * get exportCompact - export context for compact view
+         * @return {ERMrest.Reference}
+         */
+         get exportCompact() {
+            return this._contextualize(module._contexts.EXPORT_COMPACT);
+        },
+
+        /**
+         * get exportDetailed - export context for detailed view
+         * @return {ERMrest.Reference}
+         */
+         get exportDetailed() {
+            return this._contextualize(module._contexts.EXPORT_DETAILED);
         },
 
         _contextualize: function(context) {
