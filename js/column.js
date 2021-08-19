@@ -17,79 +17,67 @@
  * @private
  * @param  {ERMrest.Reference}  reference    the parent reference
  * @param  {ERMrest.Column}  column       the underlying column object
- * @param  {Object}  sourceObject the column definition
+ * @param  {ERMrest.SourceObjectWrapper}  sourceObjectWrapper the column definition
  * @param  {ERMrest.Tuple=}  mainTuple    the main tuple
  * @param  {String=}  name         the name to avoid computing it again.
- * @param  {Boolean=} isEntity     whether it's entity mode or not (to avoid computing it again)
  * @return {ERMrest.ReferenceColumn}
  */
-module._createPseudoColumn = function (reference, column, sourceObject, mainTuple, name, isEntity) {
+module._createPseudoColumn = function (reference, sourceObjectWrapper, mainTuple) {
+    var sourceObject = sourceObjectWrapper.sourceObject,
+    column = sourceObjectWrapper.column,
+    name  = sourceObjectWrapper.name,
+    context = reference._context,
+    relatedRef, fk;
+
     var generalPseudo = function () {
-        return new PseudoColumn(reference, column, sourceObject, name, mainTuple);
+        return new PseudoColumn(reference, sourceObjectWrapper.column, sourceObjectWrapper, name, mainTuple);
     };
 
     var getFK = function (constraint) {
         return module._getConstraintObject(reference.table.schema.catalog.id, constraint[0], constraint[1]).object;
     };
 
-    var source = sourceObject.source,
-        context = reference._context,
-        relatedRef, fk;
 
-    // if name is not passed, genarate it
-    if (typeof name !== "string") {
-        name = _generatePseudoColumnName(sourceObject, column);
-    }
-    if (typeof isEntity !== "boolean") {
-        isEntity = _isSourceObjectEntityMode(sourceObject, column);
-    }
 
     // has aggregate
-    if (sourceObject.aggregate) {
+    if (sourceObjectWrapper.hasAggregate || sourceObjectWrapper.isUniqueFiltered) {
         return generalPseudo();
     }
 
-    if (!_sourceHasPath(source)) {
-        // make sure the clumn is unique not-null
-        if (sourceObject.self_link === true && !column.nullok) {
-            //make sure the column is part of a simple key
-            var keys = column.memberOfKeys.filter(function (key) {
-                return key.simple;
-            });
-
-            if (keys.length !== 0) {
-                return new KeyPseudoColumn(reference, keys[0], sourceObject, name);
-            }
-        }
+    if (!sourceObjectWrapper.hasPath) {
+        // make sure the column is unique not-null
+        if (sourceObject.self_link === true && column.isUniqueNotNull) {
+            return new KeyPseudoColumn(reference, column.uniqueNotNullKey, sourceObjectWrapper, name);
+         }
 
         // no path, scalar, asset
         if (column.type.name === "text" && column.annotations.contains(module._annotations.ASSET)) {
-            return new AssetPseudoColumn(reference, column, sourceObject);
+            return new AssetPseudoColumn(reference, column, sourceObjectWrapper);
         }
 
         // no path, scalar
-        return new ReferenceColumn(reference, [column], sourceObject, name, mainTuple);
+        return new ReferenceColumn(reference, [column], sourceObjectWrapper, name, mainTuple);
     }
 
-    // path, entity, outbound length 1,
-    if (isEntity && source.length === 2 && source[0].outbound) {
-        fk = getFK(source[0].outbound);
-        return new ForeignKeyPseudoColumn(reference, fk, sourceObject, name);
+    // path, entity, outbound length 1, (cannot have any filters)
+    if (sourceObjectWrapper.isEntityMode && !sourceObjectWrapper.isFiltered && sourceObjectWrapper.foreignKeyPathLength === 1 && !sourceObjectWrapper.firstForeignKeyNode.isInbound) {
+        fk = sourceObjectWrapper.firstForeignKeyNode.nodeObject;
+        return new ForeignKeyPseudoColumn(reference, fk, sourceObjectWrapper, name);
     }
 
-    // path, entity, inbound length 1
-    if (isEntity&& source.length === 2 && source[0].inbound) {
-        fk = getFK(source[0].inbound);
-        relatedRef = reference._generateRelatedReference(fk, mainTuple, false, sourceObject);
-        return new InboundForeignKeyPseudoColumn(reference, relatedRef, sourceObject, name);
+    // path, entity, inbound length 1 (it can have filter)
+    if (sourceObjectWrapper.isEntityMode && sourceObjectWrapper.foreignKeyPathLength === 1 && sourceObjectWrapper.firstForeignKeyNode.isInbound) {
+        fk = sourceObjectWrapper.firstForeignKeyNode.nodeObject;
+        relatedRef = reference._generateRelatedReference(fk, mainTuple, false, sourceObjectWrapper);
+        return new InboundForeignKeyPseudoColumn(reference, relatedRef, sourceObjectWrapper, name);
     }
 
-    // path, entity, inbound outbound p&b
-    if (isEntity && source.length === 3 && source[0].inbound && source[1].outbound) {
-        fk = getFK(source[0].inbound);
-        relatedRef = reference._generateRelatedReference(fk, mainTuple, true, sourceObject);
+    // path, entity, inbound outbound p&b (it can have filter)
+    if (sourceObjectWrapper.isEntityMode && sourceObjectWrapper.foreignKeyPathLength === 2 && sourceObjectWrapper.firstForeignKeyNode.isInbound && !sourceObjectWrapper.lastForeignKeyNode.isInbound) {
+        fk = sourceObjectWrapper.firstForeignKeyNode.nodeObject;
         if (fk._table.isPureBinaryAssociation) {
-            return new InboundForeignKeyPseudoColumn(reference, relatedRef, sourceObject, name);
+            relatedRef = reference._generateRelatedReference(fk, mainTuple, true, sourceObjectWrapper);
+            return new InboundForeignKeyPseudoColumn(reference, relatedRef, sourceObjectWrapper, name);
         }
     }
 
@@ -102,17 +90,30 @@ module._createPseudoColumn = function (reference, column, sourceObject, mainTupl
  * @constructor
  * @param {ERMrest.Reference} reference column's reference
  * @param {ERMrest.Column[]} baseCols List of columns that this reference-column will be created based on.
- * @param {object} sourceObject the whole column object
+ * @param {ERMrest.SourceObjectWrapper} sourceObjectWrapper the sourceObjectWrapper object (might be undefined)
  * @param {string} name        to avoid processing the name again, this might be undefined.
  * @param {ERMrest.Tuple} mainTuple   if the reference is referring to just one tuple, this is defined.
  * @desc
  * Constructor for ReferenceColumn. This class is a wrapper for {@link ERMrest.Column}.
  */
-function ReferenceColumn(reference, cols, sourceObject, name, mainTuple) {
+function ReferenceColumn(reference, cols, sourceObjectWrapper, name, mainTuple) {
     this._baseReference = reference;
     this._context = reference._context;
     this._baseCols = cols;
-    this.sourceObject =  isObjectAndNotNull(sourceObject) ? sourceObject : {};
+
+    this.sourceObjectWrapper = sourceObjectWrapper;
+    this.sourceObject = {};
+    if (isObjectAndNotNull(sourceObjectWrapper)) {
+        this.sourceObject = sourceObjectWrapper.sourceObject;
+
+        this.sourceObjectNodes = this.sourceObjectWrapper.sourceObjectNodes;
+
+        this.lastForeignKeyNode = this.sourceObjectWrapper.lastForeignKeyNode;
+
+        this.firstForeignKeyNode = this.sourceObjectWrapper.firstForeignKeyNode;
+
+        this.foreignKeyPathLength = this.sourceObjectWrapper.foreignKeyPathLength;
+    }
 
     /**
      * @type {boolean}
@@ -566,8 +567,8 @@ ReferenceColumn.prototype = {
     _getShowForeignKeyLink: function (context) {
         var self = this;
 
-        // not applicable
-        if (!Array.isArray(self.foreignKeys) || self.foreignKeys.length === 0) {
+        // has no foreign key path: not applicable
+        if (!isObjectAndNotNull(self.firstForeignKeyNode)) {
             return true;
         }
 
@@ -576,8 +577,10 @@ ReferenceColumn.prototype = {
           return self.sourceObject.display.show_foreign_key_link;
         }
 
+
+        // TODO shouldn't it be the last?
         // get it from the foreignkey (which might be derived from catalog, schema, or table)
-        return self.foreignKeys[0].obj.getDisplay(context).showForeignKeyLink;
+        return self.firstForeignKeyNode.nodeObject.getDisplay(context).showForeignKeyLink;
     },
 
     /**
@@ -724,14 +727,14 @@ ReferenceColumn.prototype = {
  * @memberof ERMrest
  * @param {ERMrest.Reference} reference  column's reference
  * @param {ERMrest.Column} column      the column that this pseudo-column is representing
- * @param {object} sourceObject the whole column object
+ * @param {ERMrest.SourceObjectWrapper} sourceObjectWrapper the sourceObjectWrapper object (might be undefined)
  * @param {string} name        to avoid processing the name again, this might be undefined.
  * @param {ERMrest.Tuple} mainTuple   if the reference is referring to just one tuple, this is defined.
  * @constructor
  * @class
  */
-function VirtualColumn(reference, sourceObject, name, mainTuple) {
-    VirtualColumn.superClass.call(this, reference, [], sourceObject, name, mainTuple);
+function VirtualColumn(reference, sourceObjectWrapper, name, mainTuple) {
+    VirtualColumn.superClass.call(this, reference, [], sourceObjectWrapper, name, mainTuple);
 
     this.isPseudo = true;
 
@@ -753,14 +756,14 @@ module._extends(VirtualColumn, ReferenceColumn);
  * @memberof ERMrest
  * @param {ERMrest.Reference} reference  column's reference
  * @param {ERMrest.Column} column      the column that this pseudo-column is representing
- * @param {object} sourceObject the whole column object
+ * @param {ERMrest.SourceObjectWrapper} sourceObjectWrapper the sourceObjectWrapper object (might be undefined)
  * @param {string} name        to avoid processing the name again, this might be undefined.
  * @param {ERMrest.Tuple} mainTuple   if the reference is referring to just one tuple, this is defined.
  * @constructor
  * @class
  */
-function PseudoColumn (reference, column, sourceObject, name, mainTuple) {
-    PseudoColumn.superClass.call(this, reference, [column], sourceObject, name, mainTuple);
+function PseudoColumn (reference, column, sourceObjectWrapper, name, mainTuple) {
+    PseudoColumn.superClass.call(this, reference, [column], sourceObjectWrapper, name, mainTuple);
 
     /**
      * @type {boolean}
@@ -770,9 +773,31 @@ function PseudoColumn (reference, column, sourceObject, name, mainTuple) {
 
     this.isPathColumn = true;
 
-    this.baseColumn = column;
+    /**
+     * If the pseudo-column is connected via a path to the table or not.
+     * @type {boolean}
+     */
+    this.hasPath = this.sourceObjectWrapper.hasPath;
 
-    this._name = name;
+    /**
+     * If the pseudoColumn is in entity mode
+     * @type {boolean}
+     */
+    this.isEntityMode = this.sourceObjectWrapper.isEntityMode;
+
+    /**
+     * If the pseudoColumn is referring to a unique row (the path is one to one)
+     * @type {boolean}
+     */
+    this.isUnique = this.sourceObjectWrapper.isUnique;
+
+    /**
+     * If aggregate function is defined on the column.
+     * @type {boolean}
+     */
+    this.hasAggregate = this.sourceObjectWrapper.hasAggregate;
+
+    this.baseColumn = column;
 
     this._currentTable = reference.table;
 
@@ -855,7 +880,7 @@ PseudoColumn.prototype.formatPresentation = function(data, context, templateVari
     }
 
     // in entity mode, return the foreignkey value
-    var pres = module._generateRowPresentation(this._lastForeignKey.obj.key, data, context, this._getShowForeignKeyLink(context));
+    var pres = module._generateRowPresentation(this.lastForeignKeyNode.nodeObject.key, data, context, this._getShowForeignKeyLink(context));
     return pres ? pres: nullValue;
 };
 
@@ -960,7 +985,8 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
     // will format a single value
     var getFormattedValue = function (val) {
         if (isRow) {
-            var pres = module._generateRowPresentation(self._key, val, context, self._getShowForeignKeyLink(context));
+            var pres = module._generateRowPresentation(self.key, val, context, self._getShowForeignKeyLink(context));
+
             return pres ? pres.unformatted : null;
         }
         if (val == null || val === "") {
@@ -1099,12 +1125,11 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
      // T:=pseudoColTable/path-from-pseudo-col-to-current/filters/project
      basePath = currTable + ":=" + module._fixedEncodeURIComponent(self.table.schema.name) + ":" + module._fixedEncodeURIComponent(self.table.name) + "/";
 
-    // add the join (path from pseudoColumn's table to current table)
-    for (i = self.foreignKeys.length - 1; i >= 0; i--) {
-        fk = self.foreignKeys[i];
-        if (i === 0) basePath += baseTable + ":=";
-        basePath += fk.obj.toString(fk.isInbound, true) + "/";
+    var pathToRoot = self.sourceObjectWrapper.toString(true, true, baseTable);
+    if (pathToRoot.length > 0) {
+        pathToRoot += "/";
     }
+    basePath += pathToRoot;
 
     // make sure just projection and base uri doesn't go over limit.
     if (basePath.length + projection.length >= module.URL_PATH_LENGTH_LIMIT) {
@@ -1229,7 +1254,7 @@ PseudoColumn.prototype._determineSortable = function () {
     if (this.isUnique) {
 
         if (this.isEntityMode) {
-            var fk = this._lastForeignKey.obj;
+            var fk = this.lastForeignKeyNode.nodeObject;
             var display = fk.getDisplay(this._context), useColumn = false, baseCol;
 
             // disable the sort
@@ -1262,15 +1287,6 @@ PseudoColumn.prototype._determineSortable = function () {
 PseudoColumn.prototype._determineInputDisabled = function () {
     throw new Error("can not use this type of column in entry mode.");
 };
-
-Object.defineProperty(PseudoColumn.prototype, "name", {
-    get: function () {
-        if (this._name === undefined) {
-            this._name = _generatePseudoColumnName(this.sourceObject, this._baseCols[0]).name;
-        }
-        return this._name;
-    }
-});
 
 /**
  * The tooltip that should be used for this column.
@@ -1415,46 +1431,6 @@ Object.defineProperty(PseudoColumn.prototype, "displayname", {
 });
 
 /**
- * If the pseudoColumn is referring to a unique row (the path is one to one)
- * @member {boolean} isUnique
- * @memberof ERMrest.PseudoColumn#
- */
-Object.defineProperty(PseudoColumn.prototype, "isUnique", {
-    get: function () {
-        if (this._isUnique === undefined) {
-            this._isUnique = !this.hasAggregate && (!this.hasPath || this.sourceObject.source.every(function (s, index, arr) {
-                return (index === arr.length - 1) || (("outbound" in s) && !("inbound" in s));
-            }));
-        }
-        return this._isUnique;
-    }
-});
-
-/**
- * If the pseudoColumn is in entity mode
- * @member {boolean} isEntityMode
- * @memberof ERMrest.PseudoColumn#
- */
-Object.defineProperty(PseudoColumn.prototype, "isEntityMode", {
-    get: function () {
-        if (this._isEntityMode === undefined) {
-            this._isEntityMode = false;
-
-            var currCol = this._baseCols[0], key;
-            if (this.hasPath && this.sourceObject.entity !== false && !currCol.nullok) {
-                key = currCol.memberOfKeys.filter(function (key) {
-                    return key.simple;
-                })[0];
-                this._isEntityMode = (key !== undefined);
-            }
-
-            this._key = this._isEntityMode ? key : null;
-        }
-        return this._isEntityMode;
-    }
-});
-
-/**
  * If the pseudoColumn is in entity mode will return the key that this column represents
  * @member {boolean} key
  * @memberof ERMrest.PseudoColumn#
@@ -1462,69 +1438,12 @@ Object.defineProperty(PseudoColumn.prototype, "isEntityMode", {
 Object.defineProperty(PseudoColumn.prototype, "key", {
     get: function () {
         if (this._key === undefined) {
-            // will populate the this._key
-            var isEntityMode = this.isEntityMode;
+            this._key = this.isEntityMode ? this.baseColumn.uniqueNotNullKey : null;
         }
         return this._key;
     }
 });
 
-/**
- * If the pseudo-column is connected via a path to the table or not.
- * @member {boolean} hasPath
- * @memberof ERMrest.PseudoColumn#
- */
-Object.defineProperty(PseudoColumn.prototype, "hasPath", {
-    get: function () {
-        if (this._hasPath === undefined) {
-            this._hasPath =_sourceHasPath(this.sourceObject.source);
-        }
-        return this._hasPath;
-    }
-});
-
-/**
- * List of foreignkeys on the path
- * @member {ERMrest.ForeignKeyRef[]} foreignKeys
- * @memberof ERMrest.PseudoColumn#
- */
-Object.defineProperty(PseudoColumn.prototype, "foreignKeys", {
-    get: function () {
-        if (this._foreignKeys === undefined) {
-            this._foreignKeys = _getFacetSourceForeignKeys(this.sourceObject.source, this._baseReference.table.schema.catalog.id, module._constraintNames);
-        }
-        return this._foreignKeys;
-    }
-});
-
-/**
- * The last foreignkey on the path
- * @private
- * @member {ERMrest.ForeignKeyRef} _lastForeignKey
- * @memberof ERMrest.PseudoColumn#
- */
-Object.defineProperty(PseudoColumn.prototype, "_lastForeignKey", {
-    get: function () {
-        if (this._lastForeignKey_cached === undefined) {
-            this._lastForeignKey_cached = _getFacetSourceLastForeignKey(this.sourceObject.source, this._baseReference.table.schema.catalog.id, module._constraintNames);
-        }
-        return this._lastForeignKey_cached;
-    }
-});
-
-/**
- * If aggregate function is defined on the column.
- * @member {boolean} hasAggregate
- * @memberof ERMrest.PseudoColumn#
- */
-Object.defineProperty(PseudoColumn.prototype, "hasAggregate", {
-    get: function () {
-        if (this._hasAggregate === undefined) {
-            this._hasAggregate = module._pseudoColAggregateFns.indexOf(this.sourceObject.aggregate) !== -1;
-        }
-        return this._hasAggregate;
-    }
-});
 Object.defineProperty(PseudoColumn.prototype, "aggregateFn", {
     get: function () {
         if (this._aggregateFn === undefined) {
@@ -1552,64 +1471,23 @@ Object.defineProperty(PseudoColumn.prototype, "reference", {
                 self._reference = _referenceCopy(self._baseReference);
             } else {
 
-                // attach the parent displayname
-                var firstFk = self.foreignKeys[0], parentDisplayname;
-                if (firstFk.isInbound && firstFk.obj.to_name) {
-                    parentDisplayname = {value: firstFk.obj.to_name, unformatted: firstFk.obj.to_name, isHTML: false};
-                } else if (!firstFk.isInbound && firstFk.obj.from_name) {
-                    parentDisplayname = {value: firstFk.obj.from_name, unformatted: firstFk.obj.from_name, isHTML: false};
-                } else {
-                    parentDisplayname = this._baseReference.table.displayname;
-                }
 
-                var source = [], i, fk, columns, noData = false;
-
-                // create the reverse path
-                for (i = self.foreignKeys.length -1; i >= 0; i--) {
-                    fk = self.foreignKeys[i];
-                    if (fk.isInbound) {
-                        source.push({"outbound": fk.obj.constraint_names[0]});
-                    } else {
-                        source.push({"inbound": fk.obj.constraint_names[0]});
-                    }
-                }
-
-
-                var filters = [], uri = self.table.uri;
+                var facet;
                 if (self._mainTuple) {
-                    // create the filters based on the given tuple and shortestkey of table
-                    // NOTE we have to use shortest key of table, fk.key columns might not
-                    // be valid because it could be outbound and therefore the relationship
-                    // won't be one-to-one.
-                    self._baseReference.table.shortestKey.forEach(function (col) {
-                        if (noData || (!self._mainTuple.data && !self._mainTuple.data[col.name])) {
-                            noData = true;
-                            return;
-                        }
-
-                        var filter = {
-                            "source": source.concat(col.name)
-                        };
-                        filter[module._facetFilterTypes.CHOICE] = [self._mainTuple.data[col.name]];
-                        filters.push(filter);
-                    });
+                    facet = self.sourceObjectWrapper.getReverseAsFacet(self._mainTuple, self._baseReference.table);
                 }
 
                 // if data didn't exist, we should traverse the path
-                // TODO I removed && !self._baseReference.hasJoin
-                // TODO test this!!!!!!!
-                if ((noData || filters.length == 0)) {
-                    uri = self._baseReference.location.compactUri + "/" + this.foreignKeys.map(function (fk) {
-                        return fk.obj.toString(!fk.isInbound, false);
-                    }).join("/");
+                var uri = self.table.uri;
+                if (!isObjectAndNotNull(facet)) {
+                    uri = self._baseReference.location.compactUri + "/" + self.sourceObjectWrapper.toString(false, false);
                 }
 
                 self._reference = new Reference(module.parse(uri), self.table.schema.catalog);
-                self._reference.parentDisplayname = parentDisplayname;
 
                 // make sure data exists
-                if (!noData && filters.length > 0) {
-                    self._reference.location.facets = {"and": filters};
+                if (isObjectAndNotNull(facet)) {
+                    self._reference.location.facets = facet;
                 }
             }
 
@@ -1657,9 +1535,9 @@ Object.defineProperty(PseudoColumn.prototype, "nullok", {
  * Constructor for ForeignKeyPseudoColumn. This class is a wrapper for {@link ERMrest.ForeignKeyRef}.
  * This class extends the {@link ERMrest.ReferenceColumn}
  */
-function ForeignKeyPseudoColumn (reference, fk, sourceObject, name) {
+function ForeignKeyPseudoColumn (reference, fk, sourceObjectWrapper, name) {
     // call the parent constructor
-    ForeignKeyPseudoColumn.superClass.call(this, reference, fk.colset.columns, sourceObject);
+    ForeignKeyPseudoColumn.superClass.call(this, reference, fk.colset.columns, sourceObjectWrapper, name);
 
     /**
      * @type {boolean}
@@ -1694,15 +1572,18 @@ function ForeignKeyPseudoColumn (reference, fk, sourceObject, name) {
      */
     this.foreignKey = fk;
 
-    // TODO for compatibility
-    this._lastForeignKey = {obj: fk, isInbound: false};
-    this.foreignKeys = [{obj: fk, isInbound: false}];
+    // NOTE added for compatibility
+    // I cannot simply create a sourceObjectWrapper because it needs a shortestkey of length one.
+    if (!isObjectAndNotNull(sourceObjectWrapper)) {
+        this.lastForeignKeyNode = new SourceObjectNode(fk, false, true);
+        this.firstForeignKeyNode = this.lastForeignKeyNode;
+        this.sourceObjectNodes = [this.lastForeignKeyNode];
+        this.foreignKeyPathLength = 1;
+    }
 
     this._constraintName = this.foreignKey._constraintName;
 
     this.table = this.foreignKey.key.table;
-
-    this._name = name;
 }
 // extend the prototype
 module._extends(ForeignKeyPseudoColumn, ReferenceColumn);
@@ -2144,9 +2025,9 @@ Object.defineProperty(ForeignKeyPseudoColumn.prototype, "compressedDataSource", 
  * Constructor for KeyPseudoColumn. This class is a wrapper for {@link ERMrest.Key}.
  * This class extends the {@link ERMrest.ReferenceColumn}
  */
-function KeyPseudoColumn (reference, key, sourceObject, name) {
+function KeyPseudoColumn (reference, key, sourceObjectWrapper, name) {
     // call the parent constructor
-    KeyPseudoColumn.superClass.call(this, reference, key.colset.columns, sourceObject);
+    KeyPseudoColumn.superClass.call(this, reference, key.colset.columns, sourceObjectWrapper, name);
 
     /**
      * @type {boolean}
@@ -2169,8 +2050,6 @@ function KeyPseudoColumn (reference, key, sourceObject, name) {
     this.table = this.key.table;
 
     this._constraintName = key._constraintName;
-
-    this._name = name;
 }
 // extend the prototype
 module._extends(KeyPseudoColumn, ReferenceColumn);
@@ -2345,9 +2224,9 @@ Object.defineProperty(KeyPseudoColumn.prototype, "display", {
  * This class is a wrapper for {@link ERMrest.Column} objects that have asset annotation.
  * This class extends the {@link ERMrest.ReferenceColumn}
  */
-function AssetPseudoColumn (reference, column, sourceObject) {
+function AssetPseudoColumn (reference, column, sourceObjectWrapper, name) {
     // call the parent constructor
-    AssetPseudoColumn.superClass.call(this, reference, [column], sourceObject);
+    AssetPseudoColumn.superClass.call(this, reference, [column], sourceObjectWrapper, name);
 
     this._baseCol = column;
 
@@ -2736,11 +2615,11 @@ Object.defineProperty(AssetPseudoColumn.prototype, "filenameExtFilter", {
  *
  * This class extends the {@link ERMrest.ReferenceColumn}
  */
-function InboundForeignKeyPseudoColumn (reference, relatedReference, sourceObject, name) {
+function InboundForeignKeyPseudoColumn (reference, relatedReference, sourceObjectWrapper, name) {
     var fk = relatedReference.origFKR;
 
     // call the parent constructor
-    InboundForeignKeyPseudoColumn.superClass.call(this, reference, fk.colset.columns, sourceObject);
+    InboundForeignKeyPseudoColumn.superClass.call(this, reference, fk.colset.columns, sourceObjectWrapper);
 
     /**
      * The reference that can be used to get the data for this pseudo-column
@@ -2803,7 +2682,7 @@ InboundForeignKeyPseudoColumn.prototype._determineInputDisabled = function () {
 Object.defineProperty(InboundForeignKeyPseudoColumn.prototype, "name", {
     get: function () {
         if (this._name === undefined) {
-            this._name = _generateForeignKeyName(this.foreignKey, true);
+            this._name = _sourceColumnHelpers.generateForeignKeyName(this.foreignKey, true);
         }
         return this._name;
     }
@@ -2870,25 +2749,23 @@ Object.defineProperty(InboundForeignKeyPseudoColumn.prototype, "compressedDataSo
  * Based on facets JSON structure we can have joins that result in facets
  * on columns that are not part of reference column.
  *
- * TODO This is just experimental, the arguments might change eventually.
  *
  * If the ReferenceColumn is not provided, then the FacetColumn is for reference
  *
  * @param {ERMrest.Reference} reference the reference that this FacetColumn blongs to.
  * @param {int} index The index of this FacetColumn in the list of facetColumns
- * @param {ERMrest.Column} column the column that filters will be based on.
- * @param {?object} facetObject The filter object that this FacetColumn will be created based on
+ * @param {ERMrest.SourceObjectWrapper} facetObject The filter object that this FacetColumn will be created based on
  * @param {?ERMrest.FacetFilter[]} filters Array of filters
  * @memberof ERMrest
  * @constructor
  */
-function FacetColumn (reference, index, column, facetObject, filters) {
+function FacetColumn (reference, index, facetObjectWrapper, filters) {
 
     /**
      * The column object that the filters are based on
      * @type {ERMrest.Column}
      */
-    this._column = column;
+    this._column = facetObjectWrapper.column;
 
     /**
      * The reference that this facet blongs to
@@ -2908,13 +2785,13 @@ function FacetColumn (reference, index, column, facetObject, filters) {
      * NOTE: we're not validating this data-source, we assume that this is valid.
      * @type {obj|string}
      */
-    this.dataSource = facetObject.source;
+    this.dataSource = facetObjectWrapper.sourceObject.source;
 
     /**
      * the compressed version of data source data-source path
      * @type {obj|string}
      */
-    this.compressedDataSource = _compressSource(facetObject.source);
+    this.compressedDataSource = _compressSource(this.dataSource);
 
     /**
      * Filters that are applied to this facet.
@@ -2924,12 +2801,46 @@ function FacetColumn (reference, index, column, facetObject, filters) {
     if (Array.isArray(filters)) {
         this.filters = filters;
     } else {
-        this._setFilters(facetObject);
+        this._setFilters(facetObjectWrapper.sourceObject);
     }
 
     // the whole filter object
     // NOTE: This might not include the filters
-    this._facetObject = facetObject;
+    this._facetObject = facetObjectWrapper.sourceObject;
+
+    this._facetObjectWrapper = facetObjectWrapper;
+
+    this.sourceObjectNodes = facetObjectWrapper.sourceObjectNodes;
+
+    this.lastForeignKeyNode = facetObjectWrapper.lastForeignKeyNode;
+
+    this.foreignKeyPathLength = facetObjectWrapper.foreignKeyPathLength;
+
+    /**
+     * Whether the source has path or not
+     * @type {Boolean}
+     */
+    this.hasPath = facetObjectWrapper.hasPath;
+
+    /**
+     * Whether the source is going to have path when sending the request to ermrest
+     * The path that is defined on the facet might be different from the one that
+     * we are going to use to talk with ermrest. We might optmize the path.
+     * Facets with only one hop where the column used in foreignkey is the same column for faceting, and is not nullable
+     * can be optmized by completely ignoring the foreignkey path and just doing a value check on main table.
+     *
+     * @type {Boolean}
+     */
+    this.ermrestHasPath = facetObjectWrapper.ermrestHasPath;
+
+    /**
+     * Returns true if the source is on a key column.
+     * If facetObject['entity'] is defined as false, it will return false,
+     * otherwise it will true if filter is based on key.
+     *
+     * @type {Boolean}
+     */
+    this.isEntityMode = facetObjectWrapper.isEntityMode;
 }
 FacetColumn.prototype = {
     constructor: FacetColumn,
@@ -2945,54 +2856,6 @@ FacetColumn.prototype = {
             this._isOpen = (this.filters.length > 0) ? true : (open === true);
         }
         return this._isOpen;
-    },
-
-    get foreignKeys() {
-        if (this._foreignKeys === undefined) {
-            this._foreignKeys = _getFacetSourceForeignKeys(this.dataSource, this._column.table.schema.catalog.id, module._constraintNames);
-        }
-        return this._foreignKeys;
-    },
-
-    // returns the last foreignkey object in the path
-    get _lastForeignKey() {
-        if (this._lastForeignKey_cached === undefined) {
-            this._lastForeignKey_cached = _getFacetSourceLastForeignKey(this.dataSource, this._column.table.schema.catalog.id, module._constraintNames);
-        }
-        return this._lastForeignKey_cached;
-    },
-
-    /**
-     * Whether the source has path or not
-     * @type {Boolean}
-     */
-    get hasPath() {
-        if (this._hasPath === undefined) {
-            this._hasPath =_sourceHasPath(this.dataSource);
-        }
-        return this._hasPath;
-    },
-
-    /**
-     * Whether the source is going to have path when sending the request to ermrest
-     * The path that is defined on the facet might be different from the one that
-     * we are going to use to talk with ermrest. We might optmize the path.
-     * Facets with only one hop where the column used in foreignkey is the same column for faceting, and is not nullable
-     * can be optmized by completely ignoring the foreignkey path and just doing a value check on main table.
-     *
-     * @type {Boolean}
-     */
-    get ermrestHasPath () {
-        if (this._ermrestHasPath === undefined) {
-            var isOneToOneFK = false, self = this;
-            if (this.foreignKeys.length === 1) {
-                var fk = self.foreignKeys[0].obj, isInbound = self.foreignKeys[0].isInbound;
-                isOneToOneFK = !self._column.nullok && fk.simple && ( (isInbound && self._column === fk.colset.columns[0]) || (!isInbound && self._column === fk.key.colset.columns[0]) ) ;
-            }
-
-            this._ermrestHasPath = this.foreignKeys.length > 0 && !isOneToOneFK;
-        }
-        return this._ermrestHasPath;
     },
 
     /**
@@ -3021,9 +2884,7 @@ FacetColumn.prototype = {
 
                 //default facet for unique not null integer/serial should be choice (not range)
                 if (typename.startsWith("serial") || typename.startsWith("int")) {
-                    return column.nullok || column.memberOfKeys.filter(function (key) {
-                        return key.simple;
-                    }).length === 0;
+                    return !column.isUniqueNotNull;
                 }
 
                 return typename.startsWith("float") || typename.startsWith("date") || typename.startsWith("timestamp") || typename.startsWith("numeric");
@@ -3068,30 +2929,6 @@ FacetColumn.prototype = {
     },
 
     /**
-     * Returns true if the source is on a key column.
-     * If facetObject['entity'] is defined as false, it will return false,
-     * otherwise it will true if filter is based on key.
-     *
-     * @type {Boolean}
-     */
-    get isEntityMode() {
-        if (this._isEntityMode === undefined) {
-            var currCol = this._column;
-            if (this._lastForeignKey === null) {
-                // if from the same table, don't use entity picker
-                this._isEntityMode = false;
-            } else {
-                var basedOnKey = !currCol.nullok && currCol.memberOfKeys.filter(function (key) {
-                    return key.simple;
-                }).length > 0;
-
-                this._isEntityMode = (this._facetObject.entity === false) ? false : basedOnKey;
-            }
-        }
-        return this._isEntityMode;
-    },
-
-    /**
      * Whether the facet is defining an all outbound path that the columns used
      * in the path are all not-null.
      * NOTE even if the column.nullok is false, ermrest could return null value for it
@@ -3106,8 +2943,9 @@ FacetColumn.prototype = {
                 });
             };
 
-            this._isAllOutboundNotNull = this.foreignKeys.length > 0 && this.foreignKeys.every(function (fk) {
-                return !fk.isInbound && colsetNotNull(fk.obj.colset) && colsetNotNull(fk.obj.key.colset);
+            // TODO what about path prefix??
+            this._isAllOutboundNotNull = this.sourceObjectNodes.length > 0 && this.sourceObjectNodes.every(function (fk) {
+                return !fk.isForeignKey || (!fk.isInbound && colsetNotNull(fk.nodeObject.colset) && colsetNotNull(fk.nodeObject.key.colset));
             });
         }
         return this._isAllOutboundNotNull;
@@ -3243,7 +3081,7 @@ FacetColumn.prototype = {
                 //
                 // As I mentioned this is hacky, so we should eventually find a way around this.
                 cfacet = module._simpleDeepCopy(loc.customFacets.decoded);
-                if (cfacet.ermrest_path && self.foreignKeys.length > 0) {
+                if (cfacet.ermrest_path && self.sourceObjectNodes.length > 0) {
                     // switch the alias names, the cfacet is originally written with the assumption of
                     // the main table having "M" alias. So we just have to swap the aliases.
                     var alias = "T" + (newLoc.hasJoin ? newLoc.pathParts.length : "");
@@ -3253,13 +3091,11 @@ FacetColumn.prototype = {
             }
 
             // create a path from reference to this facetColumn
-            this.foreignKeys.forEach(function (fkObj) {
-                pathFromSource.push(fkObj.obj.toString(!fkObj.isInbound, false));
-            });
+            pathFromSource = self._facetObjectWrapper.toString(false, false);
 
             var uri = newLoc.compactUri;
             if (pathFromSource.length > 0) {
-                uri += "/" + pathFromSource.join("/");
+                uri += "/" + pathFromSource;
             }
 
             this._sourceReference = new Reference(module.parse(uri), table.schema.catalog);
@@ -3291,8 +3127,7 @@ FacetColumn.prototype = {
                     };
                 }
 
-                var lastFK = self._lastForeignKey ? self._lastForeignKey.obj : null;
-                var lastFKIsInbound = self._lastForeignKey ? self._lastForeignKey.isInbound : null;
+                var lastFK = self.lastForeignKeyNode ? self.lastForeignKeyNode.nodeObject : null;
 
                 // if is part of the main table, just return the column's displayname
                 if (lastFK === null) {
@@ -3301,6 +3136,7 @@ FacetColumn.prototype = {
 
                 // Otherwise
                 var value, unformatted, isHTML = false;
+                var lastFKIsInbound = self.lastForeignKeyNode.isInbound;
 
                 // use from_name of the last fk if it's inbound
                 if (lastFKIsInbound && lastFK.from_name !== "") {
@@ -3401,7 +3237,7 @@ FacetColumn.prototype = {
                 var versioned = self.reference.table.schema.catalog.version;
 
                 // G1 / G4
-                if (self.foreignKeys.length < 1) {
+                if (self.foreignKeyPathLength === 0) {
                     return !versioned && !self._column.nullok && self._column.rights.select === true;
                 }
 
@@ -3454,8 +3290,8 @@ FacetColumn.prototype = {
 
                 var versioned = self.reference.table.schema.catalog.version;
 
-                //if from the same column, don't show if it's not-null
-                if (self.foreignKeys.length === 0) {
+                //if from the same table, don't show if it's not-null
+                if (self._facetObjectWrapper.foreignKeyPathLength === 0) {
                     return !versioned && !self._column.nullok && self._column.rights.select === true;
                 }
 
@@ -4077,9 +3913,9 @@ FacetColumn.prototype = {
         var newFc;
         this.reference.facetColumns.forEach(function (fc) {
             if (fc.index !== self.index) {
-                newFc = new FacetColumn(newReference, fc.index, fc._column, fc._facetObject, fc.filters.slice());
+                newFc = new FacetColumn(newReference, fc.index, fc._facetObjectWrapper, fc.filters.slice());
             } else {
-                newFc = new FacetColumn(newReference, self.index, self._column, self._facetObject, filters);
+                newFc = new FacetColumn(newReference, self.index, self._facetObjectWrapper, filters);
             }
 
             newReference._facetColumns.push(newFc);

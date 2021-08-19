@@ -1,4 +1,4 @@
-    
+
     module.configure = configure;
 
     module.ermrestFactory = {
@@ -9,10 +9,10 @@
 
     /**
      * Angular $http service object
-     * @type {Object}
-     * @private
      * NOTE: This should not be used. This is the base _http module without our wrapper from http.js
      * When making requests using http, use server.http
+     * @type {Object}
+     * @private
      */
     module._http = null;
 
@@ -276,8 +276,8 @@
 
         /**
          * For internal use only. A reference to the server instance.
-         * @private
          * @type {ERMrest.Server}
+         * @private
          */
         this.server = server;
 
@@ -323,13 +323,12 @@
         },
 
         /**
-         * @private
-         * @ignore
          * Can be used to send a request and get the catalog object from server.
          * @param {Object} contextHeaderParams - properties to log under the dcctx header
          * @param {Boolean} ignoreCache - whether we should ignore the cach and fetch new object
          * @return {Promise} a promise that returns the catalog json if resolved or
          *      {@link ERMrest.ERMrestError} if rejected
+         * @private
          */
         _get: function (contextHeaderParams, ignoreCache) {
             var self = this, defer = module._q.defer(), headers = {};
@@ -385,9 +384,8 @@
         },
 
         /**
-         * @private
-         * @ignore
          * fetch the schemas of the catalog and create the appropriate objects
+         * @private
          */
         _fetchSchema: function () {
             var defer = module._q.defer(), self = this;
@@ -426,14 +424,16 @@
                     }
                 }
 
-                // find alternative tables
+                // find alternative tables and populate source definitions
                 // requires foreign keys built
+                // and source definitions need to be populated beforehand
                 for (s = 0; s < schemaNames.length; s++) {
                     schema = self.schemas.get(schemaNames[s]);
                     tables = schema.tables.names();
                     for (t = 0; t < tables.length; t++) {
                         table = schema.tables.get(tables[t]);
                         table._findAlternatives();
+                        // table._populateSourceDefinitions();
                     }
                 }
 
@@ -447,10 +447,10 @@
 
         /**
          *
-         * @private
          * @return {Promise} a promise that returns json object or catalog schema if resolved or
          *     {@link ERMrest.TimedOutError}, {@link ERMrest.InternalServerError}, {@link ERMrest.ServiceUnavailableError},
          *     {@link ERMrest.NotFoundError}, {@link ERMrest.ForbiddenError} or {@link ERMrest.UnauthorizedError} if rejected
+         * @private
          */
         _introspect: function (dontFetchSchema) {
             var defer = module._q.defer(), self = this;
@@ -1028,6 +1028,33 @@
             }
         }
 
+        var _getHierarchicalDisplayAnnotationValue = function (table, annotKey) {
+            var hierarchy = [table], annot, value = -1;
+            var displayAnnot = module._annotations.DISPLAY;
+
+            // hierarchy should be an array of [table, schema, catalog]
+            hierarchy.push(table.schema, table.schema.catalog);
+
+            for (var i = 0; i < hierarchy.length; i++) {
+                // if the display annotation is not defined, skip this model element
+                if (!hierarchy[i].annotations.contains(displayAnnot)) continue;
+
+                annot = hierarchy[i].annotations.get(displayAnnot);
+                if (annot && annot.content && typeof annot.content[annotKey] === "boolean") {
+                    value = annot.content[annotKey];
+                    if (value !== -1) break;
+                }
+            }
+
+            // no match was found, turn off the feature
+            if (value === -1) value = false;
+            return value;
+        };
+        /**
+         * @type {boolean}
+         */
+        this._showSavedQuery = _getHierarchicalDisplayAnnotationValue(this, "show_saved_query");
+
         /**
          * @desc The type of this table
          * @type {string}
@@ -1292,28 +1319,23 @@
          * Returns an object with
          * - fkeys: array of ForeignKeyRef objects
          * - columns: Array of columns
-         * - sources: hash-map of name to an object that has
-         *   - sourceObject
-         *   - column
-         *   - hasPath
-         *   - hasInbound
-         *   - isEntity
+         * - sources: hash-map of name to the SourceObjectWrapper object.
          * - sourceMapping: hashname to all the names
          * @type {Object}
          */
         get sourceDefinitions() {
             if (this._sourceDefinitions === undefined) {
-                this._sourceDefinitions = this._getSourceDefinitions();
+                this._populateSourceDefinitions();
             }
             return this._sourceDefinitions;
          },
 
-         _getSourceDefinitions: function () {
+         _populateSourceDefinitions: function () {
              var self = this;
              var sd = module._annotations.SOURCE_DEFINITIONS;
              var hasAnnot = self.annotations.contains(sd);
              var res = {columns: [], fkeys: [], sources: {}, sourceMapping: {}};
-             var addedCols = {}, addedFks = {};
+             var addedCols = {}, addedFks = {}, processedSources = {};
              var allColumns = self.columns.all(),
                  allForeignKeys = self.foreignKeys.all();
              var consNames = module._constraintNames;
@@ -1366,10 +1388,103 @@
                  return resultList;
              };
 
+             var addSourceDef = function (key, keysThatDependOnThis) {
+                var message = "source definition, table =" + self.name + ", name=" + key;
+
+                // detec circular dependency
+                keysThatDependOnThis = Array.isArray(keysThatDependOnThis) ? keysThatDependOnThis : [];
+                if (keysThatDependOnThis.indexOf(key) != -1) {
+                    module._log.info(message + ": " + " circular dependency detected.");
+                    return false;
+                }
+
+                // key must be non empty and string
+                if (!isStringAndNotEmpty(key)) {
+                    module._log.info(message + ": " + " `sourcekey` must be string and non-empty.");
+                    return false;
+                }
+
+                // already processed
+                if (key in processedSources) {
+                    return processedSources[key];
+                }
+
+                // key is not in the list of definitions
+                if (!(key in annot.sources)) {
+                    module._log.info(message + ": " + " `sourcekey` didn't exist.");
+                    return false;
+                }
+            
+                // if the key is special
+                if (Object.keys(module._specialSourceDefinitions).indexOf(key) !== -1) {
+                    module._log.info(message + ": " + " `sourcekey` cannot be any of the special keys.");
+                    return false;
+                }
+
+                // why? make sure key is not the same as table columns
+                if (self.columns.has(key)) {
+                    module._log.info(message +  ": `sourcekey` cannot be any of the table column names.");
+                    return false;
+                }
+
+                // why? make sure key doesn't start with $
+                if (key.startsWith("$")) {
+                    module._log.info(message + ": `sourcekey` cannot start with $");
+                    return false;
+                }
+
+                var sourceDef = annot.sources[key], pSource, hasPrefix;
+                try {
+                    // if it has prefix, we have to make sure the prefix is processed beforehand
+                    hasPrefix = typeof sourceDef === "object" && Array.isArray(sourceDef.source) &&
+                                sourceDef.source.length > 1 && ("sourcekey" in sourceDef.source[0]);
+                    
+                    if (hasPrefix) {
+                        // NOTE limitation because of other parts of the code which we might want 
+                        //      to allow later
+                        if (sourceDef.source.length < 3) {
+                            module._log.info(message + ": " + "sourcekey (path prefix) can only be used when there's a path after it.");
+                            return false;
+                        }
+
+                        // keep track of dependencies for cycle detection
+                        keysThatDependOnThis.push(key);
+
+                        // make sure we've processed the prefix
+                        var valid = addSourceDef(sourceDef.source[0].sourcekey, keysThatDependOnThis);
+                        processedSources[key] = valid;
+                        if (!valid) {
+                            module._log.info(message + ": " + "given sourcekey (path prefix) is invalid.");
+                            return false;
+                        }
+                    }
+
+                    // NOTE we're passing the list of processed sources 
+                    //      because some of them might have prefix and need that
+                    pSource = new SourceObjectWrapper(sourceDef, self, consNames, false, res.sources);
+                } catch (exp) {
+                    module._log.info(message + ": " + exp.message);
+                    return false;
+                }
+
+                // attach to sources
+                res.sources[key] = pSource;
+
+                // attach to sourceMapping
+                if (!(pSource.name in res.sourceMapping)) {
+                    res.sourceMapping[pSource.name] = [];
+                }
+                res.sourceMapping[pSource.name].push(key);
+
+                processedSources[key] = true;
+                return true;
+             };
+
              if (!hasAnnot) {
                  res.columns = allColumns;
                  res.fkeys = allForeignKeys;
-                 return res;
+                 self._sourceDefinitions = res;
+                 return;
              }
 
              var annot = self.annotations.get(sd).content;
@@ -1388,51 +1503,16 @@
              if (annot.sources && typeof annot.sources === "object") {
                  for (var key in annot.sources) {
                      if (!annot.sources.hasOwnProperty(key)) continue;
-
-                     // if the key is special
-                     if (Object.keys(module._specialSourceDefinitions).indexOf(key) !== -1) continue;
-
-                     var message = "source definition, table =" + self.name + ", name=" + key;
-
-                     // TODO why? make sure key is not the same as table columns
-                     if (self.columns.has(key)) {
-                         module._log.info(message +  ": cannot use the table column names.");
-                         continue;
-                     }
-
-                     // TODO why? make sure key doesn't start with $
-                     if (key.startsWith("$")) {
-                         module._log.info(message + ": key name cannot start with $");
-                         continue;
-                     }
-
-                     var pSource = _processSourceObject(annot.sources[key], self, consNames, message);
-                     if (pSource.error) {
-                         module._log.info(pSource.message);
-                         continue;
-                     }
-
-                     // attach to sources
-                     res.sources[key] = pSource;
-
-                     // attach to sourceMapping
-                     if (!(pSource.name in res.sourceMapping)) {
-                         res.sourceMapping[pSource.name] = [];
-                     }
-                     res.sourceMapping[pSource.name].push(key);
+                     if (key in processedSources) continue;
+                     processedSources[key] = addSourceDef(key);
                  }
              }
 
-             return res;
+             self._sourceDefinitions = res;
          },
 
          /**
-          * Returns an array of objects with the followin attributes:
-          *   - sourceObject
-          *   - column
-          *   - hasPath
-          *   - hasInbound
-          *   - isEntity
+          * Returns an array of SourceObjectWrapper objects.
           * @type {Object[]|false}
           */
          get searchSourceDefinition() {
@@ -1472,14 +1552,17 @@
 
                      var res = [];
                      sbDef[orOperator].forEach(function (src, index) {
-                         // process each individual object
-                         var pSource = _processSourceObject(src, self, consNames, message + ", index=" + index);
-                         if (pSource.error) {
-                             module._log.info(pSource.message);
+                         var pSource;
+                         try {
+                             // process each individual object
+                             pSource = new SourceObjectWrapper(src, self, consNames);
+                         } catch (exp) {
+                             module._log.info(message + ", index=" + index + ":" + exp.message);
                              return;
                          }
+
                          if (pSource.hasPath) {
-                             module._log.info(message + ": only table columns are accepted.");
+                             module._log.info(message + ", index=" + index + ": only table columns are accepted.");
                              return;
                          }
 
@@ -2405,9 +2488,6 @@
     /**
      * Constructs a Column.
      *
-     * TODO: The Column will need to change. We need to be able to use the
-     * column in the context the new {@link ERMrest.Reference+columns} where
-     * a Column _may not_ be a part of a Table.
      * @memberof ERMrest
      * @constructor
      * @param {ERMrest.Table} table the table object.
@@ -2449,9 +2529,6 @@
             }
 
             var display = this.getDisplay(context);
-            var isPartOfSimpleKey = !self.nullok && self.memberOfKeys.filter(function (key) {
-                return key.simple;
-            }).length > 0;
             var isPartOfSimpleFk = self.memberOfForeignKeys.filter(function (fk) {
                 return fk.simple;
             }).length > 0;
@@ -2473,7 +2550,7 @@
 
                 // if int/serial and part of simple key or simple fk we don't want to format the value
                 if ((self.type.name.indexOf("int") === 0 || self.type.name.indexOf("serial") === 0) &&
-                    (isPartOfSimpleKey || isPartOfSimpleFk)) {
+                    (self.isUniqueNotNull || isPartOfSimpleFk)) {
                     return v.toString();
                 }
 
@@ -2951,7 +3028,35 @@
             }
 
             return [{column: this}];
-        }
+        },
+
+        /**
+         * Whether this column is unique (part of a simple key) and not-null
+         * @type {Boolean}
+         */
+        get isUniqueNotNull () {
+            if (this._isUniqueNotNull === undefined) {
+                var key = this.memberOfKeys.filter(function (key) {
+                    return key.simple;
+                })[0];
+                this._isUniqueNotNull = !this.nullok && (key !== undefined);
+                this._uniqueNotNullKey = key ? key : null;
+            }
+            return this._isUniqueNotNull;
+        },
+
+        /**
+         * If the column is unique and not-null, will return the simple key
+         * that is made of this column. Otherwise it will return `null`
+         * @type {ERMrest.Key}
+         */
+        get uniqueNotNullKey () {
+            if (this._uniqueNotNullKey === undefined) {
+                // will populate the _uniqueNotNullKey
+                var dummy = this.isUniqueNotNull;
+            }
+            return this._uniqueNotNullKey;
+         }
     };
 
     /**
@@ -3249,7 +3354,7 @@
                 if (this.simple) {
                     obj = {source: this.colset.columns[0].name, self_link: true};
                 }
-                this._name = module.generatePseudoColumnHashName(obj);
+                this._name = _sourceColumnHelpers.generateSourceObjectHashName(obj, false);
             }
             return this._name;
         },
@@ -3596,7 +3701,7 @@
                     // valid fk
                     fk = this._table.schema.catalog.constraintByNamePair(orders[i], module._constraintTypes.FOREIGN_KEY);
                     if (fk !== null && this._foreignKeys.indexOf(fk.object) !== -1) {
-                        colName = _generateForeignKeyName(fk.object, true);
+                        colName = _sourceColumnHelpers.generateForeignKeyName(fk.object, true);
                         addToList({foreignKey: fk.object, name: colName});
                     } else {
                         logErr(true, wm.INVALID_FK, i);
@@ -3604,26 +3709,31 @@
                 }
                 // path
                 else if (typeof orders[i] === "object") {
+                    var wrapper;
                     if (orders[i].source || orders[i].sourcekey) {
                         if (orders[i].source) {
-                            col = _getSourceColumn(orders[i].source, this._table, module._constraintNames);
+                            try {
+                                wrapper = new SourceObjectWrapper(orders[i], this._table, module._constraintNames);
+                            } catch (exp) {
+                                // we might want to show a better error message later.
+                                wrapper = null;
+                            }
                         } else {
-                            def = definitions.sources[orders[i].sourcekey];
-                            col = null;
+                            var def = definitions.sources[orders[i].sourcekey];
                             if (def) {
-                                col = def.column;
-                                // copy the elements that are defined in the source def but not the one already defined
-                                module._shallowCopyExtras(orders[i], def.sourceObject, module._sourceDefinitionAttributes);
+                                wrapper = def.clone(orders[i], this._table, module._constraintNames);
                             }
                         }
 
                         // invalid if:
                         // 1. invalid source and not a path.
-                        // 2. not entity mode
-                        // 3. has aggregate
-                        invalid = logErr(!col || !_sourceHasPath(orders[i].source), wm.INVALID_FK, i) ||
-                                  logErr(!_isSourceObjectEntityMode(orders[i], col), wm.SCALAR_NOT_ALLOWED) ||
-                                  logErr(orders[i].aggregate, wm.AGG_NOT_ALLOWED);
+                        // 2. no inbound
+                        // 3. not entity mode
+                        // 4. has aggregate
+                        invalid = logErr(!wrapper || !wrapper.hasPath, wm.INVALID_FK, i) ||
+                                  logErr(!wrapper.hasInbound, wm.INVALID_FK_NO_INBOUND, i) ||
+                                  logErr(!wrapper.isEntityMode, wm.SCALAR_NOT_ALLOWED) ||
+                                  logErr(wrapper.hasAggregate, wm.AGG_NOT_ALLOWED);
 
                     } else {
                         invalid = true;
@@ -3631,8 +3741,7 @@
                     }
 
                     if (!invalid) {
-                        colName = _generatePseudoColumnName(orders[i], col).name;
-                        addToList({isPath: true, object: orders[i], column: col, name: colName});
+                        addToList({isPath: true, sourceObjectWrapper: wrapper, name: wrapper.name});
                     }
                 }
             }
@@ -3928,7 +4037,7 @@
          */
         get name () {
             if (this._name === undefined) {
-                this._name = _generateForeignKeyName(this);
+                this._name = _sourceColumnHelpers.generateForeignKeyName(this);
             }
             return this._name;
         },
@@ -4071,7 +4180,7 @@
         /**
          * The column name of the base. This goes to the first level which
          * will be a type understandable by database.
-         * @type {string} type name
+         * @type {string}
          */
         get rootName() {
             if (this._rootName === undefined) {

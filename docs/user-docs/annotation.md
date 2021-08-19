@@ -98,6 +98,8 @@ Supported JSON payload patterns:
 - `{`... `"show_null":` `{` _context_ `:` _nshow_ `,` ... `}`: How to display NULL data values.
 - `{`... `"show_key_link":` `{` _context_ `:` _keylink_ `,` ... `}`: Whether default display of keys (sel link) should include link to the row.
 - `{`... `"show_foreign_key_link":` `{` _context_ `:` _fklink_ `,` ... `}`: Whether default display of foreign keys should include link to the row.
+- `{`... `"hide_row_count":` `{` _context_ `:` _rowcount_ `,` ... `}`: Whether we should display the total row count. Since the request to fetch total row count is expensive, you can use this to signal to client to skip the request (and therefore do not display it to users.)
+- `{`... `"show_saved_query":` _savedquery_ ...`}`: Whether we want to display the saved query UI features or not. By default, this feature is turned off (set to false).
 
 Supported JSON _ccomment_ patterns:
 
@@ -140,6 +142,16 @@ Supported JSON _keylink_ patterns:
 - `true`: Present the key (self link) values with a link to the referred row.
 - `false`: Present the key (self link) values without adding extra links.
 
+Supported JSON _rowcount_ patterns:
+
+- `true`: Don't display the total row count.
+- `false`: Display the total row count to users.
+
+Supported JSON _savedquery_ patterns:
+
+- `true`: Display the saved query UI features.
+- `false`: Don't display the saved query UI features.
+
 Supported JSON _context_ patterns:
 - See [Context Names](#context-names) section for the list of supported JSON _context_ patterns.
 
@@ -175,6 +187,9 @@ Supported JSON _context_ patterns:
         }
     }
     ```
+- The `"show_saved_query"` settings applies to the annotated model element and is also the default for any nested element.
+  - The annotation is allowed on catalog in order to set the default for all schemas in the catalog.
+  - The annotation is allowed on schemas in order to set the default for all tables in the schema.
 
 This annotation provides an override guidance for Chaise applications using a hierarchical scoping mode:
 
@@ -339,7 +354,7 @@ Supported _columnentry_ patterns:
 - `[` _schemaname_ `,` _constraintname_ `]`: A two-element list of string literal _schemaname_ and _constraintname_ identifies a constituent foreign key of the table. The value of the external entity referenced by the foreign key SHOULD be presented, possibly with representation guided by other annotations or heuristics. If the foreign key is representing an inbound relationship with the current table, it SHOULD be presented in a tabular format since it can represent multiple rows of data.
 - `[` _schemaname_ `,` _constraintname_ `]`: A two-element list of string literal _schemaname_ and _constraintname_ identifies a constituent key of the table. The defined display of the key SHOULD be presented, with a link to the current displayed row of data. It will be served as a self link.
 - `{ "sourcekey": ` _sourcekey_ `}`: Defines a pseudo-column based on the given _sourcekey_. For more information please refer to [pseudo-column document](pseudo-columns.md).
-- `{ "source": ` _sourceentry_ `}`:  Defines a pseudo-column based on the given _sourceentry_. For detailed explanation and examples please refer to [here](pseudo-columns.md#examples). Other optional attributes that this JSON document can have are:
+- `{ "source": ` _sourceentry_ `}`:  Defines a pseudo-column based on the given _sourceentry_. For detailed explanation and examples please refer to [here](pseudo-columns.md). Other optional attributes that this JSON document can have are:
   - `markdown_name`: The markdown to use in place of the default heuristics for title of column.
   - `"hide_column_header": true`: Hide the column header (and still show the value). This is only supported in `detailed` context.
   - `display`: The display settings for generating the column presentation value. Please refer to [pseudo-columns display document](pseudo-column-display.md) for more information. The available options are:
@@ -380,8 +395,13 @@ Supported _sourceentry_ pattern:
 - _columnname_: : A string literal. _columnname_ identifies a constituent column of the table.
 - _path_: An array of _foreign key path_ that ends with a _columnname_ that will be projected. _foreign key path_ is in the following format:
 
-        "`{` _direction_ `:[` *schema name*`,` *constraint name* `]}` "
+        "`{` _direction_ `:[` <schema-name> `,` <constraint-name> `]}` "
     Where _direction_ is either `inbound`, or `outbound`.
+- *path_w_prefix*: An array that starts with a _sourcekey prefix_ and MUST have one or more _foreign key path_s and end with a _columnname_. _sourcekey prefix_ is in the following format:
+
+        "`{"sourcekey":` <source-key-name> `}` "
+    Where <source-key-name> is a string literal that refers to any of the defined sources in [`source-definitions` annotations](#tag-2019-source-definitions).
+
 
 Supported _sourcekey_ pattern in here:
   - A string literal that refers to any of the defined sources in [`source-definitions` annotations](#tag-2019-source-definitions).
@@ -715,8 +735,12 @@ Supported _fkeylist_ patterns:
 Supported _sourceentry_ pattern in here:
   - _path_: An array of _foreign key path_ that ends with a _columnname_ that will be projected. _foreign key path_ is in the following format:
 
-          "`{` _direction_ `:[` *schema name*`,` *constraint name* `]}` "
-      Where _direction_ is either `inbound`, or `outbound`.
+        "`{` _direction_ `:[` <schema-name>,` <constraint-name> `]}` "
+    Where _direction_ is either `inbound`, or `outbound`.
+- *path_w_prefix*: An array that starts with a _sourcekey prefix_ and MUST have one or more _foreign key path_s and end with a _columnname_. _sourcekey prefix_ is in the following format:
+
+        "`{"sourcekey":` <source-key-name> `}` "
+    Where <source-key-name> is a string literal that refers to any of the defined sources in [`source-definitions` annotations](#tag-2019-source-definitions).
 
 Supported _sourcekey_ pattern in here:
   - A string literal that refers to any of the defined sources in [`source-definitions` annotations](#tag-2019-source-definitions).
@@ -934,6 +958,17 @@ Example:
             "entity": true,
             "aggregate": "array_d"
         },
+        "source-2": {
+            "source": "column",
+            "markdown_name": "Column displayname"
+        },
+        "source-3": {
+            "source": [
+                {"sourcekey": "source-1"},
+                {"outbound": ["schema", "fk2"]},
+                "RID"
+            ]
+        },
         "search-box": {
             "or": [
                 {"source": "column1", "markdown_name": "another name"},
@@ -970,8 +1005,12 @@ Supported _sourceentry_ pattern:
   - _columnname_: : A string literal. _columnname_ identifies a constituent column of the table.
   - _path_: An array of _foreign key path_ that ends with a _columnname_ that will be projected. _foreign key path_ is in the following format:
 
-          "`{` _direction_ `:[` *schema name*`,` *constraint name* `]}` "
-      Where _direction_ is either `inbound`, or `outbound`.
+        "`{` _direction_ `:[` <schema-name> `,` <constraint-name> `]}` "
+    Where _direction_ is either `inbound`, or `outbound`.
+- *path_w_prefix*: An array that starts with a _sourcekey prefix_ and MUST have one or more _foreign key path_s and end with a _columnname_. _sourcekey prefix_ is in the following format:
+
+        "`{"sourcekey":` <source-key-name> `}` "
+    Where <source-key-name> is a string literal that refers to any of the source definitions.
 
 Supported _searchcolumn_ pattern:
  - `{ "source":` _columnname_  `}`: Defines a search column based on the given string literal of _columnname_. Other optional attributes that this JSON document can have are:
@@ -1007,7 +1046,7 @@ Supported _jsonld_ payload pattern:
 - JSON-LD keywords: 
     - `@context`: It is a schema for your data, not only defining the property datatypes but also the classes of json resources. Default applied if none exists is `http://schema.org`.
     - `@type`: Used to set the data type of a node or typed value. At the top level, only a value of `Dataset` is supported. Default applied if none exists is `Dataset`. 
-- Schema.org volabulary: The supported attributes and types are [here](https://github.com/informatics-isi-edu/ermrestjs/blob/master/js/utils/jsonldSchema.js). This is a subset of the original vocabulary provided by schema.org. All the properties support [pattern expansion](#pattern-expansion) and the `template_engine` property should be defined outside the `dataset` definition. Apart from the main table data and all-outbound foreignkeys the pattern has access to a `$self` object that has the following attributes:
+- Schema.org volabulary: The supported attributes and types are [here](https://github.com/informatics-isi-edu/ermrestjs/blob/master/js/utils/json_ld_schema.js). This is a subset of the original vocabulary provided by schema.org. All the properties support [pattern expansion](#pattern-expansion) and the `template_engine` property should be defined outside the `dataset` definition. Apart from the main table data and all-outbound foreignkeys the pattern has access to a `$self` object that has the following attributes:
   - `rowName`: Row-name of the represented row.
   - `uri.detailed`: a uri to the row in `detailed` context. 
 

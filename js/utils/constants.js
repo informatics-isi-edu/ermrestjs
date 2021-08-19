@@ -186,6 +186,7 @@
         "eq", "ne", "lt", "gt", "lte", "gte", "and", "or", "ifCond",
         "escape", "encode", "formatDate", "encodeFacet",
         "regexMatch", "regexFindFirst", "regexFindAll",
+        "jsonStringify", "toTitleCase", "replace",
         // math helpers
         "add", "subtract"
     ];
@@ -274,6 +275,7 @@
         NO_SCALAR_AGG_IN_ENT: "scalar aggreagte functions are not allowed in entity mode",
         FK_NOT_RELATED: "given foreignkey is not inbound or outbound related to the table.",
         INVALID_FK: "given foreignkey definition is invalid.",
+        INVALID_FK_NO_INBOUND: "given foreignkey path definiton cannot be all-outbound.",
         AGG_NOT_ALLOWED: "aggregate functions are not allowed here.",
         MULTI_SCALAR_NEED_AGG: "aggregate functions are required for scalar inbound-included paths.",
         MULTI_ENT_NEED_AGG: "aggregate functions are required for entity inbound-included paths in non-detailed contexts.",
@@ -281,6 +283,7 @@
         NO_PATH_IN_ENTRY: "pseudo columns with path are not allowed in entry contexts (only single outbound path is allowed).",
         INVALID_SELF_LINK: "given source is not a valid self-link (must be unique not-null).",
         INVALID_COLUMN_DEF: "column definiton must be an array, object, or string.",
+        INVALID_COLUMN_IN_SOURCE_PATH: "end column in the path is not valid (not available in the end table)",
         NO_INBOUND_IN_NON_DETAILED: "inline table is not valid in this context."
     });
 
@@ -317,6 +320,11 @@
         OR: "or"
     });
 
+    module._ERMrestLogicalOperators = Object.freeze({
+        AND: "&",
+        OR: ";"
+    });
+
     module._sourceDefinitionAttributes = ["source", "aggregate", "entity", "self_link"];
 
     module._classNames = Object.freeze({
@@ -336,11 +344,16 @@
     });
 
     module._shorterVersion = Object.freeze({
+        "alias": "a",
         "inbound": "i",
         "outbound": "o",
         "source": "src",
         "sourcekey": "key",
         "choices": "ch",
         "ranges": "r",
-        "search": "s"
+        "search": "s",
+        "filter": "f",
+        "operand": "opd",
+        "operator": "opr",
+        "negate": "n"
     });

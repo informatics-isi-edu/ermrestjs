@@ -102,10 +102,6 @@
                           "source": [{"inbound": ["source_definitions_schema", "inbound1_fk1"]}, "RID"],
                           "entity": true
                       },
-                      "inbound1_col_invalid": {
-                          "source": [{"inbound": ["source_definitions_schema", "inbound1_fk1"]}, "RID"],
-                          "entity": false
-                      },
                       "agg1_invalid": {
                           "source": [{"inbound": ["source_definitions_schema", "inbound1_fk1"]}, "RID"],
                           "entity": true,
@@ -158,6 +154,94 @@
                           "source": [{"inbound": ["source_definitions_schema", "inbound1_fk1"]}, "RID"],
                           "entity": false,
                           "aggregate": "array_d"
+                      },
+                      "path_to_outbound2_outbound1": {
+                          "source": [
+                              {"outbound": ["source_definitions_schema", "main_fk2"]},
+                              {"outbound": ["source_definitions_schema", "outbound2_fk1"]},
+                              "RID"
+                          ]
+                      },
+                      "path_to_outbound2_outbound1_w_prefix_diff_col": {
+                          "source": [
+                              {"sourcekey": "path_to_outbound2_outbound1"},
+                              "id"
+                          ],
+                          "comment": "not supported"
+                      },
+                      "path_to_outbound2_outbound1_outbound1_w_prefix": {
+                          "source": [
+                              {"sourcekey": "path_to_outbound2_outbound1"},
+                              {"outbound": ["source_definitions_schema", "outbound2_outbound1_fk1"]},
+                              "RID"
+                          ]
+                      },
+                      "path_to_outbound2_outbound1_outbound1_wo_prefix": {
+                          "source": [
+                              {"outbound": ["source_definitions_schema", "main_fk2"]},
+                              {"outbound": ["source_definitions_schema", "outbound2_fk1"]},
+                              {"outbound": ["source_definitions_schema", "outbound2_outbound1_fk1"]},
+                              "RID"
+                          ]
+                      },
+                      "path_to_outbound2_outbound1_inbound1_w_prefix": {
+                          "source": [
+                              {"sourcekey": "path_to_outbound2_outbound1"},
+                              {"inbound": ["source_definitions_schema", "outbound2_outbound1_inbound1_fk1"]},
+                              "RID"
+                          ]
+                      },
+                      "path_to_outbound2_outbound1_inbound1_inbound1_w_recursive_prefix": {
+                          "source": [
+                              {"sourcekey": "path_to_outbound2_outbound1_inbound1_w_prefix"},
+                              {"inbound": ["source_definitions_schema", "outbound2_outbound1_inbound1_inbound1_fk1"]},
+                              "RID"
+                          ]
+                      },
+                      "path_to_outbound2_outbound1_inbound1_inbound1_wo_prefix": {
+                          "source": [
+                              {"outbound": ["source_definitions_schema", "main_fk2"]},
+                              {"outbound": ["source_definitions_schema", "outbound2_fk1"]},
+                              {"inbound": ["source_definitions_schema", "outbound2_outbound1_inbound1_fk1"]},
+                              {"inbound": ["source_definitions_schema", "outbound2_outbound1_inbound1_inbound1_fk1"]},
+                              "RID"
+                          ]
+                      },
+                      "path_w_invalid_prefix": {
+                          "source": [
+                              {"sourcekey": "path_that_doesnt_exist"},
+                              {"outbound": ["source_definitions_schema", "main_fk1"]},
+                              "RID"
+                          ]
+                      },
+                      "circular_path_1": {
+                          "source": [
+                              {"sourcekey": "circular_path_2"},
+                              {"outbound": ["source_definitions_schema", "main_fk1"]},
+                              "RID"
+                          ]
+                      },
+                      "circular_path_2": {
+                          "source": [
+                              {"sourcekey": "circular_path_1"},
+                              {"outbound": ["source_definitions_schema", "main_fk1"]},
+                              "RID"
+                          ]
+                      },
+                      "invalid_path_w_two_prefix": {
+                        "source": [
+                            {"sourcekey": "path_to_outbound2_outbound1"},
+                            {"sourcekey": "inbound1_col"},
+                            {"outbound": ["source_definitions_schema", "main_fk1"]},
+                            "RID"
+                        ]
+                      },
+                      "use_normal_column_prefix": {
+                          "source": [
+                              {"sourcekey": "new_col"},
+                              {"outbound": ["source_definitions_schema", "main_fk1"]},
+                              "RID"
+                          ]
                       }
                   }
               }
@@ -389,6 +473,186 @@
           "kind": "table",
           "keys": [
               {"unique_columns": ["id"]}
+          ],
+          "foreign_keys": [
+              {
+                  "names": [["source_definitions_schema", "outbound2_fk1"]],
+                  "foreign_key_columns": [
+                      {
+                          "column_name": "id",
+                          "table_name": "outbound2",
+                          "schema_name": "source_definitions_schema"
+                      }
+                  ],
+                  "referenced_columns": [
+                      {
+                          "column_name": "id",
+                          "table_name": "outbound2_outbound1",
+                          "schema_name": "source_definitions_schema"
+                      }
+                  ]
+              }
+          ],
+          "column_definitions": [
+              {
+                  "name": "id",
+                  "nullok": false,
+                  "type": {
+                      "typename": "text"
+                  }
+              }
+          ]
+      },
+      "outbound2_outbound1": {
+          "table_name": "outbound2_outbound1",
+          "schema_name": "source_definitions_schema",
+          "kind": "table",
+          "keys": [
+              {"unique_columns": ["id"]}
+          ],
+          "foreign_keys": [
+              {
+                  "names": [["source_definitions_schema", "outbound2_outbound1_fk1"]],
+                  "foreign_key_columns": [
+                      {
+                          "column_name": "id",
+                          "table_name": "outbound2_outbound1",
+                          "schema_name": "source_definitions_schema"
+                      }
+                  ],
+                  "referenced_columns": [
+                      {
+                          "column_name": "id",
+                          "table_name": "outbound2_outbound1_outbound1",
+                          "schema_name": "source_definitions_schema"
+                      }
+                  ]
+              }
+          ],
+          "column_definitions": [
+              {
+                  "name": "id",
+                  "nullok": false,
+                  "type": {
+                      "typename": "text"
+                  }
+              }
+          ]
+      },
+      "outbound2_outbound1_outbound1": {
+          "table_name": "outbound2_outbound1_outbound1",
+          "schema_name": "source_definitions_schema",
+          "kind": "table",
+          "keys": [
+              {"unique_columns": ["id"]}
+          ],
+          "foreign_keys": [
+              {
+                  "names": [["source_definitions_schema", "outbound2_outbound1_outbound1_fk1"]],
+                  "foreign_key_columns": [
+                      {
+                          "column_name": "id",
+                          "table_name": "outbound2_outbound1_outbound1",
+                          "schema_name": "source_definitions_schema"
+                      }
+                  ],
+                  "referenced_columns": [
+                      {
+                          "column_name": "id",
+                          "table_name": "outbound2_outbound1_outbound1_outbound1",
+                          "schema_name": "source_definitions_schema"
+                      }
+                  ]
+              }
+          ],
+          "column_definitions": [
+              {
+                  "name": "id",
+                  "nullok": false,
+                  "type": {
+                      "typename": "text"
+                  }
+              }
+          ]
+      },
+      "outbound2_outbound1_outbound1_outbound1": {
+          "table_name": "outbound2_outbound1_outbound1_outbound1",
+          "schema_name": "source_definitions_schema",
+          "kind": "table",
+          "keys": [
+              {"unique_columns": ["id"]}
+          ],
+          "column_definitions": [
+              {
+                  "name": "id",
+                  "nullok": false,
+                  "type": {
+                      "typename": "text"
+                  }
+              }
+          ]
+      },
+      "outbound2_outbound1_inbound1": {
+          "table_name": "outbound2_outbound1_inbound1",
+          "schema_name": "source_definitions_schema",
+          "kind": "table",
+          "keys": [
+              {"unique_columns": ["id"]}
+          ],
+          "foreign_keys": [
+              {
+                  "names": [["source_definitions_schema", "outbound2_outbound1_inbound1_fk1"]],
+                  "foreign_key_columns": [
+                      {
+                          "column_name": "id",
+                          "table_name": "outbound2_outbound1_inbound1",
+                          "schema_name": "source_definitions_schema"
+                      }
+                  ],
+                  "referenced_columns": [
+                      {
+                          "column_name": "id",
+                          "table_name": "outbound2_outbound1",
+                          "schema_name": "source_definitions_schema"
+                      }
+                  ]
+              }
+          ],
+          "column_definitions": [
+              {
+                  "name": "id",
+                  "nullok": false,
+                  "type": {
+                      "typename": "text"
+                  }
+              }
+          ]
+      },
+      "outbound2_outbound1_inbound1_inbound1": {
+          "table_name": "outbound2_outbound1_inbound1_inbound1",
+          "schema_name": "source_definitions_schema",
+          "kind": "table",
+          "keys": [
+              {"unique_columns": ["id"]}
+          ],
+          "foreign_keys": [
+              {
+                  "names": [["source_definitions_schema", "outbound2_outbound1_inbound1_inbound1_fk1"]],
+                  "foreign_key_columns": [
+                      {
+                          "column_name": "id",
+                          "table_name": "outbound2_outbound1_inbound1_inbound1",
+                          "schema_name": "source_definitions_schema"
+                      }
+                  ],
+                  "referenced_columns": [
+                      {
+                          "column_name": "id",
+                          "table_name": "outbound2_outbound1_inbound1",
+                          "schema_name": "source_definitions_schema"
+                      }
+                  ]
+              }
           ],
           "column_definitions": [
               {

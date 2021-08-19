@@ -421,10 +421,10 @@ var ERMrest = (function(module) {
 
                 // add the constituent columns
                 var hasCandidate = false;
-                var firstFk = col.foreignKeys[0].obj;
+                var firstFk = col.firstForeignKeyNode.nodeObject;
                 firstFk.colset.columns.forEach(function (fkeyCol) {
                     addColumn(fkeyCol);
-                    if (!hasCandidate && col.foreignKeys.length === 1  && isCandidateColumn(firstFk.mapping.get(fkeyCol))) {
+                    if (!hasCandidate && col.foreignKeyPathLength === 1  && isCandidateColumn(firstFk.mapping.get(fkeyCol))) {
                         hasCandidate = true;
                     }
                 });
@@ -432,9 +432,8 @@ var ERMrest = (function(module) {
                 // if any of the constituent columns is candidate, don't add fk projection
                 if (hasCandidate) return;
 
-                // find the candidate column in the referred table
-                var lastFK = col.foreignKeys[col.foreignKeys.length - 1].obj;
-                candidate = getCandidateColumn(lastFK.key.table);
+                // find the candidate column in the referred table;
+                candidate = getCandidateColumn(col.lastForeignKeyNode.nodeObject.key.table);
 
                 // we couldn't find any candidate columns
                 if (!candidate) return;
@@ -443,8 +442,12 @@ var ERMrest = (function(module) {
                 fkAlias = "F" + (fkeys.length + 1);
 
                 var fkeyPath = [];
-                col.foreignKeys.forEach(function (f, index, arr) {
-                    fkeyPath.push(((index === arr.length-1) ? fkAlias + ":=" : "") + f.obj.toString(!f.isInbound,true));
+                col.sourceObjectNodes.forEach(function (f, index, arr) {
+                    if (f.isFilter) {
+                        fkeyPath.push(f.toString());
+                    } else {
+                        fkeyPath.push(((f === col.lastForeignKeyNode) ? fkAlias + ":=" : "") + f.toString(false,true));
+                    }
                 });
 
                 // path to the foreignkey + reset the path to the main table
