@@ -592,6 +592,12 @@
                     ],
                     "detailed": [
                         "id"
+                    ],
+                    "export/compact": [
+                        "id",
+                        "name",
+                        "asset_5",
+                        ["export_table_annot_schema", "no_export_annot_fk_4"]
                     ]
                 }
             }
@@ -1724,6 +1730,35 @@
                             }
                         ]
                     }
+                }
+            }
+        },
+        "table_w_empty_vis_col_for_export": {
+            "kind": "table",
+            "table_name": "table_w_empty_vis_col_for_export",
+            "schema_name": "export_table_annot_schema",
+            "keys": [
+                {"unique_columns": ["id"]}
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "col",
+                    "type": {
+                        "typename": "text"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2016:visible-columns": {
+                    "*": ["id", "col"],
+                    "export": []
                 }
             }
         }

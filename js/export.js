@@ -284,6 +284,52 @@ var ERMrest = (function(module) {
 
     module.Exporter = exporter;
 
+
+    /**
+     * Try export/<context> then export then <context>
+     * @param {ERMrest.reference} ref 
+     * @param {Boolean} isCompact - the current context
+     */
+    module._getExportReference = function (ref, useCompact) {
+        var compCtx = module._contexts.COMPACT,
+            detCtx = module._contexts.DETAILED,
+            expCompCtx = module._contexts.EXPORT_COMPACT,
+            expDetCtx = module._contexts.EXPORT_DETAILED;
+
+        var isContext = function (context) {
+            return context == ref._context;
+        };
+
+        var hasColumns = function (ctx) {
+            var res = module._getRecursiveAnnotationValue(ctx, ref.table.annotations.get(module._annotations.VISIBLE_COLUMNS).content, true);
+            return res !== -1 && Array.isArray(res);
+        };
+
+        var useMainContext = function () {
+            if (useCompact) {
+                return isContext(compCtx) ? ref : ref.contextualize.compact;
+            }
+            return isContext(detCtx) ? ref : ref.contextualize.detailed;
+        };
+
+        if (ref.table.annotations.contains(module._annotations.VISIBLE_COLUMNS)) {
+            // export/<context>
+            // NOTE even if only export context is defined, the visible-columns logic will handle it
+            if (useCompact) {
+                if (hasColumns(expCompCtx)) {
+                    return isContext(expCompCtx) ? ref : ref.contextualize.exportCompact;
+                }
+            } else {
+                if (hasColumns(expDetCtx)) {
+                    return isContext(expDetCtx) ? ref : ref.contextualize.exportDetailed;
+                }
+            }   
+        }
+
+        // <context> or no annot
+        return useMainContext();
+    };
+
     /**
      * Given a reference object, will return the appropriate output object.
      * It might use attributegroup or entity apis based on the situation.
@@ -322,7 +368,7 @@ var ERMrest = (function(module) {
      * @param  {ERMrest.Reference=} mainRef The main reference
      * @return {Object}                     the output object
      */
-    module._referenceExportOutput = function(ref, tableAlias, path, addMainKey, mainRef) {
+    module._referenceExportOutput = function(ref, tableAlias, path, addMainKey, mainRef, useCompact) {
 
         var projectionList = [],
             keyList = [],
@@ -396,14 +442,11 @@ var ERMrest = (function(module) {
             }
         }
 
-        var exportRef, hasExportColumns = false;
-        if (ref.table.annotations.contains(module._annotations.VISIBLE_COLUMNS)) {
-            var exportColumns = module._getRecursiveAnnotationValue(module._contexts.EXPORT, ref.table.annotations.get(module._annotations.VISIBLE_COLUMNS).content, true);
-            hasExportColumns = exportColumns !== -1 && Array.isArray(exportColumns);
-        }
+        var exportRef = module._getExportReference(ref, useCompact);
 
-        // use export annotation, otherwise fall back to using detailed
-        exportRef = hasExportColumns ? ref.contextualize.export : ref.contextualize.detailed;
+        if (exportRef.columns.length === 0) {
+            return null;
+        }
 
         exportRef.columns.forEach(function (col) {
             if (!col.isPseudo) {

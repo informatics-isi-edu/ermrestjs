@@ -3283,7 +3283,7 @@ App-specific URL
 
 #### reference.csvDownloadLink ⇒ <code>String</code>
 Returns a uri that will properly generate the download link for a csv document
-NOTE It will not have the same sort and paging as the reference.
+NOTE It will honor the visible columns in `export` context
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 **Returns**: <code>String</code> - A string representing the url for direct csv download  
@@ -3315,6 +3315,7 @@ can be manipulated further.
 
 #### reference.defaultExportTemplate : <code>string</code>
 Returns a object, that can be used as a default export template.
+NOTE SHOULD ONLY BE USED IN DETAILED CONTEXT
 It will include:
 - csv of the main table.
 - csv of all the related entities
@@ -6985,7 +6986,7 @@ App-specific URL
 
 #### reference.csvDownloadLink ⇒ <code>String</code>
 Returns a uri that will properly generate the download link for a csv document
-NOTE It will not have the same sort and paging as the reference.
+NOTE It will honor the visible columns in `export` context
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 **Returns**: <code>String</code> - A string representing the url for direct csv download  
@@ -7017,6 +7018,7 @@ can be manipulated further.
 
 #### reference.defaultExportTemplate : <code>string</code>
 Returns a object, that can be used as a default export template.
+NOTE SHOULD ONLY BE USED IN DETAILED CONTEXT
 It will include:
 - csv of the main table.
 - csv of all the related entities
