@@ -35,21 +35,39 @@ The following is how ERMrestJS and Chaise leverage the different values defined 
 This annotation only applies to a table, but MAY be annotated at the schema level to set a schema-wide default. If the annotation is missing on the table, we will get the export definition from the schema. If the annotation is missing from both schema and table, we are going to apply default heuristics for this annotation only in `detailed` context. This means if you navigate to a page with `detailed` context (record page in chaise) and you haven't defined any export annotation, we are going to use the default export template. The following is the content of the generated default export template:
 
 - `csv` of `attributegroup` API request to the main table.
-  - The projection list is created based on the `visible-columns` defined for the `export` context (or `detailed` if `export` annotation is not specified).
+  - The projection list is created based on the `visible-columns` defined for the `export/detailed` context (or `detailed` if `export` context is not specified).
 
 
 - `csv` of `attributegroup` API for all the other related entities.
-  - The List of related entities is populated using the `export` (or `detailed`) context in `visible-foreign-keys` annotation.
+  - The List of related entities is populated using the `export/detailed` (or `export` or `detailed`) context in `visible-foreign-keys` annotation.
   - The projection list includes all the visible columns of the related table based on `export` (or `detailed`) context.
   - The foreign key column of the main entity is added to the projection list, so we don't lose the relationship of the related entity.
   - This request is grouped by the value of table's key and foreign key value.
 
 
-- `fetch` all visible assets of the main entity in `export` (or `detailed`) context.
+- `fetch` all visible assets of the main entity in `export/detailed` (or `export` or `detailed`) context.
    - The `destination.name` is generated using the `assets/<column name>` pattern, where `<column name>` is the name of your asset column.
 
 
-- `fetch` all visible assets of the related entities in `export` (or `detailed` ) context.
+- `fetch` all visible assets of the related entities in `export/detailed` (or `export` or `detailed` ) context.
   - The `destination.name` is generated using the `assets/<table displayname>/<column name>` pattern, where `<table displayname>` is the displayname of the related table, and `<column name>` is the name of your asset column.
 
 > If the generated path for any of the `attributegroup` API requests is lengthy, we will use the `entity` API instead.
+
+
+### Default CSV option
+
+Chaise will add a default CSV option to the presented list of export templates. This option will prompt a download for a `csv` file that uses `attributegroup` API of ERMrest. The projection list is created based on the `visible-columns` and depending on the app it will use different contexts.
+
+- In recordset app, Chaise will use `export/compact` context of `visible-columns`. If not defined, it will try `export` and then `compact`.
+- In record app, Chaise will use `export/detailed`context of `visible-columns`. If not defined, it will try `export` and then `detailed`.
+
+If you don't want Chaise to add this option, you should define an empty `visible-columns` list like the following:
+```json
+"tag:isrd.isi.edu,2016:visible-columns": {
+  "export": []
+}
+```
+
+
+
