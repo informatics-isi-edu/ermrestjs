@@ -3315,6 +3315,7 @@ can be manipulated further.
 
 #### reference.defaultExportTemplate : <code>string</code>
 Returns a object, that can be used as a default export template.
+NOTE SHOULD ONLY BE USED IN DETAILED CONTEXT
 It will include:
 - csv of the main table.
 - csv of all the related entities
@@ -7017,6 +7018,7 @@ can be manipulated further.
 
 #### reference.defaultExportTemplate : <code>string</code>
 Returns a object, that can be used as a default export template.
+NOTE SHOULD ONLY BE USED IN DETAILED CONTEXT
 It will include:
 - csv of the main table.
 - csv of all the related entities

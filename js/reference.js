@@ -2267,7 +2267,7 @@
                                     self.defaultExportTemplate != null;
 
                 return canUseDefault ? [self.defaultExportTemplate]: [];
-            };
+            }
 
             // add missing outputs
             res.forEach(function (t) {
