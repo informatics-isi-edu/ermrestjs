@@ -20,7 +20,9 @@ exports.execute = function (options) {
             tableNameNoExport = "no_export_annot",
             tableWithLongDefaultExport = "table_with_long_default_export",
             tableWithContextualizedExport = "table_w_contextualized_export",
-            table, ermRest, reference, noAnnotReference, noExportoutputReference, tableWithLongDefaultReference, tableWithContextExportReference, tableAndSchemaWithContextExportReference, exportObj;
+            tableWithEmptyVisColExport = "table_w_empty_vis_col_for_export",
+            table, ermRest, reference, noAnnotReference, noExportoutputReference, tableWithLongDefaultReference, 
+            tableWithContextExportReference, tableAndSchemaWithContextExportReference, emptyVisColExportReference, exportObj;
 
         var baseUri = options.url + "/catalog/" + process.env.DEFAULT_CATALOG + "/entity/" + schemaName1 + ":" + tableName;
 
@@ -35,6 +37,8 @@ exports.execute = function (options) {
         var contextualizedTableExportUri = options.url + "/catalog/" + process.env.DEFAULT_CATALOG + "/entity/" + schemaName1 + ":" + tableWithContextualizedExport;
 
         var contextualizedTableAndSchemaExportUri = options.url + "/catalog/" + process.env.DEFAULT_CATALOG + "/entity/" + schemaName2 + ":" + tableWithContextualizedExport;
+
+        var emptyVisColExportUri = options.url + "/catalog/" + process.env.DEFAULT_CATALOG + "/entity/" + schemaName1 + ":" + tableWithEmptyVisColExport;
 
         /*
          * no_export_annot is identical in both export_schema_annot_schema and export_table_annot_schema,
@@ -229,6 +233,9 @@ exports.execute = function (options) {
                 return ermRest.resolve(contextualizedTableExportUri, {cid: "test"});
             }).then(function (ref5) {
                 tableWithContextExportReference = ref5;
+                return ermRest.resolve(emptyVisColExportUri, {cid: "test"});
+            }).then(function (ref6) {
+                emptyVisColExportReference = ref6;
                 done();
             }, function (err) {
                 console.dir(err);
@@ -352,6 +359,12 @@ exports.execute = function (options) {
                             });
                         });
 
+                        it ("should return empty if vis-col export context is empty array", function () {
+                            var tempRef = emptyVisColExportReference.contextualize.detailed;
+                            expect(tempRef.defaultExportTemplate).toBe(null, "default template missmatch")
+                            expect(tempRef.getExportTemplates(true).length).toBe(0, "templates length missmatch");
+                        });
+
                         it ("if default export paths are long, should fall back to entity api.", function () {
                             var templates = tableWithLongDefaultReference.contextualize.detailed.getExportTemplates(true);
                             expect(templates.length).toBe(1, "length missmatch");
@@ -384,6 +397,36 @@ exports.execute = function (options) {
 
             });
 
+
+            describe("reference.csvDownloadLink should honor the visible-columns, ", function () {
+                var baseURL = options.url + "/catalog/" + process.env.DEFAULT_CATALOG +
+                              "/attributegroup/M:=export_table_annot_schema:no_export_annot/id::geq::1&id::leq::10/$M/id=1;id=2/$M/id=1/";
+                var qParam = "?limit=none&accept=csv&uinit=1&cid=test&download=%2A%2ANo%20Export%20Annot%2A%2A";
+
+                it ("if export/<context> is defined should use it.", function () {
+                    var ref = noAnnotReference.contextualize.compact;
+                    var path = "F1:=left(fk_col_2,fk_col_3)=(export_table_annot_schema:outbound1:id1,id2)/$M/RID;id,name,asset_5,fk_col_2,fk_col_3,outbound1.Name_1:=F1:Name";
+                    expect(ref.csvDownloadLink).toEqual(baseURL + path + qParam);
+                });
+
+                it ("otherwise should use export context.", function () {
+                    expect(noAnnotReference.csvDownloadLink).toEqual(baseURL + getDefaultOutputs(schemaName1)[0].source.path + qParam);
+                });
+
+                it ("otherwise should use the detailed context", function () {
+                    var res = options.url + "/catalog/" + process.env.DEFAULT_CATALOG +
+                             "/attributegroup/M:=export_table_annot_schema:main/"+
+                             "RID;id,text_col,lgt,markdown_col,int_col,float_col,date_col,timestamp_col" +
+                             "?limit=none&accept=csv&uinit=1&cid=test&download=Main%20%2F%20table";
+
+                    expect(reference.csvDownloadLink).toEqual(res);
+                });
+
+                it ("should return null if visible-columns is empty", function () {
+                    expect(emptyVisColExportReference.csvDownloadLink).toEqual(null);
+                });
+            });
+            return;
             describe("for BDBag template", function () {
                 it("should create an exporter object", function() {
                     exportObj = new ermRest.Exporter(reference, "bag-name", reference.table.getExportTemplates()[0], "/deriva/export/");

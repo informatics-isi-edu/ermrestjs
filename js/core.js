@@ -1708,7 +1708,7 @@
                 hasAnnot = true;
             }
 
-            // annotation was defined on the table
+            // annotation was defined on the schema
             if (hasAnnot) {
                 // find the annotation defined for the context
                 chosenAnnot = module._getAnnotationValueByContext(context, annotDefinition);

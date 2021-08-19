@@ -2185,14 +2185,39 @@
 
         /**
          * Returns a uri that will properly generate the download link for a csv document
-         * NOTE It will not have the same sort and paging as the reference.
+         * NOTE It will honor the visible columns in `export` context
          *
          * @returns {String} A string representing the url for direct csv download
          **/
         get csvDownloadLink() {
-            var cid = this.table.schema.catalog.server.cid;
-            cid = cid ? ("&cid=" + cid) : "";
-            return this.location.ermrestCompactUri + "?limit=none&accept=csv&uinit=1" + cid + "&download=" + module._fixedEncodeURIComponent(this.displayname.unformatted);
+            if (this._csvDownloadLink === undefined) {
+                var cid = this.table.schema.catalog.server.cid;
+                var qParam = "?limit=none&accept=csv&uinit=1";
+                qParam += cid ? ("&cid=" + cid) : "";
+                qParam += "&download=" + module._fixedEncodeURIComponent(this.displayname.unformatted);
+
+                var isCompact = this._context === module._contexts.COMPACT;
+                var defaultExportOutput = module._referenceExportOutput(this, this.location.mainTableAlias, null, false, null, isCompact);
+
+                if (defaultExportOutput == null) {
+                    this._csvDownloadLink = null;
+                } else {
+                    var uri;
+                    if (["attributegroup", "entity"].indexOf(defaultExportOutput.source.api) != -1) {
+                        // example.com/ermrest/catalog/<id>/<api>/<current-path>/<vis-col-projection-and-needed-joins>
+                        uri = [
+                            this.location.service, "catalog", this._location.catalog, defaultExportOutput.source.api, 
+                            this.location.ermrestCompactPath, defaultExportOutput.source.path
+                        ].join("/");
+                    } else {
+                        // won't happen with the current code, but to make this future proof
+                        uri = this.location.ermrestCompactUri;
+                    }
+
+                    this._csvDownloadLink =  uri + qParam;
+                }
+            }
+            return this._csvDownloadLink;
         },
 
         /**
@@ -2265,12 +2290,16 @@
 
             // annotation is missing
             if (res === null) {
-                return (self._context === module._contexts.DETAILED && useDefault) ? [self.defaultExportTemplate]: [];
+                var canUseDefault = useDefault &&
+                                    self._context === module._contexts.DETAILED &&
+                                    self.defaultExportTemplate != null;
+
+                return canUseDefault ? [self.defaultExportTemplate]: [];
             }
 
             // add missing outputs
             res.forEach(function (t) {
-                if (!t.outputs) {
+                if (!t.outputs && isObjectAndNotNull(self.defaultExportTemplate)) {
                     t.outputs = self.defaultExportTemplate.outputs;
                 }
             });
@@ -2279,6 +2308,7 @@
 
         /**
          * Returns a object, that can be used as a default export template.
+         * NOTE SHOULD ONLY BE USED IN DETAILED CONTEXT
          * It will include:
          * - csv of the main table.
          * - csv of all the related entities
@@ -2296,16 +2326,10 @@
                  var getTableOutput = module._referenceExportOutput,
                      getAssetOutput = module._getAssetExportOutput;
 
-                 // given a refernece, will return it in export or detailed context
-                 var getExportReference = function (ref) {
-                     var res, hasExportColumns = false;
-                     if (ref.table.annotations.contains(module._annotations.VISIBLE_COLUMNS)) {
-                         var exportColumns = module._getRecursiveAnnotationValue(module._contexts.EXPORT, ref.table.annotations.get(module._annotations.VISIBLE_COLUMNS).content, true);
-                         hasExportColumns = exportColumns !== -1 && Array.isArray(exportColumns);
-                     }
-
-                     // use export annotation, otherwise fall back to using detailed
-                     return hasExportColumns ? ref.contextualize.export : (ref._context === module._contexts.DETAILED ? ref : ref.contextualize.detailed);
+                 var addOutput = function (output) {
+                    if (output != null) {
+                        outputs.push(output);
+                    }
                  };
 
                  // create a csv + fetch all the assets
@@ -2320,45 +2344,43 @@
                         sourcePath = rel.pseudoColumn.sourceObjectWrapper.toString(false, false, relatedTableAlias);
 
                          // path more than length one, we need to add the main table fkey
-                         outputs.push(getTableOutput(rel, relatedTableAlias, sourcePath, rel.pseudoColumn.foreignKeyPathLength >= 2, self));
+                        addOutput(getTableOutput(rel, relatedTableAlias, sourcePath, rel.pseudoColumn.foreignKeyPathLength >= 2, self));
                      }
                      // association table
                      else if (rel.derivedAssociationReference) {
                          var assoc = rel.derivedAssociationReference;
                          sourcePath = assoc.origFKR.toString() + "/" + relatedTableAlias + ":=" + assoc._secondFKR.toString(true);
-                         outputs.push(getTableOutput(rel, relatedTableAlias, sourcePath, true, self));
+                         addOutput(getTableOutput(rel, relatedTableAlias, sourcePath, true, self));
                      }
                      // single inbound related
                      else {
                          sourcePath = relatedTableAlias + ":=" + rel.origFKR.toString(false, false);
-                         outputs.push(getTableOutput(rel, relatedTableAlias, sourcePath));
+                         addOutput(getTableOutput(rel, relatedTableAlias, sourcePath));
                      }
 
                      // add asset of the related table
-                     var expRef = getExportReference(rel);
+                     var expRef = module._getExportReference(rel);
 
                      // alternative table, don't add asset
                      if (expRef.table !== rel.table) return;
 
                      expRef.columns.forEach(function(col) {
                          var output = getAssetOutput(col, destinationPath, sourcePath);
-                         if (output === null) return;
-                         outputs.push(output);
+                         addOutput(output);
                      });
                  };
 
                  // main entity
-                 outputs.push(getTableOutput(self, self.location.mainTableAlias));
+                 addOutput(getTableOutput(self, self.location.mainTableAlias));
 
-                 var exportRef = getExportReference(self);
+                 var exportRef = module._getExportReference(self);
 
                  // we're not supporting alternative tables
                  if (exportRef.table.name === self.table.name) {
                      // main assets
                      exportRef.columns.forEach(function(col) {
                          var output = getAssetOutput(col, "", "");
-                         if (output === null) return;
-                         outputs.push(output);
+                         addOutput(output);
                      });
 
                      // inline entities
@@ -2380,6 +2402,10 @@
                  var exportRefForRelated = hasRelatedExport ? self.contextualize.export : (self._context === module._contexts.DETAILED ? self : self.contextualize.detailed);
                  if (exportRefForRelated.table.name === self.table.name) {
                      exportRefForRelated.related.forEach(processRelatedReference);
+                 }
+
+                 if (outputs.length === 0) {
+                     return null;
                  }
 
                  self._defaultExportTemplate = {
@@ -2601,6 +2627,7 @@
             delete this._canUpdate;
             delete this._canDelete;
             delete this._display;
+            delete this._csvDownloadLink;
         },
 
         /**
@@ -2812,7 +2839,7 @@
                                         else if (fk.key.table == this._table && !isEntry) {
                                             // this is inbound foreignkey, so the name must change.
                                             fkName = _sourceColumnHelpers.generateForeignKeyName(fk, true);
-                                            if (!logCol(fkName in consideredColumns, wm.DUPLICATE_FK, i) && !logCol(context !== module._contexts.DETAILED && context !== module._contexts.EXPORT, wm.NO_INBOUND_IN_NON_DETAILED, i) && !nameExistsInTable(fkName, col)) {
+                                            if (!logCol(fkName in consideredColumns, wm.DUPLICATE_FK, i) && !logCol(context !== module._contexts.DETAILED && context.indexOf(module._contexts.EXPORT) == -1, wm.NO_INBOUND_IN_NON_DETAILED, i) && !nameExistsInTable(fkName, col)) {
                                                 consideredColumns[fkName] = true;
                                                 this._referenceColumns.push(new InboundForeignKeyPseudoColumn(this, this._generateRelatedReference(fk, tuple, true), null, fkName));
                                             }
@@ -2897,7 +2924,7 @@
                                  (!wrapper.hasPath && hideColumn(wrapper.column)) ||
                                  logCol(wrapper.sourceObject.self_link === true && !wrapper.column.isUniqueNotNull, wm.INVALID_SELF_LINK, i) ||
                                  logCol((!wrapper.hasAggregate && wrapper.hasInbound && !wrapper.isEntityMode), wm.MULTI_SCALAR_NEED_AGG, i) ||
-                                 logCol((!wrapper.hasAggregate && wrapper.hasInbound && wrapper.isEntityMode && context !== module._contexts.DETAILED && context !== module._contexts.EXPORT), wm.MULTI_ENT_NEED_AGG, i) ||
+                                 logCol((!wrapper.hasAggregate && wrapper.hasInbound && wrapper.isEntityMode && context !== module._contexts.DETAILED && context.indexOf(module._contexts.EXPORT) == -1), wm.MULTI_ENT_NEED_AGG, i) ||
                                  logCol(wrapper.hasAggregate && wrapper.isEntryMode, wm.NO_AGG_IN_ENTRY, i) ||
                                  logCol(isEntry && wrapper.hasPath && (wrapper.hasInbound || wrapper.isFiltered || wrapper.foreignKeyPathLength > 1), wm.NO_PATH_IN_ENTRY, i);
 
@@ -4009,6 +4036,7 @@
         delete referenceCopy._defaultExportTemplate;
         delete referenceCopy._exportTemplates;
         delete referenceCopy._readPath;
+        delete referenceCopy._csvDownloadLink;
 
         referenceCopy.contextualize = new Contextualize(referenceCopy);
         return referenceCopy;
@@ -4109,6 +4137,22 @@
          */
         get export() {
             return this._contextualize(module._contexts.EXPORT);
+        },
+
+        /**
+         * get exportCompact - export context for compact view
+         * @return {ERMrest.Reference}
+         */
+         get exportCompact() {
+            return this._contextualize(module._contexts.EXPORT_COMPACT);
+        },
+
+        /**
+         * get exportDetailed - export context for detailed view
+         * @return {ERMrest.Reference}
+         */
+         get exportDetailed() {
+            return this._contextualize(module._contexts.EXPORT_DETAILED);
         },
 
         _contextualize: function(context) {
