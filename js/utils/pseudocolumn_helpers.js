@@ -1261,7 +1261,7 @@
             try {
                 col = colTable.columns.get(source[source.length-1]);
             } catch (exp) {
-                returnError(wm.INVALID_COLUMN_IN_SOURCE_PATH);
+                return returnError(wm.INVALID_COLUMN_IN_SOURCE_PATH);
             }
 
             return {
