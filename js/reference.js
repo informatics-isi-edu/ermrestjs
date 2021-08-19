@@ -2172,7 +2172,7 @@
                 var defaultExportOutput = module._referenceExportOutput(this, this.location.mainTableAlias, null, false, null, isCompact);
 
                 if (defaultExportOutput == null) {
-                    this._csvDownloadLink = "";
+                    this._csvDownloadLink = null;
                 } else {
                     var uri;
                     if (["attributegroup", "entity"].indexOf(defaultExportOutput.source.api) != -1) {
@@ -2262,12 +2262,16 @@
 
             // annotation is missing
             if (res === null) {
-                return (self._context === module._contexts.DETAILED && useDefault) ? [self.defaultExportTemplate]: [];
-            }
+                var canUseDefault = useDefault &&
+                                    self._context === module._contexts.DETAILED &&
+                                    self.defaultExportTemplate != null;
+
+                return canUseDefault ? [self.defaultExportTemplate]: [];
+            };
 
             // add missing outputs
             res.forEach(function (t) {
-                if (!t.outputs) {
+                if (!t.outputs && isObjectAndNotNull(self.defaultExportTemplate)) {
                     t.outputs = self.defaultExportTemplate.outputs;
                 }
             });
@@ -2370,6 +2374,10 @@
                  var exportRefForRelated = hasRelatedExport ? self.contextualize.export : (self._context === module._contexts.DETAILED ? self : self.contextualize.detailed);
                  if (exportRefForRelated.table.name === self.table.name) {
                      exportRefForRelated.related.forEach(processRelatedReference);
+                 }
+
+                 if (outputs.length === 0) {
+                     return null;
                  }
 
                  self._defaultExportTemplate = {
@@ -2591,6 +2599,7 @@
             delete this._canUpdate;
             delete this._canDelete;
             delete this._display;
+            delete this._csvDownloadLink;
         },
 
         /**
@@ -2802,7 +2811,7 @@
                                         else if (fk.key.table == this._table && !isEntry) {
                                             // this is inbound foreignkey, so the name must change.
                                             fkName = _sourceColumnHelpers.generateForeignKeyName(fk, true);
-                                            if (!logCol(fkName in consideredColumns, wm.DUPLICATE_FK, i) && !logCol(context !== module._contexts.DETAILED && context !== module._contexts.EXPORT, wm.NO_INBOUND_IN_NON_DETAILED, i) && !nameExistsInTable(fkName, col)) {
+                                            if (!logCol(fkName in consideredColumns, wm.DUPLICATE_FK, i) && !logCol(context !== module._contexts.DETAILED && context.indexOf(module._contexts.EXPORT) == -1, wm.NO_INBOUND_IN_NON_DETAILED, i) && !nameExistsInTable(fkName, col)) {
                                                 consideredColumns[fkName] = true;
                                                 this._referenceColumns.push(new InboundForeignKeyPseudoColumn(this, this._generateRelatedReference(fk, tuple, true), null, fkName));
                                             }
@@ -2887,7 +2896,7 @@
                                  (!wrapper.hasPath && hideColumn(wrapper.column)) ||
                                  logCol(wrapper.sourceObject.self_link === true && !wrapper.column.isUniqueNotNull, wm.INVALID_SELF_LINK, i) ||
                                  logCol((!wrapper.hasAggregate && wrapper.hasInbound && !wrapper.isEntityMode), wm.MULTI_SCALAR_NEED_AGG, i) ||
-                                 logCol((!wrapper.hasAggregate && wrapper.hasInbound && wrapper.isEntityMode && context !== module._contexts.DETAILED && context !== module._contexts.EXPORT), wm.MULTI_ENT_NEED_AGG, i) ||
+                                 logCol((!wrapper.hasAggregate && wrapper.hasInbound && wrapper.isEntityMode && context !== module._contexts.DETAILED && context.indexOf(module._contexts.EXPORT) == -1), wm.MULTI_ENT_NEED_AGG, i) ||
                                  logCol(wrapper.hasAggregate && wrapper.isEntryMode, wm.NO_AGG_IN_ENTRY, i) ||
                                  logCol(isEntry && wrapper.hasPath && (wrapper.hasInbound || wrapper.isFiltered || wrapper.foreignKeyPathLength > 1), wm.NO_PATH_IN_ENTRY, i);
 
@@ -3999,6 +4008,7 @@
         delete referenceCopy._defaultExportTemplate;
         delete referenceCopy._exportTemplates;
         delete referenceCopy._readPath;
+        delete referenceCopy._csvDownloadLink;
 
         referenceCopy.contextualize = new Contextualize(referenceCopy);
         return referenceCopy;

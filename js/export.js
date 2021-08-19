@@ -301,15 +301,16 @@ var ERMrest = (function(module) {
         };
 
         var hasColumns = function (ctx) {
-            return module._getRecursiveAnnotationValue(ctx, ref.table.annotations.get(module._annotations.VISIBLE_COLUMNS).content, true);
-        }
+            var res = module._getRecursiveAnnotationValue(ctx, ref.table.annotations.get(module._annotations.VISIBLE_COLUMNS).content, true);
+            return res !== -1 && Array.isArray(res);
+        };
 
         var useMainContext = function () {
             if (useCompact) {
                 return isContext(compCtx) ? ref : ref.contextualize.compact;
             }
             return isContext(detCtx) ? ref : ref.contextualize.detailed;
-        }
+        };
 
         if (ref.table.annotations.contains(module._annotations.VISIBLE_COLUMNS)) {
             // export/<context>
@@ -327,7 +328,7 @@ var ERMrest = (function(module) {
 
         // <context> or no annot
         return useMainContext();
-    }
+    };
 
     /**
      * Given a reference object, will return the appropriate output object.
