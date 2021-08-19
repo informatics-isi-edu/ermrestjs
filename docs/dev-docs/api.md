@@ -155,6 +155,7 @@ to use for ERMrest JavaScript agents.
             * [.referredBy](#ERMrest.Table+referredBy) : [<code>ForeignKeys</code>](#ERMrest.ForeignKeys)
             * [.comment](#ERMrest.Table+comment) : <code>string</code>
             * [._showSavedQuery](#ERMrest.Table+_showSavedQuery) : <code>boolean</code>
+            * [._favoritesPath](#ERMrest.Table+_favoritesPath) : <code>string</code>
             * [.kind](#ERMrest.Table+kind) : <code>string</code>
             * [.shortestKey](#ERMrest.Table+shortestKey)
             * [.displayKey](#ERMrest.Table+displayKey) : [<code>Array.&lt;Column&gt;</code>](#ERMrest.Column)
@@ -378,6 +379,7 @@ to use for ERMrest JavaScript agents.
         * [.canUseTRS](#ERMrest.Reference+canUseTRS) : <code>Boolean</code>
         * [.canUseTCRS](#ERMrest.Reference+canUseTCRS) : <code>Boolean</code>
         * [.display](#ERMrest.Reference+display) : <code>Object</code>
+        * [.favoritesPath](#ERMrest.Reference+favoritesPath)
         * [.related](#ERMrest.Reference+related) : [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
         * [.unfilteredReference](#ERMrest.Reference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
         * [.appLink](#ERMrest.Reference+appLink) : <code>String</code>
@@ -702,6 +704,7 @@ to use for ERMrest JavaScript agents.
         * [.canUseTRS](#ERMrest.Reference+canUseTRS) : <code>Boolean</code>
         * [.canUseTCRS](#ERMrest.Reference+canUseTCRS) : <code>Boolean</code>
         * [.display](#ERMrest.Reference+display) : <code>Object</code>
+        * [.favoritesPath](#ERMrest.Reference+favoritesPath)
         * [.related](#ERMrest.Reference+related) : [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
         * [.unfilteredReference](#ERMrest.Reference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
         * [.appLink](#ERMrest.Reference+appLink) : <code>String</code>
@@ -1188,6 +1191,7 @@ get table by table name
         * [.referredBy](#ERMrest.Table+referredBy) : [<code>ForeignKeys</code>](#ERMrest.ForeignKeys)
         * [.comment](#ERMrest.Table+comment) : <code>string</code>
         * [._showSavedQuery](#ERMrest.Table+_showSavedQuery) : <code>boolean</code>
+        * [._favoritesPath](#ERMrest.Table+_favoritesPath) : <code>string</code>
         * [.kind](#ERMrest.Table+kind) : <code>string</code>
         * [.shortestKey](#ERMrest.Table+shortestKey)
         * [.displayKey](#ERMrest.Table+displayKey) : [<code>Array.&lt;Column&gt;</code>](#ERMrest.Column)
@@ -1294,6 +1298,12 @@ Documentation for this table
 <a name="ERMrest.Table+_showSavedQuery"></a>
 
 #### table.\_showSavedQuery : <code>boolean</code>
+**Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
+<a name="ERMrest.Table+_favoritesPath"></a>
+
+#### table.\_favoritesPath : <code>string</code>
+The path to the table where the favorite terms are stored
+
 **Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
 <a name="ERMrest.Table+kind"></a>
 
@@ -2932,6 +2942,7 @@ Constructor for a ParsedFilter.
     * [.canUseTRS](#ERMrest.Reference+canUseTRS) : <code>Boolean</code>
     * [.canUseTCRS](#ERMrest.Reference+canUseTCRS) : <code>Boolean</code>
     * [.display](#ERMrest.Reference+display) : <code>Object</code>
+    * [.favoritesPath](#ERMrest.Reference+favoritesPath)
     * [.related](#ERMrest.Reference+related) : [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
     * [.unfilteredReference](#ERMrest.Reference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
     * [.appLink](#ERMrest.Reference+appLink) : <code>String</code>
@@ -3243,6 +3254,18 @@ if ( displayType === 'table') {
   // Use modulePath to render the rows
 }
 ```
+
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+favoritesPath"></a>
+
+#### reference.favoritesPath
+The path to the table where the favorite terms are stored. Checks the
+2021:table-config annotation for `user_favorites.storage_table`. If
+present, returns a string in the form of:
+  "/ermrest/catalog/<catalog-id>/entity/<schema>:<table>".
+
+If the annotation was not properly defined or not defined at all, this
+will return null.
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+related"></a>
@@ -6634,6 +6657,7 @@ get PathColumn object by column name
     * [.canUseTRS](#ERMrest.Reference+canUseTRS) : <code>Boolean</code>
     * [.canUseTCRS](#ERMrest.Reference+canUseTCRS) : <code>Boolean</code>
     * [.display](#ERMrest.Reference+display) : <code>Object</code>
+    * [.favoritesPath](#ERMrest.Reference+favoritesPath)
     * [.related](#ERMrest.Reference+related) : [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
     * [.unfilteredReference](#ERMrest.Reference+unfilteredReference) : [<code>Reference</code>](#ERMrest.Reference)
     * [.appLink](#ERMrest.Reference+appLink) : <code>String</code>
@@ -6945,6 +6969,18 @@ if ( displayType === 'table') {
   // Use modulePath to render the rows
 }
 ```
+
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+favoritesPath"></a>
+
+#### reference.favoritesPath
+The path to the table where the favorite terms are stored. Checks the
+2021:table-config annotation for `user_favorites.storage_table`. If
+present, returns a string in the form of:
+  "/ermrest/catalog/<catalog-id>/entity/<schema>:<table>".
+
+If the annotation was not properly defined or not defined at all, this
+will return null.
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+related"></a>

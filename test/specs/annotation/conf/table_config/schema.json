@@ -1,0 +1,108 @@
+{
+    "schema_name": "table_config",
+    "tables": {
+        "favorites_path": {
+            "comment": "Table with table-config annotation to save favorites",
+            "kind": "table",
+            "keys": [
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": [
+                        "id"
+                    ]
+                }
+            ],
+            "foreign_keys": [],
+            "table_name": "favorites_path",
+            "schema_name": "table_config",
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "int"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2021:table-config": {
+                    "user_favorites": {
+                        "storage_table": {
+                            "catalog": 1,
+                            "schema": "table_config",
+                            "table": "my_favorites"
+                        }
+                    }
+                }
+            }
+        },
+        "no_annotation": {
+            "comment": "Table with NO table-config annotation for testing defaults",
+            "kind": "table",
+            "keys": [
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": [
+                        "id"
+                    ]
+                }
+            ],
+            "foreign_keys": [],
+            "table_name": "no_annotation",
+            "schema_name": "table_config",
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "int"
+                    }
+                }
+            ],
+            "annotations": {}
+        },
+        "favorites_null": {
+            "comment": "Table with an improperly configured table-config annotation for the user_favorites property",
+            "kind": "table",
+            "keys": [
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": [
+                        "id"
+                    ]
+                }
+            ],
+            "foreign_keys": [],
+            "table_name": "favorites_null",
+            "schema_name": "table_config",
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "int"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2021:table-config": {
+                    "user_favorites": {}
+                }
+            }
+        }
+    },
+    "table_names": [
+        "favorites_path",
+        "no_annotation",
+        "favorites_null"
+    ],
+    "comment": null,
+    "annotations": {
+        "tag:misd.isi.edu,2015:display": {
+            "show_saved_query": false
+        }
+    }
+}
