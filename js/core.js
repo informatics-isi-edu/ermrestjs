@@ -1059,13 +1059,17 @@
          * @desc The path to the table where the favorite terms are stored
          * @type {string}
          */
-        this._favoritesPath = null;
+        this.favoritesPath = null;
         if (this.annotations.contains(module._annotations.TABLE_CONFIG)) {
             var userFavorites = this.annotations.get(module._annotations.TABLE_CONFIG).content.user_favorites;
-            console.log(userFavorites);
-            if (userFavorites && userFavorites.storage_table) {
+            // make sure user_favorites is defined
+            // make sure storage table is an object
+            if (userFavorites && typeof userFavorites.storage_table == "object") {
                 var favoritesTable = userFavorites.storage_table;
-                this._favoritesPath = "/ermrest/catalog/" + favoritesTable.catalog + "/entity/" + favoritesTable.schema + ":" + favoritesTable.table;
+                // make sure each key is present and the value is a non empty string
+                if (isStringAndNotEmpty(favoritesTable.catalog) && isStringAndNotEmpty(favoritesTable.schema) && isStringAndNotEmpty(favoritesTable.table)) {
+                    this.favoritesPath = "/ermrest/catalog/" + favoritesTable.catalog + "/entity/" + favoritesTable.schema + ":" + favoritesTable.table;
+                }
             }
         }
 

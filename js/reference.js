@@ -2016,24 +2016,6 @@
         },
 
         /**
-         * The path to the table where the favorite terms are stored. Checks the
-         * 2021:table-config annotation for `user_favorites.storage_table`. If
-         * present, returns a string in the form of:
-         *   "/ermrest/catalog/<catalog-id>/entity/<schema>:<table>".
-         *
-         * If the annotation was not properly defined or not defined at all, this
-         * will return null.
-         */
-        get favoritesPath () {
-            if (this._favoritesPath === undefined) {
-                console.log(this.table)
-                this._favoritesPath = this.table._favoritesPath;
-            }
-
-            return this._favoritesPath;
-        },
-
-        /**
          * The "related" references. Relationships are defined by foreign key
          * references between {@link ERMrest.Table}s. Those references can be
          * considered "outbound" where the table has FKRs to other entities or

@@ -23,7 +23,7 @@ exports.execute = function (options) {
                 reference = response;
                 expect(reference).toEqual(jasmine.any(Object));
 
-                expect(reference.favoritesPath).toBe("/ermrest/catalog/1/entity/table_config:my_favorites", "table-config annotation not set properly on table favorites_path");
+                expect(reference.table.favoritesPath).toBe("/ermrest/catalog/1/entity/table_config:my_favorites", "table-config annotation not set properly on table favorites_path");
 
                 done();
             }, function (err) {
@@ -37,7 +37,7 @@ exports.execute = function (options) {
                 referenceNoTableAnnotation = response;
                 expect(referenceNoTableAnnotation).toEqual(jasmine.any(Object));
 
-                expect(referenceNoTableAnnotation.favoritesPath).toBe(null, "default value for favoritesPath not set properly");
+                expect(referenceNoTableAnnotation.table.favoritesPath).toBe(null, "default value for favoritesPath not set properly");
 
                 done();
             }, function (err) {
@@ -51,7 +51,7 @@ exports.execute = function (options) {
                 referenceMisconfiguredAnnotation = response;
                 expect(referenceMisconfiguredAnnotation).toEqual(jasmine.any(Object));
 
-                expect(referenceMisconfiguredAnnotation.favoritesPath).toBe(null, "misconfigured annotation did not set the value to the default");
+                expect(referenceMisconfiguredAnnotation.table.favoritesPath).toBe(null, "misconfigured annotation did not set the value to the default");
 
                 done();
             }, function (err) {

@@ -29,7 +29,7 @@
                 "tag:isrd.isi.edu,2021:table-config": {
                     "user_favorites": {
                         "storage_table": {
-                            "catalog": 1,
+                            "catalog": "1",
                             "schema": "table_config",
                             "table": "my_favorites"
                         }
