@@ -155,6 +155,7 @@ to use for ERMrest JavaScript agents.
             * [.referredBy](#ERMrest.Table+referredBy) : [<code>ForeignKeys</code>](#ERMrest.ForeignKeys)
             * [.comment](#ERMrest.Table+comment) : <code>string</code>
             * [._showSavedQuery](#ERMrest.Table+_showSavedQuery) : <code>boolean</code>
+            * [.favoritesPath](#ERMrest.Table+favoritesPath) : <code>string</code>
             * [.kind](#ERMrest.Table+kind) : <code>string</code>
             * [.shortestKey](#ERMrest.Table+shortestKey)
             * [.displayKey](#ERMrest.Table+displayKey) : [<code>Array.&lt;Column&gt;</code>](#ERMrest.Column)
@@ -1188,6 +1189,7 @@ get table by table name
         * [.referredBy](#ERMrest.Table+referredBy) : [<code>ForeignKeys</code>](#ERMrest.ForeignKeys)
         * [.comment](#ERMrest.Table+comment) : <code>string</code>
         * [._showSavedQuery](#ERMrest.Table+_showSavedQuery) : <code>boolean</code>
+        * [.favoritesPath](#ERMrest.Table+favoritesPath) : <code>string</code>
         * [.kind](#ERMrest.Table+kind) : <code>string</code>
         * [.shortestKey](#ERMrest.Table+shortestKey)
         * [.displayKey](#ERMrest.Table+displayKey) : [<code>Array.&lt;Column&gt;</code>](#ERMrest.Column)
@@ -1294,6 +1296,12 @@ Documentation for this table
 <a name="ERMrest.Table+_showSavedQuery"></a>
 
 #### table.\_showSavedQuery : <code>boolean</code>
+**Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
+<a name="ERMrest.Table+favoritesPath"></a>
+
+#### table.favoritesPath : <code>string</code>
+The path to the table where the favorite terms are stored
+
 **Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
 <a name="ERMrest.Table+kind"></a>
 

@@ -64,6 +64,7 @@
         REQUIRED: "tag:isrd.isi.edu,2018:required",
         SOURCE_DEFINITIONS: "tag:isrd.isi.edu,2019:source-definitions",
         TABLE_ALTERNATIVES: "tag:isrd.isi.edu,2016:table-alternatives",
+        TABLE_CONFIG: "tag:isrd.isi.edu,2021:table-config",
         TABLE_DISPLAY: "tag:isrd.isi.edu,2016:table-display",
         VISIBLE_COLUMNS: "tag:isrd.isi.edu,2016:visible-columns",
         VISIBLE_FOREIGN_KEYS: "tag:isrd.isi.edu,2016:visible-foreign-keys",
