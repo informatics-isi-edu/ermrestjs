@@ -50,13 +50,13 @@ here is a quick matrix to locate them.
 | Annotation                                                  | Catalog | Schema | Table | Column | Key | FKR | Summary                                       |
 |-------------------------------------------------------------|---------|--------|-------|--------|-----|-----|-----------------------------------------------|
 | [2015 Display](#tag-2015-display)                           | X       | X      | X     | X      | X   | -   | Display options                               |
-| [2015 Vocabulary](#tag-2015-vocabulary-deprecated) (_deprecated_)                     | -       | -      | X     | -      | -   | -   | Table as a vocabulary list                    |
+| [2015 Vocabulary](#tag-2015-vocabulary-deprecated) (_deprecated_) | -       | -      | X     | -      | -   | -   | Table as a vocabulary list                    |
 | [2016 Table Alternatives](#tag-2016-table-alternatives)     | -       | -      | X     | -      | _   | _   | Table abstracts another table                 |
 | [2016 Column Display](#tag-2016-column-display)             | -       | -      | -     | X      | -   | -   | Column-specific display options               |
 | [2017 Key Display](#tag-2017-key-display)                   | -       | -      | -     | -      | X   | -   | Key augmentation                              |
 | [2016 Foreign Key](#tag-2016-foreign-key)                   | -       | -      | -     | -      | -   | X   | Foreign key augmentation                      |
 | [2016 Generated](#tag-2016-generated)                       | -       | X      | X     | X      | -   | -   | Generated model element                       |
-| [2016 Ignore](#tag-2016-ignore-deprecated) (_deprecated_)              | -       | X      | X     | X      | -   | -   | Ignore model element                          |
+| [2016 Ignore](#tag-2016-ignore-deprecated) (_deprecated_)   | -       | X      | X     | X      | -   | -   | Ignore model element                          |
 | [2016 Immutable](#tag-2016-immutable)                       | -       | X      | X     | X      | -   | -   | Immutable model element                       |
 | [2016 Non Deletable](#tag-2016-non-deletable)               | -       | X      | X     | -      | -   | -   | Non-deletable model element                   |
 | [2016 App Links](#tag-2016-app-links)                       | -       | X      | X     | -      | -   | -   | Intra-Chaise app links                        |
@@ -64,18 +64,19 @@ here is a quick matrix to locate them.
 | [2016 Visible Columns](#tag-2016-visible-columns)           | -       | -      | X     | -      | -   | -   | Column visibility and presentation order      |
 | [2016 Visible Foreign Keys](#tag-2016-visible-foreign-keys) | -       | -      | X     | -      | -   | -   | Foreign key visibility and presentation order |
 | [2019 Export](#tag-2019-export)                             | -       | X      | X     | -      | -   | -   | Describes export templates                    |
-| [2016 Export](#tag-2016-export-deprecated) (_deprecated_)              | -       | X      | X     | -      | -   | -   | Describes export templates                    |
+| [2016 Export](#tag-2016-export-deprecated) (_deprecated_)   | -       | X      | X     | -      | -   | -   | Describes export templates                    |
 | [2017 Asset](#tag-2017-asset)                               | -       | -      | -     | X      | -   | -   | Describes assets                              |
 | [2018 Citation](#tag-2018-citation)                         | -       | -      | X     | -      | -   | -   | Describes citation                            |
 | [2018 Required](#tag-2018-required)                         | -       | -      | -     | X      | -   | -   | Required model column                         |
 | [2018 Indexing Preferences](#tag-2018-indexing-preferences) | -       | -      | X     | X      | -   | -   | Specify database indexing preferences         |
 | [2019 Chaise Config](#tag-2019-chaise-config)               | X       | -      | -     | -      | -   | -   | Properties to configure chaise app UX         |
 | [2019 Source Definitions](#tag-2019-source-definitions)     | -       | -      | X     | -      | -   | -   | Describe source definitions                   |
-| [2021 Google Dataset](#tag-2021-google-dataset)     | -       | -      | X     | -      | -   | -   | Describe metadata for rich results in Google Dataset                   |
+| [2021 Google Dataset](#tag-2021-google-dataset)             | -       | -      | X     | -      | -   | -   | Describe metadata for rich results in Google Dataset |
+| [2021 Table Config](#tag-2021-table-config)                 | -       | -      | X     | -      | -   | -   | Describe Table Config                         |
 
 For brevity, the annotation keys are listed above by their section
 name within this documentation. The actual key URI follows one of these formats:
-- `tag:misd.isi.edu,` _date_ `:` _key_ 
+- `tag:misd.isi.edu,` _date_ `:` _key_
 - `tag:isrd.isi.edu,` _date_ `:` _key_
 
 Where the _key_ part is lower-cased with hyphens replacing whitespace. For example, the `2015 Display` annotation key URI is actually `tag:misd.isi.edu,2015:display`, and `2017 Key Display` is `tag:isrd.isi.edu,2017:key-display`.
@@ -443,11 +444,11 @@ Configuration attributes (optional):
   ```json
   [
     {
-      "num_occurrences": true, 
+      "num_occurrences": true,
       "descending": true
     },
     {
-      "column": "<the scalar facet column name>", 
+      "column": "<the scalar facet column name>",
       "descending": false
     }
   ]
@@ -670,11 +671,11 @@ Supported JSON _option_ payload patterns:
         - `table`: the parent table name `{{{$page.parent.table}}}`.
         - `schema`: the parent schema name `{{{$page.parent.schema}}}`.
 - `"row_markdown_pattern":` _rowpattern_: Render the row by composing a markdown representation only when `row_markdown_pattern` is non-null.
-  - Expand _rowpattern_ to obtain a markdown representation of each row via [Pattern Expansion](#pattern-expansion). 
+  - Expand _rowpattern_ to obtain a markdown representation of each row via [Pattern Expansion](#pattern-expansion).
   - The pattern has access to column values **after** any processing implied by [2016 Column Display](#column-display).
   - If used in any context other than `row_name`, the pattern also has access to a `$self` object that has the following attributes:
     - `rowName`: Row-name of the represented row.
-    - `uri.detailed`: a uri to the row in `detailed` context. 
+    - `uri.detailed`: a uri to the row in `detailed` context.
 - `"separator_markdown":` _separator_: Insert _separator_ markdown text between each expanded _rowpattern_ when presenting row sets. (Default new-line `"\n"`.)
   - Ignore if `"row_markdown_pattern"` is not also configured.
 - `"prefix_markdown":` _prefix_: Insert _prefix_ markdown before the first _rowpattern_ expansion when presenting row sets. (Default empty string `""`.)
@@ -825,7 +826,7 @@ A new asset location may be specified via a pattern to induce a prospective asse
 Supported JSON payload patterns:
 
 - `{`... `"url_pattern": ` _pattern_ ...`}`: A desired upload location can be derived by [Pattern Expansion](#pattern-expansion) on _pattern_. This attribute is required for browser upload and if it is not specified the client will not provide the browser upload feature. See implementation notes below.
-- `{`... `"browser_upload": ` `false` ... `}`: If `url_pattern` is availale and valid browser upload feature will be enabled. If you want to force disabling this feature set it to `false`.
+- `{`... `"browser_upload": ` `false` ... `}`: If `url_pattern` is available and valid browser upload feature will be enabled. If you want to force disabling this feature set it to `false`.
 - `{`... `"filename_column": ` _column_ ...`}`: The _column_ stores the filename of the asset.
 - `{`... `"byte_count_column": ` _column_ ...`}`: The _column_ stores the file size in bytes of the asset. It SHOULD be an integer typed column.
 - `{`... `"md5": ` _column_ | `true` ...`}`: If _column_, then the _column_ stores the checksum generated by the 'md5' cryptographic hash function. It MUST be ASCII/UTF-8 hexadecimal encoded. If `true`, then the client SHOULD generate a 'md5' checksum and communicate it to the asset storage service according to its protocol.
@@ -876,7 +877,7 @@ Supported _waitForList_ pattern:
 Default heuristics:
 -  Apart from the main table data, all-outbound foreignkeys, and listed psuedo-columns in the `wait_for`, the pattern has access to a `$self` object that has the following attributes:
   - `rowName`: Row-name of the represented row.
-  - `uri.detailed`: a uri to the row in `detailed` context. 
+  - `uri.detailed`: a uri to the row in `detailed` context.
 - `journal_pattern`, `year_pattern`, and `url_pattern` MUST be specified for citation. If any of the 3 are not specified or if one of them produces a null value, citation will be disabled.
 - If any of the other values are not present or produce a null value, it is up to the client to decide how to display the citation.
 
@@ -1043,12 +1044,12 @@ Supported JSON payload pattern:
 Supported _jsonld_ payload pattern:
 
 
-- JSON-LD keywords: 
+- JSON-LD keywords:
     - `@context`: It is a schema for your data, not only defining the property datatypes but also the classes of json resources. Default applied if none exists is `http://schema.org`.
-    - `@type`: Used to set the data type of a node or typed value. At the top level, only a value of `Dataset` is supported. Default applied if none exists is `Dataset`. 
+    - `@type`: Used to set the data type of a node or typed value. At the top level, only a value of `Dataset` is supported. Default applied if none exists is `Dataset`.
 - Schema.org volabulary: The supported attributes and types are [here](https://github.com/informatics-isi-edu/ermrestjs/blob/master/js/utils/json_ld_schema.js). This is a subset of the original vocabulary provided by schema.org. All the properties support [pattern expansion](#pattern-expansion) and the `template_engine` property should be defined outside the `dataset` definition. Apart from the main table data and all-outbound foreignkeys the pattern has access to a `$self` object that has the following attributes:
   - `rowName`: Row-name of the represented row.
-  - `uri.detailed`: a uri to the row in `detailed` context. 
+  - `uri.detailed`: a uri to the row in `detailed` context.
 
 
 After generating the JSON-LD based on the given specifications, the client will validate it. If the generated JSON-LD has any of the following issues, the given JSON-LD will be completely invalidated and ignored:
@@ -1056,7 +1057,7 @@ After generating the JSON-LD based on the given specifications, the client will 
  - Incorrect value of `@type` (Must be `Dataset`.)
  - Missing or empty value of mandatory attribute `name`
  - Missing or empty value of mandatory attribute `description`
-    
+
 In all remaining scenarios, the problematic attribute (attributes that don't follow the expected structure or type) will simply be ignored and the reason for that will be logged in the browser console.
 
 You can use [this](https://search.google.com/test/rich-results) tool by Google to validate any JSON-LD yourself if needed, it accepts both a URL or a code snippet.
@@ -1068,8 +1069,8 @@ Example of annotation:
   "tag:isrd.isi.edu,2021:google-dataset": {  
     "detailed": {
       "dataset": {
-        "@context": "http://schema.org", 
-        "@type": "Dataset", 
+        "@context": "http://schema.org",
+        "@type": "Dataset",
         "name": "{{{title}}}",
         "description": "{{{summary}}}",
         "url": "{{{$self.uri.detailed}}}",
@@ -1087,7 +1088,19 @@ Example of annotation:
     }
   }
 }
-``` 
+```
+## Tag: 2021 Table Config
+`tag:isrd.isi.edu,2021:table-config`
+
+This key indicates that the annotated table has a specific configuration options that modify the behavior of the table when accessing the APIs.
+
+Supported JSON payload patterns:
+- `{`... `"user_favorites":` `{` _favoritesentry_ `}`:  Defines the user favorites configuration based on  _favoritesentry_. Attributes that this JSON document can have are:
+  - `"storage_table":` `{` _storageconfig_ `}`: An object containing the names of model elements for creating the ermrest path for creation and deletion. Teh _storageconfig_ has the following properties.
+    - `catalog`: Required. String value of the catalog id
+    - `schema`: Required. String value of the schema name
+    - `table`: Required. String value of the table name
+
 ### Context Names
 
 List of _context_ names that are used in ERMrest:
