@@ -757,6 +757,17 @@
             return true;
         },
 
+        /**
+         * Given a facetWrapper object, will send a request to fetch the rows associated with the `choices`
+         * This will return a promise that will be resolved with an object that has the following attributes:
+         * - invalidChoices: The choices that were ignored.
+         * - originalChoices: The original list of choices
+         * - andFilterObject: the given input but with the following modifications:
+         *    - a new entityChoiceFilterPage is added that stores the page result
+         *    - choices are modified based on the result.
+         * @param {ERMrest.SourceObjectWrapper} andFilterObject - the facet object
+         * @param {Object} contextHeaderParams  - the object that should be logged with read request
+         */
         getEntityChoiceRows: function (andFilterObject, contextHeaderParams) {
             var defer = module._q.defer(), sourceObject = andFilterObject.sourceObject;
 
@@ -795,6 +806,13 @@
                 return defer.resolve(res), defer.promise;
             }
 
+            if (!contextHeaderParams || !isObject(contextHeaderParams)) {
+                // TODO this should be improved
+                // TODO stack is missing while it should be passed form the parent
+                contextHeaderParams = {
+                    "action": ":set/facet,choice/preselect;preload"
+                };
+            }
             var table = andFilterObject.column.table;
             var uri = [
                 table.schema.catalog.server.uri ,"catalog" ,
@@ -826,7 +844,6 @@
                         // keep track of choices that we invalidated so we 
                         // can create a proper error message
                         res.invalidChoices = Object.keys(filterTerms);
-
 
                         if (hasNullChoice) {
                             newChoices.push(null);
