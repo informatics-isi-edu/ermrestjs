@@ -509,6 +509,8 @@ exports.execute = function (options) {
                         ],
                         "array missmatch."
                     );
+
+                    done();
                 }).catch(function (err) {
                     done.fail(err);
                 })
