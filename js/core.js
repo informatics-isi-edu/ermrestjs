@@ -1278,7 +1278,7 @@
                         var allValid = annot.stable_key_columns.every(function (colName) {
                             try {
                                 // all the columns must be valid
-                                var col = self.columns.get(col);
+                                var col = self.columns.get(colName);
                             
                                 // all the columns must be not-null
                                 if (col.nullok) {
@@ -1299,7 +1299,7 @@
                     // get it from the stable_key attribute (all the columns must be nullok=false)
                     if (Array.isArray(annot.stable_key) && annot.stable_key.length == 2) {
                         var obj = self.schema.catalog.constraintByNamePair(annot.stable_key, module._constraintTypes.KEY);
-                        if (obj && obj._notNull) {
+                        if (obj && obj.object && obj.object._notNull) {
                             return obj.object.colset.columns;
                         }
                     }

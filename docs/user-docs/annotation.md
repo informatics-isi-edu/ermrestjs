@@ -1100,6 +1100,14 @@ Supported JSON payload patterns:
     - `catalog`: Required. String value of the catalog id
     - `schema`: Required. String value of the schema name
     - `table`: Required. String value of the table name
+- `{`... `"stable_key_columns":` `[` _column name_ `,` ... `]` ... `}`: Define a list of not-null columns that should be used as "stable key".
+- `{`... `"stable_key":` `[` _schema name_ `,` _constraint name_ `]` ... `}`: An alternative syntax to `"stable_key_columns"` that allows you to refer to an existing key instead of defining your own list of columns.
+
+Note:
+- If both `stable_key_columns` and `stable_key` are defined, `stable_key_columns` will be used.
+- Current implementation of `stable_key_columns` (and `stable_key`) DOES NOT allow composite keys, and only single column is allowed.
+- "Stable key" is used to provide a more stable and presistent value for entity facets and used in combination of "save query" feature. In some cases the model might change and the facet definitions are optimized to be performant and not stable/persistence. In these circumstances you can define a "stable key" for the table and Chaise will store value of stable key instead.
+
 
 ### Context Names
 
