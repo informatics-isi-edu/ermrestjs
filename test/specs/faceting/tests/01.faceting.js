@@ -147,7 +147,9 @@ exports.execute = function (options) {
             // get all the references needed for the test cases
             options.ermRest.resolve(createURL(tableMain), {cid: "test"}).then(function (ref) {
                 refMain = ref.contextualize.compact;
-                mainFacets = refMain.facetColumns;
+                return refMain.generateFacetColumns();
+            }).then (function (res) {
+                mainFacets = res.facetColumns;
 
                 facetObj = {
                     "and": [
@@ -176,9 +178,18 @@ exports.execute = function (options) {
 
         });
 
-        describe("Reference.facetColumns, ", function () {
+        describe("Reference.generateFacetColumns, ", function () {
             describe ("when `filter` annotation is not defined, ", function () {
                 describe("when visible columns for `compact` and related entities for `detailed` are wellformed.", function () {
+                    beforeAll(function (done) {
+                        refF4.generateFacetColumns().then(function (res) {
+                            // we don't need to do anything, refF4.facetColumns is populated
+                            done();
+                        }).catch(function (err) {
+                            done.fail(err);
+                        })
+                    })
+
                     it ("it should use the visible columns from `compact` and related entities from `detailed`", function () {
                         expect(refF4.facetColumns.length).toBe(7, "length missmatch.");
                     });
@@ -353,12 +364,14 @@ exports.execute = function (options) {
 
             describe("if reference already has facets or filters applied, ", function () {
 
-                it ("should throw an error if the facet in the url is invalid.", function (done) {
+                it ("if the facet in the url is invalid should ignore them and return the issues.", function (done) {
                     facetObj = { "and": [ {"source": "invalid_column_that_doesnt_exist", "choice": ["test"]} ] };
                     options.ermRest.resolve(createURL(tableMain, facetObj)).then(function (ref) {
-                        expect(function () {
-                            var facetColumns = ref.facetColumns;
-                        }).toThrow("Given filter or facet is not valid.");
+                        return ref.generateFacetColumns();
+                    }).then(function (result) {
+                        expect(result.issues).toBeDefined("issues was not defined");
+                        expect(result.issues instanceof options.ermRest.UnsupportedFilters).toBe(true, "issues type missmatch");
+                        // TODO 
                         done();
                     }).catch(function (err) {
                         console.log(err);
@@ -369,9 +382,11 @@ exports.execute = function (options) {
                 it ("should throw an error if the filter in the url is invalid.", function (done) {
                     var invalidURL =  options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + tableMain + "/invalid_column_that_doesnt_exist=1234";
                     options.ermRest.resolve(invalidURL).then(function (ref) {
-                        expect(function () {
-                            var facetColumns = ref.facetColumns;
-                        }).toThrow("Given filter or facet is not valid.");
+                        return ref.generateFacetColumns();
+                    }).then(function (result) {
+                        expect(result.issues).toBeDefined("issues was not defined");
+                        expect(result.issues instanceof options.ermRest.UnsupportedFilters).toBe(true, "issues type missmatch");
+                        // TODO 
                         done();
                     }).catch(function (err) {
                         console.log(err);
@@ -699,7 +714,7 @@ exports.execute = function (options) {
                             expect(r.facetColumns.length).toBe(23, "facet list length missmatch.");
                             expect(r.facetColumns[0].filters.length).toBe(0, "filters length missmatch.");
                             expect(r.location.ermrestCompactPath).toEqual(
-                                "M:=faceting_schema:main/id::null::;!(id::null::)/$M",
+                                "M:=faceting_schema:main",
                                 "path missmatch."
                             );
                             done();

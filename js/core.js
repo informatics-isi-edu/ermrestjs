@@ -1234,6 +1234,7 @@
 
         /**
          * The columns that create the stable key
+         * NOTE doesn't support composite keys for now
          * 
          * @type {ERMrest.Column[]}
          */
@@ -1251,14 +1252,21 @@
                         return null;
                     }
 
-                    // get it from the stable_key_cols attribute
-                    if (Array.isArray(annot.stable_key_cols) && annot.stable_key_cols.length > 0) {
+                    // get it from the stable_key_columns attribute (all the columns must be nullok=false)
+                    if (Array.isArray(annot.stable_key_columns) && annot.stable_key_columns.length > 0) {
                         var keyCols = [];
 
                         // make sure all the columns are valid
-                        var allValid = annot.stable_key_cols.every(function (col) {
+                        var allValid = annot.stable_key_columns.every(function (colName) {
                             try {
-                                keyCols.push(self.columns.get(col));
+                                // all the columns must be valid
+                                var col = self.columns.get(col);
+                            
+                                // all the columns must be not-null
+                                if (col.nullok) {
+                                    return false;
+                                }
+                                keyCols.push(col);
                                 return true;
                             } catch(err) {
                                 return false;
@@ -1270,10 +1278,10 @@
                         }
                     }
 
-                    // get it from the stable_key attribute
+                    // get it from the stable_key attribute (all the columns must be nullok=false)
                     if (Array.isArray(annot.stable_key) && annot.stable_key.length == 2) {
                         var obj = self.schema.catalog.constraintByNamePair(annot.stable_key, module._constraintTypes.KEY);
-                        if (obj) {
+                        if (obj && obj._notNull) {
                             return obj.object.colset.columns;
                         }
                     }
@@ -1283,7 +1291,8 @@
 
                 var stableKey = getStableKey(this);
 
-                if (stableKey == null) {
+                // NOTE we're not supporting composite keys now
+                if (stableKey == null || stableKey.length > 1) {
                     stableKey = this.shortestKey;
                 }
 

@@ -463,7 +463,8 @@ exports.execute = function (options) {
             });
 
             it ("faceting should be able to handle these new type of columns.", function (done) {
-                mainRef.geenrateFacetColumns().then(function (facetColumns) {
+                mainRef.generateFacetColumns().then(function (res) {
+                    var facetColumns = res.facetColumns;
                     // since it's going to use the heuristic and in compact we don't
                     // allow inbound fk without aggregate, this won't be exactly the same list.
 

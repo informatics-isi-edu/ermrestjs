@@ -351,8 +351,8 @@ to use for ERMrest JavaScript agents.
         * [new InvalidPageCriteria(message, path)](#new_ERMrest.InvalidPageCriteria_new)
     * [.InvalidServerResponse](#ERMrest.InvalidServerResponse)
         * [new InvalidServerResponse(uri, data, logAction)](#new_ERMrest.InvalidServerResponse_new)
-    * [.FacetFiltersNotImplemented](#ERMrest.FacetFiltersNotImplemented)
-        * [new FacetFiltersNotImplemented(discardedFacets, partialyDiscardedFacets)](#new_ERMrest.FacetFiltersNotImplemented_new)
+    * [.UnsupportedFilters](#ERMrest.UnsupportedFilters)
+        * [new UnsupportedFilters(discardedFacets, partialyDiscardedFacets)](#new_ERMrest.UnsupportedFilters_new)
     * [.ParsedFilter](#ERMrest.ParsedFilter)
         * [new ParsedFilter(type)](#new_ERMrest.ParsedFilter_new)
         * [.setFilters(filters)](#ERMrest.ParsedFilter+setFilters)
@@ -390,7 +390,7 @@ to use for ERMrest JavaScript agents.
         * [.defaultExportTemplate](#ERMrest.Reference+defaultExportTemplate) : <code>string</code>
         * [.citation](#ERMrest.Reference+citation) : <code>ERMrest.Citation</code>
         * [.googleDatasetMetadata](#ERMrest.Reference+googleDatasetMetadata) : <code>ERMrest.GoogleDatasetMetadata</code>
-        * [.generateFacetColumns()](#ERMrest.Reference+generateFacetColumns) ⇒ [<code>Array.&lt;FacetColumn&gt;</code>](#ERMrest.FacetColumn)
+        * [.generateFacetColumns()](#ERMrest.Reference+generateFacetColumns)
         * [.validateFacetsFilters(facetAndFilters, facetObjectWrappers, searchTerm, skipMappingEntityChoices, changeLocation)](#ERMrest.Reference+validateFacetsFilters)
         * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
         * [.hideFacets()](#ERMrest.Reference+hideFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
@@ -716,7 +716,7 @@ to use for ERMrest JavaScript agents.
         * [.defaultExportTemplate](#ERMrest.Reference+defaultExportTemplate) : <code>string</code>
         * [.citation](#ERMrest.Reference+citation) : <code>ERMrest.Citation</code>
         * [.googleDatasetMetadata](#ERMrest.Reference+googleDatasetMetadata) : <code>ERMrest.GoogleDatasetMetadata</code>
-        * [.generateFacetColumns()](#ERMrest.Reference+generateFacetColumns) ⇒ [<code>Array.&lt;FacetColumn&gt;</code>](#ERMrest.FacetColumn)
+        * [.generateFacetColumns()](#ERMrest.Reference+generateFacetColumns)
         * [.validateFacetsFilters(facetAndFilters, facetObjectWrappers, searchTerm, skipMappingEntityChoices, changeLocation)](#ERMrest.Reference+validateFacetsFilters)
         * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
         * [.hideFacets()](#ERMrest.Reference+hideFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
@@ -1326,6 +1326,7 @@ The columns that create the shortest key that can be used for display purposes.
 
 #### table.stableKey : [<code>Array.&lt;Column&gt;</code>](#ERMrest.Column)
 The columns that create the stable key
+NOTE doesn't support composite keys for now
 
 **Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
 <a name="ERMrest.Table+uri"></a>
@@ -2877,13 +2878,13 @@ Invalid server response
 | data | <code>object</code> | the returned data |
 | logAction | <code>string</code> | the log action of the request |
 
-<a name="ERMrest.FacetFiltersNotImplemented"></a>
+<a name="ERMrest.UnsupportedFilters"></a>
 
-### ERMrest.FacetFiltersNotImplemented
+### ERMrest.UnsupportedFilters
 **Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
-<a name="new_ERMrest.FacetFiltersNotImplemented_new"></a>
+<a name="new_ERMrest.UnsupportedFilters_new"></a>
 
-#### new FacetFiltersNotImplemented(discardedFacets, partialyDiscardedFacets)
+#### new UnsupportedFilters(discardedFacets, partialyDiscardedFacets)
 Invalid server response
 
 
@@ -2970,7 +2971,7 @@ Constructor for a ParsedFilter.
     * [.defaultExportTemplate](#ERMrest.Reference+defaultExportTemplate) : <code>string</code>
     * [.citation](#ERMrest.Reference+citation) : <code>ERMrest.Citation</code>
     * [.googleDatasetMetadata](#ERMrest.Reference+googleDatasetMetadata) : <code>ERMrest.GoogleDatasetMetadata</code>
-    * [.generateFacetColumns()](#ERMrest.Reference+generateFacetColumns) ⇒ [<code>Array.&lt;FacetColumn&gt;</code>](#ERMrest.FacetColumn)
+    * [.generateFacetColumns()](#ERMrest.Reference+generateFacetColumns)
     * [.validateFacetsFilters(facetAndFilters, facetObjectWrappers, searchTerm, skipMappingEntityChoices, changeLocation)](#ERMrest.Reference+validateFacetsFilters)
     * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
     * [.hideFacets()](#ERMrest.Reference+hideFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
@@ -3359,23 +3360,40 @@ a Metadata object
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+generateFacetColumns"></a>
 
-#### reference.generateFacetColumns() ⇒ [<code>Array.&lt;FacetColumn&gt;</code>](#ERMrest.FacetColumn)
-Facets that should be represented to the user.
-Heuristics:
- - All the visible columns in compact context.
- - All the related entities in detailed context.
+#### reference.generateFacetColumns()
+Returns the facets that should be represented to the user.
+It will return a promise resolved with the following object:
+{
+  facetColumns: <an array of FacetColumn objects>
+  issues: <if null it means that there wasn't any issues, otherwise will be a UnsupportedFilters object>
+}
 
+- If `filter` context is not defined for the table, following heuristics will be used:
+   - All the visible columns in compact context.
+   - All the related entities in detailed context.
+- This function will modify the Reference.location to reflect the preselected filters
+  per annotation as well as validation.
+- This function will validate the facets in the url, by doing the following (any invalid filter will be ignored):
+  - Making sure given `source` or `sourcekey` are valid 
+  - If `source_domain` is passed,
+      - Making sure `source_domain.table` and `source_domain.schema` are valid 
+      - Using `source_domain.column` instead of end column in case of scalars
+  - Sending request to fetch the rows associated with the entity choices,
+    and ignoring the ones that don't return any result.
+- The valid fitlers in the url will either be matched with an existing facet,
+  or result in a new facet column.
 Usage:
 ```
- var facets = reference.facetColumns;
- var newRef = reference.facetColumns[0].addChoiceFilters(['value']);
- var newRef2 = newRef.facetColumns[1].addSearchFilter('text 1');
- var newRef3 = newRef2.facetColumns[2].addRangeFilter(1, 2);
- var newRef4 = newRef3.facetColumns[3].removeAllFilters();
- for (var i=0, len=newRef4.facetColumns.length; i<len; i++) {
-   var fc = reference.facetColumns[i];
-   console.log("Column name:", fc.column.name, "has following facets:", fc.filters);
- }
+ reference.generateFacetColumns.then(function (result) {
+     var newRef = result.facetColumns[0].addChoiceFilters(['value']);
+     var newRef2 = newRef.facetColumns[1].addSearchFilter('text 1');
+     var newRef3 = newRef2.facetColumns[2].addRangeFilter(1, 2);
+     var newRef4 = newRef3.facetColumns[3].removeAllFilters();
+     for (var i=0, len=newRef4.facetColumns.length; i<len; i++) {
+         var fc = reference.facetColumns[i];
+         console.log("Column name:", fc.column.name, "has following facets:", fc.filters);
+     }
+});
 ```
 
 **Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
@@ -3385,6 +3403,8 @@ Usage:
 This will go over all the facets and make sure they are fine
 if not, will try to transform or remove them and 
 in the end will update the list
+
+NOTE this should be called before doing read or as part of it
 
 **Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
 
@@ -6699,7 +6719,7 @@ get PathColumn object by column name
     * [.defaultExportTemplate](#ERMrest.Reference+defaultExportTemplate) : <code>string</code>
     * [.citation](#ERMrest.Reference+citation) : <code>ERMrest.Citation</code>
     * [.googleDatasetMetadata](#ERMrest.Reference+googleDatasetMetadata) : <code>ERMrest.GoogleDatasetMetadata</code>
-    * [.generateFacetColumns()](#ERMrest.Reference+generateFacetColumns) ⇒ [<code>Array.&lt;FacetColumn&gt;</code>](#ERMrest.FacetColumn)
+    * [.generateFacetColumns()](#ERMrest.Reference+generateFacetColumns)
     * [.validateFacetsFilters(facetAndFilters, facetObjectWrappers, searchTerm, skipMappingEntityChoices, changeLocation)](#ERMrest.Reference+validateFacetsFilters)
     * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
     * [.hideFacets()](#ERMrest.Reference+hideFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
@@ -7088,23 +7108,40 @@ a Metadata object
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+generateFacetColumns"></a>
 
-#### reference.generateFacetColumns() ⇒ [<code>Array.&lt;FacetColumn&gt;</code>](#ERMrest.FacetColumn)
-Facets that should be represented to the user.
-Heuristics:
- - All the visible columns in compact context.
- - All the related entities in detailed context.
+#### reference.generateFacetColumns()
+Returns the facets that should be represented to the user.
+It will return a promise resolved with the following object:
+{
+  facetColumns: <an array of FacetColumn objects>
+  issues: <if null it means that there wasn't any issues, otherwise will be a UnsupportedFilters object>
+}
 
+- If `filter` context is not defined for the table, following heuristics will be used:
+   - All the visible columns in compact context.
+   - All the related entities in detailed context.
+- This function will modify the Reference.location to reflect the preselected filters
+  per annotation as well as validation.
+- This function will validate the facets in the url, by doing the following (any invalid filter will be ignored):
+  - Making sure given `source` or `sourcekey` are valid 
+  - If `source_domain` is passed,
+      - Making sure `source_domain.table` and `source_domain.schema` are valid 
+      - Using `source_domain.column` instead of end column in case of scalars
+  - Sending request to fetch the rows associated with the entity choices,
+    and ignoring the ones that don't return any result.
+- The valid fitlers in the url will either be matched with an existing facet,
+  or result in a new facet column.
 Usage:
 ```
- var facets = reference.facetColumns;
- var newRef = reference.facetColumns[0].addChoiceFilters(['value']);
- var newRef2 = newRef.facetColumns[1].addSearchFilter('text 1');
- var newRef3 = newRef2.facetColumns[2].addRangeFilter(1, 2);
- var newRef4 = newRef3.facetColumns[3].removeAllFilters();
- for (var i=0, len=newRef4.facetColumns.length; i<len; i++) {
-   var fc = reference.facetColumns[i];
-   console.log("Column name:", fc.column.name, "has following facets:", fc.filters);
- }
+ reference.generateFacetColumns.then(function (result) {
+     var newRef = result.facetColumns[0].addChoiceFilters(['value']);
+     var newRef2 = newRef.facetColumns[1].addSearchFilter('text 1');
+     var newRef3 = newRef2.facetColumns[2].addRangeFilter(1, 2);
+     var newRef4 = newRef3.facetColumns[3].removeAllFilters();
+     for (var i=0, len=newRef4.facetColumns.length; i<len; i++) {
+         var fc = reference.facetColumns[i];
+         console.log("Column name:", fc.column.name, "has following facets:", fc.filters);
+     }
+});
 ```
 
 **Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
@@ -7114,6 +7151,8 @@ Usage:
 This will go over all the facets and make sure they are fine
 if not, will try to transform or remove them and 
 in the end will update the list
+
+NOTE this should be called before doing read or as part of it
 
 **Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
 

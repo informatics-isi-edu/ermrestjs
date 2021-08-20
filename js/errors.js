@@ -23,7 +23,7 @@
     module.InvalidSortCriteria = InvalidSortCriteria;
     module.InvalidPageCriteria = InvalidPageCriteria;
     module.InvalidServerResponse = InvalidServerResponse;
-    module.FacetFiltersNotImplemented = FacetFiltersNotImplemented;
+    module.UnsupportedFilters = UnsupportedFilters;
 
     /**
      * @memberof ERMrest
@@ -504,7 +504,7 @@
      * @constructor
      * @desc Invalid server response
      */
-    function FacetFiltersNotImplemented(discardedFacets, partialyDiscardedFacets) {
+    function UnsupportedFilters(discardedFacets, partialyDiscardedFacets) {
 
         // process discarded facets
         var discardedFacetMsg = [], discardedFacetSubMsg = [];
@@ -521,29 +521,35 @@
             partDiscardedFacetSubMsg.push(_createDiscardedFacetSubMessage(f, true));
         });
 
-        // create the messages:
-        var message = module._errorMessage.FACET_FILTERS_NOT_IMPLEMENTED + "\n";
-        var subMessage = "";
-        if (discardedFacetMsg.length > 0) {
-            message += "<br/><br/> Discarded facets: " + discardedFacetMsg.join(", ");
+        // create the message:
+        // TODO using HTML here looks hacky, although we already are using html
+        //      in conflict error
+        var message = "<p>" + module._errorMessage.UNSUPPORTED_FILTERS + "</p>";
+        if (discardedFacetMsg.length > 0 || partDiscardedFacetMsg.length > 0) {
+            message += "<ul>";
+            if (discardedFacetMsg.length > 0) {
+                message += "<li style='list-style-type: disc;'> Discarded facets: " + discardedFacetMsg.join(", ") + "</li>";
+            }
+            if (partDiscardedFacetMsg.length > 0) {
+                message += "<li style='list-style-type: disc;'> Facets with some discarded choices: " + partDiscardedFacetMsg.join(", ") + "</li>";
+            }
+            message += "</ul>";
         }
+
+        // create the submessage
+        var subMessage = "";
         if (discardedFacetSubMsg.length > 0) {
             subMessage += "Discarded facets:\n\n";
             subMessage += discardedFacetSubMsg.join("\n") + "\n\n";
-        }
-        if (partDiscardedFacetMsg.length > 0) {
-            message += "<br/> Facets with some discarded choices facets: " + partDiscardedFacetMsg.join(", ");
         }
         if (partDiscardedFacetSubMsg.length > 0) {
             subMessage += "\nPartially discarded facets:\n\n";
             subMessage += partDiscardedFacetSubMsg.join("\n");
         }
-
-        message += "<br/><br/>";
-        ERMrestError.call(this, '', module._errorStatus.FACET_FILTERS_NOT_IMPLEMENTED, message, subMessage);
+        ERMrestError.call(this, '', module._errorStatus.UNSUPPORTED_FILTERS, message, subMessage);
     }
-    FacetFiltersNotImplemented.prototype = Object.create(ERMrestError.prototype);
-    FacetFiltersNotImplemented.prototype.constructor = InvalidServerResponse;
+    UnsupportedFilters.prototype = Object.create(ERMrestError.prototype);
+    UnsupportedFilters.prototype.constructor = InvalidServerResponse;
 
     /**
      * Log the error object to the given ermrest location.
