@@ -62,7 +62,8 @@
 
     /**
      * function that is called when a HTTP 401 Error occurs
-     * @type {function}: Should return a promise
+     * and should return a promise
+     * @type {function}
      * @private
      */
     module._http401Handler = null;

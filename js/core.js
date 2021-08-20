@@ -875,6 +875,15 @@
             }
 
             return this._tables[name];
+        },
+
+        /**
+         * @param {string} name table name
+         * @returns {boolean} if the table exists or not
+         * @desc check for table name existence
+         */
+         has: function (name) {
+            return name in this._tables;
         }
 
     };
@@ -1248,6 +1257,75 @@
                 }
             }
             return this._displayKey;
+        },
+
+        /**
+         * The columns that create the stable key
+         * NOTE doesn't support composite keys for now
+         * 
+         * @type {ERMrest.Column[]}
+         */
+        get stableKey() {
+            if (this._stabelKey === undefined) {
+                var getStableKey = function (self) {
+                    // find the table config annot
+                    if (!self.annotations.contains(module._annotations.TABLE_CONFIG)) {
+                        return null;
+                    }
+                    var annot = self.annotations.get(module._annotations.TABLE_CONFIG).content;
+
+                    // make sure it's defined and is an object
+                    if (!isObjectAndNotNull(annot)) {
+                        return null;
+                    }
+
+                    // get it from the stable_key_columns attribute (all the columns must be nullok=false)
+                    if (Array.isArray(annot.stable_key_columns) && annot.stable_key_columns.length > 0) {
+                        var keyCols = [];
+
+                        // make sure all the columns are valid
+                        var allValid = annot.stable_key_columns.every(function (colName) {
+                            try {
+                                // all the columns must be valid
+                                var col = self.columns.get(colName);
+                            
+                                // all the columns must be not-null
+                                if (col.nullok) {
+                                    return false;
+                                }
+                                keyCols.push(col);
+                                return true;
+                            } catch(err) {
+                                return false;
+                            }
+                        });
+                        
+                        if (allValid) {
+                            return keyCols;
+                        }
+                    }
+
+                    // get it from the stable_key attribute (all the columns must be nullok=false)
+                    if (Array.isArray(annot.stable_key) && annot.stable_key.length == 2) {
+                        var obj = self.schema.catalog.constraintByNamePair(annot.stable_key, module._constraintTypes.KEY);
+                        if (obj && obj.object && obj.object._notNull) {
+                            return obj.object.colset.columns;
+                        }
+                    }
+
+                    return null;
+                };
+
+                var stableKey = getStableKey(this);
+
+                // NOTE we're not supporting composite keys now
+                if (stableKey == null || stableKey.length > 1) {
+                    stableKey = this.shortestKey;
+                }
+
+                this._stabelKey = stableKey;
+            }
+            return this._stabelKey;
         },
 
         /**

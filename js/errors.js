@@ -23,6 +23,7 @@
     module.InvalidSortCriteria = InvalidSortCriteria;
     module.InvalidPageCriteria = InvalidPageCriteria;
     module.InvalidServerResponse = InvalidServerResponse;
+    module.UnsupportedFilters = UnsupportedFilters;
 
     /**
      * @memberof ERMrest
@@ -461,6 +462,94 @@
     InvalidServerResponse.prototype = Object.create(ERMrestError.prototype);
     InvalidServerResponse.prototype.constructor = InvalidServerResponse;
 
+
+    function _createDiscardedFacetSubMessage(obj, onlyChoices) {
+        var sum = [];
+        if (Array.isArray(obj.choices) && obj.choices.length > 0) {
+            tempSum = obj.choices.length;
+            if (obj.total_choice_count) {
+                tempSum += "/" + obj.total_choice_count;
+            }
+            tempSum += " choice" + (obj.choices.length > 1 ? "s" : "");
+            sum.push(tempSum);
+        }
+
+        if (!onlyChoices && Array.isArray(obj.ranges) && obj.ranges.length > 0) {
+            sum.push(obj.ranges.length + " range" + (obj.ranges.length > 1 ? "s" : ""));
+        }
+
+        if (!onlyChoices && obj.not_null) {
+            sum.push("not null");
+        }
+
+        var values = [];
+        if (Array.isArray(obj.choices) && obj.choices.length > 0) {
+            values = values.concat(obj.choices.map(function (ch) { return "  - " + ch;}));
+        }
+        if (!onlyChoices && Array.isArray(obj.ranges) && obj.ranges.length > 0) {
+            values = values.concat(obj.ranges.map(function (r) { return "  - " + JSON.stringify(r);}));
+        }
+        if (!onlyChoices && obj.not_null) {
+            values = values.concat("  - not null");
+        }
+
+
+        return "- " + obj.markdown_name + " (" + sum.join(",") + "):\n" + values.join("\n");
+    }
+
+    /**
+     * @memberof ERMrest
+     * @param {Object[]} discardedFacets
+     * @param {Object[]} partialyDiscardedFacets
+     * @constructor
+     * @desc Invalid server response
+     */
+    function UnsupportedFilters(discardedFacets, partialyDiscardedFacets) {
+
+        // process discarded facets
+        var discardedFacetMsg = [], discardedFacetSubMsg = [];
+        discardedFacets.forEach(function (f) {
+            if (!f.markdown_name) return;
+            discardedFacetMsg.push(f.markdown_name);
+            discardedFacetSubMsg.push(_createDiscardedFacetSubMessage(f));
+        });
+        // process partialy discarded facets
+        var partDiscardedFacetMsg = [], partDiscardedFacetSubMsg = [];
+        partialyDiscardedFacets.forEach(function (f) {
+            if (!f.markdown_name) return;
+            partDiscardedFacetMsg.push(f.markdown_name);
+            partDiscardedFacetSubMsg.push(_createDiscardedFacetSubMessage(f, true));
+        });
+
+        // create the message:
+        // TODO using HTML here looks hacky, although we already are using html
+        //      in conflict error
+        var message = "<p>" + module._errorMessage.UNSUPPORTED_FILTERS + "</p>";
+        if (discardedFacetMsg.length > 0 || partDiscardedFacetMsg.length > 0) {
+            message += "<ul>";
+            if (discardedFacetMsg.length > 0) {
+                message += "<li style='list-style-type: disc;'> Discarded facets: " + discardedFacetMsg.join(", ") + "</li>";
+            }
+            if (partDiscardedFacetMsg.length > 0) {
+                message += "<li style='list-style-type: disc;'> Facets with some discarded choices: " + partDiscardedFacetMsg.join(", ") + "</li>";
+            }
+            message += "</ul>";
+        }
+
+        // create the submessage
+        var subMessage = "";
+        if (discardedFacetSubMsg.length > 0) {
+            subMessage += "Discarded facets:\n\n";
+            subMessage += discardedFacetSubMsg.join("\n") + "\n\n\n";
+        }
+        if (partDiscardedFacetSubMsg.length > 0) {
+            subMessage += "Partially discarded facets:\n\n";
+            subMessage += partDiscardedFacetSubMsg.join("\n") + "\n";
+        }
+        ERMrestError.call(this, '', module._errorStatus.UNSUPPORTED_FILTERS, message, subMessage);
+    }
+    UnsupportedFilters.prototype = Object.create(ERMrestError.prototype);
+    UnsupportedFilters.prototype.constructor = InvalidServerResponse;
 
     /**
      * Log the error object to the given ermrest location.

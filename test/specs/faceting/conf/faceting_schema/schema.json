@@ -252,7 +252,7 @@
                                 ],
                                 "entity": false
                             },
-                            {"source": [{"inbound": ["faceting_schema", "main_f3_assoc_fk1"]}, {"outbound": ["faceting_schema", "main_f3_assoc_fk2"]}, "id"]},
+                            {"sourcekey": "path_to_f3_id"},
                             {"source": "numeric_col"},
                             {"source": [{"inbound": ["faceting_schema", "f4_fk1"]}, "int_col"], "entity": false},
                             {"sourcekey": "path_to_path_prefix_o1_o1"},
@@ -299,6 +299,20 @@
                                 {"sourcekey": "path_to_path_prefix_o1"},
                                 {"outbound": ["faceting_schema", "path_prefix_o1_fk1"]},
                                 "path_prefix_o1_o1_col"
+                            ]
+                        },
+                        "path_to_path_prefix_o1_o1_entity": {
+                            "source": [
+                                {"sourcekey": "path_to_path_prefix_o1"},
+                                {"outbound": ["faceting_schema", "path_prefix_o1_fk1"]},
+                                "id"
+                            ]
+                        },
+                        "path_to_f3_id": {
+                            "source": [
+                                {"inbound": ["faceting_schema", "main_f3_assoc_fk1"]}, 
+                                {"outbound": ["faceting_schema", "main_f3_assoc_fk2"]},
+                                 "id"
                             ]
                         }
                     }

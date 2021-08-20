@@ -2446,13 +2446,13 @@ AssetPseudoColumn.prototype.formatPresentation = function(data, context, templat
 };
 
 /**
- * @private
  * Modify the default column_order heuristics for the asset, by using the filename
  * if
  *  - the filename_column is defined and valid
  *  - column_order is not defined on the column-display
  * This has been done to ensure the sorted column is the same as displayed value.
  * In most default cases, all the conditions will met.
+ * @private
  */
 AssetPseudoColumn.prototype._determineSortable = function () {
     AssetPseudoColumn.super._determineSortable.call(this);
@@ -3430,6 +3430,15 @@ FacetColumn.prototype = {
         }
         // otherwise generate an ermrest request to get the displaynames.
         else {
+            // if we already fetched the page, then just use it
+            if (self._facetObjectWrapper.entityChoiceFilterPage) {
+                self._facetObjectWrapper.entityChoiceFilterPage.tuples.forEach(function (t) {
+                    filters.push({uniqueId: t.data[columnName], displayname: t.displayname, tuple: t});
+                });
+                defer.resolve(filters);
+                return defer.promise;
+            }
+
             var filterStr = [], // used for generating the request
                 filterTerms = {}; // used for figuring out if there are any filter that didn't return result
                                   // key is the term, value is the index in self.choiceFilters

@@ -62,4 +62,57 @@ exports.execute = function (options) {
 
     });
 
+
+    describe("testing stable key related properties of table-config annotation", function () {
+        var schema, schemaName = "table_config";
+
+        var testStableKey = function (tableName, cols) {
+            expect(schema.tables.get(tableName).stableKey.map(function (col) {
+                return col.name;
+            })).toEqual(cols);
+        }
+
+        beforeAll(function (done) {
+            schema = options.catalog.schemas.get(schemaName);
+            done();
+        });
+
+        it ("should return the shortest key if stable_key and stable_key_columns are not defined", function () {
+            testStableKey("no_annotation", ["RID"]);
+        });
+
+        it ("should ignore stable_key if it's invalid", function () {
+            testStableKey("table_w_invalid_stable_key", ["RID"]);
+        });
+
+        it ("should ignore stable_key_columns if it has invalid columns", function () {
+            testStableKey("table_w_invalid_stable_key_columns", ["RID"]);
+        });
+
+        it ("should ignore stable_key if it's composite.", function () {
+            testStableKey("table_w_stable_key_composite", ["RID"]);
+        });
+
+        it ("should ignore stable_key_columns if it's composite.", function () {
+            testStableKey("table_w_stable_key_columns_composite", ["RID"]);
+        });
+
+        it ("should ignore stable_key if it has nullable column.", function () {
+            testStableKey("table_w_stable_key_nullable", ["RID"]);
+        });
+
+        it ("should ignore stable_key_columns if it has nullable column.", function () {
+            testStableKey("table_w_stable_key_columns_nullable", ["RID"]);
+        }); 
+
+        it ("should honor the stable_key", function () {
+            testStableKey("table_w_valid_stable_key", ["id"]);
+        });
+
+        it ("should honor the stable_key_columns", function () {
+            testStableKey("table_w_valid_stable_key_columns", ["id"]);
+        });
+
+    });
+
 };

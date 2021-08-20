@@ -528,6 +528,7 @@
      * @ignore
      */
     _facetColumnHelpers = {
+
         /**
          * Given a ReferenceColumn, InboundForeignKeyPseudoColumn, or ForeignKeyPseudoColumn
          * will return the facet object that should be used.
@@ -754,6 +755,103 @@
             }
 
             return true;
+        },
+
+        getEntityChoiceRows: function (andFilterObject, contextHeaderParams) {
+            var defer = module._q.defer(), sourceObject = andFilterObject.sourceObject;
+
+            var res = {
+                andFilterObject: andFilterObject,
+                invalidChoices: [],
+                originalChoices: []
+            };
+
+            // if there's source_domain use it
+            var projectedColumnName = andFilterObject.column.name,
+                filterColumnName = andFilterObject.column.name;
+            if (isObjectAndNotNull(sourceObject.source_domain) && isStringAndNotEmpty(sourceObject.source_domain.column)) {
+                filterColumnName = sourceObject.source_domain.column;
+            }
+
+            var filterStrs = [], filterTerms = {}, hasNullChoice = false;
+
+            res.originalChoices = sourceObject.choices;
+            sourceObject.choices.forEach(function (ch, index) {
+                if (ch in filterTerms) {
+                    return;
+                }
+                if (ch== null) {
+                    hasNullChoice = true;
+                    return;
+                }
+
+                filterStrs.push(
+                    module._fixedEncodeURIComponent(filterColumnName) + "=" + module._fixedEncodeURIComponent(ch)
+                );
+                filterTerms[ch] = index;
+            });
+
+            if (filterStrs.length === 0) {
+                return defer.resolve(res), defer.promise;
+            }
+
+            var table = andFilterObject.column.table;
+            var uri = [
+                table.schema.catalog.server.uri ,"catalog" ,
+                table.schema.catalog.id, "entity",
+                module._fixedEncodeURIComponent(table.schema.name) + ":" + module._fixedEncodeURIComponent(table.name),
+                filterStrs.join(";")
+            ].join("/");
+
+            var ref = new Reference(module.parse(uri), table.schema.catalog).contextualize.compactSelect;
+
+            // sorting to ensure a deterministic order of results
+            ref = ref.sort([{"column": filterColumnName, "descending": false}]);
+            (function (filterColumnName, projectedColumnName) {
+                // TODO depending on the number of columns this should potentially be multiple requests
+                //      because of the url limitation
+                ref.read(sourceObject.choices.length, contextHeaderParams, true).then(function (page) {
+
+                    // feels hacky
+                    res.andFilterObject.entityChoiceFilterPage = page;
+    
+                    // find the missing choices and also fix the choices if they are based on some other columns
+                    if (page.length != filterStrs.length || filterColumnName != projectedColumnName) {
+                        var newChoices = [];
+                        page.tuples.forEach(function (t) {
+                            newChoices.push(t.data[projectedColumnName]);
+                            delete filterTerms[t.data[filterColumnName]];
+                        });
+    
+                        // keep track of choices that we invalidated so we 
+                        // can create a proper error message
+                        res.invalidChoices = Object.keys(filterTerms);
+
+
+                        if (hasNullChoice) {
+                            newChoices.push(null);
+                        }
+    
+                        // kinda hacky
+                        // make sure the choices only include the valid ones (might be empty)
+                        // and also make sure the values are based on the correct column
+                        res.andFilterObject.sourceObject.choices = newChoices;
+                    }
+    
+                    defer.resolve(res);
+                }).catch(function (err) {
+                    // if any of the values had issue, the whole request is failing
+                    // TODO should we try to recover based on other values??
+                    res.invalidChoices = Object.keys(filterTerms);
+                    res.andFilterObject.sourceObject.choices = [];
+
+                    module._log.error("Error while trying to fetch entity facet rows: ", err);
+
+                    defer.resolve(res);
+                });
+            })(filterColumnName, projectedColumnName);
+
+            return defer.promise;
         }
     };
 

@@ -226,10 +226,13 @@
         NO_CONNECTION_ERROR: "No Connection Error",
         INVALID_SORT: "Invalid Sort Criteria",
         INVALID_PAGE: "Invalid Page Criteria",
-        INVALID_SERVER_RESPONSE: "Invalid Server Response"
+        INVALID_SERVER_RESPONSE: "Invalid Server Response",
+        UNSUPPORTED_FILTERS: "Unsupported Filters"
     });
 
     module._errorMessage = Object.freeze({
+        UNSUPPORTED_FILTERS: "Some (or all) externally supplied filter criteria cannot be implemented with the current catalog content. " +
+                                       "This may be due to lack of permissions or changes made to the content since the criteria were initially saved.",
         INVALID_FACET: "Given encoded string for facets is not valid.",
         INVALID_CUSTOM_FACET: "Given encoded string for cfacets is not valid.",
         INVALID_FACET_OR_FILTER: "Given filter or facet is not valid.",

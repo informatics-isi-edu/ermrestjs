@@ -462,52 +462,58 @@ exports.execute = function (options) {
                 areSameColumnList(detailedColsWTuple, detailedCols);
             });
 
-            it ("faceting should be able to handle these new type of columns.", function () {
-                var facetColumns = mainRef.facetColumns;
-                // since it's going to use the heuristic and in compact we don't
-                // allow inbound fk without aggregate, this won't be exactly the same list.
+            it ("faceting should be able to handle these new type of columns.", function (done) {
+                mainRef.generateFacetColumns().then(function (res) {
+                    var facetColumns = res.facetColumns;
+                    // since it's going to use the heuristic and in compact we don't
+                    // allow inbound fk without aggregate, this won't be exactly the same list.
 
-                // NOTE faceting will change the last column of more specific pseudo-columns
-                // (ForeignKey, InboundforeignKey, etc.) to the shortestkey.
-                expect(facetColumns.length).toBe(12, "length missmatch.");
-                expect(facetColumns.map(function (fc) {
-                    return fc.compressedDataSource;
-                })).toEqual(
-                    [
-                        "main_table_id_col", "col", "main_table_id_col", // the key
-                        [{"o": ["pseudo_column_schema", "main_fk1"]}, "RID"],
-                        [{"o": ["pseudo_column_schema", "main_fk1"]}, "id"], //entity:false
+                    // NOTE faceting will change the last column of more specific pseudo-columns
+                    // (ForeignKey, InboundforeignKey, etc.) to the shortestkey.
+                    expect(facetColumns.length).toBe(12, "length missmatch.");
+                    expect(facetColumns.map(function (fc) {
+                        return fc.compressedDataSource;
+                    })).toEqual(
                         [
-                            {"o": ["pseudo_column_schema", "main_fk1"]},
-                            {"o": ["pseudo_column_schema", "outbound_1_fk1"]},
-                            "id"
+                            "main_table_id_col", "col", "main_table_id_col", // the key
+                            [{"o": ["pseudo_column_schema", "main_fk1"]}, "RID"],
+                            [{"o": ["pseudo_column_schema", "main_fk1"]}, "id"], //entity:false
+                            [
+                                {"o": ["pseudo_column_schema", "main_fk1"]},
+                                {"o": ["pseudo_column_schema", "outbound_1_fk1"]},
+                                "id"
+                            ],
+                            [
+                                {"o": ["pseudo_column_schema", "main_fk1"]},
+                                {"o": ["pseudo_column_schema", "outbound_1_fk1"]},
+                                "id"
+                            ],
+                            "asset_filename",
+                            [
+                                {"o": ["pseudo_column_schema", "main_fk2"]},
+                                {"o": ["pseudo_column_schema", "outbound_2_fk1"]},
+                                "id"
+                            ],
+                            [{"i": ["pseudo_column_schema", "inbound_3_outbound_1_fk1"]}, "RID"],
+                            [
+                                {"i": ["pseudo_column_schema", "main_inbound_3_association_fk1"]},
+                                {"o": ["pseudo_column_schema", "main_inbound_3_association_fk2"]},
+                                "RID"
+                            ],
+                            [
+                                {"i": ["pseudo_column_schema", "main_inbound_3_association_fk1"]},
+                                {"o": ["pseudo_column_schema", "main_inbound_3_association_fk2"]},
+                                {"o": ["pseudo_column_schema", "inbound_3_fk1"]},
+                                "id"
+                            ]
                         ],
-                        [
-                            {"o": ["pseudo_column_schema", "main_fk1"]},
-                            {"o": ["pseudo_column_schema", "outbound_1_fk1"]},
-                            "id"
-                        ],
-                        "asset_filename",
-                        [
-                            {"o": ["pseudo_column_schema", "main_fk2"]},
-                            {"o": ["pseudo_column_schema", "outbound_2_fk1"]},
-                            "id"
-                        ],
-                        [{"i": ["pseudo_column_schema", "inbound_3_outbound_1_fk1"]}, "RID"],
-                        [
-                            {"i": ["pseudo_column_schema", "main_inbound_3_association_fk1"]},
-                            {"o": ["pseudo_column_schema", "main_inbound_3_association_fk2"]},
-                            "RID"
-                        ],
-                        [
-                            {"i": ["pseudo_column_schema", "main_inbound_3_association_fk1"]},
-                            {"o": ["pseudo_column_schema", "main_inbound_3_association_fk2"]},
-                            {"o": ["pseudo_column_schema", "inbound_3_fk1"]},
-                            "id"
-                        ]
-                    ],
-                    "array missmatch."
-                );
+                        "array missmatch."
+                    );
+
+                    done();
+                }).catch(function (err) {
+                    done.fail(err);
+                })
             });
         });
 
