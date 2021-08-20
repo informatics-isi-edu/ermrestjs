@@ -1056,6 +1056,24 @@
         this._showSavedQuery = _getHierarchicalDisplayAnnotationValue(this, "show_saved_query");
 
         /**
+         * @desc The path to the table where the favorite terms are stored
+         * @type {string}
+         */
+        this.favoritesPath = null;
+        if (this.annotations.contains(module._annotations.TABLE_CONFIG)) {
+            var userFavorites = this.annotations.get(module._annotations.TABLE_CONFIG).content.user_favorites;
+            // make sure user_favorites is defined
+            // make sure storage table is an object
+            if (userFavorites && typeof userFavorites.storage_table == "object") {
+                var favoritesTable = userFavorites.storage_table;
+                // make sure each key is present and the value is a non empty string
+                if (isStringAndNotEmpty(favoritesTable.catalog) && isStringAndNotEmpty(favoritesTable.schema) && isStringAndNotEmpty(favoritesTable.table)) {
+                    this.favoritesPath = "/ermrest/catalog/" + favoritesTable.catalog + "/entity/" + favoritesTable.schema + ":" + favoritesTable.table;
+                }
+            }
+        }
+
+        /**
          * @desc The type of this table
          * @type {string}
          */
@@ -1483,7 +1501,7 @@
                     module._log.info(message + ": " + " `sourcekey` didn't exist.");
                     return false;
                 }
-            
+
                 // if the key is special
                 if (Object.keys(module._specialSourceDefinitions).indexOf(key) !== -1) {
                     module._log.info(message + ": " + " `sourcekey` cannot be any of the special keys.");
@@ -1507,9 +1525,9 @@
                     // if it has prefix, we have to make sure the prefix is processed beforehand
                     hasPrefix = typeof sourceDef === "object" && Array.isArray(sourceDef.source) &&
                                 sourceDef.source.length > 1 && ("sourcekey" in sourceDef.source[0]);
-                    
+
                     if (hasPrefix) {
-                        // NOTE limitation because of other parts of the code which we might want 
+                        // NOTE limitation because of other parts of the code which we might want
                         //      to allow later
                         if (sourceDef.source.length < 3) {
                             module._log.info(message + ": " + "sourcekey (path prefix) can only be used when there's a path after it.");
@@ -1528,7 +1546,7 @@
                         }
                     }
 
-                    // NOTE we're passing the list of processed sources 
+                    // NOTE we're passing the list of processed sources
                     //      because some of them might have prefix and need that
                     pSource = new SourceObjectWrapper(sourceDef, self, consNames, false, res.sources);
                 } catch (exp) {

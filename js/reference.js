@@ -3880,13 +3880,13 @@
                         filter[module._facetFilterTypes.CHOICE] = [tuple.data[col.name]];
                         filters.push(filter);
                     });
-                    
+
                     facets = {"and": filters};
                 }
 
                 // the facets are basd on the value of shortest key of current table
                 newRef._location.facets = facets;
-                
+
             }
 
             return newRef;
@@ -4119,10 +4119,10 @@
                     }
 
                     return _sourceColumnHelpers.parseAllOutBoundNodes(
-                        allOutBounds[l].sourceObjectNodes, 
+                        allOutBounds[l].sourceObjectNodes,
                         allOutBounds[l].lastForeignKeyNode,
-                        sourcekey, 
-                        pathPrefixAliasMapping, 
+                        sourcekey,
+                        pathPrefixAliasMapping,
                         outAlias,
                         mainTableAlias
                     );
