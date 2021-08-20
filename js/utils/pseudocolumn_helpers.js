@@ -762,7 +762,8 @@
 
             var res = {
                 andFilterObject: andFilterObject,
-                invalidChoices: []
+                invalidChoices: [],
+                originalChoices: []
             };
 
             // if there's source_domain use it
@@ -773,6 +774,8 @@
             }
 
             var filterStrs = [], filterTerms = {}, hasNullChoice = false;
+
+            res.originalChoices = sourceObject.choices;
             sourceObject.choices.forEach(function (ch, index) {
                 if (ch in filterTerms) {
                     return;
@@ -805,6 +808,8 @@
             // sorting to ensure a deterministic order of results
             ref = ref.sort([{"column": filterColumnName, "descending": false}]);
             (function (filterColumnName, projectedColumnName) {
+                // TODO depending on the number of columns this should potentially be multiple requests
+                //      because of the url limitation
                 ref.read(sourceObject.choices.length, contextHeaderParams, true).then(function (page) {
 
                     // feels hacky
@@ -835,7 +840,14 @@
     
                     defer.resolve(res);
                 }).catch(function (err) {
-                    defer.reject(module.responseToError(err));
+                    // if any of the values had issue, the whole request is failing
+                    // TODO should we try to recover based on other values??
+                    res.invalidChoices = Object.keys(filterTerms);
+                    res.andFilterObject.sourceObject.choices = [];
+
+                    module._log.error("Error while trying to fetch entity facet rows: ", err);
+
+                    defer.resolve(res);
                 });
             })(filterColumnName, projectedColumnName);
 

@@ -875,6 +875,15 @@
             }
 
             return this._tables[name];
+        },
+
+        /**
+         * @param {string} name table name
+         * @returns {boolean} if the table exists or not
+         * @desc check for table name existence
+         */
+         has: function (name) {
+            return name in this._tables;
         }
 
     };

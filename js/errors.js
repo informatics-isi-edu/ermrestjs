@@ -540,11 +540,11 @@
         var subMessage = "";
         if (discardedFacetSubMsg.length > 0) {
             subMessage += "Discarded facets:\n\n";
-            subMessage += discardedFacetSubMsg.join("\n") + "\n\n";
+            subMessage += discardedFacetSubMsg.join("\n") + "\n\n\n";
         }
         if (partDiscardedFacetSubMsg.length > 0) {
-            subMessage += "\nPartially discarded facets:\n\n";
-            subMessage += partDiscardedFacetSubMsg.join("\n");
+            subMessage += "Partially discarded facets:\n\n";
+            subMessage += partDiscardedFacetSubMsg.join("\n") + "\n";
         }
         ERMrestError.call(this, '', module._errorStatus.UNSUPPORTED_FILTERS, message, subMessage);
     }

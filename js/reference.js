@@ -715,6 +715,15 @@
                         return;
                     }
 
+                    // TODO depending on what we want to do when
+                    //      just source is passed, we would have to move this
+                    // validate entity mode if it's defined
+                    if (typeof facetAndFilter.entity === "boolean") {
+                        if (urlSourceDef.isEntityMode != facetAndFilter.entity) {
+                            addToIssues(facetAndFilter, "`" + facetAndFilter.sourcekey + "` entity mode has changed.");
+                        }
+                    }
+
                     // copy the elements that are defined in the source def but not the one already defined
                     module._shallowCopyExtras(facetAndFilter, urlSourceDef.sourceObject, module._sourceDefinitionAttributes);
                 }
@@ -759,7 +768,7 @@
 
                     // modify the last column name to be the one in source_domain in scalar mode
                     if (!andFilterObject.isEntityMode && isStringAndNotEmpty(facetAndFilter.source_domain.column) && col.name !== facetAndFilter.source_domain.column) {
-                        if (isArray(facetAndFilter.source)) {
+                        if (Array.isArray(facetAndFilter.source)) {
                             facetAndFilter.source[facetAndFilter.source.length-1] = facetAndFilter.source_domain.column;
                         } else {
                             facetAndFilter.source = facetAndFilter.source_domain.column;
@@ -784,7 +793,9 @@
                     // if in entity mode some choices were invalid
                     if (Array.isArray(resp.invalidChoices) && resp.invalidChoices.length > 0) {
                         // if no choices was left, then we don't need to merge it with anything and we should ignore it
-                        if (resp.andFilterObject.entityChoiceFilterPage.length === 0) {
+                        if (resp.andFilterObject.sourceObject.choices.length === 0 || resp.andFilterObject.entityChoiceFilterPage.length === 0) {
+                            // adding the choices back so we can produce proper error message
+                            resp.andFilterObject.sourceObject.choices = resp.originalChoices;
                             addToIssues(resp.andFilterObject.sourceObject, "None of the encoded choices were available");
                             return;
                         } else {
