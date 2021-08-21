@@ -662,7 +662,7 @@ exports.execute = function(options) {
                     }).toThrow(errorMessage ? errorMessage : facetError);
                 };
 
-                var expectLocation = function (blob, facetObject, path, errMessage, woSchema, aliases) {
+                var expectLocation = function (blob, facetObject, path, errMessage, woSchema, woPrefix, aliases) {
                     var url = baseUri;
                     if (woSchema) {
                         url = baseUriWOSchema;
@@ -680,6 +680,9 @@ exports.execute = function(options) {
                     var st = "M:=parse_schema:parse_table/";
                     if (woSchema) {
                         st = "M:=parse_table/";
+                    }
+                    if (woPrefix) {
+                        st = "";
                     }
                     expect(loc.ermrestCompactPath).toEqual(st + path, "ermrestCompactPath missmatch" + (errMessage ? errMessage : "."));
 
@@ -732,6 +735,7 @@ exports.execute = function(options) {
                             "M_P1:=(fk1_col1)=(parse_schema:outbound1:id)/(id)=(parse_schema:outbound1_inbound1:id)/RID=1/$M",
                             " case 1",
                             false,
+                            false,
                             {"outbound1_entity":"M_P1"}
                         );
 
@@ -749,11 +753,108 @@ exports.execute = function(options) {
                                 }
                             ]},
                             "M_P2:=(fk1_col1)=(parse_schema:outbound1:id)/M_P1:=(id)=(parse_schema:outbound1_inbound1:id)/(id)=(parse_schema:outbound1_inbound1_inbound1:id)/RID=1/$M",
-                            " case 2",
+                            " case 2 (recursive path)",
+                            false,
                             false,
                             {"outbound1_entity":"M_P2","outbound1_inbound1_w_prefix_entity":"M_P1"}
                         );
+
+                        // recursive path with null
+                        expectLocation(
+                            "N4IghgdgJiBcDaoDOB7ArgJwMYFM6JFU1wGscBPOEdAFwCN1oBGAfQEsIG1mWB3FgA4YcAMzYAPFjgg02NSgF8ANKA5do+EALAYkOFkiwALHAFswIJdTT1GUVmrsPOTliJJMQAXWUgASgCSACLeVsYobLhI+BBoADZxPj5AA",
+                            {"and": [
+                                {
+                                    "source": [
+                                        {"sourcekey": "outbound1_inbound1_w_prefix_entity"},
+                                        {"inbound": ["parse_schema", "outbound1_inbound1_inbound1_fk1"]}, 
+                                        "RID"
+                                    ],
+                                    "choices": [null]
+                                }
+                            ]},
+                            "parse_schema:outbound1_inbound1_inbound1/RID::null::/(id)=(parse_schema:outbound1_inbound1:id)/(id)=(parse_schema:outbound1:id)/M:=right(id)=(parse_schema:parse_table:fk1_col1)",
+                            " case 3 (recursive path with null)",
+                            false,
+                            true
+                        );
+
+                        // filter is the based on the same values, so it should ignroe the last step
+                        expectLocation(
+                            "N4IghgdgJiBcDaoDOB7ArgJwMYFM6JFU1wGscBPOEdAFwCN1oBGAfQEsIG1mWB3FgA4YcAMzYAPFjgg02NSgF8ANKA5do+EALAYkOFkiwALHAFswIJdTT1GUVmrsPOTliJJMQAXWUg2MLytjFDZcJE1PHx8gA",
+                            {"and": [
+                                {
+                                    "source": [
+                                        {"sourcekey": "outbound1_inbound1_w_prefix_entity"},
+                                        {"inbound": ["parse_schema", "outbound1_inbound1_inbound1_fk1"]}, 
+                                        "id"
+                                    ],
+                                    "choices": ["1"]
+                                }
+                            ]},
+                            "M_P2:=(fk1_col1)=(parse_schema:outbound1:id)/M_P1:=(id)=(parse_schema:outbound1_inbound1:id)/id=1/$M",
+                            " case 4 (recursive path where last node will be ignored)",
+                            false,
+                            false
+                        );
+
+                        // filter is the based on the same values, so it should ignroe the last step (also with null)
+                        expectLocation(
+                            "N4IghgdgJiBcDaoDOB7ArgJwMYFM6JFU1wGscBPOEdAFwCN1oBGAfQEsIG1mWB3FgA4YcAMzYAPFjgg02NSgF8ANKA5do+EALAYkOFkiwALHAFswIJdTT1GUVmrsPOTliJJMQAXWUg2MLytjFDZcJHwINAAbKJ8fIA",
+                            {"and": [
+                                {
+                                    "source": [
+                                        {"sourcekey": "outbound1_inbound1_w_prefix_entity"},
+                                        {"inbound": ["parse_schema", "outbound1_inbound1_inbound1_fk1"]}, 
+                                        "id"
+                                    ],
+                                    "choices": [null]
+                                }
+                            ]},
+                            "parse_schema:outbound1_inbound1/id::null::/(id)=(parse_schema:outbound1:id)/M:=right(id)=(parse_schema:parse_table:fk1_col1)",
+                            " case 5 (recursive path where lawst node will be ignored with null)",
+                            false,
+                            true
+                        );
                     });
+
+
+                    it ("should properly handle array as source", function () {
+                        expectLocation(
+                            "N4IghgdgJiBcDaoDOB7ArgJwMYFM6JHQBcAjdafEABzAyRwH0ksALHAWzBABprb6GRMCQA2jAGYBrAIwgAugF9uoAJYQyaCgj51GzNpx6E0pclGkM1G6BamzFvAEoBJACLzerFCtxJK9hUUgA",
+                            {"and": [
+                                {
+                                    "source": [
+                                        {"outbound": ["parse_schema", "parse_table_fk1"]},
+                                        {"inbound": ["parse_schema", "outbound1_inbound1_fk1"]},
+                                        "RID"
+                                    ],
+                                    "choices": ["1"]
+                                }
+                            ]},
+                            "(fk1_col1)=(parse_schema:outbound1:id)/(id)=(parse_schema:outbound1_inbound1:id)/RID=1/$M",
+                            " case 1 (foreign key path)",
+                            false,
+                            false
+                        );
+
+                        expectLocation(
+                            "N4IghgdgJiBcDaoDOB7ArgJwMYFM6JHQBcAjdafEABzAyRwH0ksALHAWzBABprb6GRMCQA2jAGYBrAIwgAugF9uoAJYQyaCgj51GzNpx6E0pclGkM1G6BamzFvAEoBJACLzerFCtxJ8ENBERRUUgA",
+                            {"and": [
+                                {
+                                    "source": [
+                                        {"outbound": ["parse_schema", "parse_table_fk1"]},
+                                        {"inbound": ["parse_schema", "outbound1_inbound1_fk1"]},
+                                        "RID"
+                                    ],
+                                    "choices": [null]
+                                }
+                            ]},
+                            "parse_schema:outbound1_inbound1/RID::null::/(id)=(parse_schema:outbound1:id)/M:=right(id)=(parse_schema:parse_table:fk1_col1)",
+                            " case 2 (foreign key path with null)",
+                            false,
+                            true
+                        );
+                    })
 
                     // other array for source test cases are in faceting spec.
                 });
@@ -794,6 +895,7 @@ exports.execute = function(options) {
                             "M_P2:=(fk1_col1)=(parse_schema:outbound1:id)/M_P1:=(id)=(parse_schema:outbound1_inbound1:id)/(id)=(parse_schema:outbound1_inbound1_inbound1:id)/RID=v1/$M",
                             " case 2 (with path prefix)",
                             false,
+                            false,
                             {"outbound1_entity":"M_P2","outbound1_inbound1_w_prefix_entity":"M_P1"}
                         );
 
@@ -811,6 +913,7 @@ exports.execute = function(options) {
                                 "$M_P1/RID=v2/$M"
                             ].join("/"),
                             " case 3 (multiple sourcekeys with path prefix)",
+                            false,
                             false,
                             {"outbound1_entity":"M_P2","outbound1_inbound1_w_prefix_entity":"M_P1"}
                         )

@@ -137,6 +137,7 @@ to use for ERMrest JavaScript agents.
         * [.length()](#ERMrest.Tables+length) ⇒ <code>Number</code>
         * [.names()](#ERMrest.Tables+names) ⇒ <code>Array</code>
         * [.get(name)](#ERMrest.Tables+get) ⇒ [<code>Table</code>](#ERMrest.Table)
+        * [.has(name)](#ERMrest.Tables+has) ⇒ <code>boolean</code>
     * [.Table](#ERMrest.Table)
         * [new Table(schema, jsonTable)](#new_ERMrest.Table_new)
         * _instance_
@@ -1136,6 +1137,7 @@ Documentation for this schema
     * [.length()](#ERMrest.Tables+length) ⇒ <code>Number</code>
     * [.names()](#ERMrest.Tables+names) ⇒ <code>Array</code>
     * [.get(name)](#ERMrest.Tables+get) ⇒ [<code>Table</code>](#ERMrest.Table)
+    * [.has(name)](#ERMrest.Tables+has) ⇒ <code>boolean</code>
 
 <a name="new_ERMrest.Tables_new"></a>
 
@@ -1172,6 +1174,18 @@ get table by table name
 | Param | Type | Description |
 | --- | --- | --- |
 | name | <code>string</code> | name of table |
+
+<a name="ERMrest.Tables+has"></a>
+
+#### tables.has(name) ⇒ <code>boolean</code>
+check for table name existence
+
+**Kind**: instance method of [<code>Tables</code>](#ERMrest.Tables)  
+**Returns**: <code>boolean</code> - if the table exists or not  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| name | <code>string</code> | table name |
 
 <a name="ERMrest.Table"></a>
 

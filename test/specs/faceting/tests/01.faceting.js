@@ -2286,55 +2286,94 @@ exports.execute = function (options) {
 
             describe("regarding usage of path prefix,", function () {
                 var currRef;
-                var currFacetObj = {
-                    "and": [
-                        {
-                            "source":  [
-                                {"sourcekey": "path_to_path_prefix_o1_o1"},
-                                {"inbound": ["faceting_schema", "path_prefix_o1_o1_i1_fk1"]},
-                                "path_prefix_o1_o1_i1_col"
-                            ],
-                            "choices": ["one_o1_o1_i1"]
-                        },
-                        {
-                            "sourcekey": "path_to_path_prefix_o1_o1",
-                            "choices": ["two_o1_o1"]
-                        }
-                    ]
-                };
-                it ("readPath should be able to reuse the aliases in facet as part of all-outbound", function (done) {
-                    options.ermRest.resolve(createURL(tableMain, currFacetObj)).then(function (ref) {
-                        // visible-fks are defined for compact
-                        currRef = ref.contextualize.compact;
 
-                        expect(currRef.readPath).toEqual([
+                var testReadAndReadPath = function (currFacetObj, expectedReadPath) {
+                    it ("readPath should be able to reuse the aliases in facet as part of all-outbound", function (done) {
+                        options.ermRest.resolve(createURL(tableMain, currFacetObj)).then(function (ref) {
+                            // visible-fks are defined for compact
+                            currRef = ref.contextualize.compact;
+    
+                            expect(currRef.readPath).toEqual(expectedReadPath);
+                            done();
+                        }).catch(function (err) {
+                            done.fail(err);
+                        });
+                    });
+    
+                    it ("read should return proper values", function (done) {
+                        currRef.read(25).then(function (page) {
+                            expect(page.length).toBe(1, "page length missmatch");
+    
+                            var tuples = page.tuples;
+                            expect(tuples[0].data.id).toBe(4, "id raw value missmatch");
+    
+                            var expectedValues = ['4', 'two', 'two_o1_o1', 'two_o1_o1_o1'];
+                            expect(tuples[0].values).toEqual(jasmine.arrayContaining(expectedValues), "values missmatch");
+    
+                            done();
+                        }).catch(function (err) {
+                            done.fail(err);
+                        })
+                    });
+                }
+
+                describe("when null is not in the choices", function () {
+                    testReadAndReadPath(
+                        {
+                            "and": [
+                                {
+                                    "source":  [
+                                        {"sourcekey": "path_to_path_prefix_o1_o1"},
+                                        {"inbound": ["faceting_schema", "path_prefix_o1_o1_i1_fk1"]},
+                                        "path_prefix_o1_o1_i1_col"
+                                    ],
+                                    "choices": ["one_o1_o1_i1"]
+                                },
+                                {
+                                    "sourcekey": "path_to_path_prefix_o1_o1",
+                                    "choices": ["two_o1_o1"]
+                                }
+                            ]
+                        },
+                        [
                             "M:=faceting_schema:main",
                             "M_P2:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)/M_P1:=(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)",
                             "(id)=(faceting_schema:path_prefix_o1_o1_i1:fk_to_path_prefix_o1_o1)/path_prefix_o1_o1_i1_col=one_o1_o1_i1/$M",
                             "$M_P1/path_prefix_o1_o1_col=two_o1_o1/$M",
                             "$M_P1/F3:=left(fk_to_path_prefix_o1_o1_o1)=(faceting_schema:path_prefix_o1_o1_o1:id)/$M",
                             "RID;M:=array_d(M:*),F3:=array_d(F3:*),F2:=array_d(M_P1:*),F1:=array_d(M_P2:*)@sort(RID)"
-                        ].join("/"));
-                        done();
-                    }).catch(function (err) {
-                        done.fail(err);
-                    });
+                        ].join("/")
+                    );
                 });
-
-                it ("read should return proper values", function (done) {
-                    currRef.read(25).then(function (page) {
-                        expect(page.length).toBe(1, "page length missmatch");
-
-                        var tuples = page.tuples;
-                        expect(tuples[0].data.id).toBe(4, "id raw value missmatch");
-
-                        var expectedValues = ['4', 'two', 'two_o1_o1', 'two_o1_o1_o1'];
-                        expect(tuples[0].values).toEqual(jasmine.arrayContaining(expectedValues), "values missmatch");
-
-                        done();
-                    }).catch(function (err) {
-                        done.fail(err);
-                    })
+                
+                describe("when null is in the choices", function () {
+                    testReadAndReadPath(
+                        {
+                            "and": [
+                                {
+                                    "source":  [
+                                        {"sourcekey": "path_to_path_prefix_o1_o1"},
+                                        {"inbound": ["faceting_schema", "path_prefix_o1_o1_i1_fk1"]},
+                                        "path_prefix_o1_o1_i1_col"
+                                    ],
+                                    "choices": ["one_o1_o1_i1", null]
+                                },
+                                {
+                                    "sourcekey": "path_to_path_prefix_o1_o1",
+                                    "choices": ["two_o1_o1"]
+                                }
+                            ]
+                        },
+                        [
+                            "faceting_schema:path_prefix_o1_o1_i1/path_prefix_o1_o1_i1_col=one_o1_o1_i1;path_prefix_o1_o1_i1_col::null::",
+                            "(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/(id)=(faceting_schema:path_prefix_o1:fk_to_path_prefix_o1_o1)",
+                            "M:=right(id)=(faceting_schema:main:fk_to_path_prefix_o1)/M_P1:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)",
+                            "(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/path_prefix_o1_o1_col=two_o1_o1/$M/$M_P1",
+                            "M_P2:=left(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)",
+                            "F3:=left(fk_to_path_prefix_o1_o1_o1)=(faceting_schema:path_prefix_o1_o1_o1:id)/$M",
+                            "RID;M:=array_d(M:*),F3:=array_d(F3:*),F2:=array_d(M_P2:*),F1:=array_d(M_P1:*)@sort(RID)"
+                        ].join("/")
+                    );
                 });
             });
         });

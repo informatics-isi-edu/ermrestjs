@@ -1054,7 +1054,7 @@
          * @param {Boolean} isLeft use left join
          * @param {String=} outAlias the alias that should be added to the output
          */
-        toString: function (reverse, isLeft, outAlias) {
+        toString: function (reverse, isLeft, outAlias, isReverseRightJoin) {
             var self = this;
             return self.sourceObjectNodes.reduce(function (prev, sn, i) {
                 if (sn.isFilter) {
@@ -1070,9 +1070,9 @@
                     // if we're reversing, we have to add alias to the first one,
                     // otherwise we only need to add alias if this object only has a prefix and nothing else
                     if (reverse) {
-                        return sn.toString(reverse,isLeft, outAlias);
+                        return sn.toString(reverse,isLeft, outAlias, isReverseRightJoin);
                     } else {
-                        return sn.toString(reverse, isLeft, self.foreignKeyPathLength == sn.foreignKeyPathLength ? outAlias : null);
+                        return sn.toString(reverse, isLeft, self.foreignKeyPathLength == sn.foreignKeyPathLength ? outAlias : null, isReverseRightJoin);
                     }
                 }
 
@@ -1084,8 +1084,23 @@
                 // NOTE alias on each node is ignored!
                 // currently we've added alias only for the association and 
                 // therefore it's not really needed here anyways
+                var res = "";
                 if (reverse) {
-                    return ((i > 0) ? (fkStr + "/") : ((addAlias ? outAlias + ":=" : "") + fkStr) ) + prev;
+                    if (i > 0) {
+                        res += fkStr + "/";
+                    } else {
+                        if (addAlias) {
+                            res += outAlias + ":=";
+                            if (isReverseRightJoin) {
+                                res += "right";
+                            }
+                        }
+                        res += fkStr;
+                    }
+
+                    res += prev;
+                    return res;
+                    // return ((i > 0) ? (fkStr + "/") : ((addAlias ? outAlias + ":=" : "") + fkStr) ) + prev;
                 } else {
                     return prev + (i > 0 ? "/" : "") + (addAlias ? outAlias + ":=" : "") + fkStr;
                 }
@@ -1342,7 +1357,7 @@
                 if (sn.isPathPrefix) {
                     // if we're reversing, then don't use alias for that part
                     if (useRightJoin) {
-                        return sn.toString(true, false);
+                        return sn.toString(true, false, mainTableAlias, true);
                     }
                     if (sn.pathPrefixSourcekey in pathPrefixAliasMapping.aliases) {
                         return "$" + pathPrefixAliasMapping.aliases[sn.pathPrefixSourcekey];
@@ -1666,7 +1681,7 @@
          * @param {boolean=} isLeft  - whether we want to use left outer join (applicable to fk)
          * @returns {String}
          */
-        toString: function (reverse, isLeft, outAlias) {
+        toString: function (reverse, isLeft, outAlias, isReverseRightJoin) {
             var self = this;
 
             if (self.isForeignKey) {
@@ -1675,7 +1690,7 @@
             }
 
             if (self.isPathPrefix) {
-                return self.nodeObject.toString(reverse, isLeft, outAlias);
+                return self.nodeObject.toString(reverse, isLeft, outAlias, isReverseRightJoin);
             }
 
             return _sourceColumnHelpers.parseSourceObjectNodeFilter(self.nodeObject);
