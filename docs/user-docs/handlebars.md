@@ -604,6 +604,14 @@ Using the `regexMatch` function you can check whether a given value matches the 
 {{/if}}
 ```
 
+- Negate (`not`)
+
+```
+{{#if (not var1)}}
+  .. content
+{{/if}}
+```
+
 Logical operators can be applied recursively. This will allow for more complicated logical statements.
 
 ```
@@ -622,6 +630,11 @@ You can also have more than two operators inside the `or`/`and` statement.
 
 ```
 {{#if (or cond1 cond2 cond3)}}
+.. content
+{{/if}}
+
+
+{{#if (or cond1 (not cond2) cond3)}}
 .. content
 {{/if}}
 ```

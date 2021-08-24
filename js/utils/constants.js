@@ -186,7 +186,7 @@
         // default helpers - NOTE: 'log' and 'lookup' not included
         "blockHelperMissing", "each", "if", "helperMissing", "unless", "with",
         // ermrestJS helpers
-        "eq", "ne", "lt", "gt", "lte", "gte", "and", "or", "ifCond",
+        "eq", "ne", "lt", "gt", "lte", "gte", "and", "or", "not", "ifCond",
         "escape", "encode", "formatDate", "encodeFacet",
         "regexMatch", "regexFindFirst", "regexFindAll",
         "jsonStringify", "toTitleCase", "replace",

@@ -1,3 +1,5 @@
+const { templates } = require("handlebars");
+
 exports.execute = function (options) {
     var module = options.includes.ermRest;
     var formatUtils = module._formatUtils;
@@ -536,7 +538,12 @@ exports.execute = function (options) {
                 expect(module.renderHandlebarsTemplate("{{#if (or bool1 bool2 bool3)}}one or more booleans are true{{else}}both booleans are false{{/if}}", { bool1: false, bool2: false, bool3: true })).toBe("one or more booleans are true", "three arguments");
             });
 
-            it ('if nested or (disjunction) / and (conjunction) helper', function () {
+            it ("if not (negate) helper", function () {
+                expect(module.renderHandlebarsTemplate("{{#if (not bool1)}}false{{else}}true{{/if}}", { bool1: false})).toBe("false", "case 1");
+                expect(module.renderHandlebarsTemplate("{{#if (not bool1)}}false{{else}}true{{/if}}", { bool1: true})).toBe("true", "case 2");
+            });
+
+            it ('if nested or (disjunction) / and (conjunction) / not (negate) helper', function () {
                 var template = '{{#if (or (eq type "jpg") (eq type "png") )}}image{{else}}other{{/if}}';
                 expect(module.renderHandlebarsTemplate(template, {"type": "jpg"})).toBe("image", "missmatch for 01");
                 expect(module.renderHandlebarsTemplate(template, {"type": "txt"})).toBe("other", "missmatch for 02");
@@ -544,6 +551,10 @@ exports.execute = function (options) {
                 template = '{{#if (or (and (gt v 1) (lt v 5) ) (and (gt v 10) (lt v 15) ) ) }}1-5 or 10-15{{else}}outside the range{{/if}}';
                 expect(module.renderHandlebarsTemplate(template, {"v": 4})).toBe("1-5 or 10-15", "missmatch for 03");
                 expect(module.renderHandlebarsTemplate(template, {"v": -1})).toBe("outside the range", "missmatch for 04");
+
+                template = '{{#if (or cond1 (not cond2) cond3)}}ok{{else}}else{{/if}}';
+                expect(module.renderHandlebarsTemplate(template, {"cond1": false, "cond2": false, "cond3": false})).toBe("ok", "missmatch for 05");
+                expect(module.renderHandlebarsTemplate(template, {"cond1": false, "cond2": true, "cond3": false})).toBe("else", "missmatch for 06");
             });
 
             it ('regexMatch helper', function () {

@@ -194,6 +194,14 @@
                 });
             },
             /*
+               {{#if (not section1)}}
+                 .. content
+                {{/if}}
+             */
+            not: function (a) {
+                return !a;
+            },
+            /*
                 {{#ifCond value "===" value2}}
                     Values are equal!
                 {{else}}
