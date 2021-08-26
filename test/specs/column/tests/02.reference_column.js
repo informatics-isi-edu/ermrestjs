@@ -542,6 +542,21 @@ exports.execute = function (options) {
                     });
                 });
             });
+
+            describe('for normal columns', function () {
+                it ("should return true if annotation is defined.", function () {
+                    // it's generated so it should return true in edit mode
+                    expect(entryEditRef.columns[1].inputDisabled).toBe(true);
+                });
+
+                it ("should ignore generated when immutable is `false`", function () {
+                    expect(entryEditRef.columns[0].inputDisabled).toBe(false);
+                });
+
+                it ("otherwise should return false", function () {
+                    expect(entryEditRef.columns[2].inputDisabled).toBe(false);
+                });
+            });
         });
 
         describe('.filteredRef, ', function() {

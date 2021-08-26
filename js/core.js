@@ -722,18 +722,27 @@
         /**
          * whether schema is generated.
          * This should be done before initializing tables because tables require this field.
-         * @type {boolean}
+         * @type {boolean|null}
          * @private
          */
-        this._isGenerated = this.annotations.contains(module._annotations.GENERATED);
+        this._isGenerated = _processACLAnnotation(this.annotations, module._annotations.GENERATED, false);
 
         /**
          * whether schema is immutable.
-         * This should be done before initializing tables because tables require this field.
+         * true: schema is immutable (per annotation)
+         * false: schema is mutable (per annotation)
+         * null: annotation is not defined
+         * @type {boolean|null}
+         * @private
+         */
+        this._isImmutable = _processACLAnnotation(this.annotations, module._annotations.IMMUTABLE, null);
+
+        /**
+         * whether schema is non-deletable
          * @type {boolean}
          * @private
          */
-        this._isImmutable = this.annotations.contains(module._annotations.IMMUTABLE);
+        this._isNonDeletable = _processACLAnnotation(this.annotations, module._annotations.NON_DELETABLE, false);
 
         this._nameStyle = {}; // Used in the displayname to store the name styles.
 
@@ -779,15 +788,6 @@
 
         delete: function () {
 
-        },
-
-        /**
-         * whether schema is non-deletable
-         * @type {boolean}
-         * @private
-         */
-        get _isNonDeletable() {
-            return (this.annotations.contains(module._annotations.NON_DELETABLE));
         },
 
         _getAppLink: function (context) {
@@ -965,15 +965,25 @@
          * @type {boolean}
          * @private
          */
-        this._isGenerated = (this.annotations.contains(module._annotations.GENERATED) || this.schema._isGenerated);
+        this._isGenerated = _processACLAnnotation(this.annotations, module._annotations.GENERATED, this.schema._isGenerated);
 
         /**
          * whether table is immutable
          * inherits from schema
+         * true: table is immutable (per annotation)
+         * false: table is mutable (per annotation)
+         * null: annotation is not defined on table nor schema
          * @type {boolean}
          * @private
          */
-        this._isImmutable = (this.annotations.contains(module._annotations.IMMUTABLE) || this.schema._isImmutable);
+        this._isImmutable = _processACLAnnotation(this.annotations, module._annotations.IMMUTABLE, this.schema._isImmutable);
+
+        /**
+         * whether table is non-deletable
+         * @type {boolean}
+         * @private
+         */
+        this._isNonDeletable = _processACLAnnotation(this.annotations, module._annotations.NON_DELETABLE, this.schema._isNonDeletable);
 
         this._nameStyle = {}; // Used in the displayname to store the name styles.
         this._rowDisplayKeys = {}; // Used for display key
@@ -1146,15 +1156,6 @@
                 };
             }
             return this._display[context];
-        },
-
-        /**
-         * whether table is non-deletable
-         * @type {boolean}
-         * @private
-         */
-        get _isNonDeletable() {
-            return (this.annotations.contains(module._annotations.NON_DELETABLE) || this.schema._isNonDeletable);
         },
 
         /**
@@ -2762,14 +2763,14 @@
          * Mentions whether we should hide the value for this column
          * @type {Boolean}
          */
-        this.isHidden = this.rights.select === false;
+        this.isHiddenPerACLs = this.rights.select === false;
 
         /**
          * Mentions whether this column is generated depending on insert rights
          * or if column is system generated then return true so that it is disabled.
          * @type {Boolean}
          */
-        this.isGenerated = this.rights.insert === false;
+        this.isGeneratedPerACLs = this.rights.insert === false;
 
         /**
          * If column is system generated then this should true so that it is disabled during create and update.
@@ -2781,7 +2782,7 @@
          * Mentions whether this column is immutable depending on update rights
          * @type {Boolean}
          */
-        this.isImmutable = this.rights.update === false;
+        this.isImmutablePerACLs = this.rights.update === false;
 
         /**
          * The database name of this column
@@ -2980,14 +2981,15 @@
         },
 
         getInputDisabled: function(context) {
-            var isGenerated = this.annotations.contains(module._annotations.GENERATED);
-            var isImmutable = this.annotations.contains(module._annotations.IMMUTABLE);
+            // TODO we might want to add inheritence here
+            var isGenerated = _processACLAnnotation(this.annotations, module._annotations.GENERATED, false);
+            var isImmutable = _processACLAnnotation(this.annotations, module._annotations.IMMUTABLE, null);
             var isSerial = (this.type.name.indexOf('serial') === 0);
 
             if (context == module._contexts.CREATE) {
                 // only if insert: false in the ACLs
                 // (system columns also have insert:false but we want a better message for them)
-                if (this.isGenerated && !this.isSystemColumn) {
+                if (this.isGeneratedPerACLs && !this.isSystemColumn) {
                     return {
                         message: "Not allowed"
                     };
@@ -3000,9 +3002,17 @@
                     };
                 }
             } else if (context == module._contexts.EDIT || context == module._contexts.ENTRY) {
-                if (this.isSystemColumn || this.isImmutable || isGenerated || isImmutable || isSerial) {
+                if (this.isSystemColumn || this.isImmutablePerACLs || isSerial) {
                     return true;
                 }
+                // if specifically immutable is set to false, then honor it
+                if (isImmutable === false) {
+                    return false;
+                }
+                if (isGenerated || isImmutable) {
+                    return true;
+                }
+
             } else {
                 // other contexts are not in entry/create/edit modes, which means any "input" is disabled anyway
                 return true;

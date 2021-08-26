@@ -638,6 +638,28 @@
         return value;
     };
 
+    /**
+     * @param {ERMrest.Annotations} annotations - the defined annotation on the model
+     * @param {String} key - the annotation key
+     * @param {Boolean|null} defaultValue - the value that should be used if annotation is missing.
+     *                                      (parent value or null)
+     * Returns:
+     *  - true: if annotation is defined and it's not `false`.
+     *  - false: if annotation is defined and it's `false`
+     *  - defaultValue: if annotation is not defined
+     * @private
+     */
+    _processACLAnnotation = function (annotations, key, defaultValue) {
+        if (annotations.contains(key)) {
+            var ndAnnot = annotations.get(key).content;
+            if (ndAnnot !== false) {
+                return true;
+            }
+            return false;
+        }
+        return defaultValue;
+    };
+
     // given a reference and associated data to it, will return a list of Values
     // corresponding to its sort object
     _getPagingValues = function (ref, rowData, rowLinkedData) {
