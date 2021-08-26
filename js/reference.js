@@ -1105,7 +1105,9 @@
                 if (ref._table.kind === module._tableKinds.VIEW) {
                     this._canUpdate = false;
                     this._canUpdateReason = pm.TABLE_VIEW;
-                } else if (ref._table._isGenerated) {
+
+                // if table specifically says that it's not immutable, then it's not!
+                } else if (ref._table._isGenerated && ref._table._isImmutable !== false) {
                     this._canUpdate = false;
                     this._canUpdateReason = pm.TABLE_GENERATED;
                 } else if (ref._table._isImmutable) {
@@ -3406,7 +3408,7 @@
 
                     // Iterate over the base columns. If any of them are hidden then hide the column
                     for (var k=0; k< refCol._baseCols.length; k++) {
-                        if (refCol._baseCols[k].isHidden) {
+                        if (refCol._baseCols[k].isHiddenPerACLs) {
                             isHidden = true;
                             break;
                         }

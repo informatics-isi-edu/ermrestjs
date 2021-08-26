@@ -321,7 +321,8 @@
                             "detailed": {
                                 "hide_column_header": true
                             }
-                        }
+                        },
+                        "tag:isrd.isi.edu,2016:generated": null
                     }
                 },
                 {
@@ -401,7 +402,11 @@
                     "type": {
                         "typename": "text"
                     },
-                    "comment": "is in multiple composite FKRs"
+                    "comment": "is in multiple composite FKRs",
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:generated": null,
+                        "tag:isrd.isi.edu,2016:immutable": false
+                    }
                 },
                 {
                     "name": "col_7",

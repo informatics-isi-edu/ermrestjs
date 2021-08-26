@@ -395,16 +395,16 @@ exports.execute = (options) => {
                         nameColumn = reference.columns.find((c) => c.name === 'name');
                     });
 
-                    it(".isGenerated should be false.", () => {
-                        expect(nameColumn._baseCols[0].isGenerated).toBe(false);
+                    it(".isGeneratedPerACLs should be false.", () => {
+                        expect(nameColumn._baseCols[0].isGeneratedPerACLs).toBe(false);
                     });
 
-                    it(".isImmutable should be true", () => {
-                        expect(nameColumn._baseCols[0].isImmutable).toBe(true);
+                    it(".isImmutablePerACLs should be true", () => {
+                        expect(nameColumn._baseCols[0].isImmutablePerACLs).toBe(true);
                     });
 
-                    it(".isHidden should be false.", () => {
-                        expect(nameColumn._baseCols[0].isHidden).toBe(false);
+                    it(".isHiddenPerACLs should be false.", () => {
+                        expect(nameColumn._baseCols[0].isHiddenPerACLs).toBe(false);
                     });
 
                 });
@@ -415,16 +415,16 @@ exports.execute = (options) => {
                         termColumn = reference.columns.find((c) => c.name === 'term');
                     });
 
-                    it(".isGenerated should be true.", () => {
-                        expect(termColumn._baseCols[0].isGenerated).toBe(true);
+                    it(".isGeneratedPerACLs should be true.", () => {
+                        expect(termColumn._baseCols[0].isGeneratedPerACLs).toBe(true);
                     });
 
-                    it(".isImmutable should be false", () => {
-                        expect(termColumn._baseCols[0].isImmutable).toBe(false);
+                    it(".isImmutablePerACLs should be false", () => {
+                        expect(termColumn._baseCols[0].isImmutablePerACLs).toBe(false);
                     });
 
-                    it(".isHidden should be false.", () => {
-                        expect(termColumn._baseCols[0].isHidden).toBe(false);
+                    it(".isHiddenPerACLs should be false.", () => {
+                        expect(termColumn._baseCols[0].isHiddenPerACLs).toBe(false);
                     });
 
                 });
@@ -528,16 +528,16 @@ exports.execute = (options) => {
                         termColumn = reference.columns.find((c) => c.name === 'term');
                     });
 
-                    it(".isGenerated should be true.", () => {
-                        expect(termColumn._baseCols[0].isGenerated).toBe(true);
+                    it(".isGeneratedPerACLs should be true.", () => {
+                        expect(termColumn._baseCols[0].isGeneratedPerACLs).toBe(true);
                     });
 
-                    it(".isImmutable should be false", () => {
-                        expect(termColumn._baseCols[0].isImmutable).toBe(true);
+                    it(".isImmutablePerACLs should be false", () => {
+                        expect(termColumn._baseCols[0].isImmutablePerACLs).toBe(true);
                     });
 
-                    it(".isHidden should be false.", () => {
-                        expect(termColumn._baseCols[0].isHidden).toBe(false);
+                    it(".isHiddenPerACLs should be false.", () => {
+                        expect(termColumn._baseCols[0].isHiddenPerACLs).toBe(false);
                     });
 
                 });

@@ -203,10 +203,10 @@ to use for ERMrest JavaScript agents.
         * [.position](#ERMrest.Column+position) : <code>number</code>
         * [.table](#ERMrest.Column+table) : [<code>Table</code>](#ERMrest.Table)
         * [.rights](#ERMrest.Column+rights) : <code>Object</code>
-        * [.isHidden](#ERMrest.Column+isHidden) : <code>Boolean</code>
-        * [.isGenerated](#ERMrest.Column+isGenerated) : <code>Boolean</code>
+        * [.isHiddenPerACLs](#ERMrest.Column+isHiddenPerACLs) : <code>Boolean</code>
+        * [.isGeneratedPerACLs](#ERMrest.Column+isGeneratedPerACLs) : <code>Boolean</code>
         * [.isSystemColumn](#ERMrest.Column+isSystemColumn) : <code>Boolean</code>
-        * [.isImmutable](#ERMrest.Column+isImmutable) : <code>Boolean</code>
+        * [.isImmutablePerACLs](#ERMrest.Column+isImmutablePerACLs) : <code>Boolean</code>
         * [.name](#ERMrest.Column+name) : <code>string</code>
         * [.RID](#ERMrest.Column+RID) : <code>string</code>
         * [.type](#ERMrest.Column+type) : [<code>Type</code>](#ERMrest.Type)
@@ -1724,10 +1724,10 @@ Constructor for Columns.
     * [.position](#ERMrest.Column+position) : <code>number</code>
     * [.table](#ERMrest.Column+table) : [<code>Table</code>](#ERMrest.Table)
     * [.rights](#ERMrest.Column+rights) : <code>Object</code>
-    * [.isHidden](#ERMrest.Column+isHidden) : <code>Boolean</code>
-    * [.isGenerated](#ERMrest.Column+isGenerated) : <code>Boolean</code>
+    * [.isHiddenPerACLs](#ERMrest.Column+isHiddenPerACLs) : <code>Boolean</code>
+    * [.isGeneratedPerACLs](#ERMrest.Column+isGeneratedPerACLs) : <code>Boolean</code>
     * [.isSystemColumn](#ERMrest.Column+isSystemColumn) : <code>Boolean</code>
-    * [.isImmutable](#ERMrest.Column+isImmutable) : <code>Boolean</code>
+    * [.isImmutablePerACLs](#ERMrest.Column+isImmutablePerACLs) : <code>Boolean</code>
     * [.name](#ERMrest.Column+name) : <code>string</code>
     * [.RID](#ERMrest.Column+RID) : <code>string</code>
     * [.type](#ERMrest.Column+type) : [<code>Type</code>](#ERMrest.Type)
@@ -1776,15 +1776,15 @@ TODO: to be implemented
 
 #### column.rights : <code>Object</code>
 **Kind**: instance property of [<code>Column</code>](#ERMrest.Column)  
-<a name="ERMrest.Column+isHidden"></a>
+<a name="ERMrest.Column+isHiddenPerACLs"></a>
 
-#### column.isHidden : <code>Boolean</code>
+#### column.isHiddenPerACLs : <code>Boolean</code>
 Mentions whether we should hide the value for this column
 
 **Kind**: instance property of [<code>Column</code>](#ERMrest.Column)  
-<a name="ERMrest.Column+isGenerated"></a>
+<a name="ERMrest.Column+isGeneratedPerACLs"></a>
 
-#### column.isGenerated : <code>Boolean</code>
+#### column.isGeneratedPerACLs : <code>Boolean</code>
 Mentions whether this column is generated depending on insert rights
 or if column is system generated then return true so that it is disabled.
 
@@ -1795,9 +1795,9 @@ or if column is system generated then return true so that it is disabled.
 If column is system generated then this should true so that it is disabled during create and update.
 
 **Kind**: instance property of [<code>Column</code>](#ERMrest.Column)  
-<a name="ERMrest.Column+isImmutable"></a>
+<a name="ERMrest.Column+isImmutablePerACLs"></a>
 
-#### column.isImmutable : <code>Boolean</code>
+#### column.isImmutablePerACLs : <code>Boolean</code>
 Mentions whether this column is immutable depending on update rights
 
 **Kind**: instance property of [<code>Column</code>](#ERMrest.Column)  

@@ -26,6 +26,34 @@
         }
       ],
       "annotations": {}
+    },
+    "table_2": {
+      "comment": "has immutable: false",
+      "kind": "table",
+      "keys": [
+        {
+          "comment": null,
+          "annotations": {},
+          "unique_columns": [
+            "id"
+          ]
+        }
+      ],
+      "foreign_keys": [],
+      "table_name": "table_2",
+      "schema_name": "generated_schema",
+      "column_definitions": [
+        {
+          "name": "id",
+          "nullok": false,
+          "type": {
+            "typename": "int"
+          }
+        }
+      ],
+      "annotations": {
+        "tag:isrd.isi.edu,2016:immutable": false
+      }
     }
   },
   "table_names": [

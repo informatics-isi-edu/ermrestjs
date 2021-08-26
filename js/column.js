@@ -493,10 +493,11 @@ ReferenceColumn.prototype = {
 
         var cols = this._baseCols, generated, i;
 
+        // TODO does the following make sense? shouldn't it also check for ACLs and etc (column.inputDisabled)?
         if (context == module._contexts.CREATE) {
             // if one is not generated
             for (i = 0; i < cols.length; i++) {
-                if (!cols[i].annotations.contains(module._annotations.GENERATED)) {
+                if (!_processACLAnnotation(cols[i].annotations, module._annotations.GENERATED, false)) {
                     return false;
                 }
             }
@@ -507,20 +508,21 @@ ReferenceColumn.prototype = {
             };
 
         } else if (context == module._contexts.EDIT) {
-            for (i = 0; i < cols.length; i++) {
-
-                // if one is IMMUTABLE
-                if (cols[i].annotations.contains(module._annotations.IMMUTABLE)) {
-                    return true;
-                }
-
-                // if one is not GENERATED
-                if (!cols[i].annotations.contains(module._annotations.GENERATED)) {
-                    return false;
-                }
+            // at least one is IMMUTABLE, so the whole thing is immutable
+            var atLesatOneImmutable = cols.some(function (col) {
+                return _processACLAnnotation(col.annotations, module._annotations.IMMUTABLE, false);
+            });
+            if (atLesatOneImmutable) {
+                return true;
             }
-            // if all GENERATED
-            return true;
+            // if all are generated, the whole thing is immutable
+            var allAreGenerated = cols.every(function (col) {
+                var isImmutable = _processACLAnnotation(col.annotations, module._annotations.IMMUTABLE, null),
+                    isGenerated = _processACLAnnotation(col.annotations, module._annotations.GENERATED, false);
+                // if isImmutable===false, then that column is mutable based on annotation
+                return isImmutable !== false && isGenerated;
+            });
+            return allAreGenerated;
         }
 
         // other contexts

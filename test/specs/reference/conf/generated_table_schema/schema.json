@@ -277,6 +277,34 @@
       "annotations": {
         "tag:isrd.isi.edu,2016:non-deletable": {}
       }
+    },
+    "mutable_table": {
+      "comment": "An mutable table",
+      "kind": "table",
+      "keys": [
+        {
+          "comment": null,
+          "annotations": {},
+          "unique_columns": [
+            "id"
+          ]
+        }
+      ],
+      "foreign_keys": [],
+      "table_name": "mutable_table",
+      "schema_name": "generated_table_schema",
+      "column_definitions": [
+        {
+          "name": "id",
+          "nullok": false,
+          "type": {
+            "typename": "int"
+          }
+        }
+      ],
+      "annotations": {
+        "tag:isrd.isi.edu,2016:immutable": false
+      }
     }
   },
   "table_names": [
