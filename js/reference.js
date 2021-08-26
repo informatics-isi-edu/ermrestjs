@@ -1223,6 +1223,7 @@
          * tuple.
          * @param {!Array} data The array of data to be created as new tuples.
          * @param {Object} contextHeaderParams the object that we want to log.
+         * @param {Boolean} skipOnConflict if true, it will not complain about conflict
          * @returns {Promise} A promise resolved with a object containing `successful` and `failure` attributes.
          * Both are {@link ERMrest.Page} of results.
          * or rejected with any of the following errors:
@@ -1230,7 +1231,7 @@
          * - {@link ERMrest.InvalidInputError}: If `limit` is invalid.
          * - ERMrestjs corresponding http errors, if ERMrest returns http error.
          */
-        create: function(data, contextHeaderParams) {
+        create: function(data, contextHeaderParams, skipOnConflict) {
             var self = this;
             try {
                 //  verify: data is not null, data has non empty tuple set
@@ -1247,6 +1248,10 @@
                 var uri = this._location.ermrestCompactUri;
                 for (var i = 0; i < defaults.length; i++) {
                     uri += (i === 0 ? "?defaults=" : ',') + module._fixedEncodeURIComponent(defaults[i]);
+                }
+                if (skipOnConflict) {
+                    var qCharaceter = defaults.length > 0 ? "&" : "?";
+                    uri += qCharaceter + "onconflict=skip";
                 }
 
                 if (isObject(contextHeaderParams) && Array.isArray(contextHeaderParams.stack)) {
