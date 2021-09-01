@@ -94,14 +94,14 @@
 
         /**
          * returns null if the path is invalid
-         * @param {Object} source 
+         * @param {Object} source
          * @oaram {String=} sourcekey - the sourcekey name
-         * @param {String} alias 
+         * @param {String} alias
          * @param {ERMrest.Table=} rootTable - might be undefined
-         * @param {String} tableName 
-         * @param {String} catalogId 
+         * @param {String} tableName
+         * @param {String} catalogId
          * @param {Boolean} reverse - this will reverse the datasource and adds the root alias to the end
-         * @param {Object} consNames 
+         * @param {Object} consNames
          * @ignore
          */
         parseDataSource: function (source, sourcekey, alias, rootTable, tableName, catalogId, reverse, consNames, pathPrefixAliasMapping) {
@@ -142,7 +142,7 @@
             reverse = reverse && foreignKeyPathLength > 0;
 
             path = _sourceColumnHelpers.parseSourceNodesWithAliasMapping(
-                sourceNodes, lastForeignKeyNode, sourcekey, 
+                sourceNodes, lastForeignKeyNode, sourcekey,
                 pathPrefixAliasMapping, alias, reverse, ignoreLastFK
             );
 
@@ -234,7 +234,7 @@
             //if it has sourcekey
             if (typeof term.sourcekey === "string") {
                 sourcekey = term.sourcekey;
-                
+
                 // uses annotation therefore rootTable is required for it
                 if (!rootTable) {
                     return _renderFacetHelpers.getErrorOutput("Couldn't parse the url since Location doesn't have acccess to the catalog object or main table is invalid.", i);
@@ -832,7 +832,7 @@
 
                     // feels hacky
                     res.andFilterObject.entityChoiceFilterPage = page;
-    
+
                     // find the missing choices and also fix the choices if they are based on some other columns
                     if (page.length != filterStrs.length || filterColumnName != projectedColumnName) {
                         var newChoices = [];
@@ -840,21 +840,21 @@
                             newChoices.push(t.data[projectedColumnName]);
                             delete filterTerms[t.data[filterColumnName]];
                         });
-    
-                        // keep track of choices that we invalidated so we 
+
+                        // keep track of choices that we invalidated so we
                         // can create a proper error message
                         res.invalidChoices = Object.keys(filterTerms);
 
                         if (hasNullChoice) {
                             newChoices.push(null);
                         }
-    
+
                         // kinda hacky
                         // make sure the choices only include the valid ones (might be empty)
                         // and also make sure the values are based on the correct column
                         res.andFilterObject.sourceObject.choices = newChoices;
                     }
-    
+
                     defer.resolve(res);
                 }).catch(function (err) {
                     // if any of the values had issue, the whole request is failing
@@ -869,6 +869,87 @@
             })(filterColumnName, projectedColumnName);
 
             return defer.promise;
+        },
+
+        /**
+         * Instead of q.all() we're using this function so we have more control
+         * over the requests. This will make sure we're only sending "4" requests
+         * at once.
+         * @param {Array} promises
+         * @param {Function} resolveCB
+         * @param {Function} rejectCB
+         */
+        runAllEntityChoicePromises: function (promises, resolveCB, rejectCB) {
+            var helpers = _facetColumnHelpers,
+                promiseLen = promises.length,
+                donePromises = 0,
+                rejected = false,
+                resolved = false,
+                busySlots = 0,
+                response = [],
+                error = null,
+                maxSlots = 4; // maximum number of requests we're sending at the same time
+
+            var addToResponse = function (res, i) {
+                response[i] = res;
+                donePromises++;
+            };
+
+            var _runNextPromise = function () {
+                if (!Array.isArray(response)) {
+                    response = [];
+                }
+                if (error) {
+                    // make sure we're calling rejectCB only once
+                    if (rejected) return;
+                    rejected = true;
+
+                    // reject the callback
+                    rejectCB(error);
+                    return;
+                }
+
+                if (promises.length === 0) {
+                    // if all the promises are processed resolve
+                    // this will make sure we're calling this once
+                    // and only when all the promises are done
+                    if (donePromises >= promiseLen && !resolved) {
+                        resolved = true;
+                        resolveCB(response);
+                    }
+                    return;
+                }
+
+                // don't send more than maxSlots at once
+                if (busySlots >= maxSlots) {
+                    return;
+                }
+
+                var obj = promises.shift();
+                var i = promiseLen - promises.length - 1;
+
+                if (obj.mapEntityChoices) {
+                    busySlots++;
+                    // run the promise
+                    helpers.getEntityChoiceRows(obj.andFilterObject).then(function (res) {
+                        addToResponse(res, i);
+                        busySlots--;
+                        _runNextPromise();
+                        return;
+                    }).catch(function (err) {
+                        error = err;
+                        _runNextPromise();
+                        return;
+                    });
+                } else {
+                    // if it's not a promise then just add to the response
+                    addToResponse(obj, i);
+                }
+
+                _runNextPromise();
+            };
+
+            _runNextPromise(0);
         }
     };
 
@@ -878,7 +959,7 @@
         // if the extra objects are not passed, we cannot process
         if (isObjectAndNotNull(table) && isObjectAndNotNull(consNames)) {
             var res = this._process(table, consNames, isFacet, sources);
-            if (res.error) { 
+            if (res.error) {
                 throw new Error(res.message);
             }
         }
@@ -911,8 +992,8 @@
 
         /**
          * Parse the given sourceobject and create the attributes
-         * @param {ERMrest.Table} table 
-         * @param {Object} consNames 
+         * @param {ERMrest.Table} table
+         * @param {Object} consNames
          * @param {boolean} isFacet  -- validation is differrent if it's a facet
          * @returns  {Object}
          */
@@ -930,21 +1011,21 @@
             var colName, col, colTable = table, source = sourceObject.source, sourceObjectNodes = [];
             var hasPath = false, hasInbound = false, isFiltered = false, foreignKeyPathLength = 0;
             var lastForeignKeyNode, firstForeignKeyNode;
-            
+
             // just the column name
             if (isStringAndNotEmpty(source)){
                 colName = source;
-            } 
+            }
             // from 0 to source.length-1 we have paths
             else if (Array.isArray(source) && source.length === 1 && isStringAndNotEmpty(source[0])) {
                 colName = source[0];
-            } 
+            }
             else if (Array.isArray(source) && source.length > 1) {
                 var res = _sourceColumnHelpers.processDataSourcePath(source, table, table.name, table.schema.catalog.id, consNames, sources);
                 if (res.error) {
                     return res;
                 }
-                
+
                 hasPath = res.foreignKeyPathLength > 0;
                 hasInbound = res.hasInbound;
                 firstForeignKeyNode = res.firstForeignKeyNode;
@@ -958,7 +1039,7 @@
                 return returnError("Invalid source definition");
             }
 
-            // we need this check here to make sure the column is in the table 
+            // we need this check here to make sure the column is in the table
             try {
                 col = colTable.columns.get(colName);
             } catch (exp) {
@@ -1077,12 +1158,12 @@
                 }
 
                 var fkStr = sn.toString(reverse, isLeft);
-                var addAlias = outAlias && 
+                var addAlias = outAlias &&
                                (reverse && sn === self.firstForeignKeyNode ||
                                !reverse && sn === self.lastForeignKeyNode );
 
                 // NOTE alias on each node is ignored!
-                // currently we've added alias only for the association and 
+                // currently we've added alias only for the association and
                 // therefore it's not really needed here anyways
                 var res = "";
                 if (reverse) {
@@ -1108,17 +1189,17 @@
             }, "");
 
         },
-        
+
         /**
          * Turn this into a raw source path without any path prefix
-         * NOTE the returned array is not a complete path as it 
+         * NOTE the returned array is not a complete path as it
          *      doesn't include the last column
          * currently used in two places:
          *   - generating hashname for a sourcedef that uses path prefix
          *   - generating the reverse path for a related entitty
-         * @param {Boolean} reverse 
-         * @param {String=} outAlias alias that will be added to the last fk 
-         *                     regardless of reversing or not 
+         * @param {Boolean} reverse
+         * @param {String=} outAlias alias that will be added to the last fk
+         *                     regardless of reversing or not
          */
         getRawSourcePath: function (reverse, outAlias) {
             var path = [], self = this, obj;
@@ -1150,7 +1231,7 @@
 
                     path.push(obj);
                 }
-                
+
                 i = i + (reverse ? -1 : 1);
             }
             return path;
@@ -1162,9 +1243,9 @@
          *   - column.refernece
          *   - reference.generateRelatedReference
          * both are for generating the reverse related entity path
-         * @param {ERMrest.Tuple} tuple 
-         * @param {ERMrest.Table} rootTable 
-         * @param {String=} outAlias 
+         * @param {ERMrest.Tuple} tuple
+         * @param {ERMrest.Table} rootTable
+         * @param {String=} outAlias
          */
         getReverseAsFacet: function (tuple, rootTable, outAlias) {
             if (!isObjectAndNotNull(tuple)) return null;
@@ -1289,7 +1370,7 @@
                     }
 
                     tableName = colTable.name;
- 
+
                     var sn = new SourceObjectNode(fk, false, true, isInbound, false, null, fkAlias);
                     sourceObjectNodes.push(sn);
 
@@ -1328,15 +1409,15 @@
          * - outAlias is currently used only in recursive calls (not the initial call)
          * - since we're calling this in parseDataSource where we don't have sourceObjectWrapper,
          *   this function is using sourceNodes instead. it could be refactored to use sourceObjectWrapper instead.
-         * 
+         *
          * TODO could be refactored  and merged with parseAllOutBoundNodes
          * @param {*} sourceNodes - array of source nodes
          * @param {*} lastForeignKeyNode  - the last foreign key node
-         * @param {*} sourcekey 
-         * @param {*} pathPrefixAliasMapping 
-         * @param {*} mainTableAlias 
-         * @param {*} useRightJoin 
-         * @param {*} ignoreLastFK 
+         * @param {*} sourcekey
+         * @param {*} pathPrefixAliasMapping
+         * @param {*} mainTableAlias
+         * @param {*} useRightJoin
+         * @param {*} ignoreLastFK
          */
         parseSourceNodesWithAliasMapping: function (sourceNodes, lastForeignKeyNode, sourcekey, pathPrefixAliasMapping, mainTableAlias, useRightJoin, ignoreLastFK, outAlias) {
             if (!useRightJoin && sourcekey && sourcekey in pathPrefixAliasMapping.aliases) {
@@ -1347,7 +1428,7 @@
                 if (sn.isFilter) {
                     return prev + (i > 0 ? "/" : "") + sn.toString();
                 }
-                
+
                 // NOTE:
                 // limitations: we cannot have only prefix.. it must have another path after it
                 // otherwise we have to change the code to take care of the following:
@@ -1412,20 +1493,20 @@
          * - Returned object has `path` and `usedOutAlias`. where `usedOutAlias`
          *   can be used to findout what is the alias that is used for the projected table.
          *   (depending on the usage of prefix, we might ignore the given outAlias and use a prefix from pathPrefixAliasMapping)
-         * - since we don't support composite keys in source-def, the ForeignKeyPseudoColumn cannot use 
+         * - since we don't support composite keys in source-def, the ForeignKeyPseudoColumn cannot use
          *   sourceObjectWrapper and instead we're creating sourceNodes for it. that's why this function is using sourceNodes
          *   and not sourceObjectWrapper.
          * TODO could be refactored and merged with the previous function
-         * @param {*} sourceNodes 
-         * @param {*} lastForeignKeyNode 
-         * @param {*} sourcekey 
-         * @param {*} pathPrefixAliasMapping 
-         * @param {*} outAlias 
+         * @param {*} sourceNodes
+         * @param {*} lastForeignKeyNode
+         * @param {*} sourcekey
+         * @param {*} pathPrefixAliasMapping
+         * @param {*} outAlias
          */
         parseAllOutBoundNodes: function (sourceNodes, lastForeignKeyNode, sourcekey, pathPrefixAliasMapping, outAlias, mainTableAlias) {
             var usedOutAlias;
 
-            // TODO could be improved, we don't need to return any path 
+            // TODO could be improved, we don't need to return any path
             // if this the main call and not part of the recursive call
             if (sourcekey && sourcekey in pathPrefixAliasMapping.aliases) {
                 usedOutAlias = pathPrefixAliasMapping.aliases[sourcekey];
@@ -1443,7 +1524,7 @@
                 if (sn.isFilter) {
                     return prev + (i > 0 ? "/" : "") + sn.toString();
                 }
-                
+
                 // NOTE:
                 // limitations: we cannot have only prefix.. it must have another path after it
                 // otherwise we have to change the code to take care of the following:
@@ -1630,7 +1711,7 @@
         },
 
         generateForeignKeyName: function (fk, isInbound) {
-            var eTable = isInbound ? fk._table : fk.key.table;    
+            var eTable = isInbound ? fk._table : fk.key.table;
             if (!isInbound) {
                 return _sourceColumnHelpers.generateSourceObjectHashName(
                     {
@@ -1639,7 +1720,7 @@
                     false
                 );
             }
-    
+
             var source = [{inbound: fk.constraint_names[0]}];
             if (eTable.isPureBinaryAssociation) {
                 var otherFK, pureBinaryFKs = eTable.pureBinaryForeignKeys;
@@ -1649,13 +1730,13 @@
                         break;
                     }
                 }
-    
+
                 source.push({outbound: otherFK.constraint_names[0]});
                 source.push(otherFK.key.table.shortestKey[0].name);
             } else {
                 source.push(eTable.shortestKey[0].name);
             }
-    
+
             return _sourceColumnHelpers.generateSourceObjectHashName({source: source}, false);
         }
     };
@@ -1701,7 +1782,7 @@
         get simpleConjunction () {
             if (this._simpleConjunction === undefined) {
 
-                // TODO 
+                // TODO
                 var computeValue = function (self) {
                     if (!self.isFilter) return null;
 

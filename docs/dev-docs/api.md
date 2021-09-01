@@ -396,7 +396,7 @@ to use for ERMrest JavaScript agents.
         * [.validateFacetsFilters(facetAndFilters, facetObjectWrappers, searchTerm, skipMappingEntityChoices, changeLocation)](#ERMrest.Reference+validateFacetsFilters)
         * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
         * [.hideFacets()](#ERMrest.Reference+hideFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
-        * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
+        * [.create(data, contextHeaderParams, skipOnConflict)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
         * [.read(limit, contextHeaderParams, useEntity, dontCorrectPage, getTRS, getTCRS, getUnlinkTRS)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
         * [.sort(sort)](#ERMrest.Reference+sort) ⇒ <code>Reference</code>
         * [.update(tuples, contextHeaderParams)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
@@ -722,7 +722,7 @@ to use for ERMrest JavaScript agents.
         * [.validateFacetsFilters(facetAndFilters, facetObjectWrappers, searchTerm, skipMappingEntityChoices, changeLocation)](#ERMrest.Reference+validateFacetsFilters)
         * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
         * [.hideFacets()](#ERMrest.Reference+hideFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
-        * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
+        * [.create(data, contextHeaderParams, skipOnConflict)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
         * [.read(limit, contextHeaderParams, useEntity, dontCorrectPage, getTRS, getTCRS, getUnlinkTRS)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
         * [.sort(sort)](#ERMrest.Reference+sort) ⇒ <code>Reference</code>
         * [.update(tuples, contextHeaderParams)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
@@ -2997,7 +2997,7 @@ Constructor for a ParsedFilter.
     * [.validateFacetsFilters(facetAndFilters, facetObjectWrappers, searchTerm, skipMappingEntityChoices, changeLocation)](#ERMrest.Reference+validateFacetsFilters)
     * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
     * [.hideFacets()](#ERMrest.Reference+hideFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
-    * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
+    * [.create(data, contextHeaderParams, skipOnConflict)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
     * [.read(limit, contextHeaderParams, useEntity, dontCorrectPage, getTRS, getTCRS, getUnlinkTRS)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
     * [.sort(sort)](#ERMrest.Reference+sort) ⇒ <code>Reference</code>
     * [.update(tuples, contextHeaderParams)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
@@ -3460,7 +3460,7 @@ Will return a reference with the same facets but hidden.
 **Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+create"></a>
 
-#### reference.create(data, contextHeaderParams) ⇒ <code>Promise</code>
+#### reference.create(data, contextHeaderParams, skipOnConflict) ⇒ <code>Promise</code>
 Creates a set of tuples in the references relation. Note, this
 operation sets the `defaults` list according to the table
 specification, and not according to the contents of in the input
@@ -3478,6 +3478,7 @@ or rejected with any of the following errors:
 | --- | --- | --- |
 | data | <code>Array</code> | The array of data to be created as new tuples. |
 | contextHeaderParams | <code>Object</code> | the object that we want to log. |
+| skipOnConflict | <code>Boolean</code> | if true, it will not complain about conflict |
 
 <a name="ERMrest.Reference+read"></a>
 
@@ -6745,7 +6746,7 @@ get PathColumn object by column name
     * [.validateFacetsFilters(facetAndFilters, facetObjectWrappers, searchTerm, skipMappingEntityChoices, changeLocation)](#ERMrest.Reference+validateFacetsFilters)
     * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
     * [.hideFacets()](#ERMrest.Reference+hideFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
-    * [.create(data, contextHeaderParams)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
+    * [.create(data, contextHeaderParams, skipOnConflict)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
     * [.read(limit, contextHeaderParams, useEntity, dontCorrectPage, getTRS, getTCRS, getUnlinkTRS)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
     * [.sort(sort)](#ERMrest.Reference+sort) ⇒ <code>Reference</code>
     * [.update(tuples, contextHeaderParams)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
@@ -7208,7 +7209,7 @@ Will return a reference with the same facets but hidden.
 **Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+create"></a>
 
-#### reference.create(data, contextHeaderParams) ⇒ <code>Promise</code>
+#### reference.create(data, contextHeaderParams, skipOnConflict) ⇒ <code>Promise</code>
 Creates a set of tuples in the references relation. Note, this
 operation sets the `defaults` list according to the table
 specification, and not according to the contents of in the input
@@ -7226,6 +7227,7 @@ or rejected with any of the following errors:
 | --- | --- | --- |
 | data | <code>Array</code> | The array of data to be created as new tuples. |
 | contextHeaderParams | <code>Object</code> | the object that we want to log. |
+| skipOnConflict | <code>Boolean</code> | if true, it will not complain about conflict |
 
 <a name="ERMrest.Reference+read"></a>
 

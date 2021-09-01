@@ -382,7 +382,7 @@
 
         /**
          * NOTE this will not map the entity choice pickers, use "generateFacetColumns" instead.
-         * so directly using this is not recommended. 
+         * so directly using this is not recommended.
          * @return {ERMrest.FacetColumn[]}
          */
         get facetColumns() {
@@ -399,16 +399,16 @@
          *   facetColumns: <an array of FacetColumn objects>
          *   issues: <if null it means that there wasn't any issues, otherwise will be a UnsupportedFilters object>
          * }
-         * 
+         *
          * - If `filter` context is not defined for the table, following heuristics will be used:
          *    - All the visible columns in compact context.
          *    - All the related entities in detailed context.
          * - This function will modify the Reference.location to reflect the preselected filters
          *   per annotation as well as validation.
          * - This function will validate the facets in the url, by doing the following (any invalid filter will be ignored):
-         *   - Making sure given `source` or `sourcekey` are valid 
+         *   - Making sure given `source` or `sourcekey` are valid
          *   - If `source_domain` is passed,
-         *       - Making sure `source_domain.table` and `source_domain.schema` are valid 
+         *       - Making sure `source_domain.table` and `source_domain.schema` are valid
          *       - Using `source_domain.column` instead of end column in case of scalars
          *   - Sending request to fetch the rows associated with the entity choices,
          *     and ignoring the ones that don't return any result.
@@ -441,8 +441,8 @@
          *   facetColumns: <an array of FacetColumn objects>
          *   issues: <if null it means that there wasn't any issues, otherwise will be a UnsupportedFilters object>
          * }
-         * 
-         * @param {ERMrest.reference} self 
+         *
+         * @param {ERMrest.reference} self
          * @param {Boolean} skipMappingEntityChoices - whether we should map entity choices or not
          * @private
          */
@@ -599,7 +599,7 @@
                 }
             };
 
-            
+
             // if we don't want to map entity choices, then function will work in sync mode
             if (skipMappingEntityChoices) {
                 var res = self.validateFacetsFilters(andFilters ,facetObjectWrappers, searchTerm, skipMappingEntityChoices);
@@ -623,12 +623,12 @@
 
             return defer.promise;
         },
-        
+
         /**
          * This will go over all the facets and make sure they are fine
-         * if not, will try to transform or remove them and 
+         * if not, will try to transform or remove them and
          * in the end will update the list
-         * 
+         *
          * NOTE this should be called before doing read or as part of it
          * @param {Array?} facetAndFilters - (optional) the filters in the url
          * @param {ERMrest.SourceObjectWrapper[]?} facetObjectWrappers - (optional) the generated facet objects
@@ -637,8 +637,8 @@
          * @param {Boolean?} changeLocation - (optional) whether we should change reference.location or not
          */
         validateFacetsFilters: function (facetAndFilters, facetObjectWrappers, searchTerm, skipMappingEntityChoices, changeLocation) {
-            var defer = module._q.defer(), 
-                self = this, 
+            var defer = module._q.defer(),
+                self = this,
                 helpers = _facetColumnHelpers,
                 promises = [],
                 checkedObjects = {},
@@ -758,12 +758,12 @@
                         if (col.table.schema.tables.has(facetAndFilter.source_domain.table)) {
                             addToIssues(facetAndFilter, "The state of facet has changed (table missmatch).");
                             return;
-                        }                        
+                        }
                     }
 
                     // validate the given column name
                     if (isStringAndNotEmpty(facetAndFilter.source_domain.column) && !col.table.columns.has(facetAndFilter.source_domain.column)) {
-                        delete facetAndFilter.source_domain.column; 
+                        delete facetAndFilter.source_domain.column;
                     }
 
                     // modify the last column name to be the one in source_domain in scalar mode
@@ -780,7 +780,7 @@
 
                 // in case of entity choice picker we have to translate the given choices
                 if (!skipMappingEntityChoices && andFilterObject.isEntityMode && Array.isArray(facetAndFilter.choices)) {
-                    promises.push(helpers.getEntityChoiceRows(andFilterObject));
+                    promises.push({andFilterObject: andFilterObject, mapEntityChoices: true});
                 } else {
                     promises.push({
                         andFilterObject: andFilterObject
@@ -832,7 +832,7 @@
                         if (!found) {
                             res.facetObjectWrappers.push(resp.andFilterObject);
                         }
-                    } 
+                    }
                     // otherwise just capture the filters in url
                     else {
                         res.newFilters.push(res.andFilterObject);
@@ -856,15 +856,18 @@
                 finalize(promises);
                 return res;
             } else {
-                // NOTE this should be improved in case there are a lot of entity choice pickers selected
-                module._q.all(promises).then(function (response) {
-                    finalize(response);
-                    defer.resolve(res);
-                }).catch(function (error) {
-                    defer.reject(error);
-                });
+                helpers.runAllEntityChoicePromises(
+                    promises,
+                    function (response) {
+                        finalize(response);
+                        defer.resolve(res);
+                    },
+                    function (error) {
+                        defer.reject(error);
+                    }
+                );
             }
-            
+
             return defer.promise;
         },
 
@@ -2436,7 +2439,7 @@
                     if (["attributegroup", "entity"].indexOf(defaultExportOutput.source.api) != -1) {
                         // example.com/ermrest/catalog/<id>/<api>/<current-path>/<vis-col-projection-and-needed-joins>
                         uri = [
-                            this.location.service, "catalog", this._location.catalog, defaultExportOutput.source.api, 
+                            this.location.service, "catalog", this._location.catalog, defaultExportOutput.source.api,
                             this.location.ermrestCompactPath, defaultExportOutput.source.path
                         ].join("/");
                     } else {
