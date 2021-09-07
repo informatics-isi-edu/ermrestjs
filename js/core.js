@@ -1263,7 +1263,7 @@
         /**
          * The columns that create the stable key
          * NOTE doesn't support composite keys for now
-         * 
+         *
          * @type {ERMrest.Column[]}
          */
         get stableKey() {
@@ -1289,7 +1289,7 @@
                             try {
                                 // all the columns must be valid
                                 var col = self.columns.get(colName);
-                            
+
                                 // all the columns must be not-null
                                 if (col.nullok) {
                                     return false;
@@ -1300,7 +1300,7 @@
                                 return false;
                             }
                         });
-                        
+
                         if (allValid) {
                             return keyCols;
                         }
@@ -1513,8 +1513,9 @@
                 }
 
                 // if the key is special
-                if (Object.keys(module._specialSourceDefinitions).indexOf(key) !== -1) {
-                    module._log.info(message + ": " + " `sourcekey` cannot be any of the special keys.");
+                if (Object.values(module._specialSourceDefinitions).indexOf(key) !== -1) {
+                    // removed the message because it was misleading
+                    // this makes sure special source keys are not used for path prefix
                     return false;
                 }
 
@@ -1600,7 +1601,13 @@
              if (annot.sources && typeof annot.sources === "object") {
                  for (var key in annot.sources) {
                      if (!annot.sources.hasOwnProperty(key)) continue;
+
+                     // process once
                      if (key in processedSources) continue;
+
+                     // ignore special definitions
+                     if (Object.values(module._specialSourceDefinitions).indexOf(key) !== -1) continue;
+
                      processedSources[key] = addSourceDef(key);
                  }
              }
@@ -1639,7 +1646,7 @@
                       */
                      sbDef = annot.sources[sb];
 
-                     var message = "search column definition, table =" + self.name;
+                     var message = "search column definition, table=" + self.name;
 
                      // make sure it's properly defined as `or` of sources
                      if (!sbDef.hasOwnProperty(orOperator) || !Array.isArray(sbDef[orOperator])) {

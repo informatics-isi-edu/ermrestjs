@@ -63,6 +63,11 @@
                   "columns": ["invalid_col_1", "col", "invalid_col_2"],
                   "fkeys": [["source_definitions_schema", "main_fk2"], ["source_definitions_schema", "main_fk_invalid_2"]],
                   "sources": {
+                      "search-box": {
+                          "or": [
+                              {"source": "col"}
+                          ]
+                      },
                       "new_col": {"source": "col"},
                       "new_col_2": {"source": "col"},
                       "new_col_invalid": {"source": "col_invalid"},
@@ -241,6 +246,13 @@
                               {"sourcekey": "new_col"},
                               {"outbound": ["source_definitions_schema", "main_fk1"]},
                               "RID"
+                          ]
+                      },
+                      "use_special_sourcekey_as_prefix": {
+                          "source": [
+                            {"sourcekey": "search-box"},
+                            {"outbound": ["source_definitions_schema", "main_fk1"]},
+                            "RID"
                           ]
                       }
                   }
