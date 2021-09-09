@@ -8,7 +8,7 @@ The most basic tag type is a simple variable. A {{{name}}} tag renders the value
 
 ### Usage
 
-* `{{{COLUMN_NAME}}}` : The triple curly braces will replace the column value as is.  
+* `{{{COLUMN_NAME}}}` : The triple curly braces will replace the column value as is.
 
 ### Raw Values
 
@@ -19,6 +19,8 @@ By default ermrestJS returns formatted values for a column. If you need to acces
 
 {{{_user}}}
 ```
+
+In case of `jsonb` columns, `{{{col}}}` will return the string representation of the value, while `{{{_col}}}` can be used to access the raw value of the column. This will allow you to access the fields in the jsonb value. For instance if the jsonb value is `{"name": 1234}`, then you can use `{{{_col.name}}}` to access the `name` field. While accessing the raw jsonb column, we don't allow you to access the "formatted" values and the returned value is the raw field value. In the example above, `{{{_col.name}}}` will return "1234" and not "1,234".
 
 ### Foreign Key Values
 
@@ -197,7 +199,7 @@ To make sure that you handle above case, wrap properties which can be null insid
 
 ### Using Pre-defined Attributes
 
-Ermrestjs now allows users to access some pre-defined variables in the template environment for ease. You need to make sure that you don't use these variables as column-names in your tables to avoid them being overridden in the environment.  
+Ermrestjs now allows users to access some pre-defined variables in the template environment for ease. You need to make sure that you don't use these variables as column-names in your tables to avoid them being overridden in the environment.
 
 One of those variable is `$moment`.
 

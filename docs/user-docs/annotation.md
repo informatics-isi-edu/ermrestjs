@@ -201,7 +201,7 @@ This annotation provides an override guidance for Chaise applications using a hi
 
 Note:
 - An explicit setting of `null` will turn *off* inheritence and restore default behavior for that modele element and any of its nested elements.
-- The name_style has to be derived separately for each field e.g. one can set `underline_space=true` at the schema-level and doesn't have to set this again.   
+- The name_style has to be derived separately for each field e.g. one can set `underline_space=true` at the schema-level and doesn't have to set this again.
 
 ### Tag: 2015 Vocabulary (_deprecated_)
 
@@ -660,7 +660,7 @@ See [Context Names](#context-names) section for the list of supported _context_ 
 Supported JSON _option_ payload patterns:
 
 - `"row_order":` `[` _sortkey_ ... `]`: The list of one or more _sortkey_ defines the preferred or default order to present rows from a table. The ordered list of sort keys starts with a primary sort and optionally continues with secondary, tertiary, etc. sort keys. The given _sortkey_ s will be used as is (_columnorder_ SHOULD not be applied recursivly to this).
-- `"page_size":` `_number_`: The default number of rows to be shown on a page.  
+- `"page_size":` `_number_`: The default number of rows to be shown on a page.
 - `"collapse_toc_panel":` `_boolean_`: Controls whether the table of contents panel is collapsed on page load (only supported in `detailed` context).
 - `"hide_column_headers":` `_boolean_`: Controls whether the column names headers and separators between column values are shown (only supported in `detailed` context).
 - `"page_markdown_pattern"`: _pagepattern_: Render the page by composing a markdown representation only when `page_markdown_pattern` is non-null.
@@ -838,7 +838,7 @@ Default heuristics:
 - `url_pattern` MUST be specified for browser upload. If it is not specified or if it produces a null value, the browser upload will be disabled.
 - Column MUST be `text` typed. Otherwise the asset annotation will be ignored.
 - In addition to native columns, the following properties are also available under the annotated column object and can be referred in the _pattern_ e.g. `{{{_URI.md5_hex}}}` where `URI` is the annotated column (notice the [underscore before the column name](mustache-templating.md#raw-values)).
-  - `md5_hex` for hex  
+  - `md5_hex` for hex
   - `md5_base64` for base64
   - `filename` for filename
   - `size` for size in bytes
@@ -1062,11 +1062,11 @@ In all remaining scenarios, the problematic attribute (attributes that don't fol
 
 You can use [this](https://search.google.com/test/rich-results) tool by Google to validate any JSON-LD yourself if needed, it accepts both a URL or a code snippet.
 
-Example of annotation:
+The following is an example of this annotation. You can also find more information in [here](google-dataset.md).
 
 ```json
 {
-  "tag:isrd.isi.edu,2021:google-dataset": {  
+  "tag:isrd.isi.edu,2021:google-dataset": {
     "detailed": {
       "dataset": {
         "@context": "http://schema.org",
@@ -1114,8 +1114,8 @@ Note:
 List of _context_ names that are used in ERMrest:
 
 - `"compact"`: Any compact, tabular presentation of data from multiple entities.
-  - `"compact/brief"`: A limited compact, tabular presentation of data from multiple entities to be shown under the `detailed` context. In this context, only a page of data will be shown with a link to the access the `compact` context for more detail (related entities section).  
-  - `"compact/brief/inline"`: A limited inline, compact, tabular presentation of data from multiple entities to be shown under the `detailed` context. In this context, only a page of data will be shown with a link to the access the `compact` context for more detail (inline related entities section).  
+  - `"compact/brief"`: A limited compact, tabular presentation of data from multiple entities to be shown under the `detailed` context. In this context, only a page of data will be shown with a link to the access the `compact` context for more detail (related entities section).
+  - `"compact/brief/inline"`: A limited inline, compact, tabular presentation of data from multiple entities to be shown under the `detailed` context. In this context, only a page of data will be shown with a link to the access the `compact` context for more detail (inline related entities section).
   - `"compact/select"`: A sub-context of `compact` that is used for selecting entities, e.g. when prompting the user for choosing a foreign key or facet value.
 - `"detailed"`: Any detailed read-only, entity-level presentation context.
 - `"entry"`: Any data-entry presentation context, i.e. when prompting the user for input column values.

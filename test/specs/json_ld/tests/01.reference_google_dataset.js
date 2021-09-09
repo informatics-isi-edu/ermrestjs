@@ -4,7 +4,7 @@ var utils = require('./../../../utils/utilities.js');
 exports.execute = function (options) {
 
     describe('For determining google_metadata annotation, ', function () {
-        
+
         var catalog_id = process.env.DEFAULT_CATALOG,
             schemaName = "google_metadata_schema",
             tableName = "google_metadata_w_handlebars";
@@ -75,8 +75,7 @@ exports.execute = function (options) {
 
 
                 var metadata = reference.googleDatasetMetadata.compute(tuple);
-                expect(metadata).toBeObject();
-                expect(JSON.stringify(metadata)).toBeJsonString();
+                expect(metadata).toBeDefined();
                 expect(metadata.url).toEqual(expectedVal.url);
                 // date formats come differently so standardize them
                 expectedVal.datePublished = new Date(utils.findEntity(options, schemaName, tableName, "id", "2003").RCT).getDate();

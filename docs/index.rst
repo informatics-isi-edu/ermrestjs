@@ -16,3 +16,4 @@ JavaScript Client Libraries (ERMrestJS)
    user-docs/pseudo-column-template.md
    user-docs/table-alternatives.md
    user-docs/export.md
+   user-docs/google-dataset.md
