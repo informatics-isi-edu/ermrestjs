@@ -6074,7 +6074,7 @@
                         element,
                         templateVariables,
                         table.schema.catalog,
-                        { templateEngine: templateEngine }
+                        { templateEngine: templateEngine, allowObject: true }
                     ));
                 });
             }
@@ -6083,7 +6083,7 @@
                     metadataAnnotation[key],
                     templateVariables,
                     table.schema.catalog,
-                    { templateEngine: templateEngine }
+                    { templateEngine: templateEngine, allowObject: true }
                 );
             }
         });

@@ -50,6 +50,18 @@
                     "type": {
                         "typename": "text"
                     }
+                },
+                {
+                    "name": "DataCatalog",
+                    "type": {
+                        "typename": "jsonb"
+                    }
+                },
+                {
+                    "name": "citation_jsonb",
+                    "type": {
+                        "typename": "jsonb"
+                    }
                 }
             ],
             "annotations": {
@@ -78,7 +90,9 @@
                             "dateModified": "{{{RMT}}}",
                             "datePublished": "{{{RCT}}}",
                             "isAccessibleForFree": "{{{luxurious}}}",
-                            "url": "{{{$self.uri.detailed}}}"
+                            "url": "{{{$self.uri.detailed}}}",
+                            "funder": "{{#jsonStringify}}{{{_DataCatalog.funder}}}{{/jsonStringify}}",
+                            "citation": "{{{citation_jsonb}}}"
                         },
                         "template_engine": "handlebars"
                     }

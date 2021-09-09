@@ -3056,6 +3056,8 @@
      * acceptable options:
      * - templateEngine: "mustache" or "handlbars"
      * - avoidValidation: to avoid validation of the template
+     * - allowObject: if the returned string is a parsable object, return it as object
+     *                instead of string.
      *
      * @param  {string} template - template to be rendered
      * @param  {object} keyValues - formatted key value pairs needed for the template
@@ -3065,19 +3067,30 @@
      */
     module._renderTemplate = function (template, keyValues, catalog, options) {
 
-        var obj = {};
-
         if (typeof template !== 'string') return null;
 
         options = options || {};
 
+        var res, objRes;
         if (options.templateEngine === module.HANDLEBARS) {
             // render the template using Handlebars
-            return module.renderHandlebarsTemplate(template, keyValues, catalog, options);
+            res = module.renderHandlebarsTemplate(template, keyValues, catalog, options);
+        } else {
+            // render the template using Mustache
+            res = module._renderMustacheTemplate(template, keyValues, catalog, options);
         }
 
-        // render the template using Mustache
-        return module._renderMustacheTemplate(template, keyValues, catalog, options);
+        if (options.allowObject) {
+            try {
+                // if it can be parsed and is an object, return the object
+                var objRes = JSON.parse(res);
+                if (typeof objRes === "object") {
+                    return objRes;
+                }
+            } catch (exp) {}
+        }
+
+        return res;
     };
 
     /**
