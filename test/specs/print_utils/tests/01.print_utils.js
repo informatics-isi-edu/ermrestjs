@@ -475,6 +475,10 @@ exports.execute = function (options) {
             it('formatDate helper', function () {
                 expect(module.renderHandlebarsTemplate("{{formatDate '2018-07-26' 'YYYY'}}")).toBe("2018");
                 expect(module.renderHandlebarsTemplate("{{formatDate '02-16-97' 'YYYY'}}")).toBe("1997");
+                // should be able to handle invalid dates
+                expect(module.renderHandlebarsTemplate("{{formatDate 'aaa' 'YYYY'}}")).toBe("");
+                // should be able to handle null value
+                expect(module.renderHandlebarsTemplate("{{formatDate date 'YYYY'}}", {date: null})).toBe("");
             });
 
             it('encodeFacet helper', function () {

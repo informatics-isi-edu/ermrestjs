@@ -24,7 +24,12 @@
              * @returns formatted string of `value` with corresponding `format`
              */
             formatDate: function (value, format) {
-                return module._moment(value).format(format);
+                var m = module._moment(value);
+                // if we don't validate, it will return "invalid date"
+                if (m.isValid()) {
+                    return m.format(format);
+                }
+                return "";
             },
 
             /**
