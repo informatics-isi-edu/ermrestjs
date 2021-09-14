@@ -5,7 +5,9 @@ The renderer that we use ([markdown-it](https://github.com/markdown-it/markdown-
 ## Table of Contents
   * [Inline Vs. Block](#inline-vs-block)
   * [Attributes](#attributes)
-    + [Special Classes](#special-classes)
+    + [Tooltip](#tooltip)
+    + [Classes](#classes)
+      - [Special Classes](#special-classes)
   * [Examples](#examples)
     + [1. Link (Anchor)](#1-link-anchor)
     + [2. Download Button](#2-download-button)
@@ -72,55 +74,72 @@ Therefore sometimes we prefer to render the value as inline. markdown-it also ha
 
 ## Attributes
 
-You can attach attributes to any element in your markdown. Generally you can attach the attributes in `{}` to your element. For example if you want to add attributes to a link, you can use the `[caption](link){attributes}` template. The acceptable format for attributes:
+You can attach attributes to any element in your markdown. Generally you can attach the attributes in `{}` to your element. For example if you want to add attributes to a link, you can use the `[caption](link){attributes}` template. You can have any number of attributes and to separate the attributes you just need to have white space between them. The following are some examples of attaching attributes:
 
-- Any attribute that starts with a `.` will be treated as class name.
+- Attaching multiple attributes:
+  ```html
+  **Multiple attributes Example**{.test .cls-2 val=1 disabled}
+
+  #OUTPUT
+  <p>
+    <strong class="test cls-2" val="1" disabled="">Multiple attributes Example</strong>
+  </p>
+  ```
+  > <p><strong class="test cls-2" val="1" disabled="">Multiple attributes Example</strong></p>
+
+- Attaching attributes to markdown table
+   ```html
+   |header|\n|-|\n|text|{.class-name}
+   
+   #OUTPUT
+   <table class="class-name">
+     <thead>
+       <tr>
+         <th>heading</th>
+       </tr>
+     </thead>
+     <tbody>
+       <tr>
+         <td>text</td>
+       </tr>
+     </tbody>
+   </table>
+   ```
+   > <table class="class-name"><thead><tr><th>heading</th></tr></thead><tbody><tr><td>text</td></tr></tbody></table>
+
+
+
+
+Depending on the markdown element type, different attrbiutes will be acceptable and throughout this document we will mention them. The following are some of the general attributes:
+
+### Tooltip
+
+Using `title` attribute you can add a tooltip to any HTML element.
+
 ```html
-[class example](http://example.com){.test}
-
+[tooltip example](http://example.com){title="tooltip for this link"}
 #OUTPUT
 <p>
-  <a href="http://example.com" class="test">class example</a>
+  <a href="http://example.com" title="tooltip for this link">tooltip example</a>
 </p>
 ```
-> <p><a href="http://example.com" class="test">class example</a></p>
+> <p> <a href="http://example.com" title="tooltip for this link">tooltip example</a></p>
 
-- If you want to define multiple attributes just seperate them with space.
+### Classes
 
-```html
-**Multiple attributes Example**{.test .cls-2 val=1 disabled}
+Any attribute that starts with a `.` will be treated as class name.
+  ```html
+  [class example](http://example.com){.test}
 
-#OUTPUT
-<p>
-  <strong class="test cls-2" val="1" disabled="">Multiple attributes Example</strong>
-</p>
-```
-> <p><strong class="test cls-2" val="1" disabled="">Multiple attributes Example</strong></p>
-
- - Attach attributes to markdown table
-
-```html
-|header|\n|-|\n|text|{.class-name}
-
-#OUTPUT
-<table class="class-name">
-  <thead>
-    <tr>
-      <th>heading</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>text</td>
-    </tr>
-  </tbody>
-</table>
-```
-
-> <table class="class-name"><thead><tr><th>heading</th></tr></thead><tbody><tr><td>text</td></tr></tbody></table>
+  #OUTPUT
+  <p>
+    <a href="http://example.com" class="test">class example</a>
+  </p>
+  ```
+  > <p><a href="http://example.com" class="test">class example</a></p>
 
 
-### Special Classes
+#### Special Classes
 
 The following is the list of special class names that you can use:
 
