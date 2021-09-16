@@ -49,6 +49,8 @@ WHERE {
     || ?rtype = <https://schema.org/Date>
     || ?rtype = <https://schema.org/DateTime>
     || ?rtype = <https://schema.org/Comment>
+    || ?rtype = <https://schema.org/Language>
+    || ?rtype = <https://schema.org/Intangible>
     || ?rtype = <https://schema.org/Person>
     || ?rtype = <https://schema.org/Organization>
     || ?rtype = <https://schema.org/DataCatalog>
@@ -59,6 +61,8 @@ WHERE {
     )  
     && (
     ?dtype = <https://schema.org/Comment>
+    || ?dtype = <https://schema.org/Language>
+    || ?dtype = <https://schema.org/Intangible>
     || ?dtype = <https://schema.org/Person>
     || ?dtype = <https://schema.org/Organization>
     || ?dtype = <https://schema.org/DataCatalog>
@@ -81,7 +85,20 @@ SELECT
   ?prop ?subclass
 WHERE {
   ?prop a rdfs:Class .
-  ?prop rdfs:subClassOf ?subclass
+  ?prop rdfs:subClassOf ?subclass .
+  FILTER (
+    ?prop = <https://schema.org/Comment>
+    || ?prop = <https://schema.org/Language>
+    || ?prop = <https://schema.org/Intangible>
+    || ?prop = <https://schema.org/Person>
+    || ?prop = <https://schema.org/Organization>
+    || ?prop = <https://schema.org/DataCatalog>
+    || ?prop = <https://schema.org/CreativeWork>
+    || ?prop = <https://schema.org/Thing>
+    || ?prop = <https://schema.org/Dataset>
+    || ?prop = <https://schema.org/DataDownload>
+    || ?prop = <https://schema.org/MediaObject>
+    )
 }
 GROUP BY ?prop
 ORDER BY ?prop
@@ -104,8 +121,10 @@ for row in result1:
 subclassMap = {}
 for row in result2:
     currentType = transform(row, 'prop')
-    if currentType in allSchemaOrgTypesDict:
-        allSchemaOrgTypesDict[currentType]["parent"] = transform(row, 'subclass')
+    # some classes might not have any property on their own
+    if currentType not in allSchemaOrgTypesDict:
+        allSchemaOrgTypesDict[currentType] = {"properties": {}, "requiredProperties": [], "parent": None}
+    allSchemaOrgTypesDict[currentType]["parent"] = transform(row, 'subclass')
 
 # schema.org does not have any concept of required props, but Google does so we hard code it here
 allSchemaOrgTypesDict["Dataset"][requiredProps] = datasetRequiredProps

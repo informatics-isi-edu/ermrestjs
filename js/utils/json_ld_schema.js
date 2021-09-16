@@ -257,6 +257,7 @@ module.jsonldSchemaPropObj = Object.freeze({
             },
             "inLanguage": {
                 "types": [
+                    "Language",
                     "Text"
                 ]
             },
@@ -601,6 +602,7 @@ module.jsonldSchemaPropObj = Object.freeze({
             },
             "knowsLanguage": {
                 "types": [
+                    "Language",
                     "Text"
                 ]
             },
@@ -839,6 +841,7 @@ module.jsonldSchemaPropObj = Object.freeze({
             },
             "knowsLanguage": {
                 "types": [
+                    "Language",
                     "Text"
                 ]
             },
@@ -1134,5 +1137,15 @@ module.jsonldSchemaPropObj = Object.freeze({
             "encodingFormat"
         ],
         "parent": "MediaObject"
+    },
+    "Intangible": {
+        "properties": {},
+        "requiredProperties": [],
+        "parent": "Thing"
+    },
+    "Language": {
+        "properties": {},
+        "requiredProperties": [],
+        "parent": "Intangible"
     }
 });
