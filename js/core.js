@@ -1664,12 +1664,6 @@
                              module._log.info(message + ", index=" + index + ":" + exp.message);
                              return;
                          }
-
-                         if (pSource.hasPath) {
-                             module._log.info(message + ", index=" + index + ": only table columns are accepted.");
-                             return;
-                         }
-
                          res.push(pSource);
                      });
 
@@ -1677,6 +1671,51 @@
                          module._log.info(message + ": none of the defined sources were valid, using all the columns.");
                          return false;
                      }
+
+                     // if there are more than one search columns,
+                     // they all must come from the same table instance:
+                     // either local, or same path prefix
+                     if (res.length > 1) {
+                         var allLocal = false, prefixSK = "";
+                         var allSameInstsance = res.every(function (col, i) {
+                             var firstNode;
+
+                             // set the values based on the first element
+                            if (i === 0) {
+                                if (!col.hasPath) {
+                                    allLocal = true;
+                                    return true;
+                                }
+
+                                // must be using path prefix to ensure same instance
+                                // (path prefix and no foreignkey after it)
+                                firstNode = col.sourceObjectNodes[0];
+                                if (!firstNode.isPathPrefix && col.foreignKeyPathLength !== firstNode.nodeObject.foreignKeyPathLength) {
+                                    return false;
+                                }
+                                prefixSK = firstNode.pathPrefixSourcekey;
+                                return true;
+                            }
+                            
+                            // if first was local, all the others must be local
+                            if (allLocal) {
+                                return !col.hasPath;
+                            }
+
+                            // if first wasn't local, all the others must use the same path prefix
+                            firstNode = col.sourceObjectNodes[0];
+                            if (!firstNode.isPathPrefix && col.foreignKeyPathLength !== firstNode.nodeObject.foreignKeyPathLength) {
+                                return false;
+                            }
+                            return prefixSK == firstNode.pathPrefixSourcekey;
+                         });
+
+                         if (!allSameInstsance) {
+                            module._log.info(message + ": all the search columns must come from the same table instance.");
+                            return false;
+                         }
+                     }
+
                      return res;
                  };
 

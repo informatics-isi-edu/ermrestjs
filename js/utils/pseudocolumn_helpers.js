@@ -76,20 +76,32 @@
         },
 
         // parse the facet part related to main search-box
-        parseSearchBox: function (search, rootTable) {
+        parseSearchBox: function (search, rootTable, alias, pathPrefixAliasMapping) {
             // by default we're going to apply search to all the columns
-            var searchColumns = ["*"];
+            var searchColumns = ["*"], path = "", searchDefCols;
 
             // map to the search columns, if they are defined
             if (rootTable && Array.isArray(rootTable.searchSourceDefinition)) {
-                searchColumns = rootTable.searchSourceDefinition.map(function (sd) {
+                searchDefCols = rootTable.searchSourceDefinition;
+                searchColumns = searchDefCols.map(function (sd, i) {
+                    // getting the path from the first one is enough
+                    if (i === 0 && sd.hasPath) {
+                        path = _sourceColumnHelpers.parseSourceNodesWithAliasMapping(
+                            sd.sourceObjectNodes,
+                            sd.lastForeignKeyNode,
+                            sd.sourceObject && isStringAndNotEmpty(sd.sourceObject.sourcekey) ? sd.sourceObject.sourcekey : null,
+                            pathPrefixAliasMapping,
+                            alias
+                        );
+                    }
+
                     return sd.column.name;
                 });
             }
 
-            return searchColumns.map(function (cname) {
+            return path + searchColumns.map(function (cname) {
                 return _renderFacetHelpers.parseSearch(search, cname);
-            }).join(";");
+            }).join(";") + (path.length > 0 ?  "/$" + alias : "");
         },
 
         /**
@@ -249,7 +261,7 @@
                     }
 
                     // add the main search filter
-                    innerJoins.push(_renderFacetHelpers.parseSearchBox(term[module._facetFilterTypes.SEARCH], rootTable)+ "/$" + alias);
+                    innerJoins.push(_renderFacetHelpers.parseSearchBox(term[module._facetFilterTypes.SEARCH], rootTable, alias, pathPrefixAliasMapping)+ "/$" + alias);
 
                     // we can go to the next source in the and filter
                     continue;
