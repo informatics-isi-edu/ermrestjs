@@ -1538,12 +1538,6 @@
                                 sourceDef.source.length > 1 && ("sourcekey" in sourceDef.source[0]);
 
                     if (hasPrefix) {
-                        // NOTE limitation because of other parts of the code which we might want
-                        //      to allow later
-                        if (sourceDef.source.length < 3) {
-                            module._log.info(message + ": " + "sourcekey (path prefix) can only be used when there's a path after it.");
-                            return false;
-                        }
 
                         // keep track of dependencies for cycle detection
                         keysThatDependOnThis.push(key);
