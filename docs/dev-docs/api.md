@@ -3396,9 +3396,9 @@ It will return a promise resolved with the following object:
 - This function will modify the Reference.location to reflect the preselected filters
   per annotation as well as validation.
 - This function will validate the facets in the url, by doing the following (any invalid filter will be ignored):
-  - Making sure given `source` or `sourcekey` are valid 
+  - Making sure given `source` or `sourcekey` are valid
   - If `source_domain` is passed,
-      - Making sure `source_domain.table` and `source_domain.schema` are valid 
+      - Making sure `source_domain.table` and `source_domain.schema` are valid
       - Using `source_domain.column` instead of end column in case of scalars
   - Sending request to fetch the rows associated with the entity choices,
     and ignoring the ones that don't return any result.
@@ -3423,7 +3423,7 @@ Usage:
 
 #### reference.validateFacetsFilters(facetAndFilters, facetObjectWrappers, searchTerm, skipMappingEntityChoices, changeLocation)
 This will go over all the facets and make sure they are fine
-if not, will try to transform or remove them and 
+if not, will try to transform or remove them and
 in the end will update the list
 
 NOTE this should be called before doing read or as part of it
@@ -7145,9 +7145,9 @@ It will return a promise resolved with the following object:
 - This function will modify the Reference.location to reflect the preselected filters
   per annotation as well as validation.
 - This function will validate the facets in the url, by doing the following (any invalid filter will be ignored):
-  - Making sure given `source` or `sourcekey` are valid 
+  - Making sure given `source` or `sourcekey` are valid
   - If `source_domain` is passed,
-      - Making sure `source_domain.table` and `source_domain.schema` are valid 
+      - Making sure `source_domain.table` and `source_domain.schema` are valid
       - Using `source_domain.column` instead of end column in case of scalars
   - Sending request to fetch the rows associated with the entity choices,
     and ignoring the ones that don't return any result.
@@ -7172,7 +7172,7 @@ Usage:
 
 #### reference.validateFacetsFilters(facetAndFilters, facetObjectWrappers, searchTerm, skipMappingEntityChoices, changeLocation)
 This will go over all the facets and make sure they are fine
-if not, will try to transform or remove them and 
+if not, will try to transform or remove them and
 in the end will update the list
 
 NOTE this should be called before doing read or as part of it
