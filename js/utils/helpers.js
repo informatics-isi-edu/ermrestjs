@@ -3083,7 +3083,7 @@
         if (options.allowObject) {
             try {
                 // if it can be parsed and is an object, return the object
-                var objRes = JSON.parse(res);
+                objRes = JSON.parse(res);
                 if (typeof objRes === "object") {
                     return objRes;
                 }
