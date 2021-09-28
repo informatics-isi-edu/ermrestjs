@@ -882,8 +882,6 @@
                 this._searchColumns = false;
                 if (Array.isArray(this.table.searchSourceDefinition)) {
                     this._searchColumns = this.table.searchSourceDefinition.map(function (sd) {
-                        // TODO currently only supports normal columns
-                        // TODO doesn't support * syntax.
                         return module._createPseudoColumn(self, sd, null);
                     });
                 }
@@ -4120,9 +4118,12 @@
              *   3. There is no trailing `/` in uri (as it will break the ermrest too).
              * */
             if (isAttributeGroup) {
-                var compactPath = this._location.ermrestCompactPath,
-                    // to ensure we're not modifying the original object, I'm creating a deep copy
-                    pathPrefixAliasMapping = JSON.parse(JSON.stringify(this._location.pathPrefixAliasMapping)),
+                var compactPath = this._location._computeERMrestCompactPath(allOutbounds.map(function (ao) {
+                    return ao.sourceObject;
+                }));
+
+                // to ensure we're not modifying the original object, I'm creating a deep copy
+                var pathPrefixAliasMapping = JSON.parse(JSON.stringify(this._location.pathPrefixAliasMapping)),
                     mainTableAlias = this._location.mainTableAlias,
                     aggList = [],
                     sortColumn,
@@ -4142,6 +4143,7 @@
                     return _sourceColumnHelpers.parseAllOutBoundNodes(
                         allOutBounds[l].sourceObjectNodes,
                         allOutBounds[l].lastForeignKeyNode,
+                        allOutBounds[l].foreignKeyPathLength,
                         sourcekey,
                         pathPrefixAliasMapping,
                         outAlias,

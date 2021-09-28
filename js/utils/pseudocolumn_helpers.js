@@ -89,10 +89,11 @@
                         path = _sourceColumnHelpers.parseSourceNodesWithAliasMapping(
                             sd.sourceObjectNodes,
                             sd.lastForeignKeyNode,
+                            sd.foreignKeyPathLength,
                             sd.sourceObject && isStringAndNotEmpty(sd.sourceObject.sourcekey) ? sd.sourceObject.sourcekey : null,
                             pathPrefixAliasMapping,
                             alias
-                        );
+                        ).path;
                     }
 
                     return sd.column.name;
@@ -132,34 +133,37 @@
                 foreignKeyPathLength = res.foreignKeyPathLength,
                 ignoreLastFK = false;
 
-            // if the last fk is using the same column that is used in facet,
-            // and the column is not-null, we can just ignore that join.
+            // if the last fk is using the same column that is used in facet, and the column is not-null, we can just ignore that join.
+            // if we're supposed to use share path for this, then don't ignore the last fk
             // TODO FILTER_IN_SOURCE check if the last one is fk
-            var fk = lastForeignKeyNode.nodeObject,
-                isInbound = lastForeignKeyNode.isInbound;
-            var fkCol = isInbound ? fk.colset.columns[0] : fk.key.colset.columns[0];
-            if (!col.nullok && fk.simple && fkCol === col) {
-                // change the column
-                col = isInbound ? fk.key.colset.columns[0] : fk.colset.columns[0];
+            // TODO LATEST what about removing the last fk
+            // if (!(sourcekey && sourcekey in pathPrefixAliasMapping.usedSourceKeys)) {
+            //     var fk = lastForeignKeyNode.nodeObject,
+            //     isInbound = lastForeignKeyNode.isInbound;
+            //     var fkCol = isInbound ? fk.colset.columns[0] : fk.key.colset.columns[0];
+            //     if (!col.nullok && fk.simple && fkCol === col) {
+            //         // change the column
+            //         col = isInbound ? fk.key.colset.columns[0] : fk.colset.columns[0];
 
-                // change the table and schema names
-                tableName = col.table.name;
-                schemaName = col.table.schema.name;
+            //         // change the table and schema names
+            //         tableName = col.table.name;
+            //         schemaName = col.table.schema.name;
 
-                ignoreLastFK = true;
-                foreignKeyPathLength--;
-            }
+            //         ignoreLastFK = true;
+            //         foreignKeyPathLength--;
+            //     }
+            // }
 
             // if we eliminated all the foreignkeys, then we don't need to reverse anything
             reverse = reverse && foreignKeyPathLength > 0;
 
-            path = _sourceColumnHelpers.parseSourceNodesWithAliasMapping(
-                sourceNodes, lastForeignKeyNode, sourcekey,
+            var parsedRes = _sourceColumnHelpers.parseSourceNodesWithAliasMapping(
+                sourceNodes, lastForeignKeyNode, foreignKeyPathLength, sourcekey,
                 pathPrefixAliasMapping, alias, reverse, ignoreLastFK
             );
 
             return {
-                path: path,
+                path: parsedRes.path,
                 columnName: col.name, // we might optimize the path, so the column could be different
                 tableName: tableName,
                 schemaName: schemaName,
@@ -202,6 +206,7 @@
      * @param       {string} tableName the starting table name
      * @param       {string} catalogId the catalog id
      * @param       {ERMrest.catalog} [catalogObject] the catalog object (could be undefined)
+     * @param       {Object} pathPrefixAliasMapping and object with this format: {aliases: {}, usedSourceKeys: [],lastIndex: 0}
      * @param       {Object[]} [consNames] the constraint names (could be undefined)
      * @constructor
      * @return      {object} An object that will have the following attributes:
@@ -209,7 +214,7 @@
      * - parsed: String  (if the given string was parsable).
      * - message: String (if the given string was not parsable)
      */
-    _renderFacet = function(json, alias, schemaName, tableName, catalogId, catalogObject, consNames) {
+    _renderFacet = function(json, alias, schemaName, tableName, catalogId, catalogObject, pathPrefixAliasMapping, consNames) {
         var facetErrors = module._facetingErrors;
         var rootSchemaName = schemaName, rootTableName = tableName;
 
@@ -231,7 +236,10 @@
             rightJoins = [], // if we have null in the filter, we have to use join
             innerJoins = [], // all the other facets that have been parsed
             encode = module._fixedEncodeURIComponent, sourcekey,
-            i, term, col, path, ds, pathPrefixAliasMapping = {aliases: {}, lastIndex: 0}, constraints, parsed, useRightJoin;
+            i, term, col, path, ds, constraints, parsed, useRightJoin;
+
+        // pre process the list of facets and find the path prefixes that are used
+        _sourceColumnHelpers._populateUsedSourceKeys(and, pathPrefixAliasMapping.usedSourceKeys);
 
         // go through list of facets and parse each facet
         for (i = 0; i < and.length; i++) {
@@ -355,6 +363,7 @@
                 ].join("/"));
             } else {
                 innerJoins.push((path.length !== 0 ? path + "/" : "") + constraints.join(";") + "/$" + alias);
+                // innerJoins.push((path.length !== 0 ? path + "/" : "") + constraints.join(";") + (path.length !== 0 ? ("/$" + alias) : ""));
             }
         }
 
@@ -1086,35 +1095,26 @@
                 self.firstForeignKeyNode = firstForeignKeyNode;
             }
 
-            // when generating the url, we might optimize the url and remove the last hop,
-            // the following boolean shows whether the end url has path or not
-            self.ermrestHasPath = hasPath;
-            if (foreignKeyPathLength === 1) {
-                var fk = self.lastForeignKeyNode.nodeObject,
-                    isInbound = self.lastForeignKeyNode.isInbound;
-                var fkCol = isInbound ? fk.colset.columns[0] : fk.key.colset.columns[0];
-                self.ermrestHasPath = !(!col.nullok && fk.simple && fkCol === col);
-            }
-
             // generate name:
             // TODO maybe we shouldn't even allow aggregate in faceting (for now we're ignoring it)
             if ((sourceObject.self_link === true) || self.hasPath || self.isEntityMode || (isFacet !== false && self.hasAggregate)) {
                 var rawSourceObject = JSON.parse(JSON.stringify(sourceObject));
 
+                // TODO LATEST should just use the path prefix, a path with prefix is not the same as path without it!
                 // if the source has path, we should make sure the given sourceObject for hash is raw (not using alias or pathprefix)
                 if (self.hasPath) {
                     rawSourceObject.source = [];
                     sourceObject.source.forEach(function (sn, index) {
-                        if (index < sourceObjectNodes.length && sourceObjectNodes[index].isPathPrefix) {
-                            rawSourceObject.source = rawSourceObject.source.concat(sourceObjectNodes[index].nodeObject.getRawSourcePath());
-                        } else {
-                            rawSourceObject.source.push(sn);
+                        // if (index < sourceObjectNodes.length && sourceObjectNodes[index].isPathPrefix) {
+                        //     rawSourceObject.source = rawSourceObject.source.concat(sourceObjectNodes[index].nodeObject.getRawSourcePath());
+                        // } else {
+                        rawSourceObject.source.push(sn);
 
-                            // remove alias property
-                            if (typeof sn === "object" && "alias" in sn) {
-                                delete rawSourceObject.source[rawSourceObject.source.length-1].alias;
-                            }
+                        // remove alias property
+                        if (typeof sn === "object" && "alias" in sn) {
+                            delete rawSourceObject.source[rawSourceObject.source.length-1].alias;
                         }
+                        // }
                     });
                 }
                 self.name = _sourceColumnHelpers.generateSourceObjectHashName(rawSourceObject, isFacet);
@@ -1193,7 +1193,6 @@
 
                     res += prev;
                     return res;
-                    // return ((i > 0) ? (fkStr + "/") : ((addAlias ? outAlias + ":=" : "") + fkStr) ) + prev;
                 } else {
                     return prev + (i > 0 ? "/" : "") + (addAlias ? outAlias + ":=" : "") + fkStr;
                 }
@@ -1307,7 +1306,7 @@
             };
 
             var i, fkAlias, constraint, isInbound, fkObj, fk, colTable, hasInbound = false, firstForeignKeyNode, lastForeignKeyNode,
-                foreignKeyPathLength = 0, sourceObjectNodes = [], isFiltered = false, hasPrefix = false, prefix;
+                foreignKeyPathLength = 0, sourceObjectNodes = [], isFiltered = false, hasPrefix = false, hasOnlyPrefix = false, prefix;
 
             for (i = 0; i < source.length - 1; i++) {
                 if ("sourcekey" in source[i]) {
@@ -1315,6 +1314,7 @@
                         return returnError("`sourcekey` can only be used as prefix and only once");
                     }
                     hasPrefix = true;
+                    hasOnlyPrefix = true;
 
                     if (isObjectAndNotNull(sources)) {
                         prefix = sources[source[i].sourcekey];
@@ -1390,6 +1390,7 @@
                         firstForeignKeyNode = sn;
                     }
                     lastForeignKeyNode = sn;
+                    hasOnlyPrefix = false;
                 }  else {
                     // given object was invalid
                     return returnError("Invalid object in source element index=" + i);
@@ -1410,7 +1411,8 @@
                 foreignKeyPathLength: foreignKeyPathLength,
                 isFiltered: isFiltered,
                 hasInbound: hasInbound,
-                hasPrefix: hasPrefix
+                hasPrefix: hasPrefix,
+                hasOnlyPrefix: hasOnlyPrefix
             };
         },
 
@@ -1425,41 +1427,62 @@
          * TODO could be refactored  and merged with parseAllOutBoundNodes
          * @param {*} sourceNodes - array of source nodes
          * @param {*} lastForeignKeyNode  - the last foreign key node
+         * @param {*} foreignKeyPathLength - the foreignkey path length
          * @param {*} sourcekey
          * @param {*} pathPrefixAliasMapping
          * @param {*} mainTableAlias
          * @param {*} useRightJoin
          * @param {*} ignoreLastFK
          */
-        parseSourceNodesWithAliasMapping: function (sourceNodes, lastForeignKeyNode, sourcekey, pathPrefixAliasMapping, mainTableAlias, useRightJoin, ignoreLastFK, outAlias) {
+        parseSourceNodesWithAliasMapping: function (sourceNodes, lastForeignKeyNode, foreignKeyPathLength, sourcekey, pathPrefixAliasMapping, mainTableAlias, useRightJoin, ignoreLastFK, outAlias) {
+            var usedOutAlias;
+
             if (!useRightJoin && sourcekey && sourcekey in pathPrefixAliasMapping.aliases) {
-                return "$" + pathPrefixAliasMapping.aliases[sourcekey];
+                usedOutAlias = pathPrefixAliasMapping.aliases[sourcekey];
+                return {
+                    path: "$" + usedOutAlias,
+                    usedOutAlias: usedOutAlias
+                };
             }
 
-            return sourceNodes.reduce(function (prev, sn, i) {
+            var path = sourceNodes.reduce(function (prev, sn, i) {
+                var res;
+
                 if (sn.isFilter) {
                     return prev + (i > 0 ? "/" : "") + sn.toString();
                 }
 
-                // NOTE:
-                // limitations: we cannot have only prefix.. it must have another path after it
-                // otherwise we have to change the code to take care of the following:
-                // - how do we know when to add the right alias or ignore the last one!
-                // - what if the sn has alias?? sn.alias vs the one that we're generating??
-                // - so it should be recursive here...
                 if (sn.isPathPrefix) {
                     // if we're reversing, then don't use alias for that part
                     if (useRightJoin) {
                         return sn.toString(true, false, mainTableAlias, true);
                     }
                     if (sn.pathPrefixSourcekey in pathPrefixAliasMapping.aliases) {
-                        return "$" + pathPrefixAliasMapping.aliases[sn.pathPrefixSourcekey];
+                        usedOutAlias = pathPrefixAliasMapping.aliases[sn.pathPrefixSourcekey];
+                        return "$" + usedOutAlias;
                     }
 
-                    var prefixAlias = mainTableAlias + "_P" + (++pathPrefixAliasMapping.lastIndex);
-                    var path = _sourceColumnHelpers.parseSourceNodesWithAliasMapping(
+                    /* if it's just prefix, then we have to make sure if there's a
+                     * outAlias we have to use it. Since this is treated more like an alias for the other one
+                     */
+                    var containsLastFK = sn.foreignKeyPathLength === foreignKeyPathLength;
+                    var prefixAlias = containsLastFK ? outAlias : null;
+
+                    // if this is true, we should make sure the used alias is added to the sourcekey
+                    var addAliasToSourcekey = false;
+                    if (containsLastFK && sourcekey && sourcekey in pathPrefixAliasMapping.usedSourceKeys) {
+                        addAliasToSourcekey = true;
+                    }
+
+                    // if we have to use alias but it's already not defined, create one
+                    if (!prefixAlias && (sn.pathPrefixSourcekey in pathPrefixAliasMapping.usedSourceKeys || addAliasToSourcekey)) {
+                        prefixAlias = mainTableAlias + "_P" + (++pathPrefixAliasMapping.lastIndex);
+                    }
+
+                    res = _sourceColumnHelpers.parseSourceNodesWithAliasMapping(
                         sn.nodeObject.sourceObjectNodes,
                         sn.nodeObject.lastForeignKeyNode,
+                        sn.nodeObject.foreignKeyPathLength,
                         sn.pathPrefixSourcekey,
                         pathPrefixAliasMapping,
                         mainTableAlias,
@@ -1469,23 +1492,50 @@
                     );
 
                     // we should first parse the existing and then add it to list
-                    pathPrefixAliasMapping.aliases[sn.pathPrefixSourcekey] = prefixAlias;
+                    // we might not have added alias
+                    if (prefixAlias) {
+                        // if already has been added, then just use it
+                        if (sn.pathPrefixSourcekey in pathPrefixAliasMapping.aliases) {
+                            prefixAlias = pathPrefixAliasMapping.aliases[sn.pathPrefixSourcekey];
+                        } else {
+                            // we should first parse the existing and then add it to list
+                            pathPrefixAliasMapping.aliases[sn.pathPrefixSourcekey] = prefixAlias;
+                        }
 
-                    return path;
+                        usedOutAlias = prefixAlias;
+
+                        // if this is the last one, then we should make sure the
+                        // sourcekey is mapped to this alias
+                        if (addAliasToSourcekey) {
+                            pathPrefixAliasMapping.aliases[sourcekey] = prefixAlias;
+                        }
+                    }
+
+                    return res.path;
                 }
 
                 // ignore the last fk if we have to
-                if (ignoreLastFK && sn == lastForeignKeyNode) {
-                    return prev;
-                }
+                // if (ignoreLastFK && sn == lastForeignKeyNode) {
+                //     return prev;
+                // }
 
-                var fkStr = sn.toString(useRightJoin, false), res = "";
+                var fkStr = sn.toString(useRightJoin, false);
                 if (useRightJoin) {
                     // if we have reversed the path, we need to add the alias to the last bit
                     res += (i > 0) ? (fkStr + "/") : (mainTableAlias + ":=right" + fkStr);
                     res += prev;
                     return res;
                 }
+
+                // if this thing is used by other parts, then we should add alias to ensure sharing
+                if (sn === lastForeignKeyNode && sourcekey && sourcekey in pathPrefixAliasMapping.usedSourceKeys) {
+                    if (!outAlias) {
+                        outAlias = mainTableAlias + "_P" + (++pathPrefixAliasMapping.lastIndex);
+                    }
+                    pathPrefixAliasMapping.aliases[sourcekey] = outAlias;
+                }
+
+                usedOutAlias = outAlias;
 
                 res = prev;
                 res += (i > 0) ? "/" : "";
@@ -1496,6 +1546,12 @@
 
                 return res;
             }, "");
+
+
+            return {
+                path: path,
+                outAlias: outAlias
+            };
         },
 
         /**
@@ -1511,11 +1567,12 @@
          * TODO could be refactored and merged with the previous function
          * @param {*} sourceNodes
          * @param {*} lastForeignKeyNode
+         * @param {*} foreignKeyPathLength - the foreignkey path length
          * @param {*} sourcekey
          * @param {*} pathPrefixAliasMapping
          * @param {*} outAlias
          */
-        parseAllOutBoundNodes: function (sourceNodes, lastForeignKeyNode, sourcekey, pathPrefixAliasMapping, outAlias, mainTableAlias) {
+        parseAllOutBoundNodes: function (sourceNodes, lastForeignKeyNode, foreignKeyPathLength, sourcekey, pathPrefixAliasMapping, outAlias, mainTableAlias) {
             var usedOutAlias;
 
             // TODO could be improved, we don't need to return any path
@@ -1537,20 +1594,33 @@
                     return prev + (i > 0 ? "/" : "") + sn.toString();
                 }
 
-                // NOTE:
-                // limitations: we cannot have only prefix.. it must have another path after it
-                // otherwise we have to change the code to take care of the following:
-                // - what if the sn has alias?? sn.alias vs the one that we're generating??
-                // - so it should be recursive here...
                 if (sn.isPathPrefix) {
                     if (sn.pathPrefixSourcekey in pathPrefixAliasMapping.aliases) {
-                        return "$" + pathPrefixAliasMapping.aliases[sn.pathPrefixSourcekey];
+                        usedOutAlias = pathPrefixAliasMapping.aliases[sn.pathPrefixSourcekey];
+                        return "$" + usedOutAlias;
                     }
-                    var prefixAlias = mainTableAlias + "_P" + (++pathPrefixAliasMapping.lastIndex);
+
+                    /* if it's just prefix, then we have to make sure if there's a
+                    * outAlias we have to use it. Since this is treated more like an alias for the other one
+                    */
+                    var containsLastFK = sn.foreignKeyPathLength === foreignKeyPathLength;
+                    var prefixAlias = containsLastFK ? outAlias : null;
+
+                    // if this is true, we should make sure the used alias is added to the sourcekey
+                    var addAliasToSourcekey = false;
+                    if (containsLastFK && sourcekey && sourcekey in pathPrefixAliasMapping.usedSourceKeys) {
+                        addAliasToSourcekey = true;
+                    }
+
+                    // if we have to use alias but it's already not defined, create one
+                    if (!prefixAlias && (sn.pathPrefixSourcekey in pathPrefixAliasMapping.usedSourceKeys || addAliasToSourcekey)) {
+                        prefixAlias = mainTableAlias + "_P" + (++pathPrefixAliasMapping.lastIndex);
+                    }
 
                     res = _sourceColumnHelpers.parseAllOutBoundNodes(
                         sn.nodeObject.sourceObjectNodes,
                         sn.nodeObject.lastForeignKeyNode,
+                        sn.nodeObject.foreignKeyPathLength,
                         sn.pathPrefixSourcekey,
                         pathPrefixAliasMapping,
                         prefixAlias,
@@ -1558,18 +1628,43 @@
                     );
 
                     // we should first parse the existing and then add it to list
-                    pathPrefixAliasMapping.aliases[sn.pathPrefixSourcekey] = prefixAlias;
-                    usedOutAlias = prefixAlias;
+                    // we might not have added alias
+                    if (prefixAlias) {
+                        // if already has been added, then just use it
+                        if (sn.pathPrefixSourcekey in pathPrefixAliasMapping.aliases) {
+                            prefixAlias = pathPrefixAliasMapping.aliases[sn.pathPrefixSourcekey];
+                        } else {
+                            // we should first parse the existing and then add it to list
+                            pathPrefixAliasMapping.aliases[sn.pathPrefixSourcekey] = prefixAlias;
+                        }
+
+                        usedOutAlias = prefixAlias;
+
+                        // if this is the last one, then we should make sure the
+                        // sourcekey is mapped to this alias
+                        if (addAliasToSourcekey) {
+                            pathPrefixAliasMapping.aliases[sourcekey] = prefixAlias;
+                        }
+                    }
 
                     return res.path;
                 }
 
                 var fkStr = sn.toString(false, true);
+
+                // if this thing is used by other parts, then we should add alias to ensure sharing
+                if (sn === lastForeignKeyNode && sourcekey && sourcekey in pathPrefixAliasMapping.usedSourceKeys) {
+                    if (!outAlias) {
+                        outAlias = mainTableAlias + "_P" + (++pathPrefixAliasMapping.lastIndex);
+                    }
+                    pathPrefixAliasMapping.aliases[sourcekey] = outAlias;
+                }
+
                 res = prev;
                 res += (i > 0) ? "/" : "";
 
                 // what about sn.alias??
-                res += (sn == lastForeignKeyNode) ? (outAlias + ":=") : "";
+                res += (sn == lastForeignKeyNode && outAlias) ? (outAlias + ":=") : "";
                 res += fkStr;
 
                 return res;
@@ -1750,6 +1845,38 @@
             }
 
             return _sourceColumnHelpers.generateSourceObjectHashName({source: source}, false);
+        },
+
+        _populateUsedSourceKeys: function (sources, usedSourceKeys) {
+            var addToSourceKey = function (key) {
+                if (key in usedSourceKeys) {
+                    usedSourceKeys[key]++;
+                } else {
+                    usedSourceKeys[key] = 1;
+                }
+            };
+            sources.forEach(function (src) {
+                if (typeof srcObj !== "object") return;
+
+                if (typeof srcObj.sourcekey === "string") {
+                    if (srcObj.sourcekey === module._specialSourceDefinitions.SEARCH_BOX) {
+                        return;
+                    }
+                    addToSourceKey (srcObj.sourcekey);
+                }
+
+                if (!Array.isArray(srcObj.source) || !isStringAndNotEmpty(srcObj.source[0].sourcekey)) {
+                    return;
+                }
+                if (srcObj.source[0].sourcekey === module._specialSourceDefinitions.SEARCH_BOX) {
+                    return;
+                }
+                usedSourceKeys[srcObj.source[0].sourcekey] = 1;
+            });
+            for (var k in usedSourceKeys) {
+                if (usedSourceKeys[k] < 2) delete usedSourceKeys[k];
+            }
+            return usedSourceKeys;
         }
     };
 

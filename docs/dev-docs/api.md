@@ -534,7 +534,6 @@ to use for ERMrest JavaScript agents.
         * [.compressedDataSource](#ERMrest.FacetColumn+compressedDataSource) : <code>obj</code> \| <code>string</code>
         * [.filters](#ERMrest.FacetColumn+filters)
         * [.hasPath](#ERMrest.FacetColumn+hasPath) : <code>Boolean</code>
-        * [.ermrestHasPath](#ERMrest.FacetColumn+ermrestHasPath) : <code>Boolean</code>
         * [.isEntityMode](#ERMrest.FacetColumn+isEntityMode) : <code>Boolean</code>
         * [.isOpen](#ERMrest.FacetColumn+isOpen) : <code>Boolean</code>
         * [.preferredMode](#ERMrest.FacetColumn+preferredMode) : <code>string</code>
@@ -5062,7 +5061,6 @@ Indicates that this ReferenceColumn is an inbound foreign key.
     * [.compressedDataSource](#ERMrest.FacetColumn+compressedDataSource) : <code>obj</code> \| <code>string</code>
     * [.filters](#ERMrest.FacetColumn+filters)
     * [.hasPath](#ERMrest.FacetColumn+hasPath) : <code>Boolean</code>
-    * [.ermrestHasPath](#ERMrest.FacetColumn+ermrestHasPath) : <code>Boolean</code>
     * [.isEntityMode](#ERMrest.FacetColumn+isEntityMode) : <code>Boolean</code>
     * [.isOpen](#ERMrest.FacetColumn+isOpen) : <code>Boolean</code>
     * [.preferredMode](#ERMrest.FacetColumn+preferredMode) : <code>string</code>
@@ -5159,16 +5157,6 @@ Filters that are applied to this facet.
 
 #### facetColumn.hasPath : <code>Boolean</code>
 Whether the source has path or not
-
-**Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
-<a name="ERMrest.FacetColumn+ermrestHasPath"></a>
-
-#### facetColumn.ermrestHasPath : <code>Boolean</code>
-Whether the source is going to have path when sending the request to ermrest
-The path that is defined on the facet might be different from the one that
-we are going to use to talk with ermrest. We might optmize the path.
-Facets with only one hop where the column used in foreignkey is the same column for faceting, and is not nullable
-can be optmized by completely ignoring the foreignkey path and just doing a value check on main table.
 
 **Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
 <a name="ERMrest.FacetColumn+isEntityMode"></a>

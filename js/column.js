@@ -2825,17 +2825,6 @@ function FacetColumn (reference, index, facetObjectWrapper, filters) {
     this.hasPath = facetObjectWrapper.hasPath;
 
     /**
-     * Whether the source is going to have path when sending the request to ermrest
-     * The path that is defined on the facet might be different from the one that
-     * we are going to use to talk with ermrest. We might optmize the path.
-     * Facets with only one hop where the column used in foreignkey is the same column for faceting, and is not nullable
-     * can be optmized by completely ignoring the foreignkey path and just doing a value check on main table.
-     *
-     * @type {Boolean}
-     */
-    this.ermrestHasPath = facetObjectWrapper.ermrestHasPath;
-
-    /**
      * Returns true if the source is on a key column.
      * If facetObject['entity'] is defined as false, it will return false,
      * otherwise it will true if filter is based on key.
@@ -3254,13 +3243,13 @@ FacetColumn.prototype = {
                 }
 
                 // G3.1
-                if (!self.ermrestHasPath) {
+                if (!self.hasPath) {
                     return false;
                 }
 
                 // G3
                 var othersHaveNull = self.reference.facetColumns.some(function (fc, index) {
-                    return index !== self.index && fc.hasNullFilter && fc.ermrestHasPath;
+                    return index !== self.index && fc.hasNullFilter && fc.hasPath;
                 });
 
                 return othersHaveNull;
