@@ -2748,7 +2748,7 @@
                 origin: window.location.origin,
                 host: window.location.host,
                 hostname: window.location.hostname,
-                chaise_path: window.location.pathname.substring(0, window.location.pathname.indexOf("chaise/") + 7) // +7 to account for "chaise/"
+                chaise_path: window.chaiseBuildVariables.chaiseBasePath
             };
         }
 
