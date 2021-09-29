@@ -1566,7 +1566,6 @@ function ForeignKeyPseudoColumn (reference, fk, sourceObjectWrapper, name) {
      * @desc The reference object that represents the table of this PseudoColumn
      */
     this.reference =  new Reference(module.parse(ermrestURI), table.schema.catalog);
-    this.reference.session = reference._session;
 
     /**
      * @type {ERMrest.ForeignKeyRef}
@@ -2628,7 +2627,6 @@ function InboundForeignKeyPseudoColumn (reference, relatedReference, sourceObjec
      * @type {ERMrest.Reference}
      */
     this.reference = relatedReference;
-    this.reference.session = reference._session;
 
     this.reference.pseudoColumn = this;
 

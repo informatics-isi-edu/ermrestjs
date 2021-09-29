@@ -119,16 +119,6 @@ AttributeGroupReference.prototype = {
         });
     },
 
-    /**
-     * The session object from the server
-     * @param {Object} session - the session object
-     */
-    /* jshint ignore:start */
-    set session(session) {
-        this._session = session;
-    },
-    /* jshint ignore:end */
-
     sort: function (sort) {
         if (sort) {
             verify((sort instanceof Array), "input should be an array");

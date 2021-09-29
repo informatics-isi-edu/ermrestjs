@@ -69,6 +69,15 @@
     };
 
     /**
+     * This function will be called to set the session object
+     * @param {object}
+     */
+    module.setClientSession = function (session) {
+        module._session = session;
+    };
+
+
+    /**
      * This function resolves a URI reference to a {@link ERMrest.Reference}
      * object. It validates the syntax of the URI and validates that the
      * references to model elements in it are correct. This function makes a
@@ -326,16 +335,6 @@
             }
             return this._readPath;
         },
-
-        /**
-         * The session object from the server
-         * @param {Object} session - the session object
-         */
-        /* jshint ignore:start */
-        set session(session) {
-            this._session = session;
-        },
-        /* jshint ignore:end */
 
         /**
          * The table object for this reference
@@ -2102,7 +2101,6 @@
 
                 referencePaths.forEach(function (path) {
                     var reference = new Reference(module.parse(baseUri + path), self.table.schema.catalog);
-                    reference.session = associationRef._session;
                     references.push(reference);
                 });
 
@@ -3802,7 +3800,6 @@
 
                 // will be used to determine whether this related reference is derived from association relation or not
                 newRef.derivedAssociationReference = new Reference(module.parse(this._location.compactUri + "/" + fkr.toString()), catalog);
-                newRef.derivedAssociationReference.session = this._session;
                 newRef.derivedAssociationReference.origFKR = newRef.origFKR;
                 newRef.derivedAssociationReference._secondFKR = otherFK;
 
@@ -5891,7 +5888,6 @@
             ].join("/");
 
             var reference = new Reference(module.parse(uri), this._pageRef._table.schema.catalog);
-            reference.session = associationRef._session;
             return reference;
 
         },

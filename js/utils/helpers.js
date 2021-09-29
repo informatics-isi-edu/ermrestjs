@@ -2742,6 +2742,16 @@
         // date object
         obj.$moment = module._currDate;
 
+        // if there is a window object, we are in the browser
+        if (window && window.location) {
+            obj.$location = {
+                origin: window.location.origin,
+                host: window.location.host,
+                hostname: window.location.hostname,
+                chaise_path: window.location.pathname.substring(0, window.location.pathname.indexOf("chaise/") + 7) // +7 to account for "chaise/"
+            };
+        }
+
         if (catalog) {
 
             if (catalog.server) {
@@ -2759,6 +2769,56 @@
             };
 
             if (catalogSnapshot.length === 2) obj.$catalog.version = catalogSnapshot[1];
+        }
+
+        if (module._session) {
+            var session = module._session;
+            obj.$session = {
+                display_name: session.client.display_name,
+                email: session.client.email,
+                full_name: session.client.full_name,
+                id: session.client.id,
+                identities: session.client.identities,
+                attributes: []
+            };
+
+            session.attributes.forEach(function (attr) {
+                var tempAttr = attr;
+                // NOTE: the current assumption is that everything in session.attributes is a globus group or an identity
+                // a globus group if:
+                //   - display_name is defined
+                //   - display_name is not the same as the user's display_name
+                //   - current id is not in the identities array
+                if (attr.display_name && attr.display_name !== session.client.display_name && session.client.identities.indexOf(attr.id) == -1) {
+                    if (attr.id.indexOf("https://auth.globus.org/") === 0) {
+                        // assume id is always "https://auth.globus.org/ff766864-a03f-11e5-b097-22000aef184d"
+                        tempAttr.webpage = "https://app.globus.org/groups/" + attr.id.substring(24) + "/about";
+                        tempAttr.type = "globus_group";
+                    } else {
+                        // NOTE: currently no example for this case
+                        // tempAttr.type = "other_group";
+                    }
+                } else {
+                    tempAttr.type = "identity";
+                }
+
+                var matchIdx = null;
+                // determine if 'tempAttr' exists in $session.attributes
+                matchIdx = obj.$session.attributes.findIndex(function (targetAttr) {
+                    return targetAttr.id === tempAttr.id;
+                });
+
+                if (matchIdx !== -1) {
+                    Object.assign(obj.$session.attributes[matchIdx], tempAttr);
+                } else {
+                    obj.$session.attributes.push(tempAttr);
+                }
+            });
+
+            // sort the newly created atrtibutes array by display_name
+            obj.$session.attributes.sort(function(a, b) {
+                if (a.display_name && b.display_name) return a.display_name.localeCompare(b.display_name);
+            });
         }
     };
 

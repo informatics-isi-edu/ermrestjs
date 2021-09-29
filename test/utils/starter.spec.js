@@ -30,11 +30,19 @@ exports.runTests = function (options) {
                 testOptions.catalogId = res.catalogId;
                 testOptions.entities = res.entities;
                 return testOptions.server.catalogs.get(process.env.DEFAULT_CATALOG);
-            }).then(function (response) {
+            }).then(function catalogSuccess(response) {
                 testOptions.catalog = response;
-                done();
-            }, function (err) {
+
+                return testOptions.server.http.get(process.env.ERMREST_URL.replace('ermrest', 'authn') + '/session');
+            }, function catalogError(err) {
                 catalogId = err.catalogId;
+                done.fail(err);
+            }).then(function sessionSuccess(response) {
+                testOptions.session = response.data;
+                testOptions.ermRest.setClientSession(response.data);
+
+                done()
+            }, function sessionError(err) {
                 done.fail(err);
             }).catch(function (err) {
                 console.log(err);
