@@ -35,6 +35,7 @@ require('./../../utils/starter.spec.js').runTests({
         "/reference/conf/default_value.conf.json",
         "/reference/conf/aggregate.conf.json",
         "/reference/conf/permission.conf.json",
+        "/reference/conf/search.conf.json",
         "/reference/conf/comment_display_inline.conf.json",
         "/reference/conf/comment_display_related.conf.json"
     ]

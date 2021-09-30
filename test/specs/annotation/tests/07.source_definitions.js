@@ -233,7 +233,7 @@ exports.execute = function (options) {
                             foreignKeyPathLength: 2
                         },
                         "path_to_outbound2_outbound1_w_prefix_diff_col": {
-                            name: "sDfbEvnyAsNNIsAWqBgviw",
+                            name: "SGGQr0A4TrMNZ3M-Z0l3pw",
                             columnName: "id",
                             isHash: true,
                             hasPath: true,
@@ -242,7 +242,7 @@ exports.execute = function (options) {
                             foreignKeyPathLength: 2
                         },
                         "path_to_outbound2_outbound1_w_prefix_diff_col_recursive" :{
-                            name: "x90z0fm7v_jUfKyJCXw_zA",
+                            name: "AEszVrBpBVwTwm2a2kOqEA",
                             columnName: "col",
                             isHash: true,
                             hasPath: true,
@@ -251,7 +251,7 @@ exports.execute = function (options) {
                             foreignKeyPathLength: 2
                         },
                         "path_to_outbound2_outbound1_outbound1_w_prefix": {
-                            name: "W5dDGANuLo2PFmh44iiKFQ",
+                            name: "4MWPsDupi31uxzRz7WpHhQ",
                             columnName: "RID",
                             tableName: "outbound2_outbound1_outbound1",
                             isHash: true,
@@ -271,7 +271,7 @@ exports.execute = function (options) {
                             foreignKeyPathLength: 3
                         },
                         "path_to_outbound2_outbound1_inbound1_w_prefix": {
-                            name: "CDEmeAy5bMfHEbHAKpaisQ",
+                            name: "cDnLsfhz-uUPCwYSYAaoog",
                             columnName: "RID",
                             tableName: "outbound2_outbound1_inbound1",
                             isHash: true,
@@ -281,7 +281,7 @@ exports.execute = function (options) {
                             foreignKeyPathLength: 3
                         },
                         "path_to_outbound2_outbound1_inbound1_inbound1_w_recursive_prefix": {
-                            name: "MeXAc4r6YsX7jA5uTcUzOg",
+                            name: "_RRNJV5A9U_SyqSVbjDyIA",
                             columnName: "RID",
                             tableName: "outbound2_outbound1_inbound1_inbound1",
                             isHash: true,
@@ -334,11 +334,13 @@ exports.execute = function (options) {
                         "5KvRCbKSwkHPj74dunY-Xw": ["agg1_array_d_entity"],
                         "Jb0K5FtG2b6SgdvH0Yud1w": ["agg1_array_d", "agg1_array_d_duplicate"],
                         "f3s1MZ913ANjVbDks5Xseg": ["path_to_outbound2_outbound1"],
-                        "sDfbEvnyAsNNIsAWqBgviw": ["path_to_outbound2_outbound1_w_prefix_diff_col"],
-                        "x90z0fm7v_jUfKyJCXw_zA": ["path_to_outbound2_outbound1_w_prefix_diff_col_recursive"],
-                        "W5dDGANuLo2PFmh44iiKFQ": ["path_to_outbound2_outbound1_outbound1_w_prefix", "path_to_outbound2_outbound1_outbound1_wo_prefix"],
-                        "CDEmeAy5bMfHEbHAKpaisQ": ["path_to_outbound2_outbound1_inbound1_w_prefix"],
-                        "MeXAc4r6YsX7jA5uTcUzOg": ["path_to_outbound2_outbound1_inbound1_inbound1_w_recursive_prefix", "path_to_outbound2_outbound1_inbound1_inbound1_wo_prefix"]
+                        "SGGQr0A4TrMNZ3M-Z0l3pw": ["path_to_outbound2_outbound1_w_prefix_diff_col"],
+                        "AEszVrBpBVwTwm2a2kOqEA": ["path_to_outbound2_outbound1_w_prefix_diff_col_recursive"],
+                        "W5dDGANuLo2PFmh44iiKFQ": ["path_to_outbound2_outbound1_outbound1_wo_prefix"],
+                        "4MWPsDupi31uxzRz7WpHhQ": ["path_to_outbound2_outbound1_outbound1_w_prefix"],
+                        "cDnLsfhz-uUPCwYSYAaoog": ["path_to_outbound2_outbound1_inbound1_w_prefix"],
+                        "MeXAc4r6YsX7jA5uTcUzOg": ["path_to_outbound2_outbound1_inbound1_inbound1_wo_prefix"],
+                        "_RRNJV5A9U_SyqSVbjDyIA": ["path_to_outbound2_outbound1_inbound1_inbound1_w_recursive_prefix"]
                     };
 
                     for (var key in expectedSourceMapping) {

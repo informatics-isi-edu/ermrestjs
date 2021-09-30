@@ -94,6 +94,10 @@
                             pathPrefixAliasMapping,
                             alias
                         ).path;
+
+                        if (path.length > 0) {
+                            path += "/";
+                        }
                     }
 
                     return sd.column.name;
@@ -102,7 +106,9 @@
 
             return path + searchColumns.map(function (cname) {
                 return _renderFacetHelpers.parseSearch(search, cname);
-            }).join(";") + (path.length > 0 ?  "/$" + alias : "");
+            }).join(";");
+            // TODO alias is always added but it could be conditional:
+            // (path.length > 0 ?  "/$" + alias : "")
         },
 
         /**
@@ -206,7 +212,7 @@
      * @param       {string} tableName the starting table name
      * @param       {string} catalogId the catalog id
      * @param       {ERMrest.catalog} [catalogObject] the catalog object (could be undefined)
-     * @param       {Object} pathPrefixAliasMapping and object with this format: {aliases: {}, usedSourceKeys: [],lastIndex: 0}
+     * @param       {Object} usedSourceObjects
      * @param       {Object[]} [consNames] the constraint names (could be undefined)
      * @constructor
      * @return      {object} An object that will have the following attributes:
@@ -214,7 +220,7 @@
      * - parsed: String  (if the given string was parsable).
      * - message: String (if the given string was not parsable)
      */
-    _renderFacet = function(json, alias, schemaName, tableName, catalogId, catalogObject, pathPrefixAliasMapping, consNames) {
+    _renderFacet = function(json, alias, schemaName, tableName, catalogId, catalogObject, usedSourceObjects, consNames) {
         var facetErrors = module._facetingErrors;
         var rootSchemaName = schemaName, rootTableName = tableName;
 
@@ -238,8 +244,14 @@
             encode = module._fixedEncodeURIComponent, sourcekey,
             i, term, col, path, ds, constraints, parsed, useRightJoin;
 
+        var pathPrefixAliasMapping = {aliases: {}, usedSourceKeys: {},lastIndex: 0};
+
         // pre process the list of facets and find the path prefixes that are used
-        _sourceColumnHelpers._populateUsedSourceKeys(and, pathPrefixAliasMapping.usedSourceKeys);
+        _sourceColumnHelpers._populateUsedSourceKeys(
+            pathPrefixAliasMapping.usedSourceKeys,
+            Array.isArray(usedSourceObjects) ? and.concat(usedSourceObjects) : and,
+            rootTable
+        );
 
         // go through list of facets and parse each facet
         for (i = 0; i < and.length; i++) {
@@ -1100,21 +1112,17 @@
             if ((sourceObject.self_link === true) || self.hasPath || self.isEntityMode || (isFacet !== false && self.hasAggregate)) {
                 var rawSourceObject = JSON.parse(JSON.stringify(sourceObject));
 
-                // TODO LATEST should just use the path prefix, a path with prefix is not the same as path without it!
-                // if the source has path, we should make sure the given sourceObject for hash is raw (not using alias or pathprefix)
+                // if the source has path, we should make sure the given sourceObject for hash is raw (not using alias)
+                //  a pseudo-column using path prefix should be treated differently from one without it.
                 if (self.hasPath) {
                     rawSourceObject.source = [];
                     sourceObject.source.forEach(function (sn, index) {
-                        // if (index < sourceObjectNodes.length && sourceObjectNodes[index].isPathPrefix) {
-                        //     rawSourceObject.source = rawSourceObject.source.concat(sourceObjectNodes[index].nodeObject.getRawSourcePath());
-                        // } else {
                         rawSourceObject.source.push(sn);
 
                         // remove alias property
                         if (typeof sn === "object" && "alias" in sn) {
                             delete rawSourceObject.source[rawSourceObject.source.length-1].alias;
                         }
-                        // }
                     });
                 }
                 self.name = _sourceColumnHelpers.generateSourceObjectHashName(rawSourceObject, isFacet);
@@ -1325,12 +1333,12 @@
                         prefix = rootTable.sourceDefinitions.sources[source[i].sourcekey];
                     }
 
-                    if (!prefix.hasPath) {
-                        return returnError("referrred `sourcekey` must be a foreign key path.");
-                    }
-
                     if (!prefix) {
                         return returnError("sourcekey is invalid.");
+                    }
+
+                    if (!prefix.hasPath) {
+                        return returnError("referrred `sourcekey` must be a foreign key path.");
                     }
                     sourceObjectNodes.push(new SourceObjectNode(prefix, false, false, false, true, source[i].sourcekey));
 
@@ -1847,7 +1855,7 @@
             return _sourceColumnHelpers.generateSourceObjectHashName({source: source}, false);
         },
 
-        _populateUsedSourceKeys: function (sources, usedSourceKeys) {
+        _populateUsedSourceKeys: function (usedSourceKeys, sources, rootTable) {
             var addToSourceKey = function (key) {
                 if (key in usedSourceKeys) {
                     usedSourceKeys[key]++;
@@ -1855,11 +1863,22 @@
                     usedSourceKeys[key] = 1;
                 }
             };
-            sources.forEach(function (src) {
+            sources.forEach(function (srcObj) {
                 if (typeof srcObj !== "object") return;
 
                 if (typeof srcObj.sourcekey === "string") {
                     if (srcObj.sourcekey === module._specialSourceDefinitions.SEARCH_BOX) {
+                        // add the search columns as well
+                        if (rootTable && Array.isArray(rootTable.searchSourceDefinition)) {
+                            // since all the columns must be coming from the same instance,
+                            // just getting it from one is enough
+                            var col = rootTable.searchSourceDefinition[0];
+                            if (col.sourceObject && col.sourceObject.sourcekey) {
+                                addToSourceKey(col.sourceObject.sourcekey);
+                            } else if (col.sourceObjectNodes.length > 0 && col.sourceObjectNodes[0].isPathPrefix) {
+                                addToSourceKey(col.sourceObjectNodes[0].pathPrefixSourcekey);
+                            }
+                        }
                         return;
                     }
                     addToSourceKey (srcObj.sourcekey);
@@ -1868,6 +1887,8 @@
                 if (!Array.isArray(srcObj.source) || !isStringAndNotEmpty(srcObj.source[0].sourcekey)) {
                     return;
                 }
+
+                // if this is the case, then it's an invalid url that will throw error later
                 if (srcObj.source[0].sourcekey === module._specialSourceDefinitions.SEARCH_BOX) {
                     return;
                 }

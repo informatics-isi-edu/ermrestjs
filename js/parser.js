@@ -432,21 +432,14 @@
          * Which will be in this format:
          * (<parsed facets starting from the faect with null>/<rev join of the parsed facets>)+/$T(facet with null)/(<parsed facet and join of parts after the null index>)*
          *
-         *
+         * @param {Array} usedSourceObjects (optional) the source objects that are used in other parts of url (passed for path prefix logic)
          * @returns {String} Path without modifiers or queries for ermrest
          */
         _computeERMrestCompactPath: function (usedSourceObjects) {
             var self = this;
             var rightJoinIndex = -1, i;
-            var uri = "", alias, lastPathPartAliasMapping = {aliases: {}, usedSourceKeys: {},lastIndex: 0};
-
-            // precompute to find the list of sourcekeys that are shared
-            if (Array.isArray(usedSourceObjects) && usedSourceObjects.length > 0) {
-                _sourceColumnHelpers._populateUsedSourceKeys(
-                    usedSourceObjects,
-                    lastPathPartAliasMapping.usedSourceKeys
-                );
-            }
+            var uri = "", alias;
+            var lastPathPartAliasMapping = {aliases: {}, usedSourceKeys: {},lastIndex: 0};
 
             // returns the proper string presentation of a series of joins
             // parameters:
@@ -477,7 +470,7 @@
                         part.table,
                         self.catalog,
                         self.catalogObject,
-                        (index == self.pathParts.length -1 ? lastPathPartAliasMapping : {aliases: {}, usedSourceKeys: [],lastIndex: 0}),
+                        (index == self.pathParts.length -1 ? usedSourceObjects : null),
                         module._constraintNames
                     );
                     if (!facetRes.successful) {

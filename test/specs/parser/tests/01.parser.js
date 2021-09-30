@@ -719,41 +719,97 @@ exports.execute = function(options) {
                         );
                     });
 
+                    describe("should proper handle sourcekey path prefix,", function () {
+                        it ("when the prefix is used only once and we don't need alias", function () {
+                            expectLocation(
+                                "N4IghgdgJiBcDaoDOB7ArgJwMYFM6JFU1wGscBPOEdAFwCN1oBGAfRwhoEsbKBfAGlCcIDNNHwgADmAxIcLJFgAWOALZgQ-amnqMorYaOYsAZiSYgAugJAAlAJIARK1uUpOuJBIvXrQA",
+                                {"and": [
+                                    {
+                                        "source": [
+                                            {"sourcekey": "outbound1_entity"},
+                                            {"inbound": ["parse_schema", "outbound1_inbound1_fk1"]},
+                                            "RID"
+                                        ],
+                                        "choices": ["1"]
+                                    }
+                                ]},
+                                "(fk1_col1)=(parse_schema:outbound1:id)/(id)=(parse_schema:outbound1_inbound1:id)/RID=1/$M",
+                                "",
+                                false,
+                                false,
+                                {}
+                            );
+                        });
+
+                        it ("when the prefix used only once and we don't need alias with null", function () {
+                            expectLocation(
+                                "",
+                                {"and": [
+                                    {
+                                        "source": [
+                                            {"sourcekey": "outbound1_entity"},
+                                            {"inbound": ["parse_schema", "outbound1_inbound1_fk1"]},
+                                            "RID"
+                                        ],
+                                        "choices": [null]
+                                    }
+                                ]},
+                                "case2",
+                                "",
+                                false,
+                                false,
+                                {}
+                            );
+                        });
+
+                        it ("when the prefix is used more than once and we need alias")
+                    });
+
                     it ("should propery handle sourcekey path prefix.", function () {
+                        // path prefix only used once (so there's no need for alias)
+
+
+                        // path prefix with null only used once (so there's no need for alias)
+
+
                         expectLocation(
-                            "N4IghgdgJiBcDaoDOB7ArgJwMYFM6JFU1wGscBPOEdAFwCN1oBGAfRwhoEsbKBfAGlCcIDNNHwgADmAxIcLJFgAWOALZgQ-amnqMorYaOYsAZiSYgAugJAAlAJIARK1uUpOuJBIvXrQA",
+                            "",
                             {"and": [
+                                {
+                                    "sourcekey": "outbound1_entity",
+                                    "choices": ["1"]
+                                },
                                 {
                                     "source": [
                                         {"sourcekey": "outbound1_entity"},
                                         {"inbound": ["parse_schema", "outbound1_inbound1_fk1"]},
                                         "RID"
                                     ],
-                                    "choices": ["1"]
+                                    "choices": ["2"]
                                 }
                             ]},
-                            "M_P1:=(fk1_col1)=(parse_schema:outbound1:id)/(id)=(parse_schema:outbound1_inbound1:id)/RID=1/$M",
-                            " case 1",
+                            "case 3",
+                            " case 3",
                             false,
                             false,
-                            {"outbound1_entity":"M_P1"}
+                            {}
                         );
 
-                        // recursive path
+                        // recursive path only used once (so there's no need for alias)
                         expectLocation(
                             "N4IghgdgJiBcDaoDOB7ArgJwMYFM6JFU1wGscBPOEdAFwCN1oBGAfQEsIG1mWB3FgA4YcAMzYAPFjgg02NSgF8ANKA5do+EALAYkOFkiwALHAFswIJdTT1GUVmrsPOTliJJMQAXWUgASgCSACLeVsYobLhImp4+PkA",
                             {"and": [
                                 {
                                     "source": [
                                         {"sourcekey": "outbound1_inbound1_w_prefix_entity"},
-                                        {"inbound": ["parse_schema", "outbound1_inbound1_inbound1_fk1"]}, 
+                                        {"inbound": ["parse_schema", "outbound1_inbound1_inbound1_fk1"]},
                                         "RID"
                                     ],
                                     "choices": ["1"]
                                 }
                             ]},
                             "M_P2:=(fk1_col1)=(parse_schema:outbound1:id)/M_P1:=(id)=(parse_schema:outbound1_inbound1:id)/(id)=(parse_schema:outbound1_inbound1_inbound1:id)/RID=1/$M",
-                            " case 2 (recursive path)",
+                            " case 3 (recursive path)",
                             false,
                             false,
                             {"outbound1_entity":"M_P2","outbound1_inbound1_w_prefix_entity":"M_P1"}
@@ -766,18 +822,20 @@ exports.execute = function(options) {
                                 {
                                     "source": [
                                         {"sourcekey": "outbound1_inbound1_w_prefix_entity"},
-                                        {"inbound": ["parse_schema", "outbound1_inbound1_inbound1_fk1"]}, 
+                                        {"inbound": ["parse_schema", "outbound1_inbound1_inbound1_fk1"]},
                                         "RID"
                                     ],
                                     "choices": [null]
                                 }
                             ]},
                             "parse_schema:outbound1_inbound1_inbound1/RID::null::/(id)=(parse_schema:outbound1_inbound1:id)/(id)=(parse_schema:outbound1:id)/M:=right(id)=(parse_schema:parse_table:fk1_col1)",
-                            " case 3 (recursive path with null)",
+                            " case 4 (recursive path with null)",
                             false,
                             true
                         );
 
+                        /*
+                        // optimiziation has been removed
                         // filter is the based on the same values, so it should ignroe the last step
                         expectLocation(
                             "N4IghgdgJiBcDaoDOB7ArgJwMYFM6JFU1wGscBPOEdAFwCN1oBGAfQEsIG1mWB3FgA4YcAMzYAPFjgg02NSgF8ANKA5do+EALAYkOFkiwALHAFswIJdTT1GUVmrsPOTliJJMQAXWUg2MLytjFDZcJE1PHx8gA",
@@ -785,7 +843,7 @@ exports.execute = function(options) {
                                 {
                                     "source": [
                                         {"sourcekey": "outbound1_inbound1_w_prefix_entity"},
-                                        {"inbound": ["parse_schema", "outbound1_inbound1_inbound1_fk1"]}, 
+                                        {"inbound": ["parse_schema", "outbound1_inbound1_inbound1_fk1"]},
                                         "id"
                                     ],
                                     "choices": ["1"]
@@ -804,7 +862,7 @@ exports.execute = function(options) {
                                 {
                                     "source": [
                                         {"sourcekey": "outbound1_inbound1_w_prefix_entity"},
-                                        {"inbound": ["parse_schema", "outbound1_inbound1_inbound1_fk1"]}, 
+                                        {"inbound": ["parse_schema", "outbound1_inbound1_inbound1_fk1"]},
                                         "id"
                                     ],
                                     "choices": [null]
@@ -815,6 +873,7 @@ exports.execute = function(options) {
                             false,
                             true
                         );
+                        */
                     });
 
 
@@ -854,6 +913,7 @@ exports.execute = function(options) {
                             false,
                             true
                         );
+
                     })
 
                     // other array for source test cases are in faceting spec.
@@ -902,7 +962,7 @@ exports.execute = function(options) {
                         // multiple sourcekeys using the same prefix
                         expectLocation(
                             "N4IghgdgJiBcDaoDOB7ArgJwMYFMDWOAnnCOgC4BG60AjAPo4RkCWZxANCFgBYrO5I48EADcaIALoBfdsnTZ8REuSppadZhFXrN2qPQDudDDiyYkzETjoAHEwDNmADwZNWHLr345BCUQGZJGTlMXAJiWFI0Smp9DS1Yw1sHZ1cWNhBOHj4BIVEAJiDpIA",
-                            {"and": [ 
+                            {"and": [
                                 {"sourcekey": "outbound1_entity", "choices": ["v1"]},
                                 {"sourcekey": "outbound1_inbound1_inbound1_w_recursive_prefix_entity", "choices": ["v3"]},
                                 {"sourcekey": "outbound1_inbound1_w_prefix_entity", "choices": ["v2"]}

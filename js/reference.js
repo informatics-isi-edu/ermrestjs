@@ -4118,7 +4118,7 @@
              *   3. There is no trailing `/` in uri (as it will break the ermrest too).
              * */
             if (isAttributeGroup) {
-                var compactPath = this._location._computeERMrestCompactPath(allOutbounds.map(function (ao) {
+                var compactPath = this._location._computeERMrestCompactPath(allOutBounds.map(function (ao) {
                     return ao.sourceObject;
                 }));
 

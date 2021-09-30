@@ -433,7 +433,6 @@
                     for (t = 0; t < tables.length; t++) {
                         table = schema.tables.get(tables[t]);
                         table._findAlternatives();
-                        // table._populateSourceDefinitions();
                     }
                 }
 
@@ -1609,113 +1608,135 @@
              self._sourceDefinitions = res;
          },
 
-         /**
-          * Returns an array of SourceObjectWrapper objects.
-          * @type {Object[]|false}
-          */
-         get searchSourceDefinition() {
-             if (this._searchSourceDefinition === undefined) {
-                 var _getSearchSourceDefinition = function (self) {
-                     var consNames = module._constraintNames,
-                         sd = module._annotations.SOURCE_DEFINITIONS,
-                         sb = module._specialSourceDefinitions.SEARCH_BOX,
-                         orOperator = module._FacetsLogicalOperators.OR,
-                         sbDef;
-                     var hasAnnot = self.annotations.contains(sd);
+        /**
+        * Returns an array of SourceObjectWrapper objects.
+        * @type {Object[]|false}
+        */
+        get searchSourceDefinition() {
+            if (this._searchSourceDefinition === undefined) {
+                var _getSearchSourceDefinition = function (self) {
+                    var consNames = module._constraintNames,
+                        sd = module._annotations.SOURCE_DEFINITIONS,
+                        sb = module._specialSourceDefinitions.SEARCH_BOX,
+                        orOperator = module._FacetsLogicalOperators.OR,
+                        sbDef;
+                    var hasAnnot = self.annotations.contains(sd);
 
-                     // annotation is missing
-                     if (!hasAnnot) return false;
+                    // annotation is missing
+                    if (!hasAnnot) return false;
 
 
-                     var annot = self.annotations.get(sd).content;
+                    var annot = self.annotations.get(sd).content;
 
-                     // annotation is not well defined
-                     if (typeof annot.sources !== "object" || !annot.sources || typeof annot.sources[sb] !== "object" || !annot.sources[sb]) return false;
+                    // annotation is not well defined
+                    if (typeof annot.sources !== "object" || !annot.sources || typeof annot.sources[sb] !== "object" || !annot.sources[sb]) {
+                        return false;
+                    }
 
-                     /*
-                      * accepted format:
-                      * "or": [
-                      *    // source def
-                      * ]
-                      */
-                     sbDef = annot.sources[sb];
+                    /*
+                     * accepted format:
+                     * "or": [
+                     *    // source def
+                     * ]
+                     */
+                    sbDef = annot.sources[sb];
 
-                     var message = "search column definition, table=" + self.name;
+                    var message = "search column definition, table=" + self.name;
 
-                     // make sure it's properly defined as `or` of sources
-                     if (!sbDef.hasOwnProperty(orOperator) || !Array.isArray(sbDef[orOperator])) {
-                         module._log.info(message + ": search-box must be defined as `or` of sources.");
-                         return false;
-                     }
+                    // make sure it's properly defined as `or` of sources
+                    if (!sbDef.hasOwnProperty(orOperator) || !Array.isArray(sbDef[orOperator])) {
+                        module._log.info(message + ": search-box must be defined as `or` of sources.");
+                        return false;
+                    }
 
-                     var res = [];
-                     sbDef[orOperator].forEach(function (src, index) {
-                         var pSource;
-                         try {
-                             // process each individual object
-                             pSource = new SourceObjectWrapper(src, self, consNames);
-                         } catch (exp) {
-                             module._log.info(message + ", index=" + index + ":" + exp.message);
-                             return;
-                         }
-                         res.push(pSource);
+                    var res = [], processedCols = {};
+                    sbDef[orOperator].forEach(function (src, index) {
+                        var pSource, sd;
+
+                        if (src.sourcekey) {
+                            sd = self.sourceDefinitions.sources[src.sourcekey];
+                            if (!sd) {
+                                module._log.info(message + ", index=" + index + ": given sourcekey `" + src.sourcekey + "` is not valid.");
+                                return;
+                            }
+
+                            pSource = sd.clone(src, self, consNames);
+                        } else {
+                            try {
+                                pSource = new SourceObjectWrapper(src, self, consNames);
+                            } catch(exp) {
+                                module._log.info(message + ", index=" + index + ":" + exp.message);
+                                return;
+                            }
+                        }
+
+                        if (pSource.name in processedCols) {
+                            return; // duplicate
+                        }
+                        processedCols[pSource.name] = true;
+                        res.push(pSource);
                      });
 
                      if (res.length === 0) {
-                         module._log.info(message + ": none of the defined sources were valid, using all the columns.");
-                         return false;
+                        module._log.info(message + ": none of the defined sources were valid, using all the columns.");
+                        return false;
                      }
 
-                     // if there are more than one search columns,
-                     // they all must come from the same table instance:
-                     // either local, or same path prefix
-                     if (res.length > 1) {
-                         var allLocal = false, prefixSK = "";
-                         var allSameInstsance = res.every(function (col, i) {
-                             var firstNode;
-
-                             // set the values based on the first element
-                            if (i === 0) {
-                                if (!col.hasPath) {
-                                    allLocal = true;
-                                    return true;
-                                }
-
-                                // must be using path prefix to ensure same instance
-                                // (path prefix and no foreignkey after it)
-                                firstNode = col.sourceObjectNodes[0];
-                                if (!firstNode.isPathPrefix && col.foreignKeyPathLength !== firstNode.nodeObject.foreignKeyPathLength) {
-                                    return false;
-                                }
-                                prefixSK = firstNode.pathPrefixSourcekey;
+                    // if there are more than one search columns,
+                    // they all must come from the same table instance:
+                    // either local, or same path prefix
+                    if (res.length > 1) {
+                        // true: local, string: a prefix (or sourcekey), otherwise: invalid
+                        var isLocalOrGetPrefixSK = function (col) {
+                            if (!col.hasPath) {
                                 return true;
                             }
-                            
-                            // if first was local, all the others must be local
-                            if (allLocal) {
-                                return !col.hasPath;
+
+                            if (col.sourceObject && isStringAndNotEmpty(col.sourceObject.sourcekey)) {
+                                return col.sourceObject.sourcekey;
                             }
 
-                            // if first wasn't local, all the others must use the same path prefix
                             firstNode = col.sourceObjectNodes[0];
                             if (!firstNode.isPathPrefix && col.foreignKeyPathLength !== firstNode.nodeObject.foreignKeyPathLength) {
                                 return false;
                             }
-                            return prefixSK == firstNode.pathPrefixSourcekey;
-                         });
+                            return firstNode.pathPrefixSourcekey;
+                        };
 
-                         if (!allSameInstsance) {
+                        var allLocal = false, prefixSK = "";
+                        var allSameInstsance = res.every(function (col, i) {
+                            var res = isLocalOrGetPrefixSK(col);
+
+                            if (res === false) return false;
+
+                            // set the values based on the first element
+                            if (i === 0) {
+                                if (res === true) {
+                                    allLocal = true;
+                                }
+                                prefixSK = res;
+                                return true;
+                            }
+
+                            // if first was local, all the others must be local
+                            if (allLocal) {
+                                return res === true;
+                            }
+                            return res == prefixSK;
+                        });
+
+                        if (!allSameInstsance) {
                             module._log.info(message + ": all the search columns must come from the same table instance.");
                             return false;
-                         }
-                     }
+                        }
+                    }
 
-                     return res;
-                 };
+                    return res;
+                };
 
-                 this._searchSourceDefinition = _getSearchSourceDefinition(this);
-             }
-             return this._searchSourceDefinition;
+                this._searchSourceDefinition = _getSearchSourceDefinition(this);
+            }
+            return this._searchSourceDefinition;
          },
 
         /**
