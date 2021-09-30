@@ -1424,67 +1424,67 @@
                 this._populateSourceDefinitions();
             }
             return this._sourceDefinitions;
-         },
+        },
 
-         _populateSourceDefinitions: function () {
-             var self = this;
-             var sd = module._annotations.SOURCE_DEFINITIONS;
-             var hasAnnot = self.annotations.contains(sd);
-             var res = {columns: [], fkeys: [], sources: {}, sourceMapping: {}};
-             var addedCols = {}, addedFks = {}, processedSources = {};
-             var allColumns = self.columns.all(),
-                 allForeignKeys = self.foreignKeys.all();
-             var consNames = module._constraintNames;
+        _populateSourceDefinitions: function () {
+            var self = this;
+            var sd = module._annotations.SOURCE_DEFINITIONS;
+            var hasAnnot = self.annotations.contains(sd);
+            var res = {columns: [], fkeys: [], sources: {}, sourceMapping: {}};
+            var addedCols = {}, addedFks = {}, processedSources = {};
+            var allColumns = self.columns.all(),
+                allForeignKeys = self.foreignKeys.all();
+            var consNames = module._constraintNames;
 
-             var findConsName = function (catalogId, schemaName, constraintName) {
-                 var result;
-                 if ((catalogId in consNames) && (schemaName in consNames[catalogId])){
-                     result = consNames[catalogId][schemaName][constraintName];
-                 }
-                 return (result === undefined) ? null : result;
-             };
+            var findConsName = function (catalogId, schemaName, constraintName) {
+                var result;
+                if ((catalogId in consNames) && (schemaName in consNames[catalogId])){
+                    result = consNames[catalogId][schemaName][constraintName];
+                }
+                return (result === undefined) ? null : result;
+            };
 
-             // TODO this is way too ugly, rewrite this!
-             var processSourceDefinitionList = function (val, isFkey) {
-                 if (val === true) {
-                     return isFkey ? allForeignKeys : allColumns;
-                 }
+            // TODO this is way too ugly, rewrite this!
+            var processSourceDefinitionList = function (val, isFkey) {
+                if (val === true) {
+                    return isFkey ? allForeignKeys : allColumns;
+                }
 
-                 var resultList = [], mapName = function (item) {return item.name;};
-                 var allListNames = isFkey ? allForeignKeys.map(mapName) : allColumns.map(mapName);
-                 if (Array.isArray(val)) {
-                     val.forEach(function (cname, index) {
-                         if (isFkey) {
-                             if (!Array.isArray(cname) || cname.length !== 2) {
-                                 // TODO log the error
-                                 return;
-                             }
-                             var fkObj = findConsName(self.schema.catalog.id, cname[0], cname[1]);
-                             if (fkObj === null || fkObj.subject !== module._constraintTypes.FOREIGN_KEY) {
-                                 return;
-                             }
-                             cname = fkObj.object.name;
-                         }
+                var resultList = [], mapName = function (item) {return item.name;};
+                var allListNames = isFkey ? allForeignKeys.map(mapName) : allColumns.map(mapName);
+                if (Array.isArray(val)) {
+                    val.forEach(function (cname, index) {
+                        if (isFkey) {
+                            if (!Array.isArray(cname) || cname.length !== 2) {
+                                // TODO log the error
+                                return;
+                            }
+                            var fkObj = findConsName(self.schema.catalog.id, cname[0], cname[1]);
+                            if (fkObj === null || fkObj.subject !== module._constraintTypes.FOREIGN_KEY) {
+                                return;
+                            }
+                            cname = fkObj.object.name;
+                        }
 
-                         var elIndex = allListNames.indexOf(cname);
-                         if (isFkey) {
-                             if (addedFks[elIndex]) return;
-                             addedFks[elIndex] = true;
-                         } else {
-                             if (addedCols[elIndex]) return;
-                             addedCols[elIndex] = true;
-                         }
-                         if (elIndex === -1) {
-                             module._log.warn("invalid source definition, ", (isFkey ? "fkeys" : "columns"), ", index=" + index);
-                             return;
-                         }
-                         resultList.push(isFkey ? allForeignKeys[elIndex] : allColumns[elIndex]);
-                     });
-                 }
-                 return resultList;
-             };
+                        var elIndex = allListNames.indexOf(cname);
+                        if (isFkey) {
+                            if (addedFks[elIndex]) return;
+                            addedFks[elIndex] = true;
+                        } else {
+                            if (addedCols[elIndex]) return;
+                            addedCols[elIndex] = true;
+                        }
+                        if (elIndex === -1) {
+                            module._log.warn("invalid source definition, ", (isFkey ? "fkeys" : "columns"), ", index=" + index);
+                            return;
+                        }
+                        resultList.push(isFkey ? allForeignKeys[elIndex] : allColumns[elIndex]);
+                    });
+                }
+                return resultList;
+            };
 
-             var addSourceDef = function (key, keysThatDependOnThis) {
+            var addSourceDef = function (key, keysThatDependOnThis) {
                 var message = "source definition, table =" + self.name + ", name=" + key;
 
                 // detec circular dependency
@@ -1571,42 +1571,42 @@
                 return true;
              };
 
-             if (!hasAnnot) {
-                 res.columns = allColumns;
-                 res.fkeys = allForeignKeys;
-                 self._sourceDefinitions = res;
-                 return;
-             }
+            if (!hasAnnot) {
+                res.columns = allColumns;
+                res.fkeys = allForeignKeys;
+                self._sourceDefinitions = res;
+                return;
+            }
 
-             var annot = self.annotations.get(sd).content;
+            var annot = self.annotations.get(sd).content;
 
-             // columns
-             if (annot.columns) {
-                 res.columns = processSourceDefinitionList(annot.columns, false);
-             }
+            // columns
+            if (annot.columns) {
+                res.columns = processSourceDefinitionList(annot.columns, false);
+            }
 
-             // fkeys
-             if (annot.fkeys) {
-                 res.fkeys = processSourceDefinitionList(annot.fkeys, true);
-             }
+            // fkeys
+            if (annot.fkeys) {
+                res.fkeys = processSourceDefinitionList(annot.fkeys, true);
+            }
 
-             // sources
-             if (annot.sources && typeof annot.sources === "object") {
-                 for (var key in annot.sources) {
-                     if (!annot.sources.hasOwnProperty(key)) continue;
+            // sources
+            if (annot.sources && typeof annot.sources === "object") {
+                for (var key in annot.sources) {
+                    if (!annot.sources.hasOwnProperty(key)) continue;
 
-                     // process once
-                     if (key in processedSources) continue;
+                    // process once
+                    if (key in processedSources) continue;
 
-                     // ignore special definitions
-                     if (Object.values(module._specialSourceDefinitions).indexOf(key) !== -1) continue;
+                    // ignore special definitions
+                    if (Object.values(module._specialSourceDefinitions).indexOf(key) !== -1) continue;
 
-                     processedSources[key] = addSourceDef(key);
-                 }
-             }
+                    processedSources[key] = addSourceDef(key);
+                }
+            }
 
-             self._sourceDefinitions = res;
-         },
+            self._sourceDefinitions = res;
+        },
 
         /**
         * Returns an array of SourceObjectWrapper objects.
