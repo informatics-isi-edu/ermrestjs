@@ -466,9 +466,8 @@ exports.execute = function (options) {
                         expect(ref.facetColumns.length).toBe(23, "length missmatch.");
                         expect(ref.facetColumns[10].filters.length).toBe(1, "# of filters defined is incorrect");
                         expect(ref.location.facets).toBeDefined("facets is undefined.");
-                        // parser is optimizing this link
                         expect(ref.location.ermrestCompactPath).toBe(
-                            "M:=faceting_schema:main/fk_to_f1=4/$M",
+                            "M:=faceting_schema:main/(fk_to_f1)=(faceting_schema:f1:id)/id=4/$M",
                             "path missmatch."
                         );
                         done();
@@ -556,9 +555,8 @@ exports.execute = function (options) {
                         expect(ref.facetColumns.length).toBe(23, "length missmatch.");
                         expect(ref.facetColumns[15].filters.length).toBe(1, "# of filters defined is incorrect");
                         expect(ref.location.facets).toBeDefined("facets is undefined.");
-                        // this is also testing the optimization where we're removing the last fk node
                         expect(ref.location.ermrestCompactPath).toBe(
-                            "M:=faceting_schema:main/(id)=(faceting_schema:secondpath_1:id)/id=id1/$M",
+                            "M:=faceting_schema:main/(id)=(faceting_schema:secondpath_1:id)/(id)=(faceting_schema:secondpath_2:id)/id=id1/$M",
                             "path missmatch."
                         );
                         done();
@@ -974,9 +972,9 @@ exports.execute = function (options) {
                             expect(ref.location.facets).toBeDefined("facets is undefined.");
                             expect(ref.location.ermrestCompactPath).toBe(
                                 "M:=faceting_schema:main/text_col=v1;text_col=v2/$M/" +
-                                "(id)=(faceting_schema:main_f3_assoc:id_main)/id_f3=1;id_f3=3/$M/" +
+                                "(id)=(faceting_schema:main_f3_assoc:id_main)/(id_f3)=(faceting_schema:f3:id)/id=1;id=3/$M/" +
                                 "M_P1:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)/(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/path_prefix_o1_o1_col=1/$M/"+
-                                "$M_P1/fk_to_path_prefix_o1_o1=test2/$M",
+                                "$M_P1/(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/id=test2/$M",
                                 "path missmatch."
                             );
                             expect(result.issues).toBeDefined("issues was not defined");
@@ -1364,7 +1362,7 @@ exports.execute = function (options) {
                         var ref = mainFacets[10].addChoiceFilters(["1", "2"]);
                         expect(ref).not.toBe(refMain, "reference didn't change.");
                         expect(ref.location.ermrestCompactPath).toBe(
-                            "M:=faceting_schema:main/id=1/$M/int_col::geq::-2/$M/fk_to_f1=1;fk_to_f1=2/$M",
+                            "M:=faceting_schema:main/id=1/$M/int_col::geq::-2/$M/(fk_to_f1)=(faceting_schema:f1:id)/id=1;id=2/$M",
                             "path missmatch."
                         );
                         expect(ref.facetColumns[10].filters.length).toBe(2, "filters length missmatch.");
@@ -1838,7 +1836,7 @@ exports.execute = function (options) {
                     checkSourceReference(
                         "mainTable with filter on FK, index = 0",
                         refMainFilterOnFK.facetColumns[0],
-                        "M:=faceting_schema:main/int_col::geq::-2/$M/fk_to_f2=2;fk_to_f2=3/$M",
+                        "M:=faceting_schema:main/int_col::geq::-2/$M/(fk_to_f2)=(faceting_schema:f2:id)/id=2;id=3/$M",
                         "id"
                     );
                 });
@@ -2271,7 +2269,7 @@ exports.execute = function (options) {
                 var refSorted = refMain.sort([{"column": "int_col", "descending": false}]);
                 var refSortedWithFilter = refSorted.facetColumns[10].addChoiceFilters(["1", "2"]);
                 expect(refSortedWithFilter.location.ermrestCompactPath).toBe(
-                    "M:=faceting_schema:main/id=1/$M/int_col::geq::-2/$M/fk_to_f1=1;fk_to_f1=2/$M",
+                    "M:=faceting_schema:main/id=1/$M/int_col::geq::-2/$M/(fk_to_f1)=(faceting_schema:f1:id)/id=1;id=2/$M",
                     "path missmatch."
                 );
                 expect(refSortedWithFilter.location.sortObject.length).toEqual(1, "sort length missmatch.");

@@ -136,36 +136,14 @@
                 col = res.column,
                 schemaName = res.column.table.schema.name,
                 lastForeignKeyNode = res.lastForeignKeyNode,
-                foreignKeyPathLength = res.foreignKeyPathLength,
-                ignoreLastFK = false;
-
-            // if the last fk is using the same column that is used in facet, and the column is not-null, we can just ignore that join.
-            // if we're supposed to use share path for this, then don't ignore the last fk
-            // TODO FILTER_IN_SOURCE check if the last one is fk
-            // TODO LATEST what about removing the last fk
-            // if (!(sourcekey && sourcekey in pathPrefixAliasMapping.usedSourceKeys)) {
-            //     var fk = lastForeignKeyNode.nodeObject,
-            //     isInbound = lastForeignKeyNode.isInbound;
-            //     var fkCol = isInbound ? fk.colset.columns[0] : fk.key.colset.columns[0];
-            //     if (!col.nullok && fk.simple && fkCol === col) {
-            //         // change the column
-            //         col = isInbound ? fk.key.colset.columns[0] : fk.colset.columns[0];
-
-            //         // change the table and schema names
-            //         tableName = col.table.name;
-            //         schemaName = col.table.schema.name;
-
-            //         ignoreLastFK = true;
-            //         foreignKeyPathLength--;
-            //     }
-            // }
+                foreignKeyPathLength = res.foreignKeyPathLength;
 
             // if we eliminated all the foreignkeys, then we don't need to reverse anything
             reverse = reverse && foreignKeyPathLength > 0;
 
             var parsedRes = _sourceColumnHelpers.parseSourceNodesWithAliasMapping(
                 sourceNodes, lastForeignKeyNode, foreignKeyPathLength, sourcekey,
-                pathPrefixAliasMapping, alias, reverse, ignoreLastFK
+                pathPrefixAliasMapping, alias, reverse
             );
 
             return {
@@ -212,7 +190,7 @@
      * @param       {string} tableName the starting table name
      * @param       {string} catalogId the catalog id
      * @param       {ERMrest.catalog} [catalogObject] the catalog object (could be undefined)
-     * @param       {Object} usedSourceObjects
+     * @param       {Array} usedSourceObjects (optional) the source objects that are used in other parts (outbound)
      * @param       {Object[]} [consNames] the constraint names (could be undefined)
      * @constructor
      * @return      {object} An object that will have the following attributes:
@@ -1442,9 +1420,8 @@
          * @param {*} pathPrefixAliasMapping
          * @param {*} mainTableAlias
          * @param {*} useRightJoin
-         * @param {*} ignoreLastFK
          */
-        parseSourceNodesWithAliasMapping: function (sourceNodes, lastForeignKeyNode, foreignKeyPathLength, sourcekey, pathPrefixAliasMapping, mainTableAlias, useRightJoin, ignoreLastFK, outAlias) {
+        parseSourceNodesWithAliasMapping: function (sourceNodes, lastForeignKeyNode, foreignKeyPathLength, sourcekey, pathPrefixAliasMapping, mainTableAlias, useRightJoin, outAlias) {
             var usedOutAlias;
 
             if (!useRightJoin && sourcekey && sourcekey in pathPrefixAliasMapping.aliases) {
@@ -1504,7 +1481,6 @@
                         pathPrefixAliasMapping,
                         mainTableAlias,
                         false,
-                        false,
                         prefixAlias
                     );
 
@@ -1530,11 +1506,6 @@
 
                     return res.path;
                 }
-
-                // ignore the last fk if we have to
-                // if (ignoreLastFK && sn == lastForeignKeyNode) {
-                //     return prev;
-                // }
 
                 var fkStr = sn.toString(useRightJoin, false);
                 if (useRightJoin) {
