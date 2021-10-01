@@ -395,13 +395,13 @@ Supported _columnentry_ patterns:
 Supported _sourceentry_ pattern:
 - _columnname_: : A string literal. _columnname_ identifies a constituent column of the table.
 - _path_: An array of _foreign key path_ that ends with a _columnname_ that will be projected. _foreign key path_ is in the following format:
+    - `{` _direction_ `:[` _schema name_ `,` _constraint name_ `] }`
 
-        "`{` _direction_ `:[` <schema-name> `,` <constraint-name> `]}` "
     Where _direction_ is either `inbound`, or `outbound`.
-- *path_w_prefix*: An array that starts with a _sourcekey prefix_ and MUST have one or more _foreign key path_s and end with a _columnname_. _sourcekey prefix_ is in the following format:
+- *path with shared prefix*: An array that starts with a _sourcekey prefix_ and MIGHT have one or more _foreign key path_ and end with a _columnname_. _sourcekey prefix_ is in the following format:
+    - `{ "sourcekey" :` _source key name_ `}`
 
-        "`{"sourcekey":` <source-key-name> `}` "
-    Where <source-key-name> is a string literal that refers to any of the defined sources in [`source-definitions` annotations](#tag-2019-source-definitions).
+    Where _source key name_ is a string literal that refers to any of the defined sources in [`source-definitions` annotations](#tag-2019-source-definitions).
 
 
 Supported _sourcekey_ pattern in here:
@@ -735,13 +735,14 @@ Supported _fkeylist_ patterns:
 
 Supported _sourceentry_ pattern in here:
   - _path_: An array of _foreign key path_ that ends with a _columnname_ that will be projected. _foreign key path_ is in the following format:
+    - `{` _direction_ `:[` _schema name_ `,` _constraint name_ `] }`
 
-        "`{` _direction_ `:[` <schema-name>,` <constraint-name> `]}` "
     Where _direction_ is either `inbound`, or `outbound`.
-- *path_w_prefix*: An array that starts with a _sourcekey prefix_ and MUST have one or more _foreign key path_s and end with a _columnname_. _sourcekey prefix_ is in the following format:
 
-        "`{"sourcekey":` <source-key-name> `}` "
-    Where <source-key-name> is a string literal that refers to any of the defined sources in [`source-definitions` annotations](#tag-2019-source-definitions).
+  - *path with shared prefix*: An array that starts with a _sourcekey prefix_ and MIGHT have one or more _foreign key path_ and end with a _columnname_. _sourcekey prefix_ is in the following format:
+    - `{ "sourcekey" :` _source key name_ `}`
+
+    Where _source key name_ is a string literal that refers to any of the defined sources in [`source-definitions` annotations](#tag-2019-source-definitions).
 
 Supported _sourcekey_ pattern in here:
   - A string literal that refers to any of the defined sources in [`source-definitions` annotations](#tag-2019-source-definitions).
@@ -992,30 +993,57 @@ Supported JSON payload patterns:
 
 Supported _sourcedefinitions_ patterns:
 
-- `{` ... `"` _sourcekey_ `":{ "source":` _sourceentry_ `},` ... `}`: where _sourcekey_ is a name that will be used to refer to the defined _sourceentry_. Since you're defining a pseudo-column here, you can use [any of the pseudo-column optional parameters that the syntax allows (e.g., `aggregate`, `entity`, `display`, `markdown_name`)](pseudo-columns.md).
+- `{` ... `"` _sourcekey_ `":{ "source":` _sourceentry_ `},` ... `}`: where _sourcekey_ is a name that will be used to refer to the defined _sourceentry_. Since you're defining a [pseudo-column]((pseudo-columns.md)) here, you can use any of the pseudo-column optional parameters that the syntax allows (e.g., `aggregate`, `entity`, `display`, `markdown_name`).
 
-- `{` ... `"search-box": { "or": [` _searchcolumn_ `,` ... `]} }`: Configure list of search columns.
+- `{` ... `"search-box": { "or": [` _sourceentry_ `,` ... `]} }`: Configure list of search columns. Since the pseudo-column defined here is special, you can only use the following optional parameters:
+    - `markdown_name`: The client will show the displayname of columns as placeholder in the search box. To modify this default behavior, you can use this attribute.
+
+  While we allow defining a list of search columns, only the following combination of search columns are supported:
+    - A list containing only one source.
+      ```javascript
+      {
+        "or": [
+          {"source": <any valid path>}
+        ]
+      }
+      ```
+    - A list of local columns.
+      ```javascript
+      {
+        "or": [
+          {"source": "col1"}, {"source": "col2"}
+        ]
+      }
+      ```
+    - A list of pseudo-columns that deploy the _path with shared prefix_ syntax using the same _sourcekey prefix_.
+      ```javascript
+      {
+        "or": [
+          {"source": [{"sourcekey": "some_defined_path"}, "col1"]},
+          {"source": [{"sourcekey": "some_defined_path"}, "col2"]}
+        ]
+      }
+      ```
+
+  Other combinations will be ignored and client will fallback to the default behavior.
 
 Supported _sourcekey_ pattern:
  - A string literal that,
-   - Cannot start with `$`.
-   - Should not be any of the table's column names.
-   - `search-box` is a reserved _sourcekey_ and cannot be used.
+    - Cannot start with `$`.
+    - Should not be any of the table's column names.
+    - `search-box` is a reserved _sourcekey_ and cannot be used.
 
 Supported _sourceentry_ pattern:
   - _columnname_: : A string literal. _columnname_ identifies a constituent column of the table.
   - _path_: An array of _foreign key path_ that ends with a _columnname_ that will be projected. _foreign key path_ is in the following format:
+    - `{` _direction_ `:[` _schema name_ `,` _constraint name_ `] }`
 
-        "`{` _direction_ `:[` <schema-name> `,` <constraint-name> `]}` "
     Where _direction_ is either `inbound`, or `outbound`.
-- *path_w_prefix*: An array that starts with a _sourcekey prefix_ and MUST have one or more _foreign key path_s and end with a _columnname_. _sourcekey prefix_ is in the following format:
 
-        "`{"sourcekey":` <source-key-name> `}` "
-    Where <source-key-name> is a string literal that refers to any of the source definitions.
+  - *path with shared prefix*: An array that starts with a _sourcekey prefix_ and MIGHT have one or more _foreign key path_ and end with a _columnname_. _sourcekey prefix_ is in the following format:
+    - `{ "sourcekey" :` _source key name_ `}`
 
-Supported _searchcolumn_ pattern:
- - `{ "source":` _columnname_  `}`: Defines a search column based on the given string literal of _columnname_. Other optional attributes that this JSON document can have are:
-   - `markdown_name`: The client will show the displayname of columns as placeholder in the search box. To modify this default behavior, you can use this attribute.
+    Where _source key name_ is a string literal that refers to any of the defined sources in [`source-definitions` annotations](#tag-2019-source-definitions).
 
 Supported _fkeylist_ patterns:
 

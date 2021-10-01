@@ -433,9 +433,11 @@
          * (<parsed facets starting from the faect with null>/<rev join of the parsed facets>)+/$T(facet with null)/(<parsed facet and join of parts after the null index>)*
          *
          * @param {Array} usedSourceObjects (optional) the source objects that are used in other parts of url (passed for path prefix logic)
-         * @returns {String} Path without modifiers or queries for ermrest
+         * @returns {Object} an object wit the following properties:
+         *   - `path`: Path without modifiers or queries for ermrest
+         *   - `pathPrefixAliasMapping`: alias mapping that are used in the url
          */
-        _computeERMrestCompactPath: function (usedSourceObjects) {
+        computeERMrestCompactPath: function (usedSourceObjects) {
             var self = this;
             var rightJoinIndex = -1, i;
             var uri = "", alias;
@@ -556,15 +558,19 @@
                 }
             }
 
-            self._ermrestCompactPath = uri;
-            self._pathPrefixAliasMapping = lastPathPartAliasMapping;
 
-            return self._ermrestCompactPath;
+            return {
+                path: uri,
+                pathPrefixAliasMapping: lastPathPartAliasMapping
+            };
         },
 
         get ermrestCompactPath() {
             if (this._ermrestCompactPath === undefined) {
-                this._computeERMrestCompactPath([]);
+                var res = this.computeERMrestCompactPath();
+                this._ermrestCompactPath = res.path;
+                this._pathPrefixAliasMapping = res.pathPrefixAliasMapping;
+
             }
             return this._ermrestCompactPath;
         },

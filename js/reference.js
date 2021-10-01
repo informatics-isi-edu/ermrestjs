@@ -328,6 +328,23 @@
         },
 
         /**
+         * This will ensure the ermrestCompactPath is also
+         * using the same aliases that we are going to use for allOutbounds
+         * I'm attaching this to Reference so it's cached and we don't have to
+         * compute it multiple times
+         * @private
+         */
+        get _readAttributeGroupPathProps() {
+            if (this._readAttributeGroupPathProps_cached === undefined) {
+                var allOutBounds = this.activeList.allOutBounds;
+                this._readAttributeGroupPathProps_cached =  this._location.computeERMrestCompactPath(allOutBounds.map(function (ao) {
+                    return ao.sourceObject;
+                }));
+            }
+            return this._readAttributeGroupPathProps_cached;
+        },
+
+        /**
          * The session object from the server
          * @param {Object} session - the session object
          */
@@ -2859,6 +2876,7 @@
             delete this._canDelete;
             delete this._display;
             delete this._csvDownloadLink;
+            delete this._readAttributeGroupPathProps_cached;
         },
 
         /**
@@ -4118,10 +4136,7 @@
              *   3. There is no trailing `/` in uri (as it will break the ermrest too).
              * */
             if (isAttributeGroup) {
-                var compactPath = this._location._computeERMrestCompactPath(allOutBounds.map(function (ao) {
-                    return ao.sourceObject;
-                }));
-
+                var compactPath = this._readAttributeGroupPathProps.path;
                 // to ensure we're not modifying the original object, I'm creating a deep copy
                 var pathPrefixAliasMapping = JSON.parse(JSON.stringify(this._location.pathPrefixAliasMapping)),
                     mainTableAlias = this._location.mainTableAlias,
@@ -4272,6 +4287,7 @@
         delete referenceCopy._exportTemplates;
         delete referenceCopy._readPath;
         delete referenceCopy._csvDownloadLink;
+        delete referenceCopy._readAttributeGroupPathProps_cached;
 
         referenceCopy.contextualize = new Contextualize(referenceCopy);
         return referenceCopy;

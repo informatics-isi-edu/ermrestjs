@@ -1578,7 +1578,7 @@
                     return [key];
                 }
                 return processSourceDependencies(res.sources[key].sourceObjectNodes[0].pathPrefixSourcekey).concat(key);
-            }
+            };
 
             if (!hasAnnot) {
                 res.columns = allColumns;

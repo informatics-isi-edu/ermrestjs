@@ -568,7 +568,7 @@ exports.execute = function (options) {
                     });
                 });
 
-                describe("should be able to handle sources with prefix and match based on structure", function () {
+                describe("should be able to handle sources with prefix", function () {
                     it ("when the same path prefix is used", function (done) {
                         facetObj = {
                             "and": [
@@ -586,7 +586,7 @@ exports.execute = function (options) {
                             expect(ref.facetColumns[21].filters.length).toBe(1, "# of filters defined is incorrect");
                             expect(ref.location.facets).toBeDefined("facets is undefined.");
                             expect(ref.location.ermrestCompactPath).toBe(
-                                "M:=faceting_schema:main/M_P1:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)/(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/path_prefix_o1_o1_col=1/$M",
+                                "M:=faceting_schema:main/(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)/(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/path_prefix_o1_o1_col=1/$M",
                                 "path missmatch."
                             );
                             done();
@@ -596,7 +596,7 @@ exports.execute = function (options) {
                         });
                     });
 
-                    it ("when the same path prefix is used and it's recursive", function (done) {
+                    it ("when the same path prefix is used and it's recursive  match based on structure", function (done) {
                         facetObj = {
                             "and": [
                                 {
@@ -617,8 +617,8 @@ exports.execute = function (options) {
                             expect(ref.facetColumns[22].filters.length).toBe(1, "# of filters defined is incorrect");
                             expect(ref.location.facets).toBeDefined("facets is undefined.");
                             expect(ref.location.ermrestCompactPath).toBe(
-                                ["M:=faceting_schema:main/M_P2:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)",
-                                 "M_P1:=(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)",
+                                ["M:=faceting_schema:main/(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)",
+                                 "(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)",
                                  "(id)=(faceting_schema:path_prefix_o1_o1_i1:fk_to_path_prefix_o1_o1)/path_prefix_o1_o1_i1_col=1/$M"].join("/"),
                                 "path missmatch."
                             );
@@ -629,7 +629,7 @@ exports.execute = function (options) {
                         });
                     })
 
-                    it ("when the structure is used without path prefix", function (done) {
+                    it ("when the structure is used without path prefix should not match", function (done) {
                         facetObj = {
                             "and": [
                                 {
@@ -647,12 +647,12 @@ exports.execute = function (options) {
                             ref = res;
                             return ref.generateFacetColumns();
                         }).then(function () {
-                            expect(ref.facetColumns.length).toBe(23, "length missmatch.");
-                            expect(ref.facetColumns[22].filters.length).toBe(1, "# of filters defined is incorrect");
+                            expect(ref.facetColumns.length).toBe(24, "length missmatch.");
+                            expect(ref.facetColumns[23].filters.length).toBe(1, "# of filters defined is incorrect");
                             expect(ref.location.facets).toBeDefined("facets is undefined.");
                             expect(ref.location.ermrestCompactPath).toBe(
-                                ["M:=faceting_schema:main/M_P2:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)",
-                                 "M_P1:=(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)",
+                                ["M:=faceting_schema:main/(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)",
+                                 "(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)",
                                  "(id)=(faceting_schema:path_prefix_o1_o1_i1:fk_to_path_prefix_o1_o1)/path_prefix_o1_o1_i1_col=1/$M"].join("/"),
                                 "path missmatch."
                             );
@@ -872,7 +872,7 @@ exports.execute = function (options) {
                             done.fail();
                         });
                     });
-                    
+
                     // 2. testing the case where no facet remains
                     it ("if the filter in url can be turned into facet, should turn it to facet and properly ignore it.", function (done) {
                         var invalidURL =  options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + tableMain + "/invalid_column_that_doesnt_exist=1234";
@@ -897,7 +897,7 @@ exports.execute = function (options) {
 
                     // 3 - 9
                     it ("should validate filters and ignore the invalid ones.", function (done) {
-                        facetObj = { 
+                        facetObj = {
                             "and": [
                                 //3
                                 {"sourcekey": "invalid_sourcekey_that_doesnt_exist", "choices": ["test1"]},
@@ -963,7 +963,7 @@ exports.execute = function (options) {
                                     },
                                     "choices": ["one", "not_found", "three", "another_not_found"]
                                 }
-                            ] 
+                            ]
                         };
                         options.ermRest.resolve(createURL(tableMain, facetObj)).then(function (res) {
                             ref = res;
@@ -1007,7 +1007,7 @@ exports.execute = function (options) {
                         });
                     });
                 });
-                
+
             });
 
             describe("regarding alternative tables for main table, ", function () {
@@ -2292,24 +2292,24 @@ exports.execute = function (options) {
                         options.ermRest.resolve(createURL(tableMain, currFacetObj)).then(function (ref) {
                             // visible-fks are defined for compact
                             currRef = ref.contextualize.compact;
-    
+
                             expect(currRef.readPath).toEqual(expectedReadPath);
                             done();
                         }).catch(function (err) {
                             done.fail(err);
                         });
                     });
-    
+
                     it ("read should return proper values", function (done) {
                         currRef.read(25).then(function (page) {
                             expect(page.length).toBe(1, "page length missmatch");
-    
+
                             var tuples = page.tuples;
                             expect(tuples[0].data.id).toBe(4, "id raw value missmatch");
-    
+
                             var expectedValues = ['4', 'two', 'two_o1_o1', 'two_o1_o1_o1'];
                             expect(tuples[0].values).toEqual(jasmine.arrayContaining(expectedValues), "values missmatch");
-    
+
                             done();
                         }).catch(function (err) {
                             done.fail(err);
@@ -2345,7 +2345,7 @@ exports.execute = function (options) {
                         ].join("/")
                     );
                 });
-                
+
                 describe("when null is in the choices", function () {
                     testReadAndReadPath(
                         {
@@ -2368,9 +2368,8 @@ exports.execute = function (options) {
                             "faceting_schema:path_prefix_o1_o1_i1/path_prefix_o1_o1_i1_col=one_o1_o1_i1;path_prefix_o1_o1_i1_col::null::",
                             "(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/(id)=(faceting_schema:path_prefix_o1:fk_to_path_prefix_o1_o1)",
                             "M:=right(id)=(faceting_schema:main:fk_to_path_prefix_o1)/M_P1:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)",
-                            "(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/path_prefix_o1_o1_col=two_o1_o1/$M/$M_P1",
-                            "M_P2:=left(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)",
-                            "F3:=left(fk_to_path_prefix_o1_o1_o1)=(faceting_schema:path_prefix_o1_o1_o1:id)/$M",
+                            "M_P2:=(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/path_prefix_o1_o1_col=two_o1_o1/$M",
+                            "$M_P2/F3:=left(fk_to_path_prefix_o1_o1_o1)=(faceting_schema:path_prefix_o1_o1_o1:id)/$M",
                             "RID;M:=array_d(M:*),F3:=array_d(F3:*),F2:=array_d(M_P2:*),F1:=array_d(M_P1:*)@sort(RID)"
                         ].join("/")
                     );
