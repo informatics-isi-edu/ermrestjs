@@ -1417,6 +1417,8 @@
          * - columns: Array of columns
          * - sources: hash-map of name to the SourceObjectWrapper object.
          * - sourceMapping: hashname to all the names
+         * - sourceDependencies: for each sourcekey, what are the other sourcekeys that it depends on (includes self as well)
+         *                       this has been added because of path prefix where a sourcekey might rely on other sourcekeys
          * @type {Object}
          */
         get sourceDefinitions() {
@@ -1430,7 +1432,7 @@
             var self = this;
             var sd = module._annotations.SOURCE_DEFINITIONS;
             var hasAnnot = self.annotations.contains(sd);
-            var res = {columns: [], fkeys: [], sources: {}, sourceMapping: {}};
+            var res = {columns: [], fkeys: [], sources: {}, sourceMapping: {}, sourceDependencies: {}};
             var addedCols = {}, addedFks = {}, processedSources = {};
             var allColumns = self.columns.all(),
                 allForeignKeys = self.foreignKeys.all();
@@ -1569,7 +1571,14 @@
 
                 processedSources[key] = true;
                 return true;
-             };
+            };
+
+            var processSourceDependencies = function (key) {
+                if (!res.sources[key].hasPrefix) {
+                    return [key];
+                }
+                return processSourceDependencies(res.sources[key].sourceObjectNodes[0].pathPrefixSourcekey).concat(key);
+            }
 
             if (!hasAnnot) {
                 res.columns = allColumns;
@@ -1592,16 +1601,23 @@
 
             // sources
             if (annot.sources && typeof annot.sources === "object") {
-                for (var key in annot.sources) {
-                    if (!annot.sources.hasOwnProperty(key)) continue;
+                var sKey;
+                for (sKey in annot.sources) {
+                    if (!annot.sources.hasOwnProperty(sKey)) continue;
 
                     // process once
-                    if (key in processedSources) continue;
+                    if (sKey in processedSources) continue;
 
                     // ignore special definitions
-                    if (Object.values(module._specialSourceDefinitions).indexOf(key) !== -1) continue;
+                    if (Object.values(module._specialSourceDefinitions).indexOf(sKey) !== -1) continue;
 
-                    processedSources[key] = addSourceDef(key);
+                    processedSources[sKey] = addSourceDef(sKey);
+                }
+
+                // populate sourceDependencies (might be able to do it with previous one)
+                for (sKey in res.sources) {
+                    if (!res.sources.hasOwnProperty(sKey)) continue;
+                    res.sourceDependencies[sKey] = processSourceDependencies(sKey);
                 }
             }
 

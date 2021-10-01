@@ -519,10 +519,10 @@
             // no rightJoin: s:t/<parths>
             if (rightJoinIndex === -1) {
                 uri = self.rootTableAlias + ":=";
-                if (this.rootSchemaName) {
+                if (self.rootSchemaName) {
                     uri += module._fixedEncodeURIComponent(self.rootSchemaName) + ":";
                 }
-                uri += module._fixedEncodeURIComponent(this.rootTableName);
+                uri += module._fixedEncodeURIComponent(self.rootTableName);
             }
             // we have right index, then every path before null must be reversed
             else {
@@ -556,10 +556,10 @@
                 }
             }
 
-            this._ermrestCompactPath = uri;
-            this._pathPrefixAliasMapping = lastPathPartAliasMapping;
+            self._ermrestCompactPath = uri;
+            self._pathPrefixAliasMapping = lastPathPartAliasMapping;
 
-            return this._ermrestCompactPath;
+            return self._ermrestCompactPath;
         },
 
         get ermrestCompactPath() {
