@@ -4136,9 +4136,10 @@
              *   3. There is no trailing `/` in uri (as it will break the ermrest too).
              * */
             if (isAttributeGroup) {
-                var compactPath = this._readAttributeGroupPathProps.path;
-                // to ensure we're not modifying the original object, I'm creating a deep copy
-                var pathPrefixAliasMapping = JSON.parse(JSON.stringify(this._location.pathPrefixAliasMapping)),
+                var attrGroupPros = this._readAttributeGroupPathProps;
+                var compactPath = attrGroupPros.path,
+                    // to ensure we're not modifying the original object, I'm creating a deep copy
+                    pathPrefixAliasMapping = JSON.parse(JSON.stringify(attrGroupPros.pathPrefixAliasMapping)),
                     mainTableAlias = this._location.mainTableAlias,
                     aggList = [],
                     sortColumn,
