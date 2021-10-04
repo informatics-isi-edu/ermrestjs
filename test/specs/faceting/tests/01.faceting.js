@@ -2316,61 +2316,191 @@ exports.execute = function (options) {
                 }
 
                 describe("when null is not in the choices", function () {
-                    testReadAndReadPath(
-                        {
-                            "and": [
-                                {
-                                    "source":  [
-                                        {"sourcekey": "path_to_path_prefix_o1_o1"},
-                                        {"inbound": ["faceting_schema", "path_prefix_o1_o1_i1_fk1"]},
-                                        "path_prefix_o1_o1_i1_col"
-                                    ],
-                                    "choices": ["one_o1_o1_i1"]
-                                },
-                                {
-                                    "sourcekey": "path_to_path_prefix_o1_o1",
-                                    "choices": ["two_o1_o1"]
-                                }
-                            ]
-                        },
-                        [
-                            "M:=faceting_schema:main",
-                            "M_P2:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)/M_P1:=(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)",
-                            "(id)=(faceting_schema:path_prefix_o1_o1_i1:fk_to_path_prefix_o1_o1)/path_prefix_o1_o1_i1_col=one_o1_o1_i1/$M",
-                            "$M_P1/path_prefix_o1_o1_col=two_o1_o1/$M",
-                            "$M_P1/F3:=left(fk_to_path_prefix_o1_o1_o1)=(faceting_schema:path_prefix_o1_o1_o1:id)/$M",
-                            "RID;M:=array_d(M:*),F3:=array_d(F3:*),F2:=array_d(M_P1:*),F1:=array_d(M_P2:*)@sort(RID)"
-                        ].join("/")
-                    );
+                    describe("case 1", function () {
+                        testReadAndReadPath(
+                            {
+                                "and": [
+                                    {
+                                        "source":  [
+                                            {"sourcekey": "path_to_path_prefix_o1_o1"},
+                                            {"inbound": ["faceting_schema", "path_prefix_o1_o1_i1_fk1"]},
+                                            "path_prefix_o1_o1_i1_col"
+                                        ],
+                                        "choices": ["one_o1_o1_i1"]
+                                    },
+                                    {
+                                        "sourcekey": "path_to_path_prefix_o1_o1",
+                                        "choices": ["two_o1_o1"]
+                                    }
+                                ]
+                            },
+                            [
+                                "M:=faceting_schema:main",
+                                "M_P2:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)/M_P1:=(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)",
+                                "(id)=(faceting_schema:path_prefix_o1_o1_i1:fk_to_path_prefix_o1_o1)/path_prefix_o1_o1_i1_col=one_o1_o1_i1/$M",
+                                "$M_P1/path_prefix_o1_o1_col=two_o1_o1/$M",
+                                "$M_P1/F3:=left(fk_to_path_prefix_o1_o1_o1)=(faceting_schema:path_prefix_o1_o1_o1:id)/$M",
+                                "RID;M:=array_d(M:*),F3:=array_d(F3:*),F2:=array_d(M_P1:*),F1:=array_d(M_P2:*)@sort(RID)"
+                            ].join("/")
+                        );
+                    });
+
+                    // sourcekey used before the prefix
+                    describe("case 2", function () {
+                        testReadAndReadPath(
+                            {
+                                "and": [
+                                    {
+                                        "sourcekey": "path_to_path_prefix_o1_o1",
+                                        "choices": ["two_o1_o1"]
+                                    },
+                                    {
+                                        "source":  [
+                                            {"sourcekey": "path_to_path_prefix_o1_o1"},
+                                            {"inbound": ["faceting_schema", "path_prefix_o1_o1_i1_fk1"]},
+                                            "path_prefix_o1_o1_i1_col"
+                                        ],
+                                        "choices": ["one_o1_o1_i1"]
+                                    }
+                                ]
+                            },
+                            [
+                                "M:=faceting_schema:main",
+                                "M_P1:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)/M_P2:=(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/path_prefix_o1_o1_col=two_o1_o1/$M",
+                                "$M_P2/(id)=(faceting_schema:path_prefix_o1_o1_i1:fk_to_path_prefix_o1_o1)/path_prefix_o1_o1_i1_col=one_o1_o1_i1/$M",
+                                "$M_P2/F3:=left(fk_to_path_prefix_o1_o1_o1)=(faceting_schema:path_prefix_o1_o1_o1:id)/$M",
+                                "RID;M:=array_d(M:*),F3:=array_d(F3:*),F2:=array_d(M_P2:*),F1:=array_d(M_P1:*)@sort(RID)"
+                            ].join("/")
+                        );
+                    });
+
+                    // prefix with different end column
+                    describe("case 3", function () {
+                        testReadAndReadPath(
+                            {
+                                "and": [
+                                    {
+                                        "source": [
+                                            {"sourcekey": "path_to_path_prefix_o1_o1"},
+                                            "id"
+                                        ],
+                                        "choices": ["2"]
+                                    },
+                                    {
+                                        "source":  [
+                                            {"sourcekey": "path_to_path_prefix_o1_o1"},
+                                            {"inbound": ["faceting_schema", "path_prefix_o1_o1_i1_fk1"]},
+                                            "path_prefix_o1_o1_i1_col"
+                                        ],
+                                        "choices": ["one_o1_o1_i1"]
+                                    }
+                                ]
+                            },
+                            [
+                                "M:=faceting_schema:main",
+                                "M_P2:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)/M_P1:=(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/id=2/$M",
+                                "$M_P1/(id)=(faceting_schema:path_prefix_o1_o1_i1:fk_to_path_prefix_o1_o1)/path_prefix_o1_o1_i1_col=one_o1_o1_i1/$M",
+                                "$M_P1/F3:=left(fk_to_path_prefix_o1_o1_o1)=(faceting_schema:path_prefix_o1_o1_o1:id)/$M",
+                                "RID;M:=array_d(M:*),F3:=array_d(F3:*),F2:=array_d(M_P1:*),F1:=array_d(M_P2:*)@sort(RID)"
+                            ].join("/")
+                        );
+                    });
                 });
 
                 describe("when null is in the choices", function () {
-                    testReadAndReadPath(
-                        {
-                            "and": [
-                                {
-                                    "source":  [
-                                        {"sourcekey": "path_to_path_prefix_o1_o1"},
-                                        {"inbound": ["faceting_schema", "path_prefix_o1_o1_i1_fk1"]},
-                                        "path_prefix_o1_o1_i1_col"
-                                    ],
-                                    "choices": ["one_o1_o1_i1", null]
-                                },
-                                {
-                                    "sourcekey": "path_to_path_prefix_o1_o1",
-                                    "choices": ["two_o1_o1"]
-                                }
-                            ]
-                        },
-                        [
-                            "faceting_schema:path_prefix_o1_o1_i1/path_prefix_o1_o1_i1_col=one_o1_o1_i1;path_prefix_o1_o1_i1_col::null::",
-                            "(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/(id)=(faceting_schema:path_prefix_o1:fk_to_path_prefix_o1_o1)",
-                            "M:=right(id)=(faceting_schema:main:fk_to_path_prefix_o1)/M_P1:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)",
-                            "M_P2:=(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/path_prefix_o1_o1_col=two_o1_o1/$M",
-                            "$M_P2/F3:=left(fk_to_path_prefix_o1_o1_o1)=(faceting_schema:path_prefix_o1_o1_o1:id)/$M",
-                            "RID;M:=array_d(M:*),F3:=array_d(F3:*),F2:=array_d(M_P2:*),F1:=array_d(M_P1:*)@sort(RID)"
-                        ].join("/")
-                    );
+                    describe("case 1", function () {
+                        testReadAndReadPath(
+                            {
+                                "and": [
+                                    {
+                                        "source":  [
+                                            {"sourcekey": "path_to_path_prefix_o1_o1"},
+                                            {"inbound": ["faceting_schema", "path_prefix_o1_o1_i1_fk1"]},
+                                            "path_prefix_o1_o1_i1_col"
+                                        ],
+                                        "choices": ["one_o1_o1_i1", null]
+                                    },
+                                    {
+                                        "sourcekey": "path_to_path_prefix_o1_o1",
+                                        "choices": ["two_o1_o1"]
+                                    }
+                                ]
+                            },
+                            [
+                                "faceting_schema:path_prefix_o1_o1_i1/path_prefix_o1_o1_i1_col=one_o1_o1_i1;path_prefix_o1_o1_i1_col::null::",
+                                "(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/(id)=(faceting_schema:path_prefix_o1:fk_to_path_prefix_o1_o1)",
+                                "M:=right(id)=(faceting_schema:main:fk_to_path_prefix_o1)/M_P1:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)",
+                                "M_P2:=(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/path_prefix_o1_o1_col=two_o1_o1/$M",
+                                "$M_P2/F3:=left(fk_to_path_prefix_o1_o1_o1)=(faceting_schema:path_prefix_o1_o1_o1:id)/$M",
+                                "RID;M:=array_d(M:*),F3:=array_d(F3:*),F2:=array_d(M_P2:*),F1:=array_d(M_P1:*)@sort(RID)"
+                            ].join("/")
+                        );
+                    });
+
+                    // sourcekey used before the prefix
+                    describe("case 2", function () {
+                        testReadAndReadPath(
+                            {
+                                "and": [
+                                    {
+                                        "sourcekey": "path_to_path_prefix_o1_o1",
+                                        "choices": ["two_o1_o1"]
+                                    },
+                                    {
+                                        "source":  [
+                                            {"sourcekey": "path_to_path_prefix_o1_o1"},
+                                            {"inbound": ["faceting_schema", "path_prefix_o1_o1_i1_fk1"]},
+                                            "path_prefix_o1_o1_i1_col"
+                                        ],
+                                        "choices": ["one_o1_o1_i1", null]
+                                    }
+                                ]
+                            },
+                            [
+                                "faceting_schema:path_prefix_o1_o1_i1/path_prefix_o1_o1_i1_col=one_o1_o1_i1;path_prefix_o1_o1_i1_col::null::",
+                                "(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/(id)=(faceting_schema:path_prefix_o1:fk_to_path_prefix_o1_o1)",
+                                "M:=right(id)=(faceting_schema:main:fk_to_path_prefix_o1)",
+                                "M_P1:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)/M_P2:=(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/path_prefix_o1_o1_col=two_o1_o1/$M",
+                                "$M_P2/F3:=left(fk_to_path_prefix_o1_o1_o1)=(faceting_schema:path_prefix_o1_o1_o1:id)/$M",
+                                "RID;M:=array_d(M:*),F3:=array_d(F3:*),F2:=array_d(M_P2:*),F1:=array_d(M_P1:*)@sort(RID)"
+                            ].join("/"),
+                        );
+                    });
+
+                    // prefix with different end column
+                    describe("case 3", function () {
+                        testReadAndReadPath(
+                            {
+                                "and": [
+                                    {
+                                        "source": [
+                                            {"sourcekey": "path_to_path_prefix_o1_o1"},
+                                            "id"
+                                        ],
+                                        "choices": ["2"]
+                                    },
+                                    {
+                                        "source":  [
+                                            {"sourcekey": "path_to_path_prefix_o1_o1"},
+                                            {"inbound": ["faceting_schema", "path_prefix_o1_o1_i1_fk1"]},
+                                            "path_prefix_o1_o1_i1_col"
+                                        ],
+                                        "choices": ["one_o1_o1_i1", null]
+                                    }
+                                ]
+                            },
+                            [
+                                "faceting_schema:path_prefix_o1_o1_i1/path_prefix_o1_o1_i1_col=one_o1_o1_i1;path_prefix_o1_o1_i1_col::null::",
+                                "(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/(id)=(faceting_schema:path_prefix_o1:fk_to_path_prefix_o1_o1)",
+                                "M:=right(id)=(faceting_schema:main:fk_to_path_prefix_o1)",
+                                "M_P2:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)",
+                                "M_P1:=(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/id=2/$M",
+                                "$M_P1/F3:=left(fk_to_path_prefix_o1_o1_o1)=(faceting_schema:path_prefix_o1_o1_o1:id)/$M",
+                                "RID;M:=array_d(M:*),F3:=array_d(F3:*),F2:=array_d(M_P1:*),F1:=array_d(M_P2:*)@sort(RID)"
+                            ].join("/")
+                        );
+                    });
+
                 });
             });
         });
