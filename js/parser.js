@@ -219,7 +219,8 @@
         }
 
         // pathParts: <joins/facet/cfacet/filter/>
-        var joinRegExp = /(?:left|right|full|^)\((.*)\)=\((.*:.*:.*)\)/,
+        var aliasJoinRegExp = /\$.*/,
+            joinRegExp = /(?:left|right|full|^)\((.*)\)=\((.*:.*:.*)\)/,
             facetsRegExp = /\*::facets::(.+)/,
             customFacetsRegExp = /\*::cfacets::(.+)/;
 
@@ -431,123 +432,145 @@
          * Which will be in this format:
          * (<parsed facets starting from the faect with null>/<rev join of the parsed facets>)+/$T(facet with null)/(<parsed facet and join of parts after the null index>)*
          *
-         *
-         * @returns {String} Path without modifiers or queries for ermrest
+         * @param {Array} usedSourceObjects (optional) the source objects that are used in other parts of url (passed for path prefix logic)
+         * @returns {Object} an object wit the following properties:
+         *   - `path`: Path without modifiers or queries for ermrest
+         *   - `pathPrefixAliasMapping`: alias mapping that are used in the url
          */
-        get ermrestCompactPath() {
-            if (this._ermrestCompactPath === undefined) {
-                var self = this;
-                var rightJoinIndex = -1, i;
-                var uri = "", alias, lastPathPartAliasMapping = {aliases: {}, lastIndex: 0};
+        computeERMrestCompactPath: function (usedSourceObjects) {
+            var self = this;
+            var rightJoinIndex = -1, i;
+            var uri = "", alias;
+            var lastPathPartAliasMapping = {aliases: {}, usedSourceKeys: {},lastIndex: 0};
 
-                // returns the proper string presentation of a series of joins
-                // parameters:
-                //  - joins: array of ParsedJoin objects.
-                //  - alias: the alias that will be attached to the end of the path
-                //  - reverse: whether we want to return the reversed join string
-                var joinsStr = function (joins, alias, reverse) {
-                    var fn = reverse ? "reduceRight" : "reduce";
-                    var joinStr = reverse ? "strReverse" : "str";
-                    var last = reverse ? 0 : joins.length - 1;
-                    var first = reverse ? joins.length -1 : 0;
+            // returns the proper string presentation of a series of joins
+            // parameters:
+            //  - joins: array of ParsedJoin objects.
+            //  - alias: the alias that will be attached to the end of the path
+            //  - reverse: whether we want to return the reversed join string
+            var joinsStr = function (joins, alias, reverse) {
+                var fn = reverse ? "reduceRight" : "reduce";
+                var joinStr = reverse ? "strReverse" : "str";
+                var last = reverse ? 0 : joins.length - 1;
+                var first = reverse ? joins.length -1 : 0;
 
-                    return joins[fn](function (res, join, i) {
-                        return res + (i !== first ? "/" : "") + ((i === last) ? (alias + ":=") : "") + join[joinStr];
-                    }, "");
-                };
+                return joins[fn](function (res, join, i) {
+                    return res + (i !== first ? "/" : "") + ((i === last) ? (alias + ":=") : "") + join[joinStr];
+                }, "");
+            };
 
-                // get the parsed one, and count the number of right joins
-                var parsedPartsWithoutJoin = self.pathParts.map(function (part, index) {
-                    var res = [], facetRes;
+            // get the parsed one, and count the number of right joins
+            var parsedPartsWithoutJoin = self.pathParts.map(function (part, index) {
+                var res = [], facetRes;
 
-                    // facet
-                    if (part.facets) {
-                        facetRes = _renderFacet(part.facets.decoded, part.alias, part.schema, part.table, self.catalog, self.catalogObject, module._constraintNames);
+                // facet
+                if (part.facets) {
+                    facetRes = _renderFacet(
+                        part.facets.decoded,
+                        part.alias,
+                        part.schema,
+                        part.table,
+                        self.catalog,
+                        self.catalogObject,
+                        (index == self.pathParts.length -1 ? usedSourceObjects : null),
+                        module._constraintNames
+                    );
+                    if (!facetRes.successful) {
+                        throw new module.InvalidFacetOperatorError(self.path, facetRes.message);
+                    }
+                    if (facetRes.rightJoin) {
+                        // we only allow one right join (null fitler)
+                        if (rightJoinIndex !== -1) {
+                            throw new module.MalformedURIError("Only one facet in url can have `null` filter.");
+                        }
+                        rightJoinIndex = index;
+                    }
+                    if (index == self.pathParts.length -1 ) {
+                        lastPathPartAliasMapping = facetRes.pathPrefixAliasMapping;
+                    }
+
+                    res.push(facetRes.parsed);
+                }
+
+                // cfacet
+                if (part.customFacets) {
+                    if (part.customFacets.facets) {
+                        facetRes = _renderFacet(part.customFacets.facets.decoded, part.alias, part.schema, part.table, self.catalog, self.catalogObject, module._constraintNames);
                         if (!facetRes.successful) {
-                            throw new module.InvalidFacetOperatorError(self.path, facetRes.message);
+                            throw new module.InvalidCustomFacetOperatorError(self.path, facetRes.message);
                         }
                         if (facetRes.rightJoin) {
-                            // we only allow one right join (null fitler)
-                            if (rightJoinIndex !== -1) {
-                                throw new module.MalformedURIError("Only one facet in url can have `null` filter.");
-                            }
-                            rightJoinIndex = index;
+                            throw new module.InvalidCustomFacetOperatorError(self.path, "`null` choice facet is not allowed in custom facets");
                         }
-                        if (index == self.pathParts.length -1 ) {
-                            lastPathPartAliasMapping = facetRes.pathPrefixAliasMapping;
-                        }
-
                         res.push(facetRes.parsed);
                     }
 
-                    // cfacet
-                    if (part.customFacets) {
-                        if (part.customFacets.facets) {
-                            facetRes = _renderFacet(part.customFacets.facets.decoded, part.alias, part.schema, part.table, self.catalog, self.catalogObject, module._constraintNames);
-                            if (!facetRes.successful) {
-                                throw new module.InvalidCustomFacetOperatorError(self.path, facetRes.message);
-                            }
-                            if (facetRes.rightJoin) {
-                                throw new module.InvalidCustomFacetOperatorError(self.path, "`null` choice facet is not allowed in custom facets");
-                            }
-                            res.push(facetRes.parsed);
-                        }
-
-                        if (typeof part.customFacets.ermrestPath === "string") {
-                            res.push(part.customFacets.ermrestPath);
-                        }
-                    }
-
-                    //filter
-                    if (part.filtersString) {
-                        res.push(part.filtersString);
-                    }
-
-                    return res.join("/");
-                });
-
-                // no rightJoin: s:t/<parths>
-                if (rightJoinIndex === -1) {
-                    uri = self.rootTableAlias + ":=";
-                    if (this.rootSchemaName) {
-                        uri += module._fixedEncodeURIComponent(self.rootSchemaName) + ":";
-                    }
-                    uri += module._fixedEncodeURIComponent(this.rootTableName);
-                }
-                // we have right index, then every path before null must be reversed
-                else {
-                    // url format:
-                    // (<parsed facets starting from the faect with null>/<rev join of the parsed facets>)+/$T(facet with null)/(<parsed facet and join of parts after the null index>)*
-                    for (i = rightJoinIndex; i >= 0; i--) {
-                        if (parsedPartsWithoutJoin[i]) {
-                            uri += (uri.length > 0 ? "/" : "") + parsedPartsWithoutJoin[i];
-                        }
-
-                        if (self.pathParts[i].joins.length > 0) {
-                            alias = i > 0 ? self.pathPart[i-1].alias : self.rootTableAlias;
-                            uri += "/" + joinStr(self.pathParts[i].joins, alias, true);
-                        }
-                    }
-
-                    // if there was pathParts before facet with null, change back to the facet with null
-                    if (self.pathParts[rightJoinIndex].joins.length > 0) {
-                        uri += "/$" + self.pathParts[i].alias;
+                    if (typeof part.customFacets.ermrestPath === "string") {
+                        res.push(part.customFacets.ermrestPath);
                     }
                 }
 
-                // from the facet with null to end, we have to add path parts in the same order.
-                for (i = rightJoinIndex + 1; i < self.pathParts.length; i++) {
-                    var part = self.pathParts[i];
-                    if (part.joins.length > 0) {
-                        uri += "/" + joinsStr(part.joins, part.alias, false);
-                    }
+                //filter
+                if (part.filtersString) {
+                    res.push(part.filtersString);
+                }
+
+                return res.join("/");
+            });
+
+            // no rightJoin: s:t/<parths>
+            if (rightJoinIndex === -1) {
+                uri = self.rootTableAlias + ":=";
+                if (self.rootSchemaName) {
+                    uri += module._fixedEncodeURIComponent(self.rootSchemaName) + ":";
+                }
+                uri += module._fixedEncodeURIComponent(self.rootTableName);
+            }
+            // we have right index, then every path before null must be reversed
+            else {
+                // url format:
+                // (<parsed facets starting from the faect with null>/<rev join of the parsed facets>)+/$T(facet with null)/(<parsed facet and join of parts after the null index>)*
+                for (i = rightJoinIndex; i >= 0; i--) {
                     if (parsedPartsWithoutJoin[i]) {
-                        uri += "/" + parsedPartsWithoutJoin[i];
+                        uri += (uri.length > 0 ? "/" : "") + parsedPartsWithoutJoin[i];
+                    }
+
+                    if (self.pathParts[i].joins.length > 0) {
+                        alias = i > 0 ? self.pathPart[i-1].alias : self.rootTableAlias;
+                        uri += "/" + joinStr(self.pathParts[i].joins, alias, true);
                     }
                 }
 
-                this._ermrestCompactPath = uri;
-                this._pathPrefixAliasMapping = lastPathPartAliasMapping;
+                // if there was pathParts before facet with null, change back to the facet with null
+                if (self.pathParts[rightJoinIndex].joins.length > 0) {
+                    uri += "/$" + self.pathParts[i].alias;
+                }
+            }
+
+            // from the facet with null to end, we have to add path parts in the same order.
+            for (i = rightJoinIndex + 1; i < self.pathParts.length; i++) {
+                var part = self.pathParts[i];
+                if (part.joins.length > 0) {
+                    uri += "/" + joinsStr(part.joins, part.alias, false);
+                }
+                if (parsedPartsWithoutJoin[i]) {
+                    uri += "/" + parsedPartsWithoutJoin[i];
+                }
+            }
+
+
+            return {
+                path: uri,
+                pathPrefixAliasMapping: lastPathPartAliasMapping
+            };
+        },
+
+        get ermrestCompactPath() {
+            if (this._ermrestCompactPath === undefined) {
+                var res = this.computeERMrestCompactPath();
+                this._ermrestCompactPath = res.path;
+                this._pathPrefixAliasMapping = res.pathPrefixAliasMapping;
+
             }
             return this._ermrestCompactPath;
         },
@@ -556,9 +579,9 @@
          * alias mapping for the last path part
          * can be used for retrieving the existing sourcekey paths
          * so we can refer to them instead of repeating the path.
-         * 
+         *
          * The returned object has the following attributes:
-         * - aliases: An object of sourcekey name to alis
+         * - aliases: An object of sourcekey name to alias
          * - lastIndex: The last index used for the aliases,
          *              aliases are written in format of <mainalias>_<index>
          *              and the lastIndex will make it easier to generate new ones if needed
@@ -644,7 +667,7 @@
 
         /**
          * The first table name in the projection table
-         * @type {string} 
+         * @type {string}
          */
         get rootTableName() {
             return this._rootTableName;

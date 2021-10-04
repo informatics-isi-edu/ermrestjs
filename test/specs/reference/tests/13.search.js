@@ -1,10 +1,49 @@
 exports.execute = function (options) {
 
+    var chaiseURL = "https://dev.isrd.isi.edu/chaise";
+    var recordURL = chaiseURL + "/record";
+    var record2URL = chaiseURL + "/record-two";
+    var viewerURL = chaiseURL + "/viewer";
+    var searchURL = chaiseURL + "/search";
+    var recordsetURL = chaiseURL + "/recordset";
+
+    var appLinkFn = function (tag, location) {
+        var url;
+        switch (tag) {
+            case "tag:isrd.isi.edu,2016:chaise:record":
+                url = recordURL;
+                break;
+            case "tag:isrd.isi.edu,2016:chaise:record-two":
+                url = record2URL;
+                break;
+            case "tag:isrd.isi.edu,2016:chaise:viewer":
+                url = viewerURL;
+                break;
+            case "tag:isrd.isi.edu,2016:chaise:search":
+                url = searchURL;
+                break;
+            case "tag:isrd.isi.edu,2016:chaise:recordset":
+                url = recordsetURL;
+                break;
+            default:
+                url = recordURL;
+                break;
+        }
+
+        url = url + "/" + location.path;
+
+        return url;
+    };
+
+    beforeAll(function() {
+        options.ermRest.appLinkFn(appLinkFn);
+    });
+
     describe("Reference Search,", function () {
         var catalog_id = process.env.DEFAULT_CATALOG,
-            schemaName = "reference_schema",
+            schemaName = "search_schema",
             tableName = "search parser",
-            path = "M:=reference_schema:search%20parser/",
+            path = "M:=search_schema:search%20parser/",
             intRegexPrefix = floatRegexPrefix = "^(.*[^0-9.])?0*",
             intRegexSuffix = "([^0-9].*|$)";
 
@@ -484,100 +523,240 @@ exports.execute = function (options) {
 
     describe("regarding custom search feature", function () {
         var catalog_id = process.env.DEFAULT_CATALOG,
-            schemaName = "reference_schema",
+            schemaName = "search_schema",
             tableNameDefaultSearch = "search parser",
             tableNameCustomSearchInvalid = "table_w_custom_search_invalid",
-            tableNameCustomSearch1 = "table_w_custom_search_1",
+            tableNameCustomSearchDiffInstance = "table_w_custom_search_not_same_instance",
+            tableNameCustomSearchLocalCols = "table_w_custom_search_1",
+            tableNameCustomSearchSinglePath = "table_w_custom_search_2",
+            tableNameCustomSearchSamePrefix = "table_w_custom_search_3",
+            tableNameCustomSearchSamePrefix2 = "table_w_custom_search_4",
             searchTerm = "term";
 
-        var searchFacet = {"and": [{"sourcekey": "search-box", "search": ["term"]}]};
+        var searchFacet = {"and": [{"sourcekey": "search-box", "search": ["term"]}]},
+            customSearchLocalColsCompactPath = "M:=" + schemaName + ":" + tableNameCustomSearchLocalCols + "/search_col_2::ciregexp::" + searchTerm + ";search_col_1::ciregexp::" + searchTerm +"/$M",
+            customSearchSinglePathCompactPath = "M:=search_schema:table_w_custom_search_2/(id)=(search_schema:table_w_custom_search_2_vocab_assoc:fk_to_custom_search_2)/(fk_to_vocab)=(search_schema:search_vocab_table:id)/name::ciregexp::term/$M",
+            customSearchSamePrefixCompactPath = "M:=search_schema:table_w_custom_search_3/(id)=(search_schema:table_w_custom_search_3_vocab_assoc:fk_to_custom_search_3)/(fk_to_vocab)=(search_schema:search_vocab_table:id)/name::ciregexp::term;second_name::ciregexp::term;third_name::ciregexp::term/$M",
+            customSearchLocalColsResults = ["02", "03"],
+            customSearchSinglePathResults = ["02", "04", "05"],
+            customSearchSamePrefixResults = ["02", "03", "04", "05", "06"];
 
-        var createURL = function (table) {
-            return options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + table;
+        var createURL = function (table, facet) {
+            var res = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + table;
+            if (facet) {
+                res += "/*::facets::" + options.ermRest.encodeFacet(facet);
+            }
+            return res;
         }
 
-        var multipleEntityDefaultSearchUri = createURL(tableNameDefaultSearch),
-            multipleEntityCustomSearchInvalidUri = createURL(tableNameCustomSearchInvalid),
-            multipleEntityCustomSearch1Uri = createURL(tableNameCustomSearch1);
+        var defaultSearchReference, invalidSearchColumnReference, invalidSearchColumnDiffInstanceReference,
+            customSearchLocalColsReference, customSearchSinglePathReference, customSearchSamePrefixReference;
 
-        var testCustomSearchAPIs = function (uri, expectedColumnNames, expectedColumnDisplaynames, done) {
-            options.ermRest.resolve(uri, {cid: "test"}).then(function (ref) {
-                if (expectedColumnNames === false) {
-                    expect(ref.table.searchSourceDefinition).toBe(false, "searchSourceDefinition missmatch.");
-                    expect(ref.searchColumns).toBe(false, "searchColumns missmatch.");
-                } else {
-                    var searchDef = ref.table.searchSourceDefinition;
-                    expect(searchDef.length).toBe(expectedColumnNames.length, "def length missmatch");
-                    expect(searchDef.map(function (sd) {
-                        return sd.column.name;
-                    })).toEqual(expectedColumnNames, "name missmatch");
+        var testCustomSearchAPIs = function (ref, expectedColumnNames, expectedColumnDisplaynames) {
+            if (expectedColumnNames === false) {
+                expect(ref.table.searchSourceDefinition).toBe(false, "searchSourceDefinition missmatch.");
+                expect(ref.searchColumns).toBe(false, "searchColumns missmatch.");
+            } else {
+                var searchDef = ref.table.searchSourceDefinition;
+                expect(searchDef.length).toBe(expectedColumnNames.length, "def length missmatch");
+                expect(searchDef.map(function (sd) {
+                    return sd.column.name;
+                })).toEqual(expectedColumnNames, "name missmatch");
 
-                    var searchColumns = ref.searchColumns;
-                    expect(searchColumns.length).toBe(expectedColumnDisplaynames.length, "columns length missmatch");
-                    expect(searchColumns.map(function (sd) {
-                        return sd.displayname.value;
-                    })).toEqual(expectedColumnDisplaynames, "name missmatch");
-                }
-
-                done();
-            }).catch(function (err) {
-                done.fail(err);
-            });
+                var searchColumns = ref.searchColumns;
+                expect(searchColumns.length).toBe(expectedColumnDisplaynames.length, "columns length missmatch");
+                expect(searchColumns.map(function (sd) {
+                    return sd.displayname.value;
+                })).toEqual(expectedColumnDisplaynames, "name missmatch");
+            }
         }
 
-        var testCustomSearchReference = function (ref, done) {
+        var testCustomSearchReference = function (ref, compactPath, result, done) {
             expect(ref.location.searchTerm).toBe(searchTerm, "searchTerm missmatch.");
             expect(ref.location.ermrestCompactPath).toBe(
-                "M:=" + schemaName + ":" + tableNameCustomSearch1 + "/search_col_2::ciregexp::" + searchTerm + ";search_col_1::ciregexp::" + searchTerm +"/$M",
+                compactPath,
                 "ermrestCompactPath missmatch."
             );
 
             ref.read(5).then(function (page) {
-                expect(page.length).toBe(2, "length missmatch");
+                expect(page.length).toBe(result.length, "length missmatch");
                 expect(page.tuples.map(function (t) {
-                    return tuples.values['id'];
-                })).toBe(["02", "03"])
+                    return t.data['id'];
+                })).toEqual(result)
+
+                done();
+            }).catch(function (err) {
+                done.fail(err);
             })
         };
 
+        beforeAll(function (done) {
+            options.ermRest.resolve(createURL(tableNameDefaultSearch), {"cid": "test"}).then(function (ref1) {
+                defaultSearchReference = ref1;
+                return options.ermRest.resolve(createURL(tableNameCustomSearchInvalid));
+            }).then(function (ref2) {
+                invalidSearchColumnReference = ref2;
+                return options.ermRest.resolve(createURL(tableNameCustomSearchDiffInstance));
+            }).then(function (ref3) {
+                invalidSearchColumnDiffInstanceReference = ref3;
+                return options.ermRest.resolve(createURL(tableNameCustomSearchLocalCols));
+            }).then(function (ref4) {
+                customSearchLocalColsReference = ref4;
+                return options.ermRest.resolve(createURL(tableNameCustomSearchSinglePath));
+            }).then(function (ref5) {
+                customSearchSinglePathReference = ref5;
+                return options.ermRest.resolve(createURL(tableNameCustomSearchSamePrefix));
+            }).then(function (ref6) {
+                customSearchSamePrefixReference = ref6;
+                done();
+            }).catch(function (err) {
+                done.fail(err);
+            })
+        });
+
         describe("Table.searchSourceDefinition and Reference.searchColumns, ", function () {
-            it ("should return false if search-box source definition is missing.", function (done) {
-                testCustomSearchAPIs(multipleEntityDefaultSearchUri, false, false, done);
+            it ("should return false if search-box source definition is missing.", function () {
+                testCustomSearchAPIs(defaultSearchReference, false, false);
             });
 
-            it ("should return false if all the defined columns are invalid.", function (done) {
-                testCustomSearchAPIs(multipleEntityCustomSearchInvalidUri, false, false, done);
+            it ("should return false if all the defined columns are invalid.", function () {
+                testCustomSearchAPIs(invalidSearchColumnReference, false, false);
             });
 
-            it ("should return the valid columns.", function (done) {
+            it ("should return false if all columns are not the same type (local or same prefix)", function () {
+                testCustomSearchAPIs(invalidSearchColumnDiffInstanceReference, false, false);
+            });
+
+            it ("should handle multiple local columns.", function () {
                 testCustomSearchAPIs(
-                    multipleEntityCustomSearch1Uri,
+                    customSearchLocalColsReference,
                     ["search_col_2", "search_col_1"],
-                    ["<strong>some name</strong>", "search_col_1"],
-                    done
+                    ["<strong>some name</strong>", "search_col_1"]
+                );
+            });
+
+            it ("should handle single column with path.", function () {
+                testCustomSearchAPIs(
+                    customSearchSinglePathReference,
+                    ["name"],
+                    ["Vocab"]
+                );
+            });
+
+            it ("should handle columns that are using the same path prefix", function () {
+                testCustomSearchAPIs(
+                    customSearchSamePrefixReference,
+                    ["name", "second_name", "third_name"],
+                    ["name", "second_name", "third name"]
                 );
             });
         });
 
         describe("reference.search() method when custom search is defined, ", function () {
-            it ("location should return the correct urls, and read should return the correct results.", function () {
-                options.ermRest.resolve(multipleEntityCustomSearch1Uri, {cid: "test"}).then(function (ref) {
-                    testCustomSearchReference(ref.search(searchTerm), done);
+            it ("should handle multiple local columns.", function (done) {
+                testCustomSearchReference(customSearchLocalColsReference.search(searchTerm), customSearchLocalColsCompactPath, customSearchLocalColsResults, done);
+            });
+
+            it ("should handle single column with path.", function (done) {
+                testCustomSearchReference(customSearchSinglePathReference.search(searchTerm), customSearchSinglePathCompactPath, customSearchSinglePathResults, done);
+            });
+
+            it ("should handle columns that are using the same path prefix", function (done) {
+                testCustomSearchReference(customSearchSamePrefixReference.search(searchTerm), customSearchSamePrefixCompactPath, customSearchSamePrefixResults, done);
+            });
+        });
+
+        describe("reference with search in uri when custom search is defined, ", function () {
+            it ("should handle multiple local columns", function (done) {
+                options.ermRest.resolve(createURL(tableNameCustomSearchLocalCols, searchFacet), {cid: "test"}).then(function (ref) {
+                    testCustomSearchReference(ref, customSearchLocalColsCompactPath, customSearchLocalColsResults, done);
+                }).catch(function (err) {
+                    done.fail(err);
+                });
+            });
+
+            it ("should handle single column with path.", function (done) {
+                options.ermRest.resolve(createURL(tableNameCustomSearchSinglePath, searchFacet), {cid: "test"}).then(function (ref) {
+                    testCustomSearchReference(ref, customSearchSinglePathCompactPath, customSearchSinglePathResults, done);
+                }).catch(function (err) {
+                    done.fail(err);
+                })
+            });
+
+            it ("should handle columns that are using the same path prefix", function (done) {
+                options.ermRest.resolve(createURL(tableNameCustomSearchSamePrefix, searchFacet), {cid: "test"}).then(function (ref) {
+                    testCustomSearchReference(ref, customSearchSamePrefixCompactPath, customSearchSamePrefixResults, done);
                 }).catch(function (err) {
                     done.fail(err);
                 })
             });
         });
 
-        describe("reference with search in uri when custom search is defined, ", function () {
-            it ("location should return the correct urls, and read should return the correct results.", function () {
-                options.ermRest.resolve(multipleEntityCustomSearch1Uri + "*::facets::" + options.ermRest.encodeFacet(searchFacet), {cid: "test"}).then(function (ref) {
-                    testCustomSearchReference(ref.search(searchTerm), done);
+
+        describe("regarding readPath and path prefix", function () {
+            var readPathRef;
+            it ("if possible same instance should be used for search and alloutbound cols", function (done) {
+                options.ermRest.resolve(createURL(tableNameCustomSearchSamePrefix2, searchFacet), {cid: "test"}).then(function (ref) {
+                    readPathRef = ref.contextualize.compact;
+
+                    var readPath = [
+                        "M:=search_schema:table_w_custom_search_4",
+                        "M_P1:=(fk_to_vocab)=(search_schema:search_vocab_table:id)",
+                        "name::ciregexp::term;second_name::ciregexp::term/$M",
+                        "RID;M:=array_d(M:*),F1:=array_d(M_P1:*)@sort(RID)"
+                    ].join("/")
+                    expect(readPathRef.readPath).toEqual(readPath, "readPath missmatch");
+
+                    return readPathRef.read(5)
+                }).then(function (page) {
+                    expect(page.length).toBe(2, "page length missmatch");
+
+                    var tuples = page.tuples;
+                    expect(tuples[0].data.id).toBe("02", "id raw value missmatch");
+                    expect(tuples[1].data.id).toBe("03", "id raw value missmatch");
+
+                    done();
                 }).catch(function (err) {
                     done.fail(err);
-                })
+                });
             });
-        })
+
+            it ("if url has facet, the instance should properly be shared", function (done) {
+                var facet = {
+                    "and": [
+                        {"sourcekey": "search-box", "search": ["term"]},
+                        {"sourcekey": "path_to_vocab_name", "choices": ["name 2 with term"]}
+                    ]
+                };
+
+                options.ermRest.resolve(createURL(tableNameCustomSearchSamePrefix2, facet), {cid: "test"}).then(function (ref) {
+                    readPathRef = ref.contextualize.compact;
+
+                    var readPath = [
+                        "M:=search_schema:table_w_custom_search_4",
+                        "M_P1:=(fk_to_vocab)=(search_schema:search_vocab_table:id)",
+                        "name::ciregexp::term;second_name::ciregexp::term/$M",
+                        "$M_P1/name=name%202%20with%20term/$M/RID;M:=array_d(M:*),F1:=array_d(M_P1:*)@sort(RID)"
+                    ].join("/");
+                    expect(readPathRef.readPath).toEqual(readPath, "readPath missmatch");
+
+                    return readPathRef.read(5)
+                }).then(function (page) {
+                    expect(page.length).toBe(1, "page length missmatch");
+
+                    var tuples = page.tuples;
+                    expect(tuples[0].data.id).toBe("02", "id raw value missmatch");
+
+                    var expectedValues = ['02', 'name 2 with term'];
+                    expect(tuples[0].values).toEqual(jasmine.arrayContaining(expectedValues), "values missmatch");
+
+                    done();
+                }).catch(function (err) {
+                    done.fail(err);
+                });
+
+            });
+        });
 
     });
 };

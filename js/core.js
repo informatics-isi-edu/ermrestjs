@@ -433,7 +433,6 @@
                     for (t = 0; t < tables.length; t++) {
                         table = schema.tables.get(tables[t]);
                         table._findAlternatives();
-                        // table._populateSourceDefinitions();
                     }
                 }
 
@@ -1418,6 +1417,8 @@
          * - columns: Array of columns
          * - sources: hash-map of name to the SourceObjectWrapper object.
          * - sourceMapping: hashname to all the names
+         * - sourceDependencies: for each sourcekey, what are the other sourcekeys that it depends on (includes self as well)
+         *                       this has been added because of path prefix where a sourcekey might rely on other sourcekeys
          * @type {Object}
          */
         get sourceDefinitions() {
@@ -1425,67 +1426,67 @@
                 this._populateSourceDefinitions();
             }
             return this._sourceDefinitions;
-         },
+        },
 
-         _populateSourceDefinitions: function () {
-             var self = this;
-             var sd = module._annotations.SOURCE_DEFINITIONS;
-             var hasAnnot = self.annotations.contains(sd);
-             var res = {columns: [], fkeys: [], sources: {}, sourceMapping: {}};
-             var addedCols = {}, addedFks = {}, processedSources = {};
-             var allColumns = self.columns.all(),
-                 allForeignKeys = self.foreignKeys.all();
-             var consNames = module._constraintNames;
+        _populateSourceDefinitions: function () {
+            var self = this;
+            var sd = module._annotations.SOURCE_DEFINITIONS;
+            var hasAnnot = self.annotations.contains(sd);
+            var res = {columns: [], fkeys: [], sources: {}, sourceMapping: {}, sourceDependencies: {}};
+            var addedCols = {}, addedFks = {}, processedSources = {};
+            var allColumns = self.columns.all(),
+                allForeignKeys = self.foreignKeys.all();
+            var consNames = module._constraintNames;
 
-             var findConsName = function (catalogId, schemaName, constraintName) {
-                 var result;
-                 if ((catalogId in consNames) && (schemaName in consNames[catalogId])){
-                     result = consNames[catalogId][schemaName][constraintName];
-                 }
-                 return (result === undefined) ? null : result;
-             };
+            var findConsName = function (catalogId, schemaName, constraintName) {
+                var result;
+                if ((catalogId in consNames) && (schemaName in consNames[catalogId])){
+                    result = consNames[catalogId][schemaName][constraintName];
+                }
+                return (result === undefined) ? null : result;
+            };
 
-             // TODO this is way too ugly, rewrite this!
-             var processSourceDefinitionList = function (val, isFkey) {
-                 if (val === true) {
-                     return isFkey ? allForeignKeys : allColumns;
-                 }
+            // TODO this is way too ugly, rewrite this!
+            var processSourceDefinitionList = function (val, isFkey) {
+                if (val === true) {
+                    return isFkey ? allForeignKeys : allColumns;
+                }
 
-                 var resultList = [], mapName = function (item) {return item.name;};
-                 var allListNames = isFkey ? allForeignKeys.map(mapName) : allColumns.map(mapName);
-                 if (Array.isArray(val)) {
-                     val.forEach(function (cname, index) {
-                         if (isFkey) {
-                             if (!Array.isArray(cname) || cname.length !== 2) {
-                                 // TODO log the error
-                                 return;
-                             }
-                             var fkObj = findConsName(self.schema.catalog.id, cname[0], cname[1]);
-                             if (fkObj === null || fkObj.subject !== module._constraintTypes.FOREIGN_KEY) {
-                                 return;
-                             }
-                             cname = fkObj.object.name;
-                         }
+                var resultList = [], mapName = function (item) {return item.name;};
+                var allListNames = isFkey ? allForeignKeys.map(mapName) : allColumns.map(mapName);
+                if (Array.isArray(val)) {
+                    val.forEach(function (cname, index) {
+                        if (isFkey) {
+                            if (!Array.isArray(cname) || cname.length !== 2) {
+                                // TODO log the error
+                                return;
+                            }
+                            var fkObj = findConsName(self.schema.catalog.id, cname[0], cname[1]);
+                            if (fkObj === null || fkObj.subject !== module._constraintTypes.FOREIGN_KEY) {
+                                return;
+                            }
+                            cname = fkObj.object.name;
+                        }
 
-                         var elIndex = allListNames.indexOf(cname);
-                         if (isFkey) {
-                             if (addedFks[elIndex]) return;
-                             addedFks[elIndex] = true;
-                         } else {
-                             if (addedCols[elIndex]) return;
-                             addedCols[elIndex] = true;
-                         }
-                         if (elIndex === -1) {
-                             module._log.warn("invalid source definition, ", (isFkey ? "fkeys" : "columns"), ", index=" + index);
-                             return;
-                         }
-                         resultList.push(isFkey ? allForeignKeys[elIndex] : allColumns[elIndex]);
-                     });
-                 }
-                 return resultList;
-             };
+                        var elIndex = allListNames.indexOf(cname);
+                        if (isFkey) {
+                            if (addedFks[elIndex]) return;
+                            addedFks[elIndex] = true;
+                        } else {
+                            if (addedCols[elIndex]) return;
+                            addedCols[elIndex] = true;
+                        }
+                        if (elIndex === -1) {
+                            module._log.warn("invalid source definition, ", (isFkey ? "fkeys" : "columns"), ", index=" + index);
+                            return;
+                        }
+                        resultList.push(isFkey ? allForeignKeys[elIndex] : allColumns[elIndex]);
+                    });
+                }
+                return resultList;
+            };
 
-             var addSourceDef = function (key, keysThatDependOnThis) {
+            var addSourceDef = function (key, keysThatDependOnThis) {
                 var message = "source definition, table =" + self.name + ", name=" + key;
 
                 // detec circular dependency
@@ -1538,12 +1539,6 @@
                                 sourceDef.source.length > 1 && ("sourcekey" in sourceDef.source[0]);
 
                     if (hasPrefix) {
-                        // NOTE limitation because of other parts of the code which we might want
-                        //      to allow later
-                        if (sourceDef.source.length < 3) {
-                            module._log.info(message + ": " + "sourcekey (path prefix) can only be used when there's a path after it.");
-                            return false;
-                        }
 
                         // keep track of dependencies for cycle detection
                         keysThatDependOnThis.push(key);
@@ -1576,113 +1571,188 @@
 
                 processedSources[key] = true;
                 return true;
-             };
+            };
 
-             if (!hasAnnot) {
-                 res.columns = allColumns;
-                 res.fkeys = allForeignKeys;
-                 self._sourceDefinitions = res;
-                 return;
-             }
+            var processSourceDependencies = function (key) {
+                if (!res.sources[key].hasPrefix) {
+                    return [key];
+                }
+                return processSourceDependencies(res.sources[key].sourceObjectNodes[0].pathPrefixSourcekey).concat(key);
+            };
 
-             var annot = self.annotations.get(sd).content;
+            if (!hasAnnot) {
+                res.columns = allColumns;
+                res.fkeys = allForeignKeys;
+                self._sourceDefinitions = res;
+                return;
+            }
 
-             // columns
-             if (annot.columns) {
-                 res.columns = processSourceDefinitionList(annot.columns, false);
-             }
+            var annot = self.annotations.get(sd).content;
 
-             // fkeys
-             if (annot.fkeys) {
-                 res.fkeys = processSourceDefinitionList(annot.fkeys, true);
-             }
+            // columns
+            if (annot.columns) {
+                res.columns = processSourceDefinitionList(annot.columns, false);
+            }
 
-             // sources
-             if (annot.sources && typeof annot.sources === "object") {
-                 for (var key in annot.sources) {
-                     if (!annot.sources.hasOwnProperty(key)) continue;
+            // fkeys
+            if (annot.fkeys) {
+                res.fkeys = processSourceDefinitionList(annot.fkeys, true);
+            }
 
-                     // process once
-                     if (key in processedSources) continue;
+            // sources
+            if (annot.sources && typeof annot.sources === "object") {
+                var sKey;
+                for (sKey in annot.sources) {
+                    if (!annot.sources.hasOwnProperty(sKey)) continue;
 
-                     // ignore special definitions
-                     if (Object.values(module._specialSourceDefinitions).indexOf(key) !== -1) continue;
+                    // process once
+                    if (sKey in processedSources) continue;
 
-                     processedSources[key] = addSourceDef(key);
-                 }
-             }
+                    // ignore special definitions
+                    if (Object.values(module._specialSourceDefinitions).indexOf(sKey) !== -1) continue;
 
-             self._sourceDefinitions = res;
-         },
+                    processedSources[sKey] = addSourceDef(sKey);
+                }
 
-         /**
-          * Returns an array of SourceObjectWrapper objects.
-          * @type {Object[]|false}
-          */
-         get searchSourceDefinition() {
-             if (this._searchSourceDefinition === undefined) {
-                 var _getSearchSourceDefinition = function (self) {
-                     var consNames = module._constraintNames,
-                         sd = module._annotations.SOURCE_DEFINITIONS,
-                         sb = module._specialSourceDefinitions.SEARCH_BOX,
-                         orOperator = module._FacetsLogicalOperators.OR,
-                         sbDef;
-                     var hasAnnot = self.annotations.contains(sd);
+                // populate sourceDependencies (might be able to do it with previous one)
+                for (sKey in res.sources) {
+                    if (!res.sources.hasOwnProperty(sKey)) continue;
+                    res.sourceDependencies[sKey] = processSourceDependencies(sKey);
+                }
+            }
 
-                     // annotation is missing
-                     if (!hasAnnot) return false;
+            self._sourceDefinitions = res;
+        },
+
+        /**
+        * Returns an array of SourceObjectWrapper objects.
+        * @type {Object[]|false}
+        */
+        get searchSourceDefinition() {
+            if (this._searchSourceDefinition === undefined) {
+                var _getSearchSourceDefinition = function (self) {
+                    var consNames = module._constraintNames,
+                        sd = module._annotations.SOURCE_DEFINITIONS,
+                        sb = module._specialSourceDefinitions.SEARCH_BOX,
+                        orOperator = module._FacetsLogicalOperators.OR,
+                        sbDef;
+                    var hasAnnot = self.annotations.contains(sd);
+
+                    // annotation is missing
+                    if (!hasAnnot) return false;
 
 
-                     var annot = self.annotations.get(sd).content;
+                    var annot = self.annotations.get(sd).content;
 
-                     // annotation is not well defined
-                     if (typeof annot.sources !== "object" || !annot.sources || typeof annot.sources[sb] !== "object" || !annot.sources[sb]) return false;
+                    // annotation is not well defined
+                    if (typeof annot.sources !== "object" || !annot.sources || typeof annot.sources[sb] !== "object" || !annot.sources[sb]) {
+                        return false;
+                    }
 
-                     /*
-                      * accepted format:
-                      * "or": [
-                      *    // source def
-                      * ]
-                      */
-                     sbDef = annot.sources[sb];
+                    /*
+                     * accepted format:
+                     * "or": [
+                     *    // source def
+                     * ]
+                     */
+                    sbDef = annot.sources[sb];
 
-                     var message = "search column definition, table=" + self.name;
+                    var message = "search column definition, table=" + self.name;
 
-                     // make sure it's properly defined as `or` of sources
-                     if (!sbDef.hasOwnProperty(orOperator) || !Array.isArray(sbDef[orOperator])) {
-                         module._log.info(message + ": search-box must be defined as `or` of sources.");
-                         return false;
-                     }
+                    // make sure it's properly defined as `or` of sources
+                    if (!sbDef.hasOwnProperty(orOperator) || !Array.isArray(sbDef[orOperator])) {
+                        module._log.info(message + ": search-box must be defined as `or` of sources.");
+                        return false;
+                    }
 
-                     var res = [];
-                     sbDef[orOperator].forEach(function (src, index) {
-                         var pSource;
-                         try {
-                             // process each individual object
-                             pSource = new SourceObjectWrapper(src, self, consNames);
-                         } catch (exp) {
-                             module._log.info(message + ", index=" + index + ":" + exp.message);
-                             return;
-                         }
+                    var res = [], processedCols = {};
+                    sbDef[orOperator].forEach(function (src, index) {
+                        var pSource, sd;
 
-                         if (pSource.hasPath) {
-                             module._log.info(message + ", index=" + index + ": only table columns are accepted.");
-                             return;
-                         }
+                        if (src.sourcekey) {
+                            sd = self.sourceDefinitions.sources[src.sourcekey];
+                            if (!sd) {
+                                module._log.info(message + ", index=" + index + ": given sourcekey `" + src.sourcekey + "` is not valid.");
+                                return;
+                            }
 
-                         res.push(pSource);
+                            pSource = sd.clone(src, self, consNames);
+                        } else {
+                            try {
+                                pSource = new SourceObjectWrapper(src, self, consNames);
+                            } catch(exp) {
+                                module._log.info(message + ", index=" + index + ":" + exp.message);
+                                return;
+                            }
+                        }
+
+                        if (pSource.name in processedCols) {
+                            return; // duplicate
+                        }
+                        processedCols[pSource.name] = true;
+                        res.push(pSource);
                      });
 
                      if (res.length === 0) {
-                         module._log.info(message + ": none of the defined sources were valid, using all the columns.");
-                         return false;
+                        module._log.info(message + ": none of the defined sources were valid, using all the columns.");
+                        return false;
                      }
-                     return res;
-                 };
 
-                 this._searchSourceDefinition = _getSearchSourceDefinition(this);
-             }
-             return this._searchSourceDefinition;
+                    // if there are more than one search columns,
+                    // they all must come from the same table instance:
+                    // either local, or same path prefix
+                    if (res.length > 1) {
+                        // true: local, string: a prefix (or sourcekey), otherwise: invalid
+                        var isLocalOrGetPrefixSK = function (col) {
+                            if (!col.hasPath) {
+                                return true;
+                            }
+
+                            if (col.sourceObject && isStringAndNotEmpty(col.sourceObject.sourcekey)) {
+                                return col.sourceObject.sourcekey;
+                            }
+
+                            firstNode = col.sourceObjectNodes[0];
+                            if (!firstNode.isPathPrefix && col.foreignKeyPathLength !== firstNode.nodeObject.foreignKeyPathLength) {
+                                return false;
+                            }
+                            return firstNode.pathPrefixSourcekey;
+                        };
+
+                        var allLocal = false, prefixSK = "";
+                        var allSameInstsance = res.every(function (col, i) {
+                            var res = isLocalOrGetPrefixSK(col);
+
+                            if (res === false) return false;
+
+                            // set the values based on the first element
+                            if (i === 0) {
+                                if (res === true) {
+                                    allLocal = true;
+                                }
+                                prefixSK = res;
+                                return true;
+                            }
+
+                            // if first was local, all the others must be local
+                            if (allLocal) {
+                                return res === true;
+                            }
+                            return res == prefixSK;
+                        });
+
+                        if (!allSameInstsance) {
+                            module._log.info(message + ": all the search columns must come from the same table instance.");
+                            return false;
+                        }
+                    }
+
+                    return res;
+                };
+
+                this._searchSourceDefinition = _getSearchSourceDefinition(this);
+            }
+            return this._searchSourceDefinition;
          },
 
         /**

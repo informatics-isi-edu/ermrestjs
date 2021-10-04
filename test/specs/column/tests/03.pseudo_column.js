@@ -133,7 +133,7 @@ exports.execute = function (options) {
              'ZJll4WjE6eMk_g5e9WE1rg', 'GFBydDhuUocHxUlF894ntQ', 'vd-zzWca-ApLn2yvu7fx1w',
              '8siu02fMCXJ2DfB4GLv93Q', 'OLbAesieGW5dpAhzqTSzqw', 'MJVZnQ5mBRdCFPfjIOMvkA',
              "asset", "asset_filename", 'IKxB9JkO83__MmKlV0Nnow', 'wjUK75uqILcMMo85UxnPnQ',
-             "$virtual-column-1", "$virtual-column-1-1", "_bT9FV3XrFj0H474R9sg3Q"
+             "$virtual-column-1", "$virtual-column-1-1", "rxU1VoEIaH0rnNoNVr0fwA"
         ];
 
         var detailedPseudoColumnIndices = [

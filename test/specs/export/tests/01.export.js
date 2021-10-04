@@ -21,13 +21,13 @@ exports.execute = function (options) {
             tableWithLongDefaultExport = "table_with_long_default_export",
             tableWithContextualizedExport = "table_w_contextualized_export",
             tableWithEmptyVisColExport = "table_w_empty_vis_col_for_export",
-            table, ermRest, reference, noAnnotReference, noExportoutputReference, tableWithLongDefaultReference, 
+            table, ermRest, reference, noAnnotReference, noExportoutputReference, tableWithLongDefaultReference,
             tableWithContextExportReference, tableAndSchemaWithContextExportReference, emptyVisColExportReference, exportObj;
 
         var baseUri = options.url + "/catalog/" + process.env.DEFAULT_CATALOG + "/entity/" + schemaName1 + ":" + tableName;
 
-        // {"and":[{"source":"id","ranges":[{"min":"1","max":"10"}]},{"source":[{"inbound":["export_table_annot_schema","f1_fk_1"]},"id"],"choices":["1","2"]}]}
-        var facetBlob = "N4IghgdgJiBcDaoDOB7ArgJwMYFM4gEsYAaEDSAcxyTkRAFsCJ8BGEU+sAD1YAYQAvgF0BxZOmx4EoJgCN00WiBxcADigwAXAPqawsgDY5tkCCh1IsACxyd2IAGYttDgNba2I0kRBDS1lAJcGgQQNlIAJl9hASA";
+        // {"and":[{"source":"id","ranges":[{"min":"1","max":"10"}]},{"source":[{"inbound":["export_table_annot_schema","f1_fk_1"]},"RID"],"choices":["1","2"]}]}
+        var facetBlob = "N4IghgdgJiBcDaoDOB7ArgJwMYFM4gEsYAaEDSAcxyTkRAFsCJ8BGEU+sAD1YAYQAvgF0BxZOmx4EoJgCN00WiBxcADigwAXAPqawsgDY5tkCCh1IsACxyd2IAGYttDgNba2I0gCUAkgBEQIVJrFAJcGgQQNlIAJiDhASA";
         var noAnnotUri = options.url + "/catalog/" + process.env.DEFAULT_CATALOG + "/entity/" + schemaName1 + ":" + tableNameNoExport + "/id=1/*::facets::" + facetBlob;
 
         var noExportOutputUri = options.url + "/catalog/" + process.env.DEFAULT_CATALOG + "/entity/" + schemaName2 + ":" + tableNameNoExport;
@@ -400,7 +400,8 @@ exports.execute = function (options) {
 
             describe("reference.csvDownloadLink should honor the visible-columns, ", function () {
                 var baseURL = options.url + "/catalog/" + process.env.DEFAULT_CATALOG +
-                              "/attributegroup/M:=export_table_annot_schema:no_export_annot/id::geq::1&id::leq::10/$M/id=1;id=2/$M/id=1/";
+                              "/attributegroup/M:=export_table_annot_schema:no_export_annot/id::geq::1&id::leq::10/$M" +
+                              "/(id)=(export_table_annot_schema:f1:id)/RID=1;RID=2/$M/id=1/";
                 var qParam = "?limit=none&accept=csv&uinit=1&cid=test&download=%2A%2ANo%20Export%20Annot%2A%2A";
 
                 it ("if export/<context> is defined should use it.", function () {

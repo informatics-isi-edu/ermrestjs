@@ -534,7 +534,6 @@ to use for ERMrest JavaScript agents.
         * [.compressedDataSource](#ERMrest.FacetColumn+compressedDataSource) : <code>obj</code> \| <code>string</code>
         * [.filters](#ERMrest.FacetColumn+filters)
         * [.hasPath](#ERMrest.FacetColumn+hasPath) : <code>Boolean</code>
-        * [.ermrestHasPath](#ERMrest.FacetColumn+ermrestHasPath) : <code>Boolean</code>
         * [.isEntityMode](#ERMrest.FacetColumn+isEntityMode) : <code>Boolean</code>
         * [.isOpen](#ERMrest.FacetColumn+isOpen) : <code>Boolean</code>
         * [.preferredMode](#ERMrest.FacetColumn+preferredMode) : <code>string</code>
@@ -1365,6 +1364,8 @@ Returns an object with
 - columns: Array of columns
 - sources: hash-map of name to the SourceObjectWrapper object.
 - sourceMapping: hashname to all the names
+- sourceDependencies: for each sourcekey, what are the other sourcekeys that it depends on (includes self as well)
+                      this has been added because of path prefix where a sourcekey might rely on other sourcekeys
 
 **Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
 <a name="ERMrest.Table+searchSourceDefinition"></a>
@@ -5062,7 +5063,6 @@ Indicates that this ReferenceColumn is an inbound foreign key.
     * [.compressedDataSource](#ERMrest.FacetColumn+compressedDataSource) : <code>obj</code> \| <code>string</code>
     * [.filters](#ERMrest.FacetColumn+filters)
     * [.hasPath](#ERMrest.FacetColumn+hasPath) : <code>Boolean</code>
-    * [.ermrestHasPath](#ERMrest.FacetColumn+ermrestHasPath) : <code>Boolean</code>
     * [.isEntityMode](#ERMrest.FacetColumn+isEntityMode) : <code>Boolean</code>
     * [.isOpen](#ERMrest.FacetColumn+isOpen) : <code>Boolean</code>
     * [.preferredMode](#ERMrest.FacetColumn+preferredMode) : <code>string</code>
@@ -5161,16 +5161,6 @@ Filters that are applied to this facet.
 Whether the source has path or not
 
 **Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
-<a name="ERMrest.FacetColumn+ermrestHasPath"></a>
-
-#### facetColumn.ermrestHasPath : <code>Boolean</code>
-Whether the source is going to have path when sending the request to ermrest
-The path that is defined on the facet might be different from the one that
-we are going to use to talk with ermrest. We might optmize the path.
-Facets with only one hop where the column used in foreignkey is the same column for faceting, and is not nullable
-can be optmized by completely ignoring the foreignkey path and just doing a value check on main table.
-
-**Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
 <a name="ERMrest.FacetColumn+isEntityMode"></a>
 
 #### facetColumn.isEntityMode : <code>Boolean</code>
@@ -5209,7 +5199,9 @@ The logic is as follows,
 Whether the facet is defining an all outbound path that the columns used
 in the path are all not-null.
 NOTE even if the column.nullok is false, ermrest could return null value for it
-if the user rights to select that column is `null`.
+if the user rights to select that column is `null`. But we decided not to check
+for that since it's not the desired behavior for us:
+https://github.com/informatics-isi-edu/ermrestjs/issues/888
 
 **Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
 <a name="ERMrest.FacetColumn+barPlot"></a>
@@ -5302,18 +5294,20 @@ Other types of facet that null won't be applicable to them and therefore
 we shouldn't even offer the option:
   1. (G4) Scalar columns of main table that are not-null.
   2. (G5) All outbound foreignkey facets that all the columns invloved are not-null
-Although if user is vewing a snapshot of catalog, ermrest might actually return null
-value for a not-null column, and therefore we should not do this check if user is in that state.
 
 Based on this, the following will be the logic for this function:
     - If facet has `null` filter: `false`
     - If facet has `"hide_null_choice": true`: `true`
-    - If G1: `true` if the column is not-null and user has select right otherwise `false`
+    - If G1: `true` if the column is not-null
     - If G5: `true`
     - If G2: `true`
     - If G3.1: `false`
     - If G3 and no other G3 has null: `false`
     - otherwise: `false`
+
+NOTE this function used to check for select access as well as versioned catalog,
+but we decided to remove them since it's not the desired behavior:
+https://github.com/informatics-isi-edu/ermrestjs/issues/888
 
 **Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
 <a name="ERMrest.FacetColumn+hideNotNullChoice"></a>

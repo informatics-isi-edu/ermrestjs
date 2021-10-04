@@ -303,14 +303,13 @@
                         },
                         "path_to_path_prefix_o1_o1_entity": {
                             "source": [
-                                {"sourcekey": "path_to_path_prefix_o1"},
-                                {"outbound": ["faceting_schema", "path_prefix_o1_fk1"]},
+                                {"sourcekey": "path_to_path_prefix_o1_o1"},
                                 "id"
                             ]
                         },
                         "path_to_f3_id": {
                             "source": [
-                                {"inbound": ["faceting_schema", "main_f3_assoc_fk1"]}, 
+                                {"inbound": ["faceting_schema", "main_f3_assoc_fk1"]},
                                 {"outbound": ["faceting_schema", "main_f3_assoc_fk2"]},
                                  "id"
                             ]
@@ -1712,6 +1711,6 @@
                 }
             }
         }
-        
+
     }
 }

@@ -328,6 +328,23 @@
         },
 
         /**
+         * This will ensure the ermrestCompactPath is also
+         * using the same aliases that we are going to use for allOutbounds
+         * I'm attaching this to Reference so it's cached and we don't have to
+         * compute it multiple times
+         * @private
+         */
+        get _readAttributeGroupPathProps() {
+            if (this._readAttributeGroupPathProps_cached === undefined) {
+                var allOutBounds = this.activeList.allOutBounds;
+                this._readAttributeGroupPathProps_cached =  this._location.computeERMrestCompactPath(allOutBounds.map(function (ao) {
+                    return ao.sourceObject;
+                }));
+            }
+            return this._readAttributeGroupPathProps_cached;
+        },
+
+        /**
          * The session object from the server
          * @param {Object} session - the session object
          */
@@ -882,8 +899,6 @@
                 this._searchColumns = false;
                 if (Array.isArray(this.table.searchSourceDefinition)) {
                     this._searchColumns = this.table.searchSourceDefinition.map(function (sd) {
-                        // TODO currently only supports normal columns
-                        // TODO doesn't support * syntax.
                         return module._createPseudoColumn(self, sd, null);
                     });
                 }
@@ -2861,6 +2876,7 @@
             delete this._canDelete;
             delete this._display;
             delete this._csvDownloadLink;
+            delete this._readAttributeGroupPathProps_cached;
         },
 
         /**
@@ -4120,9 +4136,10 @@
              *   3. There is no trailing `/` in uri (as it will break the ermrest too).
              * */
             if (isAttributeGroup) {
-                var compactPath = this._location.ermrestCompactPath,
+                var attrGroupPros = this._readAttributeGroupPathProps;
+                var compactPath = attrGroupPros.path,
                     // to ensure we're not modifying the original object, I'm creating a deep copy
-                    pathPrefixAliasMapping = JSON.parse(JSON.stringify(this._location.pathPrefixAliasMapping)),
+                    pathPrefixAliasMapping = JSON.parse(JSON.stringify(attrGroupPros.pathPrefixAliasMapping)),
                     mainTableAlias = this._location.mainTableAlias,
                     aggList = [],
                     sortColumn,
@@ -4142,6 +4159,7 @@
                     return _sourceColumnHelpers.parseAllOutBoundNodes(
                         allOutBounds[l].sourceObjectNodes,
                         allOutBounds[l].lastForeignKeyNode,
+                        allOutBounds[l].foreignKeyPathLength,
                         sourcekey,
                         pathPrefixAliasMapping,
                         outAlias,
@@ -4270,6 +4288,7 @@
         delete referenceCopy._exportTemplates;
         delete referenceCopy._readPath;
         delete referenceCopy._csvDownloadLink;
+        delete referenceCopy._readAttributeGroupPathProps_cached;
 
         referenceCopy.contextualize = new Contextualize(referenceCopy);
         return referenceCopy;
