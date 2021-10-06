@@ -427,7 +427,7 @@ exports.execute = function (options) {
                     expect(emptyVisColExportReference.csvDownloadLink).toEqual(null);
                 });
             });
-            return;
+
             describe("for BDBag template", function () {
                 it("should create an exporter object", function() {
                     exportObj = new ermRest.Exporter(reference, "bag-name", reference.table.getExportTemplates()[0], "/deriva/export/");
