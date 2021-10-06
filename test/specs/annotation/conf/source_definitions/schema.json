@@ -62,12 +62,12 @@
               "tag:isrd.isi.edu,2019:source-definitions": {
                   "columns": ["invalid_col_1", "col", "invalid_col_2"],
                   "fkeys": [["source_definitions_schema", "main_fk2"], ["source_definitions_schema", "main_fk_invalid_2"]],
+                  "search-box": {
+                    "or": [
+                        {"source": "col"}
+                    ]
+                  },
                   "sources": {
-                      "search-box": {
-                          "or": [
-                              {"source": "col"}
-                          ]
-                      },
                       "new_col": {"source": "col"},
                       "new_col_2": {"source": "col"},
                       "new_col_invalid": {"source": "col_invalid"},

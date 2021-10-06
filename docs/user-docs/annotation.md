@@ -970,14 +970,14 @@ Example:
                 {"outbound": ["schema", "fk2"]},
                 "RID"
             ]
-        },
-        "search-box": {
-            "or": [
-                {"source": "column1", "markdown_name": "another name"},
-                {"source": "column2"},
-                {"source": "column3", "markdown_name": "Column 3 name"},
-            ]
         }
+    },
+    "search-box": {
+        "or": [
+            {"source": "column1", "markdown_name": "another name"},
+            {"source": "column2"},
+            {"source": "column3", "markdown_name": "Column 3 name"},
+        ]
     }
 }
 ```
@@ -987,6 +987,7 @@ Example:
 Supported JSON payload patterns:
 
 - `{` ... `"sources":` _sourcedefinitions_ `,` ... `}`: the source definitions that will allow you to refer to them by just using the defined _sourcekey_.
+- `{` ... `"search-box": { "or": [` _searchcolumn_ `,` ... `]} }`: Configure list of search columns.
 - `{` ... `"fkeys":` _fkeylist_  `,` ... `}`: Array of foreign key constraints that will be mapped into `$fkey_schema_contraint` key in templating environments.
 - `{` ... `"columns":` _columns_  `,` ... `}`: Array of column names that their data will be available in templating environments.
 
@@ -994,38 +995,6 @@ Supported JSON payload patterns:
 Supported _sourcedefinitions_ patterns:
 
 - `{` ... `"` _sourcekey_ `":{ "source":` _sourceentry_ `},` ... `}`: where _sourcekey_ is a name that will be used to refer to the defined _sourceentry_. Since you're defining a [pseudo-column]((pseudo-columns.md)) here, you can use any of the pseudo-column optional parameters that the syntax allows (e.g., `aggregate`, `entity`, `display`, `markdown_name`).
-
-- `{` ... `"search-box": { "or": [` _sourceentry_ `,` ... `]} }`: Configure list of search columns. Since the pseudo-column defined here is special, you can only use the following optional parameters:
-    - `markdown_name`: The client will show the displayname of columns as placeholder in the search box. To modify this default behavior, you can use this attribute.
-
-  While we allow defining a list of search columns, only the following combination of search columns are supported:
-    - A list containing only one source.
-      ```javascript
-      {
-        "or": [
-          {"source": <any valid path>}
-        ]
-      }
-      ```
-    - A list of local columns.
-      ```javascript
-      {
-        "or": [
-          {"source": "col1"}, {"source": "col2"}
-        ]
-      }
-      ```
-    - A list of pseudo-columns that deploy the _path with shared prefix_ syntax using the same _sourcekey prefix_.
-      ```javascript
-      {
-        "or": [
-          {"source": [{"sourcekey": "some_defined_path"}, "col1"]},
-          {"source": [{"sourcekey": "some_defined_path"}, "col2"]}
-        ]
-      }
-      ```
-
-  Other combinations will be ignored and client will fallback to the default behavior.
 
 Supported _sourcekey_ pattern:
  - A string literal that,
@@ -1044,6 +1013,39 @@ Supported _sourceentry_ pattern:
     - `{ "sourcekey" :` _source key name_ `}`
 
     Where _source key name_ is a string literal that refers to any of the defined sources in [`source-definitions` annotations](#tag-2019-source-definitions).
+
+Supported _searchcolumn_ pattern:
+  -  _searchcolumn_ supports the same patterns as _sourceentry_. Since the pseudo-column defined here is special, you can only use the following optional parameters:
+      - `markdown_name`: The client will show the displayname of columns as placeholder in the search box. To modify this default behavior, you can use this attribute.
+
+      While we allow defining a list of search columns, only the following combination of search columns are supported:
+        - A list containing only one source.
+          ```javascript
+          {
+            "or": [
+              {"source": <any valid path>}
+            ]
+          }
+          ```
+      - A list of local columns.
+        ```javascript
+        {
+          "or": [
+            {"source": "col1"}, {"source": "col2"}
+          ]
+        }
+        ```
+      - A list of pseudo-columns that deploy the _path with shared prefix_ syntax using the same _sourcekey prefix_.
+        ```javascript
+        {
+          "or": [
+            {"source": [{"sourcekey": "some_defined_path"}, "col1"]},
+            {"source": [{"sourcekey": "some_defined_path"}, "col2"]}
+          ]
+        }
+        ```
+
+  Other combinations will be ignored and client will fallback to the default behavior.
 
 Supported _fkeylist_ patterns:
 

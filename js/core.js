@@ -1630,6 +1630,11 @@
         */
         get searchSourceDefinition() {
             if (this._searchSourceDefinition === undefined) {
+
+                /**
+                 * search-box is either on the first level below the annotation,
+                 * or parts of sources.
+                 */
                 var _getSearchSourceDefinition = function (self) {
                     var consNames = module._constraintNames,
                         sd = module._annotations.SOURCE_DEFINITIONS,
@@ -1644,10 +1649,24 @@
 
                     var annot = self.annotations.get(sd).content;
 
-                    // annotation is not well defined
-                    if (typeof annot.sources !== "object" || !annot.sources || typeof annot.sources[sb] !== "object" || !annot.sources[sb]) {
+                    if (!annot) {
                         return false;
                     }
+
+                    if (isObjectAndNotNull(annot[sb])) {
+                        sbDef = annot[sb];
+                    }
+                    // backwards compatiblaity:
+                    else if (isObjectAndNotNull(annot.sources) && isObjectAndNotNull(annot.sources[sb])) {
+                        module._log.warn("usage of `search-box` in `sources` has been deprecated and eventually will be removed.");
+                        sbDef = annot.sources[sb];
+                    }
+                    // invalid format
+                    else {
+                        return false;
+                    }
+
+                    var message = "search column definition, table=" + self.name;
 
                     /*
                      * accepted format:
@@ -1655,10 +1674,6 @@
                      *    // source def
                      * ]
                      */
-                    sbDef = annot.sources[sb];
-
-                    var message = "search column definition, table=" + self.name;
-
                     // make sure it's properly defined as `or` of sources
                     if (!sbDef.hasOwnProperty(orOperator) || !Array.isArray(sbDef[orOperator])) {
                         module._log.info(message + ": search-box must be defined as `or` of sources.");

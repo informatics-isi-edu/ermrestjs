@@ -80,28 +80,26 @@
             ],
             "annotations": {
                 "tag:isrd.isi.edu,2019:source-definitions": {
-                    "sources": {
-                        "search-box": {
-                            "or": [
-                                {
-                                    "source": "invalid_col"
-                                },
-                                {
-                                    "source": "invalid_col_2"
-                                },
-                                {
-                                    "source": [
-                                        {
-                                            "inbound": [
-                                                "schema",
-                                                "some_invalid_const"
-                                            ]
-                                        },
-                                        "RID"
-                                    ]
-                                }
-                            ]
-                        }
+                    "search-box": {
+                        "or": [
+                            {
+                                "source": "invalid_col"
+                            },
+                            {
+                                "source": "invalid_col_2"
+                            },
+                            {
+                                "source": [
+                                    {
+                                        "inbound": [
+                                            "schema",
+                                            "some_invalid_const"
+                                        ]
+                                    },
+                                    "RID"
+                                ]
+                            }
+                        ]
                     }
                 }
             }
@@ -149,20 +147,18 @@
             ],
             "annotations": {
                 "tag:isrd.isi.edu,2019:source-definitions": {
-                    "sources": {
-                        "search-box": {
-                            "or": [
-                                {
-                                    "source": [
-                                        {"outbound": ["search_schema","table_w_custom_search_not_same_instance_fk1"]},
-                                        "name"
-                                    ]
-                                },
-                                {
-                                    "source": "id"
-                                }
-                            ]
-                        }
+                    "search-box": {
+                        "or": [
+                            {
+                                "source": [
+                                    {"outbound": ["search_schema","table_w_custom_search_not_same_instance_fk1"]},
+                                    "name"
+                                ]
+                            },
+                            {
+                                "source": "id"
+                            }
+                        ]
                     }
                 }
             }
@@ -248,20 +244,20 @@
             ],
             "annotations": {
                 "tag:isrd.isi.edu,2019:source-definitions": {
+                    "search-box": {
+                        "or": [
+                            {
+                                "sourcekey": "path_to_vocab_name",
+                                "markdown_name": "Vocab"
+                            }
+                        ]
+                    },
                     "sources": {
                         "path_to_vocab_name": {
                             "source": [
                                 {"inbound": ["search_schema","table_w_custom_search_2_vocab_assoc_fk1"]},
                                 {"outbound": ["search_schema","table_w_custom_search_2_vocab_assoc_fk2"]},
                                 "name"
-                            ]
-                        },
-                        "search-box": {
-                            "or": [
-                                {
-                                    "sourcekey": "path_to_vocab_name",
-                                    "markdown_name": "Vocab"
-                                }
                             ]
                         }
                     }
@@ -478,6 +474,12 @@
                     ]
                 },
                 "tag:isrd.isi.edu,2019:source-definitions": {
+                    "search-box": {
+                        "or": [
+                            {"sourcekey": "path_to_vocab_name"},
+                            {"source": [{"sourcekey": "path_to_vocab_name"}, "second_name"]}
+                        ]
+                    },
                     "sources": {
                         "path_to_vocab_name": {
                             "source": [
@@ -485,12 +487,6 @@
                                 "name"
                             ],
                             "entity": false
-                        },
-                        "search-box": {
-                            "or": [
-                                {"sourcekey": "path_to_vocab_name"},
-                                {"source": [{"sourcekey": "path_to_vocab_name"}, "second_name"]}
-                            ]
                         }
                     }
                 }
