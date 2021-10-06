@@ -1,6 +1,6 @@
 # Release Notes
 
-This document is a summary of code changes in Chaise. This is the vocabulary used to introduce the changes:
+This document is a summary of code changes in ERMRestJS. This is the vocabulary used to introduce the changes:
   - `[Added]`: newly added features.
   - `[Improved]`: additions made to an existence feature.
   - `[Changed]`: modifications to existing features.
@@ -8,7 +8,7 @@ This document is a summary of code changes in Chaise. This is the vocabulary use
   - `[Refactored]`: modifications to existing code to make it more maintainable.
   - `[Fixed]`: bug fixes.
   - `[Annotation]`: when the describe modification is related to annotation.
-  - `[No changes]`: means that Chaise hasn't been changed in the described duration.
+  - `[No changes]`: means that ERMRestJS hasn't been changed in the described duration.
 
 <!-- # 11/30/21 -->
 <!-- #912 PR -->
