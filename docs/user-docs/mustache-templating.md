@@ -255,10 +255,45 @@ ISO datetime is {{{$moment.ISOString}}}
 
 
 #### $dcctx Usage
-`$dcctx` is an object that gives you access to the current `pid` and `cid` of the app. You may use this attribute to genarate links with `ppid` and `pcid` as query parameters.
+`$dcctx` is an object that gives you access to the current `pid` and `cid` of the app. You may use this attribute to generate links with `ppid` and `pcid` as query parameters.
 ```
 {
     pid: "the page id",
     cid: "the context id(name of the app)"
 }
 ```
+
+#### $location Usage
+`$location` is an object that gives you access to information about the current location of the document based on the URL. The following properties are included:
+```
+{
+    origin: "the origin of the URL",
+    host: "the host of the URL, which is the hostname, and then, if the port of the URL is nonempty, a ':', and the port",
+    hostname: "the hostname of the URL",
+    chaise_path: "the path after the origin pointing to the install location of chaise. By default, this will be '/chaise/'"
+}
+```
+
+#### $session Usage
+`$session` is an object that gives you access to information about the current logged in user's session. The properties are mostly the same properties returned from webauthn from the `client` object in the response. The following properties are included:
+```
+{
+    display_name: "the `display_name` of the user from webauthn client object",
+    email: "the `email` of the user from webauthn client object",
+    full_name: "the `full_name` of the user from webauthn client object",
+    id: "the `id` of the user from webauthn client object",
+    identities: "the `identities` array of the user from webauthn client object",
+    attributes: "the `attributes` array from the webauthn response. More info below about the objects in the `attributes` array"
+}
+```
+
+Each object in the `attributes` array has the same values as the objects returned from the webauthn attributes array, with 2 added values, `webpage` and `type`. The returned array is composed of globus groups and different globus identities associated with the user. It has any objects with duplicate `id` values merged together. The following values can be found in each object of `attributes`:
+ - `display_name`: the display name of the group or identity
+ - `email`: the email of the identity (if present)
+ - `full_name`: the full_name of the identity (if present)
+ - `id`: the id of the group or identity
+ - `identities`: the identities array of the current identity (if present)
+ - `type`: the type of the entry (`identity` or `globus_group`). The type is set as a `globus_group` if the display_name is defined and the id is not in the list of identities associated with the logged in user. Otherwise it's set as an `identity`.
+ - `webpage`: If the `type` is set to `globus_group`, the webpage is then set to the globus group page. If the globus group id is "https://auth.globus.org/ff766864-a03f-11e5-b097-22000aef184d", then the webpage will be created by extracting the id value and setting it like "https://app.globus.org/groups/ff766864-a03f-11e5-b097-22000aef184d/about".
+
+ 
