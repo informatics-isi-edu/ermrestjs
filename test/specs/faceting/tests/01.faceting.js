@@ -466,9 +466,8 @@ exports.execute = function (options) {
                         expect(ref.facetColumns.length).toBe(23, "length missmatch.");
                         expect(ref.facetColumns[10].filters.length).toBe(1, "# of filters defined is incorrect");
                         expect(ref.location.facets).toBeDefined("facets is undefined.");
-                        // parser is optimizing this link
                         expect(ref.location.ermrestCompactPath).toBe(
-                            "M:=faceting_schema:main/fk_to_f1=4/$M",
+                            "M:=faceting_schema:main/(fk_to_f1)=(faceting_schema:f1:id)/id=4/$M",
                             "path missmatch."
                         );
                         done();
@@ -556,9 +555,8 @@ exports.execute = function (options) {
                         expect(ref.facetColumns.length).toBe(23, "length missmatch.");
                         expect(ref.facetColumns[15].filters.length).toBe(1, "# of filters defined is incorrect");
                         expect(ref.location.facets).toBeDefined("facets is undefined.");
-                        // this is also testing the optimization where we're removing the last fk node
                         expect(ref.location.ermrestCompactPath).toBe(
-                            "M:=faceting_schema:main/(id)=(faceting_schema:secondpath_1:id)/id=id1/$M",
+                            "M:=faceting_schema:main/(id)=(faceting_schema:secondpath_1:id)/(id)=(faceting_schema:secondpath_2:id)/id=id1/$M",
                             "path missmatch."
                         );
                         done();
@@ -568,7 +566,7 @@ exports.execute = function (options) {
                     });
                 });
 
-                describe("should be able to handle sources with prefix and match based on structure", function () {
+                describe("should be able to handle sources with prefix", function () {
                     it ("when the same path prefix is used", function (done) {
                         facetObj = {
                             "and": [
@@ -586,7 +584,7 @@ exports.execute = function (options) {
                             expect(ref.facetColumns[21].filters.length).toBe(1, "# of filters defined is incorrect");
                             expect(ref.location.facets).toBeDefined("facets is undefined.");
                             expect(ref.location.ermrestCompactPath).toBe(
-                                "M:=faceting_schema:main/M_P1:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)/(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/path_prefix_o1_o1_col=1/$M",
+                                "M:=faceting_schema:main/(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)/(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/path_prefix_o1_o1_col=1/$M",
                                 "path missmatch."
                             );
                             done();
@@ -596,7 +594,7 @@ exports.execute = function (options) {
                         });
                     });
 
-                    it ("when the same path prefix is used and it's recursive", function (done) {
+                    it ("when the same path prefix is used and it's recursive  match based on structure", function (done) {
                         facetObj = {
                             "and": [
                                 {
@@ -617,8 +615,8 @@ exports.execute = function (options) {
                             expect(ref.facetColumns[22].filters.length).toBe(1, "# of filters defined is incorrect");
                             expect(ref.location.facets).toBeDefined("facets is undefined.");
                             expect(ref.location.ermrestCompactPath).toBe(
-                                ["M:=faceting_schema:main/M_P2:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)",
-                                 "M_P1:=(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)",
+                                ["M:=faceting_schema:main/(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)",
+                                 "(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)",
                                  "(id)=(faceting_schema:path_prefix_o1_o1_i1:fk_to_path_prefix_o1_o1)/path_prefix_o1_o1_i1_col=1/$M"].join("/"),
                                 "path missmatch."
                             );
@@ -629,7 +627,7 @@ exports.execute = function (options) {
                         });
                     })
 
-                    it ("when the structure is used without path prefix", function (done) {
+                    it ("when the structure is used without path prefix should not match", function (done) {
                         facetObj = {
                             "and": [
                                 {
@@ -647,12 +645,12 @@ exports.execute = function (options) {
                             ref = res;
                             return ref.generateFacetColumns();
                         }).then(function () {
-                            expect(ref.facetColumns.length).toBe(23, "length missmatch.");
-                            expect(ref.facetColumns[22].filters.length).toBe(1, "# of filters defined is incorrect");
+                            expect(ref.facetColumns.length).toBe(24, "length missmatch.");
+                            expect(ref.facetColumns[23].filters.length).toBe(1, "# of filters defined is incorrect");
                             expect(ref.location.facets).toBeDefined("facets is undefined.");
                             expect(ref.location.ermrestCompactPath).toBe(
-                                ["M:=faceting_schema:main/M_P2:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)",
-                                 "M_P1:=(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)",
+                                ["M:=faceting_schema:main/(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)",
+                                 "(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)",
                                  "(id)=(faceting_schema:path_prefix_o1_o1_i1:fk_to_path_prefix_o1_o1)/path_prefix_o1_o1_i1_col=1/$M"].join("/"),
                                 "path missmatch."
                             );
@@ -872,7 +870,7 @@ exports.execute = function (options) {
                             done.fail();
                         });
                     });
-                    
+
                     // 2. testing the case where no facet remains
                     it ("if the filter in url can be turned into facet, should turn it to facet and properly ignore it.", function (done) {
                         var invalidURL =  options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + tableMain + "/invalid_column_that_doesnt_exist=1234";
@@ -897,7 +895,7 @@ exports.execute = function (options) {
 
                     // 3 - 9
                     it ("should validate filters and ignore the invalid ones.", function (done) {
-                        facetObj = { 
+                        facetObj = {
                             "and": [
                                 //3
                                 {"sourcekey": "invalid_sourcekey_that_doesnt_exist", "choices": ["test1"]},
@@ -963,7 +961,7 @@ exports.execute = function (options) {
                                     },
                                     "choices": ["one", "not_found", "three", "another_not_found"]
                                 }
-                            ] 
+                            ]
                         };
                         options.ermRest.resolve(createURL(tableMain, facetObj)).then(function (res) {
                             ref = res;
@@ -974,9 +972,9 @@ exports.execute = function (options) {
                             expect(ref.location.facets).toBeDefined("facets is undefined.");
                             expect(ref.location.ermrestCompactPath).toBe(
                                 "M:=faceting_schema:main/text_col=v1;text_col=v2/$M/" +
-                                "(id)=(faceting_schema:main_f3_assoc:id_main)/id_f3=1;id_f3=3/$M/" +
+                                "(id)=(faceting_schema:main_f3_assoc:id_main)/(id_f3)=(faceting_schema:f3:id)/id=1;id=3/$M/" +
                                 "M_P1:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)/(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/path_prefix_o1_o1_col=1/$M/"+
-                                "$M_P1/fk_to_path_prefix_o1_o1=test2/$M",
+                                "$M_P1/(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/id=test2/$M",
                                 "path missmatch."
                             );
                             expect(result.issues).toBeDefined("issues was not defined");
@@ -1007,7 +1005,7 @@ exports.execute = function (options) {
                         });
                     });
                 });
-                
+
             });
 
             describe("regarding alternative tables for main table, ", function () {
@@ -1364,7 +1362,7 @@ exports.execute = function (options) {
                         var ref = mainFacets[10].addChoiceFilters(["1", "2"]);
                         expect(ref).not.toBe(refMain, "reference didn't change.");
                         expect(ref.location.ermrestCompactPath).toBe(
-                            "M:=faceting_schema:main/id=1/$M/int_col::geq::-2/$M/fk_to_f1=1;fk_to_f1=2/$M",
+                            "M:=faceting_schema:main/id=1/$M/int_col::geq::-2/$M/(fk_to_f1)=(faceting_schema:f1:id)/id=1;id=2/$M",
                             "path missmatch."
                         );
                         expect(ref.facetColumns[10].filters.length).toBe(2, "filters length missmatch.");
@@ -1838,7 +1836,7 @@ exports.execute = function (options) {
                     checkSourceReference(
                         "mainTable with filter on FK, index = 0",
                         refMainFilterOnFK.facetColumns[0],
-                        "M:=faceting_schema:main/int_col::geq::-2/$M/fk_to_f2=2;fk_to_f2=3/$M",
+                        "M:=faceting_schema:main/int_col::geq::-2/$M/(fk_to_f2)=(faceting_schema:f2:id)/id=2;id=3/$M",
                         "id"
                     );
                 });
@@ -2271,7 +2269,7 @@ exports.execute = function (options) {
                 var refSorted = refMain.sort([{"column": "int_col", "descending": false}]);
                 var refSortedWithFilter = refSorted.facetColumns[10].addChoiceFilters(["1", "2"]);
                 expect(refSortedWithFilter.location.ermrestCompactPath).toBe(
-                    "M:=faceting_schema:main/id=1/$M/int_col::geq::-2/$M/fk_to_f1=1;fk_to_f1=2/$M",
+                    "M:=faceting_schema:main/id=1/$M/int_col::geq::-2/$M/(fk_to_f1)=(faceting_schema:f1:id)/id=1;id=2/$M",
                     "path missmatch."
                 );
                 expect(refSortedWithFilter.location.sortObject.length).toEqual(1, "sort length missmatch.");
@@ -2292,24 +2290,24 @@ exports.execute = function (options) {
                         options.ermRest.resolve(createURL(tableMain, currFacetObj)).then(function (ref) {
                             // visible-fks are defined for compact
                             currRef = ref.contextualize.compact;
-    
+
                             expect(currRef.readPath).toEqual(expectedReadPath);
                             done();
                         }).catch(function (err) {
                             done.fail(err);
                         });
                     });
-    
+
                     it ("read should return proper values", function (done) {
                         currRef.read(25).then(function (page) {
                             expect(page.length).toBe(1, "page length missmatch");
-    
+
                             var tuples = page.tuples;
                             expect(tuples[0].data.id).toBe(4, "id raw value missmatch");
-    
+
                             var expectedValues = ['4', 'two', 'two_o1_o1', 'two_o1_o1_o1'];
                             expect(tuples[0].values).toEqual(jasmine.arrayContaining(expectedValues), "values missmatch");
-    
+
                             done();
                         }).catch(function (err) {
                             done.fail(err);
@@ -2318,62 +2316,191 @@ exports.execute = function (options) {
                 }
 
                 describe("when null is not in the choices", function () {
-                    testReadAndReadPath(
-                        {
-                            "and": [
-                                {
-                                    "source":  [
-                                        {"sourcekey": "path_to_path_prefix_o1_o1"},
-                                        {"inbound": ["faceting_schema", "path_prefix_o1_o1_i1_fk1"]},
-                                        "path_prefix_o1_o1_i1_col"
-                                    ],
-                                    "choices": ["one_o1_o1_i1"]
-                                },
-                                {
-                                    "sourcekey": "path_to_path_prefix_o1_o1",
-                                    "choices": ["two_o1_o1"]
-                                }
-                            ]
-                        },
-                        [
-                            "M:=faceting_schema:main",
-                            "M_P2:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)/M_P1:=(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)",
-                            "(id)=(faceting_schema:path_prefix_o1_o1_i1:fk_to_path_prefix_o1_o1)/path_prefix_o1_o1_i1_col=one_o1_o1_i1/$M",
-                            "$M_P1/path_prefix_o1_o1_col=two_o1_o1/$M",
-                            "$M_P1/F3:=left(fk_to_path_prefix_o1_o1_o1)=(faceting_schema:path_prefix_o1_o1_o1:id)/$M",
-                            "RID;M:=array_d(M:*),F3:=array_d(F3:*),F2:=array_d(M_P1:*),F1:=array_d(M_P2:*)@sort(RID)"
-                        ].join("/")
-                    );
+                    describe("case 1", function () {
+                        testReadAndReadPath(
+                            {
+                                "and": [
+                                    {
+                                        "source":  [
+                                            {"sourcekey": "path_to_path_prefix_o1_o1"},
+                                            {"inbound": ["faceting_schema", "path_prefix_o1_o1_i1_fk1"]},
+                                            "path_prefix_o1_o1_i1_col"
+                                        ],
+                                        "choices": ["one_o1_o1_i1"]
+                                    },
+                                    {
+                                        "sourcekey": "path_to_path_prefix_o1_o1",
+                                        "choices": ["two_o1_o1"]
+                                    }
+                                ]
+                            },
+                            [
+                                "M:=faceting_schema:main",
+                                "M_P2:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)/M_P1:=(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)",
+                                "(id)=(faceting_schema:path_prefix_o1_o1_i1:fk_to_path_prefix_o1_o1)/path_prefix_o1_o1_i1_col=one_o1_o1_i1/$M",
+                                "$M_P1/path_prefix_o1_o1_col=two_o1_o1/$M",
+                                "$M_P1/F3:=left(fk_to_path_prefix_o1_o1_o1)=(faceting_schema:path_prefix_o1_o1_o1:id)/$M",
+                                "RID;M:=array_d(M:*),F3:=array_d(F3:*),F2:=array_d(M_P1:*),F1:=array_d(M_P2:*)@sort(RID)"
+                            ].join("/")
+                        );
+                    });
+
+                    // sourcekey used before the prefix
+                    describe("case 2", function () {
+                        testReadAndReadPath(
+                            {
+                                "and": [
+                                    {
+                                        "sourcekey": "path_to_path_prefix_o1_o1",
+                                        "choices": ["two_o1_o1"]
+                                    },
+                                    {
+                                        "source":  [
+                                            {"sourcekey": "path_to_path_prefix_o1_o1"},
+                                            {"inbound": ["faceting_schema", "path_prefix_o1_o1_i1_fk1"]},
+                                            "path_prefix_o1_o1_i1_col"
+                                        ],
+                                        "choices": ["one_o1_o1_i1"]
+                                    }
+                                ]
+                            },
+                            [
+                                "M:=faceting_schema:main",
+                                "M_P1:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)/M_P2:=(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/path_prefix_o1_o1_col=two_o1_o1/$M",
+                                "$M_P2/(id)=(faceting_schema:path_prefix_o1_o1_i1:fk_to_path_prefix_o1_o1)/path_prefix_o1_o1_i1_col=one_o1_o1_i1/$M",
+                                "$M_P2/F3:=left(fk_to_path_prefix_o1_o1_o1)=(faceting_schema:path_prefix_o1_o1_o1:id)/$M",
+                                "RID;M:=array_d(M:*),F3:=array_d(F3:*),F2:=array_d(M_P2:*),F1:=array_d(M_P1:*)@sort(RID)"
+                            ].join("/")
+                        );
+                    });
+
+                    // prefix with different end column
+                    describe("case 3", function () {
+                        testReadAndReadPath(
+                            {
+                                "and": [
+                                    {
+                                        "source": [
+                                            {"sourcekey": "path_to_path_prefix_o1_o1"},
+                                            "id"
+                                        ],
+                                        "choices": ["2"]
+                                    },
+                                    {
+                                        "source":  [
+                                            {"sourcekey": "path_to_path_prefix_o1_o1"},
+                                            {"inbound": ["faceting_schema", "path_prefix_o1_o1_i1_fk1"]},
+                                            "path_prefix_o1_o1_i1_col"
+                                        ],
+                                        "choices": ["one_o1_o1_i1"]
+                                    }
+                                ]
+                            },
+                            [
+                                "M:=faceting_schema:main",
+                                "M_P2:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)/M_P1:=(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/id=2/$M",
+                                "$M_P1/(id)=(faceting_schema:path_prefix_o1_o1_i1:fk_to_path_prefix_o1_o1)/path_prefix_o1_o1_i1_col=one_o1_o1_i1/$M",
+                                "$M_P1/F3:=left(fk_to_path_prefix_o1_o1_o1)=(faceting_schema:path_prefix_o1_o1_o1:id)/$M",
+                                "RID;M:=array_d(M:*),F3:=array_d(F3:*),F2:=array_d(M_P1:*),F1:=array_d(M_P2:*)@sort(RID)"
+                            ].join("/")
+                        );
+                    });
                 });
-                
+
                 describe("when null is in the choices", function () {
-                    testReadAndReadPath(
-                        {
-                            "and": [
-                                {
-                                    "source":  [
-                                        {"sourcekey": "path_to_path_prefix_o1_o1"},
-                                        {"inbound": ["faceting_schema", "path_prefix_o1_o1_i1_fk1"]},
-                                        "path_prefix_o1_o1_i1_col"
-                                    ],
-                                    "choices": ["one_o1_o1_i1", null]
-                                },
-                                {
-                                    "sourcekey": "path_to_path_prefix_o1_o1",
-                                    "choices": ["two_o1_o1"]
-                                }
-                            ]
-                        },
-                        [
-                            "faceting_schema:path_prefix_o1_o1_i1/path_prefix_o1_o1_i1_col=one_o1_o1_i1;path_prefix_o1_o1_i1_col::null::",
-                            "(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/(id)=(faceting_schema:path_prefix_o1:fk_to_path_prefix_o1_o1)",
-                            "M:=right(id)=(faceting_schema:main:fk_to_path_prefix_o1)/M_P1:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)",
-                            "(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/path_prefix_o1_o1_col=two_o1_o1/$M/$M_P1",
-                            "M_P2:=left(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)",
-                            "F3:=left(fk_to_path_prefix_o1_o1_o1)=(faceting_schema:path_prefix_o1_o1_o1:id)/$M",
-                            "RID;M:=array_d(M:*),F3:=array_d(F3:*),F2:=array_d(M_P2:*),F1:=array_d(M_P1:*)@sort(RID)"
-                        ].join("/")
-                    );
+                    describe("case 1", function () {
+                        testReadAndReadPath(
+                            {
+                                "and": [
+                                    {
+                                        "source":  [
+                                            {"sourcekey": "path_to_path_prefix_o1_o1"},
+                                            {"inbound": ["faceting_schema", "path_prefix_o1_o1_i1_fk1"]},
+                                            "path_prefix_o1_o1_i1_col"
+                                        ],
+                                        "choices": ["one_o1_o1_i1", null]
+                                    },
+                                    {
+                                        "sourcekey": "path_to_path_prefix_o1_o1",
+                                        "choices": ["two_o1_o1"]
+                                    }
+                                ]
+                            },
+                            [
+                                "faceting_schema:path_prefix_o1_o1_i1/path_prefix_o1_o1_i1_col=one_o1_o1_i1;path_prefix_o1_o1_i1_col::null::",
+                                "(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/(id)=(faceting_schema:path_prefix_o1:fk_to_path_prefix_o1_o1)",
+                                "M:=right(id)=(faceting_schema:main:fk_to_path_prefix_o1)/M_P1:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)",
+                                "M_P2:=(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/path_prefix_o1_o1_col=two_o1_o1/$M",
+                                "$M_P2/F3:=left(fk_to_path_prefix_o1_o1_o1)=(faceting_schema:path_prefix_o1_o1_o1:id)/$M",
+                                "RID;M:=array_d(M:*),F3:=array_d(F3:*),F2:=array_d(M_P2:*),F1:=array_d(M_P1:*)@sort(RID)"
+                            ].join("/")
+                        );
+                    });
+
+                    // sourcekey used before the prefix
+                    describe("case 2", function () {
+                        testReadAndReadPath(
+                            {
+                                "and": [
+                                    {
+                                        "sourcekey": "path_to_path_prefix_o1_o1",
+                                        "choices": ["two_o1_o1"]
+                                    },
+                                    {
+                                        "source":  [
+                                            {"sourcekey": "path_to_path_prefix_o1_o1"},
+                                            {"inbound": ["faceting_schema", "path_prefix_o1_o1_i1_fk1"]},
+                                            "path_prefix_o1_o1_i1_col"
+                                        ],
+                                        "choices": ["one_o1_o1_i1", null]
+                                    }
+                                ]
+                            },
+                            [
+                                "faceting_schema:path_prefix_o1_o1_i1/path_prefix_o1_o1_i1_col=one_o1_o1_i1;path_prefix_o1_o1_i1_col::null::",
+                                "(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/(id)=(faceting_schema:path_prefix_o1:fk_to_path_prefix_o1_o1)",
+                                "M:=right(id)=(faceting_schema:main:fk_to_path_prefix_o1)",
+                                "M_P1:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)/M_P2:=(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/path_prefix_o1_o1_col=two_o1_o1/$M",
+                                "$M_P2/F3:=left(fk_to_path_prefix_o1_o1_o1)=(faceting_schema:path_prefix_o1_o1_o1:id)/$M",
+                                "RID;M:=array_d(M:*),F3:=array_d(F3:*),F2:=array_d(M_P2:*),F1:=array_d(M_P1:*)@sort(RID)"
+                            ].join("/"),
+                        );
+                    });
+
+                    // prefix with different end column
+                    describe("case 3", function () {
+                        testReadAndReadPath(
+                            {
+                                "and": [
+                                    {
+                                        "source": [
+                                            {"sourcekey": "path_to_path_prefix_o1_o1"},
+                                            "id"
+                                        ],
+                                        "choices": ["2"]
+                                    },
+                                    {
+                                        "source":  [
+                                            {"sourcekey": "path_to_path_prefix_o1_o1"},
+                                            {"inbound": ["faceting_schema", "path_prefix_o1_o1_i1_fk1"]},
+                                            "path_prefix_o1_o1_i1_col"
+                                        ],
+                                        "choices": ["one_o1_o1_i1", null]
+                                    }
+                                ]
+                            },
+                            [
+                                "faceting_schema:path_prefix_o1_o1_i1/path_prefix_o1_o1_i1_col=one_o1_o1_i1;path_prefix_o1_o1_i1_col::null::",
+                                "(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/(id)=(faceting_schema:path_prefix_o1:fk_to_path_prefix_o1_o1)",
+                                "M:=right(id)=(faceting_schema:main:fk_to_path_prefix_o1)",
+                                "M_P2:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)",
+                                "M_P1:=(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/id=2/$M",
+                                "$M_P1/F3:=left(fk_to_path_prefix_o1_o1_o1)=(faceting_schema:path_prefix_o1_o1_o1:id)/$M",
+                                "RID;M:=array_d(M:*),F3:=array_d(F3:*),F2:=array_d(M_P1:*),F1:=array_d(M_P2:*)@sort(RID)"
+                            ].join("/")
+                        );
+                    });
+
                 });
             });
         });

@@ -2823,17 +2823,6 @@ function FacetColumn (reference, index, facetObjectWrapper, filters) {
     this.hasPath = facetObjectWrapper.hasPath;
 
     /**
-     * Whether the source is going to have path when sending the request to ermrest
-     * The path that is defined on the facet might be different from the one that
-     * we are going to use to talk with ermrest. We might optmize the path.
-     * Facets with only one hop where the column used in foreignkey is the same column for faceting, and is not nullable
-     * can be optmized by completely ignoring the foreignkey path and just doing a value check on main table.
-     *
-     * @type {Boolean}
-     */
-    this.ermrestHasPath = facetObjectWrapper.ermrestHasPath;
-
-    /**
      * Returns true if the source is on a key column.
      * If facetObject['entity'] is defined as false, it will return false,
      * otherwise it will true if filter is based on key.
@@ -2932,14 +2921,16 @@ FacetColumn.prototype = {
      * Whether the facet is defining an all outbound path that the columns used
      * in the path are all not-null.
      * NOTE even if the column.nullok is false, ermrest could return null value for it
-     * if the user rights to select that column is `null`.
+     * if the user rights to select that column is `null`. But we decided not to check
+     * for that since it's not the desired behavior for us:
+     * https://github.com/informatics-isi-edu/ermrestjs/issues/888
      * @type {Boolean}
      */
     get isAllOutboundNotNull () {
         if (this._isAllOutboundNotNull === undefined) {
             var colsetNotNull = function (colset) {
                 return colset.columns.every(function (col) {
-                    return !col.nullok && col.rights.select === true;
+                    return !col.nullok;
                 });
             };
 
@@ -3207,18 +3198,20 @@ FacetColumn.prototype = {
      * we shouldn't even offer the option:
      *   1. (G4) Scalar columns of main table that are not-null.
      *   2. (G5) All outbound foreignkey facets that all the columns invloved are not-null
-     * Although if user is vewing a snapshot of catalog, ermrest might actually return null
-     * value for a not-null column, and therefore we should not do this check if user is in that state.
      *
      * Based on this, the following will be the logic for this function:
      *     - If facet has `null` filter: `false`
      *     - If facet has `"hide_null_choice": true`: `true`
-     *     - If G1: `true` if the column is not-null and user has select right otherwise `false`
+     *     - If G1: `true` if the column is not-null
      *     - If G5: `true`
      *     - If G2: `true`
      *     - If G3.1: `false`
      *     - If G3 and no other G3 has null: `false`
      *     - otherwise: `false`
+     *
+     * NOTE this function used to check for select access as well as versioned catalog,
+     * but we decided to remove them since it's not the desired behavior:
+     * https://github.com/informatics-isi-edu/ermrestjs/issues/888
      * @type {Boolean}
      */
     get hideNullChoice() {
@@ -3234,15 +3227,14 @@ FacetColumn.prototype = {
                     return true;
                 }
 
-                var versioned = self.reference.table.schema.catalog.version;
 
                 // G1 / G4
                 if (self.foreignKeyPathLength === 0) {
-                    return !versioned && !self._column.nullok && self._column.rights.select === true;
+                    return !self._column.nullok;
                 }
 
                 // G5
-                if (!versioned && self.isAllOutboundNotNull) {
+                if (self.isAllOutboundNotNull) {
                     return true;
                 }
 
@@ -3252,13 +3244,13 @@ FacetColumn.prototype = {
                 }
 
                 // G3.1
-                if (!self.ermrestHasPath) {
+                if (!self.hasPath) {
                     return false;
                 }
 
                 // G3
                 var othersHaveNull = self.reference.facetColumns.some(function (fc, index) {
-                    return index !== self.index && fc.hasNullFilter && fc.ermrestHasPath;
+                    return index !== self.index && fc.hasNullFilter && fc.hasPath;
                 });
 
                 return othersHaveNull;
@@ -3288,15 +3280,14 @@ FacetColumn.prototype = {
                 // if hide_not_null_choice is available in facet definition
                 if (self._facetObject.hide_not_null_choice === true) return true;
 
-                var versioned = self.reference.table.schema.catalog.version;
 
                 //if from the same table, don't show if it's not-null
                 if (self._facetObjectWrapper.foreignKeyPathLength === 0) {
-                    return !versioned && !self._column.nullok && self._column.rights.select === true;
+                    return !self._column.nullok;
                 }
 
                 //if all outbound not-null don't show it.
-                return !versioned && self.isAllOutboundNotNull;
+                return self.isAllOutboundNotNull;
             };
 
             this._hideNotNullChoice = getHideNotNull(this);

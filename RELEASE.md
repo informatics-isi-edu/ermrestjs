@@ -1,6 +1,6 @@
 # Release Notes
 
-This document is a summary of code changes in Chaise. This is the vocabulary used to introduce the changes:
+This document is a summary of code changes in ERMRestJS. This is the vocabulary used to introduce the changes:
   - `[Added]`: newly added features.
   - `[Improved]`: additions made to an existence feature.
   - `[Changed]`: modifications to existing features.
@@ -8,7 +8,23 @@ This document is a summary of code changes in Chaise. This is the vocabulary use
   - `[Refactored]`: modifications to existing code to make it more maintainable.
   - `[Fixed]`: bug fixes.
   - `[Annotation]`: when the describe modification is related to annotation.
-  - `[No changes]`: means that Chaise hasn't been changed in the described duration.
+  - `[No changes]`: means that ERMRestJS hasn't been changed in the described duration.
+
+<!-- # 11/30/21 -->
+<!-- #912 PR -->
+# 9/30/21
+ - [Added] [Annotation] support for _path with prefix_ syntax where using `sourcekey`
+   as the first attribute will create a shared table instance that can be used mulitple times ([link](https://github.com/informatics-isi-edu/ermrestjs/pull/838)).
+ - [Added] [Annotation] `hide_row_count` and `show_saved_query` properties to `display` annotation ([link 1](https://github.com/informatics-isi-edu/ermrestjs/pull/891), [link 2](https://github.com/informatics-isi-edu/ermrestjs/pull/893)).
+ - [Added] [Annotation] support for `table-config` annotation.
+ - [Added] `jsonStringify` and `toTileCase` handlebars helper functions, as well as `not` logical helper ([link 1](https://github.com/informatics-isi-edu/ermrestjs/pull/895), [link 2](https://github.com/informatics-isi-edu/ermrestjs/commit/558779f48aabd3e9b9960acf56c117c9bf461e27)).
+ - [Improved] `csvDownloadLink` logic to honor the `visible-columns` annotation. Also added new contexts (`export/detailed` and `export/compact`) to this annotation specifically for this purpose ([link](https://github.com/informatics-isi-edu/ermrestjs/pull/897)).
+ - [Changed] faceting behavior to validate the facets in URL while generating the facet list ([link](https://github.com/informatics-isi-edu/ermrestjs/pull/899)).
+ - [Changed] behavior of `immutable`, `generated`, and `non-deletable` annotations to treat `false` value differently ([link](https://github.com/informatics-isi-edu/ermrestjs/pull/902)).
+ - [Fixed] how we're hiding the fullscreen button for iframes so it doesn't take extra space ([link](https://github.com/informatics-isi-edu/ermrestjs/commit/25c3f500113453dfebb12c58b7a508657a8c2f35)).
+ - [Improved] null and empty handling in array properties of `google-dataset` annotation ([link](https://github.com/informatics-isi-edu/ermrestjs/pull/882)).
+ - [Improved] `google-dataset` annotation by parsing the string as a JSON object if we can ([link](https://github.com/informatics-isi-edu/ermrestjs/pull/905)).
+ - [Refactored] pseudo-column support so one centeralized place is handling them.
 
 # 7/31/21
  - [Added] [Annotation] support for `google-dataset` annotation.
@@ -17,12 +33,12 @@ This document is a summary of code changes in Chaise. This is the vocabulary use
  - [Added] a logging utility to enable logging as per logging levels of "trace","debug","info","warn","error".
  - [Added] `$self` support to `row_markdown_pattern` and `citation` annotations.
  - [Improved] the check for using `trs`/`tcrs` to avoid using it on tables that don't need the information.
- - [Changed] `Reference.read` so client has to specifically ask for `trs`/`tcrs`. 
+ - [Changed] `Reference.read` so client has to specifically ask for `trs`/`tcrs`.
 
 
 # 5/31/21
  - [Improved] some cases related to error handling:
-  - Based on user reports, we found an odd case where the server is not returning an array in response. This change will make sure we're properly catching this error so we can track it. 
+  - Based on user reports, we found an odd case where the server is not returning an array in response. This change will make sure we're properly catching this error so we can track it.
   - Modify `logError` so Chaise can pass `cid`, `wid` and `pid` that will be logged with the error.
   - Preserver the `response.data` when the given response is HTML. Chaise will display this in the "show details" section for the error.
  - [Added] dynamic ACL support to ERMrestJS.
@@ -45,7 +61,7 @@ This document is a summary of code changes in Chaise. This is the vocabulary use
 # 1/31/21
  - [Added] support for `color_rgb_hex` column type.
  - [Added] `Tuple.rowName` API. `Tuple.displayname` uses the `row_name/title` context, while `Tuple.rowName` uses the `row_name/<context>`.
- - [Changed] `_processMarkdownPattern` to `processMarkdownPattern` so it's public 
+ - [Changed] `_processMarkdownPattern` to `processMarkdownPattern` so it's public
 
 # 11/30/20
  - [Changed] default export BAG displayname to "BDBag".
@@ -54,8 +70,8 @@ This document is a summary of code changes in Chaise. This is the vocabulary use
 
 # 9/30/20
  - [Fixed] the bug where alias names for path with joins were not working.
- - [Changed] [Annotation] `domain_filter_pattern` to `domain_filter` that has `ermrest_path_pattern` and `display_markdown_pattern` attributes. 
- - [Fixed] `getChoiceDisplaynames` (the logic to turn raw values in the facet blob into proper rowname) by returning raw value if ERMrest response is empty. 
+ - [Changed] [Annotation] `domain_filter_pattern` to `domain_filter` that has `ermrest_path_pattern` and `display_markdown_pattern` attributes.
+ - [Fixed] `getChoiceDisplaynames` (the logic to turn raw values in the facet blob into proper rowname) by returning raw value if ERMrest response is empty.
  - [Added] [Annotaiton] `comment` and `comment_display` to `display` annotation.
  - [Added] [Annotation] `comment_display` to `visible-columns` and `visible-foreign-keys` source definition.
  - [Added] [Annotation] `from_comment`, `from_comment_display`, `to_comment`, and `to_comment_display` to `foreign-key` annotation.

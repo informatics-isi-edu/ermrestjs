@@ -76,20 +76,39 @@
         },
 
         // parse the facet part related to main search-box
-        parseSearchBox: function (search, rootTable) {
+        parseSearchBox: function (search, rootTable, alias, pathPrefixAliasMapping) {
             // by default we're going to apply search to all the columns
-            var searchColumns = ["*"];
+            var searchColumns = ["*"], path = "", searchDefCols;
 
             // map to the search columns, if they are defined
             if (rootTable && Array.isArray(rootTable.searchSourceDefinition)) {
-                searchColumns = rootTable.searchSourceDefinition.map(function (sd) {
+                searchDefCols = rootTable.searchSourceDefinition;
+                searchColumns = searchDefCols.map(function (sd, i) {
+                    // getting the path from the first one is enough
+                    if (i === 0 && sd.hasPath) {
+                        path = _sourceColumnHelpers.parseSourceNodesWithAliasMapping(
+                            sd.sourceObjectNodes,
+                            sd.lastForeignKeyNode,
+                            sd.foreignKeyPathLength,
+                            sd.sourceObject && isStringAndNotEmpty(sd.sourceObject.sourcekey) ? sd.sourceObject.sourcekey : null,
+                            pathPrefixAliasMapping,
+                            alias
+                        ).path;
+
+                        if (path.length > 0) {
+                            path += "/";
+                        }
+                    }
+
                     return sd.column.name;
                 });
             }
 
-            return searchColumns.map(function (cname) {
+            return path + searchColumns.map(function (cname) {
                 return _renderFacetHelpers.parseSearch(search, cname);
             }).join(";");
+            // TODO alias is always added but it could be conditional:
+            // (path.length > 0 ?  "/$" + alias : "")
         },
 
         /**
@@ -117,37 +136,18 @@
                 col = res.column,
                 schemaName = res.column.table.schema.name,
                 lastForeignKeyNode = res.lastForeignKeyNode,
-                foreignKeyPathLength = res.foreignKeyPathLength,
-                ignoreLastFK = false;
-
-            // if the last fk is using the same column that is used in facet,
-            // and the column is not-null, we can just ignore that join.
-            // TODO FILTER_IN_SOURCE check if the last one is fk
-            var fk = lastForeignKeyNode.nodeObject,
-                isInbound = lastForeignKeyNode.isInbound;
-            var fkCol = isInbound ? fk.colset.columns[0] : fk.key.colset.columns[0];
-            if (!col.nullok && fk.simple && fkCol === col) {
-                // change the column
-                col = isInbound ? fk.key.colset.columns[0] : fk.colset.columns[0];
-
-                // change the table and schema names
-                tableName = col.table.name;
-                schemaName = col.table.schema.name;
-
-                ignoreLastFK = true;
-                foreignKeyPathLength--;
-            }
+                foreignKeyPathLength = res.foreignKeyPathLength;
 
             // if we eliminated all the foreignkeys, then we don't need to reverse anything
             reverse = reverse && foreignKeyPathLength > 0;
 
-            path = _sourceColumnHelpers.parseSourceNodesWithAliasMapping(
-                sourceNodes, lastForeignKeyNode, sourcekey,
-                pathPrefixAliasMapping, alias, reverse, ignoreLastFK
+            var parsedRes = _sourceColumnHelpers.parseSourceNodesWithAliasMapping(
+                sourceNodes, lastForeignKeyNode, foreignKeyPathLength, sourcekey,
+                pathPrefixAliasMapping, alias, reverse
             );
 
             return {
-                path: path,
+                path: parsedRes.path,
                 columnName: col.name, // we might optimize the path, so the column could be different
                 tableName: tableName,
                 schemaName: schemaName,
@@ -190,6 +190,7 @@
      * @param       {string} tableName the starting table name
      * @param       {string} catalogId the catalog id
      * @param       {ERMrest.catalog} [catalogObject] the catalog object (could be undefined)
+     * @param       {Array} usedSourceObjects (optional) the source objects that are used in other parts (outbound)
      * @param       {Object[]} [consNames] the constraint names (could be undefined)
      * @constructor
      * @return      {object} An object that will have the following attributes:
@@ -197,7 +198,7 @@
      * - parsed: String  (if the given string was parsable).
      * - message: String (if the given string was not parsable)
      */
-    _renderFacet = function(json, alias, schemaName, tableName, catalogId, catalogObject, consNames) {
+    _renderFacet = function(json, alias, schemaName, tableName, catalogId, catalogObject, usedSourceObjects, consNames) {
         var facetErrors = module._facetingErrors;
         var rootSchemaName = schemaName, rootTableName = tableName;
 
@@ -219,7 +220,16 @@
             rightJoins = [], // if we have null in the filter, we have to use join
             innerJoins = [], // all the other facets that have been parsed
             encode = module._fixedEncodeURIComponent, sourcekey,
-            i, term, col, path, ds, pathPrefixAliasMapping = {aliases: {}, lastIndex: 0}, constraints, parsed, useRightJoin;
+            i, term, col, path, ds, constraints, parsed, useRightJoin;
+
+        var pathPrefixAliasMapping = {aliases: {}, usedSourceKeys: {},lastIndex: 0};
+
+        // pre process the list of facets and find the path prefixes that are used
+        _sourceColumnHelpers._populateUsedSourceKeys(
+            pathPrefixAliasMapping.usedSourceKeys,
+            Array.isArray(usedSourceObjects) ? and.concat(usedSourceObjects) : and,
+            rootTable
+        );
 
         // go through list of facets and parse each facet
         for (i = 0; i < and.length; i++) {
@@ -249,7 +259,7 @@
                     }
 
                     // add the main search filter
-                    innerJoins.push(_renderFacetHelpers.parseSearchBox(term[module._facetFilterTypes.SEARCH], rootTable)+ "/$" + alias);
+                    innerJoins.push(_renderFacetHelpers.parseSearchBox(term[module._facetFilterTypes.SEARCH], rootTable, alias, pathPrefixAliasMapping)+ "/$" + alias);
 
                     // we can go to the next source in the and filter
                     continue;
@@ -343,6 +353,7 @@
                 ].join("/"));
             } else {
                 innerJoins.push((path.length !== 0 ? path + "/" : "") + constraints.join(";") + "/$" + alias);
+                // innerJoins.push((path.length !== 0 ? path + "/" : "") + constraints.join(";") + (path.length !== 0 ? ("/$" + alias) : ""));
             }
         }
 
@@ -1009,7 +1020,7 @@
             }
 
             var colName, col, colTable = table, source = sourceObject.source, sourceObjectNodes = [];
-            var hasPath = false, hasInbound = false, isFiltered = false, foreignKeyPathLength = 0;
+            var hasPath = false, hasInbound = false, hasPrefix = false, isFiltered = false, foreignKeyPathLength = 0;
             var lastForeignKeyNode, firstForeignKeyNode;
 
             // just the column name
@@ -1028,6 +1039,7 @@
 
                 hasPath = res.foreignKeyPathLength > 0;
                 hasInbound = res.hasInbound;
+                hasPrefix = res.hasPrefix;
                 firstForeignKeyNode = res.firstForeignKeyNode;
                 lastForeignKeyNode = res.lastForeignKeyNode;
                 colTable = res.column.table;
@@ -1054,6 +1066,7 @@
 
             self.column = col;
 
+            self.hasPrefix = hasPrefix;
             self.hasPath = hasPath;
             self.foreignKeyPathLength = foreignKeyPathLength;
             self.hasInbound = hasInbound;
@@ -1074,34 +1087,21 @@
                 self.firstForeignKeyNode = firstForeignKeyNode;
             }
 
-            // when generating the url, we might optimize the url and remove the last hop,
-            // the following boolean shows whether the end url has path or not
-            self.ermrestHasPath = hasPath;
-            if (foreignKeyPathLength === 1) {
-                var fk = self.lastForeignKeyNode.nodeObject,
-                    isInbound = self.lastForeignKeyNode.isInbound;
-                var fkCol = isInbound ? fk.colset.columns[0] : fk.key.colset.columns[0];
-                self.ermrestHasPath = !(!col.nullok && fk.simple && fkCol === col);
-            }
-
             // generate name:
             // TODO maybe we shouldn't even allow aggregate in faceting (for now we're ignoring it)
             if ((sourceObject.self_link === true) || self.hasPath || self.isEntityMode || (isFacet !== false && self.hasAggregate)) {
                 var rawSourceObject = JSON.parse(JSON.stringify(sourceObject));
 
-                // if the source has path, we should make sure the given sourceObject for hash is raw (not using alias or pathprefix)
+                // if the source has path, we should make sure the given sourceObject for hash is raw (not using alias)
+                //  a pseudo-column using path prefix should be treated differently from one without it.
                 if (self.hasPath) {
                     rawSourceObject.source = [];
                     sourceObject.source.forEach(function (sn, index) {
-                        if (index < sourceObjectNodes.length && sourceObjectNodes[index].isPathPrefix) {
-                            rawSourceObject.source = rawSourceObject.source.concat(sourceObjectNodes[index].nodeObject.getRawSourcePath());
-                        } else {
-                            rawSourceObject.source.push(sn);
+                        rawSourceObject.source.push(sn);
 
-                            // remove alias property
-                            if (typeof sn === "object" && "alias" in sn) {
-                                delete rawSourceObject.source[rawSourceObject.source.length-1].alias;
-                            }
+                        // remove alias property
+                        if (typeof sn === "object" && "alias" in sn) {
+                            delete rawSourceObject.source[rawSourceObject.source.length-1].alias;
                         }
                     });
                 }
@@ -1181,7 +1181,6 @@
 
                     res += prev;
                     return res;
-                    // return ((i > 0) ? (fkStr + "/") : ((addAlias ? outAlias + ":=" : "") + fkStr) ) + prev;
                 } else {
                     return prev + (i > 0 ? "/" : "") + (addAlias ? outAlias + ":=" : "") + fkStr;
                 }
@@ -1295,7 +1294,7 @@
             };
 
             var i, fkAlias, constraint, isInbound, fkObj, fk, colTable, hasInbound = false, firstForeignKeyNode, lastForeignKeyNode,
-                foreignKeyPathLength = 0, sourceObjectNodes = [], isFiltered = false, hasPrefix = false, prefix;
+                foreignKeyPathLength = 0, sourceObjectNodes = [], isFiltered = false, hasPrefix = false, hasOnlyPrefix = false, prefix;
 
             for (i = 0; i < source.length - 1; i++) {
                 if ("sourcekey" in source[i]) {
@@ -1303,6 +1302,7 @@
                         return returnError("`sourcekey` can only be used as prefix and only once");
                     }
                     hasPrefix = true;
+                    hasOnlyPrefix = true;
 
                     if (isObjectAndNotNull(sources)) {
                         prefix = sources[source[i].sourcekey];
@@ -1313,12 +1313,12 @@
                         prefix = rootTable.sourceDefinitions.sources[source[i].sourcekey];
                     }
 
-                    if (!prefix.hasPath) {
-                        return returnError("referrred `sourcekey` must be a foreign key path.");
-                    }
-
                     if (!prefix) {
                         return returnError("sourcekey is invalid.");
+                    }
+
+                    if (!prefix.hasPath) {
+                        return returnError("referrred `sourcekey` must be a foreign key path.");
                     }
                     sourceObjectNodes.push(new SourceObjectNode(prefix, false, false, false, true, source[i].sourcekey));
 
@@ -1378,6 +1378,7 @@
                         firstForeignKeyNode = sn;
                     }
                     lastForeignKeyNode = sn;
+                    hasOnlyPrefix = false;
                 }  else {
                     // given object was invalid
                     return returnError("Invalid object in source element index=" + i);
@@ -1398,7 +1399,8 @@
                 foreignKeyPathLength: foreignKeyPathLength,
                 isFiltered: isFiltered,
                 hasInbound: hasInbound,
-                hasPrefix: hasPrefix
+                hasPrefix: hasPrefix,
+                hasOnlyPrefix: hasOnlyPrefix
             };
         },
 
@@ -1413,67 +1415,115 @@
          * TODO could be refactored  and merged with parseAllOutBoundNodes
          * @param {*} sourceNodes - array of source nodes
          * @param {*} lastForeignKeyNode  - the last foreign key node
+         * @param {*} foreignKeyPathLength - the foreignkey path length
          * @param {*} sourcekey
          * @param {*} pathPrefixAliasMapping
          * @param {*} mainTableAlias
          * @param {*} useRightJoin
-         * @param {*} ignoreLastFK
          */
-        parseSourceNodesWithAliasMapping: function (sourceNodes, lastForeignKeyNode, sourcekey, pathPrefixAliasMapping, mainTableAlias, useRightJoin, ignoreLastFK, outAlias) {
+        parseSourceNodesWithAliasMapping: function (sourceNodes, lastForeignKeyNode, foreignKeyPathLength, sourcekey, pathPrefixAliasMapping, mainTableAlias, useRightJoin, outAlias) {
+            var usedOutAlias;
+
             if (!useRightJoin && sourcekey && sourcekey in pathPrefixAliasMapping.aliases) {
-                return "$" + pathPrefixAliasMapping.aliases[sourcekey];
+                usedOutAlias = pathPrefixAliasMapping.aliases[sourcekey];
+                return {
+                    path: "$" + usedOutAlias,
+                    usedOutAlias: usedOutAlias
+                };
             }
 
-            return sourceNodes.reduce(function (prev, sn, i) {
+            var path = sourceNodes.reduce(function (prev, sn, i) {
+                var res;
+
                 if (sn.isFilter) {
                     return prev + (i > 0 ? "/" : "") + sn.toString();
                 }
 
-                // NOTE:
-                // limitations: we cannot have only prefix.. it must have another path after it
-                // otherwise we have to change the code to take care of the following:
-                // - how do we know when to add the right alias or ignore the last one!
-                // - what if the sn has alias?? sn.alias vs the one that we're generating??
-                // - so it should be recursive here...
                 if (sn.isPathPrefix) {
                     // if we're reversing, then don't use alias for that part
                     if (useRightJoin) {
                         return sn.toString(true, false, mainTableAlias, true);
                     }
-                    if (sn.pathPrefixSourcekey in pathPrefixAliasMapping.aliases) {
-                        return "$" + pathPrefixAliasMapping.aliases[sn.pathPrefixSourcekey];
+
+                    /* if it's just prefix, then we have to make sure if there's a
+                     * outAlias we have to use it. Since this is treated more like an alias for the other one
+                     */
+                    var containsLastFK = sn.nodeObject.foreignKeyPathLength === foreignKeyPathLength;
+                    var prefixAlias = containsLastFK ? outAlias : null;
+
+                    // if this is true, we should make sure the used alias is added to the sourcekey
+                    var addAliasToSourcekey = false;
+                    if (containsLastFK && sourcekey && sourcekey in pathPrefixAliasMapping.usedSourceKeys) {
+                        addAliasToSourcekey = true;
                     }
 
-                    var prefixAlias = mainTableAlias + "_P" + (++pathPrefixAliasMapping.lastIndex);
-                    var path = _sourceColumnHelpers.parseSourceNodesWithAliasMapping(
+                    if (sn.pathPrefixSourcekey in pathPrefixAliasMapping.aliases) {
+                        usedOutAlias = pathPrefixAliasMapping.aliases[sn.pathPrefixSourcekey];
+
+                        // make sure this alias is mapped to the sourcekey as well
+                        if (addAliasToSourcekey) {
+                            pathPrefixAliasMapping.aliases[sourcekey] = usedOutAlias;
+                        }
+
+                        return "$" + usedOutAlias;
+                    }
+
+                    // if we have to use alias but it's already not defined, create one
+                    if (!prefixAlias && (sn.pathPrefixSourcekey in pathPrefixAliasMapping.usedSourceKeys || addAliasToSourcekey)) {
+                        prefixAlias = mainTableAlias + "_P" + (++pathPrefixAliasMapping.lastIndex);
+                    }
+
+                    res = _sourceColumnHelpers.parseSourceNodesWithAliasMapping(
                         sn.nodeObject.sourceObjectNodes,
                         sn.nodeObject.lastForeignKeyNode,
+                        sn.nodeObject.foreignKeyPathLength,
                         sn.pathPrefixSourcekey,
                         pathPrefixAliasMapping,
                         mainTableAlias,
-                        false,
                         false,
                         prefixAlias
                     );
 
                     // we should first parse the existing and then add it to list
-                    pathPrefixAliasMapping.aliases[sn.pathPrefixSourcekey] = prefixAlias;
+                    // we might not have added alias
+                    if (prefixAlias) {
+                        // if already has been added, then just use it
+                        if (sn.pathPrefixSourcekey in pathPrefixAliasMapping.aliases) {
+                            prefixAlias = pathPrefixAliasMapping.aliases[sn.pathPrefixSourcekey];
+                        } else {
+                            // we should first parse the existing and then add it to list
+                            pathPrefixAliasMapping.aliases[sn.pathPrefixSourcekey] = prefixAlias;
+                        }
 
-                    return path;
+                        usedOutAlias = prefixAlias;
+
+                        // if this is the last one, then we should make sure the
+                        // sourcekey is mapped to this alias
+                        if (addAliasToSourcekey) {
+                            pathPrefixAliasMapping.aliases[sourcekey] = prefixAlias;
+                        }
+                    }
+
+                    return res.path;
                 }
 
-                // ignore the last fk if we have to
-                if (ignoreLastFK && sn == lastForeignKeyNode) {
-                    return prev;
-                }
-
-                var fkStr = sn.toString(useRightJoin, false), res = "";
+                var fkStr = sn.toString(useRightJoin, false);
                 if (useRightJoin) {
                     // if we have reversed the path, we need to add the alias to the last bit
-                    res += (i > 0) ? (fkStr + "/") : (mainTableAlias + ":=right" + fkStr);
+                    res = (i > 0) ? (fkStr + "/") : (mainTableAlias + ":=right" + fkStr);
                     res += prev;
                     return res;
                 }
+
+                // if this thing is used by other parts, then we should add alias to ensure sharing
+                if (sn === lastForeignKeyNode && sourcekey && sourcekey in pathPrefixAliasMapping.usedSourceKeys) {
+                    if (!outAlias) {
+                        outAlias = mainTableAlias + "_P" + (++pathPrefixAliasMapping.lastIndex);
+                    }
+                    pathPrefixAliasMapping.aliases[sourcekey] = outAlias;
+                }
+
+                usedOutAlias = outAlias;
 
                 res = prev;
                 res += (i > 0) ? "/" : "";
@@ -1484,6 +1534,12 @@
 
                 return res;
             }, "");
+
+
+            return {
+                path: path,
+                outAlias: outAlias
+            };
         },
 
         /**
@@ -1499,11 +1555,12 @@
          * TODO could be refactored and merged with the previous function
          * @param {*} sourceNodes
          * @param {*} lastForeignKeyNode
+         * @param {*} foreignKeyPathLength - the foreignkey path length
          * @param {*} sourcekey
          * @param {*} pathPrefixAliasMapping
          * @param {*} outAlias
          */
-        parseAllOutBoundNodes: function (sourceNodes, lastForeignKeyNode, sourcekey, pathPrefixAliasMapping, outAlias, mainTableAlias) {
+        parseAllOutBoundNodes: function (sourceNodes, lastForeignKeyNode, foreignKeyPathLength, sourcekey, pathPrefixAliasMapping, outAlias, mainTableAlias) {
             var usedOutAlias;
 
             // TODO could be improved, we don't need to return any path
@@ -1525,20 +1582,39 @@
                     return prev + (i > 0 ? "/" : "") + sn.toString();
                 }
 
-                // NOTE:
-                // limitations: we cannot have only prefix.. it must have another path after it
-                // otherwise we have to change the code to take care of the following:
-                // - what if the sn has alias?? sn.alias vs the one that we're generating??
-                // - so it should be recursive here...
                 if (sn.isPathPrefix) {
-                    if (sn.pathPrefixSourcekey in pathPrefixAliasMapping.aliases) {
-                        return "$" + pathPrefixAliasMapping.aliases[sn.pathPrefixSourcekey];
+                    /* if it's just prefix, then we have to make sure if there's a
+                    * outAlias we have to use it. Since this is treated more like an alias for the other one
+                    */
+                    var containsLastFK = sn.nodeObject.foreignKeyPathLength === foreignKeyPathLength;
+                    var prefixAlias = containsLastFK ? outAlias : null;
+
+                    // if this is true, we should make sure the used alias is added to the sourcekey
+                    var addAliasToSourcekey = false;
+                    if (containsLastFK && sourcekey && sourcekey in pathPrefixAliasMapping.usedSourceKeys) {
+                        addAliasToSourcekey = true;
                     }
-                    var prefixAlias = mainTableAlias + "_P" + (++pathPrefixAliasMapping.lastIndex);
+
+                    if (sn.pathPrefixSourcekey in pathPrefixAliasMapping.aliases) {
+                        usedOutAlias = pathPrefixAliasMapping.aliases[sn.pathPrefixSourcekey];
+
+                        // make sure this alias is mapped to the sourcekey as well
+                        if (addAliasToSourcekey) {
+                            pathPrefixAliasMapping.aliases[sourcekey] = usedOutAlias;
+                        }
+
+                        return "$" + usedOutAlias;
+                    }
+
+                    // if we have to use alias but it's already not defined, create one
+                    if (!prefixAlias && (sn.pathPrefixSourcekey in pathPrefixAliasMapping.usedSourceKeys || addAliasToSourcekey)) {
+                        prefixAlias = mainTableAlias + "_P" + (++pathPrefixAliasMapping.lastIndex);
+                    }
 
                     res = _sourceColumnHelpers.parseAllOutBoundNodes(
                         sn.nodeObject.sourceObjectNodes,
                         sn.nodeObject.lastForeignKeyNode,
+                        sn.nodeObject.foreignKeyPathLength,
                         sn.pathPrefixSourcekey,
                         pathPrefixAliasMapping,
                         prefixAlias,
@@ -1546,18 +1622,43 @@
                     );
 
                     // we should first parse the existing and then add it to list
-                    pathPrefixAliasMapping.aliases[sn.pathPrefixSourcekey] = prefixAlias;
-                    usedOutAlias = prefixAlias;
+                    // we might not have added alias
+                    if (prefixAlias) {
+                        // if already has been added, then just use it
+                        if (sn.pathPrefixSourcekey in pathPrefixAliasMapping.aliases) {
+                            prefixAlias = pathPrefixAliasMapping.aliases[sn.pathPrefixSourcekey];
+                        } else {
+                            // we should first parse the existing and then add it to list
+                            pathPrefixAliasMapping.aliases[sn.pathPrefixSourcekey] = prefixAlias;
+                        }
+
+                        usedOutAlias = prefixAlias;
+
+                        // if this is the last one, then we should make sure the
+                        // sourcekey is mapped to this alias
+                        if (addAliasToSourcekey) {
+                            pathPrefixAliasMapping.aliases[sourcekey] = prefixAlias;
+                        }
+                    }
 
                     return res.path;
                 }
 
                 var fkStr = sn.toString(false, true);
+
+                // if this thing is used by other parts, then we should add alias to ensure sharing
+                if (sn === lastForeignKeyNode && sourcekey && sourcekey in pathPrefixAliasMapping.usedSourceKeys) {
+                    if (!outAlias) {
+                        outAlias = mainTableAlias + "_P" + (++pathPrefixAliasMapping.lastIndex);
+                    }
+                    pathPrefixAliasMapping.aliases[sourcekey] = outAlias;
+                }
+
                 res = prev;
                 res += (i > 0) ? "/" : "";
 
                 // what about sn.alias??
-                res += (sn == lastForeignKeyNode) ? (outAlias + ":=") : "";
+                res += (sn == lastForeignKeyNode && outAlias) ? (outAlias + ":=") : "";
                 res += fkStr;
 
                 return res;
@@ -1738,6 +1839,56 @@
             }
 
             return _sourceColumnHelpers.generateSourceObjectHashName({source: source}, false);
+        },
+
+        _populateUsedSourceKeys: function (usedSourceKeys, sources, rootTable) {
+            if (!rootTable) return;
+            var addToSourceKey = function (key) {
+                if (!(key in rootTable.sourceDefinitions.sourceDependencies)) return;
+
+                rootTable.sourceDefinitions.sourceDependencies[key].forEach(function (dep) {
+                    if (dep in usedSourceKeys) {
+                        usedSourceKeys[dep]++;
+                    } else {
+                        usedSourceKeys[dep] = 1;
+                    }
+                });
+            };
+            sources.forEach(function (srcObj) {
+                if (typeof srcObj !== "object") return;
+
+                if (typeof srcObj.sourcekey === "string") {
+                    if (srcObj.sourcekey === module._specialSourceDefinitions.SEARCH_BOX) {
+                        // add the search columns as well
+                        if (Array.isArray(rootTable.searchSourceDefinition)) {
+                            // since all the columns must be coming from the same instance,
+                            // just getting it from one is enough
+                            var col = rootTable.searchSourceDefinition[0];
+                            if (col.sourceObject && col.sourceObject.sourcekey) {
+                                addToSourceKey(col.sourceObject.sourcekey);
+                            } else if (col.sourceObjectNodes.length > 0 && col.sourceObjectNodes[0].isPathPrefix) {
+                                addToSourceKey(col.sourceObjectNodes[0].pathPrefixSourcekey);
+                            }
+                        }
+                        return;
+                    }
+                    addToSourceKey (srcObj.sourcekey);
+                    return;
+                }
+
+                if (!Array.isArray(srcObj.source) || !isStringAndNotEmpty(srcObj.source[0].sourcekey)) {
+                    return;
+                }
+                // if this is the case, then it's an invalid url that will throw error later
+                if (srcObj.source[0].sourcekey === module._specialSourceDefinitions.SEARCH_BOX) {
+                    return;
+                }
+                addToSourceKey(srcObj.source[0].sourcekey);
+            });
+            for (var k in usedSourceKeys) {
+                if (usedSourceKeys[k] < 2) delete usedSourceKeys[k];
+            }
+            return usedSourceKeys;
         }
     };
 

@@ -1,3 +1,5 @@
+var utils = require('./../../../utils/utilities.js');
+
 exports.execute = function (options) {
 
     // Test Cases:
@@ -949,21 +951,28 @@ exports.execute = function (options) {
             });
 
             describe("regarding facets, ", function () {
-                var refWFacet1, refWFacet2, refWOFacet, pageWFacet1, pageWFacet2, pageWOFacet;
-                var facet1 = {
-                    "and": [
-                        {"source": "*", "search": ["9"]},
-                        {"source": [{"outbound": ["reference_schema", "hidden_fk_inbound_related_to_reference"]}, "id"], "choices": ["9006"]},
-                        {"source": [{"outbound": ["reference_schema", "fromname_fk_inbound_related_to_reference"]}, "id"], "choices": ["9005"]}
-                    ]
-                };
-                var facet2 = {
-                    "and": [
-                        {"source": [{"outbound": ["reference_schema", "fromname_fk_inbound_related_to_reference"]}, "id"], "choices": ["9004"]}
-                    ]
-                };
+                var refWFacet1, refWFacet2, refWOFacet, pageWFacet1, pageWFacet2, pageWOFacet, mainTableRID;
 
                 beforeAll(function (done) {
+                    mainTableRID = {
+                        "9004": utils.findEntityRID(options, schemaName, tableNameReference, "id", "9004"),
+                        "9005": utils.findEntityRID(options, schemaName, tableNameReference, "id", "9005"),
+                        "9006": utils.findEntityRID(options, schemaName, tableNameReference, "id", "9006")
+                    };
+
+                    var facet1 = {
+                        "and": [
+                            {"source": "*", "search": ["9"]},
+                            {"source": [{"outbound": ["reference_schema", "hidden_fk_inbound_related_to_reference"]}, "RID"], "choices": [mainTableRID["9006"]]},
+                            {"source": [{"outbound": ["reference_schema", "fromname_fk_inbound_related_to_reference"]}, "RID"], "choices": [mainTableRID["9005"]]}
+                        ]
+                    };
+                    var facet2 = {
+                        "and": [
+                            {"source": [{"outbound": ["reference_schema", "fromname_fk_inbound_related_to_reference"]}, "RID"], "choices": [mainTableRID["9004"]]}
+                        ]
+                    };
+
                     options.ermRest.resolve(createURL(tableNameInboundRelated) + "@sort(id)").then(function (ref1) {
                         refWOFacet = ref1;
                         return refWOFacet.read(40);
@@ -989,17 +998,34 @@ exports.execute = function (options) {
 
                 it ("if the main reference has a facet, the returned reference must have it too.", function () {
                     var ref = refWFacet1.setSamePaging(pageWOFacet);
-                    expect(ref.location.ermrestCompactPath).toEqual("M:=reference_schema:inbound_related_reference_table/*::ciregexp::%5E%28.%2A%5B%5E0-9.%5D%29%3F0%2A9%28%5B%5E0-9%5D.%2A%7C%24%29/$M/fk_to_reference_hidden=9006/$M/fk_to_reference_with_fromname=9005/$M");
+                    var expectedPath = [
+                        "M:=reference_schema:inbound_related_reference_table",
+                        "*::ciregexp::%5E%28.%2A%5B%5E0-9.%5D%29%3F0%2A9%28%5B%5E0-9%5D.%2A%7C%24%29/$M",
+                        "(fk_to_reference_hidden)=(reference_schema:reference_table:id)/RID=" + mainTableRID["9006"] + "/$M",
+                        "(fk_to_reference_with_fromname)=(reference_schema:reference_table:id)/RID=" + mainTableRID["9005"] + "/$M"
+                    ].join("/");
+                    expect(ref.location.ermrestCompactPath).toEqual(expectedPath);
                 });
 
                 it ("if the main reference doesn't have facet, but the page has, the returned reference must have it too.", function () {
                     var ref = refWOFacet.setSamePaging(pageWFacet2);
-                    expect(ref.location.ermrestCompactPath).toEqual("M:=reference_schema:inbound_related_reference_table/fk_to_reference_with_fromname=9004/$M");
+                    var expectedPath = [
+                        "M:=reference_schema:inbound_related_reference_table",
+                        "(fk_to_reference_with_fromname)=(reference_schema:reference_table:id)/RID=" + mainTableRID["9004"] + "/$M"
+                    ].join("/");
+                    expect(ref.location.ermrestCompactPath).toEqual(expectedPath);
                 });
 
                 it ("if both the main reference and page have facets, the retuerned reference must have all the facets.", function () {
                     var ref = refWFacet1.setSamePaging(pageWFacet2);
-                    expect(ref.location.ermrestCompactPath).toEqual("M:=reference_schema:inbound_related_reference_table/*::ciregexp::%5E%28.%2A%5B%5E0-9.%5D%29%3F0%2A9%28%5B%5E0-9%5D.%2A%7C%24%29/$M/fk_to_reference_hidden=9006/$M/fk_to_reference_with_fromname=9005/$M/fk_to_reference_with_fromname=9004/$M");
+                    var expectedPath = [
+                        "M:=reference_schema:inbound_related_reference_table",
+                        "*::ciregexp::%5E%28.%2A%5B%5E0-9.%5D%29%3F0%2A9%28%5B%5E0-9%5D.%2A%7C%24%29/$M",
+                        "(fk_to_reference_hidden)=(reference_schema:reference_table:id)/RID=" + mainTableRID["9006"] + "/$M",
+                        "(fk_to_reference_with_fromname)=(reference_schema:reference_table:id)/RID=" + mainTableRID["9005"] + "/$M",
+                        "(fk_to_reference_with_fromname)=(reference_schema:reference_table:id)/RID=" + mainTableRID["9004"] + "/$M"
+                    ].join("/");
+                    expect(ref.location.ermrestCompactPath).toEqual(expectedPath);
                 });
             });
 
