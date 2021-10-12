@@ -78,7 +78,6 @@ exports.execute = function (options) {
             it('resolve should return a Reference object that is defined.', function(done) {
                 options.ermRest.resolve(singleEntityUri, {cid: "test"}).then(function (response) {
                     reference = response;
-                    reference.session = { attributes: [] };
 
                     expect(reference).toEqual(jasmine.any(Object));
 
@@ -391,7 +390,6 @@ exports.execute = function (options) {
                 it('resolve should return a Reference object that is defined.', function(done) {
                     options.ermRest.resolve(entityWithSlash, {cid: "test"}).then(function (response) {
                         reference = response;
-                        reference.session = { attributes: [] };
 
                         expect(reference).toEqual(jasmine.any(Object));
 

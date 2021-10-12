@@ -181,7 +181,6 @@ exports.execute = function (options) {
             it('1.1 resolve should return a Reference object that is defined.', function(done) {
                 options.ermRest.resolve(uri1, {cid: "test"}).then(function (response) {
                     reference = response;
-                    reference.session = { attributes: [] };
 
                     expect(reference).toEqual(jasmine.any(Object));
 
@@ -371,7 +370,6 @@ exports.execute = function (options) {
             it('2.1 resolve should return a Reference object that is defined.', function(done) {
                 options.ermRest.resolve(uri2, {cid: "test"}).then(function (response) {
                     reference = response;
-                    reference.session = { attributes: [] };
 
                     expect(reference).toEqual(jasmine.any(Object));
 
@@ -562,7 +560,6 @@ exports.execute = function (options) {
             it('3.1 resolve should return a Reference object that is defined.', function(done) {
                 options.ermRest.resolve(uri3, {cid: "test"}).then(function (response) {
                     reference = response;
-                    reference.session = { attributes: [] };
 
                     expect(reference).toEqual(jasmine.any(Object));
 
@@ -758,7 +755,6 @@ exports.execute = function (options) {
             it('4.1 resolve should return a Reference object that is defined.', function(done) {
                 options.ermRest.resolve(uri4, {cid: "test"}).then(function (response) {
                     reference = response;
-                    reference.session = { attributes: [] };
 
                     expect(reference).toEqual(jasmine.any(Object));
 
@@ -948,7 +944,6 @@ exports.execute = function (options) {
             it('5.1 resolve should return a Reference object that is defined.', function(done) {
                 options.ermRest.resolve(uri5, {cid: "test"}).then(function (response) {
                     reference = response;
-                    reference.session = { attributes: [] };
 
                     expect(reference).toEqual(jasmine.any(Object));
 
@@ -1140,7 +1135,6 @@ exports.execute = function (options) {
             it('6.1 resolve should return a Reference object that is defined.', function(done) {
                 options.ermRest.resolve(uri6, {cid: "test"}).then(function (response) {
                     reference = response;
-                    reference.session = { attributes: [] };
 
                     expect(reference).toEqual(jasmine.any(Object));
 
@@ -1333,7 +1327,6 @@ exports.execute = function (options) {
             it('7.1 resolve should return a Reference object that is defined.', function(done) {
                 options.ermRest.resolve(uri7, {cid: "test"}).then(function (response) {
                     reference = response;
-                    reference.session = { attributes: [] };
 
                     expect(reference).toEqual(jasmine.any(Object));
 
@@ -1534,7 +1527,6 @@ exports.execute = function (options) {
             it('8.1 resolve should return a Reference object that is defined.', function(done) {
                 options.ermRest.resolve(uri8, {cid: "test"}).then(function (response) {
                     reference = response;
-                    reference.session = { attributes: [] };
 
                     expect(reference).toEqual(jasmine.any(Object));
 
@@ -1725,7 +1717,6 @@ exports.execute = function (options) {
             it('9.1 resolve should return a Reference object that is defined.', function(done) {
                 options.ermRest.resolve(uri9, {cid: "test"}).then(function (response) {
                     reference = response;
-                    reference.session = { attributes: [] };
 
                     expect(reference).toEqual(jasmine.any(Object));
 
@@ -1917,7 +1908,6 @@ exports.execute = function (options) {
             it('10.1 resolve should return a Reference object that is defined.', function(done) {
                 options.ermRest.resolve(uri10, {cid: "test"}).then(function (response) {
                     reference = response;
-                    reference.session = { attributes: [] };
 
                     expect(reference).toEqual(jasmine.any(Object));
 
@@ -2110,7 +2100,6 @@ exports.execute = function (options) {
             it('11.1 resolve should return a Reference object that is defined.', function(done) {
                 options.ermRest.resolve(uri11, {cid: "test"}).then(function (response) {
                     reference = response;
-                    reference.session = { attributes: [] };
 
                     expect(reference).toEqual(jasmine.any(Object));
 
@@ -2307,7 +2296,6 @@ exports.execute = function (options) {
             it('12.1 resolve should return a Reference object that is defined.', function(done) {
                 options.ermRest.resolve(uri12, {cid: "test"}).then(function (response) {
                     reference = response;
-                    reference.session = { attributes: [] };
 
                     expect(reference).toEqual(jasmine.any(Object));
 
@@ -2494,7 +2482,6 @@ exports.execute = function (options) {
             it('13.1 resolve should return a Reference object that is defined.', function(done) {
                 options.ermRest.resolve(uri13, {cid: "test"}).then(function (response) {
                     reference = response;
-                    reference.session = { attributes: [] };
 
                     expect(reference).toEqual(jasmine.any(Object));
 
@@ -2735,7 +2722,6 @@ exports.execute = function (options) {
             it('14.1 resolve should return a Reference object that is defined.', function(done) {
                 options.ermRest.resolve(uri14, {cid: "test"}).then(function (response) {
                     reference = response;
-                    reference.session = { attributes: [] };
 
                     expect(reference).toEqual(jasmine.any(Object));
 
@@ -2924,7 +2910,6 @@ exports.execute = function (options) {
             it('15.1 resolve should return a Reference object that is defined.', function(done) {
                 options.ermRest.resolve(uri15, {cid: "test"}).then(function (response) {
                     reference = response;
-                    reference.session = { attributes: [] };
 
                     expect(reference).toEqual(jasmine.any(Object), "reference is not an object.");
                     expect(reference._table.name).toBe(baseTable1, "table name missmatch.");
@@ -3078,7 +3063,6 @@ exports.execute = function (options) {
             it('16.1 resolve should return a Reference object that is defined.', function(done) {
                 options.ermRest.resolve(uri16, {cid: "test"}).then(function (response) {
                     reference = response;
-                    reference.session = { attributes: [] };
 
                     expect(reference).toEqual(jasmine.any(Object), "reference is not an object.");
                     expect(reference._table.name).toBe(altDetailedTable1, "table name missmatch.");

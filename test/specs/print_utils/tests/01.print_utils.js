@@ -365,12 +365,27 @@ exports.execute = function (options) {
             expect(module._renderMustacheTemplate("cid: {{$dcctx.cid}}", {}, options.catalog)).toBe("cid: test");
         });
 
-        it('module._renderMustacheTemplate() should inject $catalog obj', function() {
+        it('module._renderMustacheTemplate() should inject $catalog obj', function () {
             expect(module._renderMustacheTemplate("catalog snapshot: {{$catalog.snapshot}}, catalog id: {{$catalog.id}}", {}, options.catalog)).toBe("catalog snapshot: " + process.env.DEFAULT_CATALOG + ", catalog id: " + process.env.DEFAULT_CATALOG);
         });
 
         it("module._renderMustacheTemplate() should NOT inject $catalog obj if 'catalog' is not passed to the function", function() {
             expect(module._renderMustacheTemplate("catalog snapshot:{{# $catalog.snapshot}} {{$catalog.snapshot}}{{/$catalog.snapshot}}", {})).toBe("catalog snapshot:");
+        });
+
+        it('module._renderMustacheTemplate() should inject $session obj', function () {
+            expect(module._renderMustacheTemplate("{{$session.display_name}}", {})).not.toBeNull("display_name is null");
+            expect(module._renderMustacheTemplate("{{$session.id}}", {})).not.toBeNull("id is null");
+            expect(module._renderMustacheTemplate("{{$session.identities}}", {})).not.toBeNull("identities is null");
+            expect(module._renderMustacheTemplate("{{$session.attributes}}", {})).not.toBeNull("attributes is null");
+
+            expect(module._renderMustacheTemplate("{{$session.display_name}}", {})).toBe(options.session.client.display_name, "display_name not set");
+            expect(module._renderMustacheTemplate("{{{$session.id}}}", {})).toBe(options.session.client.id, "id not set");
+        });
+
+        it('module._renderMustacheTemplate() should NOT inject $location obj', function () {
+            // location isn't available in unit test environment
+            expect(module._renderMustacheTemplate("{{$location.origin}}", {})).toBeNull();
         });
 
         var obj = {
@@ -659,6 +674,26 @@ exports.execute = function (options) {
 
             it("NOT injecting $catalog obj", function() {
                 expect(module.renderHandlebarsTemplate("catalog snapshot:{{#if $catalog.snapshot}} {{$catalog.snapshot}}{{/if}}", {})).toBe("catalog snapshot:");
+            });
+
+            it('injecting $session obj', function () {
+                // test cases dependent on which user runs them
+                expect(module.renderHandlebarsTemplate("{{$session.display_name}}", {})).not.toBeNull();
+                expect(module.renderHandlebarsTemplate("{{$session.id}}", {})).not.toBeNull();
+                expect(module.renderHandlebarsTemplate("{{$session.identities}}", {})).not.toBeNull();
+                expect(module.renderHandlebarsTemplate("{{$session.attributes}}", {})).not.toBeNull();
+
+                expect(module.renderHandlebarsTemplate("{{$session.display_name}}", {})).toBe(options.session.client.display_name);
+                expect(module.renderHandlebarsTemplate("{{$session.id}}", {})).toBe(options.session.client.id);
+
+                expect(module.renderHandlebarsTemplate("{{#each $session.attributes}}{{#if @first}}{{../$session.attributes.length}}{{/if}}{{/each}}", {})).not.toBeNull();
+                expect(module.renderHandlebarsTemplate("{{#each $session.attributes}}{{#if @first}}{{this.type}}{{/if}}{{/each}}", {})).not.toBeNull();
+                expect(module.renderHandlebarsTemplate("{{#each $session.identities}}{{#if @first}}{{../$session.identities.length}}{{/if}}{{/each}}", {})).not.toBeNull();
+            });
+
+            it('NOT injecting $location obj', function () {
+                // location isn't available in unit test environment
+                expect(module.renderHandlebarsTemplate("{{$location.origin}}", {})).toBeNull();
             });
 
             var handlebarTemplateCases = [{
