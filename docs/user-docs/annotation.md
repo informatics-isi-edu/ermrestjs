@@ -772,13 +772,13 @@ This key can be used to define export templates that will be used for `ioboxd` s
 
 Supported JSON payload patterns:
 
-- `{` ... _context_ `:` `{` `"templates":` `[`_template_`]` `}` `,` ... `}`: An array of template objects to export.
+- `{` ... _context_ `:` `{` `"templates":` `[`_template_ `,` ... `]` `}` `,` ... `}`: An array of template objects to export.
 - `{` ... _context1_ `:` _context2_ ... `}`: Short-hand to allow _context1_ to use the same templates configured for _context2_.
 
 Supported _template_ patterns:
 - `{` ... `"displayname:"` _displayname_ ... `}`: The display name that will be used to populate the Chaise export drop-down for this _template_.
 - `{` ... `"type:"` _type_ ... `}` One of two keywords; _"FILE"_ or _"BAG"_, used to determine the container format for results.
-- `{`... `"outputs":` `[`_output_`]` ... `}`: An array of _output_ objects. If the template type is _"BAG"_ you MAY leave this attribute and not define it. In this case, the default `outputs` that the client generates will be used.
+- `{`... `"outputs":` `[`_output_`]` ... `}`: An array of _output_ objects.
 
 Supported _output_ patterns:
 - `{`... `"source:"` _sourceentry_ ... `}`: An object that contains parameters used to generate source data by querying ERMrest.
@@ -799,7 +799,7 @@ This annotation only applies to table but MAY be annotated at the schema level t
 
 #### Heurisistics
 
-If the annotation is missing from the table and the schema, client MAY apply a set of heuristics. Currently, chaise will apply some heursitscs only in `detailed` context (record app) which you can find more information about it [in here](export.md#how-ermrestjs-interperts-it).
+If the annotation is missing from the table, schema and catalog, client MAY apply a set of heuristics. Currently, chaise will apply some heursitscs only in `detailed` context (record app) which you can find more information about it [in here](export.md#default-bdbag-template).
 
 ### Tag: 2016 Export (_Deprecated_)
 

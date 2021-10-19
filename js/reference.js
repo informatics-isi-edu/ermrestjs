@@ -2588,23 +2588,29 @@
                 
                 // if it's an object, we have to see whether it's fragment or not
                 if (isObjectAndNotNull(obj)) {
+
                     if ("fragment_key" in obj) {
                         var fragmentKey = obj.fragment_key;
+
+                        // there was a cycle, so just set the variables and abort
                         if (fragmentKey in usedFragments) {
                             cycleKey = fragmentKey;
                             hasCycle = true;
                             return null;
                         }
 
-                        usedFragments[fragmentKey] = true;
-                        if (fragmentKey in exportFragments) {
-                            return _replaceFragments(exportFragments[fragmentKey], usedFragments);
-                        } else {
+                        // fragment_key is invalid
+                        if (!(fragmentKey in exportFragments)) {
                             module._log.warn("Export: the given fragment_key `" + fragmentKey + "` is not valid");
                             return null;
                         }
+
+                        // replace with actual definition
+                        usedFragments[fragmentKey] = true;
+                        return _replaceFragments(exportFragments[fragmentKey], usedFragments);
                     }
                     
+                    // run the function for each value
                     res = {};
                     for (var k in obj) {
                         res[k] = _replaceFragments(obj[k], usedFragments);
