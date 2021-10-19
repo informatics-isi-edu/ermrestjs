@@ -54,8 +54,10 @@
         DISPLAY: "tag:misd.isi.edu,2015:display",
         EXPORT: "tag:isrd.isi.edu,2016:export",
         EXPORT_CONTEXTED: "tag:isrd.isi.edu,2019:export",
+        EXPORT_FRAGMENT_DEFINITIONS: "tag:isrd.isi.edu,2021:export-fragment-definitions",
         FOREIGN_KEY: "tag:isrd.isi.edu,2016:foreign-key",
         GENERATED: "tag:isrd.isi.edu,2016:generated",
+        GOOGLE_DATASET_METADATA: "tag:isrd.isi.edu,2021:google-dataset",
         HIDDEN: "tag:misd.isi.edu,2015:hidden", //TODO deprecated and should be deleted.
         IGNORE: "tag:isrd.isi.edu,2016:ignore", //TODO should not be used in column and foreign key
         IMMUTABLE: "tag:isrd.isi.edu,2016:immutable",
@@ -67,8 +69,7 @@
         TABLE_CONFIG: "tag:isrd.isi.edu,2021:table-config",
         TABLE_DISPLAY: "tag:isrd.isi.edu,2016:table-display",
         VISIBLE_COLUMNS: "tag:isrd.isi.edu,2016:visible-columns",
-        VISIBLE_FOREIGN_KEYS: "tag:isrd.isi.edu,2016:visible-foreign-keys",
-        GOOGLE_DATASET_METADATA: "tag:isrd.isi.edu,2021:google-dataset"
+        VISIBLE_FOREIGN_KEYS: "tag:isrd.isi.edu,2016:visible-foreign-keys"
     });
 
     /**

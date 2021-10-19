@@ -164,6 +164,7 @@ to use for ERMrest JavaScript agents.
             * [.uri](#ERMrest.Table+uri) : <code>string</code>
             * [.sourceDefinitions](#ERMrest.Table+sourceDefinitions) : <code>Object</code>
             * [.searchSourceDefinition](#ERMrest.Table+searchSourceDefinition) : <code>Array.&lt;Object&gt;</code> \| <code>false</code>
+                * [~_getSearchSourceDefinition()](#ERMrest.Table+searchSourceDefinition.._getSearchSourceDefinition)
             * [.pureBinaryForeignKeys](#ERMrest.Table+pureBinaryForeignKeys) : [<code>Array.&lt;ForeignKeyRef&gt;</code>](#ERMrest.ForeignKeyRef)
             * [._getRowDisplayKey(context)](#ERMrest.Table+_getRowDisplayKey)
             * [.getExportTemplates()](#ERMrest.Table+getExportTemplates) : <code>Array</code> \| <code>null</code>
@@ -1217,6 +1218,7 @@ check for table name existence
         * [.uri](#ERMrest.Table+uri) : <code>string</code>
         * [.sourceDefinitions](#ERMrest.Table+sourceDefinitions) : <code>Object</code>
         * [.searchSourceDefinition](#ERMrest.Table+searchSourceDefinition) : <code>Array.&lt;Object&gt;</code> \| <code>false</code>
+            * [~_getSearchSourceDefinition()](#ERMrest.Table+searchSourceDefinition.._getSearchSourceDefinition)
         * [.pureBinaryForeignKeys](#ERMrest.Table+pureBinaryForeignKeys) : [<code>Array.&lt;ForeignKeyRef&gt;</code>](#ERMrest.ForeignKeyRef)
         * [._getRowDisplayKey(context)](#ERMrest.Table+_getRowDisplayKey)
         * [.getExportTemplates()](#ERMrest.Table+getExportTemplates) : <code>Array</code> \| <code>null</code>
@@ -1374,6 +1376,13 @@ Returns an object with
 Returns an array of SourceObjectWrapper objects.
 
 **Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
+<a name="ERMrest.Table+searchSourceDefinition.._getSearchSourceDefinition"></a>
+
+##### searchSourceDefinition~\_getSearchSourceDefinition()
+search-box is either on the first level below the annotation,
+or parts of sources.
+
+**Kind**: inner method of [<code>searchSourceDefinition</code>](#ERMrest.Table+searchSourceDefinition)  
 <a name="ERMrest.Table+pureBinaryForeignKeys"></a>
 
 #### table.pureBinaryForeignKeys : [<code>Array.&lt;ForeignKeyRef&gt;</code>](#ERMrest.ForeignKeyRef)

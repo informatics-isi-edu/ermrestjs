@@ -47,32 +47,33 @@ TBD changes to propose for ERMrest:
 Some annotations are supported on multiple types of model element, so
 here is a quick matrix to locate them.
 
-| Annotation                                                  | Catalog | Schema | Table | Column | Key | FKR | Summary                                       |
-|-------------------------------------------------------------|---------|--------|-------|--------|-----|-----|-----------------------------------------------|
-| [2015 Display](#tag-2015-display)                           | X       | X      | X     | X      | X   | -   | Display options                               |
-| [2015 Vocabulary](#tag-2015-vocabulary-deprecated) (_deprecated_) | -       | -      | X     | -      | -   | -   | Table as a vocabulary list                    |
-| [2016 Table Alternatives](#tag-2016-table-alternatives)     | -       | -      | X     | -      | _   | _   | Table abstracts another table                 |
-| [2016 Column Display](#tag-2016-column-display)             | -       | -      | -     | X      | -   | -   | Column-specific display options               |
-| [2017 Key Display](#tag-2017-key-display)                   | -       | -      | -     | -      | X   | -   | Key augmentation                              |
-| [2016 Foreign Key](#tag-2016-foreign-key)                   | -       | -      | -     | -      | -   | X   | Foreign key augmentation                      |
-| [2016 Generated](#tag-2016-generated)                       | -       | X      | X     | X      | -   | -   | Generated model element                       |
-| [2016 Ignore](#tag-2016-ignore-deprecated) (_deprecated_)   | -       | X      | X     | X      | -   | -   | Ignore model element                          |
-| [2016 Immutable](#tag-2016-immutable)                       | -       | X      | X     | X      | -   | -   | Immutable model element                       |
-| [2016 Non Deletable](#tag-2016-non-deletable)               | -       | X      | X     | -      | -   | -   | Non-deletable model element                   |
-| [2016 App Links](#tag-2016-app-links)                       | -       | X      | X     | -      | -   | -   | Intra-Chaise app links                        |
-| [2016 Table Display](#tag-2016-table-display)               | -       | -      | X     | -      | -   | -   | Table-specific display options                |
-| [2016 Visible Columns](#tag-2016-visible-columns)           | -       | -      | X     | -      | -   | -   | Column visibility and presentation order      |
-| [2016 Visible Foreign Keys](#tag-2016-visible-foreign-keys) | -       | -      | X     | -      | -   | -   | Foreign key visibility and presentation order |
-| [2019 Export](#tag-2019-export)                             | -       | X      | X     | -      | -   | -   | Describes export templates                    |
-| [2016 Export](#tag-2016-export-deprecated) (_deprecated_)   | -       | X      | X     | -      | -   | -   | Describes export templates                    |
-| [2017 Asset](#tag-2017-asset)                               | -       | -      | -     | X      | -   | -   | Describes assets                              |
-| [2018 Citation](#tag-2018-citation)                         | -       | -      | X     | -      | -   | -   | Describes citation                            |
-| [2018 Required](#tag-2018-required)                         | -       | -      | -     | X      | -   | -   | Required model column                         |
-| [2018 Indexing Preferences](#tag-2018-indexing-preferences) | -       | -      | X     | X      | -   | -   | Specify database indexing preferences         |
-| [2019 Chaise Config](#tag-2019-chaise-config)               | X       | -      | -     | -      | -   | -   | Properties to configure chaise app UX         |
-| [2019 Source Definitions](#tag-2019-source-definitions)     | -       | -      | X     | -      | -   | -   | Describe source definitions                   |
-| [2021 Google Dataset](#tag-2021-google-dataset)             | -       | -      | X     | -      | -   | -   | Describe metadata for rich results in Google Dataset |
-| [2021 Table Config](#tag-2021-table-config)                 | -       | -      | X     | -      | -   | -   | Describe Table Config                         |
+| Annotation                                                               | Catalog | Schema | Table | Column | Key | FKR | Summary                                                        |
+|--------------------------------------------------------------------------|---------|--------|-------|--------|-----|-----|----------------------------------------------------------------|
+| [2015 Display](#tag-2015-display)                                        | X       | X      | X     | X      | X   | -   | Display options                                                |
+| [2015 Vocabulary](#tag-2015-vocabulary-deprecated) (_deprecated_)        | -       | -      | X     | -      | -   | -   | Table as a vocabulary list                                     |
+| [2016 Table Alternatives](#tag-2016-table-alternatives)                  | -       | -      | X     | -      | _   | _   | Table abstracts another table                                  |
+| [2016 Column Display](#tag-2016-column-display)                          | -       | -      | -     | X      | -   | -   | Column-specific display options                                |
+| [2017 Key Display](#tag-2017-key-display)                                | -       | -      | -     | -      | X   | -   | Key augmentation                                               |
+| [2016 Foreign Key](#tag-2016-foreign-key)                                | -       | -      | -     | -      | -   | X   | Foreign key augmentation                                       |
+| [2016 Generated](#tag-2016-generated)                                    | -       | X      | X     | X      | -   | -   | Generated model element                                        |
+| [2016 Ignore](#tag-2016-ignore-deprecated) (_deprecated_)                | -       | X      | X     | X      | -   | -   | Ignore model element                                           |
+| [2016 Immutable](#tag-2016-immutable)                                    | -       | X      | X     | X      | -   | -   | Immutable model element                                        |
+| [2016 Non Deletable](#tag-2016-non-deletable)                            | -       | X      | X     | -      | -   | -   | Non-deletable model element                                    |
+| [2016 App Links](#tag-2016-app-links)                                    | -       | X      | X     | -      | -   | -   | Intra-Chaise app links                                         |
+| [2016 Table Display](#tag-2016-table-display)                            | -       | -      | X     | -      | -   | -   | Table-specific display options                                 |
+| [2016 Visible Columns](#tag-2016-visible-columns)                        | -       | -      | X     | -      | -   | -   | Column visibility and presentation order                       |
+| [2016 Visible Foreign Keys](#tag-2016-visible-foreign-keys)              | -       | -      | X     | -      | -   | -   | Foreign key visibility and presentation order                  |
+| [2019 Export](#tag-2019-export)                                          | X       | X      | X     | -      | -   | -   | Describes export templates                                     |
+| [2016 Export](#tag-2016-export-deprecated) (_deprecated_)                | X       | X      | X     | -      | -   | -   | Describes export templates                                     |
+| [2017 Asset](#tag-2017-asset)                                            | -       | -      | -     | X      | -   | -   | Describes assets                                               |
+| [2018 Citation](#tag-2018-citation)                                      | -       | -      | X     | -      | -   | -   | Describes citation                                             |
+| [2018 Required](#tag-2018-required)                                      | -       | -      | -     | X      | -   | -   | Required model column                                          |
+| [2018 Indexing Preferences](#tag-2018-indexing-preferences)              | -       | -      | X     | X      | -   | -   | Specify database indexing preferences                          |
+| [2019 Chaise Config](#tag-2019-chaise-config)                            | X       | -      | -     | -      | -   | -   | Properties to configure chaise app UX                          |
+| [2019 Source Definitions](#tag-2019-source-definitions)                  | -       | -      | X     | -      | -   | -   | Describe source definitions                                    |
+| [2021 Google Dataset](#tag-2021-google-dataset)                          | -       | -      | X     | -      | -   | -   | Describe metadata for rich results in Google Dataset           |
+| [2021 Table Config](#tag-2021-table-config)                              | -       | -      | X     | -      | -   | -   | Describe Table Config                                          |
+| [2021 Export Fragment Definitions](#tag-2021-export-fragment-definitions)| X       | X      | X     | -      | -   | -   | Describe export fragments that may be used in export anotation |
 
 For brevity, the annotation keys are listed above by their section
 name within this documentation. The actual key URI follows one of these formats:
@@ -1059,7 +1060,7 @@ Supported _columns_ patterns:
 - `true`: By setting the value of `"columns"` to `true`, chaise will provide the data for all the outbound foreign keys fo the table in templating environments.
 - _Any other values_ : In this case chaise will not provide any foreign key data in templating environments.
 
-## Tag: 2021 Google Dataset
+### Tag: 2021 Google Dataset
 `tag:isrd.isi.edu,2021:google-dataset`
 
 This key indicates the metadata that will be converted to valid and well-formed JSON-LD referencing a table. In terms of SEO, JSON-LD is implemented leveraging the Schema.org vocabulary, which is a unified structured data vocabulary for the web. [Google Dataset Search](https://datasetsearch.research.google.com/) discovers datasets when a valid JSON-LD of type [Dataset](https://www.schema.org/Dataset) is added to the HTML page.
@@ -1119,7 +1120,7 @@ The following is an example of this annotation. You can also find more informati
   }
 }
 ```
-## Tag: 2021 Table Config
+### Tag: 2021 Table Config
 `tag:isrd.isi.edu,2021:table-config`
 
 This key indicates that the annotated table has a specific configuration options that modify the behavior of the table when accessing the APIs.
@@ -1139,7 +1140,12 @@ Note:
 - "Stable key" is used to provide a more stable and presistent value for entity facets and used in combination of "save query" feature. In some cases the model might change and the facet definitions are optimized to be performant and not stable/persistence. In these circumstances you can define a "stable key" for the table and Chaise will store value of stable key instead.
 
 
-### Context Names
+### Tag: 2021 Export Fragment Definitions
+
+`tag:isrd.isi.edu,2021:export-fragment-definitions`
+
+By using this key you can define an object that can be referred to while writing export annotation. The value of this key MUST be an object, otherwise it will be ignored. Please refer to `[Export annotation document](export.md)` for more details.
+## Context Names
 
 List of _context_ names that are used in ERMrest:
 

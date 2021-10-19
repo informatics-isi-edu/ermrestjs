@@ -45,15 +45,8 @@ var ERMrest = (function(module) {
         }
 
         // in FILE, outputs must be properly defined
-        if (template.type === "FILE") {
-            if (!Array.isArray(template.outputs) || template.outputs.length === 0) {
-                errMessage("outputs must be an array when template type is FILE.");
-                return false;
-            }
-        } else if (template.outputs == null) {
-            return true; // it could be missing or null (in this case we should use the default outputs)
-        } else if (!Array.isArray(template.outputs) || template.outputs.length === 0) {
-            errMessage("if outputs is defined, it must be an array.");
+        if (!Array.isArray(template.outputs) || template.outputs.length === 0) {
+            errMessage("outputs must be a non-empty array.");
             return false;
         }
 

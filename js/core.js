@@ -1789,66 +1789,46 @@
             var self = this,
                 exp = module._annotations.EXPORT,
                 expCtx = module._annotations.EXPORT_CONTEXTED,
+                expFragment = module._annotations.EXPORT_FRAGMENT_DEFINITIONS,
                 annotDefinition = {}, hasAnnot = false,
-                chosenAnnot, annotTemplates;
+                chosenAnnot;
 
-            var getValidTemplates = function (templates) {
-                // make sure it's an array
-                if (!Array.isArray(templates) || templates.length === 0) {
-                    return [];
+            // start from table, then try schema, and then catalog
+            [self, self.schema, self.schema.catalog].forEach(function (el) {
+                if (hasAnnot) return;
+
+                // get from table annotation
+                if (el.annotations.contains(exp)) {
+                    annotDefinition = {"*": el.annotations.get(exp).content};
+                    hasAnnot = true;
                 }
 
-                // filter only templates that are valid
-                return templates.filter(function (temp) {
-                    return module.validateExportTemplate(temp);
-                });
-            };
+                // get from table contextualized annotation
+                if (el.annotations.contains(expCtx)) {
+                    annotDefinition = Object.assign({}, annotDefinition, el.annotations.get(expCtx).content);
+                    hasAnnot = true;
+                }
 
-            // get from table annotation
-            if (self.annotations.contains(exp)) {
-                annotDefinition = {"*": self.annotations.get(exp).content};
-                hasAnnot = true;
-            }
+                if (hasAnnot) {
+                    // find the annotation defined for the context
+                    chosenAnnot = module._getAnnotationValueByContext(context, annotDefinition);
+                    if (chosenAnnot === -1) {
+                        hasAnnot = false;
+                    }
+                }
+            });
 
-            // get from table contextualized annotation
-            if (self.annotations.contains(expCtx)) {
-                annotDefinition = Object.assign({}, annotDefinition, self.annotations.get(expCtx).content);
-                hasAnnot = true;
-            }
-
-            // annotation was defined on table
             if (hasAnnot) {
-                // find the annotation defined for the context
-                chosenAnnot = module._getAnnotationValueByContext(context, annotDefinition);
-                if (chosenAnnot !== -1 && typeof chosenAnnot === "object") {
-                    return getValidTemplates(chosenAnnot.templates);
+                if (isObjectAndNotNull(chosenAnnot) && "templates" in chosenAnnot) {
+                    return chosenAnnot.templates;
                 }
-            }
-
-            //get from schema annoation
-            if (self.schema.annotations.contains(exp)) {
-                annotDefinition = {"*": self.schema.annotations.get(exp).content};
-                hasAnnot = true;
-            }
-
-            // get from schema contextualized annotation
-            if (self.schema.annotations.contains(expCtx)) {
-                annotDefinition = Object.assign({}, annotDefinition, self.schema.annotations.get(expCtx).content);
-                hasAnnot = true;
-            }
-
-            // annotation was defined on the schema
-            if (hasAnnot) {
-                // find the annotation defined for the context
-                chosenAnnot = module._getAnnotationValueByContext(context, annotDefinition);
-                if (chosenAnnot !== -1 && typeof chosenAnnot === "object") {
-                    return getValidTemplates(chosenAnnot.templates);
-                }
+                return [];
             }
 
             // annotation is not defined for the given context
             return null;
         },
+        
 
         // build foreignKeys of this table and referredBy of corresponding tables.
         _buildForeignKeys: function () {
