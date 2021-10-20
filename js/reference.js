@@ -2526,16 +2526,18 @@
          * If its `detailed` context and annotation was missing,
          * it will return the default export template.
          * @param {Boolean} useDefault whether we should use default template or not
-         * @return {Object}
+         * @return {Array}
          */
         getExportTemplates: function (useDefault) {
-            var self = this;
+            var self = this,
+                helpers = _exportHelpers;
+
 
             // either null or array
-            var templates = self.table.getExportTemplates(self._context);
+            var templates = helpers.getExportAnnotTemplates(self.table, self._context);
 
             // annotation is missing
-            if (templates === null) {
+            if (!Array.isArray(templates)) {
                 var canUseDefault = useDefault &&
                                     self._context === module._contexts.DETAILED &&
                                     self.defaultExportTemplate != null;
@@ -2543,111 +2545,10 @@
                 return canUseDefault ? [self.defaultExportTemplate]: [];
             }
 
-            // populate the exportFragments that might have been used in anntoation.
-            var exportFragments = {
-                "$chaise_default_bdbag_template": {
-                    "type": "BAG",
-                    "displayname": "$chaise_default_bdbag_displayname",
-                    "outputs": "$chaise_default_bdbag_outputs"
-                },
-                "$chaise_default_bdbag_displayname": "BDBag",
-                "$chaise_default_bdbag_outputs": Array.isArray(self.defaultExportTemplate) ? self.defaultExportTemplate.outputs : []
-            };
-            var annotKey = module._annotations.EXPORT_FRAGMENT_DEFINITIONS, annot;
-            [self.table.schema.catalog, self.table.schema, self.table].forEach(function (el) {
-                if (!el.annotations.contains(annotKey)) return;
-
-                annot = el.annotations.get(annotKey).content;
-                if (isObjectAndNotNull(annot)) {
-                    Object.assign(exportFragments, annot);
-                }
-            });
-
-            var hasCycle = false, cycleKey;
-
-            // traverse through the object and replace fragment with the actual definition
-            var _replaceFragments = function (obj, usedFragments) {
-                if (hasCycle) return null;
-
-                if (!usedFragments) {
-                    usedFragments = {};
-                }
-
-                var res;
-
-                // if it's an array, then we have to process each individual value
-                if (Array.isArray(obj)) {
-                    res = [];
-                    obj.forEach(function (item) {
-                        // flatten the values and just concat with each other
-                        res = res.concat(_replaceFragments(item, usedFragments));
-                    });
-
-                    return res;
-                } 
-                
-                // if it's an object, we have to see whether it's fragment or not
-                if (isObjectAndNotNull(obj)) {
-
-                    if ("fragment_key" in obj) {
-                        var fragmentKey = obj.fragment_key;
-
-                        // there was a cycle, so just set the variables and abort
-                        if (fragmentKey in usedFragments) {
-                            cycleKey = fragmentKey;
-                            hasCycle = true;
-                            return null;
-                        }
-
-                        // fragment_key is invalid
-                        if (!(fragmentKey in exportFragments)) {
-                            module._log.warn("Export: the given fragment_key `" + fragmentKey + "` is not valid");
-                            return null;
-                        }
-
-                        // replace with actual definition
-                        usedFragments[fragmentKey] = true;
-                        return _replaceFragments(exportFragments[fragmentKey], usedFragments);
-                    }
-                    
-                    // run the function for each value
-                    res = {};
-                    for (var k in obj) {
-                        res[k] = _replaceFragments(obj[k], usedFragments);
-                    }
-
-                    return res;
-                }
-
-                // for other data types, just return the input without any change
-                return obj;
-            };
-
-            var finalRes = _replaceFragments(templates, {});
-
-            // if there was cycle, just give up
-            if (hasCycle) {
-                module._log.warn("Export: circular dependency detected in the defined templates and therefore ignored. (caused by `" + cycleKey +"` key)");
-                return [];
-            }
-
-            // flatten the attributes that we expect to be array
-            if (finalRes != null) {
-                finalRes = Array.isArray(finalRes) ? finalRes : [finalRes];
-                finalRes.forEach(function (temp) {
-                    if (typeof temp != "object") return;
-
-                    // all these properties must be a flat array, so we just make sure that is the case
-                    ['outputs', 'postprocessors', 'transforms'].forEach(function (attr) {
-                        if (attr in temp) {
-                            if (!Array.isArray(temp[attr])) {
-                                temp[attr] = [temp[attr]];
-                            }
-                            temp[attr] = [].concat.apply([], temp[attr]);
-                        }
-                    });
-                });
-            }
+            var finalRes = helpers.replaceFragments(
+                templates,
+                helpers.getExportFragmentObject(self.table, self.defaultExportTemplate)
+            );
 
             // validate the templates
             return finalRes.filter(function (temp) {

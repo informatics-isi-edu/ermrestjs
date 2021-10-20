@@ -167,7 +167,6 @@ to use for ERMrest JavaScript agents.
                 * [~_getSearchSourceDefinition()](#ERMrest.Table+searchSourceDefinition.._getSearchSourceDefinition)
             * [.pureBinaryForeignKeys](#ERMrest.Table+pureBinaryForeignKeys) : [<code>Array.&lt;ForeignKeyRef&gt;</code>](#ERMrest.ForeignKeyRef)
             * [._getRowDisplayKey(context)](#ERMrest.Table+_getRowDisplayKey)
-            * [.getExportTemplates()](#ERMrest.Table+getExportTemplates) : <code>Array</code> \| <code>null</code>
             * [._getNullValue()](#ERMrest.Table+_getNullValue) : <code>object</code>
         * _static_
             * [.Entity](#ERMrest.Table.Entity)
@@ -405,7 +404,7 @@ to use for ERMrest JavaScript agents.
             * [~self](#ERMrest.Reference+delete..self)
         * [.getBatchAssociationRef(tuples)](#ERMrest.Reference+getBatchAssociationRef) ⇒ <code>Array</code>
         * [.generateRelatedList([tuple])](#ERMrest.Reference+generateRelatedList) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
-        * [.getExportTemplates(useDefault)](#ERMrest.Reference+getExportTemplates) ⇒ <code>Object</code>
+        * [.getExportTemplates(useDefault)](#ERMrest.Reference+getExportTemplates) ⇒ <code>Array</code>
         * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
         * [.getAggregates(aggregateList)](#ERMrest.Reference+getAggregates) ⇒ <code>Promise</code>
         * [.setSamePaging(page)](#ERMrest.Reference+setSamePaging) ⇒ [<code>Reference</code>](#ERMrest.Reference)
@@ -730,7 +729,7 @@ to use for ERMrest JavaScript agents.
             * [~self](#ERMrest.Reference+delete..self)
         * [.getBatchAssociationRef(tuples)](#ERMrest.Reference+getBatchAssociationRef) ⇒ <code>Array</code>
         * [.generateRelatedList([tuple])](#ERMrest.Reference+generateRelatedList) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
-        * [.getExportTemplates(useDefault)](#ERMrest.Reference+getExportTemplates) ⇒ <code>Object</code>
+        * [.getExportTemplates(useDefault)](#ERMrest.Reference+getExportTemplates) ⇒ <code>Array</code>
         * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
         * [.getAggregates(aggregateList)](#ERMrest.Reference+getAggregates) ⇒ <code>Promise</code>
         * [.setSamePaging(page)](#ERMrest.Reference+setSamePaging) ⇒ [<code>Reference</code>](#ERMrest.Reference)
@@ -1221,7 +1220,6 @@ check for table name existence
             * [~_getSearchSourceDefinition()](#ERMrest.Table+searchSourceDefinition.._getSearchSourceDefinition)
         * [.pureBinaryForeignKeys](#ERMrest.Table+pureBinaryForeignKeys) : [<code>Array.&lt;ForeignKeyRef&gt;</code>](#ERMrest.ForeignKeyRef)
         * [._getRowDisplayKey(context)](#ERMrest.Table+_getRowDisplayKey)
-        * [.getExportTemplates()](#ERMrest.Table+getExportTemplates) : <code>Array</code> \| <code>null</code>
         * [._getNullValue()](#ERMrest.Table+_getNullValue) : <code>object</code>
     * _static_
         * [.Entity](#ERMrest.Table.Entity)
@@ -1402,14 +1400,6 @@ It's the same as displaykey but with extra restrictions. It might return undefin
 | --- | --- | --- |
 | context | <code>string</code> | used to figure out if the column has markdown_pattern annoation or not. |
 
-<a name="ERMrest.Table+getExportTemplates"></a>
-
-#### table.getExportTemplates() : <code>Array</code> \| <code>null</code>
-Returns the export templates that are defined on this table.
-NOTE If this returns `null`, then the exportTemplates is not defined on the table or schema
-NOTE The returned template might not have `outputs` attribute.
-
-**Kind**: instance method of [<code>Table</code>](#ERMrest.Table)  
 <a name="ERMrest.Table+_getNullValue"></a>
 
 #### table.\_getNullValue() : <code>object</code>
@@ -3015,7 +3005,7 @@ Constructor for a ParsedFilter.
         * [~self](#ERMrest.Reference+delete..self)
     * [.getBatchAssociationRef(tuples)](#ERMrest.Reference+getBatchAssociationRef) ⇒ <code>Array</code>
     * [.generateRelatedList([tuple])](#ERMrest.Reference+generateRelatedList) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
-    * [.getExportTemplates(useDefault)](#ERMrest.Reference+getExportTemplates) ⇒ <code>Object</code>
+    * [.getExportTemplates(useDefault)](#ERMrest.Reference+getExportTemplates) ⇒ <code>Array</code>
     * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
     * [.getAggregates(aggregateList)](#ERMrest.Reference+getAggregates) ⇒ <code>Promise</code>
     * [.setSamePaging(page)](#ERMrest.Reference+setSamePaging) ⇒ [<code>Reference</code>](#ERMrest.Reference)
@@ -3642,7 +3632,7 @@ The logic for are sorted based on following attributes:
 
 <a name="ERMrest.Reference+getExportTemplates"></a>
 
-#### reference.getExportTemplates(useDefault) ⇒ <code>Object</code>
+#### reference.getExportTemplates(useDefault) ⇒ <code>Array</code>
 Will return the expor templates that are available for this reference.
 It will validate the templates that are defined in annotations.
 If its `detailed` context and annotation was missing,
@@ -6757,7 +6747,7 @@ get PathColumn object by column name
         * [~self](#ERMrest.Reference+delete..self)
     * [.getBatchAssociationRef(tuples)](#ERMrest.Reference+getBatchAssociationRef) ⇒ <code>Array</code>
     * [.generateRelatedList([tuple])](#ERMrest.Reference+generateRelatedList) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
-    * [.getExportTemplates(useDefault)](#ERMrest.Reference+getExportTemplates) ⇒ <code>Object</code>
+    * [.getExportTemplates(useDefault)](#ERMrest.Reference+getExportTemplates) ⇒ <code>Array</code>
     * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
     * [.getAggregates(aggregateList)](#ERMrest.Reference+getAggregates) ⇒ <code>Promise</code>
     * [.setSamePaging(page)](#ERMrest.Reference+setSamePaging) ⇒ [<code>Reference</code>](#ERMrest.Reference)
@@ -7384,7 +7374,7 @@ The logic for are sorted based on following attributes:
 
 <a name="ERMrest.Reference+getExportTemplates"></a>
 
-#### reference.getExportTemplates(useDefault) ⇒ <code>Object</code>
+#### reference.getExportTemplates(useDefault) ⇒ <code>Array</code>
 Will return the expor templates that are available for this reference.
 It will validate the templates that are defined in annotations.
 If its `detailed` context and annotation was missing,

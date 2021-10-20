@@ -15,6 +15,190 @@
  */
 var ERMrest = (function(module) {
 
+    _exportHelpers = {
+
+        /**
+         *
+         * Returns the export templates that are defined on this table.
+         * NOTE If this returns `null`, then the exportTemplates is not defined on the table or schema
+         * NOTE The returned array should not be directly used as it might be using fragments
+         * @param {ERMrest.Table} table
+         * @param {string} context
+         * @private
+         * @ignore
+         */
+        getExportAnnotTemplates: function (table, context) {
+            var exp = module._annotations.EXPORT,
+                expCtx = module._annotations.EXPORT_CONTEXTED,
+                annotDefinition = {}, hasAnnot = false,
+                chosenAnnot;
+
+            // start from table, then try schema, and then catalog
+            [table, table.schema, table.schema.catalog].forEach(function (el) {
+                if (hasAnnot) return;
+
+                // get from table annotation
+                if (el.annotations.contains(exp)) {
+                    annotDefinition = {"*": el.annotations.get(exp).content};
+                    hasAnnot = true;
+                }
+
+                // get from table contextualized annotation
+                if (el.annotations.contains(expCtx)) {
+                    annotDefinition = Object.assign({}, annotDefinition, el.annotations.get(expCtx).content);
+                    hasAnnot = true;
+                }
+
+                if (hasAnnot) {
+                    // find the annotation defined for the context
+                    chosenAnnot = module._getAnnotationValueByContext(context, annotDefinition);
+                    if (!isObjectAndNotNull(chosenAnnot) || !("templates" in chosenAnnot) && !Array.isArray(chosenAnnot.templates)) {
+                        hasAnnot = false;
+                    }
+                }
+            });
+
+            if (hasAnnot) {
+                return chosenAnnot.templates;
+            }
+
+            return null;
+        },
+
+        /**
+         * Return the export fragments that should be used with export annotation.
+         * @param {ERMrest.Table} table
+         * @param {Object} defaultExportTemplate
+         * @returns An object that can be used in combination with export annotation
+         * @private
+         * @ignore
+         */
+        getExportFragmentObject: function (table, defaultExportTemplate) {
+            var exportFragments = {
+                "$chaise_default_bdbag_template": {
+                    "type": "BAG",
+                    "displayname": "$chaise_default_bdbag_displayname",
+                    "outputs": "$chaise_default_bdbag_outputs"
+                },
+                "$chaise_default_bdbag_displayname": "BDBag",
+                "$chaise_default_bdbag_outputs": defaultExportTemplate ? defaultExportTemplate.outputs : []
+            };
+            var annotKey = module._annotations.EXPORT_FRAGMENT_DEFINITIONS, annot;
+            [table.schema.catalog, table.schema, table].forEach(function (el) {
+                if (!el.annotations.contains(annotKey)) return;
+
+                annot = el.annotations.get(annotKey).content;
+                if (isObjectAndNotNull(annot)) {
+                    // remove the keys that start with $
+                    Object.keys(annot).filter(function (k) {
+                       return k.startsWith("$");
+                    }).forEach(function (k) {
+                        module._log.warn("Export: ignoring `" + k + "` fragment as it cannot start with $.");
+                        delete annot[k];
+                    });
+                    Object.assign(exportFragments, annot);
+                }
+            });
+
+            return exportFragments;
+        },
+
+        /**
+         * Replace the fragments used in templates with actual definition
+         * @param {Array} templates the template definitions
+         * @param {*} exportFragments the fragment object
+         * @returns An array of templates that should be validated and used
+         * @private
+         * @ignore
+         */
+        replaceFragments: function (templates, exportFragments) {
+            var hasError;
+
+            // traverse through the object and replace fragment with the actual definition
+            var _replaceFragments = function (obj, usedFragments) {
+                if (hasError) return null;
+
+                if (!usedFragments) {
+                    usedFragments = {};
+                }
+
+                var res, intRes;
+
+                // if it's an array, then we have to process each individual value
+                if (Array.isArray(obj)) {
+                    res = [];
+                    obj.forEach(function (item) {
+                        // flatten the values and just concat with each other
+                        intRes = _replaceFragments(item, usedFragments);
+                        if (intRes == null || hasError) {
+                            res = null;
+                            return;
+                        }
+                        res = res.concat(intRes);
+                    });
+
+                    return res;
+                }
+
+                // if it's an object, we have to see whether it's fragment or not
+                if (isObjectAndNotNull(obj)) {
+
+                    if ("fragment_key" in obj) {
+                        var fragmentKey = obj.fragment_key;
+
+                        // there was a cycle, so just set the variables and abort
+                        if (fragmentKey in usedFragments) {
+                            module._log.warn("Export: circular dependency detected in the defined templates and therefore ignored and template will be ignored (caused by `" + fragmentKey +"` key)");
+                            hasError = true;
+                            return null;
+                        }
+
+                        // fragment_key is invalid
+                        if (!(fragmentKey in exportFragments)) {
+                            hasError = true;
+                            module._log.warn("Export: the given fragment_key `" + fragmentKey + "` is not valid and template will be ignored.");
+                            return null;
+                        }
+
+                        // replace with actual definition
+                        var modified = module._simpleDeepCopy(usedFragments);
+                        modified[fragmentKey] = true;
+                        return _replaceFragments(exportFragments[fragmentKey], modified);
+                    }
+
+                    // run the function for each value
+                    res = {};
+                    for (var k in obj) {
+                        intRes = _replaceFragments(obj[k], usedFragments);
+                        if (intRes == null || hasError) {
+                            res = null;
+                            return;
+                        }
+                        res[k] = intRes;
+                    }
+                    return res;
+                }
+
+                // for other data types, just return the input without any change
+                return obj;
+            };
+
+            var finalRes = [];
+
+            templates.forEach(function (t) {
+                hasError = false;
+                var tempRes = _replaceFragments(t, {});
+                // if there was an issue, the whole thing should return null
+                if (tempRes != null) {
+                    finalRes = finalRes.concat(tempRes);
+                }
+            });
+
+            return finalRes;
+        }
+
+    };
+
     /**
      * Given an object, returns a boolean that indicates whether it is a valid template or not
      * NOTE This will only validate the structure and not the values
@@ -280,7 +464,7 @@ var ERMrest = (function(module) {
 
     /**
      * Try export/<context> then export then <context>
-     * @param {ERMrest.reference} ref 
+     * @param {ERMrest.reference} ref
      * @param {Boolean} isCompact - the current context
      */
     module._getExportReference = function (ref, useCompact) {
@@ -316,7 +500,7 @@ var ERMrest = (function(module) {
                 if (hasColumns(expDetCtx)) {
                     return isContext(expDetCtx) ? ref : ref.contextualize.exportDetailed;
                 }
-            }   
+            }
         }
 
         // <context> or no annot

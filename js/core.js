@@ -1770,66 +1770,6 @@
             return this._searchSourceDefinition;
          },
 
-        /**
-         * Returns the export templates that are defined on this table.
-         * NOTE If this returns `null`, then the exportTemplates is not defined on the table or schema
-         * NOTE The returned template might not have `outputs` attribute.
-         * @type {Array|null}
-         */
-        getExportTemplates: function (context) {
-            context = context || "*";
-            if (!(context in this._exportTemplates)) {
-                this._exportTemplates[context] = this._getExportTemplates(context);
-            }
-            return this._exportTemplates[context];
-        },
-
-        // the logic for getExportTemplates function
-        _getExportTemplates: function (context) {
-            var self = this,
-                exp = module._annotations.EXPORT,
-                expCtx = module._annotations.EXPORT_CONTEXTED,
-                expFragment = module._annotations.EXPORT_FRAGMENT_DEFINITIONS,
-                annotDefinition = {}, hasAnnot = false,
-                chosenAnnot;
-
-            // start from table, then try schema, and then catalog
-            [self, self.schema, self.schema.catalog].forEach(function (el) {
-                if (hasAnnot) return;
-
-                // get from table annotation
-                if (el.annotations.contains(exp)) {
-                    annotDefinition = {"*": el.annotations.get(exp).content};
-                    hasAnnot = true;
-                }
-
-                // get from table contextualized annotation
-                if (el.annotations.contains(expCtx)) {
-                    annotDefinition = Object.assign({}, annotDefinition, el.annotations.get(expCtx).content);
-                    hasAnnot = true;
-                }
-
-                if (hasAnnot) {
-                    // find the annotation defined for the context
-                    chosenAnnot = module._getAnnotationValueByContext(context, annotDefinition);
-                    if (chosenAnnot === -1) {
-                        hasAnnot = false;
-                    }
-                }
-            });
-
-            if (hasAnnot) {
-                if (isObjectAndNotNull(chosenAnnot) && "templates" in chosenAnnot) {
-                    return chosenAnnot.templates;
-                }
-                return [];
-            }
-
-            // annotation is not defined for the given context
-            return null;
-        },
-        
-
         // build foreignKeys of this table and referredBy of corresponding tables.
         _buildForeignKeys: function () {
             // this should be built on the second pass after introspection
