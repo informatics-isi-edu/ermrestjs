@@ -241,13 +241,13 @@ For processing export, we have to consult [export annotation](annotation.md#tag-
 3. Now that we have the export definition as well as fragments, we just need to make sure any usage of `fragment_key` is replace with the actual definition. While doing so, if we find a `fragment_key` that is not valid, we're going to invalidate the whole template and ignore it.
 
 4. As the last step, to just ensure Chaise is not throwing a terminal error, we will validate the templates and ignore the ones that are problematic. The following are the checks that we're doing:
-  - Template is an array.
-  - Template has `displayname` and `type`.
-  - `type` value is either `FILE` or `BAG`.
-  - `outputs` is a non-empty array.
-  - Each output in the `outputs` array has `source` and `destination`.
-  - `source` has `api` property.
-  - `destination` has `type` property.
+    - Template is an array.
+    - Template has `displayname` and `type`.
+    - `type` value is either `FILE` or `BAG`.
+    - `outputs` is a non-empty array.
+    - Each output in the `outputs` array has `source` and `destination`.
+    - `source` has `api` property.
+    - `destination` has `type` property.
 ## Default BDBag template
 
 If export annotation is missing for `detailed` context, we will add a default BDBag template. This default template is also accessible through the export fragment definitions annotation as well using `$chaise_default_bdbag_template` key. The following are the `outputs` of the generated default export template:

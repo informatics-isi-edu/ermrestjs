@@ -733,6 +733,10 @@ Supported _template_ patterns:
   - `{` ... `"type:"` _type_ ... `}` One of two keywords; _"FILE"_ or _"BAG"_, used to determine the container format for results.
   - `{`... `"outputs":` `[`_output_`]` ... `}`: An array of _output_ objects.
 
+Supported _displayname_ patterns:
+- A string literal that will be displayed in Chaise.
+- `{ "fragment_key": ` _fragment_key_  `}`: _fragment_key_ is the string literal that refers to the export fragments defined in the [`export fragment definitions` annotation](#tag-2021-export-fragment-definitions).
+
 Supported _output_ patterns:
 - `{ "fragment_key": ` _fragment_key_  `}`: _fragment_key_ is the string literal that refers to the export fragments defined in the [`export fragment definitions` annotation](#tag-2021-export-fragment-definitions).
 - A JSON object with the following properties:
