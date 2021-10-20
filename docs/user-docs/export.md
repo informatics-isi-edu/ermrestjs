@@ -48,8 +48,8 @@ For processing export, we have to consult [export annotation](annotation.md#tag-
       {
         "$chaise_default_bdbag_template": {
           "type": "BAG",
-          "displayname": "$chaise_default_bdbag_displayname",
-          "outputs": "$chaise_default_bdbag_outputs"
+          "displayname": {"fragment_key": "$chaise_default_bdbag_displayname"},
+          "outputs": {"fragment_key": "$chaise_default_bdbag_outputs"}
         },
         "$chaise_default_bdbag_displayname": "BDBag",
         "$chaise_default_bdbag_outputs": <chaise-default-bdbag>
