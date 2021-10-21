@@ -1800,7 +1800,7 @@
                                             "api": "entity"
                                         },
                                         "destination": {
-                                            "name": "man_bag",
+                                            "name": "table_man_bag",
                                             "type": "csv"
                                         }
                                     }

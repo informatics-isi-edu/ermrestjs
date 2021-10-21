@@ -1,3 +1,5 @@
+const { template } = require("handlebars");
+
 exports.execute = function (options) {
 
     describe('Export integration, ', function () {
@@ -369,7 +371,16 @@ exports.execute = function (options) {
                         var templates = ref.getExportTemplates(false);
                         expect(templates.length).toBe(2, "length missmatch");
 
-                        // TODO what to test
+                        // first template i using default displayname, but outputs is customized
+                        expect(templates[0].displayname).toEqual("BDBag", "temp 0, displayname");
+                        expect(templates[0].outputs.length).toEqual(1, "temp 0, outputs length");
+                        expect(templates[0].outputs[0].destination.name).toEqual("custom_defined_destination", "temp 0, destination");
+
+                        // second template is using the default template
+                        expect(templates[1].displayname).toEqual("BDBag", "temp 1, displayname");
+                        expect(templates[1].outputs.length).toEqual(1, "temp 1, outputs length");
+                        expect(templates[1].outputs[0].source.path).toEqual("RID;id,col,RCT,RMT,RCB,RMB", "temp 1, source");
+                        expect(templates[1].outputs[0].destination.name).toEqual("table_w_used_fragments", "temp 1, destination");
                         done();
                     }).catch(function (err) {
                         done.fail(err);
@@ -383,7 +394,6 @@ exports.execute = function (options) {
                         expect(templates.length).toBe(1, "length missmatch");
 
                         expect(templates[0].displayname).toEqual("compact table template");
-                        // TODO what to test
                         done();
                     }).catch(function (err) {
                         done.fail(err);
@@ -394,10 +404,18 @@ exports.execute = function (options) {
                     ermRest.resolve(createURL(schemaName2, tableWCustomizedFragments, {cid: "test"})).then(function (ref) {
                         ref = ref.contextualize.compact;
                         var templates = ref.getExportTemplates(false);
-                        expect(templates.length).toBe(3, "length missmatch");
+                        expect(templates.length).toBe(2, "length missmatch");
 
-                        expect(templates[0].displayname).toEqual("default temp1");
-                        // TODO test the outputs
+                        // first template comes from the fragment on table
+                        expect(templates[0].displayname).toEqual("template fragment on table", "temp 0, displayname");
+                        expect(templates[0].outputs.length).toEqual(1, "temp 0, outputs length");
+                        expect(templates[0].outputs[0].destination.name).toEqual("table customized", "temp 0, destination");
+
+                        // second template comes from the export on table
+                        expect(templates[1].displayname).toEqual("compact table template", "temp 1, displayname");
+                        expect(templates[1].outputs.length).toEqual(1, "temp 1, outputs length");
+                        expect(templates[1].outputs[0].destination.name).toEqual("man_bag", "temp 1, destination");
+
                         done();
                     }).catch(function (err) {
                         done.fail(err);
@@ -406,11 +424,22 @@ exports.execute = function (options) {
 
                 it ("otherwise should use the schema definition", function (done) {
                     ermRest.resolve(createURL(schemaName2, tableWUsedFragments, {cid: "test"})).then(function (ref) {
-                        ref = ref.contextualize.detailed;
+                        ref = ref.contextualize.compact;
                         var templates = ref.getExportTemplates(false);
                         expect(templates.length).toBe(2, "length missmatch");
 
-                        // TODO what to test
+                        // both templates come from the fragment on catalog,
+                        // with customized output in schema
+
+                        expect(templates[0].displayname).toEqual("default temp1", "temp 0, displayname");
+                        expect(templates[0].outputs.length).toEqual(2, "temp 0, outputs length");
+                        expect(templates[0].outputs[0].destination.name).toEqual("schema_default_output_1", "temp 0, output 0, destination");
+                        expect(templates[0].outputs[1].destination.name).toEqual("schema_default_output_2", "temp 0, output 1, destination");
+
+                        expect(templates[1].displayname).toEqual("default temp2", "temp 1, displayname");
+                        expect(templates[1].outputs.length).toEqual(2, "temp 1, outputs length");
+                        expect(templates[1].outputs[0].destination.name).toEqual("schema_default_output_1", "temp 1, output 0, destination");
+                        expect(templates[1].outputs[1].destination.name).toEqual("schema_default_output_2", "temp 1, output 1, destination");
                         done();
                     }).catch(function (err) {
                         done.fail(err);
@@ -423,7 +452,21 @@ exports.execute = function (options) {
                         var templates = ref.getExportTemplates(false);
                         expect(templates.length).toBe(3, "length missmatch");
 
-                        // TODO what to test
+                        // first template is defined on the table export annot
+                        expect(templates[0].displayname).toEqual("compact table template", "temp 0, displayname");
+                        expect(templates[0].outputs.length).toEqual(1, "temp 0, outputs length");
+                        expect(templates[0].outputs[0].destination.name).toEqual("table_man_bag", "temp 0, destination");
+
+                        // second and third templates are using the fragment on catalog
+                        expect(templates[1].displayname).toEqual("default temp1", "temp 1, displayname");
+                        expect(templates[1].outputs.length).toEqual(2, "temp 1, outputs length");
+                        expect(templates[1].outputs[0].destination.name).toEqual("catalog_default_output_1", "temp 1, output 0, destination");
+                        expect(templates[2].outputs[1].destination.name).toEqual("catalog_default_output_2", "temp 1, output 1, destination");
+
+                        expect(templates[2].displayname).toEqual("default temp2", "temp 2, displayname");
+                        expect(templates[2].outputs.length).toEqual(2, "temp 2, outputs length");
+                        expect(templates[2].outputs[0].destination.name).toEqual("catalog_default_output_1", "temp 2, output 0, destination");
+                        expect(templates[2].outputs[1].destination.name).toEqual("catalog_default_output_2", "temp 2, output 1, destination");
                         done();
                     }).catch(function (err) {
                         done.fail(err);

@@ -41,7 +41,7 @@
                     if (chosenAnnot === -1) {
                         hasAnnot = false;
                     }
-
+                    // make sure it's the correct format
                     else if (isObjectAndNotNull(chosenAnnot) && ("templates" in chosenAnnot) && Array.isArray(chosenAnnot.templates)) {
                         templates = chosenAnnot.templates;
                     }

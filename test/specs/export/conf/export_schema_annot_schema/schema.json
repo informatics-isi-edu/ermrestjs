@@ -1072,7 +1072,7 @@
                                             "api": "entity"
                                         },
                                         "destination": {
-                                            "name": "man_bag",
+                                            "name": "custom_defined_destination",
                                             "type": "csv"
                                         }
                                     }
@@ -1083,21 +1083,6 @@
                     },
                     "compact": {
                         "templates": [
-                            {
-                                "displayname": "contextualized table template",
-                                "type": "BAG",
-                                "outputs": [
-                                    {
-                                        "source": {
-                                            "api": "entity"
-                                        },
-                                        "destination": {
-                                            "name": "man_bag",
-                                            "type": "csv"
-                                        }
-                                    }
-                                ]
-                            },
                             {"fragment_key": "defined_default_templates"}
                         ]
                     }
@@ -1199,26 +1184,21 @@
                     }
                 },
                 "tag:isrd.isi.edu,2021:export-fragment-definitions": {
-                    "defined_default_outputs": [
-                        {
-                            "source": {
-                                "api": "entity"
-                            },
-                            "destination": {
-                                "type": "csv",
-                                "name": "table_default_output_1"
+                    "defined_default_templates": {
+                        "displayname": "template fragment on table",
+                        "type": "BAG",
+                        "outputs": [
+                            {
+                                "source": {
+                                    "api": "entity"
+                                },
+                                "destination": {
+                                    "name": "table customized",
+                                    "type": "csv"
+                                }
                             }
-                        },
-                        {
-                            "source": {
-                                "api": "entity"
-                            },
-                            "destination": {
-                                "type": "csv",
-                                "name": "table_default_output_2"
-                            }
-                        }
-                    ]
+                        ]
+                    }
                 }
             }
         }
