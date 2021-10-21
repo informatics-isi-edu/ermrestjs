@@ -1000,7 +1000,18 @@
                         "templates": [
                             {
                                 "displayname": "contextualized table template",
-                                "type": "BAG"
+                                "type": "BAG",
+                                "outputs": [
+                                    {
+                                        "source": {
+                                            "api": "entity"
+                                        },
+                                        "destination": {
+                                            "name": "man_bag",
+                                            "type": "csv"
+                                        }
+                                    }
+                                ]
                             }
                         ]
                     }
@@ -1009,7 +1020,18 @@
                     "templates": [
                         {
                             "displayname": "default table template",
-                            "type": "BAG"
+                            "type": "BAG",
+                            "outputs": [
+                                {
+                                    "source": {
+                                        "api": "entity"
+                                    },
+                                    "destination": {
+                                        "name": "man_bag",
+                                        "type": "csv"
+                                    }
+                                }
+                            ]
                         }
                     ]
                 }
@@ -1023,7 +1045,17 @@
                 {
                     "displayname": "default schema template",
                     "type": "BAG",
-                    "post_processors": "someFn"
+                    "outputs": [
+                        {"fragment_key": "$chaise_default_bdbag_outputs"}
+                    ],
+                    "postprocessors": [
+                        {
+                            "processor": "identifier",
+                            "processor_params": {
+                                "test": "True"
+                            }
+                        }
+                    ]
                 }
             ]
         },
@@ -1032,7 +1064,10 @@
                 "templates": [
                     {
                         "displayname": "contextualized schema template",
-                        "type": "BAG"
+                        "type": "BAG",
+                        "outputs": [
+                            {"fragment_key": "$chaise_default_bdbag_outputs"}
+                        ]
                     }
                 ]
             }

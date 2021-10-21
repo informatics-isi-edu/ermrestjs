@@ -63,8 +63,8 @@ SOURCE=$(UTIL)/polyfills.js \
 	   $(JS)/reference.js \
 	   $(JS)/column.js \
 	   $(JS)/ag_reference.js \
+		 $(JS)/export.js \
 	   $(FOOTER) \
-	   $(JS)/export.js \
 	   $(JS)/hatrac.js \
 	   $(JS)/format.js \
 	   $(DIST)/$(MAKEFILE_VAR) \
@@ -82,7 +82,7 @@ LIB=$(VENDOR)/lz-string.min.js \
 	$(VENDOR)/markdown-it-sup.min.js \
 	$(VENDOR)/markdown-it-span.js \
 	$(VENDOR)/markdown-it-attrs.js \
-	$(VENDOR)/markdown-it-container.min.js 
+	$(VENDOR)/markdown-it-container.min.js
 
 # Build target
 DIST=dist

@@ -1726,6 +1726,9 @@
                         "templates": [
                             {
                                 "displayname": "contextualized table template",
+                                "outputs": [
+                                    {"fragment_key": "$chaise_default_bdbag_outputs"}
+                                ],
                                 "type": "BAG"
                             }
                         ]
