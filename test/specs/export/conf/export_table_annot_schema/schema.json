@@ -1764,6 +1764,53 @@
                     "export": []
                 }
             }
+        },
+        "table_w_used_fragments": {
+            "kind": "table",
+            "table_name": "table_w_used_fragments",
+            "schema_name": "export_schema_annot_schema",
+            "keys": [
+                {"unique_columns": ["id"]}
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "col",
+                    "type": {
+                        "typename": "text"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2019:export": {
+                    "compact": {
+                        "templates": [
+                            {
+                                "displayname": "compact table template",
+                                "type": "BAG",
+                                "outputs": [
+                                    {
+                                        "source": {
+                                            "api": "entity"
+                                        },
+                                        "destination": {
+                                            "name": "man_bag",
+                                            "type": "csv"
+                                        }
+                                    }
+                                ]
+                            },
+                            {"fragment_key": "defined_default_templates"}
+                        ]
+                    }
+                }
+            }
         }
     },
     "schema_name": "export_table_annot_schema"

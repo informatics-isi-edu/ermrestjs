@@ -37,8 +37,12 @@
                     // find the annotation defined for the context
                     chosenAnnot = module._getAnnotationValueByContext(context, annotDefinition);
 
-                    // if it's well-defined populate it, otherwise it will be empty array
-                    if (isObjectAndNotNull(chosenAnnot) && ("templates" in chosenAnnot) && Array.isArray(chosenAnnot.templates)) {
+                    // not defined for the context
+                    if (chosenAnnot === -1) {
+                        hasAnnot = false;
+                    }
+
+                    else if (isObjectAndNotNull(chosenAnnot) && ("templates" in chosenAnnot) && Array.isArray(chosenAnnot.templates)) {
                         templates = chosenAnnot.templates;
                     }
                 }
@@ -63,11 +67,11 @@
             var exportFragments = {
                 "$chaise_default_bdbag_template": {
                     "type": "BAG",
-                    "displayname": "$chaise_default_bdbag_displayname",
-                    "outputs": "$chaise_default_bdbag_outputs"
+                    "displayname": {"fragment_key": "$chaise_default_bdbag_displayname"},
+                    "outputs": [{"fragment_key": "$chaise_default_bdbag_outputs"}]
                 },
                 "$chaise_default_bdbag_displayname": "BDBag",
-                "$chaise_default_bdbag_outputs": defaultExportTemplate ? defaultExportTemplate.outputs : []
+                "$chaise_default_bdbag_outputs": defaultExportTemplate ? defaultExportTemplate.outputs : null
             };
             var annotKey = module._annotations.EXPORT_FRAGMENT_DEFINITIONS, annot;
             [table.schema.catalog, table.schema, table].forEach(function (el) {
@@ -193,7 +197,7 @@
      */
     module.validateExportTemplate = function (template) {
         var errMessage = function (reason) {
-            module._log.info("export template ignored with name=`" + template.name + "`. Reason: " + reason);
+            module._log.info("export template ignored with displayname=`" + template.displayname + "`. Reason: " + reason);
         };
 
         // template is not an object

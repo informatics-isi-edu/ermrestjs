@@ -10,6 +10,9 @@ exports.execute = function (options) {
             tableWithLongDefaultExport = "table_with_long_default_export",
             tableWithContextualizedExport = "table_w_contextualized_export",
             tableWithEmptyVisColExport = "table_w_empty_vis_col_for_export",
+            tableWUsedFragments = "table_w_used_fragments",
+            tableWInvalidFragments = "table_w_invalid_fragments",
+            tableWCustomizedFragments = "table_w_customized_fragments",
             table, ermRest, reference, noAnnotReference, noExportoutputReference, tableWithLongDefaultReference,
             tableWithContextExportReference, tableAndSchemaWithContextExportReference, emptyVisColExportReference, exportObj;
 
@@ -207,10 +210,13 @@ exports.execute = function (options) {
         }
 
         var checkFirstTemplateDisplayname = function (schema_name, table_name, context, expected, done) {
-            ermRest.resolve(createURL(schema_name, table_name)).then(function (ref) {
+            ermRest.resolve(createURL(schema_name, table_name), {cid: "test"}).then(function (ref) {
                 switch (context) {
                     case "compact":
                         ref = ref.contextualize.compact;
+                        break;
+                    case "compact/select":
+                        ref = ref.contextualize.compactSelect;
                         break;
                     case "detailed":
                         ref = ref.contextualize.detailed;
@@ -285,8 +291,12 @@ exports.execute = function (options) {
                     checkFirstTemplateDisplayname(schemaName2, tableNameNoExport, "compact", "contextualized schema template", done);
                 });
 
-                it ("otherwise, should return the 2016:export defined on the table.", function (done) {
+                it ("otherwise, should return the 2016:export defined on the schema.", function (done) {
                     checkFirstTemplateDisplayname(schemaName2, tableNameNoExport, "detailed", "default schema template", done);
+                });
+
+                it ("otherwise, should return the export defined on the catalog for the context", function (done) {
+                    checkFirstTemplateDisplayname(schemaName1, tableNameNoExport, "compact/select", "contextualized catalog template", done);
                 });
 
                 describe("otherwise (no annotation defined), ", function () {
@@ -352,20 +362,72 @@ exports.execute = function (options) {
                 });
             });
 
-
             describe("regarding fragment support", function () {
-                it ("should be able to use the default bdbag fragments", function () {
-                    // TODO template
+                it ("should be able to use the default bdbag fragments", function (done) {
+                    ermRest.resolve(createURL(schemaName2, tableWUsedFragments, {cid: "test"})).then(function (ref) {
+                        ref = ref.contextualize.detailed;
+                        var templates = ref.getExportTemplates(false);
+                        expect(templates.length).toBe(2, "length missmatch");
 
-                    // output and displayname
+                        // TODO what to test
+                        done();
+                    }).catch(function (err) {
+                        done.fail(err);
+                    });
                 });
 
-                it ("should ignore templates that have invalid fragments or circular dependency", function () {
+                it ("should ignore templates that have invalid fragments or circular dependency", function (done) {
+                    ermRest.resolve(createURL(schemaName2, tableWInvalidFragments, {cid: "test"})).then(function (ref) {
+                        ref = ref.contextualize.compact;
+                        var templates = ref.getExportTemplates(false);
+                        expect(templates.length).toBe(1, "length missmatch");
 
+                        expect(templates[0].displayname).toEqual("compact table template");
+                        // TODO what to test
+                        done();
+                    }).catch(function (err) {
+                        done.fail(err);
+                    });
                 });
 
-                it ("should be able to use the fragments", function () {
+                it ("should use the fragment defined on the table", function (done) {
+                    ermRest.resolve(createURL(schemaName2, tableWCustomizedFragments, {cid: "test"})).then(function (ref) {
+                        ref = ref.contextualize.compact;
+                        var templates = ref.getExportTemplates(false);
+                        expect(templates.length).toBe(3, "length missmatch");
 
+                        expect(templates[0].displayname).toEqual("default temp1");
+                        // TODO test the outputs
+                        done();
+                    }).catch(function (err) {
+                        done.fail(err);
+                    });
+                });
+
+                it ("otherwise should use the schema definition", function (done) {
+                    ermRest.resolve(createURL(schemaName2, tableWUsedFragments, {cid: "test"})).then(function (ref) {
+                        ref = ref.contextualize.detailed;
+                        var templates = ref.getExportTemplates(false);
+                        expect(templates.length).toBe(2, "length missmatch");
+
+                        // TODO what to test
+                        done();
+                    }).catch(function (err) {
+                        done.fail(err);
+                    });
+                });
+
+                it ('otherwise should use the one defined in catalog', function (done) {
+                    ermRest.resolve(createURL(schemaName1, tableWUsedFragments, {cid: "test"})).then(function (ref) {
+                        ref = ref.contextualize.compact;
+                        var templates = ref.getExportTemplates(false);
+                        expect(templates.length).toBe(3, "length missmatch");
+
+                        // TODO what to test
+                        done();
+                    }).catch(function (err) {
+                        done.fail(err);
+                    });
                 });
             });
         });
