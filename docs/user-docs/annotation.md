@@ -1089,7 +1089,22 @@ Note:
 
 `tag:isrd.isi.edu,2021:export-fragment-definitions`
 
-By using this key you can define an object that can be referred to while writing export annotation. The value of this key MUST be an object, otherwise it will be ignored. Please refer to `[Export annotation document](export.md)` for more details.
+By using this key you can define an object that can be referred to while writing [export annotation](#tag-2019-export). The value of this key MUST be an object, otherwise it will be ignored. Please refer to `[Export annotation document](export.md)` for more details.
+
+Note:
+- In the first level object, you cannot define any keys that start with `$`. This is done to preserve the namespace for default values that ERMrestJS is adding. For example if you define
+  ```js
+  "tag:isrd.isi.edu,2021:export-fragment-definitions": {
+    "$some_key": {
+      // some valid object definition
+    },
+    "another_key": {
+      // some valid object definition
+    }
+  }
+  ```
+  We are going to ignore the `$some_key`, while you can use `another_key` as a `fragment_key` in export annotation.
+
 ## Context Names
 
 List of _context_ names that are used in ERMrest:
