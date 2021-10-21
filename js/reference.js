@@ -2526,16 +2526,18 @@
          * If its `detailed` context and annotation was missing,
          * it will return the default export template.
          * @param {Boolean} useDefault whether we should use default template or not
-         * @return {Object}
+         * @return {Array}
          */
         getExportTemplates: function (useDefault) {
-            var self = this;
+            var self = this,
+                helpers = _exportHelpers;
+
 
             // either null or array
-            var res = self.table.getExportTemplates(self._context);
+            var templates = helpers.getExportAnnotTemplates(self.table, self._context);
 
             // annotation is missing
-            if (res === null) {
+            if (!Array.isArray(templates)) {
                 var canUseDefault = useDefault &&
                                     self._context === module._contexts.DETAILED &&
                                     self.defaultExportTemplate != null;
@@ -2543,13 +2545,15 @@
                 return canUseDefault ? [self.defaultExportTemplate]: [];
             }
 
-            // add missing outputs
-            res.forEach(function (t) {
-                if (!t.outputs && isObjectAndNotNull(self.defaultExportTemplate)) {
-                    t.outputs = self.defaultExportTemplate.outputs;
-                }
+            var finalRes = helpers.replaceFragments(
+                templates,
+                helpers.getExportFragmentObject(self.table, self.defaultExportTemplate)
+            );
+
+            // validate the templates
+            return finalRes.filter(function (temp) {
+                return module.validateExportTemplate(temp);
             });
-            return res;
         },
 
         /**
