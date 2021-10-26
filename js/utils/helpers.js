@@ -3208,10 +3208,10 @@
      * @return {Object}          An object with `isHTML` and `value` attributes.
      */
     module.processMarkdownPattern = function (template, data, table, context, options) {
-        var res = module._renderTemplate(template, data, table.schema.catalog, options);
+        var res = module._renderTemplate(template, data, table ? table.schema.catalog : null, options);
 
         if (res === null || res.trim() === '') {
-            res = table._getNullValue(context);
+            res = table ? table._getNullValue(context) : "";
             return {isHTML: false, value: res, unformatted: res};
         }
 
