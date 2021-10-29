@@ -265,8 +265,6 @@ This key indicates that the values for a given model element may not be mutated
 (changed) once set. 
 
 This key is allowed on any number of columns, tables, and schemas. If a schema is marked as immutable, all the tables in that schema will also inherit this setting. To avoid this on a table, you can define the immutable annotation and use the special `false` value (The same is true about tables and columns).
-
-> By using `false` value in a model, the model will be marked as "mutable" and client will not consult with any other annotations to figure out if the model can be updated or not. 
  
 
 ### Tag: 2016 Generated
