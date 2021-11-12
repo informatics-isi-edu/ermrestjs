@@ -2876,6 +2876,8 @@
             delete this._canRead;
             delete this._canUpdate;
             delete this._canDelete;
+            delete this._canUseTRS;
+            delete this._canUseTCRS;
             delete this._display;
             delete this._csvDownloadLink;
             delete this._readAttributeGroupPathProps_cached;
@@ -4285,6 +4287,8 @@
         delete referenceCopy._canRead;
         delete referenceCopy._canUpdate;
         delete referenceCopy._canDelete;
+        delete referenceCopy._canUseTRS;
+        delete referenceCopy._canUseTCRS;
         delete referenceCopy._defaultExportTemplate;
         delete referenceCopy._exportTemplates;
         delete referenceCopy._readPath;
