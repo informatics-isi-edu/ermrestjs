@@ -3075,13 +3075,15 @@ FacetColumn.prototype = {
                 if (cfacet.ermrest_path && self.sourceObjectNodes.length > 0) {
                     // switch the alias names, the cfacet is originally written with the assumption of
                     // the main table having "M" alias. So we just have to swap the aliases.
-                    var alias = "T" + (newLoc.hasJoin ? newLoc.pathParts.length : "");
-                    cfacet.ermrest_path = cfacet.ermrest_path.replace(/\$\M/g, "$" + alias);
+                    var mainAlias = module._parserAliases.MAIN_TABLE;
+                    var alias =  module._parserAliases.JOIN_TABLE_PREFIX + (newLoc.hasJoin ? newLoc.pathParts.length : "");
+                    cfacet.ermrest_path = cfacet.ermrest_path.replaceAll("$" + mainAlias, "$" + alias);
                 }
                 newLoc.customFacets = cfacet;
             }
 
             // create a path from reference to this facetColumn
+            // TODO this should be using the path prefix
             pathFromSource = self._facetObjectWrapper.toString(false, false);
 
             var uri = newLoc.compactUri;
