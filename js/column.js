@@ -3019,7 +3019,6 @@ FacetColumn.prototype = {
     get sourceReference () {
         if (this._sourceReference === undefined) {
             var jsonFilters = [],
-                pathFromSource = [], // the path from source reference to this facetColumn
                 self = this,
                 table = this.reference.table,
                 loc = this.reference.location;
@@ -3057,6 +3056,7 @@ FacetColumn.prototype = {
             }
 
             // add custom facets as the facets of the parent
+            var alias =  module._parserAliases.JOIN_TABLE_PREFIX + (newLoc.hasJoin ? newLoc.pathParts.length : "");
             if (loc.customFacets) {
                 //NOTE this is just a hack, and since the whole feature is just a hack it's fine.
                 // In the ermrest_path we're allowing them to use the M alias. In here, we are making
@@ -3076,22 +3076,34 @@ FacetColumn.prototype = {
                     // switch the alias names, the cfacet is originally written with the assumption of
                     // the main table having "M" alias. So we just have to swap the aliases.
                     var mainAlias = module._parserAliases.MAIN_TABLE;
-                    var alias =  module._parserAliases.JOIN_TABLE_PREFIX + (newLoc.hasJoin ? newLoc.pathParts.length : "");
                     cfacet.ermrest_path = cfacet.ermrest_path.replaceAll("$" + mainAlias, "$" + alias);
                 }
                 newLoc.customFacets = cfacet;
             }
 
             // create a path from reference to this facetColumn
-            // TODO this should be using the path prefix
-            pathFromSource = self._facetObjectWrapper.toString(false, false);
+            var wrapper = self._facetObjectWrapper,
+                aliasMapping = newLoc.pathPrefixAliasMapping;
+            var pathFromSource = _sourceColumnHelpers.parseSourceNodesWithAliasMapping(
+                wrapper.sourceObjectNodes,
+                wrapper.lastForeignKeyNode,
+                wrapper.foreignKeyPathLength,
+                wrapper.sourceObject && isStringAndNotEmpty(wrapper.sourceObject.sourcekey) ? wrapper.sourceObject.sourcekey : null,
+                aliasMapping,
+                alias
+            ).path;
 
-            var uri = newLoc.compactUri;
-            if (pathFromSource.length > 0) {
-                uri += "/" + pathFromSource;
-            }
+            // create the path from this facet to reference
+            var pathFromMainToSource = self._facetObjectWrapper.toString(true, false);
 
-            this._sourceReference = new Reference(module.parse(uri), table.schema.catalog);
+            var sourceLocation = newLoc.addJoin(
+                pathFromSource,
+                pathFromMainToSource,
+                table.schema.name,
+                table.name
+            );
+
+            this._sourceReference = new Reference(sourceLocation, table.schema.catalog);
         }
         return this._sourceReference;
     },

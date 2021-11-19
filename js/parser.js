@@ -249,7 +249,7 @@
                     filter = undefined; filtersString = undefined; cfacets = undefined; facets = undefined; join = undefined; joins = [];
                 }
 
-                join = new ParsedJoin(match, table, schema);
+                join = _createParsedJoinFromStr(match, table, schema);
                 joins.push(join);
                 prevJoin = true;
 
@@ -1181,6 +1181,23 @@
          */
         get catalogObject() {
             return this._catalogObject;
+        },
+
+        addJoin: function (clone, joinStr, reverseJoinStr, toSchema, toTable) {
+            var loc = clone ? this._clone() : this;
+            // add a join to parts based on the given input
+            var alias = module._parserAliases.JOIN_TABLE_PREFIX + (this._pathParts.length > 0 ? this._pathParts.length : "");
+            var pathPart = new PathPart(
+                alias,
+                new ParsedJoin(joinStr, reverseJoinStr, toSchema, toTable),
+                toSchema,
+                toTable
+            );
+
+            loc._pathParts.push(pathPart);
+
+            loc._setDirty();
+            return loc;
         }
     };
 
@@ -1366,21 +1383,58 @@
         return searchTerm.length === 0 ? null : searchTerm;
     };
 
-    function ParsedJoin (linking, table, schema) {
+    /**
+     * The object representing a join
+     * (could be multiple joins or just a single one)
+     * @param {string} str - the string representation (could have aliases)
+     * @param {string} strReverse - the reverse string representation
+     * @param {string} toSchema
+     * @param {string} toTable
+     * @param {boolean} hasColData - whether the next parameters passed
+     * @param {string?} fromCols
+     * @param {string?} fromColsStr
+     * @param {string?} toCols
+     * @param {string?} toColsStr
+     */
+    function ParsedJoin(str, strReverse, toSchema, toTable, hasColData, fromCols, fromColsStr, toCols, toColsStr) {
+        this.str = str;
+        this.strReverse = strReverse;
+        this.toSchema = toSchema;
+        this.toTable = toTable;
+        this.hasColumnData = hasColData;
+        if (this.hasColumnData) {
+            this.fromCols = fromCols;
+            this.fromColsStr = fromColsStr;
+            this.toCols = toCols;
+            this.toColsStr = toColsStr;
+        }
+    }
+
+    /**
+     * Given the string representation of join create ParsedJoin
+     * @param {string} linking - string representation
+     * @param {string} table - from table
+     * @param {string} schema - from schema
+     * @returns {ParsedJoin}
+     */
+    function _createParsedJoinFromStr (linking, table, schema) {
         var fromSchemaTable = schema ? [table,schema].join(":") : table;
         var fromCols = linking[1].split(",");
         var toParts = linking[2].match(/([^:]*):([^:]*):([^\)]*)/);
         var toCols = toParts[3].split(",");
         var strReverse = "(" + toParts[3] + ")=(" + fromSchemaTable + ":" + linking[1] + ")";
 
-        this.fromCols = fromCols.map(function(colName) {return decodeURIComponent(colName);});
-        this.fromColsStr = linking[1];
-        this.toCols = toCols.map(function(colName) {return decodeURIComponent(colName);});
-        this.toColsStr = linking[2];
-        this.toSchema = decodeURIComponent(toParts[1]);
-        this.toTable = decodeURIComponent(toParts[2]);
-        this.str = linking[0];
-        this.strReverse = strReverse;
+        return new ParsedJoin(
+            linking[0],
+            strReverse,
+            decodeURIComponent(toParts[1]),
+            decodeURIComponent(toParts[2]),
+            true,
+            fromCols.map(function(colName) {return decodeURIComponent(colName);}),
+            linking[1],
+            toCols.map(function(colName) {return decodeURIComponent(colName);}),
+            linking[2]
+        );
     }
 
     /**
