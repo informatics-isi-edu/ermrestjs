@@ -3020,7 +3020,7 @@ FacetColumn.prototype = {
         if (this._sourceReference === undefined) {
             var jsonFilters = [],
                 self = this,
-                table = this.reference.table,
+                table = this._column.table,
                 loc = this.reference.location;
 
 
@@ -3081,24 +3081,8 @@ FacetColumn.prototype = {
                 newLoc.customFacets = cfacet;
             }
 
-            // create a path from reference to this facetColumn
-            var wrapper = self._facetObjectWrapper,
-                aliasMapping = newLoc.pathPrefixAliasMapping;
-            var pathFromSource = _sourceColumnHelpers.parseSourceNodesWithAliasMapping(
-                wrapper.sourceObjectNodes,
-                wrapper.lastForeignKeyNode,
-                wrapper.foreignKeyPathLength,
-                wrapper.sourceObject && isStringAndNotEmpty(wrapper.sourceObject.sourcekey) ? wrapper.sourceObject.sourcekey : null,
-                aliasMapping,
-                alias
-            ).path;
-
-            // create the path from this facet to reference
-            var pathFromMainToSource = self._facetObjectWrapper.toString(true, false);
-
             var sourceLocation = newLoc.addJoin(
-                pathFromSource,
-                pathFromMainToSource,
+                self._facetObjectWrapper,
                 table.schema.name,
                 table.name
             );

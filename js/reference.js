@@ -4469,7 +4469,7 @@
                     var joinOnAlternativeKey = function () {
                         // NOTE in some cases the join must be based on
                         // aliases and we don't have the column data (share path logic)
-                        if (!source._location.lastJoin.hasColumnData) return;
+                        if (!source._location.lastJoin.hasColumnMapping) return;
 
                         var joinCols = source._location.lastJoin.toCols,
                             keyCols = source._table._baseTable._altSharedKey.colset.columns;

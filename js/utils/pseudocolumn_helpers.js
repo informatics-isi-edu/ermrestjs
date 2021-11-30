@@ -1484,6 +1484,8 @@
                         prefixAlias
                     );
 
+                    // TODO the res.usedOutAlias is not used, should it?
+
                     // we should first parse the existing and then add it to list
                     // we might not have added alias
                     if (prefixAlias) {
@@ -1538,7 +1540,7 @@
 
             return {
                 path: path,
-                outAlias: outAlias
+                outAlias: usedOutAlias
             };
         },
 

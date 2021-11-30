@@ -430,7 +430,7 @@
          * Ti:=Fi /Ti-1:=RevJi /Fi-1 /Ti-2:=RevJi-1 /… /T1:=RevJ2 /F1 /T:=RevJ1 /F0 /$Ti /Ti+1:=Ji+1 /Fi+1 /… /M:=Jn/Fn
          *
          * Which will be in this format:
-         * (<parsed facets starting from the faect with null>/<rev join of the parsed facets>)+/$T(facet with null)/(<parsed facet and join of parts after the null index>)*
+         * (<parsed facets starting from the facet with null>/<rev join of the parsed facets>)+/$T(facet with null)/(<parsed facet and join of parts after the null index>)*
          *
          * @param {Array} usedSourceObjects (optional) the source objects that are used in other parts of url (passed for path prefix logic)
          * @returns {Object} an object wit the following properties:
@@ -440,41 +440,77 @@
         computeERMrestCompactPath: function (usedSourceObjects) {
             var self = this;
             var rightJoinIndex = -1, i;
-            var uri = "", alias;
+            var uri = "", alias, temp;
             var lastPathPartAliasMapping = {aliases: {}, usedSourceKeys: {},lastIndex: 0};
+
+            var getPathPartAliasMapping = function (index) {
+                var defVal = {aliases: {}, usedSourceKeys: {},lastIndex: 0};
+                if (index !== -1 && parsedPartsWithoutJoin[index].pathPrefixAliasMapping) {
+                    return parsedPartsWithoutJoin[index].pathPrefixAliasMapping;
+                }
+                return defVal;
+            }
 
             // returns the proper string presentation of a series of joins
             // parameters:
             //  - joins: array of ParsedJoin objects.
             //  - alias: the alias that will be attached to the end of the path
             //  - reverse: whether we want to return the reversed join string
-            var joinsStr = function (joins, alias, reverse) {
+            var joinsStr = function (part, alias, index, reverse) {
+                if (part.joins[0].sourceObjectWrapper) {
+
+                    // when reversed, we're not using shared paths
+                    if (reverse) {
+                        return part.joins[0].sourceObjectWrapper.toString(true, false, alias);
+                    }
+
+                    // this join should be using the alias mapping of the previous facet
+                    var wrapper = part.joins[0].sourceObjectWrapper;
+                    temp =  _sourceColumnHelpers.parseSourceNodesWithAliasMapping(
+                        wrapper.sourceObjectNodes,
+                        wrapper.lastForeignKeyNode,
+                        wrapper.foreignKeyPathLength,
+                        wrapper.sourceObject && isStringAndNotEmpty(wrapper.sourceObject.sourcekey) ? wrapper.sourceObject.sourcekey : null,
+                        getPathPartAliasMapping(index > 0 ? index : -1),
+                        index > 0 ? self.pathParts[index-1].alias : self.mainTableAlias, // the alias of previous part??
+                        false,
+                        alias
+                    );
+
+                    // make sure alias is updated based on what's used
+                    // so while parsing the facets we're using the correct alias
+                    part.alias = temp.usedAlias;
+                    return temp.path;
+                }
+
                 var fn = reverse ? "reduceRight" : "reduce";
                 var joinStr = reverse ? "strReverse" : "str";
-                var last = reverse ? 0 : joins.length - 1;
-                var first = reverse ? joins.length -1 : 0;
+                var last = reverse ? 0 : part.joins.length - 1;
+                var first = reverse ? part.joins.length -1 : 0;
 
-                return joins[fn](function (res, join, i) {
+                return part.joins[fn](function (res, join, i) {
                     return res + (i !== first ? "/" : "") + ((i === last) ? (alias + ":=") : "") + join[joinStr];
                 }, "");
             };
 
             // get the parsed one, and count the number of right joins
+            // NOTE: we have to do this at first to find the facets with null
             var parsedPartsWithoutJoin = self.pathParts.map(function (part, index) {
                 var res = [], facetRes;
 
                 // facet
                 if (part.facets) {
-                    facetRes = _renderFacet(
-                        part.facets.decoded,
-                        part.alias,
-                        part.schema,
-                        part.table,
-                        self.catalog,
-                        self.catalogObject,
-                        (index == self.pathParts.length -1 ? usedSourceObjects : null),
-                        module._constraintNames
-                    );
+                    var currUsedSourceObjects = null;
+                    if (index == self.pathParts.length -1) {
+                        currUsedSourceObjects = usedSourceObjects;
+                    }
+                    // the next join might have a sourceObjectWrapper that
+                    // should be taken into account
+                    else if (self.pathParts[index+1].joins.sourceObjectWrapper) {
+                        currUsedSourceObjects = [self.pathParts[index+1].joins.sourceObjectWrapper];
+                    }
+
+                    facetRes = _renderFacet(part.facets.decoded, part.alias, part.schema, part.table, self.catalog, self.catalogObject, currUsedSourceObjects, module._constraintNames);
                     if (!facetRes.successful) {
                         throw new module.InvalidFacetOperatorError(self.path, facetRes.message);
                     }
@@ -494,8 +530,12 @@
 
                 // cfacet
                 if (part.customFacets) {
+                    // TODO customFacets is not properly sharing prefix path
+                    //      and should be changed
+                    //      it requires preprocessing the usedSourcekeys based on both
+                    //      facets and customFacets
                     if (part.customFacets.facets) {
-                        facetRes = _renderFacet(part.customFacets.facets.decoded, part.alias, part.schema, part.table, self.catalog, self.catalogObject, module._constraintNames);
+                        facetRes = _renderFacet(part.customFacets.facets.decoded, part.alias, part.schema, part.table, self.catalog, self.catalogObject, null, module._constraintNames);
                         if (!facetRes.successful) {
                             throw new module.InvalidCustomFacetOperatorError(self.path, facetRes.message);
                         }
@@ -515,7 +555,10 @@
                     res.push(part.filtersString);
                 }
 
-                return res.join("/");
+                return {
+                    parsed: res.join("/"),
+                    pathPrefixAliasMapping: facetRes ? facetRes.pathPrefixAliasMapping : null
+                };
             });
 
             // no rightJoin: s:t/<parths>
@@ -531,13 +574,16 @@
                 // url format:
                 // (<parsed facets starting from the faect with null>/<rev join of the parsed facets>)+/$T(facet with null)/(<parsed facet and join of parts after the null index>)*
                 for (i = rightJoinIndex; i >= 0; i--) {
-                    if (parsedPartsWithoutJoin[i]) {
-                        uri += (uri.length > 0 ? "/" : "") + parsedPartsWithoutJoin[i];
+                    temp = parsedPartsWithoutJoin[i];
+                    if (temp.parsed) {
+                        uri += (uri.length > 0 ? "/" : "") + temp.parsed;
                     }
 
                     if (self.pathParts[i].joins.length > 0) {
+                        // since we're reversing, we have to make sure we're using the
+                        // alias of the previous pathpart
                         alias = i > 0 ? self.pathPart[i-1].alias : self.rootTableAlias;
-                        uri += "/" + joinStr(self.pathParts[i].joins, alias, true);
+                        uri += "/" + joinsStr(self.pathParts[i], alias, i, true);
                     }
                 }
 
@@ -550,17 +596,23 @@
             // from the facet with null to end, we have to add path parts in the same order.
             for (i = rightJoinIndex + 1; i < self.pathParts.length; i++) {
                 var part = self.pathParts[i];
+
+                // add the join
                 if (part.joins.length > 0) {
-                    uri += "/" + joinsStr(part.joins, part.alias, false);
+                    uri += "/" + joinsStr(part, part.alias, i, false);
                 }
-                if (parsedPartsWithoutJoin[i]) {
-                    uri += "/" + parsedPartsWithoutJoin[i];
+
+                // add the facet and filters
+                temp = parsedPartsWithoutJoin[i];
+                if (temp.parsed) {
+                    uri += "/" + temp.parsed;
                 }
             }
 
 
             return {
                 path: uri,
+                // TODO could be replaced with the function
                 pathPrefixAliasMapping: lastPathPartAliasMapping
             };
         },
@@ -1183,13 +1235,19 @@
             return this._catalogObject;
         },
 
-        addJoin: function (clone, joinStr, reverseJoinStr, toSchema, toTable) {
+        addJoin: function (sourceObjectWrapper, toSchema, toTable, clone) {
             var loc = clone ? this._clone() : this;
+            // change alias of the previous part
+            var lastPart = loc.lastPathPart;
+            if (lastPart) {
+                var alias = module._parserAliases.JOIN_TABLE_PREFIX + (loc.pathParts.length > 1 ? (loc.pathParts.length-1) : "");
+                lastPart.alias = alias;
+            }
+
             // add a join to parts based on the given input
-            var alias = module._parserAliases.JOIN_TABLE_PREFIX + (this._pathParts.length > 0 ? this._pathParts.length : "");
             var pathPart = new PathPart(
-                alias,
-                new ParsedJoin(joinStr, reverseJoinStr, toSchema, toTable),
+                module._parserAliases.MAIN_TABLE,
+                [new ParsedJoin(null, null, toSchema, toTable, null, sourceObjectWrapper)],
                 toSchema,
                 toTable
             );
@@ -1197,6 +1255,16 @@
             loc._pathParts.push(pathPart);
 
             loc._setDirty();
+
+            // make sure all the properties related to join are computed again
+            delete loc._schemaName;
+            delete loc._tableName;
+            delete loc._baseSchemaName;
+            delete loc._baseTableName;
+            delete loc._facetBaseTableAlias;
+            delete loc._rootTableAlias;
+            delete loc._hasJoin;
+
             return loc;
         }
     };
@@ -1223,7 +1291,7 @@
      * @constructor
      */
     function PathPart(alias, joins, schema, table, facets, cfacets, filter, filtersString) {
-        this.alias = alias;
+        this._alias = alias;
         this.joins = Array.isArray(joins) ? joins : [];
         this.schema = (typeof schema === "string") ? schema : "";
         this.table = table;
@@ -1246,6 +1314,14 @@
 
         get facets() {
             return this._facets;
+        },
+
+        set alias(alias) {
+            this._alias = alias;
+        },
+
+        get alias () {
+            return this._alias;
         }
     };
 
@@ -1386,27 +1462,28 @@
     /**
      * The object representing a join
      * (could be multiple joins or just a single one)
-     * @param {string} str - the string representation (could have aliases)
-     * @param {string} strReverse - the reverse string representation
+     * @param {string?} str - the string representation (could have aliases)
+     * @param {string?} strReverse - the reverse string representation
      * @param {string} toSchema
      * @param {string} toTable
-     * @param {boolean} hasColData - whether the next parameters passed
-     * @param {string?} fromCols
-     * @param {string?} fromColsStr
-     * @param {string?} toCols
-     * @param {string?} toColsStr
+     * @param {object?} colMapping - the column mapping info ({fromCols: [<string>], fromColsStr: <string>, toCols: [<string>, toColsStr: <string>]})
+     * @param {object?} sourcebjectWrapper - the source object that represents the join
      */
-    function ParsedJoin(str, strReverse, toSchema, toTable, hasColData, fromCols, fromColsStr, toCols, toColsStr) {
+    function ParsedJoin(str, strReverse, toSchema, toTable, colMapping, sourcebjectWrapper) {
         this.str = str;
         this.strReverse = strReverse;
         this.toSchema = toSchema;
         this.toTable = toTable;
-        this.hasColumnData = hasColData;
-        if (this.hasColumnData) {
-            this.fromCols = fromCols;
-            this.fromColsStr = fromColsStr;
-            this.toCols = toCols;
-            this.toColsStr = toColsStr;
+        if (colMapping) {
+            this.hasColumnMapping = true;
+            this.fromCols = colMapping.fromCols;
+            this.fromColsStr = colMapping.fromColsStr;
+            this.toCols = colMapping.toCols;
+            this.toColsStr = colMapping.toColsStr;
+        }
+
+        if (sourcebjectWrapper) {
+            this.sourceObjectWrapper = sourcebjectWrapper;
         }
     }
 
@@ -1429,11 +1506,12 @@
             strReverse,
             decodeURIComponent(toParts[1]),
             decodeURIComponent(toParts[2]),
-            true,
-            fromCols.map(function(colName) {return decodeURIComponent(colName);}),
-            linking[1],
-            toCols.map(function(colName) {return decodeURIComponent(colName);}),
-            linking[2]
+            {
+                fromCols: fromCols.map(function(colName) {return decodeURIComponent(colName);}),
+                fromColsStr: linking[1],
+                toCols: toCols.map(function(colName) {return decodeURIComponent(colName);}),
+                toColsStr: linking[2]
+            }
         );
     }
 
