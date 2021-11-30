@@ -81,93 +81,93 @@ exports.execute = function (options) {
         var i, facetObj, ref;
 
         var createURL = function (tableName, facet) {
-            var res =  options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + tableName;
+            var res = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + tableName;
             if (facet) {
                 res += "/*::facets::" + options.ermRest.encodeFacet(facet);
             }
             return res;
-         };
+        };
 
-         var checkFacetSource = function (fcName, fc, source) {
-             expect(JSON.stringify(fc.dataSource)).toEqual(JSON.stringify(source), fcName + ": source missmatch.");
-         };
+        var checkFacetSource = function (fcName, fc, source) {
+            expect(JSON.stringify(fc.dataSource)).toEqual(JSON.stringify(source), fcName + ": source missmatch.");
+        };
 
-         var checkMainFacetDisplayname = function (index, value, isHTML) {
-             var disp = mainFacets[index].displayname;
-             expect(disp.value).toBe(value, "value missmatch for index="+ index);
-             expect(disp.isHTML).toBe(isHTML, "isHTML missmatch for index="+ index);
-         };
+        var checkMainFacetDisplayname = function (index, value, isHTML) {
+            var disp = mainFacets[index].displayname;
+            expect(disp.value).toBe(value, "value missmatch for index=" + index);
+            expect(disp.isHTML).toBe(isHTML, "isHTML missmatch for index=" + index);
+        };
 
-         var checkSourceReference = function (fcName, fc, compactPath, colName) {
-             var sr = fc.sourceReference;
-             var col = fc.column;
+        var checkSourceReference = function (fcName, fc, compactPath, colName) {
+            var sr = fc.sourceReference;
+            var col = fc.column;
 
-             expect(sr.location.ermrestCompactPath).toBe(compactPath, fcName + ": compactPath missmatch.");
-             expect(col._baseReference).toBe(sr, fcName + ": column wasn't based on sourceReference.");
-             expect(col.name).toBe(colName, fcName + ": colname missmatch.");
-         };
+            expect(sr.location.ermrestCompactPath).toBe(compactPath, fcName + ": compactPath missmatch.");
+            expect(col._baseReference).toBe(sr, fcName + ": column wasn't based on sourceReference.");
+            expect(col.name).toBe(colName, fcName + ": colname missmatch.");
+        };
 
-         var chaiseURL = "https://dev.isrd.isi.edu/chaise",
-             recordURL = chaiseURL + "/record",
-             record2URL = chaiseURL + "/record-two",
-             viewerURL = chaiseURL + "/viewer",
-             searchURL = chaiseURL + "/search",
-             recordsetURL = chaiseURL + "/recordset";
-         var appLinkFn = function (tag, location) {
-             var url;
-             switch (tag) {
-                 case "tag:isrd.isi.edu,2016:chaise:record":
-                     url = recordURL;
-                     break;
-                 case "tag:isrd.isi.edu,2016:chaise:record-two":
-                     url = record2URL;
-                     break;
-                 case "tag:isrd.isi.edu,2016:chaise:viewer":
-                     url = viewerURL;
-                     break;
-                 case "tag:isrd.isi.edu,2016:chaise:search":
-                     url = searchURL;
-                     break;
-                 case "tag:isrd.isi.edu,2016:chaise:recordset":
-                     url = recordsetURL;
-                     break;
-                 default:
-                     url = recordURL;
-                     break;
-             }
+        var chaiseURL = "https://dev.isrd.isi.edu/chaise",
+            recordURL = chaiseURL + "/record",
+            record2URL = chaiseURL + "/record-two",
+            viewerURL = chaiseURL + "/viewer",
+            searchURL = chaiseURL + "/search",
+            recordsetURL = chaiseURL + "/recordset";
+        var appLinkFn = function (tag, location) {
+            var url;
+            switch (tag) {
+                case "tag:isrd.isi.edu,2016:chaise:record":
+                    url = recordURL;
+                    break;
+                case "tag:isrd.isi.edu,2016:chaise:record-two":
+                    url = record2URL;
+                    break;
+                case "tag:isrd.isi.edu,2016:chaise:viewer":
+                    url = viewerURL;
+                    break;
+                case "tag:isrd.isi.edu,2016:chaise:search":
+                    url = searchURL;
+                    break;
+                case "tag:isrd.isi.edu,2016:chaise:recordset":
+                    url = recordsetURL;
+                    break;
+                default:
+                    url = recordURL;
+                    break;
+            }
 
-             url = url + "/" + location.path;
+            url = url + "/" + location.path;
 
-             return url;
-         };
+            return url;
+        };
 
         beforeAll(function (done) {
             options.ermRest.appLinkFn(appLinkFn);
 
             // get all the references needed for the test cases
-            options.ermRest.resolve(createURL(tableMain), {cid: "test"}).then(function (ref) {
+            options.ermRest.resolve(createURL(tableMain), { cid: "test" }).then(function (ref) {
                 refMain = ref.contextualize.compact;
                 return refMain.generateFacetColumns();
-            }).then (function (res) {
+            }).then(function (res) {
                 mainFacets = res.facetColumns;
 
                 facetObj = {
                     "and": [
-                        {"source": "id", "choices": ["1"]},
-                        {"source": "int_col", "ranges": [{"min": -2}]},
-                        {"source": [{"outbound": ["faceting_schema", "main_fk2"]}, "id"], "choices": ["2", "3"]}
+                        { "source": "id", "choices": ["1"] },
+                        { "source": "int_col", "ranges": [{ "min": -2 }] },
+                        { "source": [{ "outbound": ["faceting_schema", "main_fk2"] }, "id"], "choices": ["2", "3"] }
                     ]
                 };
                 return options.ermRest.resolve(createURL(tableMain, facetObj));
             }).then(function (ref) {
                 refMainFilterOnFK = ref;
-                return options.ermRest.resolve(createURL(tableF4), {cid: "test"});
+                return options.ermRest.resolve(createURL(tableF4), { cid: "test" });
             }).then(function (ref) {
                 refF4 = ref.contextualize.compact;
-                return options.ermRest.resolve(createURL(tableLongPath5), {cid: "test"});
+                return options.ermRest.resolve(createURL(tableLongPath5), { cid: "test" });
             }).then(function (ref) {
                 refLP5 = ref.contextualize.compact;
-                return options.ermRest.resolve(createURL(tableSecondPath2), {cid: "test"});
+                return options.ermRest.resolve(createURL(tableSecondPath2), { cid: "test" });
             }).then(function (ref) {
                 refSP2 = ref.contextualize.compact;
                 done();
@@ -183,7 +183,7 @@ exports.execute = function (options) {
         //      should behave the same in all cases except entity mapping,
         //      but since chaise is using .generateFacetColumns our default tests should be based on that
         describe("Reference.generateFacetColumns, ", function () {
-            describe ("when `filter` annotation is not defined, ", function () {
+            describe("when `filter` annotation is not defined, ", function () {
                 describe("when visible columns for `compact` and related entities for `detailed` are wellformed.", function () {
                     beforeAll(function (done) {
                         refF4.generateFacetColumns().then(function (res) {
@@ -194,11 +194,11 @@ exports.execute = function (options) {
                         })
                     })
 
-                    it ("it should use the visible columns from `compact` and related entities from `detailed`", function () {
+                    it("it should use the visible columns from `compact` and related entities from `detailed`", function () {
                         expect(refF4.facetColumns.length).toBe(7, "length missmatch.");
                     });
 
-                    it ('should create a scalar picker for simple keys.', function () {
+                    it('should create a scalar picker for simple keys.', function () {
                         expect(refF4.facetColumns[0]._column.name).toBe("id", "column name missmatch.");
                         expect(refF4.facetColumns[0]._column.table.name).toBe("f4", "table name missmatch.");
                         expect(refF4.facetColumns[0].dataSource).toBe("id", "dataSource missmatch.");
@@ -207,18 +207,18 @@ exports.execute = function (options) {
 
 
                     describe("regarding Key pseudo-columns, ", function () {
-                        it ("should attach ux_mode=choices for int/serial key columns.", function () {
+                        it("should attach ux_mode=choices for int/serial key columns.", function () {
                             expect(refF4.facetColumns[0]._facetObject.ux_mode).toBe("choices", "preferredMode missmatch for index=0");
                         });
 
-                        it ("should not attach specific ux_mode for other column types.", function () {
+                        it("should not attach specific ux_mode for other column types.", function () {
                             expect(refF4.facetColumns[1]._facetObject.ux_mode).toBeUndefined("preferredMode defined for index=2");
                             expect(refF4.facetColumns[2]._facetObject.ux_mode).toBeUndefined("preferredMode defined for index=3");
                             expect(refF4.facetColumns[3]._facetObject.ux_mode).toBeUndefined("preferredMode defined for index=4");
                         });
                     });
 
-                    it ("should create scalar picker for normal columns.", function () {
+                    it("should create scalar picker for normal columns.", function () {
                         expect(refF4.facetColumns[4]._column.name).toBe("term", "column name missmatch.");
                         expect(refF4.facetColumns[4]._column.table.name).toBe("f4", "table name missmatch.");
                         expect(refF4.facetColumns[4].dataSource).toBe("term", "dataSource missmatch.");
@@ -226,7 +226,7 @@ exports.execute = function (options) {
                     });
 
                     describe("for simple inbound and outbound pusedo columns, ", function () {
-                        it ("should create a entity picker facet.", function () {
+                        it("should create a entity picker facet.", function () {
                             expect(refF4.facetColumns[5]._column.name).toBe("RID", "column name missmatch for outbound.");
                             expect(refF4.facetColumns[5]._column.table.name).toBe("main", "table name missmatch for outbound.");
                             expect(JSON.stringify(refF4.facetColumns[5].dataSource)).toBe(
@@ -245,7 +245,7 @@ exports.execute = function (options) {
                             expect(refF4.facetColumns[6].isEntityMode).toBe(true, "entityMode missmatch for inbound.");
                         });
 
-                        it ("should define markdown_name properly.", function () {
+                        it("should define markdown_name properly.", function () {
                             expect(refF4.facetColumns[5]._facetObject.markdown_name).toBe("to_name", "missmatch for outbound.");
 
                             expect(refF4.facetColumns[6]._facetObject.markdown_name).toBe("main_wo_faceting_annot_1", "missmatch for inbound.");
@@ -253,8 +253,8 @@ exports.execute = function (options) {
                     });
                 });
 
-                it ("it should ignore asset columns, and composite keys. But create a facet for composite inbound and outbound foreignKeys based on shortestKey.", function (done) {
-                    options.ermRest.resolve(createURL(tableWOAnnot1), {cid: "test"}).then(function (res) {
+                it("it should ignore asset columns, and composite keys. But create a facet for composite inbound and outbound foreignKeys based on shortestKey.", function (done) {
+                    options.ermRest.resolve(createURL(tableWOAnnot1), { cid: "test" }).then(function (res) {
                         ref = res;
                         return ref.generateFacetColumns();
                     }).then(function () {
@@ -283,8 +283,8 @@ exports.execute = function (options) {
                     });
                 });
 
-                it ("it should ignore columns with `json`, `jsonb`, `longtext`, `markdown`, and `serial` type if it's not entity picker.", function (done) {
-                    options.ermRest.resolve(createURL(tableWOAnnot2), {cid: "test"}).then(function (res) {
+                it("it should ignore columns with `json`, `jsonb`, `longtext`, `markdown`, and `serial` type if it's not entity picker.", function (done) {
+                    options.ermRest.resolve(createURL(tableWOAnnot2), { cid: "test" }).then(function (res) {
                         ref = res;
                         return ref.generateFacetColumns();
                     }).then(function () {
@@ -299,8 +299,8 @@ exports.execute = function (options) {
 
             describe("when `filter` annotation is defined, ", function () {
                 // TODO
-                it ("if it's not in the valid format, should use heuristics.", function (done) {
-                    options.ermRest.resolve(createURL(tableF1), {cid: "test"}).then(function (ref) {
+                it("if it's not in the valid format, should use heuristics.", function (done) {
+                    options.ermRest.resolve(createURL(tableF1), { cid: "test" }).then(function (ref) {
                         expect(ref.facetColumns[0]._column.name).toBe("term", "column name missmatch.");
                         expect(ref.facetColumns[0]._column.table.name).toBe("f1", "table name missmatch.");
                         expect(ref.facetColumns[0].dataSource).toBe("term", "dataSource missmatch.");
@@ -312,8 +312,8 @@ exports.execute = function (options) {
                     });
                 });
 
-                it ("should ignore invalid facets.", function (done) {
-                    options.ermRest.resolve(createURL(tableF2), {cid: "test"}).then(function (ref) {
+                it("should ignore invalid facets.", function (done) {
+                    options.ermRest.resolve(createURL(tableF2), { cid: "test" }).then(function (ref) {
                         expect(ref.facetColumns.length).toBe(0);
                         done();
                     }).catch(function (err) {
@@ -322,8 +322,8 @@ exports.execute = function (options) {
                     });
                 });
 
-                it ("should ignore array columns.", function (done) {
-                    options.ermRest.resolve(createURL(tableWArray), {cid: "test"}).then(function (ref) {
+                it("should ignore array columns.", function (done) {
+                    options.ermRest.resolve(createURL(tableWArray), { cid: "test" }).then(function (ref) {
                         expect(ref.facetColumns.length).toBe(0);
                         done();
                     }).catch(function (err) {
@@ -332,20 +332,20 @@ exports.execute = function (options) {
                     });
                 });
 
-                it ("should create facets based on what data modelers have defined, and ignore the column types that are not supported (json).", function () {
+                it("should create facets based on what data modelers have defined, and ignore the column types that are not supported (json).", function () {
                     expect(refMain.facetColumns.length).toBe(23);
 
                     expect(refMain.facetColumns.map(function (fc) {
                         return fc._column.name;
                     })).toEqual(
                         ['id', 'int_col', 'float_col', 'date_col', 'timestamp_col', 'text_col', 'longtext_col',
-                         'markdown_col', 'boolean_col', 'jsonb_col', 'id', 'id', 'term', 'id', 'col', 'id', 'RID', 'RID', 'id', 'numeric_col', 'int_col',
-                         'path_prefix_o1_o1_col', 'path_prefix_o1_o1_i1_col'
+                            'markdown_col', 'boolean_col', 'jsonb_col', 'id', 'id', 'term', 'id', 'col', 'id', 'RID', 'RID', 'id', 'numeric_col', 'int_col',
+                            'path_prefix_o1_o1_col', 'path_prefix_o1_o1_i1_col'
                         ]
                     );
                 });
 
-                it ("should update the location object based on preselected values.", function () {
+                it("should update the location object based on preselected values.", function () {
                     // this will populate the facetColumns list and update the facets on the location
                     var facetColumns = refMain.facetColumns;
                     expect(refMain.location.facets).toBeDefined("facets is undefined.");
@@ -356,14 +356,14 @@ exports.execute = function (options) {
                 });
 
                 describe("if sourcekey: `search-box` is defined, ", function () {
-                    it ("if it doesn't have `search`, it should be ignored.", function () {
+                    it("if it doesn't have `search`, it should be ignored.", function () {
                         var facetColumns = refLP5.facetColumns;
                         expect(refLP5.location.searchTerm).toBe(null, "has searchTerm");
                         expect(facetColumns.length).toBe(1, "length missmatch.");
                         expect(facetColumns[0]._column.name).toBe("id", "column name missmatch.");
                     });
 
-                    it ("only the first instance of it with `search` should be considered.", function () {
+                    it("only the first instance of it with `search` should be considered.", function () {
                         var facetColumns = refSP2.facetColumns;
                         expect(refSP2.location.searchTerm).toBe("term", "searchTerm missmatch.");
                         expect(facetColumns.length).toBe(1, "length missmatch.");
@@ -374,8 +374,8 @@ exports.execute = function (options) {
 
             describe("if reference already has facets or filters applied, ", function () {
 
-                it ("should merge the facet lists, but get the filters from uri.", function (done) {
-                    facetObj = { "and": [ {"source": "unfaceted_column", "search": ["test"]} ] };
+                it("should merge the facet lists, but get the filters from uri.", function (done) {
+                    facetObj = { "and": [{ "source": "unfaceted_column", "search": ["test"] }] };
                     options.ermRest.resolve(createURL(tableMain, facetObj)).then(function (res) {
                         ref = res;
                         return ref.generateFacetColumns();
@@ -395,9 +395,9 @@ exports.execute = function (options) {
                     });
                 });
 
-                it ("If the facet exists in the annotation should only add the filter to that facet from uri. (choices)", function (done) {
+                it("If the facet exists in the annotation should only add the filter to that facet from uri. (choices)", function (done) {
                     // the facet definition is based on sourcekey, but facet blob is based on source
-                    facetObj = { "and": [ {"source": "id", "choices": ["2"]} ] };
+                    facetObj = { "and": [{ "source": "id", "choices": ["2"] }] };
                     options.ermRest.resolve(createURL(tableMain, facetObj)).then(function (res) {
                         ref = res;
                         return ref.generateFacetColumns();
@@ -416,8 +416,8 @@ exports.execute = function (options) {
                     });
                 });
 
-                it ("If the facet exists in the annotation should only add the filter to that facet from uri. (ranges)", function (done) {
-                    facetObj = { "and": [ {"source": "int_col", "ranges": [{"max": 12, "min": 5}]} ] };
+                it("If the facet exists in the annotation should only add the filter to that facet from uri. (ranges)", function (done) {
+                    facetObj = { "and": [{ "source": "int_col", "ranges": [{ "max": 12, "min": 5 }] }] };
                     options.ermRest.resolve(createURL(tableMain, facetObj)).then(function (res) {
                         ref = res;
                         return ref.generateFacetColumns();
@@ -436,9 +436,9 @@ exports.execute = function (options) {
                     });
                 });
 
-                it ("If the facet exists in the annotation should only add the filter to that facet from uri. (sourcekey)", function (done) {
+                it("If the facet exists in the annotation should only add the filter to that facet from uri. (sourcekey)", function (done) {
                     // both facet definition and facet blob are based on sourcekey
-                    facetObj = { "and": [ {"sourcekey": "text_col_source_definition", "choices": ["val"] } ] };
+                    facetObj = { "and": [{ "sourcekey": "text_col_source_definition", "choices": ["val"] }] };
                     options.ermRest.resolve(createURL(tableMain, facetObj)).then(function (res) {
                         ref = res;
                         return ref.generateFacetColumns();
@@ -456,9 +456,9 @@ exports.execute = function (options) {
                     });
                 });
 
-                it ("if the facet exists in the annotation and the uri is based on sourcekey, should be able to merge them.", function (done) {
+                it("if the facet exists in the annotation and the uri is based on sourcekey, should be able to merge them.", function (done) {
                     // facet definition is based on source, but facet blob is based on sourcekey
-                    facetObj = { "and": [ {"sourcekey": "f1_source_definition", "choices": ["4"] } ] };
+                    facetObj = { "and": [{ "sourcekey": "f1_source_definition", "choices": ["4"] }] };
                     options.ermRest.resolve(createURL(tableMain, facetObj)).then(function (res) {
                         ref = res;
                         return ref.generateFacetColumns();
@@ -476,19 +476,19 @@ exports.execute = function (options) {
                     });
                 });
 
-                it ("should be able to handle multiple types of filter.", function (done) {
+                it("should be able to handle multiple types of filter.", function (done) {
                     facetObj = {
                         "and": [
-                            {"source": "id", "choices": ["1"]},
-                            {"source": "int_col", "ranges": [{"min": -2}]},
-                            {"source": "text_col", "ranges": [{"min":"a"}, {"max": "b"}], "search": ["a", "b"], "choices": ["a", "b"]},
+                            { "source": "id", "choices": ["1"] },
+                            { "source": "int_col", "ranges": [{ "min": -2 }] },
+                            { "source": "text_col", "ranges": [{ "min": "a" }, { "max": "b" }], "search": ["a", "b"], "choices": ["a", "b"] },
                         ]
                     };
                     options.ermRest.resolve(createURL(tableMain, facetObj)).then(function (res) {
                         ref = res;
                         refMainMoreFilters = res;
                         return ref.generateFacetColumns();
-                    }).then (function () {
+                    }).then(function () {
                         expect(ref.facetColumns.length).toBe(23, "length missmatch.");
                         expect(ref.facetColumns[0].filters.length).toBe(1, "# of filters defined is incorrect, index=0");
                         expect(ref.facetColumns[1].filters.length).toBe(1, "# of filters defined is incorrect, index=1");
@@ -505,13 +505,13 @@ exports.execute = function (options) {
                     });
                 });
 
-                it ("should ignore entity/scalar mode and just match based on definition if source is passed.", function (done) {
+                it("should ignore entity/scalar mode and just match based on definition if source is passed.", function (done) {
                     facetObj = {
                         "and": [
                             {
-                                "source":  [
-                                    {"inbound": ["faceting_schema", "secondpath_1_fk1"]},
-                                    {"inbound": ["faceting_schema", "secondpath_2_fk1"]},
+                                "source": [
+                                    { "inbound": ["faceting_schema", "secondpath_1_fk1"] },
+                                    { "inbound": ["faceting_schema", "secondpath_2_fk1"] },
                                     "RID"
                                 ],
                                 "choices": ["val1"]
@@ -536,13 +536,13 @@ exports.execute = function (options) {
                     });
                 });
 
-                it ("should ignore extra attributes in source and just match based on structure if source is passed.", function (done) {
+                it("should ignore extra attributes in source and just match based on structure if source is passed.", function (done) {
                     facetObj = {
                         "and": [
                             {
-                                "source":  [
-                                    {"inbound": ["faceting_schema", "secondpath_1_fk1"], "alias": "A"},
-                                    {"inbound": ["faceting_schema", "secondpath_2_fk1"], "alias": "C"},
+                                "source": [
+                                    { "inbound": ["faceting_schema", "secondpath_1_fk1"], "alias": "A" },
+                                    { "inbound": ["faceting_schema", "secondpath_2_fk1"], "alias": "C" },
                                     "id"
                                 ],
                                 "choices": ["id1"]
@@ -567,7 +567,7 @@ exports.execute = function (options) {
                 });
 
                 describe("should be able to handle sources with prefix", function () {
-                    it ("when the same path prefix is used", function (done) {
+                    it("when the same path prefix is used", function (done) {
                         facetObj = {
                             "and": [
                                 {
@@ -594,13 +594,13 @@ exports.execute = function (options) {
                         });
                     });
 
-                    it ("when the same path prefix is used and it's recursive  match based on structure", function (done) {
+                    it("when the same path prefix is used and it's recursive  match based on structure", function (done) {
                         facetObj = {
                             "and": [
                                 {
-                                    "source":  [
-                                        {"sourcekey": "path_to_path_prefix_o1_o1"},
-                                        {"inbound": ["faceting_schema", "path_prefix_o1_o1_i1_fk1"]},
+                                    "source": [
+                                        { "sourcekey": "path_to_path_prefix_o1_o1" },
+                                        { "inbound": ["faceting_schema", "path_prefix_o1_o1_i1_fk1"] },
                                         "path_prefix_o1_o1_i1_col"
                                     ],
                                     "choices": ["1"]
@@ -616,8 +616,8 @@ exports.execute = function (options) {
                             expect(ref.location.facets).toBeDefined("facets is undefined.");
                             expect(ref.location.ermrestCompactPath).toBe(
                                 ["M:=faceting_schema:main/(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)",
-                                 "(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)",
-                                 "(id)=(faceting_schema:path_prefix_o1_o1_i1:fk_to_path_prefix_o1_o1)/path_prefix_o1_o1_i1_col=1/$M"].join("/"),
+                                    "(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)",
+                                    "(id)=(faceting_schema:path_prefix_o1_o1_i1:fk_to_path_prefix_o1_o1)/path_prefix_o1_o1_i1_col=1/$M"].join("/"),
                                 "path missmatch."
                             );
                             done();
@@ -627,14 +627,14 @@ exports.execute = function (options) {
                         });
                     })
 
-                    it ("when the structure is used without path prefix should not match", function (done) {
+                    it("when the structure is used without path prefix should not match", function (done) {
                         facetObj = {
                             "and": [
                                 {
-                                    "source":  [
-                                        {"outbound": ["faceting_schema", "main_fk3"]},
-                                        {"outbound": ["faceting_schema", "path_prefix_o1_fk1"]},
-                                        {"inbound": ["faceting_schema", "path_prefix_o1_o1_i1_fk1"]},
+                                    "source": [
+                                        { "outbound": ["faceting_schema", "main_fk3"] },
+                                        { "outbound": ["faceting_schema", "path_prefix_o1_fk1"] },
+                                        { "inbound": ["faceting_schema", "path_prefix_o1_o1_i1_fk1"] },
                                         "path_prefix_o1_o1_i1_col"
                                     ],
                                     "choices": ["1"]
@@ -650,8 +650,8 @@ exports.execute = function (options) {
                             expect(ref.location.facets).toBeDefined("facets is undefined.");
                             expect(ref.location.ermrestCompactPath).toBe(
                                 ["M:=faceting_schema:main/(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)",
-                                 "(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)",
-                                 "(id)=(faceting_schema:path_prefix_o1_o1_i1:fk_to_path_prefix_o1_o1)/path_prefix_o1_o1_i1_col=1/$M"].join("/"),
+                                    "(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)",
+                                    "(id)=(faceting_schema:path_prefix_o1_o1_i1:fk_to_path_prefix_o1_o1)/path_prefix_o1_o1_i1_col=1/$M"].join("/"),
                                 "path missmatch."
                             );
                             done();
@@ -662,9 +662,9 @@ exports.execute = function (options) {
                     });
                 });
 
-                describe ("should be able to handle and filter on same source", function () {
-                    it ("when the facet exists in the annotation.", function (done) {
-                        facetObj = { "and": [ {"source": "id", "choices": ["1"]}, {"source": "id", "choices": ["2"]} ] };
+                describe("should be able to handle and filter on same source", function () {
+                    it("when the facet exists in the annotation.", function (done) {
+                        facetObj = { "and": [{ "source": "id", "choices": ["1"] }, { "source": "id", "choices": ["2"] }] };
                         options.ermRest.resolve(createURL(tableMain, facetObj)).then(function (res) {
                             ref = res;
                             return ref.generateFacetColumns();
@@ -684,8 +684,8 @@ exports.execute = function (options) {
                         });
                     });
 
-                    it ("when the facet does not exist in the annotation.", function (done) {
-                        facetObj = { "and": [ {"source": "unfaceted_column", "choices": ["1"]}, {"source": "unfaceted_column", "choices": ["2"]} ] };
+                    it("when the facet does not exist in the annotation.", function (done) {
+                        facetObj = { "and": [{ "source": "unfaceted_column", "choices": ["1"] }, { "source": "unfaceted_column", "choices": ["2"] }] };
                         options.ermRest.resolve(createURL(tableMain, facetObj)).then(function (res) {
                             ref = res;
                             return ref.generateFacetColumns();
@@ -706,8 +706,8 @@ exports.execute = function (options) {
                     });
                 });
 
-                it ("if annotation has default search and so does the uri, the uri should take precedence.", function (done) {
-                    facetObj = {"and": [{"sourcekey": "search-box", "search": ["newTerm"]}]};
+                it("if annotation has default search and so does the uri, the uri should take precedence.", function (done) {
+                    facetObj = { "and": [{ "sourcekey": "search-box", "search": ["newTerm"] }] };
                     options.ermRest.resolve(createURL(tableSecondPath2, facetObj)).then(function (res) {
                         ref = res;
                         return ref.generateFacetColumns();
@@ -723,9 +723,9 @@ exports.execute = function (options) {
 
                 });
 
-                describe ("if a facet has not-null filter,", function () {
-                    it ("if facet has =null filter too, should return an empty list for its filters.", function (done) {
-                        var fObj = { "and": [ {"source": "id", "not_null": true, "choices": [null]} ] };
+                describe("if a facet has not-null filter,", function () {
+                    it("if facet has =null filter too, should return an empty list for its filters.", function (done) {
+                        var fObj = { "and": [{ "source": "id", "not_null": true, "choices": [null] }] };
                         options.ermRest.resolve(createURL(tableMain, fObj)).then(function (res) {
                             ref = res;
                             return ref.generateFacetColumns();
@@ -743,8 +743,8 @@ exports.execute = function (options) {
                         });
                     });
 
-                    it ("otherwise should only return the not-null filter and ignore other filters.", function (done) {
-                        var fObj = { "and": [ {"source": "id", "not_null": true, "choices": ["1"], "search": ["1"], "ranges": [{'min': 1}]} ] };
+                    it("otherwise should only return the not-null filter and ignore other filters.", function (done) {
+                        var fObj = { "and": [{ "source": "id", "not_null": true, "choices": ["1"], "search": ["1"], "ranges": [{ 'min': 1 }] }] };
                         options.ermRest.resolve(createURL(tableMain, fObj)).then(function (res) {
                             ref = res;
                             return ref.generateFacetColumns();
@@ -766,7 +766,7 @@ exports.execute = function (options) {
 
                 describe("if reference has filters,", function () {
                     var filter;
-                    it ("if filter can be represented in facet syntax, should change the location's filter into facet.", function (done) {
+                    it("if filter can be represented in facet syntax, should change the location's filter into facet.", function (done) {
                         filter = "(id=1;id=2)&(int_col::geq::5;int_col::leq::15;int_col::gt::6)";
                         options.ermRest.resolve(createURL(tableMain) + "/" + filter).then(function (res) {
                             ref = res;
@@ -789,7 +789,7 @@ exports.execute = function (options) {
                         });
                     });
 
-                    it ("otherwise should not change the filter.", function (done) {
+                    it("otherwise should not change the filter.", function (done) {
                         options.ermRest.resolve(createURL(tableMain) + "/" + unsupportedFilter).then(function (ref) {
                             refWCustomFilters = ref;
                             return ref.generateFacetColumns();
@@ -810,10 +810,10 @@ exports.execute = function (options) {
                     });
                 });
 
-                describe("if reference has hidden filters," ,function () {
+                describe("if reference has hidden filters,", function () {
                     var refWithHiddenFacets;
                     beforeAll(function (done) {
-                        facetObj = { "and": [ {"source": "id", "choices": ["2"], "hidden": true}, {"source": "unfaceted_column", "choices": ["4"], "hidden": true} ] };
+                        facetObj = { "and": [{ "source": "id", "choices": ["2"], "hidden": true }, { "source": "unfaceted_column", "choices": ["4"], "hidden": true }] };
                         options.ermRest.resolve(createURL(tableMain, facetObj)).then(function (ref) {
                             refWithHiddenFacets = ref;
                             done();
@@ -823,15 +823,15 @@ exports.execute = function (options) {
                         });
                     });
 
-                    it ("should not create new facet column for it.", function () {
+                    it("should not create new facet column for it.", function () {
                         expect(refWithHiddenFacets.facetColumns.length).toBe(23);
                     });
 
-                    it ("should not apply preselected annotation filters.", function () {
+                    it("should not apply preselected annotation filters.", function () {
                         expect(refWithHiddenFacets.facetColumns[0].filters.length).toBe(0);
                     });
 
-                    it ("location should still have the facets", function () {
+                    it("location should still have the facets", function () {
                         expect(refWithHiddenFacets.location.facets.decoded).toEqual(facetObj);
                     });
                 });
@@ -850,8 +850,8 @@ exports.execute = function (options) {
                  */
                 describe("regarding UnsupportedFilters error handling", function () {
                     // 1. testing the case where no facet remains
-                    it ("if the facet in the url is invalid should ignore them and return the issues.", function (done) {
-                        facetObj = { "and": [ {"source": "invalid_column_that_doesnt_exist", "choice": ["test"]} ] };
+                    it("if the facet in the url is invalid should ignore them and return the issues.", function (done) {
+                        facetObj = { "and": [{ "source": "invalid_column_that_doesnt_exist", "choice": ["test"] }] };
                         options.ermRest.resolve(createURL(tableMain, facetObj)).then(function (res) {
                             ref = res;
                             return ref.generateFacetColumns();
@@ -872,8 +872,8 @@ exports.execute = function (options) {
                     });
 
                     // 2. testing the case where no facet remains
-                    it ("if the filter in url can be turned into facet, should turn it to facet and properly ignore it.", function (done) {
-                        var invalidURL =  options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + tableMain + "/invalid_column_that_doesnt_exist=1234";
+                    it("if the filter in url can be turned into facet, should turn it to facet and properly ignore it.", function (done) {
+                        var invalidURL = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + tableMain + "/invalid_column_that_doesnt_exist=1234";
                         options.ermRest.resolve(invalidURL).then(function (res) {
                             ref = res;
                             return ref.generateFacetColumns();
@@ -894,13 +894,13 @@ exports.execute = function (options) {
                     });
 
                     // 3 - 9
-                    it ("should validate filters and ignore the invalid ones.", function (done) {
+                    it("should validate filters and ignore the invalid ones.", function (done) {
                         facetObj = {
                             "and": [
                                 //3
-                                {"sourcekey": "invalid_sourcekey_that_doesnt_exist", "choices": ["test1"]},
+                                { "sourcekey": "invalid_sourcekey_that_doesnt_exist", "choices": ["test1"] },
                                 //4
-                                {"sourcekey": "path_to_path_prefix_o1_o1_entity", "markdown_name": "Name 4","entity": false, "choices": ["test2"]},
+                                { "sourcekey": "path_to_path_prefix_o1_o1_entity", "markdown_name": "Name 4", "entity": false, "choices": ["test2"] },
                                 //5
                                 {
                                     "sourcekey": "path_to_path_prefix_o1_o1",
@@ -973,7 +973,7 @@ exports.execute = function (options) {
                             expect(ref.location.ermrestCompactPath).toBe(
                                 "M:=faceting_schema:main/text_col=v1;text_col=v2/$M/" +
                                 "(id)=(faceting_schema:main_f3_assoc:id_main)/(id_f3)=(faceting_schema:f3:id)/id=1;id=3/$M/" +
-                                "M_P1:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)/(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/path_prefix_o1_o1_col=1/$M/"+
+                                "M_P1:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)/(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/path_prefix_o1_o1_col=1/$M/" +
                                 "$M_P1/(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/id=test2/$M",
                                 "path missmatch."
                             );
@@ -982,18 +982,18 @@ exports.execute = function (options) {
                             var expectedSubMessage = "Discarded facets:\n\n";
                             expectedSubMessage += "- invalid_sourcekey_that_doesnt_exist (1 choice):\n";
                             expectedSubMessage += "  - test1\n";
-                            expectedSubMessage += "- Name 4 (1 choice):\n" ;
+                            expectedSubMessage += "- Name 4 (1 choice):\n";
                             expectedSubMessage += "  - test2\n";
-                            expectedSubMessage += "- path_to_path_prefix_o1_o1 (1 choice):\n" ;
+                            expectedSubMessage += "- path_to_path_prefix_o1_o1 (1 choice):\n";
                             expectedSubMessage += "  - test3\n";
-                            expectedSubMessage += "- second_path_source_defnition (2 choices):\n" ;
+                            expectedSubMessage += "- second_path_source_defnition (2 choices):\n";
                             expectedSubMessage += "  - 213145\n";
                             expectedSubMessage += "  - 213147\n";
-                            expectedSubMessage += "- Name 9 (2 choices):\n" ;
+                            expectedSubMessage += "- Name 9 (2 choices):\n";
                             expectedSubMessage += "  - som_val_1\n";
                             expectedSubMessage += "  - some_val_2\n\n\n";
                             expectedSubMessage += "Partially discarded facets:\n\n";
-                            expectedSubMessage += "- f3 name (2/4 choices):\n" ;
+                            expectedSubMessage += "- f3 name (2/4 choices):\n";
                             expectedSubMessage += "  - not_found\n";
                             expectedSubMessage += "  - another_not_found\n";
 
@@ -1015,8 +1015,8 @@ exports.execute = function (options) {
                         ref = ref.contextualize.compact;
                         var facetColumns = ref.facetColumns;
                         expect(facetColumns.length).toBe(2, "length missmatch.");
-                        checkFacetSource("index=0, ", facetColumns[0], [{"outbound": ["faceting_schema", "alt_compact_fk2"]}, "id_f5"]);
-                        checkFacetSource("index=1, ", facetColumns[1], [{"outbound": ["faceting_schema", "alt_compact_fk1"]}, {"inbound": ["faceting_schema", "f6_fk1"]}, "id_f6"]);
+                        checkFacetSource("index=0, ", facetColumns[0], [{ "outbound": ["faceting_schema", "alt_compact_fk2"] }, "id_f5"]);
+                        checkFacetSource("index=1, ", facetColumns[1], [{ "outbound": ["faceting_schema", "alt_compact_fk1"] }, { "inbound": ["faceting_schema", "f6_fk1"] }, "id_f6"]);
                         done();
                     }).catch(function (err) {
                         console.log(err);
@@ -1026,19 +1026,19 @@ exports.execute = function (options) {
             });
 
             describe("regarding alternative tables for any of facets (table used in faceting is not what we should display for compact/select), ", function () {
-                it ("if facet is in scalar mode, should not change the facet and just add it.", function (done) {
+                it("if facet is in scalar mode, should not change the facet and just add it.", function (done) {
                     options.ermRest.resolve(createURL(tableWFacetAlt)).then(function (ref) {
                         ref = ref.contextualize.compact;
                         expect(ref.facetColumns.length).toBe(2, "length missmatch.");
                         checkFacetSource(
                             "index=0",
                             ref.facetColumns[0],
-                            [{"inbound": ["faceting_schema", "f8_fk1"]}, "id_f8_2"]
+                            [{ "inbound": ["faceting_schema", "f8_fk1"] }, "id_f8_2"]
                         );
                         checkFacetSource(
                             "index=1",
                             ref.facetColumns[1],
-                            [{"inbound": ["faceting_schema", "f7_fk1"]}, "col"]
+                            [{ "inbound": ["faceting_schema", "f7_fk1"] }, "col"]
                         );
                         done();
                     }).catch(function (err) {
@@ -1051,10 +1051,10 @@ exports.execute = function (options) {
                 // I did this to separate the test cases. otherwise there would have been just one `it` statement that
                 // was testing the number of expected facet columns:
 
-                it ("otherwise, if facet is based on an alternative table, we should discard it.", function (done) {
+                it("otherwise, if facet is based on an alternative table, we should discard it.", function (done) {
                     // facet path ends up in an alternative table, but for compact/select we should go to another table
                     // we're not handling this now.
-                    acetObj = { "and": [ {"source": [{"inbound": ["faceting_schema", "f7_fk1"]}, {"outbound": ["faceting_schema", "f7_detailed_alt_fk1"]}, "id_f8_1"], "choices": ["1"]} ] };
+                    acetObj = { "and": [{ "source": [{ "inbound": ["faceting_schema", "f7_fk1"] }, { "outbound": ["faceting_schema", "f7_detailed_alt_fk1"] }, "id_f8_1"], "choices": ["1"] }] };
                     options.ermRest.resolve(createURL(tableWFacetAlt, facetObj)).then(function (ref) {
                         ref = ref.contextualize.compact;
                         expect(ref.facetColumns.length).toBe(2);
@@ -1066,16 +1066,16 @@ exports.execute = function (options) {
 
                 });
 
-                describe ("otherwise, if facet is based on main table and has alternative table for compact/select.", function () {
-                    it ("if filter is based on the key, add the join to path.", function (done) {
-                        facetObj = { "and": [ {"source": [{"inbound": ["faceting_schema", "f7_fk1"]}, "id_f7"], "choices": ["1"]} ] };
+                describe("otherwise, if facet is based on main table and has alternative table for compact/select.", function () {
+                    it("if filter is based on the key, add the join to path.", function (done) {
+                        facetObj = { "and": [{ "source": [{ "inbound": ["faceting_schema", "f7_fk1"] }, "id_f7"], "choices": ["1"] }] };
                         options.ermRest.resolve(createURL(tableWFacetAlt, facetObj)).then(function (ref) {
                             ref = ref.contextualize.compact;
                             expect(ref.facetColumns.length).toBe(3, "length missmatch.");
                             checkFacetSource(
                                 "",
                                 ref.facetColumns[2],
-                                [{"inbound": ["faceting_schema", "f7_fk1"]}, {"inbound": ["faceting_schema", "f7_compact_alt_fk1"]}, "id"]
+                                [{ "inbound": ["faceting_schema", "f7_fk1"] }, { "inbound": ["faceting_schema", "f7_compact_alt_fk1"] }, "id"]
                             );
                             done();
                         }).catch(function (err) {
@@ -1085,7 +1085,7 @@ exports.execute = function (options) {
                     });
 
                     it("in othercases, we should just discard the facet.", function (done) {
-                        facetObj = { "and": [ {"source": [{"inbound": ["faceting_schema", "f8_fk1"]}, "id_f8_1"], "choices": ["1"]} ] };
+                        facetObj = { "and": [{ "source": [{ "inbound": ["faceting_schema", "f8_fk1"] }, "id_f8_1"], "choices": ["1"] }] };
                         options.ermRest.resolve(createURL(tableWFacetAlt, facetObj)).then(function (ref) {
                             ref = ref.contextualize.compact;
                             expect(ref.facetColumns.length).toBe(2);
@@ -1106,7 +1106,7 @@ exports.execute = function (options) {
                 ref = refWCustomFilters.facetColumns[0].addChoiceFilters(["1"]);
             });
 
-            it ("should return all facets and filters if input is not true.", function () {
+            it("should return all facets and filters if input is not true.", function () {
                 var newRef = ref.removeAllFacetFilters();
                 expect(newRef).not.toBe(ref, "reference didn't change.");
                 expect(ref.location.facets).toBeDefined("original reference changed.");
@@ -1117,21 +1117,21 @@ exports.execute = function (options) {
                 }).length).toBe(0, "some of the facetColumns have facet.");
             });
 
-            it ("otherwise should only remove the filters.", function () {
+            it("otherwise should only remove the filters.", function () {
                 var newRef = ref.removeAllFacetFilters(false, false, true);
                 expect(newRef).not.toBe(ref, "reference didn't change.");
                 expect(ref.location.filtersString).toBeDefined("original reference changed.");
                 expect(newRef.location.filter).toBeUndefined("filter missmatch.");
                 expect(newRef.location.facets).toBeDefined("facets missmatch.");
                 expect(JSON.stringify(newRef.location.facets.decoded)).toEqual(JSON.stringify(
-                    {and: [{"source": "id", "choices": ["1"]}]}
+                    { and: [{ "source": "id", "choices": ["1"] }] }
                 ));
             });
         });
 
         describe("Reference.hideFacets", function () {
-            it ("should throw an error if the reference doesn't have any facets.", function (done) {
-                options.ermRest.resolve(createURL(tableMain), {cid: "test"}).then(function (ref) {
+            it("should throw an error if the reference doesn't have any facets.", function (done) {
+                options.ermRest.resolve(createURL(tableMain), { cid: "test" }).then(function (ref) {
                     expect(function () {
                         var h = ref.hideFacets();
                     }).toThrow("Reference doesn't have any facets.");
@@ -1142,7 +1142,7 @@ exports.execute = function (options) {
             });
 
             var refWithHiddenFacets;
-            it ("should return a reference with same facets but hidden.", function () {
+            it("should return a reference with same facets but hidden.", function () {
                 refWithHiddenFacets = refMain.hideFacets();
                 refWithHiddenFacets.facetColumns.forEach(function (f, index) {
                     expect(f.filters).toEqual([], 'fitlers missmatch index=' + index);
@@ -1154,7 +1154,7 @@ exports.execute = function (options) {
                 );
             });
 
-            it ("should be able to add new filters to the reference that are not hidden.", function () {
+            it("should be able to add new filters to the reference that are not hidden.", function () {
                 var newRef = refWithHiddenFacets.facetColumns[0].addChoiceFilters(["2"]);
                 expect(newRef.facetColumns[0].filters.length).toEqual(1, "filters length missmatch");
                 expect(newRef.location.ermrestCompactPath).toBe(
@@ -1163,7 +1163,7 @@ exports.execute = function (options) {
                 );
             });
 
-            it ("removeAllFacetFilters should not remove hidden facets.", function () {
+            it("removeAllFacetFilters should not remove hidden facets.", function () {
                 var newRef = refWithHiddenFacets.removeAllFacetFilters();
                 expect(newRef.facetColumns[0].filters.length).toEqual(0, "filters length missmatch");
                 expect(newRef.location.ermrestCompactPath).toBe(
@@ -1175,78 +1175,78 @@ exports.execute = function (options) {
 
         describe("FacetColumn APIs, ", function () {
             describe("isOpen, ", function () {
-                it ("should return true if facet has filters.", function () {
+                it("should return true if facet has filters.", function () {
                     expect(mainFacets[0].isOpen).toBe(true, "missmatch for id.");
                     expect(mainFacets[1].isOpen).toBe(true, "missmatch for int_col.");
                 });
 
-                it ("otherwise should return true if facet object has `open:true`.", function () {
+                it("otherwise should return true if facet object has `open:true`.", function () {
                     expect(mainFacets[11].isOpen).toBe(true);
                 });
 
-                it ("otherwise should return false.", function () {
-                    for (i = 2; i < 11; i ++) {
-                        expect(mainFacets[i].isOpen).toBe(false, "missmatch for facet index="+ i);
+                it("otherwise should return false.", function () {
+                    for (i = 2; i < 11; i++) {
+                        expect(mainFacets[i].isOpen).toBe(false, "missmatch for facet index=" + i);
                     }
 
-                    for (i = 14; i < 20; i ++) {
-                        expect(mainFacets[i].isOpen).toBe(false, "missmatch for facet index="+ i);
+                    for (i = 14; i < 20; i++) {
+                        expect(mainFacets[i].isOpen).toBe(false, "missmatch for facet index=" + i);
                     }
                 });
             });
 
             describe("isEntityMode, ", function () {
-                it ('should return false if source is not a path.', function () {
-                    for (i = 0; i < 7; i ++) {
-                        expect(mainFacets[i].isEntityMode).toBe(false, "missmatch for facet index="+ i);
+                it('should return false if source is not a path.', function () {
+                    for (i = 0; i < 7; i++) {
+                        expect(mainFacets[i].isEntityMode).toBe(false, "missmatch for facet index=" + i);
                     }
                 });
 
-                it ('should return false if source is an array, but filter is not based on simple key.', function () {
+                it('should return false if source is an array, but filter is not based on simple key.', function () {
                     expect(mainFacets[12].isEntityMode).toBe(false);
                 });
 
-                it ('should return false if source is based on simple key, and `entity:false` is set.', function () {
+                it('should return false if source is based on simple key, and `entity:false` is set.', function () {
                     expect(mainFacets[13].isEntityMode).toBe(false);
                 });
 
-                it ('should return true if source is based on simple key.', function () {
-                    for (i = 10; i < 12; i ++) {
-                        expect(mainFacets[i].isEntityMode).toBe(true, "missmatch for facet index="+ i);
+                it('should return true if source is based on simple key.', function () {
+                    for (i = 10; i < 12; i++) {
+                        expect(mainFacets[i].isEntityMode).toBe(true, "missmatch for facet index=" + i);
                     }
                 });
             });
 
             describe("preferredMode, ", function () {
-                it ("if facet has check_presence mode in annotation and also null, should return check_presence.", function () {
+                it("if facet has check_presence mode in annotation and also null, should return check_presence.", function () {
                     var newRef = mainFacets[13].addChoiceFilters([null]);
                     expect(newRef.facetColumns[13].preferredMode).toBe("check_presence");
                 });
 
-                it ('if facet has preselected choices or ranges facet, honor it.', function () {
+                it('if facet has preselected choices or ranges facet, honor it.', function () {
                     expect(mainFacets[0].preferredMode).toBe("choices", "missmatch for facet index=0");
                     expect(mainFacets[1].preferredMode).toBe("ranges", "missmatch for facet index=0");
                 });
 
-                it ('if ux_mode is defined and is valid, should return it.', function () {
+                it('if ux_mode is defined and is valid, should return it.', function () {
                     expect(mainFacets[8].preferredMode).toBe("ranges", "missmatch for facet index=8");
                     expect(mainFacets[13].preferredMode).toBe("check_presence", "missmatch for facet index=13");
                 });
 
 
-                it ("if in entity mode should return `choices`.", function () {
+                it("if in entity mode should return `choices`.", function () {
                     [10, 11, 15, 16, 18].forEach(function (fc) {
                         expect(mainFacets[fc].preferredMode).toBe("choices", "missmatch for facet index=" + fc);
                     });
                 });
 
-                it ("if unique not-null int/serial, should return `choices`.", function () {
+                it("if unique not-null int/serial, should return `choices`.", function () {
                     expect(mainFacets[17].preferredMode).toBe("choices", "missmatch for facet index=17");
                 });
 
-                it ("if its a range supported type, should return ranges.", function () {
-                    for (i = 2; i <= 4; i ++) {
-                        expect(mainFacets[i].preferredMode).toBe("ranges", "missmatch for facet index="+ i);
+                it("if its a range supported type, should return ranges.", function () {
+                    for (i = 2; i <= 4; i++) {
+                        expect(mainFacets[i].preferredMode).toBe("ranges", "missmatch for facet index=" + i);
                     }
                     // numeric type
                     expect(mainFacets[19].preferredMode).toBe("ranges", "missmatch for facet index=19");
@@ -1255,7 +1255,7 @@ exports.execute = function (options) {
                     expect(mainFacets[20].preferredMode).toBe("ranges", "missmatch for facet index=20");
                 });
 
-                it ("otherwise should return choices.", function () {
+                it("otherwise should return choices.", function () {
                     [5, 6, 7, 9, 12, 14].forEach(function (fc) {
                         expect(mainFacets[fc].preferredMode).toBe("choices", "missmatch for facet index=" + fc);
                     });
@@ -1264,13 +1264,13 @@ exports.execute = function (options) {
 
             describe("displayname, ", function () {
 
-                it ("if `markdown_name` is defined, should return it.", function () {
+                it("if `markdown_name` is defined, should return it.", function () {
                     checkMainFacetDisplayname(0, "ID facet", true);
                     checkMainFacetDisplayname(2, "float_col markdown_name", true);
                     checkMainFacetDisplayname(10, "<strong>F1</strong>", true);
                 });
 
-                it ("if source is not an array, should return the column's displayname.", function () {
+                it("if source is not an array, should return the column's displayname.", function () {
                     checkMainFacetDisplayname(1, "int_col", false);
                     checkMainFacetDisplayname(3, "date_col", false);
                     checkMainFacetDisplayname(4, "timestamp_col", false);
@@ -1280,19 +1280,19 @@ exports.execute = function (options) {
                 });
 
                 describe('otherwise (source is an array), ', function () {
-                    it ('if the last foreignKey in path is inbound, and from_name is defined, should return it.', function () {
+                    it('if the last foreignKey in path is inbound, and from_name is defined, should return it.', function () {
                         checkMainFacetDisplayname(14, "from_name", false);
                     });
 
-                    it ('if the last foreignKey in path is outbound, and to_name is defined, should return it.', function () {
+                    it('if the last foreignKey in path is outbound, and to_name is defined, should return it.', function () {
                         checkMainFacetDisplayname(11, "to_name", false);
                     });
 
                     describe("otherwise, ", function () {
-                        it ('in entity mode should return the table\'s name.', function () {
+                        it('in entity mode should return the table\'s name.', function () {
                             checkMainFacetDisplayname(15, "secondpath_2", false);
                         });
-                        it ('in scalar mode, should return the table\'s name and column\'s name.', function () {
+                        it('in scalar mode, should return the table\'s name and column\'s name.', function () {
                             checkMainFacetDisplayname(12, "f3 (term)", false);
                         });
                     });
@@ -1300,33 +1300,33 @@ exports.execute = function (options) {
             });
 
             describe("comment", function () {
-                it ("return the comment defined on the facet.", function () {
+                it("return the comment defined on the facet.", function () {
                     expect(mainFacets[6].comment).toBe("long text comment in facet");
                 });
 
-                it ("return empty string if the defined comment is `false`.", function () {
+                it("return empty string if the defined comment is `false`.", function () {
                     expect(mainFacets[7].comment).toBe("", "missmatch for index=7");
                     expect(mainFacets[10].comment).toBe("", "missmatch for index=10");
                 });
 
-                it ('if in scalar mode, return column\'s comment', function () {
+                it('if in scalar mode, return column\'s comment', function () {
                     expect(mainFacets[5].comment).toBe("text comment");
                 });
 
-                it ('otherwise return table\'s comment.', function () {
+                it('otherwise return table\'s comment.', function () {
                     expect(mainFacets[11].comment).toBe("has fk to main table + has rowname");
                 });
             });
 
             describe('filter related APIs, ', function () {
                 describe("addSearchFilter, ", function () {
-                    it ("should verify the input.", function () {
+                    it("should verify the input.", function () {
                         expect(function () {
                             var newRef = refMain.facetColumns[5].addSearchFilter(null);
                         }).toThrow("`term` is required.");
                     });
 
-                    it ("should return a new reference with the applied filter.", function () {
+                    it("should return a new reference with the applied filter.", function () {
                         var newRef = refMain.facetColumns[5].addSearchFilter("test");
                         expect(newRef).not.toBe(refMain, "reference didn't change.");
                         expect(newRef.location.ermrestCompactPath).toBe(
@@ -1339,13 +1339,13 @@ exports.execute = function (options) {
                 });
 
                 describe("addChoiceFilters, ", function () {
-                    it ("should verify the input.", function () {
+                    it("should verify the input.", function () {
                         expect(function () {
                             var newRef = refMain.facetColumns[0].addChoiceFilters("2");
                         }).toThrow("given argument must be an array");
                     });
 
-                    it ("should return a new reference with the applied filter.", function () {
+                    it("should return a new reference with the applied filter.", function () {
                         var newRef = refMain.facetColumns[0].addChoiceFilters(["2", "3"]);
                         expect(newRef).not.toBe(refMain, "reference didn't change.");
                         expect(newRef.location.ermrestCompactPath).toBe(
@@ -1374,13 +1374,13 @@ exports.execute = function (options) {
                 });
 
                 describe("replaceAllChoiceFilters, ", function () {
-                    it ("should verify the input.", function () {
+                    it("should verify the input.", function () {
                         expect(function () {
                             var newRef = refMain.facetColumns[0].replaceAllChoiceFilters("2");
                         }).toThrow("given argument must be an array");
                     });
 
-                    it ("should return a new reference with the applied filter.", function () {
+                    it("should return a new reference with the applied filter.", function () {
                         var newRef = refMain.facetColumns[0].replaceAllChoiceFilters(["2", "3"]);
                         expect(newRef).not.toBe(refMain, "reference didn't change.");
                         expect(newRef.location.ermrestCompactPath).toBe(
@@ -1395,13 +1395,13 @@ exports.execute = function (options) {
                 });
 
                 describe("removeChoiceFilters, ", function () {
-                    it ("should verify the input.", function () {
+                    it("should verify the input.", function () {
                         expect(function () {
                             var newRef = refMain.facetColumns[0].removeChoiceFilters("2");
                         }).toThrow("given argument must be an array");
                     });
 
-                    it ("should return a new reference with the applied filter.", function () {
+                    it("should return a new reference with the applied filter.", function () {
                         var newRef = refMain.facetColumns[0].removeChoiceFilters(["1", "3"]);
                         expect(newRef).not.toBe(refMain, "reference didn't change.");
                         expect(newRef.location.ermrestCompactPath).toBe(
@@ -1427,22 +1427,22 @@ exports.execute = function (options) {
                         return res.reference;
                     };
 
-                    it ("should verify the input.", function () {
+                    it("should verify the input.", function () {
                         expect(function () {
                             var newRef = refMain.facetColumns[0].addRangeFilter();
                         }).toThrow("One of min and max must be defined.");
                     });
 
-                    describe ("should return a new reference with the applied filter.", function () {
-                        it ("when passing only min.", function () {
+                    describe("should return a new reference with the applied filter.", function () {
+                        it("when passing only min.", function () {
                             testAddRange("1", false, null, false, "id::geq::1");
                         });
 
-                        it ("when passing only max.", function () {
+                        it("when passing only max.", function () {
                             testAddRange(null, false, "1", false, "id::leq::1");
                         });
 
-                        it ("when passing both min, and max.", function () {
+                        it("when passing both min, and max.", function () {
                             testAddRange("1", false, "2", false, "id::geq::1&id::leq::2");
                         });
 
@@ -1459,46 +1459,46 @@ exports.execute = function (options) {
                         expect(ref.facetColumns[3].filters[0].toString()).toBe("2014-03-03 to 2016-07-11", "toString missmatch.");
                     });
 
-                    describe ("should handle exclusive/inclusive ranges.", function () {
-                        it ("when passing only min.", function () {
+                    describe("should handle exclusive/inclusive ranges.", function () {
+                        it("when passing only min.", function () {
                             refWithMin = testAddRange("1", true, null, false, "id::gt::1");
                         });
 
-                        it ("when passing only max.", function () {
+                        it("when passing only max.", function () {
                             refWithMax = testAddRange(null, false, "1", true, "id::lt::1");
                         });
 
-                        it ("when passing both min, and max inclusive.", function () {
+                        it("when passing both min, and max inclusive.", function () {
                             refWithMinMax = testAddRange("1", true, "2", true, "id::gt::1&id::lt::2");
                         });
 
-                        it ("when passing min and max with exclusive flag.", function () {
+                        it("when passing min and max with exclusive flag.", function () {
                             refWithMinExcMax = testAddRange("1", true, "2", false, "id::gt::1&id::leq::2", "for min exclusive");
                             refWithMinMaxExc = testAddRange("1", false, "2", true, "id::geq::1&id::lt::2", "for max exclusive");
                             refWithMinExcMaxExc = testAddRange("1", true, "2", true, "id::gt::1&id::lt::2", "for min and max exclusive");
                         });
                     });
 
-                    describe ("should handle adding duplciate filters.", function () {
-                        it ("when passing only min.", function () {
+                    describe("should handle adding duplciate filters.", function () {
+                        it("when passing only min.", function () {
                             expect(refWithMin.facetColumns[0].addRangeFilter("1", true, null, false)).toBe(false);
                         });
 
-                        it ("when passing only max.", function () {
+                        it("when passing only max.", function () {
                             expect(refWithMax.facetColumns[0].addRangeFilter(null, false, "1", true)).toBe(false);
                         });
 
-                        it ("when passing both min, and max.", function () {
+                        it("when passing both min, and max.", function () {
                             expect(refWithMinMax.facetColumns[0].addRangeFilter("1", true, "2", true)).toBe(false);
                         });
 
-                        it ("when passing min and max with exclusive flag.", function () {
+                        it("when passing min and max with exclusive flag.", function () {
                             expect(refWithMinExcMax.facetColumns[0].addRangeFilter("1", true, "2", false)).toBe(false, "for min exclusive");
                             expect(refWithMinMaxExc.facetColumns[0].addRangeFilter("1", false, "2", true)).toBe(false, "for max exclusive");
                             expect(refWithMinExcMaxExc.facetColumns[0].addRangeFilter("1", true, "2", true)).toBe(false, "for min and max exclusive");
                         });
 
-                        it ('and take exclusive attributes into account.', function () {
+                        it('and take exclusive attributes into account.', function () {
                             var res = refWithMinExcMax.facetColumns[0].addRangeFilter("1", false, "2", false);
                             refWithMinExcMaxAndMinMax = res.reference;
                             expect(res.reference).not.toBe(refWithMinExcMax, "reference didn't change.");
@@ -1511,13 +1511,13 @@ exports.execute = function (options) {
                     });
                 });
                 describe("removeRangeFilter, ", function () {
-                    it ("should verify the input.", function () {
+                    it("should verify the input.", function () {
                         expect(function () {
                             var newRef = refMain.facetColumns[1].removeRangeFilter();
                         }).toThrow("One of min and max must be defined.");
                     });
 
-                    it ("should return a new reference with the new filter.", function () {
+                    it("should return a new reference with the new filter.", function () {
                         var res = refMain.facetColumns[1].removeRangeFilter(-2, false, null, false);
                         expect(res.reference).not.toBe(refMain, "reference didn't change.");
                         expect(res.reference.location.ermrestCompactPath).toBe(
@@ -1527,7 +1527,7 @@ exports.execute = function (options) {
                         expect(res.reference.facetColumns[1].filters.length).toBe(0, "filters length missmatch.");
                     });
 
-                    it ('should handle exclusive/inclusive ranges.', function () {
+                    it('should handle exclusive/inclusive ranges.', function () {
                         var res = refWithMinExcMaxAndMinMax.facetColumns[0].removeRangeFilter("1", false, "2", false);
                         expect(res.reference).not.toBe(refWithMinExcMaxAndMinMax, "reference didn't change.");
                         expect(res.reference.location.ermrestCompactPath).toBe(
@@ -1539,7 +1539,7 @@ exports.execute = function (options) {
                 });
 
                 describe("addNotNullFilter, ", function () {
-                    it ("should remove all the existing filters on the facet and just add a not-null filter.", function () {
+                    it("should remove all the existing filters on the facet and just add a not-null filter.", function () {
                         refNotNullFilter = mainFacets[0].addNotNullFilter();
                         expect(refNotNullFilter).not.toBe(refMain, "reference didn't change.");
                         expect(refNotNullFilter.location.ermrestCompactPath).toBe(
@@ -1551,7 +1551,7 @@ exports.execute = function (options) {
                 });
 
                 describe("removeNotNullFilter, ", function () {
-                    it ("should only remove the not-null filter on that facet.", function () {
+                    it("should only remove the not-null filter on that facet.", function () {
                         var prevRef = refNotNullFilter.facetColumns[0].addChoiceFilters(["1"]);
                         var newRef = prevRef.facetColumns[0].removeNotNullFilter();
                         expect(newRef).not.toBe(prevRef, "reference didn't change.");
@@ -1562,7 +1562,7 @@ exports.execute = function (options) {
                         expect(newRef.facetColumns[0].filters.length).toBe(1, "filters length missmatch.");
                     });
 
-                    it ("should not change filters of the facet if facet didn't have any not-null filter.", function () {
+                    it("should not change filters of the facet if facet didn't have any not-null filter.", function () {
                         var newRef = mainFacets[0].removeNotNullFilter();
                         expect(newRef).not.toBe(refMain, "reference didn't change.");
                         expect(newRef.location.ermrestCompactPath).toBe(
@@ -1585,61 +1585,61 @@ exports.execute = function (options) {
                 });
 
                 describe("filters, ", function () {
-                    it ("otherwise should return all the filters available on the facetColumn.", function () {
-                        for (i = 0; i < 2; i ++) {
-                            expect(mainFacets[i].filters.length).toBe(1, "missmatch for facet index="+ i);
+                    it("otherwise should return all the filters available on the facetColumn.", function () {
+                        for (i = 0; i < 2; i++) {
+                            expect(mainFacets[i].filters.length).toBe(1, "missmatch for facet index=" + i);
                         }
                         expect(mainFacets[0].filters.map(function (f) {
                             return f.term;
                         })).toEqual(["1"], "filter missmatch for facet index=0");
 
-                        for (i = 2; i < 20; i ++) {
-                            expect(mainFacets[i].filters.length).toBe(0, "missmatch for facet index="+ i);
+                        for (i = 2; i < 20; i++) {
+                            expect(mainFacets[i].filters.length).toBe(0, "missmatch for facet index=" + i);
                         }
                     });
                 });
 
-                it ("searchFilters, should return the search filters.", function () {
+                it("searchFilters, should return the search filters.", function () {
                     var filters = refMainMoreFilters.facetColumns[5].searchFilters;
                     expect(filters.length).toBe(2, "length missmatch.");
                     expect(filters[0].term).toBe("a", "term index=0 missmatch.");
                     expect(filters[1].term).toBe("b", "term index=0 missmatch.");
                 });
 
-                it ("choiceFilters, should return the choice filters.", function () {
+                it("choiceFilters, should return the choice filters.", function () {
                     var filters = refMainMoreFilters.facetColumns[5].choiceFilters;
                     expect(filters.length).toBe(2, "length missmatch.");
                     expect(filters[0].term).toBe("a", "term index=0 missmatch.");
                     expect(filters[1].term).toBe("b", "term index=0 missmatch.");
                 });
 
-                it ("rangeFilters, should return the range filters.", function () {
+                it("rangeFilters, should return the range filters.", function () {
                     var filters = refMainMoreFilters.facetColumns[5].rangeFilters;
                     expect(filters.length).toBe(2, "length missmatch.");
                     expect(filters[0].toString()).toBe("≥ a", "term index=0 missmatch.");
                     expect(filters[1].toString()).toBe("≤ b", "term index=0 missmatch.");
                 });
 
-                describe ("hasNotNullFilter,", function () {
+                describe("hasNotNullFilter,", function () {
                     var newRef;
-                    it ('should return true if facet has not-null filter', function () {
+                    it('should return true if facet has not-null filter', function () {
                         newRef = mainFacets[0].addNotNullFilter().contextualize.detailed;
                         expect(newRef.facetColumns[0].hasNotNullFilter).toEqual(true);
                     });
 
-                    it ("otherwise it should return false.", function () {
+                    it("otherwise it should return false.", function () {
                         expect(mainFacets[0].hasNotNullFilter).toEqual(false);
                     });
                 });
 
                 describe("hasNullFilter, ", function () {
                     var newRef;
-                    it ('should return true if facet has null filter', function () {
+                    it('should return true if facet has null filter', function () {
                         newRef = mainFacets[0].addChoiceFilters([null]).contextualize.detailed;
                         expect(newRef.facetColumns[0].hasNullFilter).toEqual(true);
                     });
 
-                    it ("otherwise it should return false.", function () {
+                    it("otherwise it should return false.", function () {
                         expect(mainFacets[0].hasNullFilter).toEqual(false);
                     });
                 });
@@ -1674,9 +1674,9 @@ exports.execute = function (options) {
                 });
 
                 describe("For different column types, ", function () {
-                    describe ("regarding boolean,", function () {
+                    describe("regarding boolean,", function () {
                         var newRef;
-                        it ("addChoiceFilters should be able to handle true, false, and null.", function () {
+                        it("addChoiceFilters should be able to handle true, false, and null.", function () {
                             newRef = refMain.facetColumns[8].addChoiceFilters([true, false, null]);
                             expect(newRef).not.toBe(refMain, "reference didn't change.");
                             expect(newRef.location.ermrestCompactPath).toBe(
@@ -1697,14 +1697,14 @@ exports.execute = function (options) {
                             expect(newRef.facetColumns[8].filters[2].toString()).toBe(null, "filter toString missmatch for null.");
                         });
 
-                        it ("removeChoiceFilters should be able to handle true, false, and null.", function () {
+                        it("removeChoiceFilters should be able to handle true, false, and null.", function () {
                             newRef = newRef.facetColumns[8].removeChoiceFilters([true]);
                             expect(newRef.facetColumns[8].filters.length).toBe(2, "filters didn't change.");
                         });
 
                     });
 
-                    describe ("regarding json/jsonb,", function () {
+                    describe("regarding json/jsonb,", function () {
                         var newRef;
                         var testJSONFilter = function (object, urlEncodedObject) {
                             newRef = refMain.facetColumns[9].addChoiceFilters([object]);
@@ -1717,40 +1717,40 @@ exports.execute = function (options) {
 
                             expect(JSON.stringify(newRef.facetColumns[9].filters[0].term)).toEqual(JSON.stringify(object), "filter term missmatch for true.");
                             expect(JSON.stringify(newRef.facetColumns[9].filters[0].uniqueId)).toBe(JSON.stringify(object), "filter uniqueId missmatch for true.");
-                            expect(newRef.facetColumns[9].filters[0].toString()).toBe(JSON.stringify(object,null,2), "filter toString missmatch for true.");
+                            expect(newRef.facetColumns[9].filters[0].toString()).toBe(JSON.stringify(object, null, 2), "filter toString missmatch for true.");
 
                             newRef = newRef.facetColumns[9].removeChoiceFilters([object]);
                             expect(newRef.facetColumns[9].filters.length).toBe(0, "filters didn't change.");
                         };
 
-                        describe ("filter manipulation functions should be able to add any json values and parse should serialize it correctly.", function () {
-                            it ("Having object as the value.", function () {
-                                testJSONFilter({"key": "one"}, "%7B%22key%22%3A%22one%22%7D");
+                        describe("filter manipulation functions should be able to add any json values and parse should serialize it correctly.", function () {
+                            it("Having object as the value.", function () {
+                                testJSONFilter({ "key": "one" }, "%7B%22key%22%3A%22one%22%7D");
                             });
 
-                            it ("Having array as the value.", function () {
+                            it("Having array as the value.", function () {
                                 testJSONFilter(["key", "one"], "%5B%22key%22%2C%22one%22%5D");
                             });
 
-                            it ("Having number as the value.", function () {
+                            it("Having number as the value.", function () {
                                 testJSONFilter(1234, "1234");
                             });
 
-                            it ("having string literal of integer as value.", function () {
+                            it("having string literal of integer as value.", function () {
                                 testJSONFilter("1234", "%221234%22");
                             });
 
-                            it ("Having string literal as the value.", function () {
+                            it("Having string literal as the value.", function () {
                                 testJSONFilter("value", "%22value%22");
                             });
 
-                            it ("Having boolean as the value.", function () {
+                            it("Having boolean as the value.", function () {
                                 testJSONFilter(true, "true");
                             });
                         });
 
-                        describe ("filter manipulation functions should be able to handle null value.", function () {
-                            it ("when null is given as javascript `null`.", function () {
+                        describe("filter manipulation functions should be able to handle null value.", function () {
+                            it("when null is given as javascript `null`.", function () {
                                 newRef = refMain.facetColumns[9].addChoiceFilters([null]);
 
                                 expect(newRef).not.toBe(refMain, "reference didn't change.");
@@ -1768,7 +1768,7 @@ exports.execute = function (options) {
                                 expect(newRef.facetColumns[9].filters.length).toBe(0, "filters didn't change.");
                             });
 
-                            it ("when null is given as javascript string '`null`'", function () {
+                            it("when null is given as javascript string '`null`'", function () {
                                 newRef = refMain.facetColumns[9].addChoiceFilters(["null"]);
 
                                 expect(newRef).not.toBe(refMain, "reference didn't change.");
@@ -1785,7 +1785,7 @@ exports.execute = function (options) {
             });
 
             describe("sourceReference and column APIs, ", function () {
-                it ("should have filters of other facet columns, and not filters of itself.", function () {
+                it("should have filters of other facet columns, and not filters of itself.", function () {
                     checkSourceReference(
                         "mainTable, index=0",
                         refMainMoreFilters.facetColumns[0],
@@ -1808,7 +1808,7 @@ exports.execute = function (options) {
                     );
                 });
 
-                it ("should have the search term from the reference.", function () {
+                it("should have the search term from the reference.", function () {
                     checkSourceReference(
                         "secondpath_2, index=0",
                         refSP2.facetColumns[0],
@@ -1841,14 +1841,14 @@ exports.execute = function (options) {
                     );
                 });
 
-                it ("should handle filter (not facet) on the main reference.", function () {
+                it("should handle filter (not facet) on the main reference.", function () {
                     var sr = refWCustomFilters.facetColumns[0].sourceReference;
                     expect(sr.location.ermrestCompactPath).toBe("M:=faceting_schema:main/" + unsupportedFilter, "compactPath missmatch.");
                     sr = refWCustomFilters.facetColumns[11].sourceReference;
-                    expect(sr.location.ermrestCompactPath).toBe("T:=faceting_schema:main/" + unsupportedFilter + "/M:=(fk_to_f2)=(faceting_schema:f2:id)" , "compactPath missmatch.");
+                    expect(sr.location.ermrestCompactPath).toBe("T:=faceting_schema:main/" + unsupportedFilter + "/M:=(fk_to_f2)=(faceting_schema:f2:id)", "compactPath missmatch.");
                 });
 
-                it ("should handle custom facet on the main reference.", function (done) {
+                it("should handle custom facet on the main reference.", function (done) {
                     // cfacet: {"displayname": "test", "ermrest_path": "(fk_to_f2)=(faceting_schema:f2:id)/term::ciregexp::test/$M/(fk_to_f1)=(faceting_schema:f1:id)/term::ciregexp::test/$M"}
                     var cfacetBlob = "N4IgJglgzgDgNgQwJ4DsEFsCmIBcIAumU+IANCJgE7qVH4D6MC+AFriABQBmA1vfgHt6XAEwBKALzcEAY0z4IKAOb0oMlpnQIconBDBiA9IWo4cMiLSWYAHjDOFihgCQBZQ9z6DhARknS5BWVVdU1tLh89A2MqdDMLK1t7HEd8F1cQAF8gA";
                     // facet: {"and": [{"source": "id", "choices": [2]}, {"source": "int_col", "ranges": [{"min": -5}]}]}
@@ -1864,15 +1864,15 @@ exports.execute = function (options) {
                 });
             });
 
-            describe ("getChoiceDisplaynames, ", function () {
+            describe("getChoiceDisplaynames, ", function () {
                 var checkChoiceDisplayname = function (objName, obj, uniqueId, value, isHTML) {
-                        expect(obj.uniqueId).toEqual(uniqueId, objName + ": uniqueId missmatch.");
-                        expect(obj.displayname.value).toEqual(value, objName + ": value missmatch.");
-                        expect(obj.displayname.isHTML).toEqual(isHTML, objName + ": isHTMl missmatch.");
+                    expect(obj.uniqueId).toEqual(uniqueId, objName + ": uniqueId missmatch.");
+                    expect(obj.displayname.value).toEqual(value, objName + ": value missmatch.");
+                    expect(obj.displayname.isHTML).toEqual(isHTML, objName + ": isHTMl missmatch.");
                 };
 
-                it ("should return an empty list, if there are no choice filters.", function (done) {
-                    refMain.facetColumns[5].getChoiceDisplaynames().then(function (res){
+                it("should return an empty list, if there are no choice filters.", function (done) {
+                    refMain.facetColumns[5].getChoiceDisplaynames().then(function (res) {
                         expect(res.length).toEqual(0);
                         done();
                     }).catch(function (err) {
@@ -1881,8 +1881,8 @@ exports.execute = function (options) {
                     });
                 });
 
-                it ("should return the list of toStrings in scalar mode.", function (done) {
-                    refMainMoreFilters.facetColumns[5].getChoiceDisplaynames().then(function (res){
+                it("should return the list of toStrings in scalar mode.", function (done) {
+                    refMainMoreFilters.facetColumns[5].getChoiceDisplaynames().then(function (res) {
                         expect(res.length).toEqual(2, "length missmatch.");
                         checkChoiceDisplayname("index=0", res[0], "a", "a", false);
                         checkChoiceDisplayname("index=1", res[1], "b", "b", false);
@@ -1893,8 +1893,8 @@ exports.execute = function (options) {
                     });
                 });
 
-                it ("should return the list of rownames in entity-mode.", function (done) {
-                    refMainFilterOnFK.facetColumns[11].getChoiceDisplaynames().then(function (res){
+                it("should return the list of rownames in entity-mode.", function (done) {
+                    refMainFilterOnFK.facetColumns[11].getChoiceDisplaynames().then(function (res) {
                         expect(res.length).toEqual(2, "length missmatch.");
                         checkChoiceDisplayname("index=0", res[0], 2, "<strong>two</strong>", true);
                         checkChoiceDisplayname("index=1", res[1], 3, "<strong>three</strong>", true);
@@ -1905,9 +1905,9 @@ exports.execute = function (options) {
                     });
                 });
 
-                it ("should not return the null filter.", function (done) {
+                it("should not return the null filter.", function (done) {
                     var newRef = refMainFilterOnFK.facetColumns[11].addChoiceFilters([null]);
-                    newRef.facetColumns[11].getChoiceDisplaynames().then(function (res){
+                    newRef.facetColumns[11].getChoiceDisplaynames().then(function (res) {
                         expect(res.length).toEqual(2, "length missmatch.");
                         checkChoiceDisplayname("index=1", res[0], 2, "<strong>two</strong>", true);
                         checkChoiceDisplayname("index=2", res[1], 3, "<strong>three</strong>", true);
@@ -1918,9 +1918,9 @@ exports.execute = function (options) {
                     });
                 });
 
-                it ("if the given filters are not in database, should just return the raw values.", function (done) {
+                it("if the given filters are not in database, should just return the raw values.", function (done) {
                     var newRef = refMainFilterOnFK.facetColumns[11].addChoiceFilters([8888, 5, 4, 7777]);
-                    newRef.facetColumns[11].getChoiceDisplaynames().then(function (res){
+                    newRef.facetColumns[11].getChoiceDisplaynames().then(function (res) {
                         expect(res.length).toEqual(6, "length missmatch.");
                         checkChoiceDisplayname("index=1", res[0], 2, "<strong>two</strong>", true);
                         checkChoiceDisplayname("index=2", res[1], 3, "<strong>three</strong>", true);
@@ -1937,12 +1937,12 @@ exports.execute = function (options) {
             });
 
             describe("hideNumOccurrences, ", function () {
-                it ('should return false if hide_num_occurrences is not `true`.', function () {
+                it('should return false if hide_num_occurrences is not `true`.', function () {
                     expect(mainFacets[0].hideNumOccurrences).toBe(false, "missmatch for index=0");
                     expect(mainFacets[2].hideNumOccurrences).toBe(false, "missmatch for index=2");
                 });
 
-                it ("otherwise should return true.", function () {
+                it("otherwise should return true.", function () {
                     expect(mainFacets[1].hideNumOccurrences).toBe(true, "missmatch for index=1");
                     expect(mainFacets[7].hideNumOccurrences).toBe(true, "missmatch for index=7");
                 });
@@ -1960,43 +1960,43 @@ exports.execute = function (options) {
                     newRefWithNull = mainFacets[15].addChoiceFilters([null]).contextualize.detailed;
                 });
 
-                it ("should return `false` if facet has null.", function () {
+                it("should return `false` if facet has null.", function () {
                     expect(newRefWithNull.facetColumns[15].hideNullChoice).toBe(false, "missmatch for index=10");
                 });
 
-                it ("should return `true` if hide_null_choice is set to `true`.", function () {
+                it("should return `true` if hide_null_choice is set to `true`.", function () {
                     testHideNullChoice([10, 15], true);
                 });
 
-                it ("should return `true` if source doesn't have any path and it's not-null.", function () {
+                it("should return `true` if source doesn't have any path and it's not-null.", function () {
                     testHideNullChoice([0], true);
                 });
 
-                it ("should return `false` if source doesn't have any path and it's nullable.", function () {
+                it("should return `false` if source doesn't have any path and it's nullable.", function () {
                     testHideNullChoice([1, 2, 3, 4, 5, 6, 7, 8, 9, 19], false);
                 });
 
-                it ("should return `true` if it's an all outbound path with all the columns being not-null.", function () {
+                it("should return `true` if it's an all outbound path with all the columns being not-null.", function () {
                     testHideNullChoice([11], true);
                 });
 
-                it ("should return `true` if source has a path and column is nullable.", function () {
+                it("should return `true` if source has a path and column is nullable.", function () {
                     testHideNullChoice([12, 14, 20], true);
                 });
 
-                it ("should return `false` if column is not nullable, and source has path one and foreignkey can be ignored.", function () {
+                it("should return `false` if column is not nullable, and source has path one and foreignkey can be ignored.", function () {
                     testHideNullChoice([13], false);
                 });
 
                 describe("otherwise for facets with column not-null and path, ", function () {
-                    it ("if any other such facet has null, it should return `true`.", function () {
-                        [16,18].forEach(function (index) {
+                    it("if any other such facet has null, it should return `true`.", function () {
+                        [16, 18].forEach(function (index) {
                             expect(newRefWithNull.facetColumns[index].hideNullChoice).toBe(true, "missmatch for index=" + index);
                         })
                     });
 
-                    it ("otherwise should return `false`.", function () {
-                        testHideNullChoice([16,18],false);
+                    it("otherwise should return `false`.", function () {
+                        testHideNullChoice([16, 18], false);
                     });
                 })
             });
@@ -2013,24 +2013,24 @@ exports.execute = function (options) {
                     newRefWithNull = mainFacets[2].addNotNullFilter().contextualize.detailed;
                 });
 
-                it ("should return `false` if facet has not-null.", function () {
+                it("should return `false` if facet has not-null.", function () {
                     expect(newRefWithNull.facetColumns[2].hideNullChoice).toBe(false, "missmatch for index=10");
                 });
 
-                it ("should return true if hide_not_null_choice is `true`.", function () {
-                    testHideNotNullChoice([1,2,12], true);
+                it("should return true if hide_not_null_choice is `true`.", function () {
+                    testHideNotNullChoice([1, 2, 12], true);
                 });
 
-                it ("should return `true` if facet doesn't have any path and is not-null.", function () {
+                it("should return `true` if facet doesn't have any path and is not-null.", function () {
                     testHideNotNullChoice([0], true);
                 });
 
-                it ("should return `true` for all-outbound facets that all the column in path are not-null.", function () {
+                it("should return `true` for all-outbound facets that all the column in path are not-null.", function () {
                     testHideNotNullChoice([10, 11], true);
                 });
 
-                it ('otherwise should return `false`.', function () {
-                    testHideNotNullChoice([3,4,5,6,7,8,9,13,14,15,16,17,18,19, 20], false);
+                it('otherwise should return `false`.', function () {
+                    testHideNotNullChoice([3, 4, 5, 6, 7, 8, 9, 13, 14, 15, 16, 17, 18, 19, 20], false);
                 });
 
             });
@@ -2048,52 +2048,52 @@ exports.execute = function (options) {
                     });
                 };
 
-                it ('should throw an error in entity mode.', function () {
+                it('should throw an error in entity mode.', function () {
                     expect(function () {
                         var sc = mainFacets[10].sortColumns;
                     }).toThrow("sortColumns cannot be used in entity mode.");
                 });
 
-                it ("when order is missing, should return descending num_occurrences and ascending value.", function () {
+                it("when order is missing, should return descending num_occurrences and ascending value.", function () {
                     testSortColumns(mainFacets[0].sortColumns, [
-                        {num_occurrences: true, descending: true},
-                        {column: "id", descending: false}
+                        { num_occurrences: true, descending: true },
+                        { column: "id", descending: false }
                     ], "");
                 });
 
-                it ("when order is missing and column is not sortable, still should return desc num_occ and asc value.", function () {
+                it("when order is missing and column is not sortable, still should return desc num_occ and asc value.", function () {
                     testSortColumns(mainFacets[9].sortColumns, [
-                        {num_occurrences: true, descending: true},
-                        {column: "jsonb_col", descending: false}
+                        { num_occurrences: true, descending: true },
+                        { column: "jsonb_col", descending: false }
                     ], "");
                 });
 
-                it ("when order is defined, should be honored.", function () {
+                it("when order is defined, should be honored.", function () {
                     testSortColumns(mainFacets[1].sortColumns, [
-                        {column: "id", descending: true},
+                        { column: "id", descending: true },
                     ], "missing num_occurrences, missing actual column");
 
                     testSortColumns(mainFacets[2].sortColumns, [
-                        {column: "id", descending: false},
-                        {column: "float_col", descending: true}
+                        { column: "id", descending: false },
+                        { column: "float_col", descending: true }
                     ], "missing num_occurrences, having actual column");
 
                     //text_col
                     testSortColumns(mainFacets[5].sortColumns, [
-                        {column: "date_col", descending: false},
-                        {num_occurrences: true, descending: false}
+                        { column: "date_col", descending: false },
+                        { num_occurrences: true, descending: false }
                     ], "having num_occurrences, missing actual column");
                 });
 
-                it ("when order is not valid array (or the columns were not valid), should return the default.", function () {
+                it("when order is not valid array (or the columns were not valid), should return the default.", function () {
                     testSortColumns(mainFacets[6].sortColumns, [
-                        {num_occurrences: true, descending: true},
-                        {column: "longtext_col", descending: false}
+                        { num_occurrences: true, descending: true },
+                        { column: "longtext_col", descending: false }
                     ], "longtext");
 
                     testSortColumns(mainFacets[7].sortColumns, [
-                        {num_occurrences: true, descending: true},
-                        {column: "markdown_col", descending: false}
+                        { num_occurrences: true, descending: true },
+                        { column: "markdown_col", descending: false }
                     ], "markdown");
                 });
             });
@@ -2116,13 +2116,13 @@ exports.execute = function (options) {
                     });
                 };
 
-                it ('should throw an error in entity mode.', function () {
+                it('should throw an error in entity mode.', function () {
                     expect(function () {
                         var sc = mainFacets[10].sortColumns;
                     }).toThrow("sortColumns cannot be used in entity mode.");
                 });
 
-                it ("should return the list of avaialble facets sorted by frequency and tie break by column.", function (done) {
+                it("should return the list of avaialble facets sorted by frequency and tie break by column.", function (done) {
                     testEntityCounts(
                         mainFacets[0].scalarValuesReference,
                         "ID facet",
@@ -2134,7 +2134,7 @@ exports.execute = function (options) {
                     );
                 });
 
-                it ("should be able to pass the FacetColumn.sortColumns to it.", function (done) {
+                it("should be able to pass the FacetColumn.sortColumns to it.", function (done) {
                     testEntityCounts(
                         mainFacets[2].scalarValuesReference,
                         "float_col markdown_name",
@@ -2146,7 +2146,7 @@ exports.execute = function (options) {
                     );
                 });
 
-                it ("should be able to pass the FacetColumn.hideNumOccurrences to it (should still add the count and just hide it).", function (done) {
+                it("should be able to pass the FacetColumn.hideNumOccurrences to it (should still add the count and just hide it).", function (done) {
                     testEntityCounts(
                         mainFacets[7].scalarValuesReference,
                         "markdown_col",
@@ -2158,7 +2158,7 @@ exports.execute = function (options) {
                     );
                 });
 
-                it ("should not add count column if it's hidden and not part of sortColumns.", function (done) {
+                it("should not add count column if it's hidden and not part of sortColumns.", function (done) {
                     testEntityCounts(
                         mainFacets[1].scalarValuesReference,
                         "int_col",
@@ -2182,40 +2182,40 @@ exports.execute = function (options) {
                 ref = ref.facetColumns[2].addRangeFilter(-1, false, 20.2, false).reference;
             });
 
-            it ("should be able to construct a reference with multiple filters.", function () {
+            it("should be able to construct a reference with multiple filters.", function () {
 
                 uri = "faceting_schema:secondpath_2/RID=1;RID::null::/(id)=(faceting_schema:secondpath_1:id)/M:=right(id)=(faceting_schema:main:id)/" +
-                      "id=1/$M/int_col::geq::-2/$M/float_col::geq::-1&float_col::leq::20.2/$M/" +
-                      "(id)=(faceting_schema:main_f3_assoc:id_main)/(id_f3)=(faceting_schema:f3:id)/term::ciregexp::t/$M/(id)=(faceting_schema:longpath_1:id)/(id)=(faceting_schema:longpath_2:id)/(id)=(faceting_schema:longpath_3:id)/(id)=(faceting_schema:longpath_4:id)/(id)=(faceting_schema:longpath_5:id)/col=a;col=test/$M";
+                    "id=1/$M/int_col::geq::-2/$M/float_col::geq::-1&float_col::leq::20.2/$M/" +
+                    "(id)=(faceting_schema:main_f3_assoc:id_main)/(id_f3)=(faceting_schema:f3:id)/term::ciregexp::t/$M/(id)=(faceting_schema:longpath_1:id)/(id)=(faceting_schema:longpath_2:id)/(id)=(faceting_schema:longpath_3:id)/(id)=(faceting_schema:longpath_4:id)/(id)=(faceting_schema:longpath_5:id)/col=a;col=test/$M";
 
                 facetObj = {
                     "and": [
-                        {"source": "id", "choices":["1"]},
-                        {"source":"int_col","ranges":[{"min":-2}]},
-                        {"source":["float_col"],"ranges":[{"max":20.2,"min":-1}]},
+                        { "source": "id", "choices": ["1"] },
+                        { "source": "int_col", "ranges": [{ "min": -2 }] },
+                        { "source": ["float_col"], "ranges": [{ "max": 20.2, "min": -1 }] },
                         {
                             "source": [
-                                {"inbound":  ["faceting_schema","main_f3_assoc_fk1"]},
-                                {"outbound": ["faceting_schema","main_f3_assoc_fk2"]},
+                                { "inbound": ["faceting_schema", "main_f3_assoc_fk1"] },
+                                { "outbound": ["faceting_schema", "main_f3_assoc_fk2"] },
                                 "term"
                             ],
                             "search": ["t"]
                         },
                         {
                             "source": [
-                                {"inbound": ["faceting_schema","longpath_1_fk1"]},
-                                {"inbound": ["faceting_schema","longpath_2_fk1"]},
-                                {"inbound": ["faceting_schema","longpath_3_fk1"]},
-                                {"inbound": ["faceting_schema","longpath_4_fk1"]},
-                                {"inbound": ["faceting_schema","longpath_5_fk1"]},
+                                { "inbound": ["faceting_schema", "longpath_1_fk1"] },
+                                { "inbound": ["faceting_schema", "longpath_2_fk1"] },
+                                { "inbound": ["faceting_schema", "longpath_3_fk1"] },
+                                { "inbound": ["faceting_schema", "longpath_4_fk1"] },
+                                { "inbound": ["faceting_schema", "longpath_5_fk1"] },
                                 "col"
                             ],
-                            "choices":["a","test"]
+                            "choices": ["a", "test"]
                         },
                         {
                             "source": [
-                                {"inbound": ["faceting_schema", "secondpath_1_fk1"]},
-                                {"inbound": ["faceting_schema", "secondpath_2_fk1"]},
+                                { "inbound": ["faceting_schema", "secondpath_1_fk1"] },
+                                { "inbound": ["faceting_schema", "secondpath_2_fk1"] },
                                 "RID"
                             ],
                             "choices": ["1", null]
@@ -2227,7 +2227,7 @@ exports.execute = function (options) {
                 expect(JSON.stringify(ref.location.facets.decoded)).toEqual(JSON.stringify(facetObj), "facets missmatch.");
             });
 
-            it ("sourceReference should return the correct reference.", function () {
+            it("sourceReference should return the correct reference.", function () {
                 checkSourceReference(
                     "new refernece, index = 0",
                     ref.facetColumns[0],
@@ -2248,11 +2248,11 @@ exports.execute = function (options) {
                 );
             });
 
-            it ("read on sourceReference should return the expected values.", function (done) {
+            it("read on sourceReference should return the expected values.", function (done) {
                 ref.facetColumns[0].sourceReference.read(25).then(function (p) {
                     expect(p._data[0].id).toEqual(1, "data missmatch");
                     return ref.facetColumns[14].sourceReference.read(25);
-                }).then(function (p){
+                }).then(function (p) {
                     expect(p._data[0].col).toEqual("test", "col missmatch");
                     expect(p._data[0].id).toEqual(1, "id missmatch");
                     done();
@@ -2265,8 +2265,8 @@ exports.execute = function (options) {
 
         describe("integration with other APIs, ", function () {
 
-            it ("changing facet should not remove the sort on the reference.", function () {
-                var refSorted = refMain.sort([{"column": "int_col", "descending": false}]);
+            it("changing facet should not remove the sort on the reference.", function () {
+                var refSorted = refMain.sort([{ "column": "int_col", "descending": false }]);
                 var refSortedWithFilter = refSorted.facetColumns[10].addChoiceFilters(["1", "2"]);
                 expect(refSortedWithFilter.location.ermrestCompactPath).toBe(
                     "M:=faceting_schema:main/id=1/$M/int_col::geq::-2/$M/(fk_to_f1)=(faceting_schema:f1:id)/id=1;id=2/$M",
@@ -2277,7 +2277,7 @@ exports.execute = function (options) {
             });
 
             it("should be able to call histogram on .column, and should be properly defined.", function () {
-                var agRef = mainFacets[20].column.groupAggregate.histogram(2,2,10);
+                var agRef = mainFacets[20].column.groupAggregate.histogram(2, 2, 10);
                 expect(agRef.columns.length).toBe(2, "column length invalid");
                 expect(agRef.columns[1].term).toBe("cnt_d(T:RID)", "invalid term (must use the facet base table)");
             });
@@ -2286,7 +2286,7 @@ exports.execute = function (options) {
                 var currRef;
 
                 var testReadAndReadPath = function (currFacetObj, expectedReadPath) {
-                    it ("readPath should be able to reuse the aliases in facet as part of all-outbound", function (done) {
+                    it("readPath should be able to reuse the aliases in facet as part of all-outbound", function (done) {
                         options.ermRest.resolve(createURL(tableMain, currFacetObj)).then(function (ref) {
                             // visible-fks are defined for compact
                             currRef = ref.contextualize.compact;
@@ -2298,7 +2298,7 @@ exports.execute = function (options) {
                         });
                     });
 
-                    it ("read should return proper values", function (done) {
+                    it("read should return proper values", function (done) {
                         currRef.read(25).then(function (page) {
                             expect(page.length).toBe(1, "page length missmatch");
 
@@ -2321,9 +2321,9 @@ exports.execute = function (options) {
                             {
                                 "and": [
                                     {
-                                        "source":  [
-                                            {"sourcekey": "path_to_path_prefix_o1_o1"},
-                                            {"inbound": ["faceting_schema", "path_prefix_o1_o1_i1_fk1"]},
+                                        "source": [
+                                            { "sourcekey": "path_to_path_prefix_o1_o1" },
+                                            { "inbound": ["faceting_schema", "path_prefix_o1_o1_i1_fk1"] },
                                             "path_prefix_o1_o1_i1_col"
                                         ],
                                         "choices": ["one_o1_o1_i1"]
@@ -2355,9 +2355,9 @@ exports.execute = function (options) {
                                         "choices": ["two_o1_o1"]
                                     },
                                     {
-                                        "source":  [
-                                            {"sourcekey": "path_to_path_prefix_o1_o1"},
-                                            {"inbound": ["faceting_schema", "path_prefix_o1_o1_i1_fk1"]},
+                                        "source": [
+                                            { "sourcekey": "path_to_path_prefix_o1_o1" },
+                                            { "inbound": ["faceting_schema", "path_prefix_o1_o1_i1_fk1"] },
                                             "path_prefix_o1_o1_i1_col"
                                         ],
                                         "choices": ["one_o1_o1_i1"]
@@ -2381,15 +2381,15 @@ exports.execute = function (options) {
                                 "and": [
                                     {
                                         "source": [
-                                            {"sourcekey": "path_to_path_prefix_o1_o1"},
+                                            { "sourcekey": "path_to_path_prefix_o1_o1" },
                                             "id"
                                         ],
                                         "choices": ["2"]
                                     },
                                     {
-                                        "source":  [
-                                            {"sourcekey": "path_to_path_prefix_o1_o1"},
-                                            {"inbound": ["faceting_schema", "path_prefix_o1_o1_i1_fk1"]},
+                                        "source": [
+                                            { "sourcekey": "path_to_path_prefix_o1_o1" },
+                                            { "inbound": ["faceting_schema", "path_prefix_o1_o1_i1_fk1"] },
                                             "path_prefix_o1_o1_i1_col"
                                         ],
                                         "choices": ["one_o1_o1_i1"]
@@ -2413,9 +2413,9 @@ exports.execute = function (options) {
                             {
                                 "and": [
                                     {
-                                        "source":  [
-                                            {"sourcekey": "path_to_path_prefix_o1_o1"},
-                                            {"inbound": ["faceting_schema", "path_prefix_o1_o1_i1_fk1"]},
+                                        "source": [
+                                            { "sourcekey": "path_to_path_prefix_o1_o1" },
+                                            { "inbound": ["faceting_schema", "path_prefix_o1_o1_i1_fk1"] },
                                             "path_prefix_o1_o1_i1_col"
                                         ],
                                         "choices": ["one_o1_o1_i1", null]
@@ -2447,9 +2447,9 @@ exports.execute = function (options) {
                                         "choices": ["two_o1_o1"]
                                     },
                                     {
-                                        "source":  [
-                                            {"sourcekey": "path_to_path_prefix_o1_o1"},
-                                            {"inbound": ["faceting_schema", "path_prefix_o1_o1_i1_fk1"]},
+                                        "source": [
+                                            { "sourcekey": "path_to_path_prefix_o1_o1" },
+                                            { "inbound": ["faceting_schema", "path_prefix_o1_o1_i1_fk1"] },
                                             "path_prefix_o1_o1_i1_col"
                                         ],
                                         "choices": ["one_o1_o1_i1", null]
@@ -2474,15 +2474,15 @@ exports.execute = function (options) {
                                 "and": [
                                     {
                                         "source": [
-                                            {"sourcekey": "path_to_path_prefix_o1_o1"},
+                                            { "sourcekey": "path_to_path_prefix_o1_o1" },
                                             "id"
                                         ],
                                         "choices": ["2"]
                                     },
                                     {
-                                        "source":  [
-                                            {"sourcekey": "path_to_path_prefix_o1_o1"},
-                                            {"inbound": ["faceting_schema", "path_prefix_o1_o1_i1_fk1"]},
+                                        "source": [
+                                            { "sourcekey": "path_to_path_prefix_o1_o1" },
+                                            { "inbound": ["faceting_schema", "path_prefix_o1_o1_i1_fk1"] },
                                             "path_prefix_o1_o1_i1_col"
                                         ],
                                         "choices": ["one_o1_o1_i1", null]
