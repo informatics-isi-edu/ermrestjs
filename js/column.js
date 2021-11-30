@@ -925,7 +925,7 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
         http = this._baseReference._server.http,
         column = this._baseCols[0],
         keyColName, keyColNameEncoded,
-        baseUri, basePath, uri, i, fk, str, projection;
+        baseUri, basePath, pathToCol, tempUri, i, filterStr, projection;
 
     var sourceMarkdownPattern = this.display.sourceMarkdownPattern;
     var sourceTemplateEngine = this.display.sourceTemplateEngine;
@@ -972,16 +972,13 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
         headers: self.reference._generateContextHeader(contextHeaderParams, page.tuples.length)
     };
 
-    var currTable = "T";
-    var baseTable = self.hasPath ? "M": currTable;
-
     // creates http request with the current uri
     baseUri = [location.service, "catalog", location.catalog, "attributegroup"].join("/") + "/";
-    var addPromise = function () {
+    var addPromise = function (uri) {
         if (uri.charAt(uri.length-1) === ";") {
             uri = uri.slice(0, -1);
         }
-        promises.push(http.get(baseUri + uri + projection, config));
+        promises.push(http.get(baseUri + uri + pathToCol + projection, config));
     };
 
     // will format a single value
@@ -1117,46 +1114,50 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
         return defer.promise;
     }
 
+    var currTable = "T";
+    var baseTable = self.hasPath ? "M": currTable;
+
     keyColName = mainTable.shortestKey[0].name;
     keyColNameEncoded = module._fixedEncodeURIComponent(mainTable.shortestKey[0].name);
     projection = "/c:=:" + baseTable + ":" + keyColNameEncoded +
                  ";v:=" + self.sourceObject.aggregate +
                  "(" + currTable + ":" + (isRow ? "*" : module._fixedEncodeURIComponent(column.name)) + ")";
 
-     // generate the base path in the following format:
-     // T:=pseudoColTable/path-from-pseudo-col-to-current/filters/project
-     basePath = currTable + ":=" + module._fixedEncodeURIComponent(self.table.schema.name) + ":" + module._fixedEncodeURIComponent(self.table.name) + "/";
+    // generate the base path in the following format:
+    // <baseUri><basePath><filters><path-to-pseudo-col><projection>
+    // the following shows where `/` is stored for each part:
+    // <baseUri/><basePath/><filters></path-from-main-to-pseudo-col></projection>
+    basePath = baseTable + ":=" + module._fixedEncodeURIComponent(mainTable.schema.name) + ":" + module._fixedEncodeURIComponent(mainTable.name) + "/";
 
-    var pathToRoot = self.sourceObjectWrapper.toString(true, true, baseTable);
-    if (pathToRoot.length > 0) {
-        pathToRoot += "/";
+    pathToCol = self.sourceObjectWrapper.toString(false, false, currTable);
+    if (pathToCol.length > 0) {
+        pathToCol = "/" + pathToCol;
     }
-    basePath += pathToRoot;
 
     // make sure just projection and base uri doesn't go over limit.
-    if (basePath.length + projection.length >= module.URL_PATH_LENGTH_LIMIT) {
+    if (basePath.length + pathToCol.length + projection.length >= module.URL_PATH_LENGTH_LIMIT) {
         module._log.warn("couldn't generate the requests because of url limitation");
         defer.resolve(values);
         return defer.promise;
     }
 
     // create the request urls
-    uri = basePath;
+    tempUri = basePath;
     for (i = 0; i < page.tuples.length; i++) {
-        str = keyColNameEncoded + "=" + page.tuples[i].data[keyColName] + ";";
+        filterStr = keyColNameEncoded + "=" + page.tuples[i].data[keyColName] + ";";
 
         // adding this will go over limit, create a request with the previous uri
-        if ((uri.length + str.length + projection.length) > module.URL_PATH_LENGTH_LIMIT) {
-            if (uri.length !== basePath.length) {
-                addPromise();
-                uri = basePath + str;
+        if ((tempUri.length + filterStr.length + pathToCol.length + projection.length) > module.URL_PATH_LENGTH_LIMIT) {
+            if (tempUri.length !== basePath.length) {
+                addPromise(tempUri);
+                tempUri = basePath + filterStr;
             }
         } else {
-            uri += str;
+            tempUri += filterStr;
 
             // if this was the last one, create a promise with it
             if (i === page.tuples.length-1) {
-                addPromise();
+                addPromise(tempUri);
             }
         }
     }

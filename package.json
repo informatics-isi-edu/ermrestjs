@@ -33,7 +33,6 @@
     "jasmine": "2.5.3",
     "jasmine-expect": "^3.7.1",
     "jasmine-spec-reporter": "^2.5.0",
-    "just-handlebars-helpers": "^1.0.18",
     "lz-string": "1.4.4",
     "markdown-it": "7.0.1",
     "markdown-it-attrs": "2.3.1",
