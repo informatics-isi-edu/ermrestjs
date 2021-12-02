@@ -961,6 +961,34 @@
         },
 
         /**
+         * Given a list of facet and filters, will add them to the existing conjunctive facet filters.
+         *
+         * @param {Object[]} facetAndFilters - an array of facets that will be added
+         * @return {ERMrest.Reference}
+         */
+        addFacets: function (facetAndFilters) {
+            verify(Array.isArray(facetAndFilters) && facetAndFilters.length > 0, "given input must be an array");
+
+            var loc = this.location;
+
+            // keep a copy of existing facets
+            var existingFilters = loc.facets ? module._simpleDeepCopy(loc.facets.andFilters) : [];
+
+            // create a new copy
+            var newReference = _referenceCopy(this);
+
+            // clone the location object
+            newReference._location = loc._clone();
+            newReference._location.beforeObject = null;
+            newReference._location.afterObject = null;
+
+            // merge the existing facets with the input
+            newReference._location.facets = {"and": facetAndFilters.concat(existingFilters)};
+
+            return newReference;
+        },
+
+        /**
          * Will return a reference with the same facets but hidden.
          *
          * @return {ERMrest.Reference}
