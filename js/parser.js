@@ -1467,9 +1467,9 @@
      * @param {string} toSchema
      * @param {string} toTable
      * @param {object?} colMapping - the column mapping info ({fromCols: [<string>], fromColsStr: <string>, toCols: [<string>, toColsStr: <string>]})
-     * @param {object?} sourcebjectWrapper - the source object that represents the join
+     * @param {object?} sourceObjectWrapper - the source object that represents the join
      */
-    function ParsedJoin(str, strReverse, toSchema, toTable, colMapping, sourcebjectWrapper) {
+    function ParsedJoin(str, strReverse, toSchema, toTable, colMapping, sourceObjectWrapper) {
         this.str = str;
         this.strReverse = strReverse;
         this.toSchema = toSchema;
@@ -1482,8 +1482,16 @@
             this.toColsStr = colMapping.toColsStr;
         }
 
-        if (sourcebjectWrapper) {
-            this.sourceObjectWrapper = sourcebjectWrapper;
+        if (sourceObjectWrapper) {
+            this.sourceObjectWrapper = sourceObjectWrapper;
+
+            this.str = sourceObjectWrapper.toString();
+            this.strReverse = sourceObjectWrapper.toString(true);
+        }
+
+        // should not happen in the existing work flow, added just for sanity check
+        if (!this.str || !this.strReverse) {
+            throw new InvalidInputError("Either str/strReverse or sourceObjectWrapper must be defined.")
         }
     }
 

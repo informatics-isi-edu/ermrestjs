@@ -3082,13 +3082,15 @@ FacetColumn.prototype = {
                 newLoc.customFacets = cfacet;
             }
 
-            var sourceLocation = newLoc.addJoin(
-                self._facetObjectWrapper,
-                table.schema.name,
-                table.name
-            );
+            if (self.hasPath) {
+                newLoc = newLoc.addJoin(
+                    self._facetObjectWrapper,
+                    table.schema.name,
+                    table.name
+                );
+            }
 
-            this._sourceReference = new Reference(sourceLocation, table.schema.catalog);
+            this._sourceReference = new Reference(newLoc, table.schema.catalog);
         }
         return this._sourceReference;
     },
