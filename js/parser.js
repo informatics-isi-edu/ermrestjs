@@ -471,7 +471,7 @@
                         wrapper.lastForeignKeyNode,
                         wrapper.foreignKeyPathLength,
                         wrapper.sourceObject && isStringAndNotEmpty(wrapper.sourceObject.sourcekey) ? wrapper.sourceObject.sourcekey : null,
-                        getPathPartAliasMapping(index > 0 ? index : -1),
+                        getPathPartAliasMapping(index -1), // share with the previous path part (facet)
                         index > 0 ? self.pathParts[index-1].alias : self.mainTableAlias, // the alias of previous part??
                         false,
                         alias
@@ -479,7 +479,7 @@
 
                     // make sure alias is updated based on what's used
                     // so while parsing the facets we're using the correct alias
-                    part.alias = temp.usedAlias;
+                    part.alias = temp.usedOutAlias;
                     return temp.path;
                 }
 
@@ -506,8 +506,8 @@
                     }
                     // the next join might have a sourceObjectWrapper that
                     // should be taken into account
-                    else if (self.pathParts[index+1].joins.sourceObjectWrapper) {
-                        currUsedSourceObjects = [self.pathParts[index+1].joins.sourceObjectWrapper];
+                    else if (self.pathParts[index+1].joins.length > 0 && self.pathParts[index+1].joins[0].sourceObjectWrapper) {
+                        currUsedSourceObjects = [self.pathParts[index+1].joins[0].sourceObjectWrapper.sourceObject];
                     }
 
                     facetRes = _renderFacet(part.facets.decoded, part.alias, part.schema, part.table, self.catalog, self.catalogObject, currUsedSourceObjects, module._constraintNames);
@@ -1317,6 +1317,10 @@
         },
 
         set alias(alias) {
+            // sanity check to make sure code is working as expected
+            if (!isStringAndNotEmpty(alias)) {
+                throw new module.InvalidInputError("Given alias must be string.");
+            }
             this._alias = alias;
         },
 

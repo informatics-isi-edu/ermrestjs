@@ -1540,7 +1540,7 @@
 
             return {
                 path: path,
-                outAlias: usedOutAlias
+                usedOutAlias: usedOutAlias
             };
         },
 
@@ -1843,6 +1843,32 @@
             return _sourceColumnHelpers.generateSourceObjectHashName({source: source}, false);
         },
 
+        /**
+         * Given an array of source objects will populate the used source keys
+         * in the given first parameter.
+         * NOTE: this function doesn't account for cases where a recursive path
+         * is used twice. for example assume the following scenario:
+         * {
+         *   "key1": {
+         *     "source": [{"inbound": ["s", "const"]}, "RID"]
+         *   },
+         *   "key1_i1": {
+         *     "source": [{"sourcekey": "key1"}, {"inbound": ["s", "const2"]}, "RID"]
+         *   },
+             "key1_key1_i1": {
+         *     "source": [{"sourcekey": "key1_i1"}, {"inbound": ["s", "const3"]}, "RID"]
+         *   }
+         * }
+         * if "key1_i1" and "key1_key1_i1" are used in multiple sources, then it will include "key1" as well as
+         * "key1_i1" as part of usedSourcekeys even though adding alias for "key1_i1" is enough and
+         * we don't need any for "key1".
+         *
+         * @param {string[]} usedSourceKeys - an array of strings representing the sourcekeys that are used
+         *                             more than once and therefore should add alias.
+         * @param {Object[]} sources
+         * @param {ERMrest.Table} rootTable
+         * @private
+         */
         _populateUsedSourceKeys: function (usedSourceKeys, sources, rootTable) {
             if (!rootTable) return;
             var addToSourceKey = function (key) {
@@ -1890,7 +1916,6 @@
             for (var k in usedSourceKeys) {
                 if (usedSourceKeys[k] < 2) delete usedSourceKeys[k];
             }
-            return usedSourceKeys;
         }
     };
 
