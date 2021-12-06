@@ -13,23 +13,23 @@ to use for ERMrest JavaScript agents.</p>
 ## Functions
 
 <dl>
-<dt><a href="#formatDate">formatDate()</a> ⇒</dt>
-<dd><p>{{formatDate value format}}</p>
+<dt><a href="#escape">escape()</a> ⇒</dt>
+<dd><p>escape markdown characters</p>
 </dd>
+<dt><a href="#encode">encode()</a> ⇒</dt>
+<dd></dd>
 <dt><a href="#encodeFacet">encodeFacet()</a> ⇒</dt>
 <dd><p>{{#encodeFacet}}
  str
 {{/encodeFacet}}</p>
 </dd>
+<dt><a href="#formatDate">formatDate()</a> ⇒</dt>
+<dd><p>{{formatDate value format}}</p>
+</dd>
 <dt><a href="#jsonStringify">jsonStringify()</a> ⇒</dt>
 <dd><p>{{#jsonStringify}}
  JSON Object
 {{/jsonStringify}}</p>
-</dd>
-<dt><a href="#toTitleCase">toTitleCase()</a> ⇒</dt>
-<dd><p>{{#toTitleCase}}
- string
-{{/toTitleCase}}</p>
 </dd>
 <dt><a href="#replace">replace()</a> ⇒</dt>
 <dd><p>{{#replace substr newSubstr}}
@@ -50,6 +50,11 @@ to use for ERMrest JavaScript agents.</p>
 <dd><p>{{#each (regexFindAll value regexp)}}
   {{this}}
 {{/each}}</p>
+</dd>
+<dt><a href="#toTitleCase">toTitleCase()</a> ⇒</dt>
+<dd><p>{{#toTitleCase}}
+ string
+{{/toTitleCase}}</p>
 </dd>
 </dl>
 
@@ -7971,13 +7976,18 @@ ERMrest.resolve('https://example.org/catalog/42/entity/s:t/k=123').then(
 **Kind**: static method of [<code>ERMrest</code>](#ERMrest)  
 **Returns**: <code>integer</code> - A value set to determine the elapsed time
 since the ermrestJS has been available (milliseconds).  
-<a name="formatDate"></a>
+<a name="escape"></a>
 
-## formatDate() ⇒
-{{formatDate value format}}
+## escape() ⇒
+escape markdown characters
 
 **Kind**: global function  
-**Returns**: formatted string of `value` with corresponding `format`  
+**Returns**: escaped characeters  
+<a name="encode"></a>
+
+## encode() ⇒
+**Kind**: global function  
+**Returns**: url-encoded string  
 <a name="encodeFacet"></a>
 
 ## encodeFacet() ⇒
@@ -7987,21 +7997,19 @@ since the ermrestJS has been available (milliseconds).
 
 **Kind**: global function  
 **Returns**: encoded facet string that can be used in url  
+<a name="formatDate"></a>
+
+## formatDate() ⇒
+{{formatDate value format}}
+
+**Kind**: global function  
+**Returns**: formatted string of `value` with corresponding `format`  
 <a name="jsonStringify"></a>
 
 ## jsonStringify() ⇒
 {{#jsonStringify}}
  JSON Object
 {{/jsonStringify}}
-
-**Kind**: global function  
-**Returns**: string representation of the given JSON object  
-<a name="toTitleCase"></a>
-
-## toTitleCase() ⇒
-{{#toTitleCase}}
- string
-{{/toTitleCase}}
 
 **Kind**: global function  
 **Returns**: string representation of the given JSON object  
@@ -8041,6 +8049,15 @@ since the ermrestJS has been available (milliseconds).
 
 **Kind**: global function  
 **Returns**: array of strings from value that match the regular expression or  
+<a name="toTitleCase"></a>
+
+## toTitleCase() ⇒
+{{#toTitleCase}}
+ string
+{{/toTitleCase}}
+
+**Kind**: global function  
+**Returns**: string representation of the given JSON object  
 <a name="appLinkFn"></a>
 
 ## appLinkFn : <code>function</code>

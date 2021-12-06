@@ -15,9 +15,42 @@
         return matches;
     };
 
-    module._injectHandlerbarCompareHelpers = function(Handlebars) {
-
+    module._injectCustomHandlebarHelpers = function (Handlebars) {
+        // general purpose helpers
         Handlebars.registerHelper({
+
+            /**
+             * escape markdown characters
+             *
+             * @returns escaped characeters
+             */
+            escape: function () {
+                var args = Array.prototype.slice.call(arguments);
+                var text = args.splice(0, args.length - 1).join('');
+                return module._escapeMarkdownCharacters(text);
+            },
+
+            /**
+             *
+             * @returns url-encoded string
+             */
+            encode: function () {
+                var args = Array.prototype.slice.call(arguments);
+                var text = args.splice(0, args.length - 1).join('');
+                return module._fixedEncodeURIComponent(text);
+            },
+
+            /**
+             * {{#encodeFacet}}
+             *  str
+             * {{/encodeFacet}}
+             *
+             * @returns encoded facet string that can be used in url
+             */
+            encodeFacet: function (options) {
+                return module.encodeFacetString(options.fn(this));
+            },
+
             /**
              * {{formatDate value format}}
              *
@@ -33,17 +66,6 @@
             },
 
             /**
-             * {{#encodeFacet}}
-             *  str
-             * {{/encodeFacet}}
-             *
-             * @returns encoded facet string that can be used in url
-             */
-            encodeFacet: function (options) {
-                return module.encodeFacetString(options.fn(this));
-            },
-
-            /**
              * {{#jsonStringify}}
              *  JSON Object
              * {{/jsonStringify}}
@@ -52,22 +74,6 @@
              */
             jsonStringify: function (options) {
                 return JSON.stringify(options.fn(this));
-            },
-
-            /**
-             * {{#toTitleCase}}
-             *  string
-             * {{/toTitleCase}}
-             *
-             * @returns string representation of the given JSON object
-             */
-            toTitleCase: function (options) {
-                var str = options.fn(this);
-                // \w matches any word character
-                // \S matches any non-whitespace character
-                return str.replace(/\w\S*/g, function(txt) {
-                    return txt.charAt(0).toUpperCase() + txt.substr(1);
-                });
             },
 
             /**
@@ -118,6 +124,26 @@
                 return regexpFindAll(value, regexp) || [];
             },
 
+            /**
+             * {{#toTitleCase}}
+             *  string
+             * {{/toTitleCase}}
+             *
+             * @returns string representation of the given JSON object
+             */
+            toTitleCase: function (options) {
+                var str = options.fn(this);
+                // \w matches any word character
+                // \S matches any non-whitespace character
+                return str.replace(/\w\S*/g, function(txt) {
+                    return txt.charAt(0).toUpperCase() + txt.substr(1);
+                });
+            },
+
+        });
+
+        // compare helpers
+        Handlebars.registerHelper({
             /*
                {{#if (eq val1 val2)}}
                  .. content
@@ -240,10 +266,8 @@
                 }
             }
         });
-    };
 
-    module._injectHandlerbarMathHelpers = function(Handlebars) {
-
+        // math helpers
         Handlebars.registerHelper({
             add: function (arg1, arg2) {
                 return Number(arg1) + Number(arg2);

@@ -478,6 +478,11 @@ exports.execute = function (options) {
                 expect(module.renderHandlebarsTemplate("My name is {{#unless name}}Jona{{/unless}}", {})).toBe("My name is Jona", "For unless");
             });
 
+            it ("escaping handlebars expression and raw helper", function () {
+                expect(module.renderHandlebarsTemplate("\\{{name}}", { name: 'Chloe' })).toBe("{{name}}");
+                expect(module.renderHandlebarsTemplate("\\{{{name}}}", { name: 'Chloe' })).toBe("{{{name}}}");
+            });
+
             it('ifCond helper', function() {
                 expect(module.renderHandlebarsTemplate("Name {{#ifCond name \"===\" 'Chloe'}}{{name}} is equal to Chloe{{else}}{{name}} is not equal to Chloe{{/ifCond}}", { name: 'Chloe' })).toBe("Name Chloe is equal to Chloe");
                 expect(module.renderHandlebarsTemplate("Name {{#ifCond name \"===\" 'Chloe'}}{{name}} is equal to Chloe{{else}}{{name}} is not equal to Chloe{{/ifCond}}", { name: 'John' })).toBe("Name John is not equal to Chloe");

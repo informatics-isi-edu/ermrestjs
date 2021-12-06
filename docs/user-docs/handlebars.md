@@ -49,6 +49,7 @@ Handlebars supports more complicated expression syntax and allow the comparison 
    * [Replace](#replace-helper)
    * [ToTitleCase](#totitlecase-helper)
 * [Using Arrays](#using-arrays)
+* [Escaping Handlebars expressions](#escaping-handlebars-expressions)
 * [Accessing keys with spaces and special characters](#accessing-keys-with-spaces-and-special-characters)
 * [Subexpressions](#subexpressions)
 * [Boolean Helpers](#boolean-helpers)
@@ -501,7 +502,18 @@ Result:
 ```
 first element
 ```
+## Escaping Handlebars expressions
 
+Handlebars content may be escaped using inline escapes. Inline escapes created by prefixing a mustache block with `\\`
+
+For example,
+```
+\\{{{escaped}}}
+```
+Would return
+```
+{{{escaped}}}
+```
 
 ## Accessing keys with spaces and special characters
 
