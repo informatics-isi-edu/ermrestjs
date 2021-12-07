@@ -2109,8 +2109,8 @@
 
                 var referencePaths = [],
                     references = [];
-                var keyColumns = associationRef._secondFKR.colset.columns; // columns tells us what the key column names are in the fkr "_to" relationship
-                var mapping = associationRef._secondFKR.mapping; // mapping tells us what the column name is on the leaf tuple, so we know what data to fetch from each tuple for identifying
+                var keyColumns = associationRef.associationToRelatedFKR.colset.columns; // columns tells us what the key column names are in the fkr "_to" relationship
+                var mapping = associationRef.associationToRelatedFKR.mapping; // mapping tells us what the column name is on the leaf tuple, so we know what data to fetch from each tuple for identifying
 
                 var currentPath = compactPath;
                 for (var i=0; i<tuples.length; i++) {
@@ -2627,7 +2627,7 @@
                      // association table
                      else if (rel.derivedAssociationReference) {
                          var assoc = rel.derivedAssociationReference;
-                         sourcePath = assoc.origFKR.toString() + "/" + relatedTableAlias + ":=" + assoc._secondFKR.toString(true);
+                         sourcePath = assoc.origFKR.toString() + "/" + relatedTableAlias + ":=" + assoc.associationToRelatedFKR.toString(true);
                          addOutput(getTableOutput(rel, relatedTableAlias, sourcePath, true, self));
                      }
                      // single inbound related
@@ -3851,7 +3851,7 @@
                 // will be used to determine whether this related reference is derived from association relation or not
                 newRef.derivedAssociationReference = new Reference(module.parse(this._location.compactUri + "/" + fkr.toString()), catalog);
                 newRef.derivedAssociationReference.origFKR = newRef.origFKR;
-                newRef.derivedAssociationReference._secondFKR = otherFK;
+                newRef.derivedAssociationReference.associationToRelatedFKR = otherFK;
 
                 // build the filter source (the alias is used in the read function to get the proper acls)
                 filterSource.push({"inbound": otherFK.constraint_names[0], "alias": module._parserAliases.ASSOCIATION_TABLE});
@@ -5930,7 +5930,7 @@
             // filter based on the first key
             missingData = !addFilter(associationRef.origFKR, origTableData);
             //filter based on the second key
-            missingData = missingData || !addFilter(associationRef._secondFKR, this._data);
+            missingData = missingData || !addFilter(associationRef.associationToRelatedFKR, this._data);
 
             if (missingData) {
                 return null;
