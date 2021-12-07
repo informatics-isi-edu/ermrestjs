@@ -2666,23 +2666,8 @@
     };
 
     module._injectHandlebarHelpers = function() {
-
-        // Register a handlebars helper to encode strings in a template
-        module._handlebars.registerHelper('encode', function() {
-            var args = Array.prototype.slice.call(arguments);
-            var text = args.splice(0, args.length - 1).join('');
-            return module._fixedEncodeURIComponent(text);
-        });
-
-        // Register a handlebars helper to escape Markdown characters in a string
-        module._handlebars.registerHelper('escape', function() {
-            var args = Array.prototype.slice.call(arguments);
-            var text = args.splice(0, args.length - 1).join('');
-            return module._escapeMarkdownCharacters(text);
-        });
-
-        module._injectHandlerbarCompareHelpers(module._handlebars);
-        module._injectHandlerbarMathHelpers(module._handlebars);
+        // inject the custom handlebars
+        module._injectCustomHandlebarHelpers(module._handlebars);
 
         // loop through handlebars defined list of helpers and check against the enum in ermrestJs
         // if not in enum, set helper to false

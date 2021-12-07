@@ -54,6 +54,9 @@ Apart from accessing the source definitions, you can access the current pseudo-c
     }
     ```
     Example (using [handlebars](handlebars.md)): `{{#each $self}}[{{{this.rowName}}}]({{{this.uri.detailed}}}){{/each}}`
+    
+    Notes:
+      - As it is demonstrated in the data structure, you can access the foreign key values of each row in here. Please refer to [examples](#examples) for an example of this use case.
 
 
 2. **Entity `array` or `array_d` aggregate**
@@ -191,12 +194,12 @@ Assume the following is the ERD and we're writing these annotations for the tabl
         ```
       - Condition based on other outbound foreignkeys (example based on f3).
         ```
-        {{#if ($self.$fkey_s_f4_cons.values.f4_id 13)}}
-            {{#each $self}}
+        {{#each $self}}
+            {{#if (eq this.values.$fkey_s_f4_cons.values.f4_id 13)}}
               [{{{this.rowName}}}]({{{this.uri.detailed}}})
               {{#unless @last}}, {{/unless}}
-            {{/each}}
-        {{/if}}
+            {{/if}}
+        {{/each}}
         ```
 
 2. **Entity `array` or `array_d` aggregate**
