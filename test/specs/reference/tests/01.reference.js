@@ -168,6 +168,37 @@ exports.execute = function (options) {
                 expect(unfiltered.uri).toEqual(baseUri);
             });
 
+            it('addFacets should return a new reference with the added facet filter', function () {
+                var andFilters = [];
+                andFilters.push({
+                    "source": "name",
+                    "hidden": true,
+                    "not_null": true
+                });
+
+                var addFacetsRef = reference.addFacets(andFilters);
+                // checks to see if original reference is unchanged
+                expect(reference.location.facets).not.toBeDefined("reference has facets");
+
+                expect(addFacetsRef.location.facets).toBeDefined("addFacetRef does NOT have facets");
+                expect(addFacetsRef.location.facets.andFilters.length).toBe(1, "and filters length is not what we expected");
+                expect(addFacetsRef.uri.indexOf("*::facets::")).toBeGreaterThan(-1, "facets blob not present in url")
+
+                var andFilters = [];
+                andFilters.push({
+                    "source": "fk1",
+                    "hidden": true,
+                    "not_null": true
+                });
+
+                var addFacetsRef2 = addFacetsRef.addFacets(andFilters);
+                // checks to see if first reference with added facets is unchanged
+                expect(addFacetsRef.location.facets.andFilters.length).toBe(1, "and filters length is not what we expected");
+
+                expect(addFacetsRef2.location.facets).toBeDefined("addFacetRef2 does NOT have facets");
+                expect(addFacetsRef2.location.facets.andFilters.length).toBe(2, "and filters length is not what we expected");
+            });
+
             // Single Entity specific tests
             it('read should return a Page object that is defined.', function(done) {
                 reference.read(limit).then(function (response) {
