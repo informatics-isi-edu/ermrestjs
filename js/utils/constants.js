@@ -291,7 +291,8 @@
         INVALID_SELF_LINK: "given source is not a valid self-link (must be unique not-null).",
         INVALID_COLUMN_DEF: "column definiton must be an array, object, or string.",
         INVALID_COLUMN_IN_SOURCE_PATH: "end column in the path is not valid (not available in the end table)",
-        NO_INBOUND_IN_NON_DETAILED: "inline table is not valid in this context."
+        NO_INBOUND_IN_NON_DETAILED: "inline table is not valid in this context.",
+        FILTER_NOT_ALLOWED: "filter in source is only supported in `filter` context of visible-columns"
     });
 
     module._permissionMessages = Object.freeze({

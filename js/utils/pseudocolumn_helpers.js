@@ -179,7 +179,7 @@
      *   the url will be:
      *      S:B/<filters of B>/<path from B to A where the last join is right join>/<parsed filter of all the other facets>/$alias
      *   Compare this with the following which will be the result if none of the facets have `null`:
-     *      <parsed fitler of all the facets>/$alias
+     *      <parsed filter of all the facets>/$alias
      *   In this case, we are returning a `"rightJoin": true`. In this case, we
      *   have to make sure that the returned value must be the start of url and
      *   cannot be simply appended to the rest of url.
@@ -578,7 +578,7 @@
                 };
             }
 
-            // TODO FITLER_IN_SOURCE
+            // TODO FILTER_IN_SOURCE
             if (refCol.isInboundForeignKey) {
                 var res = [];
                 var origFkR = refCol.foreignKey;
@@ -978,7 +978,6 @@
 
     SourceObjectWrapper.prototype = {
 
-        // TODO FILTER_IN_SOURCE Could be optimized
         clone: function (sourceObject, table, consNames, isFacet) {
             var key, res, self = this;
 
@@ -1330,12 +1329,15 @@
                     hasInbound = hasInbound || prefix.hasInbound;
                     isFiltered = isFiltered || prefix.isFiltered;
                 }
-                // TODO FILTER_IN_SOURCE
-                // else if ("fitler" in source[i] || "and" in source[i] || "or" in source[i]) {
-                //     isFiltered = true;
-                //     sourceObjectNodes.push(new SourceObjectNode(source[i], true));
-                //     continue;
-                // }
+                else if ("filter" in source[i] || "and" in source[i] || "or" in source[i]) {
+                    isFiltered = true;
+                    try {
+                        sourceObjectNodes.push(new SourceObjectNode(source[i], true, false, false, false, undefined, undefined, colTable));
+                    } catch (exp) {
+                        return returnError(exp.message);
+                    }
+                    continue;
+                }
                 else if (("inbound" in source[i]) || ("outbound" in source[i])) {
                     isInbound = ("inbound" in source[i]);
                     constraint = isInbound ? source[i].inbound : source[i].outbound;
@@ -1671,40 +1673,53 @@
         },
 
         // TODO FILTER_IN_SOURCE test this
-        parseSourceObjectNodeFilter: function (nodeObject) {
-            var logOp, ermrestOp, i, operator, res = "", innerRes;
+        parseSourceObjectNodeFilter: function (nodeObject, table) {
+            var logOp, ermrestOp, i, operator, res = "", innerRes, colName;
             var encode = module._fixedEncodeURIComponent;
             var nullOperator = module.OPERATOR.NULL;
+            var returnError = function (message) {
+                throw new Error(message);
+            };
 
             if (!("filter" in nodeObject || "and" in nodeObject || "or" in nodeObject)) {
-                return null;
+                returnError("given source node is not a filter");
             }
 
             if ("filter" in nodeObject) {
                 // ------- add the column ---------
-                if (!isStringAndNotEmpty(nodeObject.filter)) {
-                    // filter must be the column name string
-                    return null;
+                if (isStringAndNotEmpty(nodeObject.filter)) {
+                    colName = nodeObject.filter;
                 }
-                res += encode(nodeObject.filter);
+                else if (Array.isArray(nodeObject.filter) && nodeObject.filter.length == 1 && isStringAndNotEmpty(nodeObject.filter[0])) {
+                    colName = nodeObject.filter[0];
+                } else if (Array.isArray(nodeObject.filter) && nodeObject.filter.length == 2 && isStringAndNotEmpty(nodeObject.filter[1])) {
+                    // TODO the context is ignored for now
+                    colName = nodeObject.filter[1];
+                } else {
+                    return returnError("invalid `filter` property: " + nodeObject.filter);
+                }
+
+                if (table && !table.columns.has(colName)) {
+                    returnError("given `filter` (`" + nodeObject.filter + "`) is not in the table.");
+                }
+
+                res += encode(colName);
 
                 // ------- add the operator ---------
                 if ("operator" in nodeObject) {
                     operator = nodeObject.operator;
                     if (Object.values(module.OPERATOR).indexOf(operator) === -1) {
-                        // the operator is not valid
-                        return null;
+                        return returnError("invalid operator used: `" + operator + "`");
                     }
                 } else {
                     operator = module.OPERATOR.EQUAL;
                 }
                 res += operator;
 
-
                 // ------- add the operator ---------
                 // null cannot have any operand, the rest need operand
                 if ( ("operand" in nodeObject) ? (nodeObject.operand != nullOperator) : (nodeObject.operand == nullOperator) ) {
-                    return null;
+                    return returnError(nodeObject.operand == nullOperator ? "null operator cannot have any operand" : "operand must be defined");
                 }
 
                 if ("operand" in nodeObject) {
@@ -1725,11 +1740,8 @@
 
                 res = "(";
                 for (i = 0; i < nodeObject[logOp].length; i++) {
-                    // TODO FILTER_IN_SOURCE test this
-                    innerRes = _renderFacetHelpers.parseSourceObjectNodeFilter(nodeObject[logOp][i]);
-                    if (innerRes == null) {
-                        return null;
-                    }
+                    // it might throw an error
+                    innerRes = _renderFacetHelpers.parseSourceObjectNodeFilter(nodeObject[logOp][i], table);
                     res += (i > 0 ? ermrestOp : "") + innerRes;
                 }
                 res += ")";
@@ -1892,10 +1904,14 @@
         }
     };
 
-    function SourceObjectNode (nodeObject, isFilter, isForeignKey, isInbound, isPathPrefix, pathPrefixSourcekey, alias) {
+    function SourceObjectNode (nodeObject, isFilter, isForeignKey, isInbound, isPathPrefix, pathPrefixSourcekey, alias, table) {
         this.nodeObject = nodeObject;
 
         this.isFilter = isFilter;
+        if (isFilter && table) {
+            // this will parse the filter and throw errors if it's invalid
+            this.parsedFilterNode = _sourceColumnHelpers.parseSourceObjectNodeFilter(nodeObject, table);
+        }
 
         this.isForeignKey = isForeignKey;
         this.isInbound = isInbound;
@@ -1925,7 +1941,7 @@
                 return self.nodeObject.toString(reverse, isLeft, outAlias, isReverseRightJoin);
             }
 
-            return _sourceColumnHelpers.parseSourceObjectNodeFilter(self.nodeObject);
+            return this.parsedFilterNode;
         },
 
         // TOOD what's the point of this???
