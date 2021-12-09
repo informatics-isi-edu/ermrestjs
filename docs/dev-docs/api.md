@@ -400,6 +400,7 @@ to use for ERMrest JavaScript agents.
         * [.generateFacetColumns()](#ERMrest.Reference+generateFacetColumns)
         * [.validateFacetsFilters(facetAndFilters, facetObjectWrappers, searchTerm, skipMappingEntityChoices, changeLocation)](#ERMrest.Reference+validateFacetsFilters)
         * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
+        * [.addFacets(facetAndFilters)](#ERMrest.Reference+addFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
         * [.hideFacets()](#ERMrest.Reference+hideFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
         * [.create(data, contextHeaderParams, skipOnConflict)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
         * [.read(limit, contextHeaderParams, useEntity, dontCorrectPage, getTRS, getTCRS, getUnlinkTRS)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
@@ -725,6 +726,7 @@ to use for ERMrest JavaScript agents.
         * [.generateFacetColumns()](#ERMrest.Reference+generateFacetColumns)
         * [.validateFacetsFilters(facetAndFilters, facetObjectWrappers, searchTerm, skipMappingEntityChoices, changeLocation)](#ERMrest.Reference+validateFacetsFilters)
         * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
+        * [.addFacets(facetAndFilters)](#ERMrest.Reference+addFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
         * [.hideFacets()](#ERMrest.Reference+hideFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
         * [.create(data, contextHeaderParams, skipOnConflict)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
         * [.read(limit, contextHeaderParams, useEntity, dontCorrectPage, getTRS, getTCRS, getUnlinkTRS)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
@@ -3001,6 +3003,7 @@ Constructor for a ParsedFilter.
     * [.generateFacetColumns()](#ERMrest.Reference+generateFacetColumns)
     * [.validateFacetsFilters(facetAndFilters, facetObjectWrappers, searchTerm, skipMappingEntityChoices, changeLocation)](#ERMrest.Reference+validateFacetsFilters)
     * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
+    * [.addFacets(facetAndFilters)](#ERMrest.Reference+addFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
     * [.hideFacets()](#ERMrest.Reference+hideFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
     * [.create(data, contextHeaderParams, skipOnConflict)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
     * [.read(limit, contextHeaderParams, useEntity, dontCorrectPage, getTRS, getTCRS, getUnlinkTRS)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
@@ -3456,6 +3459,17 @@ Remove all the fitlers, facets, and custom-facets from the reference
 | sameFilter | <code>boolean</code> | By default we're removing filters, if this is true filters won't be changed. |
 | sameCustomFacet | <code>boolean</code> | By default we're removing custom-facets, if this is true custom-facets won't be changed. |
 | sameFacet | <code>boolean</code> | By default we're removing facets, if this is true facets won't be changed. |
+
+<a name="ERMrest.Reference+addFacets"></a>
+
+#### reference.addFacets(facetAndFilters) ⇒ [<code>Reference</code>](#ERMrest.Reference)
+Given a list of facet and filters, will add them to the existing conjunctive facet filters.
+
+**Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| facetAndFilters | <code>Array.&lt;Object&gt;</code> | an array of facets that will be added |
 
 <a name="ERMrest.Reference+hideFacets"></a>
 
@@ -6743,6 +6757,7 @@ get PathColumn object by column name
     * [.generateFacetColumns()](#ERMrest.Reference+generateFacetColumns)
     * [.validateFacetsFilters(facetAndFilters, facetObjectWrappers, searchTerm, skipMappingEntityChoices, changeLocation)](#ERMrest.Reference+validateFacetsFilters)
     * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
+    * [.addFacets(facetAndFilters)](#ERMrest.Reference+addFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
     * [.hideFacets()](#ERMrest.Reference+hideFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
     * [.create(data, contextHeaderParams, skipOnConflict)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
     * [.read(limit, contextHeaderParams, useEntity, dontCorrectPage, getTRS, getTCRS, getUnlinkTRS)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
@@ -7198,6 +7213,17 @@ Remove all the fitlers, facets, and custom-facets from the reference
 | sameFilter | <code>boolean</code> | By default we're removing filters, if this is true filters won't be changed. |
 | sameCustomFacet | <code>boolean</code> | By default we're removing custom-facets, if this is true custom-facets won't be changed. |
 | sameFacet | <code>boolean</code> | By default we're removing facets, if this is true facets won't be changed. |
+
+<a name="ERMrest.Reference+addFacets"></a>
+
+#### reference.addFacets(facetAndFilters) ⇒ [<code>Reference</code>](#ERMrest.Reference)
+Given a list of facet and filters, will add them to the existing conjunctive facet filters.
+
+**Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| facetAndFilters | <code>Array.&lt;Object&gt;</code> | an array of facets that will be added |
 
 <a name="ERMrest.Reference+hideFacets"></a>
 
