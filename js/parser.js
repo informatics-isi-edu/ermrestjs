@@ -891,11 +891,12 @@
         },
 
         /**
-         * if the location has facet/filter/customfacet
-         * @return {Boolean} [description]
+         * if the location has visible facet/filter/customfacet
+         * NOTE: if location only has hidden facets, this will return false.
+         * @return {Boolean}]
          */
         get isConstrained() {
-            return this.facets || this.searchTerm || this.filter || this.customFacets;
+            return (this.facets && this.facets.hasVisibleFilters) || this.searchTerm || this.filter || this.customFacets;
         },
 
         /**
@@ -1792,6 +1793,18 @@
             throw new module.InvalidFacetOperatorError(path, module._facetingErrors.invalidBooleanOperator);
         }
 
+        /**
+         * Whether facet blob has any visible filters
+         * @type {boolean}
+         */
+        this.hasVisibleFilters = obj[andOperator].some(function (f) {
+            return !f.hidden;
+        });
+
+        /**
+         * and array of conjunctive filters defined in the facet blob
+         * @type {Array}
+         */
         this.andFilters = obj[andOperator];
     }
     /**
