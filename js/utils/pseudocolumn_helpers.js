@@ -591,7 +591,7 @@
                     res.push({"inbound": origFkR.constraint_names[0]});
                     if (association) {
                         res.push({
-                            "outbound": association._secondFKR.constraint_names[0]
+                            "outbound": association.associationToRelatedFKR.constraint_names[0]
                         });
                     }
                     res.push(column.name);
