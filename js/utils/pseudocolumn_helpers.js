@@ -374,7 +374,7 @@
      *  - `sourcekey` to `key`
      *  - `alias` to `a`
      *  - `filter` to `f`
-     *  - `operand` to `opd`
+     *  - `operand_pattern` to `opd`
      *  - `operator` to `opr`
      *  - `negate` to `n`
      * @private
@@ -393,7 +393,7 @@
         if (!_sourceColumnHelpers._sourceHasPath(source)) return res;
 
         for (var i = 0; i < res.length; i++) {
-            ["alias", "sourcekey", "inbound", "outbound", "filter", "operand", "operator", "negate"].forEach(shorten(res[i]));
+            ["alias", "sourcekey", "inbound", "outbound", "filter", "operand_pattern", "operator", "negate"].forEach(shorten(res[i]));
         }
         return res;
     };
@@ -1292,7 +1292,7 @@
                 return (result === undefined) ? null : result;
             };
 
-            var i, fkAlias, constraint, isInbound, fkObj, fk, colTable, hasInbound = false, firstForeignKeyNode, lastForeignKeyNode,
+            var i, fkAlias, constraint, isInbound, fkObj, fk, colTable = rootTable, hasInbound = false, firstForeignKeyNode, lastForeignKeyNode,
                 foreignKeyPathLength = 0, sourceObjectNodes = [], isFiltered = false, hasPrefix = false, hasOnlyPrefix = false, prefix;
 
             for (i = 0; i < source.length - 1; i++) {
@@ -1330,6 +1330,10 @@
                     isFiltered = isFiltered || prefix.isFiltered;
                 }
                 else if ("filter" in source[i] || "and" in source[i] || "or" in source[i]) {
+                    if (!isObjectAndNotNull(colTable)) {
+                        return returnError("Couldn't parse the url since Location doesn't have acccess to the catalog object or main table is invalid.");
+                    }
+
                     isFiltered = true;
                     try {
                         sourceObjectNodes.push(new SourceObjectNode(source[i], true, false, false, false, undefined, undefined, colTable));
@@ -1674,7 +1678,7 @@
 
         // TODO FILTER_IN_SOURCE test this
         parseSourceObjectNodeFilter: function (nodeObject, table) {
-            var logOp, ermrestOp, i, operator, res = "", innerRes, colName;
+            var logOp, ermrestOp, i, operator, res = "", innerRes, colName, operand = "";
             var encode = module._fixedEncodeURIComponent;
             var nullOperator = module.OPERATOR.NULL;
             var returnError = function (message) {
@@ -1685,6 +1689,7 @@
                 returnError("given source node is not a filter");
             }
 
+            // ------- termination case of the recusive filter ---------
             if ("filter" in nodeObject) {
                 // ------- add the column ---------
                 if (isStringAndNotEmpty(nodeObject.filter)) {
@@ -1716,20 +1721,33 @@
                 }
                 res += operator;
 
-                // ------- add the operator ---------
+                // ------- add the operand ---------
                 // null cannot have any operand, the rest need operand
-                if ( ("operand" in nodeObject) ? (nodeObject.operand != nullOperator) : (nodeObject.operand == nullOperator) ) {
-                    return returnError(nodeObject.operand == nullOperator ? "null operator cannot have any operand" : "operand must be defined");
+                if ( (("operand_pattern" in nodeObject) && (operator == nullOperator)) ||
+                     (!("operand_pattern" in nodeObject) && (operator != nullOperator))) {
+                    returnError(nodeObject.operand_pattern == nullOperator ? "null operator cannot have any operand_pattern" : "operand_pattern must be defined");
                 }
+                if ("operand_pattern" in nodeObject) {
+                    operand = module._renderTemplate(
+                        nodeObject.operand_pattern,
+                        {}, 
+                        table.schema.catalog, 
+                        {templateEngine: nodeObject.template_engine}
+                    );
 
-                if ("operand" in nodeObject) {
-                    res = nodeObject.operand;
+                    if (operand == null || operand.trim() == "") {
+                        returnError("operand_pattern template resutls in empty string.");
+                    }
                 }
+                res += encode(operand);
 
+                // ------- add negate ---------
                 if (nodeObject.negate === true) {
                     res = "!(" + res + ")";
                 }
-            } else {
+            } 
+            // ------- recursrive filter ---------
+            else {
                 if ("and" in nodeObject) {
                     logOp = "and";
                     ermrestOp = module._ERMrestLogicalOperators.AND;
@@ -1738,13 +1756,13 @@
                     ermrestOp = module._ERMrestLogicalOperators.OR;
                 }
 
-                res = "(";
+                res = nodeObject[logOp].length > 1 ? "(" : "";
                 for (i = 0; i < nodeObject[logOp].length; i++) {
-                    // it might throw an error
-                    innerRes = _renderFacetHelpers.parseSourceObjectNodeFilter(nodeObject[logOp][i], table);
+                    // it might throw an error which will be propagated to the original caller
+                    innerRes = _sourceColumnHelpers.parseSourceObjectNodeFilter(nodeObject[logOp][i], table);
                     res += (i > 0 ? ermrestOp : "") + innerRes;
                 }
-                res += ")";
+                res += nodeObject[logOp].length > 1 ? ")" : "";
             }
 
             return res;

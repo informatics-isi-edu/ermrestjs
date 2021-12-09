@@ -361,7 +361,7 @@
         "ranges": "r",
         "search": "s",
         "filter": "f",
-        "operand": "opd",
+        "operand_pattern": "opd",
         "operator": "opr",
         "negate": "n"
     });
