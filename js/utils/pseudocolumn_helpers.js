@@ -1692,22 +1692,31 @@
             // ------- termination case of the recusive filter ---------
             if ("filter" in nodeObject) {
                 // ------- add the column ---------
+                // just a string
                 if (isStringAndNotEmpty(nodeObject.filter)) {
                     colName = nodeObject.filter;
                 }
+                // an array of length one where the element is a string
                 else if (Array.isArray(nodeObject.filter) && nodeObject.filter.length == 1 && isStringAndNotEmpty(nodeObject.filter[0])) {
                     colName = nodeObject.filter[0];
-                } else if (Array.isArray(nodeObject.filter) && nodeObject.filter.length == 2 && isStringAndNotEmpty(nodeObject.filter[1])) {
-                    // TODO the context is ignored for now
+                } 
+                // an array of length two where both are string and second one 
+                // is used as the column name
+                else if (Array.isArray(nodeObject.filter) && nodeObject.filter.length == 2 && isStringAndNotEmpty(nodeObject.filter[1])) {
+                    // if there's a context, just throw error
+                    if (isStringAndNotEmpty(nodeObject.filter[0])) {
+                        return returnError("context change in filter is not currently supported.");
+                    }
                     colName = nodeObject.filter[1];
-                } else {
+                }  
+                // if none of the cases above matched
+                if (!colName){
                     return returnError("invalid `filter` property: " + nodeObject.filter);
                 }
-
+                // make sure the column is in the table
                 if (table && !table.columns.has(colName)) {
                     returnError("given `filter` (`" + nodeObject.filter + "`) is not in the table.");
                 }
-
                 res += encode(colName);
 
                 // ------- add the operator ---------
