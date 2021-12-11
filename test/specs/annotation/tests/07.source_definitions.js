@@ -1,3 +1,5 @@
+var moment = require('moment');
+
 exports.execute = function (options) {
     var catalog_id = process.env.DEFAULT_CATALOG,
         schemaName = "source_definitions_schema",
@@ -21,11 +23,14 @@ exports.execute = function (options) {
         })).toEqual(jasmine.arrayContaining(expectedNames), "fkeys elements missmatch.");
     }
 
-    var testSourceWrapperAPIs = function (obj, reverse, isLeft, outAlias, expectedString, expectedRawSource) {
-        expect(obj.toString(reverse, isLeft, outAlias)).toEqual(expectedString, "toString missmatch");
+    var testSourceWrapperAPIs = function (obj, reverse, isLeft, outAlias, expectedString, expectedRawSource, message) {
+        var addedMessage = message ? message : "";
+        expect(obj.toString(reverse, isLeft, outAlias)).toEqual(expectedString, "toString missmatch " + addedMessage);
 
-        var src = obj.getRawSourcePath(reverse, outAlias);
-        expect(JSON.stringify(src)).toEqual(JSON.stringify(expectedRawSource), "rawSource missmatch");
+        if (expectedRawSource) {
+            var src = obj.getRawSourcePath(reverse, outAlias);
+        expect(JSON.stringify(src)).toEqual(JSON.stringify(expectedRawSource), "rawSource missmatch" + addedMessage);
+        }
     }
 
     beforeAll(function (done) {
@@ -91,7 +96,8 @@ exports.execute = function (options) {
                             hasPath: false,
                             hasInbound: false,
                             isEntityMode: false,
-                            foreignKeyPathLength: 0
+                            foreignKeyPathLength: 0,
+                            isFiltered: false
                         },
                         "new_col_2": {
                             name: "col",
@@ -100,7 +106,8 @@ exports.execute = function (options) {
                             isHash: false,
                             hasPath: false,
                             hasInbound: false,
-                            isEntityMode: false
+                            isEntityMode: false,
+                            isFiltered: false
                         },
                         "fk1_col_entity": {
                             name: "DfGbmoqMIfSqDHRJasrtnQ",
@@ -109,7 +116,8 @@ exports.execute = function (options) {
                             isHash: true,
                             hasPath: true,
                             hasInbound: false,
-                            isEntityMode: true
+                            isEntityMode: true,
+                            isFiltered: false
                         },
                         "fk1_col_scalar": {
                             name: "KAR6cMQDIO5pmnfhz5d4fw",
@@ -117,7 +125,8 @@ exports.execute = function (options) {
                             isHash: true,
                             hasPath: true,
                             hasInbound: false,
-                            isEntityMode: false
+                            isEntityMode: false,
+                            isFiltered: false
                         },
                         "fk1_col_entity_duplicate": {
                             name: "DfGbmoqMIfSqDHRJasrtnQ",
@@ -125,7 +134,8 @@ exports.execute = function (options) {
                             isHash: true,
                             hasPath: true,
                             hasInbound: false,
-                            isEntityMode: true
+                            isEntityMode: true,
+                            isFiltered: false
                         },
                         "fk1_col_scalar_duplicate": {
                             name: "KAR6cMQDIO5pmnfhz5d4fw",
@@ -133,7 +143,8 @@ exports.execute = function (options) {
                             isHash: true,
                             hasPath: true,
                             hasInbound: false,
-                            isEntityMode: false
+                            isEntityMode: false,
+                            isFiltered: false
                         },
                         "all_outbound_col": {
                             name: "TCvUzQfnU6gwYiBVTtE7jQ",
@@ -141,7 +152,8 @@ exports.execute = function (options) {
                             isHash: true,
                             hasPath: true,
                             hasInbound: false,
-                            isEntityMode: true
+                            isEntityMode: true,
+                            isFiltered: false
                         },
                         "inbound1_col": {
                             name: "gYt7pa2yjoSRQ4pgF9KEWQ",
@@ -149,7 +161,8 @@ exports.execute = function (options) {
                             isHash: true,
                             hasPath: true,
                             hasInbound: true,
-                            isEntityMode: true
+                            isEntityMode: true,
+                            isFiltered: false
                         },
                         "inbound1_col_2": {
                             name: "gYt7pa2yjoSRQ4pgF9KEWQ",
@@ -157,7 +170,8 @@ exports.execute = function (options) {
                             isHash: true,
                             hasPath: true,
                             hasInbound: true,
-                            isEntityMode: true
+                            isEntityMode: true,
+                            isFiltered: false
                         },
                         "agg1_cnt": {
                             name: "hVBgA7x0-AB8fNuiQ0uGYA",
@@ -165,7 +179,8 @@ exports.execute = function (options) {
                             isHash: true,
                             hasPath: true,
                             hasInbound: true,
-                            isEntityMode: true
+                            isEntityMode: true,
+                            isFiltered: false
                         },
                         "agg1_cnt_d": {
                             name: "Ym148G91WOlKt5GWzpq7lQ",
@@ -173,7 +188,8 @@ exports.execute = function (options) {
                             isHash: true,
                             hasPath: true,
                             hasInbound: true,
-                            isEntityMode: true
+                            isEntityMode: true,
+                            isFiltered: false
                         },
                         "agg1_min": {
                             name: "ii9Jz3vgiw-G00TDffG4ZQ",
@@ -181,7 +197,8 @@ exports.execute = function (options) {
                             isHash: true,
                             hasPath: true,
                             hasInbound: true,
-                            isEntityMode: true
+                            isEntityMode: true,
+                            isFiltered: false
                         },
                         "agg1_max": {
                             name: "raE5u8lqi8fLPc9SpChLtQ",
@@ -189,7 +206,8 @@ exports.execute = function (options) {
                             isHash: true,
                             hasPath: true,
                             hasInbound: true,
-                            isEntityMode: true
+                            isEntityMode: true,
+                            isFiltered: false
                         },
                         "agg1_array": {
                             name: "W-TwpGoWV0qkZnBXm2O97w",
@@ -197,7 +215,8 @@ exports.execute = function (options) {
                             isHash: true,
                             hasPath: true,
                             hasInbound: true,
-                            isEntityMode: true
+                            isEntityMode: true,
+                            isFiltered: false
                         },
                         "agg1_array_d_entity": {
                             name: "5KvRCbKSwkHPj74dunY-Xw",
@@ -205,7 +224,8 @@ exports.execute = function (options) {
                             isHash: true,
                             hasPath: true,
                             hasInbound: true,
-                            isEntityMode: true
+                            isEntityMode: true,
+                            isFiltered: false
                         },
                         "agg1_array_d": {
                             name: "Jb0K5FtG2b6SgdvH0Yud1w",
@@ -213,7 +233,8 @@ exports.execute = function (options) {
                             isHash: true,
                             hasPath: true,
                             hasInbound: true,
-                            isEntityMode: false
+                            isEntityMode: false,
+                            isFiltered: false
                         },
                         "agg1_array_d_duplicate": {
                             name: "Jb0K5FtG2b6SgdvH0Yud1w",
@@ -221,7 +242,8 @@ exports.execute = function (options) {
                             isHash: true,
                             hasPath: true,
                             hasInbound: true,
-                            isEntityMode: false
+                            isEntityMode: false,
+                            isFiltered: false
                         },
                         "path_to_outbound2_outbound1": {
                             name: "f3s1MZ913ANjVbDks5Xseg",
@@ -230,7 +252,18 @@ exports.execute = function (options) {
                             hasPath: true,
                             hasInbound: false,
                             isEntityMode: true,
-                            foreignKeyPathLength: 2
+                            foreignKeyPathLength: 2,
+                            isFiltered: false
+                        },
+                        "path_to_outbound2_outbound1_add_filter": {
+                            name: "ZjYUxIhtQqUXe0A2mvR3oA",
+                            columnName: "RID",
+                            isHash: true,
+                            hasPath: true,
+                            hasInbound: false,
+                            isEntityMode: true,
+                            foreignKeyPathLength: 2,
+                            isFiltered: true
                         },
                         "path_to_outbound2_outbound1_w_prefix_diff_col": {
                             name: "SGGQr0A4TrMNZ3M-Z0l3pw",
@@ -239,7 +272,8 @@ exports.execute = function (options) {
                             hasPath: true,
                             hasInbound: false,
                             isEntityMode: true,
-                            foreignKeyPathLength: 2
+                            foreignKeyPathLength: 2,
+                            isFiltered: false
                         },
                         "path_to_outbound2_outbound1_w_prefix_diff_col_recursive" :{
                             name: "AEszVrBpBVwTwm2a2kOqEA",
@@ -248,7 +282,8 @@ exports.execute = function (options) {
                             hasPath: true,
                             hasInbound: false,
                             isEntityMode: false,
-                            foreignKeyPathLength: 2
+                            foreignKeyPathLength: 2,
+                            isFiltered: false
                         },
                         "path_to_outbound2_outbound1_outbound1_w_prefix": {
                             name: "4MWPsDupi31uxzRz7WpHhQ",
@@ -258,7 +293,8 @@ exports.execute = function (options) {
                             hasPath: true,
                             hasInbound: false,
                             isEntityMode: true,
-                            foreignKeyPathLength: 3
+                            foreignKeyPathLength: 3,
+                            isFiltered: false
                         },
                         "path_to_outbound2_outbound1_outbound1_wo_prefix": {
                             name: "W5dDGANuLo2PFmh44iiKFQ",
@@ -268,7 +304,8 @@ exports.execute = function (options) {
                             hasPath: true,
                             hasInbound: false,
                             isEntityMode: true,
-                            foreignKeyPathLength: 3
+                            foreignKeyPathLength: 3,
+                            isFiltered: false
                         },
                         "path_to_outbound2_outbound1_inbound1_w_prefix": {
                             name: "cDnLsfhz-uUPCwYSYAaoog",
@@ -278,7 +315,8 @@ exports.execute = function (options) {
                             hasPath: true,
                             hasInbound: true,
                             isEntityMode: true,
-                            foreignKeyPathLength: 3
+                            foreignKeyPathLength: 3,
+                            isFiltered: false
                         },
                         "path_to_outbound2_outbound1_inbound1_inbound1_w_recursive_prefix": {
                             name: "_RRNJV5A9U_SyqSVbjDyIA",
@@ -288,7 +326,8 @@ exports.execute = function (options) {
                             hasPath: true,
                             hasInbound: true,
                             isEntityMode: true,
-                            foreignKeyPathLength: 4
+                            foreignKeyPathLength: 4,
+                            isFiltered: false
                         },
                         "path_to_outbound2_outbound1_inbound1_inbound1_wo_prefix": {
                             name: "MeXAc4r6YsX7jA5uTcUzOg",
@@ -298,8 +337,94 @@ exports.execute = function (options) {
                             hasPath: true,
                             hasInbound: true,
                             isEntityMode: true,
-                            foreignKeyPathLength: 4
+                            foreignKeyPathLength: 4,
+                            isFiltered: false
                         },
+                        "col_w_filter": {
+                            name: "5uyQhvQzuNEIo1OAhJuHzg",
+                            columnName: "id",
+                            isHash: true,
+                            hasPath: false,
+                            hasInbound: false,
+                            isEntityMode: false,
+                            foreignKeyPathLength: 0,
+                            isFiltered: true
+                        },
+                        "fk1_col_entity_w_filter_1": {
+                            name: "Wcv9DsKtYwVpGSMAnSlCvw",
+                            columnName: "RID",
+                            isHash: true,
+                            hasPath: true,
+                            hasInbound: false,
+                            isEntityMode: true,
+                            foreignKeyPathLength: 1,
+                            isFiltered: true
+                        },
+                        "fk1_col_entity_w_filter_2": {
+                            name: "XFbPoe6I_wUEqm14FQV19A",
+                            columnName: "RID",
+                            isHash: true,
+                            hasPath: true,
+                            hasInbound: false,
+                            isEntityMode: true,
+                            foreignKeyPathLength: 1,
+                            isFiltered: true
+                        },
+                        "fk1_col_entity_w_filter_3": {
+                            name: "kX5CklkHXmhfSc8H2DrWIA",
+                            columnName: "RID",
+                            isHash: true,
+                            hasPath: true,
+                            hasInbound: false,
+                            isEntityMode: true,
+                            foreignKeyPathLength: 1,
+                            isFiltered: true
+                        },
+                        "path_to_outbound2_outbound1_w_filter_1": {
+                            name: "zfchwF3DOkHZ_PDPQhu4VA",
+                            columnName: "RID",
+                            tableName: "main",
+                            isHash: true,
+                            hasPath: true,
+                            hasInbound: false,
+                            isEntityMode: true,
+                            foreignKeyPathLength: 2,
+                            isFiltered: true
+                        },
+                        "path_to_outbound2_outbound1_w_filter_2": {
+                            name: "cbQKEIV_BqzKdUvA1OQiyA",
+                            columnName: "RID",
+                            tableName: "main",
+                            isHash: true,
+                            hasPath: true,
+                            hasInbound: false,
+                            isEntityMode: true,
+                            foreignKeyPathLength: 2,
+                            isFiltered: true
+                        },
+                        "path_to_outbound2_outbound1_w_filter_2_diff_col": {
+                            name: "XnjW7-cTPW1vu71_89uYCg",
+                            columnName: "col",
+                            tableName: "main",
+                            isHash: true,
+                            hasPath: true,
+                            hasInbound: false,
+                            isEntityMode: false,
+                            foreignKeyPathLength: 2,
+                            isFiltered: true
+                        },
+                        "path_to_outbound2_outbound1_w_filter_2_outbound1_w_prefix": {
+                            name: "pOnmB3D_I1JfNdTsPxaV7g",
+                            columnName: "RID",
+                            tableName: "main",
+                            isHash: true,
+                            hasPath: true,
+                            hasInbound: false,
+                            isEntityMode: true,
+                            foreignKeyPathLength: 3,
+                            isFiltered: true
+                        }
+                        
                     };
                     for (var key in expectedSources) {
                         if (!(expectedSources.hasOwnProperty(key))) continue;
@@ -309,7 +434,7 @@ exports.execute = function (options) {
                         var expectedS = expectedSources[key];
                         expect(s.column.name).toBe(expectedS.columnName, "key `" + key + "`: columnName missmatch.");
                         // expect(s.column.table.name).toBe(expectedS.tableName, "key `" + key + "`: tableName missmatch.")
-                        ["name", "isHash", "hasPath", "hasInbound", "isEntityMode", "foreignKeyPathLength"].forEach(function (attr) {
+                        ["name", "isHash", "hasPath", "hasInbound", "isEntityMode", "foreignKeyPathLength", "isFiltered"].forEach(function (attr) {
                             if (!(attr in expectedS)) return;
                             expect(s[attr]).toBe(expectedS[attr], "key `" + key + "`: " + attr + " missmatch.");
                         })
@@ -340,7 +465,16 @@ exports.execute = function (options) {
                         "4MWPsDupi31uxzRz7WpHhQ": ["path_to_outbound2_outbound1_outbound1_w_prefix"],
                         "cDnLsfhz-uUPCwYSYAaoog": ["path_to_outbound2_outbound1_inbound1_w_prefix"],
                         "MeXAc4r6YsX7jA5uTcUzOg": ["path_to_outbound2_outbound1_inbound1_inbound1_wo_prefix"],
-                        "_RRNJV5A9U_SyqSVbjDyIA": ["path_to_outbound2_outbound1_inbound1_inbound1_w_recursive_prefix"]
+                        "_RRNJV5A9U_SyqSVbjDyIA": ["path_to_outbound2_outbound1_inbound1_inbound1_w_recursive_prefix"],
+                        "ZjYUxIhtQqUXe0A2mvR3oA": ["path_to_outbound2_outbound1_add_filter"],
+                        "5uyQhvQzuNEIo1OAhJuHzg": ["col_w_filter"],
+                        "Wcv9DsKtYwVpGSMAnSlCvw": ["fk1_col_entity_w_filter_1"],
+                        "XFbPoe6I_wUEqm14FQV19A": ["fk1_col_entity_w_filter_2"],
+                        "kX5CklkHXmhfSc8H2DrWIA": ["fk1_col_entity_w_filter_3"],
+                        "zfchwF3DOkHZ_PDPQhu4VA": ["path_to_outbound2_outbound1_w_filter_1"],
+                        "cbQKEIV_BqzKdUvA1OQiyA": ["path_to_outbound2_outbound1_w_filter_2"],
+                        "XnjW7-cTPW1vu71_89uYCg": ["path_to_outbound2_outbound1_w_filter_2_diff_col"],
+                        "pOnmB3D_I1JfNdTsPxaV7g": ["path_to_outbound2_outbound1_w_filter_2_outbound1_w_prefix"]
                     };
 
                     for (var key in expectedSourceMapping) {
@@ -358,11 +492,11 @@ exports.execute = function (options) {
 
                 describe("regarding SourceObjectWrapper.toString and SourceObjectWrapper.getRawSourcePath", function () {
                    describe("when reverse=false is passed", function () {
-                        it ("should be able to handle sources without any path", function () {
+                        it ("should handle sources without any path", function () {
                             testSourceWrapperAPIs(tableMainSources["new_col"], false, true, "alias", "", []);
                         });
 
-                        it ("should be able to handle sources with path", function () {
+                        it ("should handle sources with path", function () {
                             testSourceWrapperAPIs(
                                 tableMainSources["path_to_outbound2_outbound1_inbound1_inbound1_wo_prefix"],
                                 false,
@@ -383,79 +517,244 @@ exports.execute = function (options) {
                             );
                         });
 
-                        it ("should be able to handle sources with path prefix", function () {
-                            testSourceWrapperAPIs(
-                                tableMainSources["path_to_outbound2_outbound1_inbound1_w_prefix"],
-                                false,
-                                true,
-                                "alias",
-                                [
-                                    "left(id)=(source_definitions_schema:outbound2:id)",
-                                    "left(id)=(source_definitions_schema:outbound2_outbound1:id)",
-                                    "alias:=left(id)=(source_definitions_schema:outbound2_outbound1_inbound1:id)",
-                                ].join("/"),
-                                [
-                                    {"outbound": ["source_definitions_schema", "main_fk2"]},
-                                    {"outbound": ["source_definitions_schema", "outbound2_fk1"]},
-                                    {"inbound": ["source_definitions_schema", "outbound2_outbound1_inbound1_fk1"], "alias": "alias"}
-                                ]
-                            );
+                        describe("related to path prefix, ", function () {
+                            it ("should handle sources with path prefix", function () {
+                                testSourceWrapperAPIs(
+                                    tableMainSources["path_to_outbound2_outbound1_inbound1_w_prefix"],
+                                    false,
+                                    true,
+                                    "alias",
+                                    [
+                                        "left(id)=(source_definitions_schema:outbound2:id)",
+                                        "left(id)=(source_definitions_schema:outbound2_outbound1:id)",
+                                        "alias:=left(id)=(source_definitions_schema:outbound2_outbound1_inbound1:id)",
+                                    ].join("/"),
+                                    [
+                                        {"outbound": ["source_definitions_schema", "main_fk2"]},
+                                        {"outbound": ["source_definitions_schema", "outbound2_fk1"]},
+                                        {"inbound": ["source_definitions_schema", "outbound2_outbound1_inbound1_fk1"], "alias": "alias"}
+                                    ],
+                                    "case 1"
+                                );
+
+                                testSourceWrapperAPIs(
+                                    tableMainSources["path_to_outbound2_outbound1_w_filter_2_outbound1_w_prefix"],
+                                    false,
+                                    true,
+                                    "alias",
+                                    [
+                                        "left(id)=(source_definitions_schema:outbound2:id)",
+                                        "left(id)=(source_definitions_schema:outbound2_outbound1:id)",
+                                        "col::ts::sample%20val",
+                                        "alias:=left(id)=(source_definitions_schema:outbound2_outbound1_outbound1:id)"
+                                    ].join("/"),
+                                    [
+                                        {"outbound": ["source_definitions_schema", "main_fk2"]},
+                                        {"outbound": ["source_definitions_schema", "outbound2_fk1"]},
+                                        {"filter": "col", "operator": "::ts::", "operand_pattern": "sample val"},
+                                        {"outbound": ["source_definitions_schema", "outbound2_outbound1_fk1"], "alias": "alias"}
+                                    ],
+                                    "case 2"
+                                );
+                            });
+
+                            it ("should handle sources with path prefix that just add filter", function () {
+                                testSourceWrapperAPIs(
+                                    tableMainSources["path_to_outbound2_outbound1_add_filter"],
+                                    false,
+                                    true,
+                                    "alias",
+                                    [
+                                        "left(id)=(source_definitions_schema:outbound2:id)",
+                                        "alias:=left(id)=(source_definitions_schema:outbound2_outbound1:id)",
+                                        "col%20w%20space::ciregexp::some%20val"
+                                    ].join("/"),
+                                    [
+                                        {"outbound": ["source_definitions_schema", "main_fk2"]},
+                                        {"outbound": ["source_definitions_schema", "outbound2_fk1"], "alias": "alias"},
+                                        {"filter": "col w space", "operator": "::ciregexp::", "operand_pattern": "some val"},
+                                    ]
+                                );
+                            });
+    
+                            it ("should handle sources with path prefix that just change end column", function () {
+                                testSourceWrapperAPIs(
+                                    tableMainSources["path_to_outbound2_outbound1_w_prefix_diff_col"],
+                                    false,
+                                    true,
+                                    "alias",
+                                    [
+                                        "left(id)=(source_definitions_schema:outbound2:id)",
+                                        "alias:=left(id)=(source_definitions_schema:outbound2_outbound1:id)"
+                                    ].join("/"),
+                                    [
+                                        {"outbound": ["source_definitions_schema", "main_fk2"]},
+                                        {"outbound": ["source_definitions_schema", "outbound2_fk1"], "alias": "alias"}
+                                    ],
+                                    "case 1"
+                                );
+
+                                // the prefix ends with filter
+                                testSourceWrapperAPIs(
+                                    tableMainSources["path_to_outbound2_outbound1_w_filter_2_diff_col"],
+                                    false,
+                                    true,
+                                    "alias",
+                                    [
+                                        "left(id)=(source_definitions_schema:outbound2:id)",
+                                        "alias:=left(id)=(source_definitions_schema:outbound2_outbound1:id)",
+                                        "col::ts::sample%20val"
+                                    ].join("/"),
+                                    [
+                                        {"outbound": ["source_definitions_schema", "main_fk2"]},
+                                        {"outbound": ["source_definitions_schema", "outbound2_fk1"], "alias": "alias"},
+                                        {"filter": "col", "operator": "::ts::", "operand_pattern": "sample val"},
+                                    ],
+                                    "case 2"
+                                );
+                            });
+    
+                            it ("should handle sources with path prefix that just change end column (recursive)", function () {
+                                testSourceWrapperAPIs(
+                                    tableMainSources["path_to_outbound2_outbound1_w_prefix_diff_col_recursive"],
+                                    false,
+                                    true,
+                                    "alias",
+                                    [
+                                        "left(id)=(source_definitions_schema:outbound2:id)",
+                                        "alias:=left(id)=(source_definitions_schema:outbound2_outbound1:id)"
+                                    ].join("/"),
+                                    [
+                                        {"outbound": ["source_definitions_schema", "main_fk2"]},
+                                        {"outbound": ["source_definitions_schema", "outbound2_fk1"], "alias": "alias"}
+                                    ]
+                                );
+                            });
+    
+                            it ("should handle sources with recursive path prefix", function () {
+                                testSourceWrapperAPIs(
+                                    tableMainSources["path_to_outbound2_outbound1_inbound1_inbound1_w_recursive_prefix"],
+                                    false,
+                                    true,
+                                    "alias",
+                                    [
+                                        "left(id)=(source_definitions_schema:outbound2:id)",
+                                        "left(id)=(source_definitions_schema:outbound2_outbound1:id)",
+                                        "left(id)=(source_definitions_schema:outbound2_outbound1_inbound1:id)",
+                                        "alias:=left(id)=(source_definitions_schema:outbound2_outbound1_inbound1_inbound1:id)"
+                                    ].join("/"),
+                                    [
+                                        {"outbound": ["source_definitions_schema", "main_fk2"]},
+                                        {"outbound": ["source_definitions_schema", "outbound2_fk1"]},
+                                        {"inbound": ["source_definitions_schema", "outbound2_outbound1_inbound1_fk1"]},
+                                        {"inbound": ["source_definitions_schema", "outbound2_outbound1_inbound1_inbound1_fk1"], "alias": "alias"}
+                                    ]
+                                );
+                            });
                         });
 
-                        it ("should be able to handle sources with path prefix that just change end column", function () {
-                            testSourceWrapperAPIs(
-                                tableMainSources["path_to_outbound2_outbound1_w_prefix_diff_col"],
-                                false,
-                                true,
-                                "alias",
-                                [
-                                    "left(id)=(source_definitions_schema:outbound2:id)",
-                                    "left(id)=(source_definitions_schema:outbound2_outbound1:id)"
-                                ].join("/"),
-                                [
-                                    {"outbound": ["source_definitions_schema", "main_fk2"]},
-                                    {"outbound": ["source_definitions_schema", "outbound2_fk1"]}
-                                ]
-                            );
+                        describe("related to filter in source,", function () {
+                            it ("should handle source without path with filter", function () {
+                                testSourceWrapperAPIs(
+                                    tableMainSources["col_w_filter"],
+                                    false,
+                                    false,
+                                    "alias",
+                                    [
+                                        "col%20w%20space::ciregexp::val%20w%20space"
+                                    ].join("/"),
+                                    [
+                                        {"filter": "col w space", "operator": "::ciregexp::", "operand_pattern": "val w space"},
+                                    ]
+                                );
+                            });
+
+                            it ("should handle source with path and filter on main table", function () {
+                                testSourceWrapperAPIs(
+                                    tableMainSources["fk1_col_entity_w_filter_1"],
+                                    false,
+                                    true,
+                                    "alias",
+                                    [
+                                        "id::gt::1",
+                                        "alias:=left(id)=(source_definitions_schema:outbound1:id)",
+                                    ].join("/"),
+                                    [
+                                        {"filter": "id", "operator": "::gt::", "operand_pattern": "1"},
+                                        {"outbound": ["source_definitions_schema", "main_fk1"], "alias": "alias"}
+                                    ],
+                                    "case 1"
+                                );
+
+                                testSourceWrapperAPIs(
+                                    tableMainSources["fk1_col_entity_w_filter_2"],
+                                    false,
+                                    true,
+                                    "alias",
+                                    [
+                                        "!(RID=1)",
+                                        "alias:=left(id)=(source_definitions_schema:outbound1:id)",
+                                    ].join("/"),
+                                    [
+                                        {"filter": "RID", "negate": true, "operand_pattern": "1"},
+                                        {"outbound": ["source_definitions_schema", "main_fk1"], "alias": "alias"}, 
+                                    ],
+                                    "case 2"
+                                );
+
+                                testSourceWrapperAPIs(
+                                    tableMainSources["fk1_col_entity_w_filter_3"],
+                                    false,
+                                    true,
+                                    "alias",
+                                    [
+                                        "((id="+ moment().format("YYYY") + "&!(col%20w%20space::null::));col::ts::some%20val;!(RMB::null::;id::null::))",
+                                        "alias:=left(id)=(source_definitions_schema:outbound1:id)"
+                                    ].join("/"),
+                                    null, // it's a big object that we cannot easily test and there's no point in testing as well
+                                    "case 3"
+                                );
+                            });
+
+                            it ("should handle source with path and filter in the middle", function () {
+                                testSourceWrapperAPIs(
+                                    tableMainSources["path_to_outbound2_outbound1_w_filter_1"],
+                                    false,
+                                    true,
+                                    "alias",
+                                    [
+                                        "left(id)=(source_definitions_schema:outbound2:id)",
+                                        "id::ts::1",
+                                        "alias:=left(id)=(source_definitions_schema:outbound2_outbound1:id)"
+                                    ].join("/"),
+                                    [
+                                        {"outbound": ["source_definitions_schema", "main_fk2"]},
+                                        {"filter": "id", "operator": "::ts::", "operand_pattern": "1"},
+                                        {"outbound": ["source_definitions_schema", "outbound2_fk1"], "alias": "alias"},
+                                    ]
+                                );
+                            });
+
+                            it ("should handle source with path and filter on leaf table", function () {
+                                testSourceWrapperAPIs(
+                                    tableMainSources["path_to_outbound2_outbound1_w_filter_2"],
+                                    false,
+                                    true,
+                                    "alias",
+                                    [
+                                        "left(id)=(source_definitions_schema:outbound2:id)",
+                                        "alias:=left(id)=(source_definitions_schema:outbound2_outbound1:id)",
+                                        "col::ts::sample%20val"
+                                    ].join("/"),
+                                    [
+                                        {"outbound": ["source_definitions_schema", "main_fk2"]},
+                                        {"outbound": ["source_definitions_schema", "outbound2_fk1"], "alias": "alias"},
+                                        {"filter": "col", "operator": "::ts::", "operand_pattern": "sample val"},
+                                    ]
+                                );
+                            });
                         });
 
-                        it ("should be able to handle sources with path prefix that just change end column (recursive)", function () {
-                            testSourceWrapperAPIs(
-                                tableMainSources["path_to_outbound2_outbound1_w_prefix_diff_col_recursive"],
-                                false,
-                                true,
-                                "alias",
-                                [
-                                    "left(id)=(source_definitions_schema:outbound2:id)",
-                                    "left(id)=(source_definitions_schema:outbound2_outbound1:id)"
-                                ].join("/"),
-                                [
-                                    {"outbound": ["source_definitions_schema", "main_fk2"]},
-                                    {"outbound": ["source_definitions_schema", "outbound2_fk1"]}
-                                ]
-                            );
-                        });
-
-                        it ("should be bale to handle sources with recursive path prefix", function () {
-                            testSourceWrapperAPIs(
-                                tableMainSources["path_to_outbound2_outbound1_inbound1_inbound1_w_recursive_prefix"],
-                                false,
-                                true,
-                                "alias",
-                                [
-                                    "left(id)=(source_definitions_schema:outbound2:id)",
-                                    "left(id)=(source_definitions_schema:outbound2_outbound1:id)",
-                                    "left(id)=(source_definitions_schema:outbound2_outbound1_inbound1:id)",
-                                    "alias:=left(id)=(source_definitions_schema:outbound2_outbound1_inbound1_inbound1:id)"
-                                ].join("/"),
-                                [
-                                    {"outbound": ["source_definitions_schema", "main_fk2"]},
-                                    {"outbound": ["source_definitions_schema", "outbound2_fk1"]},
-                                    {"inbound": ["source_definitions_schema", "outbound2_outbound1_inbound1_fk1"]},
-                                    {"inbound": ["source_definitions_schema", "outbound2_outbound1_inbound1_inbound1_fk1"], "alias": "alias"}
-                                ]
-                            );
-                        });
                    });
 
                    describe("when reverse=true is passed", function () {

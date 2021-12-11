@@ -333,6 +333,18 @@
         OR: ";"
     });
 
+    module._ERMrestFilterPredicates = Object.freeze({
+        NULL: "::null::",
+        EQUAL: "=",
+        LESS_THAN: "::lt::",
+        LESS_THAN_OR_EQUAL_TO: "::leq::",
+        GREATER_THAN: "::gt::",
+        GREATER_THAN_OR_EQUAL_TO: "::geq::",
+        REG_EXP: "::regexp::",
+        CASE_INS_REG_EXP: "::ciregexp::",
+        TEXT_SEARCH: "::ts::"
+    });
+
     module._sourceDefinitionAttributes = ["source", "aggregate", "entity", "self_link"];
 
     module._classNames = Object.freeze({

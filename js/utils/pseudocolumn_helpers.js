@@ -35,9 +35,9 @@
                 }
 
                 if (isDefinedAndNotNull(range.min)) {
-                    operator = module.OPERATOR.GREATER_THAN_OR_EQUAL_TO;
+                    operator = module._ERMrestFilterPredicates.GREATER_THAN_OR_EQUAL_TO;
                     if (range.min_exclusive === true) {
-                        operator = module.OPERATOR.GREATER_THAN;
+                        operator = module._ERMrestFilterPredicates.GREATER_THAN;
                     }
 
                     res += encode(column) + operator + encode(_renderFacetHelpers.valueToString(range.min));
@@ -45,9 +45,9 @@
                 }
 
                 if (isDefinedAndNotNull(range.max)) {
-                    operator = module.OPERATOR.LESS_THAN_OR_EQUAL_TO;
+                    operator = module._ERMrestFilterPredicates.LESS_THAN_OR_EQUAL_TO;
                     if (range.max_exclusive === true) {
-                        operator = module.OPERATOR.LESS_THAN;
+                        operator = module._ERMrestFilterPredicates.LESS_THAN;
                     }
 
                     if (hasFilter) {
@@ -1066,6 +1066,7 @@
             self.column = col;
 
             self.hasPrefix = hasPrefix;
+            // TODO FILTER_IN_SOURCE we should not change this when there's filter, right?
             self.hasPath = hasPath;
             self.foreignKeyPathLength = foreignKeyPathLength;
             self.hasInbound = hasInbound;
@@ -1088,7 +1089,7 @@
 
             // generate name:
             // TODO maybe we shouldn't even allow aggregate in faceting (for now we're ignoring it)
-            if ((sourceObject.self_link === true) || self.hasPath || self.isEntityMode || (isFacet !== false && self.hasAggregate)) {
+            if ((sourceObject.self_link === true) || self.isFiltered || self.hasPath || self.isEntityMode || (isFacet !== false && self.hasAggregate)) {
                 var rawSourceObject = JSON.parse(JSON.stringify(sourceObject));
 
                 // if the source has path, we should make sure the given sourceObject for hash is raw (not using alias)
@@ -1150,9 +1151,9 @@
                     // if we're reversing, we have to add alias to the first one,
                     // otherwise we only need to add alias if this object only has a prefix and nothing else
                     if (reverse) {
-                        return sn.toString(reverse,isLeft, outAlias, isReverseRightJoin);
+                        return sn.toString(reverse, isLeft, outAlias, isReverseRightJoin);
                     } else {
-                        return sn.toString(reverse, isLeft, self.foreignKeyPathLength == sn.foreignKeyPathLength ? outAlias : null, isReverseRightJoin);
+                        return sn.toString(reverse, isLeft, self.foreignKeyPathLength == sn.nodeObject.foreignKeyPathLength ? outAlias : null, isReverseRightJoin);
                     }
                 }
 
@@ -1211,7 +1212,7 @@
                 sn = self.sourceObjectNodes[i];
                 if (sn.isPathPrefix) {
                     // if this is the last element, we have to add the alias to this
-                    path = path.concat(sn.nodeObject.getRawSourcePath(reverse, self.foreignKeyPathLength == sn.foreignKeyPathLength ? outAlias : null));
+                    path = path.concat(sn.nodeObject.getRawSourcePath(reverse, self.foreignKeyPathLength == sn.nodeObject.foreignKeyPathLength ? outAlias : null));
                 }
                 else if (sn.isFilter) {
                     path.push(sn.nodeObject);
@@ -1680,7 +1681,7 @@
         parseSourceObjectNodeFilter: function (nodeObject, table) {
             var logOp, ermrestOp, i, operator, res = "", innerRes, colName, operand = "";
             var encode = module._fixedEncodeURIComponent;
-            var nullOperator = module.OPERATOR.NULL;
+            var nullOperator = module._ERMrestFilterPredicates.NULL;
             var returnError = function (message) {
                 throw new Error(message);
             };
@@ -1722,11 +1723,11 @@
                 // ------- add the operator ---------
                 if ("operator" in nodeObject) {
                     operator = nodeObject.operator;
-                    if (Object.values(module.OPERATOR).indexOf(operator) === -1) {
+                    if (Object.values(module._ERMrestFilterPredicates).indexOf(operator) === -1) {
                         return returnError("invalid operator used: `" + operator + "`");
                     }
                 } else {
-                    operator = module.OPERATOR.EQUAL;
+                    operator = module._ERMrestFilterPredicates.EQUAL;
                 }
                 res += operator;
 
@@ -1749,13 +1750,8 @@
                     }
                 }
                 res += encode(operand);
-
-                // ------- add negate ---------
-                if (nodeObject.negate === true) {
-                    res = "!(" + res + ")";
-                }
             } 
-            // ------- recursrive filter ---------
+            // ------- recursive filter ---------
             else {
                 if ("and" in nodeObject) {
                     logOp = "and";
@@ -1765,13 +1761,18 @@
                     ermrestOp = module._ERMrestLogicalOperators.OR;
                 }
 
-                res = nodeObject[logOp].length > 1 ? "(" : "";
+                res = (nodeObject[logOp].length > 1 && !nodeObject.negate) ? "(" : "";
                 for (i = 0; i < nodeObject[logOp].length; i++) {
                     // it might throw an error which will be propagated to the original caller
                     innerRes = _sourceColumnHelpers.parseSourceObjectNodeFilter(nodeObject[logOp][i], table);
                     res += (i > 0 ? ermrestOp : "") + innerRes;
                 }
-                res += nodeObject[logOp].length > 1 ? ")" : "";
+                res += (nodeObject[logOp].length > 1  && !nodeObject.negate) ? ")" : "";
+            }
+
+            // ------- add negate ---------
+            if (nodeObject.negate === true) {
+                res = "!(" + res + ")";
             }
 
             return res;
