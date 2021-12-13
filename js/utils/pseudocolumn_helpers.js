@@ -1140,7 +1140,7 @@
             return self.sourceObjectNodes.reduce(function (prev, sn, i) {
                 if (sn.isFilter) {
                     if (reverse) {
-                        return (i > 0 ? "/" : "") + sn.toString() + prev;
+                        return sn.toString() + (i > 0 ? "/" : "") + prev;
                     } else {
                         return prev + (i > 0 ? "/" : "") + sn.toString();
                     }

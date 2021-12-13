@@ -758,11 +758,11 @@ exports.execute = function (options) {
                    });
 
                    describe("when reverse=true is passed", function () {
-                        it ("should be able to handle sources without any path", function () {
+                        it ("should handle sources without any path", function () {
                             testSourceWrapperAPIs(tableMainSources["new_col"], true, false, "", "", []);
                         });
 
-                        it ("should be able to handle sources with path", function () {
+                        it ("should handle sources with path", function () {
                             testSourceWrapperAPIs(
                                 tableMainSources["path_to_outbound2_outbound1_inbound1_inbound1_wo_prefix"],
                                 true,
@@ -783,78 +783,140 @@ exports.execute = function (options) {
                             );
                         });
 
-                        it ("should be able to handle sources with path prefix that just change end column", function () {
-                            testSourceWrapperAPIs(
-                                tableMainSources["path_to_outbound2_outbound1_w_prefix_diff_col"],
-                                true,
-                                false,
-                                "",
-                                [
-                                    "(id)=(source_definitions_schema:outbound2:id)",
-                                    "(id)=(source_definitions_schema:main:id)"
-                                ].join("/"),
-                                [
-                                    {"inbound": ["source_definitions_schema", "outbound2_fk1"]},
-                                    {"inbound": ["source_definitions_schema", "main_fk2"]}
-                                ]
-                            );
-                        });
+                        describe("related to path prefix, ", function () {
+                            it ("should handle sources with path prefix", function () {
+                                testSourceWrapperAPIs(
+                                    tableMainSources["path_to_outbound2_outbound1_inbound1_w_prefix"],
+                                    true,
+                                    false,
+                                    "",
+                                    [
+                                        "(id)=(source_definitions_schema:outbound2_outbound1:id)",
+                                        "(id)=(source_definitions_schema:outbound2:id)",
+                                        "(id)=(source_definitions_schema:main:id)"
+                                    ].join("/"),
+                                    [
+                                        {"outbound": ["source_definitions_schema", "outbound2_outbound1_inbound1_fk1"]},
+                                        {"inbound": ["source_definitions_schema", "outbound2_fk1"]},
+                                        {"inbound": ["source_definitions_schema", "main_fk2"]}
+                                    ],
+                                    "case 1"
+                                );
 
-                        it ("should be able to handle sources with path prefix that just change end column (recursive)", function () {
-                            testSourceWrapperAPIs(
-                                tableMainSources["path_to_outbound2_outbound1_w_prefix_diff_col_recursive"],
-                                true,
-                                false,
-                                "",
-                                [
-                                    "(id)=(source_definitions_schema:outbound2:id)",
-                                    "(id)=(source_definitions_schema:main:id)"
-                                ].join("/"),
-                                [
-                                    {"inbound": ["source_definitions_schema", "outbound2_fk1"]},
-                                    {"inbound": ["source_definitions_schema", "main_fk2"]}
-                                ]
-                            );
-                        });
+                                testSourceWrapperAPIs(
+                                    tableMainSources["path_to_outbound2_outbound1_w_filter_2_outbound1_w_prefix"],
+                                    true,
+                                    false,
+                                    "",
+                                    [
+                                        "(id)=(source_definitions_schema:outbound2_outbound1:id)",
+                                        "col::ts::sample%20val",
+                                        "(id)=(source_definitions_schema:outbound2:id)",
+                                        "(id)=(source_definitions_schema:main:id)"
+                                    ].join("/"),
+                                    [
+                                        {"inbound": ["source_definitions_schema", "outbound2_outbound1_fk1"]},
+                                        {"filter": "col", "operator": "::ts::", "operand_pattern": "sample val"},
+                                        {"inbound": ["source_definitions_schema", "outbound2_fk1"]},
+                                        {"inbound": ["source_definitions_schema", "main_fk2"]}
+                                    ],
+                                    "case 2"
+                                );
+                            });
 
-                        it ("should be able to handle sources with path prefix", function () {
-                            testSourceWrapperAPIs(
-                                tableMainSources["path_to_outbound2_outbound1_inbound1_w_prefix"],
-                                true,
-                                false,
-                                "",
-                                [
-                                    "(id)=(source_definitions_schema:outbound2_outbound1:id)/" +
-                                    "(id)=(source_definitions_schema:outbound2:id)/" +
-                                    "(id)=(source_definitions_schema:main:id)"
-                                ].join("/"),
-                                [
-                                    {"outbound": ["source_definitions_schema", "outbound2_outbound1_inbound1_fk1"]},
-                                    {"inbound": ["source_definitions_schema", "outbound2_fk1"]},
-                                    {"inbound": ["source_definitions_schema", "main_fk2"]}
-                                ]
-                            );
-                        });
+                            it ("should handle sources with path prefix that just add filter", function () {
+                                testSourceWrapperAPIs(
+                                    tableMainSources["path_to_outbound2_outbound1_add_filter"],
+                                    true,
+                                    false,
+                                    "",
+                                    [
+                                        "col%20w%20space::ciregexp::some%20val",
+                                        "(id)=(source_definitions_schema:outbound2:id)",
+                                        "(id)=(source_definitions_schema:main:id)"
+                                    ].join("/"),
+                                    [   
+                                        {"filter": "col w space", "operator": "::ciregexp::", "operand_pattern": "some val"},
+                                        {"inbound": ["source_definitions_schema", "outbound2_fk1"]},
+                                        {"inbound": ["source_definitions_schema", "main_fk2"]},
+                                    ]
+                                );
+                            });
 
-                        it ("should be bale to handle sources with recursive path prefix", function () {
-                            testSourceWrapperAPIs(
-                                tableMainSources["path_to_outbound2_outbound1_inbound1_inbound1_w_recursive_prefix"],
-                                true,
-                                false   ,
-                                "",
-                                [
-                                    "(id)=(source_definitions_schema:outbound2_outbound1_inbound1:id)/" +
-                                    "(id)=(source_definitions_schema:outbound2_outbound1:id)/" +
-                                    "(id)=(source_definitions_schema:outbound2:id)/" +
-                                    "(id)=(source_definitions_schema:main:id)"
-                                ].join("/"),
-                                [
-                                    {"outbound": ["source_definitions_schema", "outbound2_outbound1_inbound1_inbound1_fk1"]},
-                                    {"outbound": ["source_definitions_schema", "outbound2_outbound1_inbound1_fk1"]},
-                                    {"inbound": ["source_definitions_schema", "outbound2_fk1"]},
-                                    {"inbound": ["source_definitions_schema", "main_fk2"]}
-                                ]
-                            );
+                            it ("should handle sources with path prefix that just change end column", function () {
+                                testSourceWrapperAPIs(
+                                    tableMainSources["path_to_outbound2_outbound1_w_prefix_diff_col"],
+                                    true,
+                                    false,
+                                    "",
+                                    [
+                                        "(id)=(source_definitions_schema:outbound2:id)",
+                                        "(id)=(source_definitions_schema:main:id)"
+                                    ].join("/"),
+                                    [
+                                        {"inbound": ["source_definitions_schema", "outbound2_fk1"]},
+                                        {"inbound": ["source_definitions_schema", "main_fk2"]}
+                                    ],
+                                    "case 1"
+                                );
+
+                                // the prefix ends with filter
+                                testSourceWrapperAPIs(
+                                    tableMainSources["path_to_outbound2_outbound1_w_filter_2_diff_col"],
+                                    true,
+                                    false,
+                                    "",
+                                    [
+                                        "col::ts::sample%20val",
+                                        "(id)=(source_definitions_schema:outbound2:id)",
+                                        "(id)=(source_definitions_schema:main:id)"
+                                    ].join("/"),
+                                    [
+                                        {"filter": "col", "operator": "::ts::", "operand_pattern": "sample val"},
+                                        {"inbound": ["source_definitions_schema", "outbound2_fk1"]},
+                                        {"inbound": ["source_definitions_schema", "main_fk2"]},
+                                    ],
+                                    "case 2"
+                                );
+                            });
+
+                            it ("should handle sources with path prefix that just change end column (recursive)", function () {
+                                testSourceWrapperAPIs(
+                                    tableMainSources["path_to_outbound2_outbound1_w_prefix_diff_col_recursive"],
+                                    true,
+                                    false,
+                                    "",
+                                    [
+                                        "(id)=(source_definitions_schema:outbound2:id)",
+                                        "(id)=(source_definitions_schema:main:id)"
+                                    ].join("/"),
+                                    [
+                                        {"inbound": ["source_definitions_schema", "outbound2_fk1"]},
+                                        {"inbound": ["source_definitions_schema", "main_fk2"]}
+                                    ]
+                                );
+                            });
+
+                            it ("should handle sources with recursive path prefix", function () {
+                                testSourceWrapperAPIs(
+                                    tableMainSources["path_to_outbound2_outbound1_inbound1_inbound1_w_recursive_prefix"],
+                                    true,
+                                    false   ,
+                                    "",
+                                    [
+                                        "(id)=(source_definitions_schema:outbound2_outbound1_inbound1:id)/" +
+                                        "(id)=(source_definitions_schema:outbound2_outbound1:id)/" +
+                                        "(id)=(source_definitions_schema:outbound2:id)/" +
+                                        "(id)=(source_definitions_schema:main:id)"
+                                    ].join("/"),
+                                    [
+                                        {"outbound": ["source_definitions_schema", "outbound2_outbound1_inbound1_inbound1_fk1"]},
+                                        {"outbound": ["source_definitions_schema", "outbound2_outbound1_inbound1_fk1"]},
+                                        {"inbound": ["source_definitions_schema", "outbound2_fk1"]},
+                                        {"inbound": ["source_definitions_schema", "main_fk2"]}
+                                    ]
+                                );
+                            });
                         });
                    });
 
