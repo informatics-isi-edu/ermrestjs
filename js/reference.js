@@ -4565,7 +4565,7 @@
                             var fk = null;
 
                             //‌ُ TODO this should not be called here, we should refactor this part later
-                            if (_sourceColumnHelpers._sourceHasPath(f.source)) {
+                            if (_sourceColumnHelpers._sourceHasNodes(f.source)) {
                                 var cons, isInbound = false, fkObj;
 
                                 if ("inbound" in f.source[0]) {

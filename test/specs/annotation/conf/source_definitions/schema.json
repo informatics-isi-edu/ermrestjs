@@ -341,8 +341,8 @@
                                   "or": [
                                       {
                                           "and": [
-                                            {"filter": "id", "operand_pattern": "{{{$moment.year}}}"},
-                                            {"filter": "col w space", "operator": "::null::", "negate": true}
+                                              {"filter": "id", "operand_pattern": "{{{$moment.year}}}"},
+                                              {"filter": "col w space", "operator": "::null::", "negate": true}
                                           ]
                                       },
                                       {"filter": "col", "operator": "::ts::", "operand_pattern": "some val"},
@@ -352,6 +352,32 @@
                                               {"filter": "id", "operator": "::null::"}
                                           ],
                                           "negate": true
+                                      }
+                                  ]
+                              },
+                              {"outbound": ["source_definitions_schema", "main_fk1"]}, 
+                              "RID"
+                          ],
+                          "entity": true
+                      },
+                      "fk1_col_entity_w_filter_3_second_name": {
+                          "comment": "same as above and just added for testing hashname logic",
+                          "source": [
+                              {
+                                  "or": [
+                                      {
+                                          "and": [
+                                              {"operand_pattern": "{{{$moment.year}}}", "filter": "id"},
+                                              {"negate": true, "filter": "col w space", "operator": "::null::"}
+                                          ]
+                                      },
+                                      {"operand_pattern": "some val", "operator": "::ts::", "filter": "col"},
+                                      {
+                                          "negate": true,
+                                          "or": [
+                                              {"filter": "RMB", "operator": "::null::"},
+                                              {"operator": "::null::", "filter": "id"}
+                                          ]
                                       }
                                   ]
                               },

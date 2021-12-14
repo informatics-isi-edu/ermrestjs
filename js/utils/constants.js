@@ -373,7 +373,21 @@
         "ranges": "r",
         "search": "s",
         "filter": "f",
+        "and": "and",
+        "or": "or",
         "operand_pattern": "opd",
         "operator": "opr",
         "negate": "n"
+    });
+
+    module._sourceProperties = Object.freeze({
+        SOURCEKEY: "sourcekey",
+        INBOUND: "inbound",
+        OUTBOUND: "outbound",
+        FILTER: "filter",
+        AND: "and",
+        OR: "or",
+        OPERATOR: "operator",
+        OPERAND_PATTERN: "operand_pattern",
+        NEGATE: "negate"
     });

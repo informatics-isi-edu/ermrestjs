@@ -287,7 +287,7 @@
             // ---------------- parse the path ---------------- //
             path = ""; // the source path if there are some joins
             useRightJoin = false;
-            if (_sourceColumnHelpers._sourceHasPath(term.source)) {
+            if (_sourceColumnHelpers._sourceHasNodes(term.source)) {
 
                 // if there's a null filter and source has path, we have to use right join
                 // parse the datasource
@@ -390,8 +390,9 @@
             };
         };
 
-        if (!_sourceColumnHelpers._sourceHasPath(source)) return res;
-
+        if (!_sourceColumnHelpers._sourceHasNodes(source)) return res;
+        
+        // TODO FILTER_IN_SOURCE and and or should recursively do this
         for (var i = 0; i < res.length; i++) {
             ["alias", "sourcekey", "inbound", "outbound", "filter", "operand_pattern", "operator", "negate"].forEach(shorten(res[i]));
         }
@@ -1090,22 +1091,7 @@
             // generate name:
             // TODO maybe we shouldn't even allow aggregate in faceting (for now we're ignoring it)
             if ((sourceObject.self_link === true) || self.isFiltered || self.hasPath || self.isEntityMode || (isFacet !== false && self.hasAggregate)) {
-                var rawSourceObject = JSON.parse(JSON.stringify(sourceObject));
-
-                // if the source has path, we should make sure the given sourceObject for hash is raw (not using alias)
-                //  a pseudo-column using path prefix should be treated differently from one without it.
-                if (self.hasPath) {
-                    rawSourceObject.source = [];
-                    sourceObject.source.forEach(function (sn, index) {
-                        rawSourceObject.source.push(sn);
-
-                        // remove alias property
-                        if (typeof sn === "object" && "alias" in sn) {
-                            delete rawSourceObject.source[rawSourceObject.source.length-1].alias;
-                        }
-                    });
-                }
-                self.name = _sourceColumnHelpers.generateSourceObjectHashName(rawSourceObject, isFacet);
+                self.name = _sourceColumnHelpers.generateSourceObjectHashName(sourceObject, isFacet);
                 self.isHash = true;
 
                 if (table.columns.has(self.name)) {
@@ -1761,6 +1747,10 @@
                     ermrestOp = module._ERMrestLogicalOperators.OR;
                 }
 
+                if (!Array.isArray(nodeObject[logOp]) || nodeObject[logOp].length === 0) {
+                    returnError("given source not is not a valid faild (and/or must be an array)");
+                }
+
                 res = (nodeObject[logOp].length > 1 && !nodeObject.negate) ? "(" : "";
                 for (i = 0; i < nodeObject[logOp].length; i++) {
                     // it might throw an error which will be propagated to the original caller
@@ -1778,7 +1768,7 @@
             return res;
         },
 
-        _sourceHasPath: function (source) {
+        _sourceHasNodes: function (source) {
             return Array.isArray(source) && !(source.length === 1 && typeof source[0] === "string");
         },
 
@@ -1790,6 +1780,83 @@
          */
         _getSourceColumnStr: function (source) {
             return Array.isArray(source) ? source[source.length-1] : source;
+        },
+
+
+        /**
+         * Some elements of source have multiple properties and we cannot just 
+         * use JSON.stringify since it will not preserve the order.
+         * NOTE this function will not check the structure and assume it's already valid
+         * @param {*} source 
+         * @returns stringify the given source while ensuring proper order of properties
+         * @private
+         */
+        _stringifySource: function (source) {
+            var srcProps = module._sourceProperties;
+            
+            var stringifyAndOr = function (arr) {
+                // TODO we might want to sort this to make sure the order
+                // of elements doesn't matter
+                return "[" + arr.map(stringifyFilter).join(",") + "]";
+            };
+
+            var stringifyFilter = function (node) {
+                var res = [];
+                if (srcProps.NEGATE in node) {
+                    res.push('"negate":' + node[srcProps.NEGATE]);
+                }
+
+                if (srcProps.FILTER in node) {
+                    // make sure attributes are added in the same order all the times
+                    // NOTE technically could use the Object.keys and sort
+                    [srcProps.FILTER, srcProps.OPERATOR, srcProps.OPERAND_PATTERN].forEach(function (attr) {
+                        if (attr in node) {
+                            res.push('"' + attr + '":' + JSON.stringify(node[attr]));
+                        }
+                    });
+                    return '{' + res.join(",") + '}';
+                }
+
+                if (srcProps.AND in node) {
+                    res.push('"and":' + stringifyAndOr(node[srcProps.AND]));
+                }
+                else if (srcProps.OR in node){
+                    res.push('"or":' + stringifyAndOr(node[srcProps.OR]));
+                }
+
+                return '{' + res.join(",") + '}';
+            };
+
+            if (_sourceColumnHelpers._sourceHasNodes(source)) {
+                // do the same thing as JSON.stringify but 
+                // make sure the attributes are added in the same order
+                var attrs = [];
+                source.forEach(function (node) {
+                    if (typeof node === "string") {
+                        attrs.push('"' + node + '"');
+                        return;
+                    }
+
+                    // this will ensure any extra attributes are just ignored (e.g. alias)
+                    [srcProps.SOURCEKEY, srcProps.INBOUND, srcProps.OUTBOUND].forEach(function (attr) {
+                        if (attr in node) {
+                            attrs.push('{"' + attr + '":' + JSON.stringify(node[attr]) + '}');
+                            return;
+                        }
+                    });
+
+                    [srcProps.FILTER, srcProps.AND, srcProps.OR].forEach(function (attr) {
+                        if (attr in node) {
+                            attrs.push(stringifyFilter(node));
+                            return;
+                        }
+                    });
+                });
+                
+                return '[' + attrs.join(',') + ']';
+            } else {
+                return _sourceColumnHelpers._getSourceColumnStr(source);
+            }
         },
 
         /**
@@ -1804,7 +1871,10 @@
          *   Pass the equivalent pseudo-column definition of them. It must at least have `source` as an attribute.
          * - Pseudo-Columns:
          *   - Just pass the object that defines the pseudo-column. It must at least have `source` as an attribute.
-         *   - The given source will be hashed as is, so we should remove the alias and change to raw source (instead of prefix) beforehand
+         *   - This function will go through the source array and ensure the attributes are properly sorted.
+         *     This is mainly done for the nodes with multiple properties where JSON.stringify will not 
+         *     preserve the order of proprties. So instead we're going over the known attributes and create
+         *     the string manually ourselves (this will also ensure additional properties are ignored).
          */
         generateSourceObjectHashName: function (colObject, useOnlySource) {
 
@@ -1816,12 +1886,7 @@
             if (typeof colObject === "object") {
                 if (!colObject.source) return null;
 
-                if (_sourceColumnHelpers._sourceHasPath(colObject.source)) {
-                    // since it's an array, it will preserve the order
-                    str += JSON.stringify(colObject.source);
-                } else {
-                    str += _sourceColumnHelpers._getSourceColumnStr(colObject.source);
-                }
+                str += _sourceColumnHelpers._stringifySource(colObject.source);
 
                 if (useOnlySource !== true && typeof colObject.aggregate === "string") {
                     str += colObject.aggregate;
