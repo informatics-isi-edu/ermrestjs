@@ -39,23 +39,71 @@ Even if we are faceting on a vocabulary concept and just want the user to pick v
 > Based on this, we are not supporting filtering on foreign keys with composite keys.
 
 Therefore the following are acceptable ways of defining data source:
+
 - A column name string literal (an array of one string is also acceptable):
   ```
   {"source": "column"}
   {"source": ["column"]}
   ```
-- An array of _foreign key path_ that ends with a _columnname_ that will be projected and filtered. _foreign key path_ must be in the following format:
-  ```
-  { <direction>: [ <schema-name>, <constraint-name> ]  }
-  ```
-  Where
-  - `<direction>` is either `"inbound"` or `"outbound"`. These labels remove any ambiguity for self-referencing table navigation scenarios.
-  - The constraint pairs `[ <schema-name>, <constraint-name> ]` represent a foreign key relationship which reuses the same names appearing in the ERMrest model introspection document.
+- An array of _path element_ that ends with a _columnname_ that will be projected and filtered. 
   
+  - `[` _path element_  `,`  _columnname_`]`
+  
+  Each anterior element MAY use one of the following sub-document structures:
+  
+  - `{ "sourcekey":` _sourcekey prefix_ `}`
+    - Only acceptable as the first element. Please refer to [Data source with reusable prefix](#data-source-with-reusable-prefix) for more information.
+    - _sourcekey prefix_ is a string literal that refers to any of the defined sources in [`source-definitions` annotations](annotation.md#tag-2019-source-definitions)
+
+  - `{` _direction_ `:` _fkeyname_ `}`
+    - Links a new table instance to the existing path via join.
+    - _direction_ can either be `"inbound"`, or `"outbound"`.
+    - _fkeyname_ is the given name of the foreign key which is usually in the following format: `[` _schema name_ `,` _constraint name_ `]`
+
+  - `{ "and": [` _filter_ `,` ... `], "negate": ` _negate_ `}`
+    - Currently only limited to `filter` context of visible-columns annotation.
+    - A logical conjunction of multiple _filter_ clauses is applied to the query to constrain matching rows.
+	- The logical result is negated only if _negate_ is `true`.
+	- Each _filter_ clause may be a terminal filter element, conjunction, or disjunction.
+  
+  - `{ "or": [` _filter_ `,` ... `], "negate": ` _negate_ `}`
+    - Currently only limited to `filter` context of visible-columns annotation.
+    - A logical disjunction of multiple _filter_ clauses is applied to the query to constrain matching rows.
+	  - The logical result is negated only if _negate_ is `true`.
+	  - Each _filter_ clause may be a terminal filter element, conjunction, or disjunction.
+  
+  - `{ "filter":` _column_ `, "operand_pattern":` _value_ `, "operator":` _operator_ `, "negate":` _negate_ `}`
+    - Currently only limited to `filter` context of visible-columns annotation.
+    - An individual filter _path element_ is applied to the query or individual _filter_ clauses participate in a conjunction or disjunction.
+    
+    - The filter constrains a named _column_ in the current context table.
+    
+    - The _operator_ specifies the constraint operator via one of the valid operator names in the ERMrest REST API, which are
+
+        | operator  | meaning |
+        |-----------|---------|
+        | `::null::`| column is `null`     |
+        | `=`      | column equals value |
+        | `::lt::` | column less than value |
+        | `::leq::` | column less than or equal to value |
+        | `::gt::` | column greater than value |
+        | `::geq::` | column greater than or equal to value |
+        | `::regexp::` | column matches regular expression value |
+        | `::ciregexp::` | column matches regular expression value case-insensitively |
+        | `::ts::` | column matches text-search query value |
+
+      > If `operator` is missing, we will use `=` by default.
+
+    - The _value_ specifies the constant operand for a binary constraint operator and must be computed to a non-empty value. Pattern expansion MAY be used to access [the pre-defined values in templating envorinment](mustache-templating.md#using-pre-defined-attributes).
+    
+    - The logical result of the constraint is negated only if _negate_ is `true`.
+  
+
   The following are some examples of defining data source:
   ```
   [{"inbound": ["S1", "FK1"]}, "Column2"]
   [{"inbound": ["S1", "FK1"]}, {"outbound": ["S2", "FK2"]}, "Column3"]
+  [{"inbound": ["S1", "FK1"]}, {"filter": "RCB", "operand_pattern": "{{{$session.id}}}"}, "Column3"]
   ```
 ### Data source with reusable prefix
 
