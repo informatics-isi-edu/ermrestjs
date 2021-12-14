@@ -111,11 +111,19 @@ jobs:
       - name: Diagnosis after failure
         if: ${{ failure() }}
         run: |
+          echo "/etc/apache2 folder:"
           sudo ls -lR /etc/apache2
+          echo "/var/run/apache2 folder:"
           sudo ls -lR /var/run/apache2
+          echo "webauthn config"
           sudo cat /etc/apache2/conf.d/webauthn.conf
+          echo "webauthn wsgi config"
           sudo cat /etc/apache2/conf.d/wsgi_webauthn2.conf
+          echo "ermrest wsgi config"
           sudo cat /etc/apache2/conf.d/wsgi_ermrest.conf
+          echo "apache error log:"
           sudo cat /var/log/apache2/error.log
+          echo "apache access log:"
           sudo cat /var/log/apache2/access.log
+          echo "sessions:"
           sudo -H -u webauthn psql -c 'select * from webauthn2_db.session' webauthn

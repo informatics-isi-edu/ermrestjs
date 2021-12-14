@@ -1,5 +1,3 @@
-var moment = require("moment");
-
 exports.execute = function (options) {
     /*
      * The tables that are used in this test spec:
@@ -86,6 +84,7 @@ exports.execute = function (options) {
         var i, facetObj, ref;
 
         var currentDateString = options.ermRest._fixedEncodeURIComponent(new Date().toLocaleDateString());
+        console.log("CURRENT DATE: " + currentDateString);
 
         var createURL = function (tableName, facet) {
             var res = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + tableName;
