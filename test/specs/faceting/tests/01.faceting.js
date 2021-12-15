@@ -84,7 +84,8 @@ exports.execute = function (options) {
         var mainFacets;
         var i, facetObj, ref;
 
-        var currentDateString = options.ermRest._fixedEncodeURIComponent(new Date().toLocaleDateString());
+        var currDate = new Date();
+        var currentDateString = options.ermRest._fixedEncodeURIComponent(currDate.getFullYear() + "-" + (currDate.getMonth()+1) + "-" + currDate.getDay());
 
         var createURL = function (tableName, facet) {
             var res = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + tableName;
@@ -691,7 +692,7 @@ exports.execute = function (options) {
                                         // {"filter": "id", "operand_pattern": "-1", "operator": "::gt::"},
                                         {"outbound": ["faceting_schema", "main_fk3"]},
                                         {"and": [
-                                            {"filter": "date_col", "operand_pattern": "{{{$moment.localeDateString}}}", "operator": "::gt::"},
+                                            {"filter": "date_col", "operand_pattern": "{{{$moment.year}}}-{{{$moment.month}}}-{{{$moment.day}}}", "operator": "::gt::"},
                                             {"filter": "path_prefix_o1_col", "operand_pattern": "some_non_used_value"}
                                         ], "negate": true},
                                         "path_prefix_o1_col"
@@ -2833,7 +2834,7 @@ exports.execute = function (options) {
                                     "source": [
                                         {"outbound": ["faceting_schema", "main_fk3"]},
                                         {"and": [
-                                            {"filter": "date_col", "operand_pattern": "{{{$moment.localeDateString}}}", "operator": "::gt::"},
+                                            {"filter": "date_col", "operand_pattern": "{{{$moment.year}}}-{{{$moment.month}}}-{{{$moment.day}}}", "operator": "::gt::"},
                                             {"filter": "path_prefix_o1_col", "operand_pattern": "some_non_used_value"}
                                         ], "negate": true},
                                         "path_prefix_o1_col"
@@ -2853,7 +2854,7 @@ exports.execute = function (options) {
                                     "source": [
                                         {"outbound": ["faceting_schema", "main_fk3"]},
                                         {"and": [
-                                            {"filter": "date_col", "operand_pattern": "{{{$moment.localeDateString}}}", "operator": "::gt::"},
+                                            {"filter": "date_col", "operand_pattern": "{{{$moment.year}}}-{{{$moment.month}}}-{{{$moment.day}}}", "operator": "::gt::"},
                                             {"filter": "path_prefix_o1_col", "operand_pattern": "some_non_used_value"}
                                         ]},
                                         "path_prefix_o1_col"
@@ -2873,7 +2874,7 @@ exports.execute = function (options) {
                                     "source": [
                                         {"outbound": ["faceting_schema", "main_fk3"]},
                                         {"and": [
-                                            {"filter": "date_col", "operand_pattern": "{{{$moment.localeDateString}}}"},
+                                            {"filter": "date_col", "operand_pattern": "{{{$moment.year}}}-{{{$moment.month}}}-{{{$moment.day}}}"},
                                             {"filter": "path_prefix_o1_col", "operand_pattern": "some_non_used_value"}
                                         ], "negate": true},
                                         "path_prefix_o1_col"
@@ -2912,7 +2913,7 @@ exports.execute = function (options) {
                                     "source": [
                                         {"outbound": ["faceting_schema", "main_fk3"]},
                                         {"and": [
-                                            {"filter": "date_col", "operand_pattern": "{{{$moment.localeDateString}}}"},
+                                            {"filter": "date_col", "operand_pattern": "{{{$moment.year}}}-{{{$moment.month}}}-{{{$moment.day}}}"},
                                         ], "negate": true},
                                         "path_prefix_o1_col"
                                     ],
