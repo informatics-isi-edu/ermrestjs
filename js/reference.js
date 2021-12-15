@@ -1549,12 +1549,6 @@
                 }).then(function (resPage) {
                     defer.resolve(resPage);
                 }).catch(function (e) {
-                    var status = e.status || e.statusCode;
-                    if (status == 500) {
-                        console.log("500 error happened here!");
-                        console.log(uri);
-                        console.log(e);
-                    }
                     defer.reject(module.responseToError(e));
                 });
             } catch (e) {
