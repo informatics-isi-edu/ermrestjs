@@ -688,7 +688,7 @@ exports.execute = function (options) {
                             "and": [
                                 {
                                     "source": [
-                                        {"filter": "id", "operand_pattern": "-1", "operator": "::gt::"},
+                                        // {"filter": "id", "operand_pattern": "-1", "operator": "::gt::"},
                                         {"outbound": ["faceting_schema", "main_fk3"]},
                                         {"and": [
                                             {"filter": "date_col", "operand_pattern": "{{{$moment.localeDateString}}}", "operator": "::gt::"},
@@ -709,7 +709,8 @@ exports.execute = function (options) {
                             expect(ref.location.facets).toBeDefined("facets is undefined.");
                             expect(ref.location.ermrestCompactPath).toBe(
                                 [
-                                    "M:=faceting_schema:main/id::gt::-1",
+                                    "M:=faceting_schema:main",
+                                    // "id::gt::-1",
                                     "(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)",
                                     "!(date_col::gt::" + currentDateString + "&path_prefix_o1_col=some_non_used_value)",
                                     "path_prefix_o1_col=1/$M"
@@ -2275,7 +2276,8 @@ exports.execute = function (options) {
                         refMainAllData.facetColumns[24].scalarValuesReference,
                         "path with complicated filters",
                         [
-                            "T:=faceting_schema:main/int_col::geq::-2/$T/id::gt::-1",
+                            "T:=faceting_schema:main/int_col::geq::-2/$T",
+                            // "id::gt::-1",
                             "M:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)",
                             "!(date_col::gt::" +  currentDateString + "&path_prefix_o1_col=some_non_used_value)",
                             "!(path_prefix_o1_col::null::)/0:=path_prefix_o1_col;count:=cnt_d(T:RID)@sort(count::desc::,0)"
@@ -2293,7 +2295,8 @@ exports.execute = function (options) {
                         refMainAllData.facetColumns[25].scalarValuesReference,
                         "Path to o1_o1 with prefix and filter",
                         [
-                            "T:=faceting_schema:main/int_col::geq::-2/$T/id::gt::-1",
+                            "T:=faceting_schema:main/int_col::geq::-2/$T",
+                            // "id::gt::-1",
                             "T1:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)",
                             "!(date_col::gt::" +  currentDateString + "&path_prefix_o1_col=some_non_used_value)",
                             "M:=(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)",
@@ -2696,7 +2699,8 @@ exports.execute = function (options) {
                             ]
                         },
                         [
-                            "M:=faceting_schema:main/id::gt::-1",
+                            "M:=faceting_schema:main",
+                            // "id::gt::-1",
                             "M_P2:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)",
                             "!(date_col::gt::" + currentDateString + "&path_prefix_o1_col=some_non_used_value)",
                             "M_P1:=(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)",
@@ -2728,7 +2732,8 @@ exports.execute = function (options) {
                             ]
                         },
                         [
-                            "M:=faceting_schema:main/id::gt::-1",
+                            "M:=faceting_schema:main",
+                            // "id::gt::-1",
                             "M_P1:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)",
                             "!(date_col::gt::" + currentDateString + "&path_prefix_o1_col=some_non_used_value)",
                             "M_P2:=(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/path_prefix_o1_o1_col=two_o1_o1/$M",
@@ -2762,7 +2767,8 @@ exports.execute = function (options) {
                             ]
                         },
                         [
-                            "M:=faceting_schema:main/id::gt::-1",
+                            "M:=faceting_schema:main",
+                            // "id::gt::-1",
                             "M_P2:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)",
                             "!(date_col::gt::" + currentDateString + "&path_prefix_o1_col=some_non_used_value)",
                             "M_P1:=(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/id=2/$M",
@@ -2803,7 +2809,8 @@ exports.execute = function (options) {
                             ]
                         },
                         [
-                            "M:=faceting_schema:main/id::gt::-1",
+                            "M:=faceting_schema:main",
+                            // "id::gt::-1",
                             "M_P2:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)",
                             "!(date_col::gt::" + currentDateString + "&path_prefix_o1_col=some_non_used_value)",
                             "M_P1:=(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)",

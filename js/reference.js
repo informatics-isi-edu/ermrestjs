@@ -1542,7 +1542,7 @@
                             newActionVerb = "auto-reload-domain";
                         }
                         contextHeaderParams.action = action.substring(0,action.lastIndexOf(";")+1) + newActionVerb;
-                        return referenceWithoutPaging.read(limit, contextHeaderParams, useEntity, true)
+                        return referenceWithoutPaging.read(limit, contextHeaderParams, useEntity, true);
                     } else {
                         return page;
                     }
@@ -1553,6 +1553,7 @@
                     if (status == 500) {
                         console.log("500 error happened here!");
                         console.log(uri);
+                        console.log(e);
                     }
                     defer.reject(module.responseToError(e));
                 });
