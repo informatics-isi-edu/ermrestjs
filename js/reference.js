@@ -428,7 +428,7 @@
          *       - Using `source_domain.column` instead of end column in case of scalars
          *   - Sending request to fetch the rows associated with the entity choices,
          *     and ignoring the ones that don't return any result.
-         * - The valid fitlers in the url will either be matched with an existing facet,
+         * - The valid filters in the url will either be matched with an existing facet,
          *   or result in a new facet column.
          * Usage:
          * ```
@@ -906,7 +906,7 @@
         },
 
         /**
-         * Remove all the fitlers, facets, and custom-facets from the reference
+         * Remove all the filters, facets, and custom-facets from the reference
          * @param {boolean} sameFilter By default we're removing filters, if this is true filters won't be changed.
          * @param {boolean} sameCustomFacet By default we're removing custom-facets, if this is true custom-facets won't be changed.
          * @param {boolean} sameFacet By default we're removing facets, if this is true facets won't be changed.
@@ -1542,16 +1542,12 @@
                             newActionVerb = "auto-reload-domain";
                         }
                         contextHeaderParams.action = action.substring(0,action.lastIndexOf(";")+1) + newActionVerb;
-                        referenceWithoutPaging.read(limit, contextHeaderParams, useEntity, true).then(function rereadReference(rereadPage) {
-                            defer.resolve(rereadPage);
-                        }, function error(response) {
-                            var error = module.responseToError(response);
-                            defer.reject(error);
-                        });
+                        return referenceWithoutPaging.read(limit, contextHeaderParams, useEntity, true);
                     } else {
-                        defer.resolve(page);
+                        return page;
                     }
-
+                }).then(function (resPage) {
+                    defer.resolve(resPage);
                 }).catch(function (e) {
                     defer.reject(module.responseToError(e));
                 });
@@ -3203,6 +3199,7 @@
                         ignore = logCol((wrapper.name in consideredColumns), wm.DUPLICATE_PC, i) ||
                                  (wrapper.hasPath && !wrapper.hasInbound && wrapper.foreignKeyPathLength == 1 && hideFKR(wrapper.firstForeignKeyNode.nodeObject)) ||
                                  (!wrapper.hasPath && hideColumn(wrapper.column)) ||
+                                 logCol(wrapper.isFiltered, wm.FILTER_NOT_ALLOWED) ||
                                  logCol(wrapper.sourceObject.self_link === true && !wrapper.column.isUniqueNotNull, wm.INVALID_SELF_LINK, i) ||
                                  logCol((!wrapper.hasAggregate && wrapper.hasInbound && !wrapper.isEntityMode), wm.MULTI_SCALAR_NEED_AGG, i) ||
                                  logCol((!wrapper.hasAggregate && wrapper.hasInbound && wrapper.isEntityMode && context !== module._contexts.DETAILED && context.indexOf(module._contexts.EXPORT) == -1), wm.MULTI_ENT_NEED_AGG, i) ||
@@ -4564,7 +4561,7 @@
                             var fk = null;
 
                             //‌ُ TODO this should not be called here, we should refactor this part later
-                            if (_sourceColumnHelpers._sourceHasPath(f.source)) {
+                            if (_sourceColumnHelpers._sourceHasNodes(f.source)) {
                                 var cons, isInbound = false, fkObj;
 
                                 if ("inbound" in f.source[0]) {

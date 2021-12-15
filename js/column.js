@@ -3199,10 +3199,13 @@ FacetColumn.prototype = {
      * we shouldn't even offer the option:
      *   1. (G4) Scalar columns of main table that are not-null.
      *   2. (G5) All outbound foreignkey facets that all the columns invloved are not-null
+     *   3. (G6) Facets with `filter` in their source definition. We cannot combine filter
+     *           and null together.
      *
      * Based on this, the following will be the logic for this function:
      *     - If facet has `null` filter: `false`
      *     - If facet has `"hide_null_choice": true`: `true`
+     *     - If G6: true
      *     - If G1: `true` if the column is not-null
      *     - If G5: `true`
      *     - If G2: `true`
@@ -3228,6 +3231,10 @@ FacetColumn.prototype = {
                     return true;
                 }
 
+                // G6
+                if (self._facetObjectWrapper.isFiltered) {
+                    return true;
+                }
 
                 // G1 / G4
                 if (self.foreignKeyPathLength === 0) {

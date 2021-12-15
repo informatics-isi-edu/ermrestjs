@@ -351,14 +351,59 @@ Supported _columnentry_ patterns:
 
 Supported _sourceentry_ pattern:
 - _columnname_: : A string literal. _columnname_ identifies a constituent column of the table.
-- _path_: An array of _foreign key path_ that ends with a _columnname_ that will be projected. _foreign key path_ is in the following format:
-    - `{` _direction_ `:[` _schema name_ `,` _constraint name_ `] }`
 
-    Where _direction_ is either `inbound`, or `outbound`.
-- *path with shared prefix*: An array that starts with a _sourcekey prefix_ and MIGHT have one or more _foreign key path_ and end with a _columnname_. _sourcekey prefix_ is in the following format:
-    - `{ "sourcekey" :` _source key name_ `}`
+- An array of _path element_ that ends with a _columnname_ that will be projected. 
+  
+  - `[` _path element_  `,`  _columnname_`]`
+  
+  Each anterior _path element_ MAY use one of the following sub-document structures:
+  
+  - `{ "sourcekey":` _sourcekey prefix_ `}`
+    - Only acceptable as the first element. Please refer to [Data source with reusable prefix](facet-json-structure.md#data-source-with-reusable-prefix) for more information.
+    - _sourcekey prefix_ is a string literal that refers to any of the defined sources in [`source-definitions` annotations](annotation.md#tag-2019-source-definitions)
 
-    Where _source key name_ is a string literal that refers to any of the defined sources in [`source-definitions` annotations](#tag-2019-source-definitions).
+  - `{` _direction_ `:` _fkeyname_ `}`
+    - Links a new table instance to the existing path via join.
+    - _direction_ can either be `"inbound"`, or `"outbound"`.
+    - _fkeyname_ is the given name of the foreign key which is usually in the following format: `[` _schema name_ `,` _constraint name_ `]`
+
+  - `{ "and": [` _filter_ `,` ... `], "negate": ` _negate_ `}`
+    - Currently only limited to `filter` context of visible-columns annotation.
+    - A logical conjunction of multiple _filter_ clauses is applied to the query to constrain matching rows.
+	- The logical result is negated only if _negate_ is `true`.
+	- Each _filter_ clause may be a terminal filter element, conjunction, or disjunction.
+  
+  - `{ "or": [` _filter_ `,` ... `], "negate": ` _negate_ `}`
+    - Currently only limited to `filter` context of visible-columns annotation.
+    - A logical disjunction of multiple _filter_ clauses is applied to the query to constrain matching rows.
+	  - The logical result is negated only if _negate_ is `true`.
+	  - Each _filter_ clause may be a terminal filter element, conjunction, or disjunction.
+  
+  - `{ "filter":` _column_ `, "operand_pattern":` _value_ `, "operator":` _operator_ `, "negate":` _negate_ `}`
+    - Currently only limited to `filter` context of visible-columns annotation.
+    - An individual filter _path element_ is applied to the query or individual _filter_ clauses participate in a conjunction or disjunction.
+    
+    - The filter constrains a named _column_ in the current context table.
+    
+    - The _operator_ specifies the constraint operator via one of the valid operator names in the ERMrest REST API, which are
+
+        | operator  | meaning |
+        |-----------|---------|
+        | `::null::`| column is `null`     |
+        | `=`      | column equals value |
+        | `::lt::` | column less than value |
+        | `::leq::` | column less than or equal to value |
+        | `::gt::` | column greater than value |
+        | `::geq::` | column greater than or equal to value |
+        | `::regexp::` | column matches regular expression value |
+        | `::ciregexp::` | column matches regular expression value case-insensitively |
+        | `::ts::` | column matches text-search query value |
+
+      > If `operator` is missing, we will use `=` by default.
+
+    - The _value_ specifies the constant operand for a binary constraint operator and must be computed to a non-empty value. Pattern expansion MAY be used to access [the pre-defined values in templating envorinment](mustache-templating.md#using-pre-defined-attributes).
+    
+    - The logical result of the constraint is negated only if _negate_ is `true`.
 
 
 Supported _sourcekey_ pattern in here:
@@ -691,15 +736,21 @@ Supported _fkeylist_ patterns:
 - `{ "sourcekey": ` _sourcekey_ `}`: Defines a pseudo-column based on the given _sourcekey_.
 
 Supported _sourceentry_ pattern in here:
-  - _path_: An array of _foreign key path_ that ends with a _columnname_ that will be projected. _foreign key path_ is in the following format:
-    - `{` _direction_ `:[` _schema name_ `,` _constraint name_ `] }`
 
-    Where _direction_ is either `inbound`, or `outbound`.
+- An array of _path element_ that ends with a _columnname_ that will be projected. 
+  
+  - `[` _path element_  `,`  _columnname_`]`
+  
+  Each anterior _path element_ MAY use one of the following sub-document structures:
+  
+  - `{ "sourcekey":` _sourcekey prefix_ `}`
+    - Only acceptable as the first element. Please refer to [Data source with reusable prefix](facet-json-structure.md#data-source-with-reusable-prefix) for more information.
+    - _sourcekey prefix_ is a string literal that refers to any of the defined sources in [`source-definitions` annotations](annotation.md#tag-2019-source-definitions)
 
-  - *path with shared prefix*: An array that starts with a _sourcekey prefix_ and MIGHT have one or more _foreign key path_ and end with a _columnname_. _sourcekey prefix_ is in the following format:
-    - `{ "sourcekey" :` _source key name_ `}`
-
-    Where _source key name_ is a string literal that refers to any of the defined sources in [`source-definitions` annotations](#tag-2019-source-definitions).
+  - `{` _direction_ `:` _fkeyname_ `}`
+    - Links a new table instance to the existing path via join.
+    - _direction_ can either be `"inbound"`, or `"outbound"`.
+    - _fkeyname_ is the given name of the foreign key which is usually in the following format: `[` _schema name_ `,` _constraint name_ `]`
 
 Supported _sourcekey_ pattern in here:
   - A string literal that refers to any of the defined sources in [`source-definitions` annotations](#tag-2019-source-definitions).
@@ -955,15 +1006,20 @@ Supported _sourcekey_ pattern:
 
 Supported _sourceentry_ pattern:
   - _columnname_: : A string literal. _columnname_ identifies a constituent column of the table.
-  - _path_: An array of _foreign key path_ that ends with a _columnname_ that will be projected. _foreign key path_ is in the following format:
-    - `{` _direction_ `:[` _schema name_ `,` _constraint name_ `] }`
+  - An array of _path element_ that ends with a _columnname_ that will be projected. 
+    
+    - `[` _path element_  `,`  _columnname_`]`
+    
+    Each anterior _path element_ MAY use one of the following sub-document structures:
+    
+    - `{ "sourcekey":` _sourcekey prefix_ `}`
+      - Only acceptable as the first element. Please refer to [Data source with reusable prefix](facet-json-structure.md#data-source-with-reusable-prefix) for more information.
+      - _sourcekey prefix_ is a string literal that refers to any of the defined sources in [`source-definitions` annotations](#tag-2019-source-definitions)
 
-    Where _direction_ is either `inbound`, or `outbound`.
-
-  - *path with shared prefix*: An array that starts with a _sourcekey prefix_ and MIGHT have one or more _foreign key path_ and end with a _columnname_. _sourcekey prefix_ is in the following format:
-    - `{ "sourcekey" :` _source key name_ `}`
-
-    Where _source key name_ is a string literal that refers to any of the defined sources in [`source-definitions` annotations](#tag-2019-source-definitions).
+    - `{` _direction_ `:` _fkeyname_ `}`
+      - Links a new table instance to the existing path via join.
+      - _direction_ can either be `"inbound"`, or `"outbound"`.
+      - _fkeyname_ is the given name of the foreign key which is usually in the following format: `[` _schema name_ `,` _constraint name_ `]`
 
 Supported _searchcolumn_ pattern:
   -  _searchcolumn_ supports the same patterns as _sourceentry_. Since the pseudo-column defined here is special, you can only use the following optional parameters:
@@ -986,7 +1042,7 @@ Supported _searchcolumn_ pattern:
           ]
         }
         ```
-      - A list of pseudo-columns that deploy the _path with shared prefix_ syntax using the same _sourcekey prefix_.
+      - A list of pseudo-columns that use the same _sourcekey prefix_.
         ```javascript
         {
           "or": [

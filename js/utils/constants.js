@@ -291,7 +291,8 @@
         INVALID_SELF_LINK: "given source is not a valid self-link (must be unique not-null).",
         INVALID_COLUMN_DEF: "column definiton must be an array, object, or string.",
         INVALID_COLUMN_IN_SOURCE_PATH: "end column in the path is not valid (not available in the end table)",
-        NO_INBOUND_IN_NON_DETAILED: "inline table is not valid in this context."
+        NO_INBOUND_IN_NON_DETAILED: "inline table is not valid in this context.",
+        FILTER_NOT_ALLOWED: "filter in source is only supported in `filter` context of visible-columns"
     });
 
     module._permissionMessages = Object.freeze({
@@ -332,6 +333,18 @@
         OR: ";"
     });
 
+    module._ERMrestFilterPredicates = Object.freeze({
+        NULL: "::null::",
+        EQUAL: "=",
+        LESS_THAN: "::lt::",
+        LESS_THAN_OR_EQUAL_TO: "::leq::",
+        GREATER_THAN: "::gt::",
+        GREATER_THAN_OR_EQUAL_TO: "::geq::",
+        REG_EXP: "::regexp::",
+        CASE_INS_REG_EXP: "::ciregexp::",
+        TEXT_SEARCH: "::ts::"
+    });
+
     module._sourceDefinitionAttributes = ["source", "aggregate", "entity", "self_link"];
 
     module._classNames = Object.freeze({
@@ -360,7 +373,21 @@
         "ranges": "r",
         "search": "s",
         "filter": "f",
-        "operand": "opd",
+        "and": "and",
+        "or": "or",
+        "operand_pattern": "opd",
         "operator": "opr",
         "negate": "n"
+    });
+
+    module._sourceProperties = Object.freeze({
+        SOURCEKEY: "sourcekey",
+        INBOUND: "inbound",
+        OUTBOUND: "outbound",
+        FILTER: "filter",
+        AND: "and",
+        OR: "or",
+        OPERATOR: "operator",
+        OPERAND_PATTERN: "operand_pattern",
+        NEGATE: "negate"
     });

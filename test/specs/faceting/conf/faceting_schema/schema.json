@@ -212,6 +212,10 @@
                             "display": {"show_foreign_key_link":false}
                         }
                     ],
+                    "compact/select": [
+                        "id",
+                        ["faceting_schema", "main_fk1"]
+                    ],
                     "filter": {
                         "and": [
                             {"sourcekey": "search-box", "choices": ["test"]},
@@ -255,9 +259,34 @@
                             {"sourcekey": "path_to_f3_id"},
                             {"source": "numeric_col"},
                             {"source": [{"inbound": ["faceting_schema", "f4_fk1"]}, "int_col"], "entity": false},
-                            {"sourcekey": "path_to_path_prefix_o1_o1"},
+                            {
+                                "sourcekey": "path_to_path_prefix_o1_o1",
+                                "markdown_name": "Path to o1_o1 with prefix"
+                            },
+                            {
+                                "source": [
+                                    {"sourcekey": "path_to_path_prefix_o1_o1"},
+                                    {"inbound": ["faceting_schema", "path_prefix_o1_o1_i1_fk1"]},
+                                    "path_prefix_o1_o1_i1_col"
+                                ]
+                            },
+                            {
+                                "source": [
+                                    {"filter": "id", "operand_pattern": "1", "operator": "::gt::"},
+                                    "id"
+                                ],
+                                "markdown_name": "id with filter"
+                            },
+                            {
+                                "sourcekey": "path_to_path_prefix_o1_w_filter",
+                                "markdown_name": "path with complicated filters"
+                            },
+                            {
+                                "sourcekey": "path_to_path_prefix_o1_o1_w_filter",
+                                "markdown_name": "Path to o1_o1 with prefix and filter"
+                            },
                             {"source": [
-                                {"sourcekey": "path_to_path_prefix_o1_o1"},
+                                {"sourcekey": "path_to_path_prefix_o1_o1_w_filter"},
                                 {"inbound": ["faceting_schema", "path_prefix_o1_o1_i1_fk1"]},
                                 "path_prefix_o1_o1_i1_col"
                             ]}
@@ -313,6 +342,23 @@
                                 {"outbound": ["faceting_schema", "main_f3_assoc_fk2"]},
                                  "id"
                             ]
+                        },
+                        "path_to_path_prefix_o1_w_filter": {
+                            "source": [
+                                {"outbound": ["faceting_schema", "main_fk3"]},
+                                {"and": [
+                                    {"filter": "date_col", "operand_pattern": "{{{$moment.year}}}-{{{$moment.month}}}-{{{$moment.day}}}", "operator": "::gt::"},
+                                    {"filter": "path_prefix_o1_col", "operand_pattern": "some_non_used_value"}
+                                ], "negate": true},
+                                "path_prefix_o1_col"
+                            ]
+                        },
+                        "path_to_path_prefix_o1_o1_w_filter": {
+                            "source": [
+                                {"sourcekey": "path_to_path_prefix_o1_w_filter"},
+                                {"outbound": ["faceting_schema", "path_prefix_o1_fk1"]},
+                                "path_prefix_o1_o1_col"
+                            ]
                         }
                     }
                 }
@@ -358,7 +404,26 @@
                 {"unique_columns": ["id"]},
                 {"unique_columns": ["term"]}
             ],
-            "foreign_keys": [],
+            "foreign_keys": [
+                {
+                    "comment": "fk to f1",
+                    "names": [["faceting_schema", "f2_fk1"]],
+                    "foreign_key_columns": [
+                        {
+                            "column_name": "fk_to_f1",
+                            "table_name": "f2",
+                            "schema_name": "faceting_schema"
+                        }
+                    ],
+                    "referenced_columns": [
+                        {
+                            "column_name": "id",
+                            "table_name": "f1",
+                            "schema_name": "faceting_schema"
+                        }
+                    ]
+                }
+            ],
             "column_definitions": [
                 {
                     "name": "id",
@@ -372,6 +437,13 @@
                     "type": {
                         "typename": "text"
                     }
+                },
+                {
+                    "name": "fk_to_f1",
+                    "type": {
+                        "typename": "int4"
+                    },
+                    "nullok": true
                 }
             ],
             "annotations": {
@@ -385,7 +457,31 @@
                         "and": [
                             {"source": "some col"},
                             {"source": [{"outbound": ["faceting_schema", "main_fk2"]}, "id"]},
-                            {"source": [{"inbound": ["faceting_schema", "main_fk1"]}, "id"]}
+                            {"source": [{"inbound": ["faceting_schema", "main_fk1"]}, "id"]},
+                            {"source": [{"outbound": ["faceting_schema", "f2_fk1"]}, "some_invalid_col"]},
+                            {"source": [
+                                {"outbound": ["faceting_schema", "f2_fk1"]},
+                                {"filter": "some_col", "operand_pattern": "1"},
+                                "RID"
+                            ]},
+                            {"source": [
+                                {"outbound": ["faceting_schema", "f2_fk1"]},
+                                {"filter": "RID"},
+                                "RID"
+                            ]},
+                            {"source": [
+                                {"outbound": ["faceting_schema", "f2_fk1"]},
+                                {"filter": "RID", "operand_pattern": "{{{invalid_parameter}}}"},
+                                "RID"
+                            ]},
+                            {"source": [
+                                {"outbound": ["faceting_schema", "f2_fk1"]},
+                                {"or": [
+                                    {"filter": "RID", "operand_pattern": "{{{invalid_parameter}}}"},
+                                    {"filter": "RID", "operand_pattern": "1"}
+                                ]},
+                                "RID"
+                            ]}
                         ]
                     }
                 }
@@ -1584,6 +1680,10 @@
                 {
                     "name": "path_prefix_o1_col",
                     "type": {"typename": "text"}
+                },
+                {
+                    "name": "date_col",
+                    "type": {"typename": "date"}
                 }
             ],
             "annotations": {

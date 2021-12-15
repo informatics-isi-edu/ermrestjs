@@ -3410,7 +3410,7 @@ It will return a promise resolved with the following object:
       - Using `source_domain.column` instead of end column in case of scalars
   - Sending request to fetch the rows associated with the entity choices,
     and ignoring the ones that don't return any result.
-- The valid fitlers in the url will either be matched with an existing facet,
+- The valid filters in the url will either be matched with an existing facet,
   or result in a new facet column.
 Usage:
 ```
@@ -3449,7 +3449,7 @@ NOTE this should be called before doing read or as part of it
 <a name="ERMrest.Reference+removeAllFacetFilters"></a>
 
 #### reference.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet) ⇒ <code>ERMrest.reference</code>
-Remove all the fitlers, facets, and custom-facets from the reference
+Remove all the filters, facets, and custom-facets from the reference
 
 **Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
 **Returns**: <code>ERMrest.reference</code> - A reference without facet filters  
@@ -5312,10 +5312,13 @@ Other types of facet that null won't be applicable to them and therefore
 we shouldn't even offer the option:
   1. (G4) Scalar columns of main table that are not-null.
   2. (G5) All outbound foreignkey facets that all the columns invloved are not-null
+  3. (G6) Facets with `filter` in their source definition. We cannot combine filter
+          and null together.
 
 Based on this, the following will be the logic for this function:
     - If facet has `null` filter: `false`
     - If facet has `"hide_null_choice": true`: `true`
+    - If G6: true
     - If G1: `true` if the column is not-null
     - If G5: `true`
     - If G2: `true`
@@ -7164,7 +7167,7 @@ It will return a promise resolved with the following object:
       - Using `source_domain.column` instead of end column in case of scalars
   - Sending request to fetch the rows associated with the entity choices,
     and ignoring the ones that don't return any result.
-- The valid fitlers in the url will either be matched with an existing facet,
+- The valid filters in the url will either be matched with an existing facet,
   or result in a new facet column.
 Usage:
 ```
@@ -7203,7 +7206,7 @@ NOTE this should be called before doing read or as part of it
 <a name="ERMrest.Reference+removeAllFacetFilters"></a>
 
 #### reference.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet) ⇒ <code>ERMrest.reference</code>
-Remove all the fitlers, facets, and custom-facets from the reference
+Remove all the filters, facets, and custom-facets from the reference
 
 **Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
 **Returns**: <code>ERMrest.reference</code> - A reference without facet filters  
