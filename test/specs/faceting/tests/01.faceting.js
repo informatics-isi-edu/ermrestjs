@@ -2656,7 +2656,9 @@ exports.execute = function (options) {
                             // visible-fks are defined for compact/select
                             currRef = ref.contextualize.compactSelect;
 
-                            expect(currRef.readPath).toEqual(expectedReadPath);
+                            if (expectedReadPath) {
+                                expect(currRef.readPath).toEqual(expectedReadPath);
+                            }
                             done();
                         }).catch(function (err) {
                             done.fail(err);
@@ -2822,6 +2824,140 @@ exports.execute = function (options) {
                         ].join("/")
                     );
                 });
+
+                describe("case 5", function () {
+                    testReadAndReadPath(
+                        {
+                            "and": [
+                                {
+                                    "source": [
+                                        {"outbound": ["faceting_schema", "main_fk3"]},
+                                        {"and": [
+                                            {"filter": "date_col", "operand_pattern": "{{{$moment.localeDateString}}}", "operator": "::gt::"},
+                                            {"filter": "path_prefix_o1_col", "operand_pattern": "some_non_used_value"}
+                                        ], "negate": true},
+                                        "path_prefix_o1_col"
+                                    ],
+                                    "choices": ["one"]
+                                }
+                            ]
+                        }
+                    );
+                });
+
+                describe("case 6", function () {
+                    testReadAndReadPath(
+                        {
+                            "and": [
+                                {
+                                    "source": [
+                                        {"outbound": ["faceting_schema", "main_fk3"]},
+                                        {"and": [
+                                            {"filter": "date_col", "operand_pattern": "{{{$moment.localeDateString}}}", "operator": "::gt::"},
+                                            {"filter": "path_prefix_o1_col", "operand_pattern": "some_non_used_value"}
+                                        ]},
+                                        "path_prefix_o1_col"
+                                    ],
+                                    "choices": ["one"]
+                                }
+                            ]
+                        }
+                    );
+                });
+
+                describe("case 7", function () {
+                    testReadAndReadPath(
+                        {
+                            "and": [
+                                {
+                                    "source": [
+                                        {"outbound": ["faceting_schema", "main_fk3"]},
+                                        {"and": [
+                                            {"filter": "date_col", "operand_pattern": "{{{$moment.localeDateString}}}"},
+                                            {"filter": "path_prefix_o1_col", "operand_pattern": "some_non_used_value"}
+                                        ], "negate": true},
+                                        "path_prefix_o1_col"
+                                    ],
+                                    "choices": ["one"]
+                                }
+                            ]
+                        }
+                    );
+                });
+
+                describe("case 8", function () {
+                    testReadAndReadPath(
+                        {
+                            "and": [
+                                {
+                                    "source": [
+                                        {"outbound": ["faceting_schema", "main_fk3"]},
+                                        {"and": [
+                                            {"filter": "path_prefix_o1_col", "operand_pattern": "some_non_used_value"}
+                                        ], "negate": true},
+                                        "path_prefix_o1_col"
+                                    ],
+                                    "choices": ["one"]
+                                }
+                            ]
+                        }
+                    );
+                });
+
+                describe("case 9", function () {
+                    testReadAndReadPath(
+                        {
+                            "and": [
+                                {
+                                    "source": [
+                                        {"outbound": ["faceting_schema", "main_fk3"]},
+                                        {"and": [
+                                            {"filter": "date_col", "operand_pattern": "{{{$moment.localeDateString}}}"},
+                                        ], "negate": true},
+                                        "path_prefix_o1_col"
+                                    ],
+                                    "choices": ["one"]
+                                }
+                            ]
+                        }
+                    );
+                });
+
+                describe("case 10", function () {
+                    testReadAndReadPath(
+                        {
+                            "and": [
+                                {
+                                    "source": [
+                                        {"outbound": ["faceting_schema", "main_fk3"]},
+                                        {"filter": "path_prefix_o1_col", "negate": true, "operand_pattern": "::null::"},
+                                        "path_prefix_o1_col"
+                                    ],
+                                    "choices": ["one"]
+                                }
+                            ]
+                        }
+                    );
+                });
+
+                describe("case 11", function () {
+                    testReadAndReadPath(
+                        {
+                            "and": [
+                                {
+                                    "source": [
+                                        {"outbound": ["faceting_schema", "main_fk3"]},
+                                        {"filter": "path_prefix_o1_col", "operand_pattern": "::null::"},
+                                        "path_prefix_o1_col"
+                                    ],
+                                    "choices": ["one"]
+                                }
+                            ]
+                        }
+                    );
+                });
+
+                
             });
         });
     });
