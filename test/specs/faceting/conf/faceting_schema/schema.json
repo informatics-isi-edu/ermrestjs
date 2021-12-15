@@ -348,7 +348,7 @@
                                 {"filter": "id", "operand_pattern": "-1", "operator": "::gt::"},
                                 {"outbound": ["faceting_schema", "main_fk3"]},
                                 {"and": [
-                                    {"filter": "RCT", "operand_pattern": "{{{$moment.localeDateString}}}", "operator": "::gt::"},
+                                    {"filter": "date_col", "operand_pattern": "{{{$moment.localeDateString}}}", "operator": "::gt::"},
                                     {"filter": "path_prefix_o1_col", "operand_pattern": "some_non_used_value"}
                                 ], "negate": true},
                                 "path_prefix_o1_col"
@@ -1681,6 +1681,10 @@
                 {
                     "name": "path_prefix_o1_col",
                     "type": {"typename": "text"}
+                },
+                {
+                    "name": "date_col",
+                    "type": {"typename": "date"}
                 }
             ],
             "annotations": {

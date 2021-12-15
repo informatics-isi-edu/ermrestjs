@@ -691,7 +691,7 @@ exports.execute = function (options) {
                                         {"filter": "id", "operand_pattern": "-1", "operator": "::gt::"},
                                         {"outbound": ["faceting_schema", "main_fk3"]},
                                         {"and": [
-                                            {"filter": "RCT", "operand_pattern": "{{{$moment.localeDateString}}}", "operator": "::gt::"},
+                                            {"filter": "date_col", "operand_pattern": "{{{$moment.localeDateString}}}", "operator": "::gt::"},
                                             {"filter": "path_prefix_o1_col", "operand_pattern": "some_non_used_value"}
                                         ], "negate": true},
                                         "path_prefix_o1_col"
@@ -711,7 +711,7 @@ exports.execute = function (options) {
                                 [
                                     "M:=faceting_schema:main/id::gt::-1",
                                     "(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)",
-                                    "!(RCT::gt::" + currentDateString + "&path_prefix_o1_col=some_non_used_value)",
+                                    "!(date_col::gt::" + currentDateString + "&path_prefix_o1_col=some_non_used_value)",
                                     "path_prefix_o1_col=1/$M"
                                 ].join("/"),
                                 "path missmatch."
@@ -2178,6 +2178,7 @@ exports.execute = function (options) {
                         })).toEqual(values, "values missmatch.");
                         done();
                     }).catch(function (err) {
+                        console.log(err);
                         done.fail(err);
                     });
                 };
@@ -2276,7 +2277,7 @@ exports.execute = function (options) {
                         [
                             "T:=faceting_schema:main/int_col::geq::-2/$T/id::gt::-1",
                             "M:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)",
-                            "!(RCT::gt::" +  currentDateString + "&path_prefix_o1_col=some_non_used_value)",
+                            "!(date_col::gt::" +  currentDateString + "&path_prefix_o1_col=some_non_used_value)",
                             "!(path_prefix_o1_col::null::)/0:=path_prefix_o1_col;count:=cnt_d(T:RID)@sort(count::desc::,0)"
                         ].join("/"),
                         4,
@@ -2294,7 +2295,7 @@ exports.execute = function (options) {
                         [
                             "T:=faceting_schema:main/int_col::geq::-2/$T/id::gt::-1",
                             "T1:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)",
-                            "!(RCT::gt::" +  currentDateString + "&path_prefix_o1_col=some_non_used_value)",
+                            "!(date_col::gt::" +  currentDateString + "&path_prefix_o1_col=some_non_used_value)",
                             "M:=(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)",
                             "!(path_prefix_o1_o1_col::null::)/0:=path_prefix_o1_o1_col;count:=cnt_d(T1:RID)@sort(count::desc::,0)"
                         ].join("/"),
@@ -2697,7 +2698,7 @@ exports.execute = function (options) {
                         [
                             "M:=faceting_schema:main/id::gt::-1",
                             "M_P2:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)",
-                            "!(RCT::gt::" + currentDateString + "&path_prefix_o1_col=some_non_used_value)",
+                            "!(date_col::gt::" + currentDateString + "&path_prefix_o1_col=some_non_used_value)",
                             "M_P1:=(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)",
                             "(id)=(faceting_schema:path_prefix_o1_o1_i1:fk_to_path_prefix_o1_o1)/path_prefix_o1_o1_i1_col=one_o1_o1_i1/$M",
                             "$M_P1/path_prefix_o1_o1_col=two_o1_o1/$M",
@@ -2729,7 +2730,7 @@ exports.execute = function (options) {
                         [
                             "M:=faceting_schema:main/id::gt::-1",
                             "M_P1:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)",
-                            "!(RCT::gt::" + currentDateString + "&path_prefix_o1_col=some_non_used_value)",
+                            "!(date_col::gt::" + currentDateString + "&path_prefix_o1_col=some_non_used_value)",
                             "M_P2:=(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/path_prefix_o1_o1_col=two_o1_o1/$M",
                             "$M_P2/(id)=(faceting_schema:path_prefix_o1_o1_i1:fk_to_path_prefix_o1_o1)/path_prefix_o1_o1_i1_col=one_o1_o1_i1/$M",
                             "F1:=left(fk_to_f1)=(faceting_schema:f1:id)/$M",
@@ -2763,7 +2764,7 @@ exports.execute = function (options) {
                         [
                             "M:=faceting_schema:main/id::gt::-1",
                             "M_P2:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)",
-                            "!(RCT::gt::" + currentDateString + "&path_prefix_o1_col=some_non_used_value)",
+                            "!(date_col::gt::" + currentDateString + "&path_prefix_o1_col=some_non_used_value)",
                             "M_P1:=(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/id=2/$M",
                             "$M_P1/(id)=(faceting_schema:path_prefix_o1_o1_i1:fk_to_path_prefix_o1_o1)/path_prefix_o1_o1_i1_col=one_o1_o1_i1/$M",
                             "F1:=left(fk_to_f1)=(faceting_schema:f1:id)/$M",
@@ -2789,10 +2790,10 @@ exports.execute = function (options) {
                                     "source": [
                                         {"sourcekey": "path_to_path_prefix_o1_o1_w_filter"},
                                         {"or": [
-                                            {"filter": "RCB", "operator": "::null::"},
+                                            {"filter": "id", "operator": "::null::"},
                                             {"and": [
-                                                {"filter": "RCB", "operator": "::null::", "negate": true},
-                                                {"filter": "RCT", "operator": "::null::", "negate": true}
+                                                {"filter": "RID", "operator": "::null::", "negate": true},
+                                                {"filter": "id", "operator": "::null::", "negate": true}
                                             ]}
                                         ]},
                                         "path_prefix_o1_o1_col"
@@ -2804,10 +2805,10 @@ exports.execute = function (options) {
                         [
                             "M:=faceting_schema:main/id::gt::-1",
                             "M_P2:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)",
-                            "!(RCT::gt::" + currentDateString + "&path_prefix_o1_col=some_non_used_value)",
+                            "!(date_col::gt::" + currentDateString + "&path_prefix_o1_col=some_non_used_value)",
                             "M_P1:=(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)",
                             "(id)=(faceting_schema:path_prefix_o1_o1_i1:fk_to_path_prefix_o1_o1)/path_prefix_o1_o1_i1_col=one_o1_o1_i1/$M",
-                            "$M_P1/(RCB::null::;(!(RCB::null::)&!(RCT::null::)))",
+                            "$M_P1/(id::null::;(!(RID::null::)&!(id::null::)))",
                             "path_prefix_o1_o1_col=two_o1_o1/$M",
                             "F1:=left(fk_to_f1)=(faceting_schema:f1:id)/$M",
                             "RID;M:=array_d(M:*),F1:=array_d(F1:*)@sort(RID)"

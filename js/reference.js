@@ -1542,17 +1542,18 @@
                             newActionVerb = "auto-reload-domain";
                         }
                         contextHeaderParams.action = action.substring(0,action.lastIndexOf(";")+1) + newActionVerb;
-                        referenceWithoutPaging.read(limit, contextHeaderParams, useEntity, true).then(function rereadReference(rereadPage) {
-                            defer.resolve(rereadPage);
-                        }, function error(response) {
-                            var error = module.responseToError(response);
-                            defer.reject(error);
-                        });
+                        return referenceWithoutPaging.read(limit, contextHeaderParams, useEntity, true)
                     } else {
-                        defer.resolve(page);
+                        return page;
                     }
-
+                }).then(function (resPage) {
+                    defer.resolve(resPage);
                 }).catch(function (e) {
+                    var status = e.status || e.statusCode;
+                    if (status == 500) {
+                        console.log("500 error happened here!");
+                        console.log(uri);
+                    }
                     defer.reject(module.responseToError(e));
                 });
             } catch (e) {
