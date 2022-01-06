@@ -3199,7 +3199,6 @@
                         ignore = logCol((wrapper.name in consideredColumns), wm.DUPLICATE_PC, i) ||
                                  (wrapper.hasPath && !wrapper.hasInbound && wrapper.foreignKeyPathLength == 1 && hideFKR(wrapper.firstForeignKeyNode.nodeObject)) ||
                                  (!wrapper.hasPath && hideColumn(wrapper.column)) ||
-                                 logCol(wrapper.isFiltered, wm.FILTER_NOT_ALLOWED) ||
                                  logCol(wrapper.sourceObject.self_link === true && !wrapper.column.isUniqueNotNull, wm.INVALID_SELF_LINK, i) ||
                                  logCol((!wrapper.hasAggregate && wrapper.hasInbound && !wrapper.isEntityMode), wm.MULTI_SCALAR_NEED_AGG, i) ||
                                  logCol((!wrapper.hasAggregate && wrapper.hasInbound && wrapper.isEntityMode && context !== module._contexts.DETAILED && context.indexOf(module._contexts.EXPORT) == -1), wm.MULTI_ENT_NEED_AGG, i) ||

@@ -391,7 +391,7 @@
         };
 
         if (!_sourceColumnHelpers._sourceHasNodes(source)) return res;
-        
+
         // TODO FILTER_IN_SOURCE and and or should recursively do this
         for (var i = 0; i < res.length; i++) {
             ["alias", "sourcekey", "inbound", "outbound", "filter", "operand_pattern", "operator", "negate"].forEach(shorten(res[i]));
@@ -506,11 +506,11 @@
                 }
 
                 // there's at least one secondary request
-                if (sd.hasInbound || sd.sourceObject.aggregate) {
+                if (sd.hasInbound || sd.sourceObject.aggregate || sd.isUniqueFiltered) {
                     hasWaitFor = true;
                 }
 
-                // NOTE this coukd be in the table.sourceDefinitions
+                // NOTE this could be in the table.sourceDefinitions
                 // the only issue is that in there we don't have the mainTuple...
                 var pc = module._createPseudoColumn(baseReference, sd, mainTuple);
 
@@ -1067,7 +1067,7 @@
             self.column = col;
 
             self.hasPrefix = hasPrefix;
-            // TODO FILTER_IN_SOURCE we should not change this when there's filter, right?
+            // NOTE hasPath only means foreign key path and not filter
             self.hasPath = hasPath;
             self.foreignKeyPathLength = foreignKeyPathLength;
             self.hasInbound = hasInbound;
@@ -1075,8 +1075,22 @@
             self.isFiltered = isFiltered;
             self.isEntityMode = isEntity;
             self.isUnique = !self.hasAggregate && !self.isFiltered && (!hasPath || !hasInbound);
+
             // TODO FILTER_IN_SOURCE better name...
-            self.isUniqueFiltered = !self.hasAggregate && self.isFiltered && (!hasPath || !hasInbound);
+            /**
+             * I would have to create a new column type that allows this,
+             * then depending on whether its fk or not then I would have to do something
+             * else ...
+             * the request should be something like the aggregate ..
+             * so it's more or less like aggregate, right?
+             * LETS IGNORE THIS FOR NOW, right?
+             * _createPseudoColumn should also then change to create generalPseudo for these
+             *
+             */
+            // self.isUniqueFiltered = !self.hasAggregate && self.isFiltered && (!hasPath || !hasInbound);
+            if (self.isFiltered && !self.hasAggregate && (!hasPath || !hasInbound)) {
+                return returnError(wm.FILTER_NO_PATH_NOT_ALLOWED);
+            }
 
             // attach last fk
             if (lastForeignKeyNode != null) {
@@ -1686,8 +1700,8 @@
                 // an array of length one where the element is a string
                 else if (Array.isArray(nodeObject.filter) && nodeObject.filter.length == 1 && isStringAndNotEmpty(nodeObject.filter[0])) {
                     colName = nodeObject.filter[0];
-                } 
-                // an array of length two where both are string and second one 
+                }
+                // an array of length two where both are string and second one
                 // is used as the column name
                 else if (Array.isArray(nodeObject.filter) && nodeObject.filter.length == 2 && isStringAndNotEmpty(nodeObject.filter[1])) {
                     // if there's a context, just throw error
@@ -1695,7 +1709,7 @@
                         return returnError("context change in filter is not currently supported.");
                     }
                     colName = nodeObject.filter[1];
-                }  
+                }
                 // if none of the cases above matched
                 if (!colName){
                     return returnError("invalid `filter` property: " + nodeObject.filter);
@@ -1726,8 +1740,8 @@
                 if ("operand_pattern" in nodeObject) {
                     operand = module._renderTemplate(
                         nodeObject.operand_pattern,
-                        {}, 
-                        table.schema.catalog, 
+                        {},
+                        table.schema.catalog,
                         {templateEngine: nodeObject.template_engine}
                     );
 
@@ -1736,7 +1750,7 @@
                     }
                 }
                 res += encode(operand);
-            } 
+            }
             // ------- recursive filter ---------
             else {
                 if ("and" in nodeObject) {
@@ -1795,9 +1809,9 @@
          *   - otherwise (both have `or`):
          *      - shorter one comes first
          *      - if same size, sort based on string representation.
-         * @param {*} a 
-         * @param {*} b 
-         * @returns 
+         * @param {*} a
+         * @param {*} b
+         * @returns
          */
         _sortFilterInSource: function (a, b) {
             var srcProps = module._sourceProperties,
@@ -1809,7 +1823,7 @@
                 bHasNegate = srcProps.NEGATE in b,
                 bHasFilter = srcProps.FILTER in b,
                 bHasAnd = srcProps.AND in b;
-            
+
             var sortBasedOnStr = function () {
                 var tempA = helpers._stringifyFilterInSource(a),
                     tempB = helpers._stringifyFilterInSource(b);
@@ -1818,7 +1832,7 @@
                 }
                 return tempA > tempB ? 1 : -1;
             }
-          
+
             // ------- only one has negate (the one with negative comes second) -------- //
             if (aHasNegate && !bHasNegate) {
                 return 1;
@@ -1826,7 +1840,7 @@
             if (!aHasNegate && bHasNegate) {
                 return -1;
             }
-          
+
             // ------- only one has filter (the one with filter comes first) -------- //
             if (aHasFilter && !bHasFilter) {
                 return -1;
@@ -1834,12 +1848,12 @@
             if (!aHasFilter && bHasFilter) {
                 return 1;
             }
-          
+
             // ------- both have filter (sort based on str) -------- //
             if (aHasFilter && bHasFilter) {
                 return sortBasedOnStr();
             }
-          
+
             // ------- only one has and (the one with `and` comes first) -------- //
             if (aHasAnd && !bHasAnd) {
                 return -1;
@@ -1847,9 +1861,9 @@
             if (!aHasAnd && bHasAnd) {
                 return 1;
             }
-          
+
             // ------- both have and -------- //
-            if (aHasAnd && bHasAnd) { 
+            if (aHasAnd && bHasAnd) {
                 // the shorter comes first
                 if (a[AND_PROP].length != b[AND_PROP].length) {
                     return a[AND_PROP].length - b[AND_PROP].length;
@@ -1857,7 +1871,7 @@
                 // sort based on str
                 return sortBasedOnStr();
             }
-          
+
             // ------- both have or -------- //
             // the shorter comes first
             if (a[OR_PROP].length != b[OR_PROP].length) {
@@ -1905,10 +1919,10 @@
         },
 
         /**
-         * Some elements of source have multiple properties and we cannot just 
+         * Some elements of source have multiple properties and we cannot just
          * use JSON.stringify since it will not preserve the order.
          * NOTE this function will not check the structure and assume it's already valid
-         * @param {*} source 
+         * @param {*} source
          * @returns stringify the given source while ensuring proper order of properties
          * @private
          */
@@ -1917,7 +1931,7 @@
                 helpers = _sourceColumnHelpers;
 
             if (helpers._sourceHasNodes(source)) {
-                // do the same thing as JSON.stringify but 
+                // do the same thing as JSON.stringify but
                 // make sure the attributes are added in the same order
                 var attrs = [];
                 source.forEach(function (node) {
@@ -1941,7 +1955,7 @@
                         }
                     });
                 });
-                
+
                 return '[' + attrs.join(',') + ']';
             } else {
                 return _sourceColumnHelpers._getSourceColumnStr(source);
@@ -1961,7 +1975,7 @@
          * - Pseudo-Columns:
          *   - Just pass the object that defines the pseudo-column. It must at least have `source` as an attribute.
          *   - This function will go through the source array and ensure the attributes are properly sorted.
-         *     This is mainly done for the nodes with multiple properties where JSON.stringify will not 
+         *     This is mainly done for the nodes with multiple properties where JSON.stringify will not
          *     preserve the order of proprties. So instead we're going over the known attributes and create
          *     the string manually ourselves (this will also ensure additional properties are ignored).
          */

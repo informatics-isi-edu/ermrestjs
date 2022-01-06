@@ -3851,8 +3851,7 @@
                         invalid = logErr(!wrapper || !wrapper.hasPath, wm.INVALID_FK, i) ||
                                   logErr(!wrapper.hasInbound, wm.INVALID_FK_NO_INBOUND, i) ||
                                   logErr(!wrapper.isEntityMode, wm.SCALAR_NOT_ALLOWED) ||
-                                  logErr(wrapper.hasAggregate, wm.AGG_NOT_ALLOWED) ||
-                                  logErr(wrapper.isFiltered, wm.FILTER_NOT_ALLOWED);
+                                  logErr(wrapper.hasAggregate, wm.AGG_NOT_ALLOWED);
 
                     } else {
                         invalid = true;
