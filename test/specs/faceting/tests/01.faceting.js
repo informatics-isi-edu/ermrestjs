@@ -681,20 +681,19 @@ exports.execute = function (options) {
                 });
 
                 describe("should be able to handle sources with filter", function () {
-                    // TODO this requires a change in code...
-                    // I HAVE TO MAKE SURE THE HASH STAYS THE SAME BASED ON ALL THESE DIFFERENT PROPERTIES
-                    // THERE IS NO GUARANTEE THAT JSON.STRINGIFY JUST KEEPS THE ORDER
                     it ("when the facet exists in the annotation, should merge", function (done) {
                         facetObj = {
                             "and": [
                                 {
                                     "source": [
-                                        // {"filter": "id", "operand_pattern": "-1", "operator": "::gt::"},
                                         {"outbound": ["faceting_schema", "main_fk3"]},
-                                        {"and": [
-                                            {"filter": "date_col", "operand_pattern": "{{{$moment.year}}}-{{{$moment.month}}}-{{{$moment.day}}}", "operator": "::gt::"},
-                                            {"filter": "path_prefix_o1_col", "operand_pattern": "some_non_used_value"}
-                                        ], "negate": true},
+                                        {
+                                            "negate": true,
+                                            "and": [
+                                                {"operand_pattern": "some_non_used_value", "filter": "path_prefix_o1_col"},
+                                                {"operator": "::gt::", "filter": "date_col", "operand_pattern": "{{{$moment.year}}}-{{{$moment.month}}}-{{{$moment.day}}}"},
+                                            ]
+                                        },
                                         "path_prefix_o1_col"
                                     ],
                                     "choices": ["1"]

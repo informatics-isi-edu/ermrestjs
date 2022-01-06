@@ -1782,6 +1782,127 @@
             return Array.isArray(source) ? source[source.length-1] : source;
         },
 
+        /**
+         * Given two source nodes representing filter, sort them. This is mainly
+         * done to ensure the hash string for a source ignores the given order
+         * of "and"/"or" filters and sorts them based on the following:
+         *   - if only one has `negate`, the one without `negate` comes first.
+         *   - if only one has `filter` (the other has `and`/`or`), it comes first.
+         *   - if only one has `and`, it comes first.
+         *   - if both have `and`,
+         *      - shorter one comes first.
+         *      - if same size, sort based on string representation.
+         *   - otherwise (both have `or`):
+         *      - shorter one comes first
+         *      - if same size, sort based on string representation.
+         * @param {*} a 
+         * @param {*} b 
+         * @returns 
+         */
+        _sortFilterInSource: function (a, b) {
+            var srcProps = module._sourceProperties,
+                helpers = _sourceColumnHelpers;
+
+            var aHasNegate = srcProps.NEGATE in a,
+                aHasFilter = srcProps.FILTER in a,
+                aHasAnd = srcProps.AND in a,
+                bHasNegate = srcProps.NEGATE in b,
+                bHasFilter = srcProps.FILTER in b,
+                bHasAnd = srcProps.AND in b;
+            
+            var sortBasedOnStr = function () {
+                var tempA = helpers._stringifyFilterInSource(a),
+                    tempB = helpers._stringifyFilterInSource(b);
+                if (tempA == tempB) {
+                    return 0
+                }
+                return tempA > tempB ? 1 : -1;
+            }
+          
+            // ------- only one has negate (the one with negative comes second) -------- //
+            if (aHasNegate && !bHasNegate) {
+                return 1;
+            }
+            if (!aHasNegate && bHasNegate) {
+                return -1;
+            }
+          
+            // ------- only one has filter (the one with filter comes first) -------- //
+            if (aHasFilter && !bHasFilter) {
+                return -1;
+            }
+            if (!aHasFilter && bHasFilter) {
+                return 1;
+            }
+          
+            // ------- both have filter (sort based on str) -------- //
+            if (aHasFilter && bHasFilter) {
+                return sortBasedOnStr();
+            }
+          
+            // ------- only one has and (the one with `and` comes first) -------- //
+            if (aHasAnd && !bHasAnd) {
+                return -1;
+            }
+            if (!aHasAnd && bHasAnd) {
+                return 1;
+            }
+          
+            // ------- both have and -------- //
+            if (aHasAnd && bHasAnd) { 
+                // the shorter comes first
+                if (a[AND_PROP].length != b[AND_PROP].length) {
+                    return a[AND_PROP].length - b[AND_PROP].length;
+                }
+                // sort based on str
+                return sortBasedOnStr();
+            }
+          
+            // ------- both have or -------- //
+            // the shorter comes first
+            if (a[OR_PROP].length != b[OR_PROP].length) {
+                return a[OR_PROP].length - b[OR_PROP].length;
+            }
+
+            // sort based on str
+            return sortBasedOnStr();
+        },
+
+        _stringifyFilterInSource: function (node) {
+            var srcProps = module._sourceProperties,
+                helpers = _sourceColumnHelpers;
+
+            var stringifyAndOr = function (arr) {
+                // TODO we might want to sort this to make sure the order
+                // of elements doesn't matter
+                return "[" + arr.sort(helpers._sortFilterInSource).map(helpers._stringifyFilterInSource).join(",") + "]";
+            };
+
+            var res = [];
+            if (srcProps.NEGATE in node) {
+                res.push('"negate":' + node[srcProps.NEGATE]);
+            }
+
+            if (srcProps.FILTER in node) {
+                // make sure attributes are added in the same order all the times
+                // NOTE technically could use the Object.keys and sort
+                [srcProps.FILTER, srcProps.OPERATOR, srcProps.OPERAND_PATTERN].forEach(function (attr) {
+                    if (attr in node) {
+                        res.push('"' + attr + '":' + JSON.stringify(node[attr]));
+                    }
+                });
+                return '{' + res.join(",") + '}';
+            }
+
+            if (srcProps.AND in node) {
+                res.push('"and":' + stringifyAndOr(node[srcProps.AND]));
+            }
+            else if (srcProps.OR in node){
+                res.push('"or":' + stringifyAndOr(node[srcProps.OR]));
+            }
+
+            return '{' + res.join(",") + '}';
+        },
 
         /**
          * Some elements of source have multiple properties and we cannot just 
@@ -1792,42 +1913,10 @@
          * @private
          */
         _stringifySource: function (source) {
-            var srcProps = module._sourceProperties;
-            
-            var stringifyAndOr = function (arr) {
-                // TODO we might want to sort this to make sure the order
-                // of elements doesn't matter
-                return "[" + arr.map(stringifyFilter).join(",") + "]";
-            };
+            var srcProps = module._sourceProperties,
+                helpers = _sourceColumnHelpers;
 
-            var stringifyFilter = function (node) {
-                var res = [];
-                if (srcProps.NEGATE in node) {
-                    res.push('"negate":' + node[srcProps.NEGATE]);
-                }
-
-                if (srcProps.FILTER in node) {
-                    // make sure attributes are added in the same order all the times
-                    // NOTE technically could use the Object.keys and sort
-                    [srcProps.FILTER, srcProps.OPERATOR, srcProps.OPERAND_PATTERN].forEach(function (attr) {
-                        if (attr in node) {
-                            res.push('"' + attr + '":' + JSON.stringify(node[attr]));
-                        }
-                    });
-                    return '{' + res.join(",") + '}';
-                }
-
-                if (srcProps.AND in node) {
-                    res.push('"and":' + stringifyAndOr(node[srcProps.AND]));
-                }
-                else if (srcProps.OR in node){
-                    res.push('"or":' + stringifyAndOr(node[srcProps.OR]));
-                }
-
-                return '{' + res.join(",") + '}';
-            };
-
-            if (_sourceColumnHelpers._sourceHasNodes(source)) {
+            if (helpers._sourceHasNodes(source)) {
                 // do the same thing as JSON.stringify but 
                 // make sure the attributes are added in the same order
                 var attrs = [];
@@ -1847,7 +1936,7 @@
 
                     [srcProps.FILTER, srcProps.AND, srcProps.OR].forEach(function (attr) {
                         if (attr in node) {
-                            attrs.push(stringifyFilter(node));
+                            attrs.push(helpers._stringifyFilterInSource(node));
                             return;
                         }
                     });
