@@ -539,7 +539,7 @@ In this example, we want to add a new template to a table that uses the same def
 ### Example 6
 Let's assume you want to create global templates that should be used on every table. To do so,
 
-- First define the templates as a fragment that can be used later. Since we want a global template, we would define this on catalog:
+1. Define the templates as a fragment that can be used later. Since we want a global template, we would define this on catalog:
     ```js
     {
       "tag:isrd.isi.edu,2021:export-fragment-definitions": {
@@ -550,7 +550,7 @@ Let's assume you want to create global templates that should be used on every ta
     }
     ```
 
-- To make sure tables/schemas that don't have any annotation inject these templates, you can define a catalog-level export annotation like this:
+2. To make sure tables/schemas without export annotation are using the templates defined in `my_default_templates` fragment, you can define a catalog-level export annotation like this:
     ```js
     {
       "tag:isrd.isi.edu,2019:export": {
@@ -563,7 +563,7 @@ Let's assume you want to create global templates that should be used on every ta
     }
     ```
 
-- For tables that already have this annotation, you can just inject this fragment in the list of templates:
+3. And for schemas/tables that already have export annotation, you have to make sure the `my_default_templates` fragment is added to the list of templates:
     ```js
     {
       "tag:isrd.isi.edu,2019:export": {
