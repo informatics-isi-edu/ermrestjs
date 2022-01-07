@@ -1,13 +1,7 @@
 
 name: ERMrestJS tests
 
-on:
-  push:
-    branches:
-      - 'master'
-  pull_request:
-    branches:
-      - 'master'
+on: [push]
 
 jobs:
   install-and-test:
