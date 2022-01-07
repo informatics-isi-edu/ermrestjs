@@ -1078,19 +1078,14 @@
 
             // TODO FILTER_IN_SOURCE better name...
             /**
-             * I would have to create a new column type that allows this,
-             * then depending on whether its fk or not then I would have to do something
-             * else ...
-             * the request should be something like the aggregate ..
-             * so it's more or less like aggregate, right?
-             * LETS IGNORE THIS FOR NOW, right?
-             * _createPseudoColumn should also then change to create generalPseudo for these
-             *
+             * these type of columns would be very similiar to aggregate columns.
+             * but it requires more changes in both chaise and ermrestjs
+             * (most probably a new column type or at least more api to fetch their values is needed)
+             * (in chaise we would have to add a new type of secondary requests to active list)
+             * (not sure if these type of pseudo-columns are even useful or not)
+             * so for now we're not going to allow these type of pseudo-columns in visible-columns
              */
-            // self.isUniqueFiltered = !self.hasAggregate && self.isFiltered && (!hasPath || !hasInbound);
-            if (self.isFiltered && !self.hasAggregate && (!hasPath || !hasInbound)) {
-                return returnError(wm.FILTER_NO_PATH_NOT_ALLOWED);
-            }
+            self.isUniqueFiltered = !self.hasAggregate && self.isFiltered && (!hasPath || !hasInbound);
 
             // attach last fk
             if (lastForeignKeyNode != null) {

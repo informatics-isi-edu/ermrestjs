@@ -39,8 +39,12 @@ module._createPseudoColumn = function (reference, sourceObjectWrapper, mainTuple
 
 
 
-    // has aggregate
-    if (sourceObjectWrapper.hasAggregate) {
+    // has aggregate or filter
+    // TODO FILTER_IN_SOURCE later this should be more specific so we can
+    //      categorize some of them as simple inbound, or p&b.
+    //      currently we don't want to allow "add" feature so it's easier if
+    //      we just mark them as general pseudo-column
+    if (sourceObjectWrapper.hasAggregate || sourceObjectWrapper.isFiltered) {
         return generalPseudo();
     }
 
