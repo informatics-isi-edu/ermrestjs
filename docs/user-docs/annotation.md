@@ -262,10 +262,10 @@ using a hierarchical scoping mode:
 `tag:isrd.isi.edu,2016:immutable`
 
 This key indicates that the values for a given model element may not be mutated
-(changed) once set. 
+(changed) once set.
 
 This key is allowed on any number of columns, tables, and schemas. If a schema is marked as immutable, all the tables in that schema will also inherit this setting. To avoid this on a table, you can define the immutable annotation and use the special `false` value (The same is true about tables and columns).
- 
+
 
 ### Tag: 2016 Generated
 
@@ -352,12 +352,12 @@ Supported _columnentry_ patterns:
 Supported _sourceentry_ pattern:
 - _columnname_: : A string literal. _columnname_ identifies a constituent column of the table.
 
-- An array of _path element_ that ends with a _columnname_ that will be projected. 
-  
+- An array of _path element_ that ends with a _columnname_ that will be projected.
+
   - `[` _path element_  `,`  _columnname_`]`
-  
+
   Each anterior _path element_ MAY use one of the following sub-document structures:
-  
+
   - `{ "sourcekey":` _sourcekey prefix_ `}`
     - Only acceptable as the first element. Please refer to [Data source with reusable prefix](facet-json-structure.md#data-source-with-reusable-prefix) for more information.
     - _sourcekey prefix_ is a string literal that refers to any of the defined sources in [`source-definitions` annotations](annotation.md#tag-2019-source-definitions)
@@ -368,23 +368,20 @@ Supported _sourceentry_ pattern:
     - _fkeyname_ is the given name of the foreign key which is usually in the following format: `[` _schema name_ `,` _constraint name_ `]`
 
   - `{ "and": [` _filter_ `,` ... `], "negate": ` _negate_ `}`
-    - Currently only limited to `filter` context of visible-columns annotation.
     - A logical conjunction of multiple _filter_ clauses is applied to the query to constrain matching rows.
 	- The logical result is negated only if _negate_ is `true`.
 	- Each _filter_ clause may be a terminal filter element, conjunction, or disjunction.
-  
+
   - `{ "or": [` _filter_ `,` ... `], "negate": ` _negate_ `}`
-    - Currently only limited to `filter` context of visible-columns annotation.
     - A logical disjunction of multiple _filter_ clauses is applied to the query to constrain matching rows.
 	  - The logical result is negated only if _negate_ is `true`.
 	  - Each _filter_ clause may be a terminal filter element, conjunction, or disjunction.
-  
+
   - `{ "filter":` _column_ `, "operand_pattern":` _value_ `, "operator":` _operator_ `, "negate":` _negate_ `}`
-    - Currently only limited to `filter` context of visible-columns annotation.
     - An individual filter _path element_ is applied to the query or individual _filter_ clauses participate in a conjunction or disjunction.
-    
+
     - The filter constrains a named _column_ in the current context table.
-    
+
     - The _operator_ specifies the constraint operator via one of the valid operator names in the ERMrest REST API, which are
 
         | operator  | meaning |
@@ -402,7 +399,7 @@ Supported _sourceentry_ pattern:
       > If `operator` is missing, we will use `=` by default.
 
     - The _value_ specifies the constant operand for a binary constraint operator and must be computed to a non-empty value. Pattern expansion MAY be used to access [the pre-defined values in templating envorinment](mustache-templating.md#using-pre-defined-attributes).
-    
+
     - The logical result of the constraint is negated only if _negate_ is `true`.
 
 
@@ -735,14 +732,14 @@ Supported _fkeylist_ patterns:
      - `wait_for`: List of pseudo-column [`sourcekey`](#tag-2019-source-definitions)s that used in `markdown_pattern`. You should list all the all-outbound, aggregates, and entity sets that you are using.
 - `{ "sourcekey": ` _sourcekey_ `}`: Defines a pseudo-column based on the given _sourcekey_.
 
-Supported _sourceentry_ pattern in here:
+Supported _sourceentry_ patterns:
 
-- An array of _path element_ that ends with a _columnname_ that will be projected. 
-  
+- An array of _path element_ that ends with a _columnname_ that will be projected.
+
   - `[` _path element_  `,`  _columnname_`]`
-  
+
   Each anterior _path element_ MAY use one of the following sub-document structures:
-  
+
   - `{ "sourcekey":` _sourcekey prefix_ `}`
     - Only acceptable as the first element. Please refer to [Data source with reusable prefix](facet-json-structure.md#data-source-with-reusable-prefix) for more information.
     - _sourcekey prefix_ is a string literal that refers to any of the defined sources in [`source-definitions` annotations](annotation.md#tag-2019-source-definitions)
@@ -752,7 +749,42 @@ Supported _sourceentry_ pattern in here:
     - _direction_ can either be `"inbound"`, or `"outbound"`.
     - _fkeyname_ is the given name of the foreign key which is usually in the following format: `[` _schema name_ `,` _constraint name_ `]`
 
-Supported _sourcekey_ pattern in here:
+  - `{ "and": [` _filter_ `,` ... `], "negate": ` _negate_ `}`
+    - A logical conjunction of multiple _filter_ clauses is applied to the query to constrain matching rows.
+  	- The logical result is negated only if _negate_ is `true`.
+	  - Each _filter_ clause may be a terminal filter element, conjunction, or disjunction.
+
+  - `{ "or": [` _filter_ `,` ... `], "negate": ` _negate_ `}`
+    - A logical disjunction of multiple _filter_ clauses is applied to the query to constrain matching rows.
+	  - The logical result is negated only if _negate_ is `true`.
+	  - Each _filter_ clause may be a terminal filter element, conjunction, or disjunction.
+
+  - `{ "filter":` _column_ `, "operand_pattern":` _value_ `, "operator":` _operator_ `, "negate":` _negate_ `}`
+    - An individual filter _path element_ is applied to the query or individual _filter_ clauses participate in a conjunction or disjunction.
+
+    - The filter constrains a named _column_ in the current context table.
+
+    - The _operator_ specifies the constraint operator via one of the valid operator names in the ERMrest REST API, which are
+
+        | operator  | meaning |
+        |-----------|---------|
+        | `::null::`| column is `null`     |
+        | `=`      | column equals value |
+        | `::lt::` | column less than value |
+        | `::leq::` | column less than or equal to value |
+        | `::gt::` | column greater than value |
+        | `::geq::` | column greater than or equal to value |
+        | `::regexp::` | column matches regular expression value |
+        | `::ciregexp::` | column matches regular expression value case-insensitively |
+        | `::ts::` | column matches text-search query value |
+
+      > If `operator` is missing, we will use `=` by default.
+
+    - The _value_ specifies the constant operand for a binary constraint operator and must be computed to a non-empty value. Pattern expansion MAY be used to access [the pre-defined values in templating envorinment](mustache-templating.md#using-pre-defined-attributes).
+
+    - The logical result of the constraint is negated only if _negate_ is `true`.
+
+Supported _sourcekey_ patterns:
   - A string literal that refers to any of the defined sources in [`source-definitions` annotations](#tag-2019-source-definitions).
 
 
@@ -1006,12 +1038,12 @@ Supported _sourcekey_ pattern:
 
 Supported _sourceentry_ pattern:
   - _columnname_: : A string literal. _columnname_ identifies a constituent column of the table.
-  - An array of _path element_ that ends with a _columnname_ that will be projected. 
-    
+  - An array of _path element_ that ends with a _columnname_ that will be projected.
+
     - `[` _path element_  `,`  _columnname_`]`
-    
+
     Each anterior _path element_ MAY use one of the following sub-document structures:
-    
+
     - `{ "sourcekey":` _sourcekey prefix_ `}`
       - Only acceptable as the first element. Please refer to [Data source with reusable prefix](facet-json-structure.md#data-source-with-reusable-prefix) for more information.
       - _sourcekey prefix_ is a string literal that refers to any of the defined sources in [`source-definitions` annotations](#tag-2019-source-definitions)
@@ -1026,13 +1058,13 @@ Supported _sourceentry_ pattern:
       - A logical conjunction of multiple _filter_ clauses is applied to the query to constrain matching rows.
   	- The logical result is negated only if _negate_ is `true`.
   	- Each _filter_ clause may be a terminal filter element, conjunction, or disjunction.
-  
+
     - `{ "or": [` _filter_ `,` ... `], "negate": ` _negate_ `}`
       - Currently only limited to `filter` context of visible-columns annotation.
       - A logical disjunction of multiple _filter_ clauses is applied to the query to constrain matching rows.
 	  - The logical result is negated only if _negate_ is `true`.
 	  - Each _filter_ clause may be a terminal filter element, conjunction, or disjunction.
-  
+
     - `{ "filter":` _column_ `, "operand_pattern":` _value_ `, "operator":` _operator_ `, "negate":` _negate_ `}`
       - Currently only limited to `filter` context of visible-columns annotation.
       - An individual filter _path element_ is applied to the query or individual _filter_ clauses participate in a conjunction or disjunction.

@@ -12,7 +12,7 @@ The overall structure of filters is as follows. Each facet term combines a data 
 <TERM>:     { <logical-operator>: <TERMSET> }
             or
             { "source": <data-source>, <constraint(s)>, <extra-attribute(s)> }
-            or 
+            or
             { "sourcekey": <source-key>, <constraint(s)>, <extra-attribute(s)> }
 ```
 
@@ -45,12 +45,12 @@ Therefore the following are acceptable ways of defining data source:
   {"source": "column"}
   {"source": ["column"]}
   ```
-- An array of _path element_ that ends with a _columnname_ that will be projected and filtered. 
-  
+- An array of _path element_ that ends with a _columnname_ that will be projected and filtered.
+
   - `[` _path element_  `,`  _columnname_`]`
-  
+
   Each anterior element MAY use one of the following sub-document structures:
-  
+
   - `{ "sourcekey":` _sourcekey prefix_ `}`
     - Only acceptable as the first element. Please refer to [Data source with reusable prefix](#data-source-with-reusable-prefix) for more information.
     - _sourcekey prefix_ is a string literal that refers to any of the defined sources in [`source-definitions` annotations](annotation.md#tag-2019-source-definitions)
@@ -61,23 +61,20 @@ Therefore the following are acceptable ways of defining data source:
     - _fkeyname_ is the given name of the foreign key which is usually in the following format: `[` _schema name_ `,` _constraint name_ `]`
 
   - `{ "and": [` _filter_ `,` ... `], "negate": ` _negate_ `}`
-    - Currently only limited to `filter` context of visible-columns annotation.
     - A logical conjunction of multiple _filter_ clauses is applied to the query to constrain matching rows.
 	- The logical result is negated only if _negate_ is `true`.
 	- Each _filter_ clause may be a terminal filter element, conjunction, or disjunction.
-  
+
   - `{ "or": [` _filter_ `,` ... `], "negate": ` _negate_ `}`
-    - Currently only limited to `filter` context of visible-columns annotation.
     - A logical disjunction of multiple _filter_ clauses is applied to the query to constrain matching rows.
 	  - The logical result is negated only if _negate_ is `true`.
 	  - Each _filter_ clause may be a terminal filter element, conjunction, or disjunction.
-  
+
   - `{ "filter":` _column_ `, "operand_pattern":` _value_ `, "operator":` _operator_ `, "negate":` _negate_ `}`
-    - Currently only limited to `filter` context of visible-columns annotation.
     - An individual filter _path element_ is applied to the query or individual _filter_ clauses participate in a conjunction or disjunction.
-    
+
     - The filter constrains a named _column_ in the current context table.
-    
+
     - The _operator_ specifies the constraint operator via one of the valid operator names in the ERMrest REST API, which are
 
         | operator  | meaning |
@@ -95,9 +92,9 @@ Therefore the following are acceptable ways of defining data source:
       > If `operator` is missing, we will use `=` by default.
 
     - The _value_ specifies the constant operand for a binary constraint operator and must be computed to a non-empty value. Pattern expansion MAY be used to access [the pre-defined values in templating envorinment](mustache-templating.md#using-pre-defined-attributes).
-    
+
     - The logical result of the constraint is negated only if _negate_ is `true`.
-  
+
 
   The following are some examples of defining data source:
   ```
@@ -109,8 +106,8 @@ Therefore the following are acceptable ways of defining data source:
 
  In some cases, the defined foreign key paths for different columns/facets might be sharing the same prefix. In those cases, reusing the prefix allows sharing certain joined table instances rather than introducing more "copies" as each facet is activated which in turn will increase the performance.
 
- To do this, you would have to use [`2019:source-definitions`](annotation.md#tag-2019-source-definitions) annotation and define the shared prefix. Then you can use `sourcekey` to refer to this shared prefix in the data source. 
- 
+ To do this, you would have to use [`2019:source-definitions`](annotation.md#tag-2019-source-definitions) annotation and define the shared prefix. Then you can use `sourcekey` to refer to this shared prefix in the data source.
+
  - When using a prefix, the prefix's last column and all the other extra attributes on it will be ignored for the purpose of prefix.
 - You can use recursive prefixes. If we detect a circular dependency, we're going to invalidate the given definition.
 - While using prefix, you MUST add extra foreign key paths to the relationship. The following is not an acceptable source:
@@ -122,7 +119,7 @@ Therefore the following are acceptable ways of defining data source:
 
  For example, assume the following is the ERD of table:
 
-![erd_01](https://raw.githubusercontent.com/informatics-isi-edu/ermrestjs/master/docs/resources/facet-json-structure-path-prefix-erd-01.png) 
+![erd_01](https://raw.githubusercontent.com/informatics-isi-edu/ermrestjs/master/docs/resources/facet-json-structure-path-prefix-erd-01.png)
 
 And the following is source-definition and visible-columns annotation:
 
