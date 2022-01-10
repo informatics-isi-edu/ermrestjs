@@ -39,8 +39,12 @@ module._createPseudoColumn = function (reference, sourceObjectWrapper, mainTuple
 
 
 
-    // has aggregate
-    if (sourceObjectWrapper.hasAggregate || sourceObjectWrapper.isUniqueFiltered) {
+    // has aggregate or filter
+    // TODO FILTER_IN_SOURCE later this should be more specific so we can
+    //      categorize some of them as simple inbound, or p&b.
+    //      currently we don't want to allow "add" feature so it's easier if
+    //      we just mark them as general pseudo-column
+    if (sourceObjectWrapper.hasAggregate || sourceObjectWrapper.isFiltered) {
         return generalPseudo();
     }
 
@@ -798,6 +802,12 @@ function PseudoColumn (reference, column, sourceObjectWrapper, name, mainTuple) 
      * @type {boolean}
      */
     this.hasAggregate = this.sourceObjectWrapper.hasAggregate;
+
+    /**
+     * If the pseudoColumn has filter in its path
+     * @type {boolean}
+     */
+    this.isFiltered = this.sourceObjectWrapper.isFiltered;
 
     this.baseColumn = column;
 
@@ -2615,6 +2625,9 @@ Object.defineProperty(AssetPseudoColumn.prototype, "filenameExtFilter", {
  * This is a bit different than the {@link ERMrest.ForeignKeyPseudoColumn}, as that was for foreign keys
  * of current table. This wrapper is for inbound foreignkeys. It is actually warpping the whole reference (table).
  *
+ * Note: The sourceObjectWrapper might include filters and therefore the relatedReference
+ *       might not be a simple path from main to related table and it could have filters.
+ *
  * This class extends the {@link ERMrest.ReferenceColumn}
  */
 function InboundForeignKeyPseudoColumn (reference, relatedReference, sourceObjectWrapper, name) {
@@ -2654,6 +2667,12 @@ function InboundForeignKeyPseudoColumn (reference, relatedReference, sourceObjec
      * @desc Indicates that this ReferenceColumn is an inbound foreign key.
      */
     this.isInboundForeignKey = true;
+
+    /**
+     * @type {boolean}
+     * @desc Indicates that this related table has filters in its path
+     */
+    this.isFiltered = isObjectAndNotNull(sourceObjectWrapper) && sourceObjectWrapper.isFiltered;
 
     this.isUnique = false;
 
