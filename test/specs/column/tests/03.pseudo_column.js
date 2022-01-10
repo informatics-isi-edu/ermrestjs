@@ -31,6 +31,7 @@
  * 26: virtual-column
  * 27: virtual-column-1-1
  * 28: array aggregate using recursive path prefix (end table: inbound_1_outbound_1_outbound_1)
+ * 29: same as 8 with `array` in entity mode and filter at the end
  *
  * Only the following indeces are PseudoColumn:
  * 4 (outbound len 1, scalar)
@@ -50,6 +51,7 @@
  * 21 (has lots of rows)
  * 24 (main -> outbound_2, outbound_2_inbound_1, entity)
  * 28 (main -> inbound_1 -> inbound_1_outbound_1 -> inbound_1_outbound_1_outbound_1, col, agg array)
+ * 29 (aggregate with filter)
  *
  * For entry:
  * 0: main_table_id_col
@@ -133,11 +135,12 @@ exports.execute = function (options) {
              'ZJll4WjE6eMk_g5e9WE1rg', 'GFBydDhuUocHxUlF894ntQ', 'vd-zzWca-ApLn2yvu7fx1w',
              '8siu02fMCXJ2DfB4GLv93Q', 'OLbAesieGW5dpAhzqTSzqw', 'MJVZnQ5mBRdCFPfjIOMvkA',
              "asset", "asset_filename", 'IKxB9JkO83__MmKlV0Nnow', 'wjUK75uqILcMMo85UxnPnQ',
-             "$virtual-column-1", "$virtual-column-1-1", "rxU1VoEIaH0rnNoNVr0fwA"
+             "$virtual-column-1", "$virtual-column-1-1", "rxU1VoEIaH0rnNoNVr0fwA",
+             "kDWbu6FLabJ84GjvcmjfYQ"
         ];
 
         var detailedPseudoColumnIndices = [
-            4, 5, 6, 9, 11,12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 24, 25, 28
+            4, 5, 6, 9, 11,12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 24, 25, 28, 29
         ];
 
         var detailedColumnTypes = [
@@ -146,7 +149,7 @@ exports.execute = function (options) {
             "isInboundForeignKey", "isPathColumn", "isPathColumn", "isPathColumn", "isPathColumn",
             "isPathColumn", "isPathColumn", "isPathColumn", "isPathColumn", "isPathColumn",
             "isPathColumn", "isPathColumn", "isAsset", "", "isPathColumn", "isPathColumn",
-            "isVirtualColumn", "isVirtualColumn", "isPathColumn"
+            "isVirtualColumn", "isVirtualColumn", "isPathColumn", "isPathColumn"
         ];
 
         var mainRef, mainRefDetailed, invalidRef, mainRefEntry, mainRefCompactEntry,
@@ -272,7 +275,7 @@ exports.execute = function (options) {
             });
 
             it ("should create the correct columns for valid list of sources.", function () {
-                expect(mainRefDetailed.columns.length).toBe(29, "length missmatch");
+                expect(mainRefDetailed.columns.length).toBe(30, "length missmatch");
                 checkReferenceColumns([{
                     "ref": mainRefDetailed,
                     "expected": [
@@ -359,6 +362,15 @@ exports.execute = function (options) {
                         [
                             {"sourcekey": "path_to_inbound_1_outbound_1_w_prefix"},
                             {"outbound": ["pseudo_column_schema", "inbound_1_outbound_1_fk1"]},
+                            "id"
+                        ],
+                        [
+                            {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
+                            {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
+                            {"or": [
+                                {"filter": "RCT", "operand_pattern": "{{{$moment.year}}}-{{{$moment.month}}}-{{{$moment.day}}}", "operator": "::gt::"},
+                                {"filter": "RID", "operator": "::null::", "negate": true}
+                            ]},
                             "id"
                         ]
                     ]
@@ -749,7 +761,8 @@ exports.execute = function (options) {
                         'main', 'inbound_2', 'inbound_2', 'inbound_2', 'inbound_2',
                         'inbound_2', 'inbound_2', 'inbound 4 long table name',
                         'main', 'main', 'outbound_2_inbound_1', 'outbound_2_outbound_2',
-                        'main', 'main', 'inbound_1_outbound_1_outbound_1'
+                        'main', 'main', 'inbound_1_outbound_1_outbound_1',
+                        'inbound_2'
                     ]);
                 });
             });
@@ -852,7 +865,16 @@ exports.execute = function (options) {
                         { "key": 'path_to_inbound_1_outbound_1_w_prefix' },
                         { "o": ['pseudo_column_schema', 'inbound_1_outbound_1_fk1']},
                         "id"
-                    ]
+                    ], //28
+                    [
+                        {"i": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
+                        {"o": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
+                        {"or": [
+                            {"f": "RCT", "opd": "{{{$moment.year}}}-{{{$moment.month}}}-{{{$moment.day}}}", "opr": "::gt::"},
+                            {"f": "RID", "opr": "::null::", "n": true}
+                        ]},
+                        "id"
+                    ] // 29
                 ];
                 it ("should return the data source of the pseudo-column.", function () {
                     detailedColsWTuple.forEach(function (col, index) {
@@ -1015,7 +1037,7 @@ exports.execute = function (options) {
                     testGetAggregatedValue(14, "col val 01", false, done);
                 });
 
-                it ("should handle aggregates with prefix.", function (done) {
+                it ("should handle aggregates with path prefix.", function (done) {
                     var RIDval = utils.findEntityRID(options, schemaName, "inbound_1_outbound_1_outbound_1", "id", "01");
                     var url = "https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:inbound_1_outbound_1_outbound_1/RID=" + RIDval;
                     var value = '<p><a href="' + url + '">01</a></p>\n';
@@ -1027,6 +1049,12 @@ exports.execute = function (options) {
                     var value = "<p>" + inboundTwoValues.join(", ") + "</p>\n";
 
                     testGetAggregatedValue(16, value, true, done);
+                });
+
+                it ("should handle aggregates with filter in source.", function (done) {
+                    var value = "<p>" + inboundTwoValues.join(", ") + "</p>\n";
+
+                    testGetAggregatedValue(29, value, true, done);
                 });
 
                 describe('should honor the given array_display, ', function () {

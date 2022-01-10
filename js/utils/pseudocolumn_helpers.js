@@ -390,10 +390,22 @@
             };
         };
 
+        var shortenAndOr = function (node) {
+            return function (k) {
+                if (!Array.isArray(node[k])) return;
+
+                node[k].forEach(function (el) {
+                    ["and", "or"].forEach(shortenAndOr(el));
+                    ["filter", "operand_pattern", "operator", "negate"].forEach(shorten(el));
+                });
+            };
+        };
+
         if (!_sourceColumnHelpers._sourceHasNodes(source)) return res;
 
-        // TODO FILTER_IN_SOURCE and and or should recursively do this
         for (var i = 0; i < res.length; i++) {
+            ["and", "or"].forEach(shortenAndOr(res[i]));
+
             ["alias", "sourcekey", "inbound", "outbound", "filter", "operand_pattern", "operator", "negate"].forEach(shorten(res[i]));
         }
         return res;
@@ -1806,7 +1818,6 @@
          *      - if same size, sort based on string representation.
          * @param {*} a
          * @param {*} b
-         * @returns
          */
         _sortFilterInSource: function (a, b) {
             var srcProps = module._sourceProperties,
@@ -1823,10 +1834,10 @@
                 var tempA = helpers._stringifyFilterInSource(a),
                     tempB = helpers._stringifyFilterInSource(b);
                 if (tempA == tempB) {
-                    return 0
+                    return 0;
                 }
                 return tempA > tempB ? 1 : -1;
-            }
+            };
 
             // ------- only one has negate (the one with negative comes second) -------- //
             if (aHasNegate && !bHasNegate) {
