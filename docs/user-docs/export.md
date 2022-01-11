@@ -15,8 +15,9 @@ If you just want to see the overall structure of export annotation go [here](#ov
     - [destination](#destination-object)
     - [output type](#type)
 - [How it works](#how-it-works)
-- [Default BDBag template](#default-bdbag-template)
-- [Default CSV template](#default-csv-template)
+- [Default templates](#default-templates)
+  - [Default BDBag template](#default-bdbag-template)
+  - [Default CSV template](#default-csv-template)
 - [Examples](#examples)
 
 ## Export Templates
@@ -250,17 +251,23 @@ For processing export, we have to consult [export annotation](annotation.md#tag-
     - Each output in the `outputs` array has `source` and `destination`.
     - `source` has `api` property.
     - `destination` has `type` property.
-## Default BDBag template
+
+## Default templates
+
+As part of Chaise/ERMrestJS heuristics, we will try to populate default export templates. The following are
+how these templates are generated:
+
+### Default BDBag template
 
 If export annotation is missing for `detailed` context, we will add a default BDBag template. This default template is also accessible through the export fragment definitions annotation as well using `$chaise_default_bdbag_template` key. The following are the `outputs` of the generated default export template:
 
 - `csv` of `attributegroup` API request to the main table.
-  - The projection list is created based on the `visible-columns` defined for the `export/detailed` context (or `detailed` if `export` context is not specified).
+  - The projection list is created based on the `visible-columns` defined for the `export/detailed` context (or `detailed` if `export` context is not specified). Please refere to [this section](#how-visible-columns-is-turned-into-export) for more info
 
 
 - `csv` of `attributegroup` API for all the other related entities.
   - The List of related entities is populated using the `export/detailed` (or `export` or `detailed`) context in `visible-foreign-keys` annotation.
-  - The projection list includes all the visible columns of the related table based on `export` (or `detailed`) context.
+  - The projection list includes [the visible columns](#how-visible-columns-is-turned-into-export) of the related table based on `export` (or `detailed`) context.
   - The foreign key column of the main entity is added to the projection list, so we don't lose the relationship of the related entity.
   - This request is grouped by the value of table's key and foreign key value.
 
@@ -275,11 +282,11 @@ If export annotation is missing for `detailed` context, we will add a default BD
 > If the generated path for any of the `attributegroup` API requests is lengthy, we will use the `entity` API instead.
 
 
-## Default CSV template
+### Default CSV template
 
-Chaise will add a default CSV option to the presented list of export templates. This option will prompt a download for a `csv` file that uses `attributegroup` API of ERMrest. The projection list is created based on the `visible-columns` and depending on the app it will use different contexts.
+Chaise will add a default CSV option to the presented list of export templates. This option will prompt a download for a `csv` file that uses `attributegroup` API of ERMrest. The projection list is created based on the `visible-columns` as it's described [here](#how-visible-columns-is-turned-into-export) and depending on the app it will use different contexts.
 
-- In recordset app, Chaise will use `export/compact` context of `visible-columns`. If not defined, it will try `export` and then `compact`.
+- In recordset app, Chaise will use `export/compact` context of `visible-columns`. If not defined, it will try `export` and then `detailed`.
 - In record app, Chaise will use `export/detailed`context of `visible-columns`. If not defined, it will try `export` and then `detailed`.
 
 If you don't want Chaise to add this option, you should define an empty `visible-columns` list like the following:
@@ -288,6 +295,16 @@ If you don't want Chaise to add this option, you should define an empty `visible
   "export": []
 }
 ```
+### How visible-columns is turned into export
+
+As part of creating default templates, we use the `visible-columns` annotation to determine the projection list for the `attributegroup` requests. To do so, ERMrestJS will go through the list of visible columns and based on its type will populate the projection list. The following is the logic:
+
+- Local columns: The column will be added to the projection list as is.
+- All-outbound Foreign key columns: The constituent columns will be added to the projection list. To make sure the value is easier to read (and make more sense to the users), we might also add an extra "candidate" column to the projection list. "candidate" column will be a column from the leaf where its name is "close" to `title`, `name`, `term`, `label`, `accessionid`, or `accessionnumber` (we said "close" because the actual name could have different capitalization, or could have `.`, `-`, or `_` e.g. `Accession_ID`). The added "candidate" column will be using an alias with `<table_name>.<candidate_column_name>` format.
+- Key columns: The constituent columns will be added.
+- Asset columns: All the metadata columns are added alongside the url column.
+- Other types: ignored and not added to the projection list.
+
 
 ## Examples
 
