@@ -19,6 +19,9 @@ exports.execute = function(options) {
         var singleEnitityUri = options.url + "/catalog/" + catalog_id + "/entity/"
             + schemaName + ":" + tableName + "/id=" + entityId;
 
+        var currDate = new Date();
+        var currentDateString = options.ermRest._fixedEncodeURIComponent(currDate.getFullYear() + "-" + (currDate.getMonth()+1) + "-" + currDate.getDay());
+
         var chaiseURL = "https://dev.isrd.isi.edu/chaise";
         var recordURL = chaiseURL + "/record";
         var record2URL = chaiseURL + "/record-two";
@@ -69,7 +72,7 @@ exports.execute = function(options) {
             expect(ref.table.schema.name).toBe(schema, "schema missmatch.");
             expect(ref.table.name).toBe(table, "table missmatch.");
             if (facet) {
-                expect(ref.location.facets.decoded).toEqual(jasmine.objectContaining(facet), "facet missmatch.");
+                expect(ref.location.facets.decoded).toEqual(facet, "facet missmatch.");
             }
 
             if (ermrestCompactPath) {
@@ -256,7 +259,8 @@ exports.execute = function(options) {
                                 "M:=reference_schema:reference_table",
                                 "(RCT::null::;RID::null::)/(id)=(reference_schema:association%20table%20with%20id:id%20from%20ref%20table)",
                                 "!(RID=-1)/(id_from_inbound_related_table)=(reference_schema:inbound_related_reference_table:id)",
-                                "(fk_to_reference_with_fromname)=(reference_schema:reference_table:id)/!(RCT::lt::2022-1-1)",
+                                "(fk_to_reference_with_fromname)=(reference_schema:reference_table:id)",
+                                "!(RCT::lt::" + currentDateString + ")",
                                 "RID=" + utils.findEntityRID(options, schemaName, tableName, "id", "9003"),
                                 "$M"
                             ].join("/")
