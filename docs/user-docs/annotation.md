@@ -311,8 +311,8 @@ Supported _columnentry_ patterns:
 - _columnname_: A string literal _columnname_ identifies a constituent column of the table. The value of the column SHOULD be presented, possibly with representation guided by other annotations or heuristics.
 - `[` _schemaname_ `,` _constraintname_ `]`: A two-element list of string literal _schemaname_ and _constraintname_ identifies a constituent foreign key of the table. The value of the external entity referenced by the foreign key SHOULD be presented, possibly with representation guided by other annotations or heuristics. If the foreign key is representing an inbound relationship with the current table, it SHOULD be presented in a tabular format since it can represent multiple rows of data.
 - `[` _schemaname_ `,` _constraintname_ `]`: A two-element list of string literal _schemaname_ and _constraintname_ identifies a constituent key of the table. The defined display of the key SHOULD be presented, with a link to the current displayed row of data. It will be served as a self link.
-- `{ "sourcekey": ` _sourcekey_ `}`: Defines a pseudo-column based on the given _sourcekey_. For more information please refer to [pseudo-column document](pseudo-columns.md).
-- `{ "source": ` _sourceentry_ `}`:  Defines a pseudo-column based on the given _sourceentry_. For detailed explanation and examples please refer to [here](pseudo-columns.md). Other optional attributes that this JSON document can have are:
+- `{ "sourcekey": ` _sourcekey_ `}`: Defines a column directive based on the given _sourcekey_. For more information please refer to [pseudo-column document](column-directive.md#sourcekey).
+- `{ "source": ` _columndirective_ `}`:  Defines a column directive based on the given _sourceentry_. For detailed explanation and examples please refer to [here](pseudo-columns.md). Other optional attributes that this JSON document can have are:
   - `markdown_name`: The markdown to use in place of the default heuristics for title of column.
   - `"hide_column_header": true`: Hide the column header (and still show the value). This is only supported in `detailed` context.
   - `display`: The display settings for generating the column presentation value. Please refer to [pseudo-columns display document](pseudo-column-display.md) for more information. The available options are:
@@ -359,7 +359,7 @@ Supported _sourceentry_ pattern:
   Each anterior _path element_ MAY use one of the following sub-document structures:
 
   - `{ "sourcekey":` _sourcekey prefix_ `}`
-    - Only acceptable as the first element. Please refer to [Data source with reusable prefix](facet-json-structure.md#data-source-with-reusable-prefix) for more information.
+    - Only acceptable as the first element. Please refer to [Data source with reusable prefix](column-directive.md#source-path-with-reusable-prefix) for more information.
     - _sourcekey prefix_ is a string literal that refers to any of the defined sources in [`source-definitions` annotations](annotation.md#tag-2019-source-definitions)
 
   - `{` _direction_ `:` _fkeyname_ `}`
@@ -456,7 +456,7 @@ Configuration attributes (optional):
   You can modify this to sort based on other columns of the table that the scalar column belongs to. Or use the `"num_occurrences": true` to refer to the "Number of occurences" column.
 
 
-The following is an example of visible-columns annotation payload for defining facets. You can find more examples in [here](facet-examples.md) and use [this document](facet-json-structure.md) to learn more about the structure of facet.
+The following is an example of visible-columns annotation payload for defining facets. Please refer to [this document](facet.md) to learn more about the structure of facet and find more examples.
 
 ```
 "filter": {
@@ -741,7 +741,7 @@ Supported _sourceentry_ patterns:
   Each anterior _path element_ MAY use one of the following sub-document structures:
 
   - `{ "sourcekey":` _sourcekey prefix_ `}`
-    - Only acceptable as the first element. Please refer to [Data source with reusable prefix](facet-json-structure.md#data-source-with-reusable-prefix) for more information.
+    - Only acceptable as the first element. Please refer to [column directive document](column-directive.md#source-path-with-reusable-prefix) for more information.
     - _sourcekey prefix_ is a string literal that refers to any of the defined sources in [`source-definitions` annotations](annotation.md#tag-2019-source-definitions)
 
   - `{` _direction_ `:` _fkeyname_ `}`
@@ -1028,7 +1028,7 @@ Supported JSON payload patterns:
 
 Supported _sourcedefinitions_ patterns:
 
-- `{` ... `"` _sourcekey_ `":{ "source":` _sourceentry_ `},` ... `}`: where _sourcekey_ is a name that will be used to refer to the defined _sourceentry_. Since you're defining a [pseudo-column]((pseudo-columns.md)) here, you can use any of the pseudo-column optional parameters that the syntax allows (e.g., `aggregate`, `entity`, `display`, `markdown_name`).
+- `{` ... `"` _sourcekey_ `":{` _column_directive_ ... `}`: where _sourcekey_ is a name that will be used to refer to the defined _column_directive_. Please refer to the [Column Directive](#column-directive) section for more information (You can use any of the column-directive optional parameters that the syntax allows (e.g., `aggregate`, `entity`, `display`, `markdown_name`).
 
 Supported _sourcekey_ pattern:
  - A string literal that,
@@ -1045,7 +1045,7 @@ Supported _sourceentry_ pattern:
     Each anterior _path element_ MAY use one of the following sub-document structures:
 
     - `{ "sourcekey":` _sourcekey prefix_ `}`
-      - Only acceptable as the first element. Please refer to [Data source with reusable prefix](facet-json-structure.md#data-source-with-reusable-prefix) for more information.
+      - Only acceptable as the first element. Please refer to [column directive document](column-directive.md#source-path-with-reusable-prefix) for more information.
       - _sourcekey prefix_ is a string literal that refers to any of the defined sources in [`source-definitions` annotations](#tag-2019-source-definitions)
 
     - `{` _direction_ `:` _fkeyname_ `}`
@@ -1299,3 +1299,10 @@ A web user agent that consumes this annotation and the related table data would 
     <img src="https://dev.isrd.isi.edu/chaise/search?name=col%20name" alt="Title of Image">
 </p>
 ```
+
+
+## Column Directive
+
+Column directive allows instruction of a data source and modification of its presentation. Column directives are defined relative to the table that they are part of. They can be used in [`visible-columns`](#tag-2016-visible-columns) or [`visible-foreign-keys`](#tag-2016-visible-foreign-keys) annotations, or defined as part of [`source-definitions`](#tag-2019-source-definitions) annotation.
+
+The followin
