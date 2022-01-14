@@ -1,4 +1,4 @@
-# Column directive in Templating Environments
+# Column directive in templating environments
 
 This document will explain which annotations you need to use and how to use them in order to be able to access more than the current table's values in the templating environment. To make this simpler, we will explain this using an example.
 
@@ -6,7 +6,7 @@ Let's assume the following is the ERD of our database. In all the examples, we'r
 
 ![erd_01](https://raw.githubusercontent.com/informatics-isi-edu/ermrestjs/master/docs/resources/column-directive-erd-01.png)
 
-## 1. Defining Sources
+## 1. Defining sources
 
 First you need to define your source definitions. To do this, you have to define the [source-definitions](annotation.md#tag-2019-source-definitions) annotation which is in the following format:
 
@@ -122,7 +122,7 @@ The following is the source definitions that we are going to use:
 }
 ```
 
-## 2. Defining Column Directive Display
+## 2. Defining column directive display
 
 The following is the syntax for writing a custom display for a column directive:
 
@@ -137,7 +137,7 @@ The following is the syntax for writing a custom display for a column directive:
 }
 ```
 
-### Accessing Columns and Fkeys
+### Accessing columns and fkeys
 
 In the `markdown_pattern` defined, by default, you can access the `"columns"` and `"fkeys"` that you have in the `source-definitions` annotation.
 
@@ -179,7 +179,7 @@ formatted: {{{int_col}}}, raw: {{{_int_col}}}
 
 ```
 
-### Accessing Sources (Wait For)
+### Accessing sources (wait_for)
 
 If you want to access any extra `"sources"`, you need to list them in the `wait_for` of the column directive. This will delay the processing of the column directive value until the data for all the column directives specified in the `wait_for` list are available.
 
@@ -195,7 +195,7 @@ If you want to access any extra `"sources"`, you need to list them in the `wait_
 }
 ```
 
-#### Column Directive Templating Variable Data Structure
+#### Column directive templating variable data structure
 
 The data structure of the object that you have access to by using the given sourcekey is different based on depending on the type. The data-structure is aligned with the $self structure which is as follows.
 

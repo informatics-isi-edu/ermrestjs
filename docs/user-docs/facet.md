@@ -146,7 +146,6 @@ In _scalar_ facets we show an extra column called "number of occurrences". Use t
 
 ## Examples
 
-
 ### Example 1
 Consider this logical filter set:
   - and
@@ -167,7 +166,6 @@ It can be encoded in the following JSON using the above abbreviation techniques:
 Which will be translated to the following in ermrest syntax:
 
     /M:=S:T/(column1=1;column1=2;column1=3)/$M/(fk)=(S1:T2:key)/(column2::gt::5&column2::lt::10)/$M
-
 
 ### Example 2
 
@@ -194,13 +192,11 @@ which translates to:
 
     /M:=S:T/(c1::gt::1&c1::lt::5);(c2=1;c2=1)/$M/(fk)=(S1:T2)/(c3::ciregexp::text)/$M
 
-# Other examples
+### Example 3 (Entity vs. Scalar)
 
 All the following examples are based on the given ERD and we are creating facet list for the `main` table.
 
 ![ERD](https://dev.isrd.isi.edu/~ashafaei/wiki-images/faceting_example_erd.png)
-
-### Entity vs. Scalar
 
 In chaise we have two facet types:
 
@@ -239,7 +235,7 @@ In chaise we have two facet types:
     {"source": [{"inbound": ["s", "fk3_cons"]}, {"outbound": ["s", "fk4_cons"]}, "f3_id"], "entity": false}
     ```
 
-### Choice Vs. Range
+### Example 4 (Choice Vs. Range)
 
 In scalar mode, you can define your preferred UX mode. You can set that by setting the `ux_mode` attribute to `choices` or `ranges`.
 By default (If `ux_mode` is unavailable or invalid) we are showing range for the following column types:
@@ -250,7 +246,7 @@ By default (If `ux_mode` is unavailable or invalid) we are showing range for the
 {"source": [{"outbound": ["s", "fk1_cons"]}, "f1_id"], "entity": false, "ux_mode": "ranges"}
 ```
 
-### Facet Title
+### Example 5 (Facet Title)
 
 You can change the facet title by defining `markdown_name` in your facet. This attribute is available in all possible facet modes (entity, scalar, choices, ranges, etc.).
 
@@ -259,7 +255,7 @@ You can change the facet title by defining `markdown_name` in your facet. This a
 {"source": [{"outbound": ["s", "fk1_cons"]}, "f1_text"], "markdown_name": "_Italic Title_"}
 ```
 
-### Open Vs. Close
+### Example 6 (Open Vs. Close)
 
 If you want the facet to be open by default, you can add `open:true` to any of the facets. This attribute is available in all possible facet modes (entity, scalar, choices, ranges, etc.)
 
@@ -268,7 +264,7 @@ If you want the facet to be open by default, you can add `open:true` to any of t
 {"source": [{"outbound": ["s", "fk1_cons"]}, "f1_text"], "open": true}
 ```
 
-### Change order of scalar values
+### Example 7 (Change order of scalar values)
 
 In a scalar facet that is using the `choices` UX mode, the values are sorted in a desencing order of "Number of occurences" (frequency), and tie breaking is done based on the ascending value of the scalar column:
 
@@ -290,6 +286,4 @@ In a scalar facet that is using the `choices` UX mode, the values are sorted in 
         {"column": "f1_text", "descending": false}
     ]
 }
-
-
 ```

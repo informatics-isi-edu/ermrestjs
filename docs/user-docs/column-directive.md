@@ -15,6 +15,7 @@ The following are all the available properties on a column directive:
   "self_link": <boolean>
   "markdown_name": <display name>,
   "comment": <tooltip message>,
+  "comment_display": <inline|tooltip>,
   "hide_column_header": <boolean>
   "display": {
       "markdown_pattern": <pattern>,
@@ -38,6 +39,7 @@ or
   "sourcekey" : <source key>,
   "markdown_name": <display name>,
   "comment": <tooltip message>,
+  "comment_display": <inline|tooltip>,
   "hide_column_header": <boolean>
   "display": {
       "markdown_pattern": <pattern>,
@@ -248,9 +250,9 @@ This is only applicable in visible columns definition (Not applicable in Facet d
 - `array_d` will return the distinct values. It has the same performance overhead as `array`, so pleas USE WITH CARE.
 
 
-### 2. Display properties
+### 2. Presentation properties
 
-The following attributes can be used to manipulate the display settings of the column directive.
+The following attributes can be used to manipulate the presentation settings of the column directive.
 
 
 #### markdown_name
@@ -264,6 +266,10 @@ The following attributes can be used to manipulate the display settings of the c
 In Chaise, comment is displayed as tooltip associated with columns. To change the default tooltip for the columns, the `comment` attribute can be used.
 
     "comment": "New comment"
+
+#### comment_display
+
+By default Chaise will display `comment` as a tooltip. Set this value to `inline` to show it as text or `tooltip` to show as a hover tooltip. This property is only supported for related tables in detailed context of `visible-foreign-keys` annotation, and is not honored in other annotations.
 
 
 #### hide_column_header
@@ -314,8 +320,6 @@ If you have `"aggregate": "array"` or `"aggregate": "array_d"` in your column di
 - `ulist` for unordered bullet list.
 - `csv` for comma-seperated values (the default presentation).
 - `raw` for space-seperated values.
-
-
 
 #### array_options
 
@@ -404,12 +408,6 @@ cnt_d -> #
 
 -->
 
-
-
-
-
-
-### 3. Facet specific properties
 
 ## Columns without any source
 
