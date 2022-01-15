@@ -1552,7 +1552,7 @@
 
             return {
                 path: path,
-                outAlias: outAlias
+                usedOutAlias: usedOutAlias
             };
         },
 
