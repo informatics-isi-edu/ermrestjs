@@ -348,6 +348,8 @@ to use for ERMrest JavaScript agents.
         * [new InvalidInputError(message)](#new_ERMrest.InvalidInputError_new)
     * [.MalformedURIError](#ERMrest.MalformedURIError)
         * [new MalformedURIError(message)](#new_ERMrest.MalformedURIError_new)
+    * [.BatchUnlinkResponse](#ERMrest.BatchUnlinkResponse)
+        * [new BatchUnlinkResponse(message)](#new_ERMrest.BatchUnlinkResponse_new)
     * [.NoDataChangedError](#ERMrest.NoDataChangedError)
         * [new NoDataChangedError(message)](#new_ERMrest.NoDataChangedError_new)
     * [.NoConnectionError](#ERMrest.NoConnectionError)
@@ -408,6 +410,7 @@ to use for ERMrest JavaScript agents.
         * [.update(tuples, contextHeaderParams)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
         * [.delete(contextHeaderParams)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
             * [~self](#ERMrest.Reference+delete..self)
+        * [.deleteBatchAssociationRef(mainTuple, tuples)](#ERMrest.Reference+deleteBatchAssociationRef) ⇒ <code>Object</code>
         * [.generateRelatedList([tuple])](#ERMrest.Reference+generateRelatedList) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
         * [.getExportTemplates(useDefault)](#ERMrest.Reference+getExportTemplates) ⇒ <code>Array</code>
         * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
@@ -733,6 +736,7 @@ to use for ERMrest JavaScript agents.
         * [.update(tuples, contextHeaderParams)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
         * [.delete(contextHeaderParams)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
             * [~self](#ERMrest.Reference+delete..self)
+        * [.deleteBatchAssociationRef(mainTuple, tuples)](#ERMrest.Reference+deleteBatchAssociationRef) ⇒ <code>Object</code>
         * [.generateRelatedList([tuple])](#ERMrest.Reference+generateRelatedList) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
         * [.getExportTemplates(useDefault)](#ERMrest.Reference+getExportTemplates) ⇒ <code>Array</code>
         * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
@@ -2831,6 +2835,20 @@ A malformed URI was passed to the API.
 | --- | --- | --- |
 | message | <code>string</code> | error message |
 
+<a name="ERMrest.BatchUnlinkResponse"></a>
+
+### ERMrest.BatchUnlinkResponse
+**Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
+<a name="new_ERMrest.BatchUnlinkResponse_new"></a>
+
+#### new BatchUnlinkResponse(message)
+A malformed URI was passed to the API.
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| message | <code>string</code> | error message |
+
 <a name="ERMrest.NoDataChangedError"></a>
 
 ### ERMrest.NoDataChangedError
@@ -3009,6 +3027,7 @@ Constructor for a ParsedFilter.
     * [.update(tuples, contextHeaderParams)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
     * [.delete(contextHeaderParams)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
         * [~self](#ERMrest.Reference+delete..self)
+    * [.deleteBatchAssociationRef(mainTuple, tuples)](#ERMrest.Reference+deleteBatchAssociationRef) ⇒ <code>Object</code>
     * [.generateRelatedList([tuple])](#ERMrest.Reference+generateRelatedList) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
     * [.getExportTemplates(useDefault)](#ERMrest.Reference+getExportTemplates) ⇒ <code>Array</code>
     * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
@@ -3603,6 +3622,36 @@ without any joins.
 github issue: #425
 
 **Kind**: inner property of [<code>delete</code>](#ERMrest.Reference+delete)  
+<a name="ERMrest.Reference+deleteBatchAssociationRef"></a>
+
+#### reference.deleteBatchAssociationRef(mainTuple, tuples) ⇒ <code>Object</code>
+If the current reference is derived from an association related table, this function will delete the set of
+tuples included and return a set of success responses and a set of errors for the corresponding delete
+actions for the provided entity set from the corresponding association table denoted by the list of tuples.
+
+For example, assume
+Table1(K1,C1) <- AssociationTable(FK1, FK2) -> Table2(K2,C2)
+and the current tuples are from Table2 with k2 = "2" and k2 = "3".
+With origFKRData = {"k1": "1"} this function will return a set of success and error responses for
+delete requests to AssociattionTable with FK1 = "1" as a part of the path and FK2 = "2" and FK2 = "3"
+as the filters that define the set and how they are related to Table1.
+
+To make sure a deletion occurs only for the tuples specified, we need to verify each reference path that
+is created includes a parent constraint and has one or more filters based on the other side of the association
+table's uniqueness constraint. Some more information about the validations that need to occur based on the above example:
+ - parent value has to be not null
+   - FK1 has to have a not null constraint
+ - child values have to have at least 1 value and all not null
+   - for FK2, all selected values are not null
+
+**Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
+**Returns**: <code>Object</code> - an ERMrest.BatchUnlinkResponse "error" object  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| mainTuple | <code>Array</code> | an ERMrest.Tuple from Table1 (from example above) |
+| tuples | <code>Array</code> | an array of ERMrest.Tuple objects from Table2 (same as self) (from example above) |
+
 <a name="ERMrest.Reference+generateRelatedList"></a>
 
 #### reference.generateRelatedList([tuple]) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
@@ -6744,6 +6793,7 @@ get PathColumn object by column name
     * [.update(tuples, contextHeaderParams)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
     * [.delete(contextHeaderParams)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
         * [~self](#ERMrest.Reference+delete..self)
+    * [.deleteBatchAssociationRef(mainTuple, tuples)](#ERMrest.Reference+deleteBatchAssociationRef) ⇒ <code>Object</code>
     * [.generateRelatedList([tuple])](#ERMrest.Reference+generateRelatedList) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
     * [.getExportTemplates(useDefault)](#ERMrest.Reference+getExportTemplates) ⇒ <code>Array</code>
     * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
@@ -7338,6 +7388,36 @@ without any joins.
 github issue: #425
 
 **Kind**: inner property of [<code>delete</code>](#ERMrest.Reference+delete)  
+<a name="ERMrest.Reference+deleteBatchAssociationRef"></a>
+
+#### reference.deleteBatchAssociationRef(mainTuple, tuples) ⇒ <code>Object</code>
+If the current reference is derived from an association related table, this function will delete the set of
+tuples included and return a set of success responses and a set of errors for the corresponding delete
+actions for the provided entity set from the corresponding association table denoted by the list of tuples.
+
+For example, assume
+Table1(K1,C1) <- AssociationTable(FK1, FK2) -> Table2(K2,C2)
+and the current tuples are from Table2 with k2 = "2" and k2 = "3".
+With origFKRData = {"k1": "1"} this function will return a set of success and error responses for
+delete requests to AssociattionTable with FK1 = "1" as a part of the path and FK2 = "2" and FK2 = "3"
+as the filters that define the set and how they are related to Table1.
+
+To make sure a deletion occurs only for the tuples specified, we need to verify each reference path that
+is created includes a parent constraint and has one or more filters based on the other side of the association
+table's uniqueness constraint. Some more information about the validations that need to occur based on the above example:
+ - parent value has to be not null
+   - FK1 has to have a not null constraint
+ - child values have to have at least 1 value and all not null
+   - for FK2, all selected values are not null
+
+**Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
+**Returns**: <code>Object</code> - an ERMrest.BatchUnlinkResponse "error" object  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| mainTuple | <code>Array</code> | an ERMrest.Tuple from Table1 (from example above) |
+| tuples | <code>Array</code> | an array of ERMrest.Tuple objects from Table2 (same as self) (from example above) |
+
 <a name="ERMrest.Reference+generateRelatedList"></a>
 
 #### reference.generateRelatedList([tuple]) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)

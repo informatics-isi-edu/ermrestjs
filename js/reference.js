@@ -170,152 +170,6 @@
     };
 
     /**
-     * If the leafReference is derived from an association related table, this function will
-     * delete the set of tuples included and return a set of success responses and a set of errors for the corresponding
-     * delete actions for the provided entity set from the corresponding association table.
-     *
-     * For example, assume
-     * Table1(K1,C1) <- AssociationTable(FK1, FK2) -> Table2(K2,C2)
-     * and the current tuples are from Table2 with k2 = "2" and k2 = "3".
-     * With origFKRData = {"k1": "1"} this function will return a set of success and error responses for
-     * delete requests to AssociattionTable with FK1 = "1" as a part of the path and FK2 = "2" and FK2 = "3"
-     * as the filters that define the set and how they are related to Table1.
-     *
-     * @param {Array} leafReference - a reference derived from an association related table (usually tuples[0].reference is sufficient)
-     * @param {Array} tuples - an array of ERMrest.Tuple objects from Table2 (from example above)
-     *
-     * @returns {Array} an array of success responses for the AssociationTable that maps the supplied tuples to a row from Table1
-     * @returns {Array} an array of error responses for the AssociationTable that maps the supplied tuples to a row from Table1
-     **/
-    // unlinkBatchAssocationTuples
-    module.deleteBatchAssociationRef = function (leafReference, tuples) {
-        try {
-            verify(leafReference, "'reference' must be specified");
-            verify(tuples, "'tuples' must be specified");
-            verify(tuples.length > 0, "'tuples' must have at least one row to delete");
-
-            // TODO: make sure derivedAssociationReference makes sure the association uniqueness constraint does NOT include a nullable column
-            if (!leafReference.derivedAssociationReference) return null;
-
-            var defer = module._q.defer();
-
-            var associationRef = leafReference.derivedAssociationReference;
-            var baseUri = associationRef.location.service + "/catalog/" + associationRef.location.catalog + "/entity/";
-            var compactPath = associationRef.location.compactPath + '/';
-            var catalogObject = leafReference.table.schema.catalog;
-
-            var referenceLocations = [],
-                references = [];
-
-            // keyColumns should be a set of columns that are unique and not-null
-            var keyColumns = associationRef.associationToRelatedFKR.colset.columns; // columns tells us what the key column names are in the fkr "_to" relationship
-            var mapping = associationRef.associationToRelatedFKR.mapping; // mapping tells us what the column name is on the leaf tuple, so we know what data to fetch from each tuple for identifying
-
-            var tempLoc = null;
-            var currentPath = compactPath;
-            for (var i=0; i<tuples.length; i++) {
-                var tupleData = tuples[i].data;
-
-                var filter = '(';  // group each unique filter because it can be conjunction
-
-                for (var j=0; j<keyColumns.length; j++) {
-                    var keyCol = keyColumns[j],
-                    data = tupleData[mapping.get(keyCol).name];
-                    if (data === undefined || data === null) {
-                        // TODO: - should this throw an error or continue to the next iteration of the loop? <-- do this
-                        //       - seems like we should continue to next iteration of the loop since there
-                        //         should be a safeguard when calling module.parse() and then checking for filters after
-                        // returning null returns from the function
-                        // NOTE: include more context in the error message to communicate information about the parent, assocation, and leaf tables
-                        //         - for example, "one or more association tuples have a null value for leaf_id"
-                        return null; // tuple data for keyCol doesn't exist
-                    }
-                    if (j != 0) filter += '&';
-                    filter += module._fixedEncodeURIComponent(keyCol.name) + '=' + module._fixedEncodeURIComponent(data);
-                }
-
-                filter += ')';
-
-                // check url length limit if not first one;
-                if (i != 0 && new Reference(module.parse(baseUri + currentPath + (i != 0 ? ';' : '') + filter), catalogObject).contextualize.compact._getReadPath().value.length > module.URL_PATH_LENGTH_LIMIT) {
-                    // verify each reference path includes a parent constraint (has a derivedAssociationReference) and one or more child filters
-                    //    - parent value has to be not null
-                    //    - child values have to have at least 1 value and all not null
-                    //      - how to not allow a child with a null value to be selected?
-                    //        - communicate to the user which row failed? break if found!
-                    //        - OR design chaise to not include the row that is null
-                    // NOTE: should we make sure the filter is based on a unique key constraint?
-                    // TODO: - iterate over "filter.filters" and check that each one uses the same unique keyset
-                    //         - structure when multiple filters set on the filter
-                    //           - filter.filters[].filters[]
-                    //           - "column" and "value" are now present
-                    //       - do the same for single filter case (verify it is a unique constraint) checking "column" and "value"
-                    //       - Q: should I check the facet object instead of the filter object?
-                    tempLoc = module.parse(baseUri + currentPath);
-                    if (tempLoc.filter) referenceLocations.push(tempLoc);
-                    currentPath = compactPath;
-                } else if (i != 0) {
-                    // prepend the conjunction operator when it isn't the first filter to create and we aren't dealing with a url length limit
-                    filter = ";" + filter;
-                }
-
-                currentPath += filter;
-            }
-
-            // verify each reference path includes a filter
-            // NOTE: should we make sure the filter is based on a unique key constaint?
-            // TODO: - iterate over "filter.filters" and check that each one uses the same unique keyset
-            //         - structure when multiple filters set on the filter
-            //           - filter.filters[].filters[]
-            //           - "column" and "value" are now present
-            //       - do the same for single filter case (verify it is a unique constraint) checking "column" and "value"
-            tempLoc = module.parse(baseUri + currentPath);
-            if (tempLoc.filter) referenceLocations.push(tempLoc);
-
-            var k = 0;
-            var successResponses = [],
-                deleteErrors = [];
-
-            recursiveDelete(referenceLocations[k], catalogObject);
-
-            return defer.promise;
-        } catch (e) {
-            console.log(e);
-            return module._q.reject(module.responseToError(e, leafReference));
-        }
-
-        function recursiveDelete(loc, catalogObj) {
-            var delFlag = module._operationsFlag.DELETE;
-
-            // TODO: expand logging information
-            var headers = {};
-            headers[module.contextHeaderName] = {"action": "delete"};
-            var config = {
-                headers: headers
-            };
-
-            console.log(loc.ermrestCompactUri);
-            // NOTE: - if we can't trust the url, make a get to loc.ermrestCompactUri to verify the data set is the same (iterate over keys)
-            //       - a further verification is to take etag of read and use as the if-match header as part of delete to make sure the fetched set is the same as the delete set
-            module._http.delete(loc.ermrestCompactUri, config).then(function (res) {
-                // NOTE: do we want to do something with the success information?
-                console.log(res);
-                successResponses.push(res);
-            }).catch(function (err) {
-                console.log(err);
-                deleteErrors.push(err);
-            }).finally(function () {
-              if (k < referenceLocations.length-1) {
-                  k++;
-                  recursiveDelete(referenceLocations[k], catalogObject);
-              } else {
-                  defer.resolve(successResponses, deleteErrors);
-              }
-            });
-        }
-    };
-
-    /**
      * Throws a 'not implemented' error.
      *
      * A simple helper method.
@@ -2218,6 +2072,182 @@
             }
             catch (e) {
                 return module._q.reject(e);
+            }
+        },
+
+        /**
+         * If the current reference is derived from an association related table, this function will delete the set of
+         * tuples included and return a set of success responses and a set of errors for the corresponding delete
+         * actions for the provided entity set from the corresponding association table denoted by the list of tuples.
+         *
+         * For example, assume
+         * Table1(K1,C1) <- AssociationTable(FK1, FK2) -> Table2(K2,C2)
+         * and the current tuples are from Table2 with k2 = "2" and k2 = "3".
+         * With origFKRData = {"k1": "1"} this function will return a set of success and error responses for
+         * delete requests to AssociattionTable with FK1 = "1" as a part of the path and FK2 = "2" and FK2 = "3"
+         * as the filters that define the set and how they are related to Table1.
+         *
+         * To make sure a deletion occurs only for the tuples specified, we need to verify each reference path that
+         * is created includes a parent constraint and has one or more filters based on the other side of the association
+         * table's uniqueness constraint. Some more information about the validations that need to occur based on the above example:
+         *  - parent value has to be not null
+         *    - FK1 has to have a not null constraint
+         *  - child values have to have at least 1 value and all not null
+         *    - for FK2, all selected values are not null
+         *
+         * @param {Array} mainTuple - an ERMrest.Tuple from Table1 (from example above)
+         * @param {Array} tuples - an array of ERMrest.Tuple objects from Table2 (same as self) (from example above)
+         *
+         * @returns {Object} an ERMrest.BatchUnlinkResponse "error" object
+         **/
+        deleteBatchAssociationRef: function (parentTuple, tuples) {
+            var self = this, delFlag = module._operationsFlag.DELETE;
+            try {
+                verify(parentTuple, "'parentTuple' must be specified");
+                verify(tuples, "'tuples' must be specified");
+                verify(tuples.length > 0, "'tuples' must have at least one row to delete");
+
+                // TODO: make sure derivedAssociationReference makes sure the association uniqueness constraint does NOT include a nullable column
+                if (!self.derivedAssociationReference) return null;
+
+                var defer = module._q.defer();
+
+                var associationRef = self.derivedAssociationReference;
+                var baseUri = associationRef.location.service + "/catalog/" + associationRef.location.catalog + "/entity/";
+
+                // create path using parentTuple and self
+                var fkRel = self.origFKR;
+                var compactPath = parentTuple.reference.location.compactPath + '/' + fkRel.toString() + '/';
+                // var compactPath = associationRef.location.compactPath + '/'; // TODO: remove after reviewing code
+
+                var referencePathObjs = [];
+
+                // keyColumns should be a set of columns that are unique and not-null
+                var keyColumns = associationRef.associationToRelatedFKR.colset.columns; // columns tells us what the key column names are in the fkr "_to" relationship
+                var mapping = associationRef.associationToRelatedFKR.mapping; // mapping tells us what the column name is on the leaf tuple, so we know what data to fetch from each tuple for identifying
+
+                var currentPath = compactPath;
+                var currentCount = 0; // count used for notifying chaise how many each delete request/response refers to
+                for (var i=0; i<tuples.length; i++) {
+                    var tupleData = tuples[i].data;
+
+                    var filter = '(';  // group each unique filter because it can be conjunction
+
+                    for (var j=0; j<keyColumns.length; j++) {
+                        var keyCol = keyColumns[j],
+                        data = tupleData[mapping.get(keyCol).name];
+                        if (data === undefined || data === null) {
+                            // this returns an error, if a value was shown in the UI with a null value for the right side of the
+                            //         uniqueness constraint, something about the model is broken and further UX actions should not continue
+                            // NOTE: include more context in the error message to communicate information about the parent, assocation, and leaf tables
+                            var err = new module.InvalidInputError("One or more " + associationRef.displayname.value + " tuples have a null value for " + mapping.get(keyCol).name);
+                            defer.reject(err);
+                        }
+                        if (j != 0) filter += '&';
+                        filter += module._fixedEncodeURIComponent(keyCol.name) + '=' + module._fixedEncodeURIComponent(data);
+                    }
+
+                    filter += ')';
+
+                    // check url length limit if not first one;
+                    if (i != 0 && new Reference(module.parse(baseUri + currentPath + (i != 0 ? ';' : '') + filter), self.table.schema.catalog).contextualize.compact._getReadPath().value.length > module.URL_PATH_LENGTH_LIMIT) {
+                        // any more filters will go over the url length limit so save the current path and count
+                        // then clear both to start creating a new path
+                        referencePathObjs.push({
+                            path: baseUri + currentPath,
+                            count: currentCount
+                        });
+
+                        currentPath = compactPath;
+                        currentCount = 0;
+                    } else if (i != 0) {
+                        // prepend the conjunction operator when it isn't the first filter to create and we aren't dealing with a url length limit
+                        filter = ";" + filter;
+                    }
+
+                    // append the filter either on the previous path after adding ";", or on the new path started from compactPath
+                    currentPath += filter;
+                    currentCount++;
+                }
+                // After last iteration of loop, push the current path
+                referencePathObjs.push({
+                    path: baseUri + currentPath,
+                    count: currentCount
+                });
+
+                var k = 0;
+                var successResponses = [],
+                    deleteErrors = [];
+
+                recursiveDelete(referencePathObjs[k], self.table.schema.catalog);
+
+                return defer.promise;
+            } catch (e) {
+                return module._q.reject(module.responseToError(e, self));
+            }
+
+            function recursiveDelete(pathObj, catalogObj) {
+                var delFlag = module._operationsFlag.DELETE;
+
+                // TODO: expand logging information
+                var headers = {};
+                headers[module.contextHeaderName] = {"action": "delete"};
+                var config = {
+                    headers: headers
+                };
+
+                // NOTE: - if we can't trust the url, make a get to loc.ermrestCompactUri to verify the data set is the same (iterate over keys)
+                //       - a further verification is to take etag of read and use as the if-match header as part of delete to make sure the fetched set is the same as the delete set
+                module._http.delete(pathObj.path, config).then(function (res) {
+                    // NOTE: do we want to do something with the success information?
+                    successResponses.push({
+                        response: res,
+                        count: pathObj.count
+                    });
+                }).catch(function (err) {
+                    deleteErrors.push({
+                        error: err,
+                        count: pathObj.count
+                    });
+                }).finally(function () {
+                    if (k < referencePathObjs.length-1) {
+                        k++;
+                        recursiveDelete(referencePathObjs[k], catalogObj);
+                    } else {
+                        var message = "";
+                        var deleteSubmessage = "";
+                        var totalSuccess = 0;
+                        if (successResponses.length > 0) {
+                            successResponses.forEach(function (resPair) {
+                                totalSuccess += resPair.count;
+                            });
+                        }
+
+                        var totalFail = 0;
+                        var errorsPresent = deleteErrors.length > 0;
+                        if (errorsPresent) {
+                            deleteErrors.forEach(function (errPair, idx) {
+                                deleteSubmessage += errPair.error.data;
+                                if (idx < deleteErrors.length-1) deleteSubmessage += " \n";
+                                totalFail += errPair.count;
+                            });
+                        }
+
+                        if (totalSuccess > 0) {
+                            message = totalSuccess + " row" + (totalSuccess > 1 ? "s" : "") + " successfully removed.";
+                            if (totalFail > 0) message += " ";
+                        }
+
+                        var err = new module.BatchUnlinkResponse(message);
+
+                        if (totalFail > 0) {
+                            message += totalFail + " row" + (totalFail > 1 ? "s" : "") + " could not be removed. Check the error details below to see more information.";
+                            err = new module.BatchUnlinkResponse(message, deleteSubmessage);
+                        }
+
+                        defer.resolve(err);
+                    }
+                });
             }
         },
 

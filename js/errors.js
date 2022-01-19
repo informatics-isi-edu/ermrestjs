@@ -16,6 +16,7 @@
     module.InvalidFilterOperatorError = InvalidFilterOperatorError;
     module.InvalidInputError = InvalidInputError;
     module.MalformedURIError = MalformedURIError;
+    module.BatchUnlinkResponse = BatchUnlinkResponse;
     module.NoDataChangedError = NoDataChangedError;
     module.NoConnectionError = NoConnectionError;
     module.IntegrityConflictError = IntegrityConflictError;
@@ -372,6 +373,20 @@
 
     MalformedURIError.prototype = Object.create(ERMrestError.prototype);
     MalformedURIError.prototype.constructor = MalformedURIError;
+
+    /**
+     * @memberof ERMrest
+     * @param {string} message error message
+     * @constructor
+     * @desc A malformed URI was passed to the API.
+     */
+    function BatchUnlinkResponse(message, subMessage) {
+        this.message = message;
+        ERMrestError.call(this, '', module._errorStatus.BATCH_UNLINK, message, subMessage);
+    }
+
+    BatchUnlinkResponse.prototype = Object.create(ERMrestError.prototype);
+    BatchUnlinkResponse.prototype.constructor = BatchUnlinkResponse;
 
     /**
      * @memberof ERMrest
