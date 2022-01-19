@@ -2,11 +2,18 @@
 
 Column directive allows instruction of a data source and modification of its presentation. Column directives are defined relative to the table that they are part of. They can be used in `visible-columns` or a `visible-foreign-keys` annotation.
 
-## Table of contents
+- In [Overall structure](#overall-structure) we briefly explain different methods of defining a column directive.
+- Using [Properties](#properties) section you can find all the available properties in column directive.
+- Please Find the examples in [this section](#examples).
 
-## Syntax
+## Overall structure
 
-The following are all the available properties on a column directive:
+As it was described, column directives are meant to intruct the data source and its presentation. Based on how the data source is defined, we can categorize them into the following:
+
+### 1. Column directive with `source`
+
+In this category, you use the [`source`](#source) property to define the data source of the column directive in place. Other source related properties (i.e. [`entity`](#entity), [`aggregate`](aggregate)) can be used in combination with `source` to change the nature of the column directive. The following is an overview of such column directive with all the available properties (some might not be applicaple depending on where the column directive is used):
+
 ```
 {
   "source" : <source path>,
@@ -32,7 +39,9 @@ The following are all the available properties on a column directive:
 }
 ```
 
-or
+### 2. Column directive with `sourcekey`
+
+In this category, the [`sourcekey`](#sourcekey) proprety is used to refer to one of the defines sources in the [`source-definitions` annotations](annotation.md#tag-2019-source-definitions). The following is an overview of such column directive with all the available properties (some might not be applicaple depending on where the column directive is used):
 
 ```
 {
@@ -56,7 +65,40 @@ or
 }
 ```
 
-Some properties are only available in special scenarios and are not used in all the scenarios. The properties can be categorized as following:
+### 3. Column directive without any source
+
+If you want to have a column directive that its value is made up of multiple column directives, you don't need to define any `source` or `sourcekey`. The only required attributes for these types of columns (we call them virtual columns) are [`markdown_name`](#markdown_name) that is used for generating the display name, and [`markdown_pattern`](#markdown_pattern) under [`display`](#display) to get the value. For instance the following is an acceptable virtual column:
+
+```
+{
+  "markdown_name": "displayname value",
+  "display": {
+      "markdown_pattern": "{{{column1}}}, {{{column2}}}"
+  }
+}
+```
+
+In order to access the data of other column directives in this virtual column, you can use the [`wait_for`](#wait_for) option.
+
+
+The following is an overview of such column directive with all the available properties (some might not be applicaple depending on where the column directive is used):
+```
+{
+  "markdown_name": <display name>,
+  "comment": <tooltip message>,
+  "comment_display": <inline|tooltip>,
+  "hide_column_header": <boolean>
+  "display": {
+      "markdown_pattern": <pattern>,
+      "template_engine": <handlebars or mustache>,
+      "wait_for": <wait_for list>
+  }
+}
+```
+
+# Properties
+
+Some properties are only available in special scenarios and are not used in all the scenarios. As you can see in the overall structure, there are three different ways that you can define a column directive:
 
 ### 1. Data source properties
 
@@ -69,9 +111,10 @@ These sets of properties change the nature of the column directive, as they will
 
 These attribute will also dictate the default display heuristics that are used for the column. For instance if it's an aggregate, it will require an extra request and will therefore modify the heuristics for displaying the values.
 
+
 #### source
 
-This property allows the definition of "source path". As column directive is define on a table, tt can either be
+This property allows the definition of "source path". As column directive is define on a table, it can either be
   - One of the current table's column.
   - A column in table that has a valid foreign key relationship with the current table.
 
@@ -407,22 +450,6 @@ cnt_d -> #
 4. In scalar mode, use the constituent column's logic for sorting.
 
 -->
-
-
-## Columns without any source
-
-If you want to have a column directive that its value is made up of multiple column directives, you don't need to define any `source` or `sourcekey`. The only required attributes for these types of columns (we call them virtual columns) are `markdown_name` that is used for generating the display name, and `markdown_pattern` to get the value. For instance the following is an acceptable virtual column:
-
-```
-{
-  "markdown_name": "displayname value",
-  "display": {
-      "markdown_pattern": "{{{column1}}}, {{{column2}}}"
-  }
-}
-```
-
-In order to access the data of other column directives in this virtual column, you can use the `wait_for` option.
 
 
 ## Examples

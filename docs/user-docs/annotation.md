@@ -323,7 +323,7 @@ Required attributes:
 
 You need to define one of these attributes which will refer to the source of the facet column.
 
-- `source`: Source of the filter. If it is not specified or is invalid the _facetentry_ will be ignored. It follows the same pattern as the `source`s defined for a _columndirective_. For more detailed explanation please refer to [this document](column-directive.md#source).
+- `source`: Source of the filter. If it is not specified or is invalid the _facetentry_ will be ignored. It follows the same pattern as the `source`s defined for a _columndirective_. For more detailed explanation please refer to [column directive section](#column-directive).
 
 - `sourcekey`: A string literal that refers to any of the defined sources in [`source-definitions` annotations](#tag-2019-source-definitions). You MUST avoid defining both `source` and `sourcekey` as the client will ignore the `source` and just uses the `sourcekey`.
 
@@ -1088,21 +1088,35 @@ A web user agent that consumes this annotation and the related table data would 
 
 Column directive allows instruction of a data source and modification of its presentation. Column directives are defined relative to the table that they are part of. They can be used in [`visible-columns`](#tag-2016-visible-columns) or [`visible-foreign-keys`](#tag-2016-visible-foreign-keys) annotations, or defined as part of [`source-definitions`](#tag-2019-source-definitions) annotation.
 
-Please refer to [this document](column-directive.md) for more detailed explanation and examples. The following is an overview of all the properties available on a column directive:
+<!-- TODO we might want to include the simple syntax here instead of just in visible-columns and visible-fks -->
 
-### 1. Data source properties
+Please refer to [this document](column-directive.md) for more detailed explanation and examples. The following is a summary of what's described in the separate document.
 
-These sets of properties change the nature of the column directive, as they will affect the communication with server. To detect duplicate column-directives we only look for these attributes. The properties are:
+### Overall structure
 
-- `source`: The source path. It can either be a column or a foreign key path to a column in another table.
+As it was described, column directives are meant to intruct the data source and its presentation. Based on how the data source is defined, we can categorize them into the following (All the properties are described in [the next section](#properties)):
+
+1. **Column directive with `source`**: In this category, you use the `source` property to define the data source of the column directive in place. Other source related properties (i.e. `entity`, `aggregate`) can be used in combination with `source` to change the nature of the column directive.
+2. **Column directive with `sourcekey`**: In this category, the `sourcekey` proprety is used to refer to one of the defines sources in the [`source-definitions` annotations](annotation.md#tag-2019-source-definitions).
+3. **Column directive without any source** (_Applicaple only to read-only non-filter context of `visible-columns` annotation_): If you want to have a column directive that its value is made up of multiple column directives, you don't need to define any `source` or `sourcekey`. The only required attributes for these types of columns (we call them virtual columns) are [`markdown_name`](#markdown_name) that is used for generating the display name, and [`markdown_pattern`](#markdown_pattern) under [`display`](#display) to get the value.
+### Properties
+#### 1. Data source properties
+
+These sets of properties change the nature of the column directive, as they will affect the communication with server. To detect duplicate column-directives we only look for these properties.
+
+- SOURCE and source specific properties
+- SOURCEKEY
+- without any source or sourcekey (presentation required: header and value)
+
+- `source`: The source path. It can either be a column or a foreign key path to a column in another table. You can find more information in [the column directive document](column-directive.md#source).
+- `sourcekey`: Allows referring to any of the defined `sources` in the [`source-definitions`](#tag-2019-source-definitions) annotation.
 - `entity`: If the source column is key of the table, setting this attribute to `false` will force the scalar mode. Otherwise the column directive will be in entity mode.
 - `aggregate`: The aggregate function that should be used for getting an aggregated result. Applicaple only to read-only non-filter context of `visible-columns` annotation. The available aggregate functions are `min`, `max`, `cnt`, `cnt_d`, `array`, and `array_d`.
     - `array` will return ALL the values including duplicates associated with the specified columns. For data types that are sortable (e.g integer, text), the values will be sorted alphabetically or numerically. Otherwise, it displays values in the order that it receives from ERMrest. There is no paging mechanism to limit what's shown in the aggregate column, therefore please USE WITH CARE as it can incur performance overhead and ugly presentation.
     - `array_d` will return distinct values. It has the same performance overhead as `array`, so pleas USE WITH CARE.
     - Using `array` or `array_d` aggregate in entity mode will provide an array of row-names instead of just the value of the column. Row-names will be derived from the `row_name/compact` context.
-- `sourcekey`: Allows referring to any of the defined `sources` in the [`source-definitions`](#tag-2019-source-definitions) annotation.
 
-### 2. Presentation properties
+#### 2. Presentation properties
 
 The following attributes can be used to manipulate the presentation settings of the column directive:
 
@@ -1128,3 +1142,7 @@ The following attributes can be used to manipulate the presentation settings of 
 - `array_options`: Applicaple only to read-only non-filter context of `visible-columns` annotation. This attribute is meant to be an object of properties that control the display of `array` or `array_d` aggregate column. These options will only affect the display (and templating environment) and have no effect on the generated ERMrest query. The available options are:
     - `order`: An alternative sort method to apply when a client wants to semantically sort by key values. It follows the same syntax as `column_order`. In scalar array aggregate, you cannot sort based on other columns values, you can only sort based on the scalar value of the column.
     - `max_length`: `<number>` A number that defines the maximum number of elements that should be displayed.
+
+
+
+ADD A SECTION ABOUT COLUMNDIRECTIVE WITHOUT SOURCE
