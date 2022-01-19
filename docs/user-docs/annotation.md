@@ -1098,15 +1098,11 @@ As it was described, column directives are meant to intruct the data source and 
 
 1. **Column directive with `source`**: In this category, you use the `source` property to define the data source of the column directive in place. Other source related properties (i.e. `entity`, `aggregate`) can be used in combination with `source` to change the nature of the column directive.
 2. **Column directive with `sourcekey`**: In this category, the `sourcekey` proprety is used to refer to one of the defines sources in the [`source-definitions` annotations](annotation.md#tag-2019-source-definitions).
-3. **Column directive without any source** (_Applicaple only to read-only non-filter context of `visible-columns` annotation_): If you want to have a column directive that its value is made up of multiple column directives, you don't need to define any `source` or `sourcekey`. The only required attributes for these types of columns (we call them virtual columns) are [`markdown_name`](#markdown_name) that is used for generating the display name, and [`markdown_pattern`](#markdown_pattern) under [`display`](#display) to get the value.
+3. **Column directive without any source** (_Applicaple only to read-only non-filter context of `visible-columns` annotation_): If you want to have a column directive that its value is made up of multiple column directives, you don't need to define any `source` or `sourcekey`. The only required attributes for these types of columns (we call them virtual columns) are `markdown_name` that is used for generating the display name, and `markdown_pattern` under `display` to get the value.
 ### Properties
 #### 1. Data source properties
 
 These sets of properties change the nature of the column directive, as they will affect the communication with server. To detect duplicate column-directives we only look for these properties.
-
-- SOURCE and source specific properties
-- SOURCEKEY
-- without any source or sourcekey (presentation required: header and value)
 
 - `source`: The source path. It can either be a column or a foreign key path to a column in another table. You can find more information in [the column directive document](column-directive.md#source).
 - `sourcekey`: Allows referring to any of the defined `sources` in the [`source-definitions`](#tag-2019-source-definitions) annotation.
