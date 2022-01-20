@@ -87,10 +87,10 @@ You can attach attributes to any element in your markdown. Generally you can att
   ```
   > <p><strong class="test cls-2" val="1" disabled="">Multiple attributes Example</strong></p>
 
-- Attaching attributes to markdown table
+- Attaching attributes to markdown table (the two newlines between the end of table and the added attributes are required):
    ```html
-   |header|\n|-|\n|text|{.class-name}
-   
+   |header|\n|-|\n|text|\n\n{.class-name}
+
    #OUTPUT
    <table class="class-name">
      <thead>

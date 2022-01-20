@@ -246,7 +246,7 @@ exports.execute = function (options) {
             });
 
             it("should support table with classname attribute.", function () {
-                var mkString = "|heading|\n|-|\n|text|\n{.class-name}";
+                var mkString = "|heading|\n|-|\n|text|\n\n{.class-name}";
                 expect(printMarkdown(mkString)).toBe('<table class="class-name">\n<thead>\n<tr>\n<th>heading</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td>text</td>\n</tr>\n</tbody>\n</table>\n');
             });
 

@@ -49,14 +49,15 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
      * Make markdownit use Sub, Sup and Attrs plugin
      */
     ERMrest._markdownIt = require('markdown-it')({ typographer : true, breaks: true })
-                            .use(require('markdown-it-sub')) // add subscript support
-                            .use(require('markdown-it-sup')) // add superscript support;
+                            .use(require('../vendor/markdown-it-sub.min.js')) // add subscript support
+                            .use(require('../vendor/markdown-it-sup.min.js')) // add superscript support;
                             .use(require('../vendor/markdown-it-span')) // add span support
                             .use(require('../vendor/markdown-it-attrs.js')); // add attrs support
 
 
     // set custom markdown tags using markdown-it-container plugin
-    ERMrest._bindCustomMarkdownTags(ERMrest._markdownIt, require("markdown-it-container"));
+    // (using the local version to ensure consistency between browser and node versions)
+    ERMrest._bindCustomMarkdownTags(ERMrest._markdownIt, require("../vendor/markdown-it-container.min.js"));
 
     ERMrest._LZString = require('lz-string');
 
