@@ -304,14 +304,7 @@ See [Context Names](#context-names) section for the list of supported _context_ 
 
 Supported _columnlist_ patterns:
 
-- `[` ... _columnentry_ `,` ... `]`: Present content corresponding to each _columnentry_, in the order specified in the list. Ignore listed _columnentry_ values that do not correspond to content from the table. Do not present table columns that are not specified in the list.
-
-Supported _columnentry_ patterns:
-
-- _columnname_: A string literal _columnname_ identifies a constituent column of the table. The value of the column SHOULD be presented, possibly with representation guided by other annotations or heuristics.
-- `[` _schemaname_ `,` _constraintname_ `]`: A two-element list of string literal _schemaname_ and _constraintname_ identifies a constituent foreign key of the table. The value of the external entity referenced by the foreign key SHOULD be presented, possibly with representation guided by other annotations or heuristics. If the foreign key is representing an inbound relationship with the current table, it SHOULD be presented in a tabular format since it can represent multiple rows of data.
-- `[` _schemaname_ `,` _constraintname_ `]`: A two-element list of string literal _schemaname_ and _constraintname_ identifies a constituent key of the table. The defined display of the key SHOULD be presented, with a link to the current displayed row of data. It will be served as a self link.
-- A _columndirective_ JSON object. Please refer to [column directive](#column-directive) section for more information about the speciciation of the object.
+- `[` ... _columndirective_ `,` ... `]`: Present content corresponding to each _columndirective_, in the order specified in the list. Ignore listed _columndirective_ values that do not correspond to content from the table. Do not present table columns that are not specified in the list. Please refer to [column directive](#column-directive) section for more information.
 
 Supported _facetlist_ pattern:
 
@@ -617,12 +610,7 @@ For presentation contexts which are not listed in the annotation, or when the an
 
 Supported _fkeylist_ patterns:
 
-- `[` ... _fkeyentry_ `,` ... `]`: Present content correspondign to each _fkeyentry_, in the order specified in the list. Ignore _fkeyentry_ that do not correspond to a valid path from the table. Do not present foreign keys that are not mentioned in the list.
-
-
-Supported _fkeyentry_ patterns:
-- `[` _schemaname_ `,` _constraintname_ `]`: A two-element list of string literal _schemaname_ and _constraintname_ identifies a constituent foreign key of the table. The foreign keys MUST represent inbound relationships to the current table.
-- A _columndirective_ JSON object. Please refer to [column directive](#column-directive) section for more information about the speciciation of the object. The defined column directive MUST be in entity mode and have at least an `inbound` node in its relationship to the current table.
+- `[` ... _columndirective_ `,` ... `]`: Present content correspondign to each _columndirective_, in the order specified in the list. Ignore _columndirective_ that do not correspond to a valid path from the table. Do not present foreign keys that are not mentioned in the list. Please refer to [column directive](#column-directive) section for more information. The defined column directive MUST be in entity mode and have at least an `inbound` node in its relationship to the current table.
 
 ### Tag: 2016 Table Alternatives
 
@@ -1094,11 +1082,75 @@ Please refer to [this document](column-directive.md) for more detailed explanati
 
 ### Overall structure
 
-As it was described, column directives are meant to intruct the data source and its presentation. Based on how the data source is defined, we can categorize them into the following (All the properties are described in [the next section](#properties)):
+As it was described, column directives are meant to instruct the data source and its presentation. Based on how the data source is defined, we can categorize them into the following (All the properties are described in [the next section](#properties)):
 
 1. **Column directive with `source`**: In this category, you use the `source` property to define the data source of the column directive in place. Other source related properties (i.e. `entity`, `aggregate`) can be used in combination with `source` to change the nature of the column directive.
 2. **Column directive with `sourcekey`**: In this category, the `sourcekey` proprety is used to refer to one of the defines sources in the [`source-definitions` annotations](annotation.md#tag-2019-source-definitions).
 3. **Column directive without any source** (_Applicaple only to read-only non-filter context of `visible-columns` annotation_): If you want to have a column directive that its value is made up of multiple column directives, you don't need to define any `source` or `sourcekey`. The only required attributes for these types of columns (we call them virtual columns) are `markdown_name` that is used for generating the display name, and `markdown_pattern` under `display` to get the value.
+
+While the general syntax of column directives is defining a JSON object, depending on where the column directive is used, you can use the simpler syntax which heavily relies on heuristics. The following are other acceptable ways of defining column directives:
+
+- In read-only non-filter context of `visible-columns` annotation, you can use string to refer to any of the columns in the table. For instance the two following syntax are alternative to each other:
+  ```
+  {
+    "source": "column"
+  }
+  ```
+  ```
+  "column"
+  ```
+- In non-filter context of `visible-columns` annotation you can use the two-element list of string literal which identifies a constituent foreign key of the table. The value of the external entity referenced by the foreign key will be presented, with representation guided by other annotations or heuristics. Therefore the follow are alternative:
+  ```
+  {
+    "source": [
+      {"outbound": ["schema", "fkey1"]},
+      "RID"
+    ],
+    "entity": true
+  }
+  ```
+  ```
+  ["schema", "fkey1"]
+  ```
+- In `detailed` context of `visible-columns` and `visible-foreign-keys` annotation you can use the two-element list of string literal which identifies a constituent foreign key that is referring to the current table (inbound relationship). Therefore the follow are alternative:
+  ```
+  {
+    "source": [
+      {"inbound": ["schema", "fkey_to_main"]},
+      "RID"
+    ],
+    "entity": true
+  }
+  ```
+  ```
+  ["schema", "fkey_to_main"]
+  ```
+- In `detailed` context of `visible-columns` and `visible-foreign-keys` annotation you can use the two-element list of string literal which identifies a constituent foreign key from a pure and binary association table to the current table. Therefore the follow are alternative:
+  ```
+  {
+    "source": [
+      {"inbound": ["schema", "fkey_from_assoc_to_main"]},
+      {"outbound": ["schema", "fkey_from_assoc_to_related"]},
+      "RID"
+    ],
+    "entity": true
+  }
+  ```
+  ```
+  ["schema", "fkey_from_assoc_to_main"]
+  ```
+- In read-only non-filter context of `visible-columns` annotation you can use the two-element list of string literal which identifies a constituent key of the table. The defined display of the key will be presented, with a link to the current displayed row of data. This is the same as the `self_link` property on column directive JSON object. Therefore the follow are alternative:
+  ```
+  {
+    "source": "RID",
+    "entity": true
+    "self_link": true
+  }
+  ```
+  ```
+  ["schema", "primary_key"]
+  ```
+
 ### Properties
 #### 1. Data source properties
 
@@ -1138,7 +1190,3 @@ The following attributes can be used to manipulate the presentation settings of 
 - `array_options`: Applicaple only to read-only non-filter context of `visible-columns` annotation. This attribute is meant to be an object of properties that control the display of `array` or `array_d` aggregate column. These options will only affect the display (and templating environment) and have no effect on the generated ERMrest query. The available options are:
     - `order`: An alternative sort method to apply when a client wants to semantically sort by key values. It follows the same syntax as `column_order`. In scalar array aggregate, you cannot sort based on other columns values, you can only sort based on the scalar value of the column.
     - `max_length`: `<number>` A number that defines the maximum number of elements that should be displayed.
-
-
-
-ADD A SECTION ABOUT COLUMNDIRECTIVE WITHOUT SOURCE
