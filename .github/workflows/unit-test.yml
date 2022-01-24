@@ -16,7 +16,6 @@ jobs:
           path: ermrestjs
       - name: Setup the system
         run: |
-          sudo chown -R 1001:121 "/root/.npm"
           sudo timedatectl set-timezone America/Los_Angeles
           export PATH="$(systemd-path user-binaries):$PATH"
           sudo apt-get -y update
@@ -85,6 +84,7 @@ jobs:
       - name: Install ermrestjs
         run: |
           cd ermrestjs
+          sudo rm -rf /root/.npm
           sudo npm install
           sudo make install
       - name: Add tests users
