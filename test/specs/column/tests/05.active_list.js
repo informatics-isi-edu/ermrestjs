@@ -250,7 +250,7 @@ exports.execute = function (options) {
                 "F1:=left(fk1_col1,fk1_col2)=(active_list_schema:outbound1:outbound1_id1,outbound1_id2)/$M/" +
                 "main_id;M:=array_d(M:*),F11:=array_d(F11:*),F10:=array_d(F10:*),F9:=F9:int_col," +
                 "F8:=array_d(F8:*),F7:=F7:int_col,F6:=F6:int_col,F5:=array_d(F5:*)," +
-                "F4:=array_d(F4:*),F3:int_col,F2:=array_d(F2:*),F1:=array_d(F1:*)@sort(main_id)";
+                "F4:=array_d(F4:*),F3:=F3:int_col,F2:=array_d(F2:*),F1:=array_d(F1:*)@sort(main_id)";
 
                 var expectedPath1 = "M:=active_list_schema:main/" +
                 "F11:=left(fk4_col1)=(active_list_schema:outbound3:outbound3_id)/$M/" +
