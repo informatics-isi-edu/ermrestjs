@@ -88,7 +88,6 @@ jobs:
       - name: Install ermrestjs
         run: |
           cd ermrestjs
-          sudo npm install -g jsdoc --unsafe-perm=true --allow-root
           sudo npm install
           sudo make install
       - name: Add tests users
