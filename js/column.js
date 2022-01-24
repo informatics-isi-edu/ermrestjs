@@ -1536,6 +1536,46 @@ Object.defineProperty(PseudoColumn.prototype, "nullok", {
         throw new Error("can not use this type of column in entry mode.");
     }
 });
+/**
+ * Whether we can use the raw column in the projection list or not.
+ *
+ * If we only need the value of scalar column and none of the other columns of the
+ * all-outbound path then we can simply use the scalar projection.
+ * Therefore the pseudo-column must:
+ * - be all-outbound path in scalar mode
+ * - the leaf column cannot have any column_display annotation
+ * - the leaf column cannot be sorted or doesn’t have a sort based on other columns of the table.
+ *
+ *
+ * @member {Object} canUseScalarProjection
+ * @memberof ERMrest.PseudoColumn#
+ */
+Object.defineProperty(PseudoColumn.prototype, "canUseScalarProjection", {
+    get: function () {
+        if (this._canUseScalarProjection === undefined) {
+            var populate = function (self) {
+                // only in scalar mode
+                if (self.isEntityMode || !self.isUnique) {
+                    return false;
+                }
+                // if it has column_display we cannot use scalar
+                if (self.baseColumn.getDisplay(self._context).isMarkdownPattern) {
+                    return false;
+                }
+                // if it's sortable and based on other columns, we cannot use scalar
+                var sortCols = self._sortColumns;
+                if (self.sortable &&
+                    (sortCols.length != 1 || sortCols[0].column.name != self.baseColumn.name)) {
+                    return false;
+                }
+
+                return true;
+            };
+            this._canUseScalarProjection = populate(this);
+        }
+        return this._canUseScalarProjection;
+    }
+});
 
 
 /**
