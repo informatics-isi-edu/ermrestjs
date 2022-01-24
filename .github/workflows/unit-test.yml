@@ -84,6 +84,7 @@ jobs:
       - name: Install ermrestjs
         run: |
           cd ermrestjs
+          sudo npm cache clean --force
           sudo npm install
           sudo make install
       - name: Add tests users
