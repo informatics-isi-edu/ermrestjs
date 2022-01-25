@@ -410,7 +410,7 @@ to use for ERMrest JavaScript agents.
         * [.update(tuples, contextHeaderParams)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
         * [.delete(contextHeaderParams)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
             * [~self](#ERMrest.Reference+delete..self)
-        * [.deleteBatchAssociationTuples(mainTuple, tuples)](#ERMrest.Reference+deleteBatchAssociationTuples) ⇒ <code>Object</code>
+        * [.deleteBatchAssociationTuples(mainTuple, tuples, contextHeaderParams)](#ERMrest.Reference+deleteBatchAssociationTuples) ⇒ <code>Object</code>
         * [.generateRelatedList([tuple])](#ERMrest.Reference+generateRelatedList) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
         * [.getExportTemplates(useDefault)](#ERMrest.Reference+getExportTemplates) ⇒ <code>Array</code>
         * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
@@ -736,7 +736,7 @@ to use for ERMrest JavaScript agents.
         * [.update(tuples, contextHeaderParams)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
         * [.delete(contextHeaderParams)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
             * [~self](#ERMrest.Reference+delete..self)
-        * [.deleteBatchAssociationTuples(mainTuple, tuples)](#ERMrest.Reference+deleteBatchAssociationTuples) ⇒ <code>Object</code>
+        * [.deleteBatchAssociationTuples(mainTuple, tuples, contextHeaderParams)](#ERMrest.Reference+deleteBatchAssociationTuples) ⇒ <code>Object</code>
         * [.generateRelatedList([tuple])](#ERMrest.Reference+generateRelatedList) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
         * [.getExportTemplates(useDefault)](#ERMrest.Reference+getExportTemplates) ⇒ <code>Array</code>
         * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
@@ -3027,7 +3027,7 @@ Constructor for a ParsedFilter.
     * [.update(tuples, contextHeaderParams)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
     * [.delete(contextHeaderParams)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
         * [~self](#ERMrest.Reference+delete..self)
-    * [.deleteBatchAssociationTuples(mainTuple, tuples)](#ERMrest.Reference+deleteBatchAssociationTuples) ⇒ <code>Object</code>
+    * [.deleteBatchAssociationTuples(mainTuple, tuples, contextHeaderParams)](#ERMrest.Reference+deleteBatchAssociationTuples) ⇒ <code>Object</code>
     * [.generateRelatedList([tuple])](#ERMrest.Reference+generateRelatedList) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
     * [.getExportTemplates(useDefault)](#ERMrest.Reference+getExportTemplates) ⇒ <code>Array</code>
     * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
@@ -3624,7 +3624,7 @@ github issue: #425
 **Kind**: inner property of [<code>delete</code>](#ERMrest.Reference+delete)  
 <a name="ERMrest.Reference+deleteBatchAssociationTuples"></a>
 
-#### reference.deleteBatchAssociationTuples(mainTuple, tuples) ⇒ <code>Object</code>
+#### reference.deleteBatchAssociationTuples(mainTuple, tuples, contextHeaderParams) ⇒ <code>Object</code>
 If the current reference is derived from an association related table and filtered, this
 function will delete the set of tuples included and return a set of success responses and
 a set of errors for the corresponding delete actions for the provided entity set from the
@@ -3634,7 +3634,7 @@ For example, assume
 Table1(K1,C1) <- AssociationTable(FK1, FK2) -> Table2(K2,C2)
 and the current tuples are from Table2 with k2 = "2" and k2 = "3".
 With origFKRData = {"k1": "1"} this function will return a set of success and error responses for
-delete requests to AssociattionTable with FK1 = "1" as a part of the path and FK2 = "2" and FK2 = "3"
+delete requests to AssociationTable with FK1 = "1" as a part of the path and FK2 = "2" and FK2 = "3"
 as the filters that define the set and how they are related to Table1.
 
 To make sure a deletion occurs only for the tuples specified, we need to verify each reference path that
@@ -3652,6 +3652,7 @@ table's uniqueness constraint. Some more information about the validations that 
 | --- | --- | --- |
 | mainTuple | <code>Array</code> | an ERMrest.Tuple from Table1 (from example above) |
 | tuples | <code>Array</code> | an array of ERMrest.Tuple objects from Table2 (same as self) (from example above) |
+| contextHeaderParams | <code>Object</code> | the object that we want to log. |
 
 <a name="ERMrest.Reference+generateRelatedList"></a>
 
@@ -6794,7 +6795,7 @@ get PathColumn object by column name
     * [.update(tuples, contextHeaderParams)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
     * [.delete(contextHeaderParams)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
         * [~self](#ERMrest.Reference+delete..self)
-    * [.deleteBatchAssociationTuples(mainTuple, tuples)](#ERMrest.Reference+deleteBatchAssociationTuples) ⇒ <code>Object</code>
+    * [.deleteBatchAssociationTuples(mainTuple, tuples, contextHeaderParams)](#ERMrest.Reference+deleteBatchAssociationTuples) ⇒ <code>Object</code>
     * [.generateRelatedList([tuple])](#ERMrest.Reference+generateRelatedList) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
     * [.getExportTemplates(useDefault)](#ERMrest.Reference+getExportTemplates) ⇒ <code>Array</code>
     * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
@@ -7391,7 +7392,7 @@ github issue: #425
 **Kind**: inner property of [<code>delete</code>](#ERMrest.Reference+delete)  
 <a name="ERMrest.Reference+deleteBatchAssociationTuples"></a>
 
-#### reference.deleteBatchAssociationTuples(mainTuple, tuples) ⇒ <code>Object</code>
+#### reference.deleteBatchAssociationTuples(mainTuple, tuples, contextHeaderParams) ⇒ <code>Object</code>
 If the current reference is derived from an association related table and filtered, this
 function will delete the set of tuples included and return a set of success responses and
 a set of errors for the corresponding delete actions for the provided entity set from the
@@ -7401,7 +7402,7 @@ For example, assume
 Table1(K1,C1) <- AssociationTable(FK1, FK2) -> Table2(K2,C2)
 and the current tuples are from Table2 with k2 = "2" and k2 = "3".
 With origFKRData = {"k1": "1"} this function will return a set of success and error responses for
-delete requests to AssociattionTable with FK1 = "1" as a part of the path and FK2 = "2" and FK2 = "3"
+delete requests to AssociationTable with FK1 = "1" as a part of the path and FK2 = "2" and FK2 = "3"
 as the filters that define the set and how they are related to Table1.
 
 To make sure a deletion occurs only for the tuples specified, we need to verify each reference path that
@@ -7419,6 +7420,7 @@ table's uniqueness constraint. Some more information about the validations that 
 | --- | --- | --- |
 | mainTuple | <code>Array</code> | an ERMrest.Tuple from Table1 (from example above) |
 | tuples | <code>Array</code> | an array of ERMrest.Tuple objects from Table2 (same as self) (from example above) |
+| contextHeaderParams | <code>Object</code> | the object that we want to log. |
 
 <a name="ERMrest.Reference+generateRelatedList"></a>
 

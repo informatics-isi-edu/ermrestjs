@@ -2085,7 +2085,7 @@
          * Table1(K1,C1) <- AssociationTable(FK1, FK2) -> Table2(K2,C2)
          * and the current tuples are from Table2 with k2 = "2" and k2 = "3".
          * With origFKRData = {"k1": "1"} this function will return a set of success and error responses for
-         * delete requests to AssociattionTable with FK1 = "1" as a part of the path and FK2 = "2" and FK2 = "3"
+         * delete requests to AssociationTable with FK1 = "1" as a part of the path and FK2 = "2" and FK2 = "3"
          * as the filters that define the set and how they are related to Table1.
          *
          * To make sure a deletion occurs only for the tuples specified, we need to verify each reference path that
@@ -2098,6 +2098,7 @@
          *
          * @param {Array} mainTuple - an ERMrest.Tuple from Table1 (from example above)
          * @param {Array} tuples - an array of ERMrest.Tuple objects from Table2 (same as self) (from example above)
+         * @param {Object} contextHeaderParams the object that we want to log.
          *
          * @returns {Object} an ERMrest.BatchUnlinkResponse "error" object
          **/
@@ -2131,12 +2132,13 @@
                 var mapping = associationRef.associationToRelatedFKR.mapping; // mapping tells us what the column name is on the leaf tuple, so we know what data to fetch from each tuple for identifying
 
                 var currentPath = compactPath;
-                var keyData = [];
+                var keyData = []; // key information for each tuple. Array of objects where each row in object is a key/value pair for the key colum info
                 for (var i=0; i<tuples.length; i++) {
                     var tupleData = tuples[i].data;
 
                     var filter = '(';  // group each unique filter because it can be conjunction
 
+                    var keyColumnsData = {};
                     for (var j=0; j<keyColumns.length; j++) {
                         var keyCol = keyColumns[j],
                             tupleColName = mapping.get(keyCol).name,
@@ -2151,10 +2153,7 @@
                         }
                         if (j != 0) filter += '&';
                         filter += module._fixedEncodeURIComponent(keyCol.name) + '=' + module._fixedEncodeURIComponent(data);
-                        keyData.push({
-                            columnName: tupleColName,
-                            value: data
-                        });
+                        keyColumnsData[tupleColName] = data;
                     }
 
                     filter += ')';
@@ -2177,6 +2176,7 @@
 
                     // append the filter either on the previous path after adding ";", or on the new path started from compactPath
                     currentPath += filter;
+                    keyData.push(keyColumnsData);
                 }
                 // After last iteration of loop, push the current path
                 referencePathObjs.push({
