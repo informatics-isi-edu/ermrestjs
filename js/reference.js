@@ -2101,7 +2101,7 @@
          *
          * @returns {Object} an ERMrest.BatchUnlinkResponse "error" object
          **/
-        deleteBatchAssociationTuples: function (parentTuple, tuples) {
+        deleteBatchAssociationTuples: function (parentTuple, tuples, contextHeaderParams) {
             var self = this, delFlag = module._operationsFlag.DELETE;
             try {
                 verify(parentTuple, "'parentTuple' must be specified");
@@ -2113,6 +2113,11 @@
 
                 var defer = module._q.defer();
 
+                var k = 0;
+                var referencePathObjs = [],
+                    successResponses = [],
+                    deleteErrors = [];
+
                 var associationRef = self.derivedAssociationReference;
                 // NOTE: without a proper derivedAssociationReference, location won't be defined
                 var baseUri = associationRef.location.service + "/catalog/" + associationRef.location.catalog + "/entity/";
@@ -2120,9 +2125,6 @@
                 // create path using parentTuple and self
                 var fkRel = self.origFKR;
                 var compactPath = parentTuple.reference.location.compactPath + '/' + fkRel.toString() + '/';
-                // var compactPath = associationRef.location.compactPath + '/'; // TODO: remove after reviewing code
-
-                var referencePathObjs = [];
 
                 // keyColumns should be a set of columns that are unique and not-null
                 var keyColumns = associationRef.associationToRelatedFKR.colset.columns; // columns tells us what the key column names are in the fkr "_to" relationship
@@ -2145,7 +2147,7 @@
                             //         uniqueness constraint, something about the model is broken and further UX actions should not continue
                             // NOTE: include more context in the error message to communicate information about the parent, assocation, and leaf tables
                             var err = new module.InvalidInputError("One or more " + associationRef.displayname.value + " tuples have a null value for " + tupleColName);
-                            defer.reject(err);
+                            return defer.reject(err), defer.promise;
                         }
                         if (j != 0) filter += '&';
                         filter += module._fixedEncodeURIComponent(keyCol.name) + '=' + module._fixedEncodeURIComponent(data);
@@ -2158,7 +2160,7 @@
                     filter += ')';
 
                     // check url length limit if not first one;
-                    if (i != 0 && new Reference(module.parse(baseUri + currentPath + (i != 0 ? ';' : '') + filter), self.table.schema.catalog).contextualize.compact._getReadPath().value.length > module.URL_PATH_LENGTH_LIMIT) {
+                    if (i != 0 && baseUri + currentPath + (i != 0 ? ';' : '') + filter > module.URL_PATH_LENGTH_LIMIT) {
                         // any more filters will go over the url length limit so save the current path and count
                         // then clear both to start creating a new path
                         referencePathObjs.push({
@@ -2182,10 +2184,6 @@
                     keyData: keyData
                 });
 
-                var k = 0;
-                var successResponses = [],
-                    deleteErrors = [];
-
                 recursiveDelete(referencePathObjs[k], self.table.schema.catalog);
 
                 return defer.promise;
@@ -2196,11 +2194,11 @@
             function recursiveDelete(pathObj, catalogObj) {
                 var delFlag = module._operationsFlag.DELETE;
 
-                // TODO: expand logging information
-                var headers = {};
-                headers[module.contextHeaderName] = {"action": "delete"};
+                if (!contextHeaderParams || !isObject(contextHeaderParams)) {
+                    contextHeaderParams = {"action": "delete"};
+                }
                 var config = {
-                    headers: headers
+                    headers: self._generateContextHeader(contextHeaderParams)
                 };
 
                 // NOTE: - if we can't trust the url, make a get to loc.ermrestCompactUri to verify the data set is the same (iterate over keys)
