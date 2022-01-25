@@ -1174,7 +1174,7 @@ The following attributes can be used to manipulate the presentation settings of 
   - Currently `comment_display` is only supported for related tables in detailed context.
 - `hide_column_header`: Hide the column header (and still show the value). This is only supported in `detailed` context of `visible-columns` annotation.
 - `self-link`: If you want to show a self-link to the current row, you need to make sure the source is based on a not-null unique column of the current table and add the `"self_link": true` to the definition. Applicaple only to read-only non-filter context of `visible-columns` annotation.
-- `display`: The display settings for generating the value for this column. Please refer to [column-directive display document](column-directive-display.md) for more information. This object can have the following properties:
+- `display`: A JSON object that describes the display settings for generating the value for this column. Please refer to [column-directive display document](column-directive-display.md) for more information. This object can have the following properties:
   - `markdown_pattern`: The markdown pattern that will be used for generating the value.
     - In case of related tables, the given markdown pattern will be used for the "custom display" mode. If this is missing, we're going to provided `row_markdown_pattern` in the `table-display` annotation for the custom display. And if it's missing from that annotation as well, Chaise will not provide any custom display.
   - `template_engine`: The template enginge that should be used for the `markdown_pattern`.
@@ -1186,7 +1186,7 @@ The following attributes can be used to manipulate the presentation settings of 
       - `ulist` for unordered bullet list.
       - `csv` for comma-seperated values.
       - `raw` for space-seperated values.
-- `array_display`: This attribute is _deprecated_. It is the same as `array_ux_mode` that is defined above under `display` property.
-- `array_options`: Applicaple only to read-only non-filter context of `visible-columns` annotation. This attribute is meant to be an object of properties that control the display of `array` or `array_d` aggregate column. These options will only affect the display (and templating environment) and have no effect on the generated ERMrest query. The available options are:
+- `array_display`: This property is _deprecated_. It is the same as `array_ux_mode` that is defined above under `display` property.
+- `array_options`: Applicaple only to read-only non-filter context of `visible-columns` annotation. This property is meant to be an object of properties that control the display of `array` or `array_d` aggregate column. These options will only affect the display (and templating environment) and have no effect on the generated ERMrest query. The available options are:
     - `order`: An alternative sort method to apply when a client wants to semantically sort by key values. It follows the same syntax as `column_order`. In scalar array aggregate, you cannot sort based on other columns values, you can only sort based on the scalar value of the column.
     - `max_length`: `<number>` A number that defines the maximum number of elements that should be displayed.
