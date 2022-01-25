@@ -4936,7 +4936,6 @@
             }
             // could not find the expected aliases
             catch(exception) {
-                console.log(exception);
                 var fkName, col, tempData, k;
 
                 this._data = data;
