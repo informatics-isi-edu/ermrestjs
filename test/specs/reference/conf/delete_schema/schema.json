@@ -38,10 +38,150 @@
                 }
             ],
             "annotations": {}
+        },
+        "main_table": {
+            "comment": "Table to represent the main table when deleting association rows",
+            "kind": "table",
+            "keys": [
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": [
+                        "key_col"
+                    ]
+                }, {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": [
+                        "int_col"
+                    ]
+                }
+            ],
+            "foreign_keys": [],
+            "table_name": "main_table",
+            "schema_name": "delete_schema",
+            "column_definitions": [
+                {
+                    "name": "key_col",
+                    "nullok": false,
+                    "type": {
+                        "typename": "int"
+                    }
+                }, {
+                    "name": "int_col",
+                    "nullok": false,
+                    "type": {
+                        "typename": "int"
+                    }
+                }
+            ],
+            "annotations": {}
+        },
+        "association_table": {
+            "comment": "Table to represent the association tuples being deleted",
+            "kind": "table",
+            "keys": [
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": [
+                        "main_key_col",
+                        "leaf_key_col"
+                    ]
+                }
+            ],
+            "foreign_keys": [{
+                "comment": "foreign key to main table",
+                "foreign_key_columns": [{
+                    "schema_name": "delete_schema",
+                    "table_name": "association_table",
+                    "column_name": "main_key_col"
+                }],
+                "referenced_columns": [{
+                    "schema_name": "delete_schema",
+                    "table_name": "main_table",
+                    "column_name": "int_col"
+                }],
+                "annotations": {}
+            }, {
+                "comment": "foreign key to leaf table",
+                "foreign_key_columns": [{
+                    "schema_name": "delete_schema",
+                    "table_name": "association_table",
+                    "column_name": "leaf_key_col"
+                }],
+                "referenced_columns": [{
+                    "schema_name": "delete_schema",
+                    "table_name": "leaf_table",
+                    "column_name": "int_col"
+                }],
+                "annotations": {}
+            }],
+            "table_name": "association_table",
+            "schema_name": "delete_schema",
+            "column_definitions": [
+                {
+                    "name": "main_key_col",
+                    "comment": "points to the int_col on main_table",
+                    "nullok": false,
+                    "type": {
+                        "typename": "int"
+                    }
+                }, {
+                    "name": "leaf_key_col",
+                    "comment": "points to the int_col on leaf_table",
+                    "nullok": false,
+                    "type": {
+                        "typename": "int"
+                    }
+                }
+            ],
+            "annotations": {}
+        },
+        "leaf_table": {
+            "comment": "Table to represent the leaf table when deleting association rows",
+            "kind": "table",
+            "keys": [
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": [
+                        "key_col"
+                    ]
+                }, {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": [
+                        "int_col"
+                    ]
+                }
+            ],
+            "foreign_keys": [],
+            "table_name": "leaf_table",
+            "schema_name": "delete_schema",
+            "column_definitions": [
+                {
+                    "name": "key_col",
+                    "nullok": false,
+                    "type": {
+                        "typename": "int"
+                    }
+                }, {
+                    "name": "int_col",
+                    "nullok": false,
+                    "type": {
+                        "typename": "int"
+                    }
+                }
+            ],
+            "annotations": {}
         }
     },
     "table_names": [
-        "delete_table"
+        "delete_table",
+        "main_table",
+        "association_table",
+        "leaf_table"
     ],
     "comment": null,
     "annotations": {}

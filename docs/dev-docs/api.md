@@ -410,7 +410,7 @@ to use for ERMrest JavaScript agents.
         * [.update(tuples, contextHeaderParams)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
         * [.delete(contextHeaderParams)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
             * [~self](#ERMrest.Reference+delete..self)
-        * [.deleteBatchAssociationRef(mainTuple, tuples)](#ERMrest.Reference+deleteBatchAssociationRef) ⇒ <code>Object</code>
+        * [.deleteBatchAssociationTuples(mainTuple, tuples)](#ERMrest.Reference+deleteBatchAssociationTuples) ⇒ <code>Object</code>
         * [.generateRelatedList([tuple])](#ERMrest.Reference+generateRelatedList) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
         * [.getExportTemplates(useDefault)](#ERMrest.Reference+getExportTemplates) ⇒ <code>Array</code>
         * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
@@ -736,7 +736,7 @@ to use for ERMrest JavaScript agents.
         * [.update(tuples, contextHeaderParams)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
         * [.delete(contextHeaderParams)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
             * [~self](#ERMrest.Reference+delete..self)
-        * [.deleteBatchAssociationRef(mainTuple, tuples)](#ERMrest.Reference+deleteBatchAssociationRef) ⇒ <code>Object</code>
+        * [.deleteBatchAssociationTuples(mainTuple, tuples)](#ERMrest.Reference+deleteBatchAssociationTuples) ⇒ <code>Object</code>
         * [.generateRelatedList([tuple])](#ERMrest.Reference+generateRelatedList) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
         * [.getExportTemplates(useDefault)](#ERMrest.Reference+getExportTemplates) ⇒ <code>Array</code>
         * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
@@ -3027,7 +3027,7 @@ Constructor for a ParsedFilter.
     * [.update(tuples, contextHeaderParams)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
     * [.delete(contextHeaderParams)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
         * [~self](#ERMrest.Reference+delete..self)
-    * [.deleteBatchAssociationRef(mainTuple, tuples)](#ERMrest.Reference+deleteBatchAssociationRef) ⇒ <code>Object</code>
+    * [.deleteBatchAssociationTuples(mainTuple, tuples)](#ERMrest.Reference+deleteBatchAssociationTuples) ⇒ <code>Object</code>
     * [.generateRelatedList([tuple])](#ERMrest.Reference+generateRelatedList) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
     * [.getExportTemplates(useDefault)](#ERMrest.Reference+getExportTemplates) ⇒ <code>Array</code>
     * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
@@ -3622,12 +3622,13 @@ without any joins.
 github issue: #425
 
 **Kind**: inner property of [<code>delete</code>](#ERMrest.Reference+delete)  
-<a name="ERMrest.Reference+deleteBatchAssociationRef"></a>
+<a name="ERMrest.Reference+deleteBatchAssociationTuples"></a>
 
-#### reference.deleteBatchAssociationRef(mainTuple, tuples) ⇒ <code>Object</code>
-If the current reference is derived from an association related table, this function will delete the set of
-tuples included and return a set of success responses and a set of errors for the corresponding delete
-actions for the provided entity set from the corresponding association table denoted by the list of tuples.
+#### reference.deleteBatchAssociationTuples(mainTuple, tuples) ⇒ <code>Object</code>
+If the current reference is derived from an association related table and filtered, this
+function will delete the set of tuples included and return a set of success responses and
+a set of errors for the corresponding delete actions for the provided entity set from the
+corresponding association table denoted by the list of tuples.
 
 For example, assume
 Table1(K1,C1) <- AssociationTable(FK1, FK2) -> Table2(K2,C2)
@@ -6793,7 +6794,7 @@ get PathColumn object by column name
     * [.update(tuples, contextHeaderParams)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
     * [.delete(contextHeaderParams)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
         * [~self](#ERMrest.Reference+delete..self)
-    * [.deleteBatchAssociationRef(mainTuple, tuples)](#ERMrest.Reference+deleteBatchAssociationRef) ⇒ <code>Object</code>
+    * [.deleteBatchAssociationTuples(mainTuple, tuples)](#ERMrest.Reference+deleteBatchAssociationTuples) ⇒ <code>Object</code>
     * [.generateRelatedList([tuple])](#ERMrest.Reference+generateRelatedList) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
     * [.getExportTemplates(useDefault)](#ERMrest.Reference+getExportTemplates) ⇒ <code>Array</code>
     * [.search(term)](#ERMrest.Reference+search) ⇒ <code>Reference</code>
@@ -7388,12 +7389,13 @@ without any joins.
 github issue: #425
 
 **Kind**: inner property of [<code>delete</code>](#ERMrest.Reference+delete)  
-<a name="ERMrest.Reference+deleteBatchAssociationRef"></a>
+<a name="ERMrest.Reference+deleteBatchAssociationTuples"></a>
 
-#### reference.deleteBatchAssociationRef(mainTuple, tuples) ⇒ <code>Object</code>
-If the current reference is derived from an association related table, this function will delete the set of
-tuples included and return a set of success responses and a set of errors for the corresponding delete
-actions for the provided entity set from the corresponding association table denoted by the list of tuples.
+#### reference.deleteBatchAssociationTuples(mainTuple, tuples) ⇒ <code>Object</code>
+If the current reference is derived from an association related table and filtered, this
+function will delete the set of tuples included and return a set of success responses and
+a set of errors for the corresponding delete actions for the provided entity set from the
+corresponding association table denoted by the list of tuples.
 
 For example, assume
 Table1(K1,C1) <- AssociationTable(FK1, FK2) -> Table2(K2,C2)

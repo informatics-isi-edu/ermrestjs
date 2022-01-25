@@ -54,6 +54,103 @@ exports.execute = function (options) {
             });
         });
 
+        describe("when unlinking a set of rows from the main tuple (deleting association references)", function () {
+            var mainTableName = "main_table",
+                associationTableName = "association_table",
+                leafTableName = "leaf_table",
+                mainReference, leafReference, filteredLeafReference,
+                mainTuple, leafTuples;
+
+            var mainUri = options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ':' + mainTableName,
+                mainToAssocPath = "(int_col)=(" + schemaName + ':' + associationTableName + ':main_key_col)',
+                assocToLeafPath = "(leaf_key_col)=(" + schemaName + ':' + leafTableName + ':int_col)',
+                leafUri = options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ':' + mainTableName + "/key_col=1/" + mainToAssocPath + '/' + assocToLeafPath;
+
+            beforeAll(function (done) {
+                options.ermRest.resolve(mainUri + "/key_col=1", {cid: "test"}).then(function (response) {
+                    mainReference = response;
+                    leafReference = mainReference.related[0]
+
+                    return mainReference.read(1);
+                }).then(function (page) {
+                    mainTuple = page.tuples[0];
+
+                    return leafReference.read(5);
+                }).then(function (page) {
+                    leafTuples = page.tuples;
+                    filteredLeafReference = leafTuples[0].reference;
+
+                    done();
+                }).catch(function (error) {
+                    console.dir(error);
+                    done.fail();
+                });
+            });
+
+            it("should get back defined references and expected set of rows", function (done) {
+                expect(mainTuple).toBeDefined("the tuple for main_table is not defined");
+                expect(leafTuples.length).toBe(4, "the tuples for leaf_table are not what is expected");
+                expect(filteredLeafReference).toBeDefined("leaf reference from a leaf tuple is not defined");
+                done();
+            });
+
+            it("should delete multiple rows when calling deleteBatchAssociationTuples", function (done) {
+                // remove one of the tuples from the array so we only delete 3 rows and check that 1 still remains
+                leafTuples.splice(0, 1);
+                // for deleteBatchAssociationTuples we need:
+                //   - a "main_table" tuple
+                //   - an array of "leaf_table" tuples
+                //   - a filtered reference representing a single row from the leaf table
+                filteredLeafReference.deleteBatchAssociationTuples(mainTuple, leafTuples).then(function (res) {
+                    expect(res.message).toBe("3 rows successfully removed.")
+                    expect(res.successTupleData.length).toBe(3, "success count for batch delete is incorrect");
+
+                    return leafReference.read(5);
+                }).then(function (page) {
+                    expect(page.tuples.length).toBe(1, "# of tuples after batch delete is incorrect");
+
+                    done();
+                }).catch(function (error) {
+                    console.dir(error);
+                    done.fail();
+                });
+            });
+
+            it("should check failure cases for deleteBatchAssociationTuples", function (done) {
+                // no mainTuple defined
+                filteredLeafReference.deleteBatchAssociationTuples(null, leafTuples).then(null, function (err) {
+                    expect(err.message).toBe("Error: 'parentTuple' must be specified");
+
+                    // no tuuples set defined
+                    return filteredLeafReference.deleteBatchAssociationTuples(mainTuple, null);
+                }).then(null, function (err) {
+                    expect(err.message).toBe("Error: 'tuples' must be specified");
+
+                    // tuples set is empty
+                    return filteredLeafReference.deleteBatchAssociationTuples(mainTuple, [])
+                }).then(null, function (err) {
+                    expect(err.message).toBe("Error: 'tuples' must have at least one row to delete");
+
+                    // the reference is not filtered (no derived association)
+                    return filteredLeafReference.unfilteredReference.deleteBatchAssociationTuples(mainTuple, leafTuples);
+                }).then(null, function (err) {
+                    expect(err.message).toBe("Error: The current reference ('self') must have a derived association reference defined");
+
+                    // one of the tuples is an empty object
+                    newTuples = leafTuples;
+                    newTuples.push({data: {}});
+                    return filteredLeafReference.deleteBatchAssociationTuples(mainTuple, newTuples)
+                }).then(null, function (err) {
+                    expect(err.message).toBe("One or more association_table tuples have a null value for int_col");
+
+                    done();
+                }).catch(function (error) {
+                    console.dir(error);
+                    done.fail();
+                });
+            });
+        });
+
         describe('if attempting a delete with mismatching ETags', function() {
             // When a delete request is met with a 412 Precondition Failed, reference.delete
             // should check if its referenced data has changed (whether it's been deleted or modified

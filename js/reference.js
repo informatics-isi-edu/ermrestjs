@@ -2076,9 +2076,10 @@
         },
 
         /**
-         * If the current reference is derived from an association related table, this function will delete the set of
-         * tuples included and return a set of success responses and a set of errors for the corresponding delete
-         * actions for the provided entity set from the corresponding association table denoted by the list of tuples.
+         * If the current reference is derived from an association related table and filtered, this
+         * function will delete the set of tuples included and return a set of success responses and
+         * a set of errors for the corresponding delete actions for the provided entity set from the
+         * corresponding association table denoted by the list of tuples.
          *
          * For example, assume
          * Table1(K1,C1) <- AssociationTable(FK1, FK2) -> Table2(K2,C2)
@@ -2100,19 +2101,20 @@
          *
          * @returns {Object} an ERMrest.BatchUnlinkResponse "error" object
          **/
-        deleteBatchAssociationRef: function (parentTuple, tuples) {
+        deleteBatchAssociationTuples: function (parentTuple, tuples) {
             var self = this, delFlag = module._operationsFlag.DELETE;
             try {
                 verify(parentTuple, "'parentTuple' must be specified");
                 verify(tuples, "'tuples' must be specified");
                 verify(tuples.length > 0, "'tuples' must have at least one row to delete");
+                // Can occur using an unfiltered reference
+                verify(self.derivedAssociationReference, "The current reference ('self') must have a derived association reference defined");
 
-                // TODO: make sure derivedAssociationReference makes sure the association uniqueness constraint does NOT include a nullable column
-                if (!self.derivedAssociationReference) return null;
 
                 var defer = module._q.defer();
 
                 var associationRef = self.derivedAssociationReference;
+                // NOTE: without a proper derivedAssociationReference, location won't be defined
                 var baseUri = associationRef.location.service + "/catalog/" + associationRef.location.catalog + "/entity/";
 
                 // create path using parentTuple and self
@@ -2127,7 +2129,7 @@
                 var mapping = associationRef.associationToRelatedFKR.mapping; // mapping tells us what the column name is on the leaf tuple, so we know what data to fetch from each tuple for identifying
 
                 var currentPath = compactPath;
-                var currentCount = 0; // count used for notifying chaise how many each delete request/response refers to
+                var keyData = [];
                 for (var i=0; i<tuples.length; i++) {
                     var tupleData = tuples[i].data;
 
@@ -2135,16 +2137,22 @@
 
                     for (var j=0; j<keyColumns.length; j++) {
                         var keyCol = keyColumns[j],
-                        data = tupleData[mapping.get(keyCol).name];
+                            tupleColName = mapping.get(keyCol).name,
+                            data = tupleData[tupleColName];
+
                         if (data === undefined || data === null) {
                             // this returns an error, if a value was shown in the UI with a null value for the right side of the
                             //         uniqueness constraint, something about the model is broken and further UX actions should not continue
                             // NOTE: include more context in the error message to communicate information about the parent, assocation, and leaf tables
-                            var err = new module.InvalidInputError("One or more " + associationRef.displayname.value + " tuples have a null value for " + mapping.get(keyCol).name);
+                            var err = new module.InvalidInputError("One or more " + associationRef.displayname.value + " tuples have a null value for " + tupleColName);
                             defer.reject(err);
                         }
                         if (j != 0) filter += '&';
                         filter += module._fixedEncodeURIComponent(keyCol.name) + '=' + module._fixedEncodeURIComponent(data);
+                        keyData.push({
+                            columnName: tupleColName,
+                            value: data
+                        });
                     }
 
                     filter += ')';
@@ -2155,11 +2163,11 @@
                         // then clear both to start creating a new path
                         referencePathObjs.push({
                             path: baseUri + currentPath,
-                            count: currentCount
+                            keyData: keyData
                         });
 
                         currentPath = compactPath;
-                        currentCount = 0;
+                        keyData = [];
                     } else if (i != 0) {
                         // prepend the conjunction operator when it isn't the first filter to create and we aren't dealing with a url length limit
                         filter = ";" + filter;
@@ -2167,12 +2175,11 @@
 
                     // append the filter either on the previous path after adding ";", or on the new path started from compactPath
                     currentPath += filter;
-                    currentCount++;
                 }
                 // After last iteration of loop, push the current path
                 referencePathObjs.push({
                     path: baseUri + currentPath,
-                    count: currentCount
+                    keyData: keyData
                 });
 
                 var k = 0;
@@ -2198,16 +2205,16 @@
 
                 // NOTE: - if we can't trust the url, make a get to loc.ermrestCompactUri to verify the data set is the same (iterate over keys)
                 //       - a further verification is to take etag of read and use as the if-match header as part of delete to make sure the fetched set is the same as the delete set
-                module._http.delete(pathObj.path, config).then(function (res) {
+                self._server.http.delete(pathObj.path, config).then(function (res) {
                     // NOTE: do we want to do something with the success information?
                     successResponses.push({
                         response: res,
-                        count: pathObj.count
+                        keyData: pathObj.keyData
                     });
                 }).catch(function (err) {
                     deleteErrors.push({
                         error: err,
-                        count: pathObj.count
+                        keyData: pathObj.keyData
                     });
                 }).finally(function () {
                     if (k < referencePathObjs.length-1) {
@@ -2217,19 +2224,27 @@
                         var message = "";
                         var deleteSubmessage = "";
                         var totalSuccess = 0;
+                        var successTupleData = [];
                         if (successResponses.length > 0) {
                             successResponses.forEach(function (resPair) {
-                                totalSuccess += resPair.count;
+                                totalSuccess += resPair.keyData.length;
+                                resPair.keyData.forEach(function (data) {
+                                    successTupleData.push(data);
+                                });
                             });
                         }
 
                         var totalFail = 0;
+                        var failedTupleData = [];
                         var errorsPresent = deleteErrors.length > 0;
                         if (errorsPresent) {
                             deleteErrors.forEach(function (errPair, idx) {
                                 deleteSubmessage += errPair.error.data;
                                 if (idx < deleteErrors.length-1) deleteSubmessage += " \n";
-                                totalFail += errPair.count;
+                                totalFail += errPair.keyData.length;
+                                errPair.keyData.forEach(function (data) {
+                                    failedTupleData.push(data);
+                                });
                             });
                         }
 
@@ -2244,6 +2259,9 @@
                             message += totalFail + " row" + (totalFail > 1 ? "s" : "") + " could not be removed. Check the error details below to see more information.";
                             err = new module.BatchUnlinkResponse(message, deleteSubmessage);
                         }
+
+                        err.successTupleData = successTupleData;
+                        err.failedTupleData = failedTupleData;
 
                         defer.resolve(err);
                     }
