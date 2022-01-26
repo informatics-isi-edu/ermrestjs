@@ -91,7 +91,7 @@ Therefore the following are acceptable ways of defining data source:
 
       > If `operator` is missing, we will use `=` by default.
 
-    - The _value_ specifies the constant operand for a binary constraint operator and must be computed to a non-empty value. Pattern expansion MAY be used to access [the pre-defined values in templating envorinment](mustache-templating.md#using-pre-defined-attributes).
+    - The _value_ specifies the constant operand for a binary constraint operator and must be computed to a non-empty value. [Pattern expansion](annotation.md#pattern-expansion) MAY be used to access [the pre-defined values in templating envorinment](mustache-templating.md#using-pre-defined-attributes). Like other pattern expansions the default `template_engine` will be applied and if you want to change it, you can define `template_engine` alongside the `operand_pattern`.
 
     - The logical result of the constraint is negated only if _negate_ is `true`.
 
