@@ -21,18 +21,18 @@
     "library"
   ],
   "dependencies": {
-    "jsdoc": "3.6.7",
-    "jsdoc-to-markdown": "5.0.3",
-    "jshint": "2.11.1",
+    "jsdoc-to-markdown": "7.0.0",
+    "jshint": "2.13.4",
     "uglify-js": "3.9.2"
   },
   "devDependencies": {
+    "axios": "0.25.0",
     "buffer-slice": "0.0.1",
     "file-api": "^0.10.4",
-    "handlebars": "^4.7.7",
+    "handlebars": "4.7.7",
     "jasmine": "2.5.3",
-    "jasmine-expect": "^3.7.1",
-    "jasmine-spec-reporter": "^2.5.0",
+    "jasmine-expect": "3.7.1",
+    "jasmine-spec-reporter": "2.5.0",
     "lz-string": "1.4.4",
     "markdown-it": "12.3.2",
     "mime": "1.4.1",
@@ -40,9 +40,7 @@
     "moment-timezone": "0.5.14",
     "mustache": "x",
     "nock": "9.0.22",
-    "q": "1.5.0",
-    "request": "x",
-    "request-q": "x",
+    "q": "1.5.1",
     "require-reload": "^0.2.2",
     "set-cookie-parser": "x",
     "spark-md5": "^3.0.0"

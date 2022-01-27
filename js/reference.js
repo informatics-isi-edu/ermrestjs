@@ -1313,7 +1313,7 @@
 
                 //  do the 'post' call
                 this._server.http.post(uri, data, config).then(function(response) {
-                    var etag = response.headers().etag;
+                    var etag = module.getResponseHeader(response).etag;
                     //  new page will have a new reference (uri that filters on a disjunction of ids of these tuples)
                     var uri = self._location.compactUri + '/',
                         keyName;
@@ -1498,7 +1498,7 @@
                         throw new InvalidServerResponse(uri, response.data, action);
                     }
 
-                    var etag = response.headers().etag;
+                    var etag = module.getResponseHeader(response).etag;
 
                     var hasPrevious, hasNext = false;
                     if (!ownReference._location.paging) { // first page
@@ -1890,7 +1890,7 @@
                         }
                     }
 
-                    var etag = response.headers().etag;
+                    var etag = module.getResponseHeader(response).etag;
                     var pageData = [];
 
                     var uri = self._location.service + "/catalog/" + self.table.schema.catalog.id + "/entity/" + urlEncode(self.table.schema.name) + ':' + urlEncode(self.table.name) + '/';
@@ -4851,7 +4851,7 @@
                         (associatonRef && associatonRef.canUseTRS);
 
         if (hasLinkedData) {
-            var fks = reference._table.foreignKeys.all(), i, j, colFKs, key, fkData;
+            var fks = reference._table.foreignKeys.all(), i, j, colFKs, d, key, fkData;
             var mTableAlias = this._ref.location.mainTableAlias;
 
             try {
@@ -4872,7 +4872,8 @@
                          */
                         if (allOutBounds[j].isPathColumn && allOutBounds[j].canUseScalarProjection) {
                             // the value will not be an array
-                            var d = {}, fkData = data[i][fkAliasPreix + (j+1)];
+                            d = {};
+                            fkData = data[i][fkAliasPreix + (j+1)];
                             if (fkData === undefined || fkData === null) {
                                 this._linkedData[i][allOutBounds[j].name] = null;
                             } else {
@@ -4920,7 +4921,8 @@
                          */
                         if (allOutBounds[j].isPathColumn && allOutBounds[j].canUseScalarProjection) {
                             // the value will not be an array
-                            var d = {}, fkData = extraData[fkAliasPreix + (j+1)];
+                            d = {};
+                            fkData = extraData[fkAliasPreix + (j+1)];
                             if (fkData === undefined || fkData === null) {
                                 this._extraLinkedData[allOutBounds[j].name] = null;
                             } else {

@@ -4,54 +4,52 @@ var _scriptsLoaded = false, _defers = [];
 if (typeof module === 'object' && module.exports && typeof require === 'function') {
 
     /*
-     *  Call configure with node.js request-q package for Http and
+     *  Call configure with node.js axios package for Http and
      *  q library for promise
      */
-    ERMrest.configure(require('request-q'), require('q'));
+    ERMrest.configure(require('axios'), require('q'));
 
     /*
      * Expose authCookie function, to reset ermrest cookie
+     * NOTE meant to be used only in node environments
      */
     ERMrest.resetUserCookie = function() {
-        ERMrest._http.setDefaults({
-            json: true
-        });
+        ERMrest._http.defaults.headers.common.Cookie = '';
     };
 
     /*
      * Expose authCookie function, to set ermrest cookie
+     * NOTE meant to be used only in node environments
      */
     ERMrest.setUserCookie = function(authCookie) {
-        ERMrest._http.setDefaults({
-            headers: { 'Cookie': authCookie || '' },
-            json: true
-        });
+        ERMrest._http.defaults.withCredentials = true;
+        ERMrest._http.defaults.headers.common.Cookie = authCookie || '';
     };
 
     /*
      * Inject _moment module in ERMrest
      */
-    ERMrest._moment = require('moment-timezone');
+    ERMrest._moment = require('../vendor/moment.min.js');
 
     /*
      * Inject _mustache module in ERMrest
      */
-    ERMrest._mustache = require('mustache');
+    ERMrest._mustache = require('../vendor/mustache.min.js');
 
     /*
      * Inject _handlebars module in ERMrest as well as its helpers
      */
-    ERMrest._handlebars = require('handlebars');
+    ERMrest._handlebars = require('../vendor/handlebars.min.js');
     ERMrest._injectHandlebarHelpers();
 
     /*
      * Inject _markdownIt module in ERMrest
      * Make markdownit use Sub, Sup and Attrs plugin
      */
-    ERMrest._markdownIt = require('markdown-it')({ typographer : true, breaks: true })
+    ERMrest._markdownIt = require('../vendor/markdown-it.min.js')({ typographer : true, breaks: true })
                             .use(require('../vendor/markdown-it-sub.min.js')) // add subscript support
                             .use(require('../vendor/markdown-it-sup.min.js')) // add superscript support;
-                            .use(require('../vendor/markdown-it-span')) // add span support
+                            .use(require('../vendor/markdown-it-span.js')) // add span support
                             .use(require('../vendor/markdown-it-attrs.js')); // add attrs support
 
 
@@ -59,9 +57,9 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
     // (using the local version to ensure consistency between browser and node versions)
     ERMrest._bindCustomMarkdownTags(ERMrest._markdownIt, require("../vendor/markdown-it-container.min.js"));
 
-    ERMrest._LZString = require('lz-string');
+    ERMrest._LZString = require('../vendor/lz-string.min.js');
 
-    ERMrest._SparkMD5 = require('spark-md5');
+    ERMrest._SparkMD5 = require('../vendor/spark-md5.min.js');
 
     _scriptsLoaded = true;
 
