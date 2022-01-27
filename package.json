@@ -39,7 +39,7 @@
     "moment": "2.19.3",
     "moment-timezone": "0.5.14",
     "mustache": "x",
-    "nock": "9.0.22",
+    "nock": "13.2.2",
     "q": "1.5.1",
     "require-reload": "^0.2.2",
     "set-cookie-parser": "x",
