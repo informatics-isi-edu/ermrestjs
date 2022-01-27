@@ -43,7 +43,7 @@ exports.run = function (config) {
 				axios({
 					url: process.env.ERMREST_URL.replace('ermrest', 'authn') + '/session',
 					method: 'POST',
-					body: 'username=' + username + '&password=' + password
+					data: 'username=' + username + '&password=' + password
 				}).then(function (response) {
 					var cookies = require('set-cookie-parser').parse(response);
 
@@ -60,8 +60,14 @@ exports.run = function (config) {
 						throw new Error('Unable to retreive ' + authCookieEnvName + ' : set-cookie was not in response');
 					}
 				}).catch(function (err) {
-					console.log(err);
-					throw new Error('Unable to retreive ' + authCookieEnvName + ': ' + err.message);
+					if (error.response) {
+						console.log(error.response.data);;
+					} else if (error.request) {
+						console.log(error.request);
+					} else {
+						console.log('Error', error.message);
+					}
+					throw new Error('Unable to retreive ' + authCookieEnvName);
 				})
 			};
 
