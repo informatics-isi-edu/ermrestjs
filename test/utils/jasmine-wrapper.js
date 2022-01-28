@@ -45,21 +45,27 @@ exports.run = function (config) {
 					method: 'POST',
 					data: 'username=' + username + '&password=' + password
 				}).then(function (response) {
-					var cookies = require('set-cookie-parser').parse(response);
+					console.log("username and password are working.");
+					try {
+						var cookies = require('set-cookie-parser').parse(response);
 
-					cookies.forEach(function (c) {
-						if (c.name == 'webauthn') {
-							process.env[authCookieEnvName] = c.name + '=' + c.value + ';';
-							console.log('Cookie found in CI ' + c.name + '=' + c.value + '; and set in env variable ' + authCookieEnvName);
-						}
-					});
+						cookies.forEach(function (c) {
+							if (c.name == 'webauthn') {
+								process.env[authCookieEnvName] = c.name + '=' + c.value + ';';
+								console.log('Cookie found in CI ' + c.name + '=' + c.value + '; and set in env variable ' + authCookieEnvName);
+							}
+						});
+					} catch (exp) {
+						console.dir(exp);
+						process.env[authCookieEnvName] = null;
+					}
 
 					if (process.env[authCookieEnvName]) {
 						cb();
 					} else {
 						throw new Error('Unable to retreive ' + authCookieEnvName + ' : set-cookie was not in response');
 					}
-				}).catch(function (err) {
+				}).catch(function (error) {
 					if (error.response) {
 						console.log(error.response.data);;
 					} else if (error.request) {
