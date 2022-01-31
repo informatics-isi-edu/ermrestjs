@@ -493,6 +493,7 @@ to use for ERMrest JavaScript agents.
         * [.displayname](#ERMrest.PseudoColumn+displayname) : <code>Object</code>
         * [.key](#ERMrest.PseudoColumn+key) : <code>boolean</code>
         * [.reference](#ERMrest.PseudoColumn+reference) : [<code>Reference</code>](#ERMrest.Reference)
+        * [.canUseScalarProjection](#ERMrest.PseudoColumn+canUseScalarProjection) : <code>Object</code>
         * [.formatPresentation(data, [context], [templateVariables], [options])](#ERMrest.PseudoColumn+formatPresentation) ⇒ <code>Object</code>
         * [.getAggregatedValue(page, contextHeaderParams)](#ERMrest.PseudoColumn+getAggregatedValue) ⇒ <code>Promise</code>
     * [.ForeignKeyPseudoColumn](#ERMrest.ForeignKeyPseudoColumn)
@@ -4543,6 +4544,7 @@ it will append "-<integer>" to it.
     * [.displayname](#ERMrest.PseudoColumn+displayname) : <code>Object</code>
     * [.key](#ERMrest.PseudoColumn+key) : <code>boolean</code>
     * [.reference](#ERMrest.PseudoColumn+reference) : [<code>Reference</code>](#ERMrest.Reference)
+    * [.canUseScalarProjection](#ERMrest.PseudoColumn+canUseScalarProjection) : <code>Object</code>
     * [.formatPresentation(data, [context], [templateVariables], [options])](#ERMrest.PseudoColumn+formatPresentation) ⇒ <code>Object</code>
     * [.getAggregatedValue(page, contextHeaderParams)](#ERMrest.PseudoColumn+getAggregatedValue) ⇒ <code>Promise</code>
 
@@ -4651,6 +4653,19 @@ This is how it behaves:
 3. if mainTuple is available, create the reference based on this path:
      <pseudoColumnSchema:PseudoColumnTable>/<path from pseudo-column to main table>/<facets based on value of shortestkey of main table>
 4. Otherwise create the path by traversing the path
+
+**Kind**: instance property of [<code>PseudoColumn</code>](#ERMrest.PseudoColumn)  
+<a name="ERMrest.PseudoColumn+canUseScalarProjection"></a>
+
+#### pseudoColumn.canUseScalarProjection : <code>Object</code>
+Whether we can use the raw column in the projection list or not.
+
+If we only need the value of scalar column and none of the other columns of the
+all-outbound path then we can simply use the scalar projection.
+Therefore the pseudo-column must:
+- be all-outbound path in scalar mode
+- the leaf column cannot have any column_display annotation
+- the leaf column cannot be sorted or doesn’t have a sort based on other columns of the table.
 
 **Kind**: instance property of [<code>PseudoColumn</code>](#ERMrest.PseudoColumn)  
 <a name="ERMrest.PseudoColumn+formatPresentation"></a>

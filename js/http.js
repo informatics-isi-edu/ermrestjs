@@ -116,6 +116,22 @@
     };
 
     /**
+     * given a respone object from http module, will return the headers
+     * This is to ensure angularjs and axios behave the same way.
+     * In case of angularjs' $http the headers is a function while for axios
+     * it's an object.
+     *
+     * The response is always going to be an object
+     */
+    module.getResponseHeader = function (response) {
+        if (!response || response.headers == null) return {};
+        if (typeof response.headers === "function") return response.headers();
+        if (!("headers" in response)) return {};
+
+        return response.headers;
+    };
+
+    /**
      * This is an experimental function for wrapping an http service.
      * @memberof ERMrest
      * @function
@@ -188,8 +204,27 @@
                             deferred.resolve(response);
                         });
                     },
-                    function(response) {
-                        response.status = response.status || response.statusCode;
+                    function(error) {
+                        /**
+                         * angularjs' $http returns the "response" object
+                         * while axios returns an "error" object that has "response" in it
+                         */
+                        var response = ("response" in error) ? error.response : error;
+
+                        /**
+                         * there was an error with calling the http module,
+                         * not that we got an error from server.
+                         */
+                        if (typeof response !== "object" || response == null) {
+                            module.onload().then(function() {
+                                deferred.reject(error);
+                            });
+                            return;
+                        }
+
+
+                        var contentType = module.getResponseHeader(response)["content-type"];
+
                         // if retry flag is set, skip on -1 and 0
                         var skipRetry = config.skipRetryBrowserError && (response.status == -1 || response.status == 0);
                         if ((_retriable_error_codes.indexOf(response.status) != -1) && count < max_retries && !skipRetry) {
@@ -213,11 +248,11 @@
 
                             // If we get an HTTP error with HTML in it, this means something the server returned as an error.
                             // Ermrest never produces HTML errors, so this was produced by the server itself
-                            if (response.headers()['content-type'] && response.headers()['content-type'].indexOf("html") > -1) {
-                                response.status = response.statusCode = _http_status_codes.internal_server_error;
+                            if (contentType && contentType.indexOf("html") > -1) {
+                                response.status = _http_status_codes.internal_server_error;
                                 // keep response.data the way it is, so client can provide more info to users
                             } else {
-                                response.status = response.statusCode = _http_status_codes.no_content;
+                                response.status = _http_status_codes.no_content;
                             }
 
                             module.onload().then(function() {
@@ -279,8 +314,8 @@
                         } else {
                             // If we get an HTTP error with HTML in it, this means something the server returned as an error.
                             // Ermrest never produces HTML errors, so this was produced by the server itself
-                            if (response.headers()['content-type'] && response.headers()['content-type'].indexOf("html") > -1) {
-                                response.status = response.statusCode = _http_status_codes.internal_server_error;
+                            if (contentType && contentType.indexOf("html") > -1) {
+                                response.status  = _http_status_codes.internal_server_error;
                                 // keep response.data the way it is, so client can provide more info to users
                             }
 

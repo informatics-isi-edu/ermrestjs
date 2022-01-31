@@ -1,6 +1,8 @@
 # Markdown Formatting
 
-The renderer that we use ([markdown-it](https://github.com/markdown-it/markdown-it)), supports the default markdown syntax with some extra features. Please refer to [markdown reference sheet](http://commonmark.org/help/) for markdown syntax.
+Markdown is a plain text format for writing structured documents. We use [markdown-it](https://github.com/markdown-it/markdown-it) to parse markdown content which follows [commonMark specifications](https://spec.commonmark.org/0.30/).
+
+For common markdown syntax please refer to [this reference sheet](http://commonmark.org/help/). The following content are mainly focused on more advanced features and/or features specific to ERMrestJS.
 
 ## Table of Contents
   * [Inline Vs. Block](#inline-vs-block)
@@ -45,6 +47,7 @@ The renderer that we use ([markdown-it](https://github.com/markdown-it/markdown-
     + [12. Superscript](#12-superscript)
     + [13. Span (Attach Attributes To Text)](#13-span-attach-attributes-to-text)
     + [14. RID link](#14-rid-link)
+    + [15. Table](#15-table)
 
 
 
@@ -52,7 +55,7 @@ The renderer that we use ([markdown-it](https://github.com/markdown-it/markdown-
 
 In HTML we have block and inline elements. Block elements usually add a newline and extra spaces around the content, while inline elements will only take up as much width as is needed to display the content. Paragraphs `<p>`, headers `<h#>`, and division `<div>` are some of the common block elements. Span `<span>`, images `<img>`, and anchors `<a>` are examples for inline blocks.
 
-This concept exists in markdown-it too. If we parse the content as a block, if the given markdown value does not produce a proper block element, it will be wrapped in a `<p>` tag.  While rendering it inline, will not add the `<p>` tag. Also newline (`\n`) is not acceptable in values of inline elements.
+This concept exists in ERMrestJS markdown parser too. If we parse the content as a block, if the given markdown value does not produce a proper block element, it will be wrapped in a `<p>` tag.  While rendering it inline, will not add the `<p>` tag. Also newline (`\n`) is not acceptable in values of inline elements.
 
 ```html
 [caption](http://example.com)
@@ -66,7 +69,7 @@ This concept exists in markdown-it too. If we parse the content as a block, if t
 </p>
 ```
 
-Therefore sometimes we prefer to render the value as inline. markdown-it also has different set of rules for inline and block. All the inline tags are acceptable while rendering a block, but not the other way around. For example you cannot have a header in inline. So you need to be careful while using the blocks. The following are different places that we are rendering inline. Other parts of code accept block elements.
+Therefore sometimes we prefer to render the value as inline. ERMrestJS parser also has different set of rules for inline and block. All the inline tags are acceptable while rendering a block, but not the other way around. For example you cannot have a header in inline. So you need to be careful while using the blocks. The following are different places that we are rendering inline. Other parts of code accept block elements.
 
 - row-name logic. More specifcally the logic for processing `row_markdown_pattern`.
 - While processing `markdown_name` (used on facets, columns, tables, and schemas).
@@ -87,10 +90,10 @@ You can attach attributes to any element in your markdown. Generally you can att
   ```
   > <p><strong class="test cls-2" val="1" disabled="">Multiple attributes Example</strong></p>
 
-- Attaching attributes to markdown table
+- Attaching attributes to markdown table (the two newlines between the end of table and the added attributes are required):
    ```html
-   |header|\n|-|\n|text|{.class-name}
-   
+   |header|\n|-|\n|text|\n\n{.class-name}
+
    #OUTPUT
    <table class="class-name">
      <thead>
@@ -916,3 +919,86 @@ Takes an RID of an existing record and generates a resolvable link for that reco
 <a href="/id/1-3X0H">1-3X0H</a>
 ```
 > <a href="/id/1-3X0H">1-3X0H</a>
+
+
+### 15. Table
+
+Tables are not part of the commonMark specifications, but the parser that we use follows the [GitHub Flavored Markdown specification for tables](https://github.github.com/gfm/#tables-extension-).
+
+A table is an arrangement of data with rows and columns, consisting of a single header row, a delimiter row separating the header from the data, and zero or more data rows.
+
+Each row consists of cells containing arbitrary text, in which inlines are parsed, separated by pipes (`|`). A leading and trailing pipe is also recommended for clarity of reading, and if there’s otherwise parsing ambiguity. Spaces between pipes and cell content are trimmed. Block-level elements cannot be inserted in a table.
+
+The delimiter row consists of cells whose only content are hyphens (`-`), and optionally, a leading or trailing colon (`:`), or both, to indicate left, right, or center alignment respectively.
+
+For example,
+```html
+| foo | bar |\n| --- | --- |\n| baz | bim |\n
+
+#OUTPUT
+<table>
+    <thead>
+        <tr>
+        <th>foo</th>
+        <th>bar</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+        <td>baz</td>
+        <td>bim</td>
+        </tr>
+    </tbody>
+</table>
+```
+> <table><thead><tr><th>foo</th><th>bar</th></tr></thead><tbody><tr><td>baz</td><td>bim</td></tr></tbody></table>
+
+
+The table is broken at the first empty line, or beginning of another block element:
+
+- Example 1 (table and a header which is block-level)
+    ```
+    | foo | bar |\n| --- | --- |\n| baz | bim |\n #### header
+
+    #OUTPUT
+    <table>
+        <thead>
+            <tr>
+            <th>foo</th>
+            <th>bar</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+            <td>baz</td>
+            <td>bim</td>
+            </tr>
+        </tbody>
+    </table>
+    <h4>header</h4>
+    ```
+    > <table><thead><tr><th>foo</th><th>bar</th></tr></thead><tbody><tr><td>baz</td><td>bim</td></tr></tbody></table><h4>header</h4>
+
+- A table and a link (an inline element) after it with extra newline in between. If you fail to add the empty newline inbetween, parser will add the link as a new row of the table.
+
+    ```
+    | foo | bar |\n| --- | --- |\n| baz | bim |\n\n[caption](example.com)
+
+    #OUTPUT
+    <table>
+        <thead>
+            <tr>
+            <th>foo</th>
+            <th>bar</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+            <td>baz</td>
+            <td>bim</td>
+            </tr>
+        </tbody>
+    </table>
+    <a href="example.com">caption</h4>
+    ```
+    > <table><thead><tr><th>foo</th><th>bar</th></tr></thead><tbody><tr><td>baz</td><td>bim</td></tr></tbody></table><a href="example.com">caption</a>

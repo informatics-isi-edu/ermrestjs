@@ -35,7 +35,7 @@ configuration itself.
 
 ## Node.js
 
-In Node.js environment, we're using [`request-q`](https://www.npmjs.com/package/request-q) as the http library and  [`q`](https://www.npmjs.com/package/q) for the promise library. You don't need to configure ERMrestJS.
+In Node.js environment, we're using [`axios`](https://www.npmjs.com/package/axios) as the http library and  [`q`](https://www.npmjs.com/package/q) for the promise library. You don't need to configure ERMrestJS.
 
 ```javascript
 var ERMrest = require("./build/ermrest.js");
