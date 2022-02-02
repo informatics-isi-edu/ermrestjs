@@ -453,13 +453,12 @@
 
 
     /**
-     * Try export/<context> then export then <context>
+     * Try export/<context> then export then 'detailed'
      * @param {ERMrest.reference} ref
-     * @param {Boolean} isCompact - the current context
+     * @param {Boolean} useCompact - whether the current context is compact or not
      */
     module._getExportReference = function (ref, useCompact) {
-        var compCtx = module._contexts.COMPACT,
-            detCtx = module._contexts.DETAILED,
+        var detCtx = module._contexts.DETAILED,
             expCompCtx = module._contexts.EXPORT_COMPACT,
             expDetCtx = module._contexts.EXPORT_DETAILED;
 
@@ -473,9 +472,6 @@
         };
 
         var useMainContext = function () {
-            if (useCompact) {
-                return isContext(compCtx) ? ref : ref.contextualize.compact;
-            }
             return isContext(detCtx) ? ref : ref.contextualize.detailed;
         };
 

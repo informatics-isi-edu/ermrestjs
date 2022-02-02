@@ -206,6 +206,46 @@
                                 "RID"
                             ],
                             "comment": "recursive path prefix"
+                        },
+                        {
+                            "source": [
+                                {"or": [
+                                    {"filter": "RCT", "operator": "::null::"},
+                                    {"filter": "RID", "operator": "::null::"}
+                                ]},
+                                {"inbound": ["reference_schema", "fk_inbound_related_to_reference"]},
+                                {"filter": "id", "operand_pattern": "-1", "negate": true},
+                                "id"
+                            ],
+                            "markdown_name": "inbound related with filter"
+                        },
+                        {
+                            "source": [
+                                {"filter": "RID", "negate": true, "operand_pattern": "-1"},
+                                {"inbound": ["reference_schema", "id_fk_association_related_to_reference"]},
+                                {"outbound": ["reference_schema", "fk_to_inbound_related_reference_table"]},
+                                {"or": [
+                                    {"filter": "RCT", "operator": "::null::"},
+                                    {"filter": "RID", "operator": "::null::"}
+                                ]},
+                                "id"
+                            ],
+                            "markdown_name": "associative related with filter"
+                        },
+                        {
+                            "source": [
+                                {"filter": "RCT", "negate": true, "operand_pattern": "{{{$moment.year}}}-{{{$moment.month}}}-{{{$moment.day}}}", "operator": "::lt::"},
+                                {"inbound": ["reference_schema","fromname_fk_inbound_related_to_reference"]},
+                                {"inbound":["reference_schema","fk_to_inbound_related_reference_table"]},
+                                {"filter": "RID", "negate": true, "operand_pattern": "-1"},
+                                {"outbound":["reference_schema","id_fk_association_related_to_reference"]},
+                                {"or": [
+                                    {"filter": "RCT", "operator": "::null::"},
+                                    {"filter": "RID", "operator": "::null::"}
+                                ]},
+                                "RID"
+                            ],
+                            "markdown_name": "free form related with filter"
                         }
                     ]
                 },

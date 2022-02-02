@@ -39,8 +39,12 @@ module._createPseudoColumn = function (reference, sourceObjectWrapper, mainTuple
 
 
 
-    // has aggregate
-    if (sourceObjectWrapper.hasAggregate || sourceObjectWrapper.isUniqueFiltered) {
+    // has aggregate or filter
+    // TODO FILTER_IN_SOURCE later this should be more specific so we can
+    //      categorize some of them as simple inbound, or p&b.
+    //      currently we don't want to allow "add" feature so it's easier if
+    //      we just mark them as general pseudo-column
+    if (sourceObjectWrapper.hasAggregate || sourceObjectWrapper.isFiltered) {
         return generalPseudo();
     }
 
@@ -799,6 +803,12 @@ function PseudoColumn (reference, column, sourceObjectWrapper, name, mainTuple) 
      */
     this.hasAggregate = this.sourceObjectWrapper.hasAggregate;
 
+    /**
+     * If the pseudoColumn has filter in its path
+     * @type {boolean}
+     */
+    this.isFiltered = this.sourceObjectWrapper.isFiltered;
+
     this.baseColumn = column;
 
     this._currentTable = reference.table;
@@ -1524,6 +1534,46 @@ Object.defineProperty(PseudoColumn.prototype, "default", {
 Object.defineProperty(PseudoColumn.prototype, "nullok", {
     get: function () {
         throw new Error("can not use this type of column in entry mode.");
+    }
+});
+/**
+ * Whether we can use the raw column in the projection list or not.
+ *
+ * If we only need the value of scalar column and none of the other columns of the
+ * all-outbound path then we can simply use the scalar projection.
+ * Therefore the pseudo-column must:
+ * - be all-outbound path in scalar mode
+ * - the leaf column cannot have any column_display annotation
+ * - the leaf column cannot be sorted or doesn’t have a sort based on other columns of the table.
+ *
+ *
+ * @member {Object} canUseScalarProjection
+ * @memberof ERMrest.PseudoColumn#
+ */
+Object.defineProperty(PseudoColumn.prototype, "canUseScalarProjection", {
+    get: function () {
+        if (this._canUseScalarProjection === undefined) {
+            var populate = function (self) {
+                // only in scalar mode
+                if (self.isEntityMode || !self.isUnique) {
+                    return false;
+                }
+                // if it has column_display we cannot use scalar
+                if (self.baseColumn.getDisplay(self._context).isMarkdownPattern) {
+                    return false;
+                }
+                // if it's sortable and based on other columns, we cannot use scalar
+                var sortCols = self._sortColumns;
+                if (self.sortable &&
+                    (sortCols.length != 1 || sortCols[0].column.name != self.baseColumn.name)) {
+                    return false;
+                }
+
+                return true;
+            };
+            this._canUseScalarProjection = populate(this);
+        }
+        return this._canUseScalarProjection;
     }
 });
 
@@ -2615,6 +2665,9 @@ Object.defineProperty(AssetPseudoColumn.prototype, "filenameExtFilter", {
  * This is a bit different than the {@link ERMrest.ForeignKeyPseudoColumn}, as that was for foreign keys
  * of current table. This wrapper is for inbound foreignkeys. It is actually warpping the whole reference (table).
  *
+ * Note: The sourceObjectWrapper might include filters and therefore the relatedReference
+ *       might not be a simple path from main to related table and it could have filters.
+ *
  * This class extends the {@link ERMrest.ReferenceColumn}
  */
 function InboundForeignKeyPseudoColumn (reference, relatedReference, sourceObjectWrapper, name) {
@@ -2654,6 +2707,12 @@ function InboundForeignKeyPseudoColumn (reference, relatedReference, sourceObjec
      * @desc Indicates that this ReferenceColumn is an inbound foreign key.
      */
     this.isInboundForeignKey = true;
+
+    /**
+     * @type {boolean}
+     * @desc Indicates that this related table has filters in its path
+     */
+    this.isFiltered = isObjectAndNotNull(sourceObjectWrapper) && sourceObjectWrapper.isFiltered;
 
     this.isUnique = false;
 
@@ -3088,6 +3147,12 @@ FacetColumn.prototype = {
                     table.schema.name,
                     table.name
                 );
+            } else if (self._facetObjectWrapper.isFiltered) {
+                // TODO can this be improved?
+                var filterPath = self._facetObjectWrapper.toString(false, false);
+                if (filterPath.length > 0) {
+                    newLoc = module.parse(newLoc.compactUri + "/" + filterPath);
+                }
             }
 
             this._sourceReference = new Reference(newLoc, table.schema.catalog);
@@ -3199,10 +3264,13 @@ FacetColumn.prototype = {
      * we shouldn't even offer the option:
      *   1. (G4) Scalar columns of main table that are not-null.
      *   2. (G5) All outbound foreignkey facets that all the columns invloved are not-null
+     *   3. (G6) Facets with `filter` in their source definition. We cannot combine filter
+     *           and null together.
      *
      * Based on this, the following will be the logic for this function:
      *     - If facet has `null` filter: `false`
      *     - If facet has `"hide_null_choice": true`: `true`
+     *     - If G6: true
      *     - If G1: `true` if the column is not-null
      *     - If G5: `true`
      *     - If G2: `true`
@@ -3228,6 +3296,10 @@ FacetColumn.prototype = {
                     return true;
                 }
 
+                // G6
+                if (self._facetObjectWrapper.isFiltered) {
+                    return true;
+                }
 
                 // G1 / G4
                 if (self.foreignKeyPathLength === 0) {

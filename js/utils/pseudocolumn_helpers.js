@@ -35,9 +35,9 @@
                 }
 
                 if (isDefinedAndNotNull(range.min)) {
-                    operator = module.OPERATOR.GREATER_THAN_OR_EQUAL_TO;
+                    operator = module._ERMrestFilterPredicates.GREATER_THAN_OR_EQUAL_TO;
                     if (range.min_exclusive === true) {
-                        operator = module.OPERATOR.GREATER_THAN;
+                        operator = module._ERMrestFilterPredicates.GREATER_THAN;
                     }
 
                     res += encode(column) + operator + encode(_renderFacetHelpers.valueToString(range.min));
@@ -45,9 +45,9 @@
                 }
 
                 if (isDefinedAndNotNull(range.max)) {
-                    operator = module.OPERATOR.LESS_THAN_OR_EQUAL_TO;
+                    operator = module._ERMrestFilterPredicates.LESS_THAN_OR_EQUAL_TO;
                     if (range.max_exclusive === true) {
-                        operator = module.OPERATOR.LESS_THAN;
+                        operator = module._ERMrestFilterPredicates.LESS_THAN;
                     }
 
                     if (hasFilter) {
@@ -179,7 +179,7 @@
      *   the url will be:
      *      S:B/<filters of B>/<path from B to A where the last join is right join>/<parsed filter of all the other facets>/$alias
      *   Compare this with the following which will be the result if none of the facets have `null`:
-     *      <parsed fitler of all the facets>/$alias
+     *      <parsed filter of all the facets>/$alias
      *   In this case, we are returning a `"rightJoin": true`. In this case, we
      *   have to make sure that the returned value must be the start of url and
      *   cannot be simply appended to the rest of url.
@@ -287,7 +287,7 @@
             // ---------------- parse the path ---------------- //
             path = ""; // the source path if there are some joins
             useRightJoin = false;
-            if (_sourceColumnHelpers._sourceHasPath(term.source)) {
+            if (_sourceColumnHelpers._sourceHasNodes(term.source)) {
 
                 // if there's a null filter and source has path, we have to use right join
                 // parse the datasource
@@ -374,7 +374,7 @@
      *  - `sourcekey` to `key`
      *  - `alias` to `a`
      *  - `filter` to `f`
-     *  - `operand` to `opd`
+     *  - `operand_pattern` to `opd`
      *  - `operator` to `opr`
      *  - `negate` to `n`
      * @private
@@ -390,10 +390,23 @@
             };
         };
 
-        if (!_sourceColumnHelpers._sourceHasPath(source)) return res;
+        var shortenAndOr = function (node) {
+            return function (k) {
+                if (!Array.isArray(node[k])) return;
+
+                node[k].forEach(function (el) {
+                    ["and", "or"].forEach(shortenAndOr(el));
+                    ["filter", "operand_pattern", "operator", "negate"].forEach(shorten(el));
+                });
+            };
+        };
+
+        if (!_sourceColumnHelpers._sourceHasNodes(source)) return res;
 
         for (var i = 0; i < res.length; i++) {
-            ["alias", "sourcekey", "inbound", "outbound", "filter", "operand", "operator", "negate"].forEach(shorten(res[i]));
+            ["and", "or"].forEach(shortenAndOr(res[i]));
+
+            ["alias", "sourcekey", "inbound", "outbound", "filter", "operand_pattern", "operator", "negate"].forEach(shorten(res[i]));
         }
         return res;
     };
@@ -505,13 +518,28 @@
                 }
 
                 // there's at least one secondary request
-                if (sd.hasInbound || sd.sourceObject.aggregate) {
+                if (sd.hasInbound || sd.sourceObject.aggregate || sd.isUniqueFiltered) {
                     hasWaitFor = true;
                 }
 
-                // NOTE this coukd be in the table.sourceDefinitions
+                // NOTE this could be in the table.sourceDefinitions
                 // the only issue is that in there we don't have the mainTuple...
-                var pc = module._createPseudoColumn(baseReference, sd, mainTuple);
+                var pc = module._createPseudoColumn(
+                    baseReference,
+                    /**
+                     * cloning so,
+                     * - we're not referring to the same sd
+                     * - make sure the sourcekey is also part of the definition
+                     *   so the mapping of sourcekey to definition is not lost.
+                     *   this mapping is needed for the path prefix logic
+                     */
+                    sd.clone(
+                        {"sourcekey": wf},
+                        currentTable,
+                        module._constraintNames
+                    ),
+                    mainTuple
+                );
 
                 // ignore normal columns
                 if (!pc.isPseudo || pc.isAsset) return;
@@ -578,7 +606,7 @@
                 };
             }
 
-            // TODO FITLER_IN_SOURCE
+            // TODO FILTER_IN_SOURCE
             if (refCol.isInboundForeignKey) {
                 var res = [];
                 var origFkR = refCol.foreignKey;
@@ -591,7 +619,7 @@
                     res.push({"inbound": origFkR.constraint_names[0]});
                     if (association) {
                         res.push({
-                            "outbound": association._secondFKR.constraint_names[0]
+                            "outbound": association.associationToRelatedFKR.constraint_names[0]
                         });
                     }
                     res.push(column.name);
@@ -978,7 +1006,6 @@
 
     SourceObjectWrapper.prototype = {
 
-        // TODO FILTER_IN_SOURCE Could be optimized
         clone: function (sourceObject, table, consNames, isFacet) {
             var key, res, self = this;
 
@@ -1067,6 +1094,7 @@
             self.column = col;
 
             self.hasPrefix = hasPrefix;
+            // NOTE hasPath only means foreign key path and not filter
             self.hasPath = hasPath;
             self.foreignKeyPathLength = foreignKeyPathLength;
             self.hasInbound = hasInbound;
@@ -1074,7 +1102,16 @@
             self.isFiltered = isFiltered;
             self.isEntityMode = isEntity;
             self.isUnique = !self.hasAggregate && !self.isFiltered && (!hasPath || !hasInbound);
+
             // TODO FILTER_IN_SOURCE better name...
+            /**
+             * these type of columns would be very similiar to aggregate columns.
+             * but it requires more changes in both chaise and ermrestjs
+             * (most probably a new column type or at least more api to fetch their values is needed)
+             * (in chaise we would have to add a new type of secondary requests to active list)
+             * (not sure if these type of pseudo-columns are even useful or not)
+             * so for now we're not going to allow these type of pseudo-columns in visible-columns
+             */
             self.isUniqueFiltered = !self.hasAggregate && self.isFiltered && (!hasPath || !hasInbound);
 
             // attach last fk
@@ -1089,23 +1126,8 @@
 
             // generate name:
             // TODO maybe we shouldn't even allow aggregate in faceting (for now we're ignoring it)
-            if ((sourceObject.self_link === true) || self.hasPath || self.isEntityMode || (isFacet !== false && self.hasAggregate)) {
-                var rawSourceObject = JSON.parse(JSON.stringify(sourceObject));
-
-                // if the source has path, we should make sure the given sourceObject for hash is raw (not using alias)
-                //  a pseudo-column using path prefix should be treated differently from one without it.
-                if (self.hasPath) {
-                    rawSourceObject.source = [];
-                    sourceObject.source.forEach(function (sn, index) {
-                        rawSourceObject.source.push(sn);
-
-                        // remove alias property
-                        if (typeof sn === "object" && "alias" in sn) {
-                            delete rawSourceObject.source[rawSourceObject.source.length-1].alias;
-                        }
-                    });
-                }
-                self.name = _sourceColumnHelpers.generateSourceObjectHashName(rawSourceObject, isFacet);
+            if ((sourceObject.self_link === true) || self.isFiltered || self.hasPath || self.isEntityMode || (isFacet !== false && self.hasAggregate)) {
+                self.name = _sourceColumnHelpers.generateSourceObjectHashName(sourceObject, isFacet);
                 self.isHash = true;
 
                 if (table.columns.has(self.name)) {
@@ -1140,7 +1162,7 @@
             return self.sourceObjectNodes.reduce(function (prev, sn, i) {
                 if (sn.isFilter) {
                     if (reverse) {
-                        return (i > 0 ? "/" : "") + sn.toString() + prev;
+                        return sn.toString() + (i > 0 ? "/" : "") + prev;
                     } else {
                         return prev + (i > 0 ? "/" : "") + sn.toString();
                     }
@@ -1151,9 +1173,9 @@
                     // if we're reversing, we have to add alias to the first one,
                     // otherwise we only need to add alias if this object only has a prefix and nothing else
                     if (reverse) {
-                        return sn.toString(reverse,isLeft, outAlias, isReverseRightJoin);
+                        return sn.toString(reverse, isLeft, outAlias, isReverseRightJoin);
                     } else {
-                        return sn.toString(reverse, isLeft, self.foreignKeyPathLength == sn.foreignKeyPathLength ? outAlias : null, isReverseRightJoin);
+                        return sn.toString(reverse, isLeft, self.foreignKeyPathLength == sn.nodeObject.foreignKeyPathLength ? outAlias : null, isReverseRightJoin);
                     }
                 }
 
@@ -1212,7 +1234,7 @@
                 sn = self.sourceObjectNodes[i];
                 if (sn.isPathPrefix) {
                     // if this is the last element, we have to add the alias to this
-                    path = path.concat(sn.nodeObject.getRawSourcePath(reverse, self.foreignKeyPathLength == sn.foreignKeyPathLength ? outAlias : null));
+                    path = path.concat(sn.nodeObject.getRawSourcePath(reverse, self.foreignKeyPathLength == sn.nodeObject.foreignKeyPathLength ? outAlias : null));
                 }
                 else if (sn.isFilter) {
                     path.push(sn.nodeObject);
@@ -1293,7 +1315,7 @@
                 return (result === undefined) ? null : result;
             };
 
-            var i, fkAlias, constraint, isInbound, fkObj, fk, colTable, hasInbound = false, firstForeignKeyNode, lastForeignKeyNode,
+            var i, fkAlias, constraint, isInbound, fkObj, fk, colTable = rootTable, hasInbound = false, firstForeignKeyNode, lastForeignKeyNode,
                 foreignKeyPathLength = 0, sourceObjectNodes = [], isFiltered = false, hasPrefix = false, hasOnlyPrefix = false, prefix;
 
             for (i = 0; i < source.length - 1; i++) {
@@ -1330,12 +1352,19 @@
                     hasInbound = hasInbound || prefix.hasInbound;
                     isFiltered = isFiltered || prefix.isFiltered;
                 }
-                // TODO FILTER_IN_SOURCE
-                // else if ("fitler" in source[i] || "and" in source[i] || "or" in source[i]) {
-                //     isFiltered = true;
-                //     sourceObjectNodes.push(new SourceObjectNode(source[i], true));
-                //     continue;
-                // }
+                else if ("filter" in source[i] || "and" in source[i] || "or" in source[i]) {
+                    if (!isObjectAndNotNull(colTable)) {
+                        return returnError("Couldn't parse the url since Location doesn't have acccess to the catalog object or main table is invalid.");
+                    }
+
+                    isFiltered = true;
+                    try {
+                        sourceObjectNodes.push(new SourceObjectNode(source[i], true, false, false, false, undefined, undefined, colTable));
+                    } catch (exp) {
+                        return returnError(exp.message);
+                    }
+                    continue;
+                }
                 else if (("inbound" in source[i]) || ("outbound" in source[i])) {
                     isInbound = ("inbound" in source[i]);
                     constraint = isInbound ? source[i].inbound : source[i].outbound;
@@ -1673,50 +1702,81 @@
         },
 
         // TODO FILTER_IN_SOURCE test this
-        parseSourceObjectNodeFilter: function (nodeObject) {
-            var logOp, ermrestOp, i, operator, res = "", innerRes;
+        parseSourceObjectNodeFilter: function (nodeObject, table) {
+            var logOp, ermrestOp, i, operator, res = "", innerRes, colName, operand = "";
             var encode = module._fixedEncodeURIComponent;
-            var nullOperator = module.OPERATOR.NULL;
+            var nullOperator = module._ERMrestFilterPredicates.NULL;
+            var returnError = function (message) {
+                throw new Error(message);
+            };
 
             if (!("filter" in nodeObject || "and" in nodeObject || "or" in nodeObject)) {
-                return null;
+                returnError("given source node is not a filter");
             }
 
+            // ------- termination case of the recusive filter ---------
             if ("filter" in nodeObject) {
                 // ------- add the column ---------
-                if (!isStringAndNotEmpty(nodeObject.filter)) {
-                    // filter must be the column name string
-                    return null;
+                // just a string
+                if (isStringAndNotEmpty(nodeObject.filter)) {
+                    colName = nodeObject.filter;
                 }
-                res += encode(nodeObject.filter);
+                // an array of length one where the element is a string
+                else if (Array.isArray(nodeObject.filter) && nodeObject.filter.length == 1 && isStringAndNotEmpty(nodeObject.filter[0])) {
+                    colName = nodeObject.filter[0];
+                }
+                // an array of length two where both are string and second one
+                // is used as the column name
+                else if (Array.isArray(nodeObject.filter) && nodeObject.filter.length == 2 && isStringAndNotEmpty(nodeObject.filter[1])) {
+                    // if there's a context, just throw error
+                    if (isStringAndNotEmpty(nodeObject.filter[0])) {
+                        return returnError("context change in filter is not currently supported.");
+                    }
+                    colName = nodeObject.filter[1];
+                }
+                // if none of the cases above matched
+                if (!colName){
+                    return returnError("invalid `filter` property: " + nodeObject.filter);
+                }
+                // make sure the column is in the table
+                if (table && !table.columns.has(colName)) {
+                    returnError("given `filter` (`" + nodeObject.filter + "`) is not in the table.");
+                }
+                res += encode(colName);
 
                 // ------- add the operator ---------
                 if ("operator" in nodeObject) {
                     operator = nodeObject.operator;
-                    if (Object.values(module.OPERATOR).indexOf(operator) === -1) {
-                        // the operator is not valid
-                        return null;
+                    if (Object.values(module._ERMrestFilterPredicates).indexOf(operator) === -1) {
+                        return returnError("invalid operator used: `" + operator + "`");
                     }
                 } else {
-                    operator = module.OPERATOR.EQUAL;
+                    operator = module._ERMrestFilterPredicates.EQUAL;
                 }
                 res += operator;
 
-
-                // ------- add the operator ---------
+                // ------- add the operand ---------
                 // null cannot have any operand, the rest need operand
-                if ( ("operand" in nodeObject) ? (nodeObject.operand != nullOperator) : (nodeObject.operand == nullOperator) ) {
-                    return null;
+                if ( (("operand_pattern" in nodeObject) && (operator == nullOperator)) ||
+                     (!("operand_pattern" in nodeObject) && (operator != nullOperator))) {
+                    returnError(nodeObject.operand_pattern == nullOperator ? "null operator cannot have any operand_pattern" : "operand_pattern must be defined");
                 }
+                if ("operand_pattern" in nodeObject) {
+                    operand = module._renderTemplate(
+                        nodeObject.operand_pattern,
+                        {},
+                        table.schema.catalog,
+                        {templateEngine: nodeObject.template_engine}
+                    );
 
-                if ("operand" in nodeObject) {
-                    res = nodeObject.operand;
+                    if (operand == null || operand.trim() == "") {
+                        returnError("operand_pattern template resutls in empty string.");
+                    }
                 }
-
-                if (nodeObject.negate === true) {
-                    res = "!(" + res + ")";
-                }
-            } else {
+                res += encode(operand);
+            }
+            // ------- recursive filter ---------
+            else {
                 if ("and" in nodeObject) {
                     logOp = "and";
                     ermrestOp = module._ERMrestLogicalOperators.AND;
@@ -1725,22 +1785,28 @@
                     ermrestOp = module._ERMrestLogicalOperators.OR;
                 }
 
-                res = "(";
+                if (!Array.isArray(nodeObject[logOp]) || nodeObject[logOp].length === 0) {
+                    returnError("given source not is not a valid faild (and/or must be an array)");
+                }
+
+                res = (nodeObject[logOp].length > 1 && !nodeObject.negate) ? "(" : "";
                 for (i = 0; i < nodeObject[logOp].length; i++) {
-                    // TODO FILTER_IN_SOURCE test this
-                    innerRes = _renderFacetHelpers.parseSourceObjectNodeFilter(nodeObject[logOp][i]);
-                    if (innerRes == null) {
-                        return null;
-                    }
+                    // it might throw an error which will be propagated to the original caller
+                    innerRes = _sourceColumnHelpers.parseSourceObjectNodeFilter(nodeObject[logOp][i], table);
                     res += (i > 0 ? ermrestOp : "") + innerRes;
                 }
-                res += ")";
+                res += (nodeObject[logOp].length > 1  && !nodeObject.negate) ? ")" : "";
+            }
+
+            // ------- add negate ---------
+            if (nodeObject.negate === true) {
+                res = "!(" + res + ")";
             }
 
             return res;
         },
 
-        _sourceHasPath: function (source) {
+        _sourceHasNodes: function (source) {
             return Array.isArray(source) && !(source.length === 1 && typeof source[0] === "string");
         },
 
@@ -1755,6 +1821,171 @@
         },
 
         /**
+         * Given two source nodes representing filter, sort them. This is mainly
+         * done to ensure the hash string for a source ignores the given order
+         * of "and"/"or" filters and sorts them based on the following:
+         *   - if only one has `negate`, the one without `negate` comes first.
+         *   - if only one has `filter` (the other has `and`/`or`), it comes first.
+         *   - if only one has `and`, it comes first.
+         *   - if both have `and`,
+         *      - shorter one comes first.
+         *      - if same size, sort based on string representation.
+         *   - otherwise (both have `or`):
+         *      - shorter one comes first
+         *      - if same size, sort based on string representation.
+         * @param {*} a
+         * @param {*} b
+         */
+        _sortFilterInSource: function (a, b) {
+            var srcProps = module._sourceProperties,
+                helpers = _sourceColumnHelpers;
+
+            var aHasNegate = srcProps.NEGATE in a,
+                aHasFilter = srcProps.FILTER in a,
+                aHasAnd = srcProps.AND in a,
+                bHasNegate = srcProps.NEGATE in b,
+                bHasFilter = srcProps.FILTER in b,
+                bHasAnd = srcProps.AND in b;
+
+            var sortBasedOnStr = function () {
+                var tempA = helpers._stringifyFilterInSource(a),
+                    tempB = helpers._stringifyFilterInSource(b);
+                if (tempA == tempB) {
+                    return 0;
+                }
+                return tempA > tempB ? 1 : -1;
+            };
+
+            // ------- only one has negate (the one with negative comes second) -------- //
+            if (aHasNegate && !bHasNegate) {
+                return 1;
+            }
+            if (!aHasNegate && bHasNegate) {
+                return -1;
+            }
+
+            // ------- only one has filter (the one with filter comes first) -------- //
+            if (aHasFilter && !bHasFilter) {
+                return -1;
+            }
+            if (!aHasFilter && bHasFilter) {
+                return 1;
+            }
+
+            // ------- both have filter (sort based on str) -------- //
+            if (aHasFilter && bHasFilter) {
+                return sortBasedOnStr();
+            }
+
+            // ------- only one has and (the one with `and` comes first) -------- //
+            if (aHasAnd && !bHasAnd) {
+                return -1;
+            }
+            if (!aHasAnd && bHasAnd) {
+                return 1;
+            }
+
+            // ------- both have and -------- //
+            if (aHasAnd && bHasAnd) {
+                // the shorter comes first
+                if (a[AND_PROP].length != b[AND_PROP].length) {
+                    return a[AND_PROP].length - b[AND_PROP].length;
+                }
+                // sort based on str
+                return sortBasedOnStr();
+            }
+
+            // ------- both have or -------- //
+            // the shorter comes first
+            if (a[OR_PROP].length != b[OR_PROP].length) {
+                return a[OR_PROP].length - b[OR_PROP].length;
+            }
+
+            // sort based on str
+            return sortBasedOnStr();
+        },
+
+        _stringifyFilterInSource: function (node) {
+            var srcProps = module._sourceProperties,
+                helpers = _sourceColumnHelpers;
+
+            var stringifyAndOr = function (arr) {
+                // TODO we might want to sort this to make sure the order
+                // of elements doesn't matter
+                return "[" + arr.sort(helpers._sortFilterInSource).map(helpers._stringifyFilterInSource).join(",") + "]";
+            };
+
+            var res = [];
+            if (srcProps.NEGATE in node) {
+                res.push('"negate":' + node[srcProps.NEGATE]);
+            }
+
+            if (srcProps.FILTER in node) {
+                // make sure attributes are added in the same order all the times
+                // NOTE technically could use the Object.keys and sort
+                [srcProps.FILTER, srcProps.OPERATOR, srcProps.OPERAND_PATTERN].forEach(function (attr) {
+                    if (attr in node) {
+                        res.push('"' + attr + '":' + JSON.stringify(node[attr]));
+                    }
+                });
+                return '{' + res.join(",") + '}';
+            }
+
+            if (srcProps.AND in node) {
+                res.push('"and":' + stringifyAndOr(node[srcProps.AND]));
+            }
+            else if (srcProps.OR in node){
+                res.push('"or":' + stringifyAndOr(node[srcProps.OR]));
+            }
+
+            return '{' + res.join(",") + '}';
+        },
+
+        /**
+         * Some elements of source have multiple properties and we cannot just
+         * use JSON.stringify since it will not preserve the order.
+         * NOTE this function will not check the structure and assume it's already valid
+         * @param {*} source
+         * @returns stringify the given source while ensuring proper order of properties
+         * @private
+         */
+        _stringifySource: function (source) {
+            var srcProps = module._sourceProperties,
+                helpers = _sourceColumnHelpers;
+
+            if (helpers._sourceHasNodes(source)) {
+                // do the same thing as JSON.stringify but
+                // make sure the attributes are added in the same order
+                var attrs = [];
+                source.forEach(function (node) {
+                    if (typeof node === "string") {
+                        attrs.push('"' + node + '"');
+                        return;
+                    }
+
+                    // this will ensure any extra attributes are just ignored (e.g. alias)
+                    [srcProps.SOURCEKEY, srcProps.INBOUND, srcProps.OUTBOUND].forEach(function (attr) {
+                        if (attr in node) {
+                            attrs.push('{"' + attr + '":' + JSON.stringify(node[attr]) + '}');
+                            return;
+                        }
+                    });
+
+                    [srcProps.FILTER, srcProps.AND, srcProps.OR].forEach(function (attr) {
+                        if (attr in node) {
+                            attrs.push(helpers._stringifyFilterInSource(node));
+                            return;
+                        }
+                    });
+                });
+
+                return '[' + attrs.join(',') + ']';
+            } else {
+                return _sourceColumnHelpers._getSourceColumnStr(source);
+            }
+        },
+
+        /**
          * @param {string|object} colObject if the foreignkey/key is compund, this should be the constraint name. otherwise the source syntax for pseudo-column.
          * @param {boolean} useOnlySource whether we should ignore other attributes other than source or not
          * @desc return the name that should be used for pseudoColumn. This function makes sure that the returned name is unique.
@@ -1766,7 +1997,10 @@
          *   Pass the equivalent pseudo-column definition of them. It must at least have `source` as an attribute.
          * - Pseudo-Columns:
          *   - Just pass the object that defines the pseudo-column. It must at least have `source` as an attribute.
-         *   - The given source will be hashed as is, so we should remove the alias and change to raw source (instead of prefix) beforehand
+         *   - This function will go through the source array and ensure the attributes are properly sorted.
+         *     This is mainly done for the nodes with multiple properties where JSON.stringify will not
+         *     preserve the order of proprties. So instead we're going over the known attributes and create
+         *     the string manually ourselves (this will also ensure additional properties are ignored).
          */
         generateSourceObjectHashName: function (colObject, useOnlySource) {
 
@@ -1778,12 +2012,7 @@
             if (typeof colObject === "object") {
                 if (!colObject.source) return null;
 
-                if (_sourceColumnHelpers._sourceHasPath(colObject.source)) {
-                    // since it's an array, it will preserve the order
-                    str += JSON.stringify(colObject.source);
-                } else {
-                    str += _sourceColumnHelpers._getSourceColumnStr(colObject.source);
-                }
+                str += _sourceColumnHelpers._stringifySource(colObject.source);
 
                 if (useOnlySource !== true && typeof colObject.aggregate === "string") {
                     str += colObject.aggregate;
@@ -1919,10 +2148,14 @@
         }
     };
 
-    function SourceObjectNode (nodeObject, isFilter, isForeignKey, isInbound, isPathPrefix, pathPrefixSourcekey, alias) {
+    function SourceObjectNode (nodeObject, isFilter, isForeignKey, isInbound, isPathPrefix, pathPrefixSourcekey, alias, table) {
         this.nodeObject = nodeObject;
 
         this.isFilter = isFilter;
+        if (isFilter && table) {
+            // this will parse the filter and throw errors if it's invalid
+            this.parsedFilterNode = _sourceColumnHelpers.parseSourceObjectNodeFilter(nodeObject, table);
+        }
 
         this.isForeignKey = isForeignKey;
         this.isInbound = isInbound;
@@ -1952,7 +2185,7 @@
                 return self.nodeObject.toString(reverse, isLeft, outAlias, isReverseRightJoin);
             }
 
-            return _sourceColumnHelpers.parseSourceObjectNodeFilter(self.nodeObject);
+            return this.parsedFilterNode;
         },
 
         // TOOD what's the point of this???

@@ -428,7 +428,7 @@
          *       - Using `source_domain.column` instead of end column in case of scalars
          *   - Sending request to fetch the rows associated with the entity choices,
          *     and ignoring the ones that don't return any result.
-         * - The valid fitlers in the url will either be matched with an existing facet,
+         * - The valid filters in the url will either be matched with an existing facet,
          *   or result in a new facet column.
          * Usage:
          * ```
@@ -906,7 +906,7 @@
         },
 
         /**
-         * Remove all the fitlers, facets, and custom-facets from the reference
+         * Remove all the filters, facets, and custom-facets from the reference
          * @param {boolean} sameFilter By default we're removing filters, if this is true filters won't be changed.
          * @param {boolean} sameCustomFacet By default we're removing custom-facets, if this is true custom-facets won't be changed.
          * @param {boolean} sameFacet By default we're removing facets, if this is true facets won't be changed.
@@ -956,6 +956,34 @@
             if (!sameFilter) {
                 newReference._location.removeFilters();
             }
+
+            return newReference;
+        },
+
+        /**
+         * Given a list of facet and filters, will add them to the existing conjunctive facet filters.
+         *
+         * @param {Object[]} facetAndFilters - an array of facets that will be added
+         * @return {ERMrest.Reference}
+         */
+        addFacets: function (facetAndFilters) {
+            verify(Array.isArray(facetAndFilters) && facetAndFilters.length > 0, "given input must be an array");
+
+            var loc = this.location;
+
+            // keep a copy of existing facets
+            var existingFilters = loc.facets ? module._simpleDeepCopy(loc.facets.andFilters) : [];
+
+            // create a new copy
+            var newReference = _referenceCopy(this);
+
+            // clone the location object
+            newReference._location = loc._clone();
+            newReference._location.beforeObject = null;
+            newReference._location.afterObject = null;
+
+            // merge the existing facets with the input
+            newReference._location.facets = {"and": facetAndFilters.concat(existingFilters)};
 
             return newReference;
         },
@@ -1285,7 +1313,7 @@
 
                 //  do the 'post' call
                 this._server.http.post(uri, data, config).then(function(response) {
-                    var etag = response.headers().etag;
+                    var etag = module.getResponseHeader(response).etag;
                     //  new page will have a new reference (uri that filters on a disjunction of ids of these tuples)
                     var uri = self._location.compactUri + '/',
                         keyName;
@@ -1470,7 +1498,7 @@
                         throw new InvalidServerResponse(uri, response.data, action);
                     }
 
-                    var etag = response.headers().etag;
+                    var etag = module.getResponseHeader(response).etag;
 
                     var hasPrevious, hasNext = false;
                     if (!ownReference._location.paging) { // first page
@@ -1514,16 +1542,12 @@
                             newActionVerb = "auto-reload-domain";
                         }
                         contextHeaderParams.action = action.substring(0,action.lastIndexOf(";")+1) + newActionVerb;
-                        referenceWithoutPaging.read(limit, contextHeaderParams, useEntity, true).then(function rereadReference(rereadPage) {
-                            defer.resolve(rereadPage);
-                        }, function error(response) {
-                            var error = module.responseToError(response);
-                            defer.reject(error);
-                        });
+                        return referenceWithoutPaging.read(limit, contextHeaderParams, useEntity, true);
                     } else {
-                        defer.resolve(page);
+                        return page;
                     }
-
+                }).then(function (resPage) {
+                    defer.resolve(resPage);
                 }).catch(function (e) {
                     defer.reject(module.responseToError(e));
                 });
@@ -1866,7 +1890,7 @@
                         }
                     }
 
-                    var etag = response.headers().etag;
+                    var etag = module.getResponseHeader(response).etag;
                     var pageData = [];
 
                     var uri = self._location.service + "/catalog/" + self.table.schema.catalog.id + "/entity/" + urlEncode(self.table.schema.name) + ':' + urlEncode(self.table.name) + '/';
@@ -2081,8 +2105,8 @@
 
                 var referencePaths = [],
                     references = [];
-                var keyColumns = associationRef._secondFKR.colset.columns; // columns tells us what the key column names are in the fkr "_to" relationship
-                var mapping = associationRef._secondFKR.mapping; // mapping tells us what the column name is on the leaf tuple, so we know what data to fetch from each tuple for identifying
+                var keyColumns = associationRef.associationToRelatedFKR.colset.columns; // columns tells us what the key column names are in the fkr "_to" relationship
+                var mapping = associationRef.associationToRelatedFKR.mapping; // mapping tells us what the column name is on the leaf tuple, so we know what data to fetch from each tuple for identifying
 
                 var currentPath = compactPath;
                 for (var i=0; i<tuples.length; i++) {
@@ -2599,7 +2623,7 @@
                      // association table
                      else if (rel.derivedAssociationReference) {
                          var assoc = rel.derivedAssociationReference;
-                         sourcePath = assoc.origFKR.toString() + "/" + relatedTableAlias + ":=" + assoc._secondFKR.toString(true);
+                         sourcePath = assoc.origFKR.toString() + "/" + relatedTableAlias + ":=" + assoc.associationToRelatedFKR.toString(true);
                          addOutput(getTableOutput(rel, relatedTableAlias, sourcePath, true, self));
                      }
                      // single inbound related
@@ -3179,6 +3203,7 @@
                                  logCol((!wrapper.hasAggregate && wrapper.hasInbound && !wrapper.isEntityMode), wm.MULTI_SCALAR_NEED_AGG, i) ||
                                  logCol((!wrapper.hasAggregate && wrapper.hasInbound && wrapper.isEntityMode && context !== module._contexts.DETAILED && context.indexOf(module._contexts.EXPORT) == -1), wm.MULTI_ENT_NEED_AGG, i) ||
                                  logCol(wrapper.hasAggregate && wrapper.isEntryMode, wm.NO_AGG_IN_ENTRY, i) ||
+                                 logCol(wrapper.isUniqueFiltered, wm.FILTER_NO_PATH_NOT_ALLOWED) ||
                                  logCol(isEntry && wrapper.hasPath && (wrapper.hasInbound || wrapper.isFiltered || wrapper.foreignKeyPathLength > 1), wm.NO_PATH_IN_ENTRY, i);
 
                         // avoid duplciates and hide the column
@@ -3823,7 +3848,7 @@
                 // will be used to determine whether this related reference is derived from association relation or not
                 newRef.derivedAssociationReference = new Reference(module.parse(this._location.compactUri + "/" + fkr.toString()), catalog);
                 newRef.derivedAssociationReference.origFKR = newRef.origFKR;
-                newRef.derivedAssociationReference._secondFKR = otherFK;
+                newRef.derivedAssociationReference.associationToRelatedFKR = otherFK;
 
                 // build the filter source (the alias is used in the read function to get the proper acls)
                 filterSource.push({"inbound": otherFK.constraint_names[0], "alias": module._parserAliases.ASSOCIATION_TABLE});
@@ -4040,8 +4065,17 @@
 
                             // the column must be part of outbounds, so we don't need to check for it
                             fkIndex = findAllOutBoundIndex(col.name);
-                            colName = fkAliasPreix + (allOutBounds.length + k++);
-                            sortMap[colName] = [fkAliasPreix + (fkIndex+1), module._fixedEncodeURIComponent(sortCols[j].column.name)].join(":");
+
+                            if (col.canUseScalarProjection) {
+                                // in this case the column itself is projected,
+                                // and sort can only be based on the column itself..
+                                // so we don't need sortMap and just need to
+                                // ensure the colName is referring to the proper fk
+                                colName = fkIndex;
+                            } else {
+                                colName = fkAliasPreix + (allOutBounds.length + k++);
+                                sortMap[colName] = [fkAliasPreix + (fkIndex+1), module._fixedEncodeURIComponent(sortCols[j].column.name)].join(":");
+                            }
                         } else {
                             colName = sortCols[j].column.name;
                             if (colName in sortColNames) {
@@ -4148,6 +4182,7 @@
                     sortColumn,
                     addedCols,
                     aggFn = "array_d",
+                    allOutBound,
                     pseudoPathRes,
                     rightSummFn;
 
@@ -4177,6 +4212,7 @@
 
                 // add all the allOutBounds
                 for (k = allOutBounds.length - 1; k >= 0; k--) {
+                    allOutBound = allOutBounds[k];
                     pseudoPathRes = getPseudoPath(k, fkAliasPreix + (k+1));
 
                     // TODO could be improved by adding $M to the begining?
@@ -4186,8 +4222,13 @@
                         uri += pseudoPathRes.path + "/$" + mainTableAlias + "/";
                     }
 
-                    // F2:array_d(F2:*),F1:array_d(F1:*)
-                    aggList.push(fkAliasPreix + (k+1) + ":=" + aggFn + "(" + pseudoPathRes.usedOutAlias + ":*)");
+                    // entity mode: F2:array_d(F2:*),F1:array_d(F1:*)
+                    // scalar mode: F2:F2:col,F1:F1:col
+                    if (allOutBound.isPathColumn && allOutBound.canUseScalarProjection) {
+                        aggList.push(fkAliasPreix + (k+1) + ":=" + pseudoPathRes.usedOutAlias + ":" + module._fixedEncodeURIComponent(allOutBound.baseColumn.name));
+                    } else {
+                        aggList.push(fkAliasPreix + (k+1) + ":=" + aggFn + "(" + pseudoPathRes.usedOutAlias + ":*)");
+                    }
                 }
 
                 // add trs or tcrs for main table
@@ -4540,7 +4581,7 @@
                             var fk = null;
 
                             //‌ُ TODO this should not be called here, we should refactor this part later
-                            if (_sourceColumnHelpers._sourceHasPath(f.source)) {
+                            if (_sourceColumnHelpers._sourceHasNodes(f.source)) {
                                 var cons, isInbound = false, fkObj;
 
                                 if ("inbound" in f.source[0]) {
@@ -4814,7 +4855,7 @@
                         (associatonRef && associatonRef.canUseTRS);
 
         if (hasLinkedData) {
-            var fks = reference._table.foreignKeys.all(), i, j, colFKs, key;
+            var fks = reference._table.foreignKeys.all(), i, j, colFKs, d, key, fkData;
             var mTableAlias = this._ref.location.mainTableAlias;
 
             try {
@@ -4826,7 +4867,26 @@
                     // fk data
                     this._linkedData.push({});
                     for (j = allOutBounds.length - 1; j >= 0; j--) {
-                        this._linkedData[i][allOutBounds[j].name] = data[i][fkAliasPreix + (j+1)][0];
+                        /**
+                         * if we've used scalar value in the projection list,
+                         * then we have to create an object to mimic values of the table
+                         * other parts of the code (formatpresentation) relies on an object
+                         * where values of each column is encoded. In this case the object
+                         * will have the value of only one column
+                         */
+                        if (allOutBounds[j].isPathColumn && allOutBounds[j].canUseScalarProjection) {
+                            // the value will not be an array
+                            d = {};
+                            fkData = data[i][fkAliasPreix + (j+1)];
+                            if (fkData === undefined || fkData === null) {
+                                this._linkedData[i][allOutBounds[j].name] = null;
+                            } else {
+                                d[allOutBounds[j].baseColumn.name] = fkData;
+                                this._linkedData[i][allOutBounds[j].name] = d;
+                            }
+                        } else {
+                            this._linkedData[i][allOutBounds[j].name] = data[i][fkAliasPreix + (j+1)][0];
+                        }
                     }
 
                     // table rights
@@ -4856,7 +4916,26 @@
                     // fk data
                     this._extraLinkedData = {};
                     for (j = allOutBounds.length - 1; j >= 0; j--) {
-                        this._extraLinkedData[allOutBounds[j].name] = extraData[fkAliasPreix + (j+1)][0];
+                        /**
+                         * if we've used scalar value in the projection list,
+                         * then we have to create an object to mimic values of the table
+                         * other parts of the code (sort logic) relies on an object
+                         * where values of each column is encoded. In this case the object
+                         * will have the value of only one column
+                         */
+                        if (allOutBounds[j].isPathColumn && allOutBounds[j].canUseScalarProjection) {
+                            // the value will not be an array
+                            d = {};
+                            fkData = extraData[fkAliasPreix + (j+1)];
+                            if (fkData === undefined || fkData === null) {
+                                this._extraLinkedData[allOutBounds[j].name] = null;
+                            } else {
+                                d[allOutBounds[j].baseColumn.name] = fkData;
+                                this._extraLinkedData[allOutBounds[j].name] = d;
+                            }
+                        } else {
+                            this._extraLinkedData[allOutBounds[j].name] = extraData[fkAliasPreix + (j+1)][0];
+                        }
                     }
                 }
 
@@ -5906,7 +5985,7 @@
             // filter based on the first key
             missingData = !addFilter(associationRef.origFKR, origTableData);
             //filter based on the second key
-            missingData = missingData || !addFilter(associationRef._secondFKR, this._data);
+            missingData = missingData || !addFilter(associationRef.associationToRelatedFKR, this._data);
 
             if (missingData) {
                 return null;

@@ -943,11 +943,12 @@
         },
 
         /**
-         * if the location has facet/filter/customfacet
-         * @return {Boolean} [description]
+         * if the location has visible facet/filter/customfacet
+         * NOTE: if location only has hidden facets, this will return false.
+         * @return {Boolean}]
          */
         get isConstrained() {
-            return this.facets || this.searchTerm || this.filter || this.customFacets;
+            return (this.facets && this.facets.hasVisibleFilters) || this.searchTerm || this.filter || this.customFacets;
         },
 
         /**
@@ -1434,7 +1435,7 @@
                     exp = module._encodeRegexp(t);
                 }
 
-                filterString += (index === 0? "" : "&") + column + module.OPERATOR.CASE_INS_REG_EXP + module._fixedEncodeURIComponent(exp);
+                filterString += (index === 0? "" : "&") + column + module._ERMrestFilterPredicates.CASE_INS_REG_EXP + module._fixedEncodeURIComponent(exp);
             });
         }
 
@@ -1759,25 +1760,25 @@
         if (parsedFilter instanceof ParsedFilter && parsedFilter.type === module.filterTypes.BINARYPREDICATE){
             facet.source = parsedFilter.column;
             switch (parsedFilter.operator) {
-                case module.OPERATOR.GREATER_THAN_OR_EQUAL_TO:
+                case module._ERMrestFilterPredicates.GREATER_THAN_OR_EQUAL_TO:
                     facet[module._facetFilterTypes.RANGE] = [{min: parsedFilter.value}];
                     break;
-                case module.OPERATOR.LESS_THAN_OR_EQUAL_TO:
+                case module._ERMrestFilterPredicates.LESS_THAN_OR_EQUAL_TO:
                     facet[module._facetFilterTypes.RANGE] = [{max: parsedFilter.value}];
                     break;
-                case module.OPERATOR.GREATER_THAN:
+                case module._ERMrestFilterPredicates.GREATER_THAN:
                     facet[module._facetFilterTypes.RANGE] = [{min: parsedFilter.value, min_exclusive: true}];
                     break;
-                case module.OPERATOR.LESS_THAN:
+                case module._ERMrestFilterPredicates.LESS_THAN:
                     facet[module._facetFilterTypes.RANGE] = [{max: parsedFilter.value, max_exclusive: true}];
                     break;
-                case module.OPERATOR.NULL:
+                case module._ERMrestFilterPredicates.NULL:
                     facet[module._facetFilterTypes.CHOICE] = [null];
                     break;
-                case module.OPERATOR.CASE_INS_REG_EXP:
+                case module._ERMrestFilterPredicates.CASE_INS_REG_EXP:
                     facet[module._facetFilterTypes.SEARCH] = [parsedFilter.value];
                     break;
-                case module.OPERATOR.EQUAL:
+                case module._ERMrestFilterPredicates.EQUAL:
                     facet[[module._facetFilterTypes.CHOICE]] = [parsedFilter.value];
                     break;
                 default:
@@ -1936,6 +1937,18 @@
             throw new module.InvalidFacetOperatorError(path, module._facetingErrors.invalidBooleanOperator);
         }
 
+        /**
+         * Whether facet blob has any visible filters
+         * @type {boolean}
+         */
+        this.hasVisibleFilters = obj[andOperator].some(function (f) {
+            return !f.hidden;
+        });
+
+        /**
+         * and array of conjunctive filters defined in the facet blob
+         * @type {Array}
+         */
         this.andFilters = obj[andOperator];
     }
     /**

@@ -56,6 +56,12 @@
                   "type": {
                       "typename": "text"
                   }
+              },
+              {
+                  "name": "col w space",
+                  "type": {
+                      "typename": "text"
+                  }
               }
           ],
           "annotations": {
@@ -167,6 +173,13 @@
                               "RID"
                           ]
                       },
+                      "path_to_outbound2_outbound1_add_filter": {
+                          "source": [
+                              {"sourcekey": "path_to_outbound2_outbound1"},
+                              {"filter": "col w space", "operator": "::ciregexp::", "operand_pattern": "some val"},
+                              "RID"
+                          ]
+                      },
                       "path_to_outbound2_outbound1_outbound1_w_prefix": {
                           "source": [
                               {"sourcekey": "path_to_outbound2_outbound1"},
@@ -258,6 +271,174 @@
                             {"sourcekey": "search-box"},
                             {"outbound": ["source_definitions_schema", "main_fk1"]},
                             "RID"
+                          ]
+                      },
+                      "fk1_col_entity_w_filter_invalid_1": {
+                          "source": [
+                              {"outbound": ["source_definitions_schema", "main_fk1"]},
+                              {"filter": "invalid_col", "negate": true, "operand_pattern": "1"},
+                              "RID"
+                          ],
+                          "entity": true
+                      },
+                      "fk1_col_entity_w_filter_invalid_2": {
+                          "source": [
+                              {"outbound": ["source_definitions_schema", "main_fk1"]},
+                              {"filter": "RID", "operator": "some_unknown_operator", "operand_pattern": "1"},
+                              "RID"
+                          ],
+                          "entity": true
+                      },
+                      "fk1_col_entity_w_filter_invalid_3": {
+                          "source": [
+                              {"outbound": ["source_definitions_schema", "main_fk1"]},
+                              {"filter": "RID", "operator": "::null::", "operand_pattern": "1"},
+                              "RID"
+                          ],
+                          "entity": true
+                      },
+                      "fk1_col_entity_w_filter_invalid_4": {
+                          "source": [
+                              {"outbound": ["source_definitions_schema", "main_fk1"]},
+                              {"filter": "RID", "operator": "::lt::"},
+                              "RID"
+                          ],
+                          "entity": true
+                      },
+                      "fk1_col_entity_w_filter_invalid_5": {
+                          "source": [
+                              {"outbound": ["source_definitions_schema", "main_fk1"]},
+                              {"filter": "RID", "operand_pattern": "{{{invalid_column}}}"},
+                              "RID"
+                          ],
+                          "entity": true
+                      },
+                      "col_w_filter": {
+                          "source": [
+                              {"filter": "col w space", "operator": "::ciregexp::", "operand_pattern": "val w space"},
+                              "id"
+                          ]
+                      },
+                      "fk1_col_entity_w_filter_1": {
+                          "source": [
+                              {"filter": "id", "operator": "::gt::", "operand_pattern": "1"},
+                              {"outbound": ["source_definitions_schema", "main_fk1"]},
+                              "RID"
+                          ],
+                          "entity": true
+                      },
+                      "fk1_col_entity_w_filter_2": {
+                          "source": [
+                              {"filter": "RID", "negate": true, "operand_pattern": "1"},
+                              {"outbound": ["source_definitions_schema", "main_fk1"]},
+                              "RID"
+                          ],
+                          "entity": true
+                      },
+                      "fk1_col_entity_w_filter_3": {
+                          "source": [
+                              {
+                                  "or": [
+                                      {
+                                          "and": [
+                                              {"filter": "id", "operand_pattern": "{{{$moment.year}}}"},
+                                              {"filter": "col w space", "operator": "::null::", "negate": true}
+                                          ]
+                                      },
+                                      {"filter": "col", "operator": "::ts::", "operand_pattern": "some val"},
+                                      {
+                                          "or": [
+                                              {"filter": "RMB", "operator": "::null::"},
+                                              {"filter": "id", "operator": "::null::"}
+                                          ],
+                                          "negate": true
+                                      }
+                                  ]
+                              },
+                              {"outbound": ["source_definitions_schema", "main_fk1"]},
+                              "RID"
+                          ],
+                          "entity": true
+                      },
+                      "fk1_col_entity_w_filter_3_second_name": {
+                          "comment": "same as above and just added for testing hashname logic",
+                          "source": [
+                              {
+                                  "or": [
+                                      {
+                                          "and": [
+                                              {"operand_pattern": "{{{$moment.year}}}", "filter": "id"},
+                                              {"negate": true, "filter": "col w space", "operator": "::null::"}
+                                          ]
+                                      },
+                                      {"operand_pattern": "some val", "operator": "::ts::", "filter": "col"},
+                                      {
+                                          "negate": true,
+                                          "or": [
+                                              {"filter": "RMB", "operator": "::null::"},
+                                              {"operator": "::null::", "filter": "id"}
+                                          ]
+                                      }
+                                  ]
+                              },
+                              {"outbound": ["source_definitions_schema", "main_fk1"]},
+                              "RID"
+                          ],
+                          "entity": true
+                      },
+                      "fk1_col_entity_w_filter_3_third_name": {
+                          "comment": "same as above with diff order of filters and just added for testing hashname logic",
+                          "source": [
+                              {
+                                  "or": [
+                                      {"operand_pattern": "some val", "operator": "::ts::", "filter": "col"},
+                                      {
+                                          "or": [
+                                              {"operator": "::null::", "filter": "id"},
+                                              {"operator": "::null::", "filter": "RMB"}
+                                          ],
+                                          "negate": true
+                                      },
+                                      {
+                                        "and": [
+                                            {"filter": "col w space", "negate": true, "operator": "::null::"},
+                                            {"operand_pattern": "{{{$moment.year}}}", "filter": "id"}
+                                        ]
+                                    }
+                                  ]
+                              },
+                              {"outbound": ["source_definitions_schema", "main_fk1"]},
+                              "RID"
+                          ],
+                          "entity": true
+                      },
+                      "path_to_outbound2_outbound1_w_filter_1": {
+                          "source": [
+                              {"outbound": ["source_definitions_schema", "main_fk2"]},
+                              {"filter": "id", "operator": "::ts::", "operand_pattern": "1"},
+                              {"outbound": ["source_definitions_schema", "outbound2_fk1"]},
+                              "RID"
+                          ]
+                      },
+                      "path_to_outbound2_outbound1_w_filter_2": {
+                          "source": [
+                              {"outbound": ["source_definitions_schema", "main_fk2"]},
+                              {"outbound": ["source_definitions_schema", "outbound2_fk1"]},
+                              {"filter": "col", "operator": "::ts::", "operand_pattern": "sample val"},
+                              "RID"
+                          ]
+                      },
+                      "path_to_outbound2_outbound1_w_filter_2_diff_col": {
+                          "source": [
+                              {"sourcekey": "path_to_outbound2_outbound1_w_filter_2"},
+                              "col"
+                          ]
+                      },
+                      "path_to_outbound2_outbound1_w_filter_2_outbound1_w_prefix": {
+                          "source": [
+                              {"sourcekey": "path_to_outbound2_outbound1_w_filter_2"},
+                              {"outbound": ["source_definitions_schema", "outbound2_outbound1_fk1"]},
+                              "RID"
                           ]
                       }
                   }
@@ -556,6 +737,13 @@
               },
               {
                 "name": "col",
+                "nullok": true,
+                "type": {
+                    "typename": "text"
+                }
+              },
+              {
+                "name": "col w space",
                 "nullok": true,
                 "type": {
                     "typename": "text"

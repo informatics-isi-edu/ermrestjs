@@ -86,21 +86,92 @@ exports.execute = function (options) {
                 expect(formatUtils.printMarkdown("[test](test\r.com){.download download}", {inline: true})).toBe("[test](test\r.com){.download download}");
             });
 
-            it ("should support default markdown tags.", function () {
-                expect(printMarkdown('*markdown*')).toBe('<p><em>markdown</em></p>\n', "invalid em");
-                expect(printMarkdown('markdown')).toBe('<p>markdown</p>\n', "invalid paragraph");
-                expect(printMarkdown("![a random image](random_image.com)"))
-                    .toBe('<p><img src="random_image.com" alt="a random image" class="-chaise-post-load"></p>\n', "invalid image");
-                // Check for anchor tags
-                expect(printMarkdown('[NormalLink](https://dev.isrd.isi.edu/chaise/search)'))
-                    .toBe('<p><a href=\"https://dev.isrd.isi.edu/chaise/search\">NormalLink</a></p>\n', "invalid link");
+            describe ("should support default markdown tags.", function () {
+                var testMarkdown = function (markdown, expected, message) {
+                    if (message) {
+                        expect(printMarkdown(markdown)).toBe(expected, message);
+                    } else {
+                        expect(printMarkdown(markdown)).toBe(expected);
+                    }
+                };
+
+                it ("paragraph", function () {
+                    testMarkdown('markdown', '<p>markdown</p>\n');
+                });
+
+                it ("strong", function () {
+                    testMarkdown('*markdown*', '<p><em>markdown</em></p>\n', "case 1");
+                    testMarkdown('_markdown_', '<p><em>markdown</em></p>\n', "case 2");
+
+                });
+
+                it ("emphasis", function () {
+                    testMarkdown('**markdown**', '<p><strong>markdown</strong></p>\n', "case 1");
+                    testMarkdown('__markdown__', '<p><strong>markdown</strong></p>\n', "case 2");
+                    testMarkdown('*foo**bar**baz*', '<p><em>foo<strong>bar</strong>baz</em></p>\n', "case 3 (combination of strong and em)");
+                });
+
+                it ("heading 1", function () {
+                    testMarkdown("# heading 1", "<h1>heading 1</h1>\n");
+                });
+
+                it ("heading 2", function () {
+                    testMarkdown("## heading 2", "<h2>heading 2</h2>\n");
+                });
+
+                it ("link", function () {
+                    testMarkdown('[NormalLink](https://dev.isrd.isi.edu/chaise/search)', '<p><a href=\"https://dev.isrd.isi.edu/chaise/search\">NormalLink</a></p>\n');
+                });
+
+                it ("image", function () {
+                    testMarkdown("![a random image](random_image.com)", '<p><img src="random_image.com" alt="a random image" class="-chaise-post-load"></p>\n');
+                });
+
+                it ("block quote", function () {
+                    testMarkdown("> some quote", "<blockquote>\n<p>some quote</p>\n</blockquote>\n");
+                });
+
+                it ("unordered list", function () {
+                    testMarkdown("- item 1\n- item 2\n- item 3", "<ul>\n<li>item 1</li>\n<li>item 2</li>\n<li>item 3</li>\n</ul>\n", "case1");
+                    testMarkdown("- item 1\n\n\n- item 2\n- item 3", "<ul>\n<li>\n<p>item 1</p>\n</li>\n<li>\n<p>item 2</p>\n</li>\n<li>\n<p>item 3</p>\n</li>\n</ul>\n", "case2 (with extra spacing)");
+
+                    testMarkdown("- item 1\n\n :span::/span:\n- item 2\n- item 3", "<ul>\n<li>item 1</li>\n</ul>\n<p>:span::/span:</p>\n<ul>\n<li>item 2</li>\n<li>item 3</li>\n</ul>\n", "case2 (with span)");
+                });
+
+                it ("ordered list", function () {
+                    testMarkdown("1. item 1\n2. item 2\n3. item 3", "<ol>\n<li>item 1</li>\n<li>item 2</li>\n<li>item 3</li>\n</ol>\n");
+                });
+
+                it ("hr rule", function () {
+                    testMarkdown("Horizontal rule: \n\n---", "<p>Horizontal rule:</p>\n<hr>\n", "case 1");
+                    testMarkdown("Horizontal rule: \n\n***", "<p>Horizontal rule:</p>\n<hr>\n", "case 2");
+                });
+
+                it ("inline code block", function () {
+                    testMarkdown("`inline code` with backticks", "<p><code>inline code</code> with backticks</p>\n");
+                });
+
+                it ("code block", function () {
+                    testMarkdown("```\n # code block\nprint `3 backticks or`\n[caption](example.com)\n```", "<pre><code> # code block\nprint `3 backticks or`\n[caption](example.com)\n</code></pre>\n");
+                });
+
+                it ("table", function () {
+                    var expected = "<table>\n<thead>\n<tr>\n<th>heading1</th>\n<th>heading 2</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td>text1</td>\n<td>text2</td>\n</tr>\n</tbody>\n</table>\n";
+                    testMarkdown("|heading1|heading 2|\n|-|-|\n|text1|text2|\n", expected);
+                });
+
+                it ("table and link after it", function () {
+                    var expected = "<table>\n<thead>\n<tr>\n<th>heading1</th>\n<th>heading 2</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td>text1</td>\n<td>text2</td>\n</tr>\n</tbody>\n</table>\n<p><a href=\"https://example.com/a.2\">caption</a></p>\n";
+                    testMarkdown("|heading1|heading 2|\n|-|-|\n|text1|text2|\n\n[caption](https://example.com/a.2)", expected);
+                });
+
             });
 
             it ("should return empty string for null.", function () {
                 expect(printMarkdown(null)).toBe('');
             });
 
-            it ("should support elements with tags.", function () {
+            it ("should support elements with attributes.", function () {
                 // Check for link tag with download attribute
                 expect(printMarkdown('[Link With Download](https://code.jquery.com/jquery-3.1.0.js){download .btn .btn-primary}'))
                     .toBe('<p><a href="https://code.jquery.com/jquery-3.1.0.js" download="" class="btn btn-primary">Link With Download</a></p>\n', "invalid link with tag");
@@ -246,7 +317,7 @@ exports.execute = function (options) {
             });
 
             it("should support table with classname attribute.", function () {
-                var mkString = "|heading|\n|-|\n|text|\n{.class-name}";
+                var mkString = "|heading|\n|-|\n|text|\n\n{.class-name}";
                 expect(printMarkdown(mkString)).toBe('<table class="class-name">\n<thead>\n<tr>\n<th>heading</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td>text</td>\n</tr>\n</tbody>\n</table>\n');
             });
 
@@ -476,6 +547,11 @@ exports.execute = function (options) {
                 expect(module.renderHandlebarsTemplate("My name is {{^if name}}{{name}}{{/if}}", {})).toBe("My name is ", "For inverted if with variable");
                 expect(module.renderHandlebarsTemplate("My name is {{^if name}}John{{/if}}", {})).toBe("My name is John", "For inverted if with string");
                 expect(module.renderHandlebarsTemplate("My name is {{#unless name}}Jona{{/unless}}", {})).toBe("My name is Jona", "For unless");
+            });
+
+            it ("escaping handlebars expression and raw helper", function () {
+                expect(module.renderHandlebarsTemplate("\\{{name}}", { name: 'Chloe' })).toBe("{{name}}");
+                expect(module.renderHandlebarsTemplate("\\{{{name}}}", { name: 'Chloe' })).toBe("{{{name}}}");
             });
 
             it('ifCond helper', function() {

@@ -19,6 +19,9 @@ exports.execute = function(options) {
         var singleEnitityUri = options.url + "/catalog/" + catalog_id + "/entity/"
             + schemaName + ":" + tableName + "/id=" + entityId;
 
+        var currDate = new Date();
+        var currentDateString = options.ermRest._fixedEncodeURIComponent(currDate.getFullYear() + "-" + (currDate.getMonth()+1) + "-" + currDate.getDay());
+
         var chaiseURL = "https://dev.isrd.isi.edu/chaise";
         var recordURL = chaiseURL + "/record";
         var record2URL = chaiseURL + "/record-two";
@@ -65,10 +68,16 @@ exports.execute = function(options) {
             });
         }
 
-        function checkRelated (ref, schema, table, facet) {
+        function checkRelated (ref, schema, table, facet, ermrestCompactPath) {
             expect(ref.table.schema.name).toBe(schema, "schema missmatch.");
             expect(ref.table.name).toBe(table, "table missmatch.");
-            expect(JSON.stringify(ref.location.facets.decoded)).toEqual(JSON.stringify(facet), "facet missmatch.");
+            if (facet) {
+                expect(ref.location.facets.decoded).toEqual(facet, "facet missmatch.");
+            }
+
+            if (ermrestCompactPath) {
+                expect(ref.location.ermrestCompactPath).toEqual(ermrestCompactPath);
+            }
         };
 
         function checkUri (index, expectedTable, expectedFacets) {
@@ -153,7 +162,7 @@ exports.execute = function(options) {
                 describe("regarding column objects defining path.", function () {
 
                     it ('should ignore the invalid (invalid, no path, non-entity, has aggregate, all-outbound) objects.', function () {
-                        expect(pathRelatedWithTuple.length).toBe(6);
+                        expect(pathRelatedWithTuple.length).toBe(9);
                     });
 
                     it ('should create the reference by using facet syntax (starting from related table with facet on shortestkey of main table.).', function () {
@@ -211,6 +220,50 @@ exports.execute = function(options) {
                                 {"inbound": ["reference_schema", "reference_table_fk1"]},
                                 "RID"
                             ], "choices":[utils.findEntityRID(options, schemaName, tableName, "id", "9003")]}]}
+                        );
+                    });
+
+                    it ("should be able to support inbound related with filter", function () {
+                        // we cannot guarantee the order of properties so we cannot check the facet object
+                        checkRelated(
+                            pathRelatedWithTuple[6], "reference_schema", "inbound_related_reference_table", null,
+                            [
+                                "M:=reference_schema:inbound_related_reference_table",
+                                "!(id=-1)/(fk_to_reference%20with%20space)=(reference_schema:reference_table:id)/(RCT::null::;RID::null::)",
+                                "RID=" + utils.findEntityRID(options, schemaName, tableName, "id", "9003"),
+                                "$M"
+                            ].join("/")
+                        );
+
+                    });
+
+                    it ("should be able to support pure & binary related with filter", function () {
+                        // we cannot guarantee the order of properties so we cannot check the facet object
+                        checkRelated(
+                            pathRelatedWithTuple[7], "reference_schema", "inbound_related_reference_table", null,
+                            [
+                                "M:=reference_schema:inbound_related_reference_table",
+                                "(RCT::null::;RID::null::)/(id)=(reference_schema:association%20table%20with%20id:id_from_inbound_related_table)",
+                                "(id%20from%20ref%20table)=(reference_schema:reference_table:id)/!(RID=-1)",
+                                "RID=" + utils.findEntityRID(options, schemaName, tableName, "id", "9003"),
+                                "$M"
+                            ].join("/")
+                        );
+                    });
+
+                    it ("should be able to support free-form related with filter", function () {
+                        // we cannot guarantee the order of properties so we cannot check the facet object
+                        checkRelated(
+                            pathRelatedWithTuple[8], "reference_schema", "reference_table", null,
+                            [
+                                "M:=reference_schema:reference_table",
+                                "(RCT::null::;RID::null::)/(id)=(reference_schema:association%20table%20with%20id:id%20from%20ref%20table)",
+                                "!(RID=-1)/(id_from_inbound_related_table)=(reference_schema:inbound_related_reference_table:id)",
+                                "(fk_to_reference_with_fromname)=(reference_schema:reference_table:id)",
+                                "!(RCT::lt::" + currentDateString + ")",
+                                "RID=" + utils.findEntityRID(options, schemaName, tableName, "id", "9003"),
+                                "$M"
+                            ].join("/")
                         );
                     });
                 });
@@ -292,10 +345,26 @@ exports.execute = function(options) {
                             {"key": "path_to_outbound1_inbound1_outbound1"},
                             {"i": ["reference_schema", "reference_outbound1_inbound1_outbound1_inbound1_fk1"]},
                             "RID"
-                        ]
+                        ],
+                        [
+                            {"or": [
+                                {"f": "RCT", "opr": "::null::"},
+                                {"f": "RID", "opr": "::null::"}
+                            ]},
+                            {"i": ["reference_schema", "fk_inbound_related_to_reference"]},
+                            {"f": "id", "opd": "-1", "n": true},
+                            "id"
+                        ], false, false
                     ];
                     pathRelatedWithTuple.forEach(function (rel, i) {
-                        expect(rel.compressedDataSource).toEqual(expectedCompressedDataSources[i], "missmatch for index=" + i);
+                        var expVal = expectedCompressedDataSources[i];
+                        if (!expVal) {
+                            // we cannot easily test the expected value, so just make sure it's not throwing any errors.
+                            expect(rel.compressedDataSource).toBeDefined("missmatch for index=" + i);
+                        }
+                        else {
+                            expect(rel.compressedDataSource).toEqual(expVal, "missmatch for index=" + i);
+                        }
                     });
                 });
             });

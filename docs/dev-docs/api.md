@@ -13,23 +13,23 @@ to use for ERMrest JavaScript agents.</p>
 ## Functions
 
 <dl>
-<dt><a href="#formatDate">formatDate()</a> ⇒</dt>
-<dd><p>{{formatDate value format}}</p>
+<dt><a href="#escape">escape()</a> ⇒</dt>
+<dd><p>escape markdown characters</p>
 </dd>
+<dt><a href="#encode">encode()</a> ⇒</dt>
+<dd></dd>
 <dt><a href="#encodeFacet">encodeFacet()</a> ⇒</dt>
 <dd><p>{{#encodeFacet}}
  str
 {{/encodeFacet}}</p>
 </dd>
+<dt><a href="#formatDate">formatDate()</a> ⇒</dt>
+<dd><p>{{formatDate value format}}</p>
+</dd>
 <dt><a href="#jsonStringify">jsonStringify()</a> ⇒</dt>
 <dd><p>{{#jsonStringify}}
  JSON Object
 {{/jsonStringify}}</p>
-</dd>
-<dt><a href="#toTitleCase">toTitleCase()</a> ⇒</dt>
-<dd><p>{{#toTitleCase}}
- string
-{{/toTitleCase}}</p>
 </dd>
 <dt><a href="#replace">replace()</a> ⇒</dt>
 <dd><p>{{#replace substr newSubstr}}
@@ -50,6 +50,11 @@ to use for ERMrest JavaScript agents.</p>
 <dd><p>{{#each (regexFindAll value regexp)}}
   {{this}}
 {{/each}}</p>
+</dd>
+<dt><a href="#toTitleCase">toTitleCase()</a> ⇒</dt>
+<dd><p>{{#toTitleCase}}
+ string
+{{/toTitleCase}}</p>
 </dd>
 </dl>
 
@@ -395,6 +400,7 @@ to use for ERMrest JavaScript agents.
         * [.generateFacetColumns()](#ERMrest.Reference+generateFacetColumns)
         * [.validateFacetsFilters(facetAndFilters, facetObjectWrappers, searchTerm, skipMappingEntityChoices, changeLocation)](#ERMrest.Reference+validateFacetsFilters)
         * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
+        * [.addFacets(facetAndFilters)](#ERMrest.Reference+addFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
         * [.hideFacets()](#ERMrest.Reference+hideFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
         * [.create(data, contextHeaderParams, skipOnConflict)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
         * [.read(limit, contextHeaderParams, useEntity, dontCorrectPage, getTRS, getTCRS, getUnlinkTRS)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
@@ -481,11 +487,13 @@ to use for ERMrest JavaScript agents.
         * [.isEntityMode](#ERMrest.PseudoColumn+isEntityMode) : <code>boolean</code>
         * [.isUnique](#ERMrest.PseudoColumn+isUnique) : <code>boolean</code>
         * [.hasAggregate](#ERMrest.PseudoColumn+hasAggregate) : <code>boolean</code>
+        * [.isFiltered](#ERMrest.PseudoColumn+isFiltered) : <code>boolean</code>
         * [.comment](#ERMrest.PseudoColumn+comment) : <code>Object</code>
         * [.commentDisplay](#ERMrest.PseudoColumn+commentDisplay) : <code>Object</code>
         * [.displayname](#ERMrest.PseudoColumn+displayname) : <code>Object</code>
         * [.key](#ERMrest.PseudoColumn+key) : <code>boolean</code>
         * [.reference](#ERMrest.PseudoColumn+reference) : [<code>Reference</code>](#ERMrest.Reference)
+        * [.canUseScalarProjection](#ERMrest.PseudoColumn+canUseScalarProjection) : <code>Object</code>
         * [.formatPresentation(data, [context], [templateVariables], [options])](#ERMrest.PseudoColumn+formatPresentation) ⇒ <code>Object</code>
         * [.getAggregatedValue(page, contextHeaderParams)](#ERMrest.PseudoColumn+getAggregatedValue) ⇒ <code>Promise</code>
     * [.ForeignKeyPseudoColumn](#ERMrest.ForeignKeyPseudoColumn)
@@ -525,6 +533,7 @@ to use for ERMrest JavaScript agents.
         * [.foreignKey](#ERMrest.InboundForeignKeyPseudoColumn+foreignKey) : [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)
         * [.isPseudo](#ERMrest.InboundForeignKeyPseudoColumn+isPseudo) : <code>boolean</code>
         * [.isInboundForeignKey](#ERMrest.InboundForeignKeyPseudoColumn+isInboundForeignKey) : <code>boolean</code>
+        * [.isFiltered](#ERMrest.InboundForeignKeyPseudoColumn+isFiltered) : <code>boolean</code>
     * [.FacetColumn](#ERMrest.FacetColumn)
         * [new FacetColumn(reference, index, facetObject, filters)](#new_ERMrest.FacetColumn_new)
         * [._column](#ERMrest.FacetColumn+_column) : [<code>Column</code>](#ERMrest.Column)
@@ -720,6 +729,7 @@ to use for ERMrest JavaScript agents.
         * [.generateFacetColumns()](#ERMrest.Reference+generateFacetColumns)
         * [.validateFacetsFilters(facetAndFilters, facetObjectWrappers, searchTerm, skipMappingEntityChoices, changeLocation)](#ERMrest.Reference+validateFacetsFilters)
         * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
+        * [.addFacets(facetAndFilters)](#ERMrest.Reference+addFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
         * [.hideFacets()](#ERMrest.Reference+hideFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
         * [.create(data, contextHeaderParams, skipOnConflict)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
         * [.read(limit, contextHeaderParams, useEntity, dontCorrectPage, getTRS, getTCRS, getUnlinkTRS)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
@@ -2996,6 +3006,7 @@ Constructor for a ParsedFilter.
     * [.generateFacetColumns()](#ERMrest.Reference+generateFacetColumns)
     * [.validateFacetsFilters(facetAndFilters, facetObjectWrappers, searchTerm, skipMappingEntityChoices, changeLocation)](#ERMrest.Reference+validateFacetsFilters)
     * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
+    * [.addFacets(facetAndFilters)](#ERMrest.Reference+addFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
     * [.hideFacets()](#ERMrest.Reference+hideFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
     * [.create(data, contextHeaderParams, skipOnConflict)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
     * [.read(limit, contextHeaderParams, useEntity, dontCorrectPage, getTRS, getTCRS, getUnlinkTRS)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
@@ -3402,7 +3413,7 @@ It will return a promise resolved with the following object:
       - Using `source_domain.column` instead of end column in case of scalars
   - Sending request to fetch the rows associated with the entity choices,
     and ignoring the ones that don't return any result.
-- The valid fitlers in the url will either be matched with an existing facet,
+- The valid filters in the url will either be matched with an existing facet,
   or result in a new facet column.
 Usage:
 ```
@@ -3441,7 +3452,7 @@ NOTE this should be called before doing read or as part of it
 <a name="ERMrest.Reference+removeAllFacetFilters"></a>
 
 #### reference.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet) ⇒ <code>ERMrest.reference</code>
-Remove all the fitlers, facets, and custom-facets from the reference
+Remove all the filters, facets, and custom-facets from the reference
 
 **Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
 **Returns**: <code>ERMrest.reference</code> - A reference without facet filters  
@@ -3451,6 +3462,17 @@ Remove all the fitlers, facets, and custom-facets from the reference
 | sameFilter | <code>boolean</code> | By default we're removing filters, if this is true filters won't be changed. |
 | sameCustomFacet | <code>boolean</code> | By default we're removing custom-facets, if this is true custom-facets won't be changed. |
 | sameFacet | <code>boolean</code> | By default we're removing facets, if this is true facets won't be changed. |
+
+<a name="ERMrest.Reference+addFacets"></a>
+
+#### reference.addFacets(facetAndFilters) ⇒ [<code>Reference</code>](#ERMrest.Reference)
+Given a list of facet and filters, will add them to the existing conjunctive facet filters.
+
+**Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| facetAndFilters | <code>Array.&lt;Object&gt;</code> | an array of facets that will be added |
 
 <a name="ERMrest.Reference+hideFacets"></a>
 
@@ -4516,11 +4538,13 @@ it will append "-<integer>" to it.
     * [.isEntityMode](#ERMrest.PseudoColumn+isEntityMode) : <code>boolean</code>
     * [.isUnique](#ERMrest.PseudoColumn+isUnique) : <code>boolean</code>
     * [.hasAggregate](#ERMrest.PseudoColumn+hasAggregate) : <code>boolean</code>
+    * [.isFiltered](#ERMrest.PseudoColumn+isFiltered) : <code>boolean</code>
     * [.comment](#ERMrest.PseudoColumn+comment) : <code>Object</code>
     * [.commentDisplay](#ERMrest.PseudoColumn+commentDisplay) : <code>Object</code>
     * [.displayname](#ERMrest.PseudoColumn+displayname) : <code>Object</code>
     * [.key](#ERMrest.PseudoColumn+key) : <code>boolean</code>
     * [.reference](#ERMrest.PseudoColumn+reference) : [<code>Reference</code>](#ERMrest.Reference)
+    * [.canUseScalarProjection](#ERMrest.PseudoColumn+canUseScalarProjection) : <code>Object</code>
     * [.formatPresentation(data, [context], [templateVariables], [options])](#ERMrest.PseudoColumn+formatPresentation) ⇒ <code>Object</code>
     * [.getAggregatedValue(page, contextHeaderParams)](#ERMrest.PseudoColumn+getAggregatedValue) ⇒ <code>Promise</code>
 
@@ -4574,6 +4598,12 @@ If the pseudoColumn is referring to a unique row (the path is one to one)
 If aggregate function is defined on the column.
 
 **Kind**: instance property of [<code>PseudoColumn</code>](#ERMrest.PseudoColumn)  
+<a name="ERMrest.PseudoColumn+isFiltered"></a>
+
+#### pseudoColumn.isFiltered : <code>boolean</code>
+If the pseudoColumn has filter in its path
+
+**Kind**: instance property of [<code>PseudoColumn</code>](#ERMrest.PseudoColumn)  
 <a name="ERMrest.PseudoColumn+comment"></a>
 
 #### pseudoColumn.comment : <code>Object</code>
@@ -4623,6 +4653,19 @@ This is how it behaves:
 3. if mainTuple is available, create the reference based on this path:
      <pseudoColumnSchema:PseudoColumnTable>/<path from pseudo-column to main table>/<facets based on value of shortestkey of main table>
 4. Otherwise create the path by traversing the path
+
+**Kind**: instance property of [<code>PseudoColumn</code>](#ERMrest.PseudoColumn)  
+<a name="ERMrest.PseudoColumn+canUseScalarProjection"></a>
+
+#### pseudoColumn.canUseScalarProjection : <code>Object</code>
+Whether we can use the raw column in the projection list or not.
+
+If we only need the value of scalar column and none of the other columns of the
+all-outbound path then we can simply use the scalar projection.
+Therefore the pseudo-column must:
+- be all-outbound path in scalar mode
+- the leaf column cannot have any column_display annotation
+- the leaf column cannot be sorted or doesn’t have a sort based on other columns of the table.
 
 **Kind**: instance property of [<code>PseudoColumn</code>](#ERMrest.PseudoColumn)  
 <a name="ERMrest.PseudoColumn+formatPresentation"></a>
@@ -5002,6 +5045,7 @@ Format the presentation value corresponding to this asset definition.
     * [.foreignKey](#ERMrest.InboundForeignKeyPseudoColumn+foreignKey) : [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)
     * [.isPseudo](#ERMrest.InboundForeignKeyPseudoColumn+isPseudo) : <code>boolean</code>
     * [.isInboundForeignKey](#ERMrest.InboundForeignKeyPseudoColumn+isInboundForeignKey) : <code>boolean</code>
+    * [.isFiltered](#ERMrest.InboundForeignKeyPseudoColumn+isFiltered) : <code>boolean</code>
 
 <a name="new_ERMrest.InboundForeignKeyPseudoColumn_new"></a>
 
@@ -5009,6 +5053,9 @@ Format the presentation value corresponding to this asset definition.
 Constructor for InboundForeignKeyPseudoColumn. This class is a wrapper for [ForeignKeyRef](#ERMrest.ForeignKeyRef).
 This is a bit different than the [ForeignKeyPseudoColumn](#ERMrest.ForeignKeyPseudoColumn), as that was for foreign keys
 of current table. This wrapper is for inbound foreignkeys. It is actually warpping the whole reference (table).
+
+Note: The sourceObjectWrapper might include filters and therefore the relatedReference
+      might not be a simple path from main to related table and it could have filters.
 
 This class extends the [ReferenceColumn](#ERMrest.ReferenceColumn)
 
@@ -5046,6 +5093,12 @@ indicates that this object represents a PseudoColumn.
 
 #### inboundForeignKeyPseudoColumn.isInboundForeignKey : <code>boolean</code>
 Indicates that this ReferenceColumn is an inbound foreign key.
+
+**Kind**: instance property of [<code>InboundForeignKeyPseudoColumn</code>](#ERMrest.InboundForeignKeyPseudoColumn)  
+<a name="ERMrest.InboundForeignKeyPseudoColumn+isFiltered"></a>
+
+#### inboundForeignKeyPseudoColumn.isFiltered : <code>boolean</code>
+Indicates that this related table has filters in its path
 
 **Kind**: instance property of [<code>InboundForeignKeyPseudoColumn</code>](#ERMrest.InboundForeignKeyPseudoColumn)  
 <a name="ERMrest.FacetColumn"></a>
@@ -5293,10 +5346,13 @@ Other types of facet that null won't be applicable to them and therefore
 we shouldn't even offer the option:
   1. (G4) Scalar columns of main table that are not-null.
   2. (G5) All outbound foreignkey facets that all the columns invloved are not-null
+  3. (G6) Facets with `filter` in their source definition. We cannot combine filter
+          and null together.
 
 Based on this, the following will be the logic for this function:
     - If facet has `null` filter: `false`
     - If facet has `"hide_null_choice": true`: `true`
+    - If G6: true
     - If G1: `true` if the column is not-null
     - If G5: `true`
     - If G2: `true`
@@ -6738,6 +6794,7 @@ get PathColumn object by column name
     * [.generateFacetColumns()](#ERMrest.Reference+generateFacetColumns)
     * [.validateFacetsFilters(facetAndFilters, facetObjectWrappers, searchTerm, skipMappingEntityChoices, changeLocation)](#ERMrest.Reference+validateFacetsFilters)
     * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
+    * [.addFacets(facetAndFilters)](#ERMrest.Reference+addFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
     * [.hideFacets()](#ERMrest.Reference+hideFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
     * [.create(data, contextHeaderParams, skipOnConflict)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
     * [.read(limit, contextHeaderParams, useEntity, dontCorrectPage, getTRS, getTCRS, getUnlinkTRS)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
@@ -7144,7 +7201,7 @@ It will return a promise resolved with the following object:
       - Using `source_domain.column` instead of end column in case of scalars
   - Sending request to fetch the rows associated with the entity choices,
     and ignoring the ones that don't return any result.
-- The valid fitlers in the url will either be matched with an existing facet,
+- The valid filters in the url will either be matched with an existing facet,
   or result in a new facet column.
 Usage:
 ```
@@ -7183,7 +7240,7 @@ NOTE this should be called before doing read or as part of it
 <a name="ERMrest.Reference+removeAllFacetFilters"></a>
 
 #### reference.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet) ⇒ <code>ERMrest.reference</code>
-Remove all the fitlers, facets, and custom-facets from the reference
+Remove all the filters, facets, and custom-facets from the reference
 
 **Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
 **Returns**: <code>ERMrest.reference</code> - A reference without facet filters  
@@ -7193,6 +7250,17 @@ Remove all the fitlers, facets, and custom-facets from the reference
 | sameFilter | <code>boolean</code> | By default we're removing filters, if this is true filters won't be changed. |
 | sameCustomFacet | <code>boolean</code> | By default we're removing custom-facets, if this is true custom-facets won't be changed. |
 | sameFacet | <code>boolean</code> | By default we're removing facets, if this is true facets won't be changed. |
+
+<a name="ERMrest.Reference+addFacets"></a>
+
+#### reference.addFacets(facetAndFilters) ⇒ [<code>Reference</code>](#ERMrest.Reference)
+Given a list of facet and filters, will add them to the existing conjunctive facet filters.
+
+**Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| facetAndFilters | <code>Array.&lt;Object&gt;</code> | an array of facets that will be added |
 
 <a name="ERMrest.Reference+hideFacets"></a>
 
@@ -7971,13 +8039,18 @@ ERMrest.resolve('https://example.org/catalog/42/entity/s:t/k=123').then(
 **Kind**: static method of [<code>ERMrest</code>](#ERMrest)  
 **Returns**: <code>integer</code> - A value set to determine the elapsed time
 since the ermrestJS has been available (milliseconds).  
-<a name="formatDate"></a>
+<a name="escape"></a>
 
-## formatDate() ⇒
-{{formatDate value format}}
+## escape() ⇒
+escape markdown characters
 
 **Kind**: global function  
-**Returns**: formatted string of `value` with corresponding `format`  
+**Returns**: escaped characeters  
+<a name="encode"></a>
+
+## encode() ⇒
+**Kind**: global function  
+**Returns**: url-encoded string  
 <a name="encodeFacet"></a>
 
 ## encodeFacet() ⇒
@@ -7987,21 +8060,19 @@ since the ermrestJS has been available (milliseconds).
 
 **Kind**: global function  
 **Returns**: encoded facet string that can be used in url  
+<a name="formatDate"></a>
+
+## formatDate() ⇒
+{{formatDate value format}}
+
+**Kind**: global function  
+**Returns**: formatted string of `value` with corresponding `format`  
 <a name="jsonStringify"></a>
 
 ## jsonStringify() ⇒
 {{#jsonStringify}}
  JSON Object
 {{/jsonStringify}}
-
-**Kind**: global function  
-**Returns**: string representation of the given JSON object  
-<a name="toTitleCase"></a>
-
-## toTitleCase() ⇒
-{{#toTitleCase}}
- string
-{{/toTitleCase}}
 
 **Kind**: global function  
 **Returns**: string representation of the given JSON object  
@@ -8041,6 +8112,15 @@ since the ermrestJS has been available (milliseconds).
 
 **Kind**: global function  
 **Returns**: array of strings from value that match the regular expression or  
+<a name="toTitleCase"></a>
+
+## toTitleCase() ⇒
+{{#toTitleCase}}
+ string
+{{/toTitleCase}}
+
+**Kind**: global function  
+**Returns**: string representation of the given JSON object  
 <a name="appLinkFn"></a>
 
 ## appLinkFn : <code>function</code>

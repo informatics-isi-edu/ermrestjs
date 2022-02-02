@@ -90,7 +90,7 @@ exports.execute = function (options) {
                 done.fail("didn't throw any errors");
             }, function(err) {
                 // since the error is coming directly from the http module, it won't be any of the ERMrestError objects
-                expect(err.statusCode).toBe(401);
+                expect(err.status).toBe(401);
                 done();
             }).catch(function(err) {
                 done.fail(err);
