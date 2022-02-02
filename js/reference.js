@@ -2247,14 +2247,14 @@
                         }
 
                         if (totalSuccess > 0) {
-                            message = totalSuccess + " row" + (totalSuccess > 1 ? "s" : "") + " successfully removed.";
+                            message = totalSuccess + " record" + (totalSuccess > 1 ? "s" : "") + " successfully removed.";
                             if (totalFail > 0) message += " ";
                         }
 
                         var err = new module.BatchUnlinkResponse(message);
 
                         if (totalFail > 0) {
-                            message += totalFail + " row" + (totalFail > 1 ? "s" : "") + " could not be removed. Check the error details below to see more information.";
+                            message += totalFail + " record" + (totalFail > 1 ? "s" : "") + " could not be removed. Check the error details below to see more information.";
                             err = new module.BatchUnlinkResponse(message, deleteSubmessage);
                         }
 
