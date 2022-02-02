@@ -304,107 +304,8 @@ See [Context Names](#context-names) section for the list of supported _context_ 
 
 Supported _columnlist_ patterns:
 
-- `[` ... _columnentry_ `,` ... `]`: Present content corresponding to each _columnentry_, in the order specified in the list. Ignore listed _columnentry_ values that do not correspond to content from the table. Do not present table columns that are not specified in the list.
+- `[` ... _columndirective_ `,` ... `]`: Present content corresponding to each _columndirective_, in the order specified in the list. Ignore listed _columndirective_ values that do not correspond to content from the table. Do not present table columns that are not specified in the list. Please refer to [column directive](#column-directive) section for more information.
 
-Supported _columnentry_ patterns:
-
-- _columnname_: A string literal _columnname_ identifies a constituent column of the table. The value of the column SHOULD be presented, possibly with representation guided by other annotations or heuristics.
-- `[` _schemaname_ `,` _constraintname_ `]`: A two-element list of string literal _schemaname_ and _constraintname_ identifies a constituent foreign key of the table. The value of the external entity referenced by the foreign key SHOULD be presented, possibly with representation guided by other annotations or heuristics. If the foreign key is representing an inbound relationship with the current table, it SHOULD be presented in a tabular format since it can represent multiple rows of data.
-- `[` _schemaname_ `,` _constraintname_ `]`: A two-element list of string literal _schemaname_ and _constraintname_ identifies a constituent key of the table. The defined display of the key SHOULD be presented, with a link to the current displayed row of data. It will be served as a self link.
-- `{ "sourcekey": ` _sourcekey_ `}`: Defines a pseudo-column based on the given _sourcekey_. For more information please refer to [pseudo-column document](pseudo-columns.md).
-- `{ "source": ` _sourceentry_ `}`:  Defines a pseudo-column based on the given _sourceentry_. For detailed explanation and examples please refer to [here](pseudo-columns.md). Other optional attributes that this JSON document can have are:
-  - `markdown_name`: The markdown to use in place of the default heuristics for title of column.
-  - `"hide_column_header": true`: Hide the column header (and still show the value). This is only supported in `detailed` context.
-  - `display`: The display settings for generating the column presentation value. Please refer to [pseudo-columns display document](pseudo-column-display.md) for more information. The available options are:
-    - `markdown_pattern`: Markdown pattern that will be used for generating the value.
-    - `template_engine`: The template engine that should be used for the `markdown_pattern`.
-    - `wait_for`: A list of pseudo-column [`sourcekey`](#tag-2019-source-definitions) that are use in the defined `markdown_pattern`. You should list all the all-outbound, aggregates, and entity sets that you want to use in your `markdown_pattern`. Entity sets (pseudo-columns with `inbound` path and no `aggregate` attribute) are only acceptable in `detailed` context.
-    - `show_foreign_key_link`: It will override the inherited behavior of outbound foreign key displays. Set it to `false`, to avoid adding extra link to the foreign key display.
-    - `show_key_link`: It will override the inherited behavior of key (self link) displays. Set it to `false`, to avoid adding extra link to the key display.
-    - `array_ux_mode`: If you have `"aggregate": "array"` or `"aggregate": "array_d"` in the pseudo-column definition, a comma-seperated value will be presented to the user. You can use `array_ux_mode` attribute to change that. The available options are,
-      - `olist` for ordered bullet list.
-      - `ulist` for unordered bullet list.
-      - `csv` for comma-seperated values.
-      - `raw` for space-seperated values.
-  - `comment`: The tooltip to be used in place of the default heuristics for the column. Set this to `false` if you don't want any tooltip.
-  - `comment_display`: The display mode for the tooltip. Set to `inline` to show it as text or `tooltip` to show as a hover tooltip.
-    - Currently the contextualized `comment_display` is only supported for tables in detailed context when they are part of foreign key relationship.
-  - `entity`: If the _sourceentry_ can be treated as entity (the source column is key of the table), setting this attribute to `false` will force the scalar mode.
-  - `self_link`: If the defined source is one of the unique not-null keys of the table, setting this attribute to `true` will switch the display mode to self link.
-  - `aggregate`: The aggregate function that should be used for getting an aggregated result. The available aggregate functions are `min`, `max`, `cnt`, `cnt_d`, `array`, and `array_d`.
-    - `array` will return ALL the values including duplicates associated with the specified columns. For data types that are sortable (e.g integer, text), the values will be sorted alphabetically or numerically. Otherwise, it displays values in the order that it receives from ERMrest. There is no paging mechanism to limit what's shown in the aggregate column, therefore please USE WITH CARE as it can incur performance overhead and ugly presentation.
-    - `array_d` will return distinct values. It has the same performance overhead as `array`, so pleas USE WITH CARE.
-    - Using `array` or `array_d` aggregate in entity mode will provide an array of row-names instead of just the value of the column. Row-names will be derived from the `row_name/compact` context.
-  - `array_display`: This attribute is _deprecated_. It is the same as `array_ux_mode` that is defined above.
-  - `array_options`: This attribute is meant to be an object of properties that control the display of `array` or `array_d` aggregate column. These options will only affect the display (and templating environment) and have no effect on the generated ERMrest query. The available options are:
-    - `order`: An alternative sort method to apply when a client wants to semantically sort by key values. It follows the same syntax as `column_order`. In scalar array aggregate, you cannot sort based on other columns values, you can only sort based on the scalar value of the column.
-    - `max_length`: `<number>` A number that defines the maximum number of elements that should be displayed.
-- If you want to have a pseudo-column that its value is made up of multiple pseudo-columns, you don't need to define any `source` or `sourcekey`. The only required attributes for these types of columns (we call them virtual columns) are `markdown_name` that is used for generating the display name, and `markdown_pattern` to get the value. For instance the following is an acceptable virtual column:
-  ```
-  {
-      "markdown_name": "displayname value",
-      "display": {
-          "markdown_pattern": "{{{column1}}}, {{{column2}}}"
-      }
-  }
-  ```
-
-Supported _sourceentry_ pattern:
-- _columnname_: : A string literal. _columnname_ identifies a constituent column of the table.
-
-- An array of _path element_ that ends with a _columnname_ that will be projected.
-
-  - `[` _path element_  `,`  _columnname_`]`
-
-  Each anterior _path element_ MAY use one of the following sub-document structures:
-
-  - `{ "sourcekey":` _sourcekey prefix_ `}`
-    - Only acceptable as the first element. Please refer to [Data source with reusable prefix](facet-json-structure.md#data-source-with-reusable-prefix) for more information.
-    - _sourcekey prefix_ is a string literal that refers to any of the defined sources in [`source-definitions` annotations](annotation.md#tag-2019-source-definitions)
-
-  - `{` _direction_ `:` _fkeyname_ `}`
-    - Links a new table instance to the existing path via join.
-    - _direction_ can either be `"inbound"`, or `"outbound"`.
-    - _fkeyname_ is the given name of the foreign key which is usually in the following format: `[` _schema name_ `,` _constraint name_ `]`
-
-  - `{ "and": [` _filter_ `,` ... `], "negate": ` _negate_ `}`
-    - A logical conjunction of multiple _filter_ clauses is applied to the query to constrain matching rows.
-	- The logical result is negated only if _negate_ is `true`.
-	- Each _filter_ clause may be a terminal filter element, conjunction, or disjunction.
-
-  - `{ "or": [` _filter_ `,` ... `], "negate": ` _negate_ `}`
-    - A logical disjunction of multiple _filter_ clauses is applied to the query to constrain matching rows.
-	  - The logical result is negated only if _negate_ is `true`.
-	  - Each _filter_ clause may be a terminal filter element, conjunction, or disjunction.
-
-  - `{ "filter":` _column_ `, "operand_pattern":` _value_ `, "operator":` _operator_ `, "negate":` _negate_ `}`
-    - An individual filter _path element_ is applied to the query or individual _filter_ clauses participate in a conjunction or disjunction.
-
-    - The filter constrains a named _column_ in the current context table.
-
-    - The _operator_ specifies the constraint operator via one of the valid operator names in the ERMrest REST API, which are
-
-        | operator  | meaning |
-        |-----------|---------|
-        | `::null::`| column is `null`     |
-        | `=`      | column equals value |
-        | `::lt::` | column less than value |
-        | `::leq::` | column less than or equal to value |
-        | `::gt::` | column greater than value |
-        | `::geq::` | column greater than or equal to value |
-        | `::regexp::` | column matches regular expression value |
-        | `::ciregexp::` | column matches regular expression value case-insensitively |
-        | `::ts::` | column matches text-search query value |
-
-      > If `operator` is missing, we will use `=` by default.
-
-    - The _value_ specifies the constant operand for a binary constraint operator and must be computed to a non-empty value. [Pattern expansion](#pattern-expansion) MAY be used to access [the pre-defined values in templating envorinment](mustache-templating.md#using-pre-defined-attributes). Like other pattern expansions the default `template_engine` will be applied and if you want to change it, you can define `template_engine` alongside the `operand_pattern`.
-
-    - The logical result of the constraint is negated only if _negate_ is `true`.
-
-
-Supported _sourcekey_ pattern in here:
-  - A string literal that refers to any of the defined sources in [`source-definitions` annotations](#tag-2019-source-definitions).
 
 Supported _facetlist_ pattern:
 
@@ -416,7 +317,7 @@ Required attributes:
 
 You need to define one of these attributes which will refer to the source of the facet column.
 
-- `source`: Source of the filter. If it is not specified or is invalid the _facetentry_ will be ignored. It has the same pattern as _sourceentry_ defined above.
+- `source`: Source of the filter. If it is not specified or is invalid the _facetentry_ will be ignored. It follows the same pattern as the `source`s defined for a _columndirective_. For more detailed explanation please refer to [column directive section](#column-directive).
 
 - `sourcekey`: A string literal that refers to any of the defined sources in [`source-definitions` annotations](#tag-2019-source-definitions). You MUST avoid defining both `source` and `sourcekey` as the client will ignore the `source` and just uses the `sourcekey`.
 
@@ -456,7 +357,7 @@ Configuration attributes (optional):
   You can modify this to sort based on other columns of the table that the scalar column belongs to. Or use the `"num_occurrences": true` to refer to the "Number of occurences" column.
 
 
-The following is an example of visible-columns annotation payload for defining facets. You can find more examples in [here](facet-examples.md) and use [this document](facet-json-structure.md) to learn more about the structure of facet.
+The following is an example of visible-columns annotation payload for defining facets. Please refer to [this document](facet.md) to learn more about the structure of facet and find more examples.
 
 ```
 "filter": {
@@ -496,16 +397,6 @@ Supported _columnorder_key_ syntax:
 - `{ "column":` _columnname_ `}`: If omitted, the `"descending"` field defaults to `false` as per above.
 - _columnname_: A bare _columnname_ is a short-hand for `{ "column":` _columnname_ `}`.
 
-
-Key pseudo-column-naming heuristics (use first applicable rule):
-
-1. Use key name specified by [2015 Display](#display) if `name` attribute is specified.
-2. For simple keys, use effective name of sole constituent column considering [2015 Display](#display) and column name from model.
-3. Other application-specific defaults might be considered (non-normative examples):
-  - Anonymous pseudo-column may be applicable in some presentations
-  - A fixed name such as `Key`
-  - The effective table name
-  - A composite name formed by joining the effective names of each constituent column of a composite key
 
 Key sorting heuristics (use first applicable rule):
 
@@ -720,73 +611,7 @@ For presentation contexts which are not listed in the annotation, or when the an
 
 Supported _fkeylist_ patterns:
 
-- `[` `[` _schema name_`,` _constraint name_ `]` `,` ... `]`: Present foreign keys with matching _schema name_ and _constraint name_, in the order specified in the list. Ignore constraint names that do not correspond to foreign keys in the catalog. Do not present foreign keys that are not mentioned in the list. These 2-element lists use the same format as each element in the `names` property of foreign keys in the JSON model introspection output of ERMrest. The foreign keys MUST represent inbound relationships to the current table.
-- `{ "source": ` _sourceentry_ `}`:  Defines a pseudo-column based on the given _sourceentry_. For detailed explanation and examples please refer to [here](pseudo-columns.md#examples). Other optional attributes that this JSON document can have are:
-  - `markdown_name`: The markdown to use in place of the default heuristics for title of column.
-  - `comment`: The tooltip to be used in place of the default heuristics for the column. Set this to `false` if you don't want any tooltip.
-  - `comment_display`: The display mode for the tooltip. Set to `inline` to show it as text or `tooltip` to show as a hover tooltip.
-    - Currently the contextualized `comment_display` is only supported for tables in detailed context when they are part of foreign key.
-  - `display`: The display settings to use for generating the value for this column. Please refer to [pseudo-columns display document](pseudo-column-display.md) for more information. The following are attributes that are applicable here:
-     - `markdown_pattern`: The markdown pattern that can be used for generating a custom display for the related table. If this is missing, we're going to provided `row_markdown_pattern` in the `table-display` annotation for the custom display. And if it's missing from that annotation as well, Chaise will not provide any custom display.
-     - `template_engine`: The template enginge that should be used for the `markdown_pattern`.
-     - `wait_for`: List of pseudo-column [`sourcekey`](#tag-2019-source-definitions)s that used in `markdown_pattern`. You should list all the all-outbound, aggregates, and entity sets that you are using.
-- `{ "sourcekey": ` _sourcekey_ `}`: Defines a pseudo-column based on the given _sourcekey_.
-
-Supported _sourceentry_ patterns:
-
-- An array of _path element_ that ends with a _columnname_ that will be projected.
-
-  - `[` _path element_  `,`  _columnname_`]`
-
-  Each anterior _path element_ MAY use one of the following sub-document structures:
-
-  - `{ "sourcekey":` _sourcekey prefix_ `}`
-    - Only acceptable as the first element. Please refer to [Data source with reusable prefix](facet-json-structure.md#data-source-with-reusable-prefix) for more information.
-    - _sourcekey prefix_ is a string literal that refers to any of the defined sources in [`source-definitions` annotations](annotation.md#tag-2019-source-definitions)
-
-  - `{` _direction_ `:` _fkeyname_ `}`
-    - Links a new table instance to the existing path via join.
-    - _direction_ can either be `"inbound"`, or `"outbound"`.
-    - _fkeyname_ is the given name of the foreign key which is usually in the following format: `[` _schema name_ `,` _constraint name_ `]`
-
-  - `{ "and": [` _filter_ `,` ... `], "negate": ` _negate_ `}`
-    - A logical conjunction of multiple _filter_ clauses is applied to the query to constrain matching rows.
-  	- The logical result is negated only if _negate_ is `true`.
-	  - Each _filter_ clause may be a terminal filter element, conjunction, or disjunction.
-
-  - `{ "or": [` _filter_ `,` ... `], "negate": ` _negate_ `}`
-    - A logical disjunction of multiple _filter_ clauses is applied to the query to constrain matching rows.
-	  - The logical result is negated only if _negate_ is `true`.
-	  - Each _filter_ clause may be a terminal filter element, conjunction, or disjunction.
-
-  - `{ "filter":` _column_ `, "operand_pattern":` _value_ `, "operator":` _operator_ `, "negate":` _negate_ `}`
-    - An individual filter _path element_ is applied to the query or individual _filter_ clauses participate in a conjunction or disjunction.
-
-    - The filter constrains a named _column_ in the current context table.
-
-    - The _operator_ specifies the constraint operator via one of the valid operator names in the ERMrest REST API, which are
-
-        | operator  | meaning |
-        |-----------|---------|
-        | `::null::`| column is `null`     |
-        | `=`      | column equals value |
-        | `::lt::` | column less than value |
-        | `::leq::` | column less than or equal to value |
-        | `::gt::` | column greater than value |
-        | `::geq::` | column greater than or equal to value |
-        | `::regexp::` | column matches regular expression value |
-        | `::ciregexp::` | column matches regular expression value case-insensitively |
-        | `::ts::` | column matches text-search query value |
-
-      > If `operator` is missing, we will use `=` by default.
-
-    - The _value_ specifies the constant operand for a binary constraint operator and must be computed to a non-empty value. [Pattern expansion](#pattern-expansion) MAY be used to access [the pre-defined values in templating envorinment](mustache-templating.md#using-pre-defined-attributes). Like other pattern expansions the default `template_engine` will be applied and if you want to change it, you can define `template_engine` alongside the `operand_pattern`.
-
-    - The logical result of the constraint is negated only if _negate_ is `true`.
-
-Supported _sourcekey_ patterns:
-  - A string literal that refers to any of the defined sources in [`source-definitions` annotations](#tag-2019-source-definitions).
-
+- `[` ... _columndirective_ `,` ... `]`: Present content correspondign to each _columndirective_, in the order specified in the list. Ignore _columndirective_ that do not correspond to a valid path from the table. Do not present foreign keys that are not mentioned in the list. Please refer to [column directive](#column-directive) section for more information. The defined column directive MUST be in entity mode and have at least an `inbound` node in its relationship to the current table.
 
 ### Tag: 2016 Table Alternatives
 
@@ -903,7 +728,7 @@ Supported JSON payload patterns:
 - `{`... `"year_pattern": ` _pattern_ ...`}`: A desired year value can be derived by [Pattern Expansion](#pattern-expansion) on _pattern_. This attribute is required for the citation feature and if it is not specified, the client will not provide the citation display feature. See implementation notes below.
 - `{`... `"url_pattern": ` _pattern_ ...`}`: A desired url value can be derived by [Pattern Expansion](#pattern-expansion) on _pattern_. This attribute is required for the citation feature and if it is not specified, the client will not provide the citation display feature. See implementation notes below.
 - `{`... `"id_pattern": ` _pattern_ ...`}`: A desired id value can be derived by [Pattern Expansion](#pattern-expansion) on _pattern_.
-- `{`... `"wait_for":` _waitForList_ ... `}`: List of pseudo-column [`sourcekey`](#tag-2019-source-definitions)s that are used in any of the provided patterns. You should list all the all-outbound, aggregates, and entity sets that you are using.
+- `{`... `"wait_for":` _waitForList_ ... `}`: List of column directive [`sourcekey`](#tag-2019-source-definitions)s that are used in any of the provided patterns. You should list all the all-outbound, aggregates, and entity sets that you are using.
 
 Supported _waitForList_ pattern:
 
@@ -979,7 +804,7 @@ Using this key you can,
 
 - Define `sources` that can be used in `visible-columns` and `visible-foreign-keys` annotations.
 - Define `sources` that can be used in the `wait_for` definition of `visible-columns`, `visible-foreign-keys`, and `citation` annotations.
-- Define list of column names and outbound foreign keys that should be available in the templating environments (Please refer to [this document](pseudo-column-template.md) for more information).
+- Define list of column names and outbound foreign keys that should be available in the templating environments (Please refer to [this document](column-directive-template.md) for more information).
 - Modify the behavior of main search box in recordset page.
 
 Example:
@@ -1028,7 +853,7 @@ Supported JSON payload patterns:
 
 Supported _sourcedefinitions_ patterns:
 
-- `{` ... `"` _sourcekey_ `":{ "source":` _sourceentry_ `},` ... `}`: where _sourcekey_ is a name that will be used to refer to the defined _sourceentry_. Since you're defining a [pseudo-column]((pseudo-columns.md)) here, you can use any of the pseudo-column optional parameters that the syntax allows (e.g., `aggregate`, `entity`, `display`, `markdown_name`).
+- `{` ... `"` _sourcekey_ `":` _column_directive_ ... `}`: where _sourcekey_ is a name that will be used to refer to the defined _column_directive_. Please refer to the [Column Directive](#column-directive) section for more information (You can use any of the column-directive optional parameters that the syntax allows (e.g., `aggregate`, `entity`, `display`, `markdown_name`).
 
 Supported _sourcekey_ pattern:
  - A string literal that,
@@ -1036,61 +861,8 @@ Supported _sourcekey_ pattern:
     - Should not be any of the table's column names.
     - `search-box` is a reserved _sourcekey_ and cannot be used.
 
-Supported _sourceentry_ pattern:
-  - _columnname_: : A string literal. _columnname_ identifies a constituent column of the table.
-  - An array of _path element_ that ends with a _columnname_ that will be projected.
-
-    - `[` _path element_  `,`  _columnname_`]`
-
-    Each anterior _path element_ MAY use one of the following sub-document structures:
-
-    - `{ "sourcekey":` _sourcekey prefix_ `}`
-      - Only acceptable as the first element. Please refer to [Data source with reusable prefix](facet-json-structure.md#data-source-with-reusable-prefix) for more information.
-      - _sourcekey prefix_ is a string literal that refers to any of the defined sources in [`source-definitions` annotations](#tag-2019-source-definitions)
-
-    - `{` _direction_ `:` _fkeyname_ `}`
-      - Links a new table instance to the existing path via join.
-      - _direction_ can either be `"inbound"`, or `"outbound"`.
-      - _fkeyname_ is the given name of the foreign key which is usually in the following format: `[` _schema name_ `,` _constraint name_ `]`
-
-    - `{ "and": [` _filter_ `,` ... `], "negate": ` _negate_ `}`
-      - Currently only limited to `filter` context of visible-columns annotation.
-      - A logical conjunction of multiple _filter_ clauses is applied to the query to constrain matching rows.
-  	- The logical result is negated only if _negate_ is `true`.
-  	- Each _filter_ clause may be a terminal filter element, conjunction, or disjunction.
-
-    - `{ "or": [` _filter_ `,` ... `], "negate": ` _negate_ `}`
-      - Currently only limited to `filter` context of visible-columns annotation.
-      - A logical disjunction of multiple _filter_ clauses is applied to the query to constrain matching rows.
-	  - The logical result is negated only if _negate_ is `true`.
-	  - Each _filter_ clause may be a terminal filter element, conjunction, or disjunction.
-
-    - `{ "filter":` _column_ `, "operand_pattern":` _value_ `, "operator":` _operator_ `, "negate":` _negate_ `}`
-      - Currently only limited to `filter` context of visible-columns annotation.
-      - An individual filter _path element_ is applied to the query or individual _filter_ clauses participate in a conjunction or disjunction.
-      - The filter constrains a named _column_ in the current context table.
-      - The _operator_ specifies the constraint operator via one of the valid operator names in the ERMrest REST API, which are
-
-        | operator  | meaning |
-        |-----------|---------|
-        | `::null::`| column is `null`     |
-        | `=`      | column equals value |
-        | `::lt::` | column less than value |
-        | `::leq::` | column less than or equal to value |
-        | `::gt::` | column greater than value |
-        | `::geq::` | column greater than or equal to value |
-        | `::regexp::` | column matches regular expression value |
-        | `::ciregexp::` | column matches regular expression value case-insensitively |
-        | `::ts::` | column matches text-search query value |
-
-      > If `operator` is missing, we will use `=` by default.
-
-      - The _value_ specifies the constant operand for a binary constraint operator and must be computed to a non-empty value. [Pattern expansion](#pattern-expansion) MAY be used to access [the pre-defined values in templating envorinment](mustache-templating.md#using-pre-defined-attributes). Like other pattern expansions the default `template_engine` will be applied and if you want to change it, you can define `template_engine` alongside the `operand_pattern`.
-      - The logical result of the constraint is negated only if _negate_ is `true`.
-
-
 Supported _searchcolumn_ pattern:
-  -  _searchcolumn_ supports the same patterns as _sourceentry_. Since the pseudo-column defined here is special, you can only use the following optional parameters:
+  -  _searchcolumn_ supports the same patterns as _sourceentry_. Since the column directive defined here is special, you can only use the following optional parameters:
       - `markdown_name`: The client will show the displayname of columns as placeholder in the search box. To modify this default behavior, you can use this attribute.
 
       While we allow defining a list of search columns, only the following combination of search columns are supported:
@@ -1110,7 +882,7 @@ Supported _searchcolumn_ pattern:
           ]
         }
         ```
-      - A list of pseudo-columns that use the same _sourcekey prefix_.
+      - A list of column directives that use the same _sourcekey prefix_.
         ```javascript
         {
           "or": [
@@ -1252,7 +1024,7 @@ List of _context_ names that are used in ERMrest:
 - `"filter"`: Any data-filtering control context, i.e. when prompting the user for column constraints or facets.
 - `"row_name"`: Any abbreviated title-like presentation context.
   - `"row_name/title"`: A sub-context of `row_name` that only applies to title of page.
-  - `"row_name/compact"`: A sub-context of `row_name` that only applies to compact, tabular presentation of a row (When a foreignkey value is displayed in a tabular presentation. Or when displaying an entity array aggregate pseudo-column).
+  - `"row_name/compact"`: A sub-context of `row_name` that only applies to compact, tabular presentation of a row (When a foreignkey value is displayed in a tabular presentation. Or when displaying an entity array aggregate column directive).
   - `"row_name/detailed"`: A sub-context of `row_name` that only applies to entity-level presentation of a row (When a foreignkey value is displayed in the entity-level page).
 - `"*"`: A default to apply for any context not matched by a more specific context name.
 
@@ -1299,3 +1071,123 @@ A web user agent that consumes this annotation and the related table data would 
     <img src="https://dev.isrd.isi.edu/chaise/search?name=col%20name" alt="Title of Image">
 </p>
 ```
+
+
+## Column Directive
+
+Column directive allows instruction of a data source and modification of its presentation. Column directives are defined relative to the table that they are part of. They can be used in [`visible-columns`](#tag-2016-visible-columns) or [`visible-foreign-keys`](#tag-2016-visible-foreign-keys) annotations, or defined as part of [`source-definitions`](#tag-2019-source-definitions) annotation.
+
+<!-- TODO we might want to include the simple syntax here instead of just in visible-columns and visible-fks -->
+
+Please refer to [this document](column-directive.md) for more detailed explanation and examples. The following is a summary of what's described in the separate document.
+
+### Overall structure
+
+As it was described, column directives are meant to instruct the data source and its presentation. Based on how the data source is defined, we can categorize them into the following (All the properties are described in [the next section](#properties)):
+
+1. **Column directive with `source`**: In this category, you use the `source` property to define the data source of the column directive in place. Other source related properties (i.e. `entity`, `aggregate`) can be used in combination with `source` to change the nature of the column directive.
+2. **Column directive with `sourcekey`**: In this category, the `sourcekey` proprety is used to refer to one of the defines sources in the [`source-definitions` annotations](annotation.md#tag-2019-source-definitions).
+3. **Column directive without any source** (_Applicaple only to read-only non-filter context of `visible-columns` annotation_): If you want to have a column directive that its value is made up of multiple column directives, you don't need to define any `source` or `sourcekey`. The only required attributes for these types of columns (we call them virtual columns) are `markdown_name` that is used for generating the display name, and `markdown_pattern` under `display` to get the value.
+
+While the general syntax of column directives is defining a JSON object, depending on where the column directive is used, you can use the simpler syntax which heavily relies on heuristics. The following are other acceptable ways of defining column directives:
+
+- In read-only non-filter context of `visible-columns` annotation, you can use string to refer to any of the columns in the table. For instance the two following syntax are alternative to each other:
+  ```
+  {
+    "source": "column"
+  }
+  ```
+  ```
+  "column"
+  ```
+- In non-filter context of `visible-columns` annotation you can use the two-element list of string literal which identifies a constituent foreign key of the table. The value of the external entity referenced by the foreign key will be presented, with representation guided by other annotations or heuristics. Therefore the follow are alternative:
+  ```
+  {
+    "source": [
+      {"outbound": ["schema", "fkey1"]},
+      "RID"
+    ],
+    "entity": true
+  }
+  ```
+  ```
+  ["schema", "fkey1"]
+  ```
+- In `detailed` context of `visible-columns` and `visible-foreign-keys` annotation you can use the two-element list of string literal which identifies a constituent foreign key that is referring to the current table (inbound relationship). Therefore the follow are alternative:
+  ```
+  {
+    "source": [
+      {"inbound": ["schema", "fkey_to_main"]},
+      "RID"
+    ],
+    "entity": true
+  }
+  ```
+  ```
+  ["schema", "fkey_to_main"]
+  ```
+- In `detailed` context of `visible-columns` and `visible-foreign-keys` annotation you can use the two-element list of string literal which identifies a constituent foreign key from a pure and binary association table to the current table. Therefore the follow are alternative:
+  ```
+  {
+    "source": [
+      {"inbound": ["schema", "fkey_from_assoc_to_main"]},
+      {"outbound": ["schema", "fkey_from_assoc_to_related"]},
+      "RID"
+    ],
+    "entity": true
+  }
+  ```
+  ```
+  ["schema", "fkey_from_assoc_to_main"]
+  ```
+- In read-only non-filter context of `visible-columns` annotation you can use the two-element list of string literal which identifies a constituent key of the table. The defined display of the key will be presented, with a link to the current displayed row of data. This is the same as the `self_link` property on column directive JSON object. Therefore the follow are alternative:
+  ```
+  {
+    "source": "RID",
+    "entity": true
+    "self_link": true
+  }
+  ```
+  ```
+  ["schema", "primary_key"]
+  ```
+
+### Properties
+#### 1. Data source properties
+
+These sets of properties change the nature of the column directive, as they will affect the communication with server. To detect duplicate column-directives we only look for these properties.
+
+- `source`: The source path. It can either be a column or a foreign key path to a column in another table. You can find more information in [the column directive document](column-directive.md#source).
+- `sourcekey`: Allows referring to any of the defined `sources` in the [`source-definitions`](#tag-2019-source-definitions) annotation.
+- `entity`: If the source column is key of the table, setting this attribute to `false` will force the scalar mode. Otherwise the column directive will be in entity mode.
+- `aggregate`: The aggregate function that should be used for getting an aggregated result. Applicaple only to read-only non-filter context of `visible-columns` annotation. The available aggregate functions are `min`, `max`, `cnt`, `cnt_d`, `array`, and `array_d`.
+    - `array` will return ALL the values including duplicates associated with the specified columns. For data types that are sortable (e.g integer, text), the values will be sorted alphabetically or numerically. Otherwise, it displays values in the order that it receives from ERMrest. There is no paging mechanism to limit what's shown in the aggregate column, therefore please USE WITH CARE as it can incur performance overhead and ugly presentation.
+    - `array_d` will return distinct values. It has the same performance overhead as `array`, so pleas USE WITH CARE.
+    - Using `array` or `array_d` aggregate in entity mode will provide an array of row-names instead of just the value of the column. Row-names will be derived from the `row_name/compact` context.
+
+#### 2. Presentation properties
+
+The following attributes can be used to manipulate the presentation settings of the column directive:
+
+- `markdown_name`: The markdown to use in place of the default heuristics for title of column.
+- `comment`: The tooltip to be used in place of the default heuristics for the column. Set this to `false` if you don't want any tooltip.
+- `comment_display`: The display mode for the tooltip. Set to `inline` to show it as text or `tooltip` to show as a hover tooltip.
+  - Currently `comment_display` is only supported for related tables in detailed context.
+- `hide_column_header`: Hide the column header (and still show the value). This is only supported in `detailed` context of `visible-columns` annotation.
+- `self-link`: If you want to show a self-link to the current row, you need to make sure the source is based on a not-null unique column of the current table and add the `"self_link": true` to the definition. Applicaple only to read-only non-filter context of `visible-columns` annotation.
+- `display`: A JSON object that describes the display settings for generating the value for this column. Please refer to [column-directive display document](column-directive-display.md) for more information. This object can have the following properties:
+  - `markdown_pattern`: The markdown pattern that will be used for generating the value.
+    - In case of related tables, the given markdown pattern will be used for the "custom display" mode. If this is missing, we're going to provided `row_markdown_pattern` in the `table-display` annotation for the custom display. And if it's missing from that annotation as well, Chaise will not provide any custom display.
+  - `template_engine`: The template enginge that should be used for the `markdown_pattern`.
+  - `wait_for`: List of column directive [`sourcekey`](#tag-2019-source-definitions)s that used in `markdown_pattern`. You should list all the all-outbound, aggregates, and entity sets that you want to use in your `markdown_pattern`. Entity sets (column directives with `inbound` path and no `aggregate` attribute) are only acceptable in `detailed` context.
+  - `show_foreign_key_link`: Applicaple only to read-only non-filter context of `visible-columns` annotation. If the given data source properties represent an all-outbound foreign key path, this property will override the inherited behavior of adding a link to the referred row. Set it to `false`, to avoid adding extra link to the foreign key display, or `true` to ensure the link will be added regardless of inherited behavior.
+  - `show_key_link`: Applicaple only to read-only non-filter context of `visible-columns` annotation. If the given data source properties represent a key (self link), this property will override the inherited behavior of adding a link to the referred row. Set it to `false`, to avoid adding extra link to the key display, or `true` to ensure the link will be added regardless of inherited behavior.
+  - `array_ux_mode`: Applicaple only to read-only non-filter context of `visible-columns` annotation. If you have `"aggregate": "array"` or `"aggregate": "array_d"` in the column directive definition, a comma-seperated value will be presented to the user. You can use `array_ux_mode` attribute to change that. The available options are,
+      - `olist` for ordered bullet list.
+      - `ulist` for unordered bullet list.
+      - `csv` for comma-seperated values.
+      - `raw` for space-seperated values.
+- `array_display`: This property is _deprecated_. It is the same as `array_ux_mode` that is defined above under `display` property.
+- `array_options`: Applicaple only to read-only non-filter context of `visible-columns` annotation. This property is meant to be an object of properties that control the display of `array` or `array_d` aggregate column. These options will only affect the display (and templating environment) and have no effect on the generated ERMrest query. The available options are:
+    - `order`: An alternative sort method to apply when a client wants to semantically sort by key values. It follows the same syntax as `column_order`. In scalar array aggregate, you cannot sort based on other columns values, you can only sort based on the scalar value of the column.
+    - `max_length`: `<number>` A number that defines the maximum number of elements that should be displayed.
