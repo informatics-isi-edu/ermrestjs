@@ -368,7 +368,7 @@ var ERMrest = (function(module) {
 
         this.http.head(this._getAbsoluteUrl(this.url), config).then(function(response) {
 
-            var headers = response.headers();
+            var headers = module.getResponseHeader(response);
             var md5 = headers["content-md5"];
             var length = headers["content-length"];
 
@@ -381,7 +381,7 @@ var ERMrest = (function(module) {
             self.isPaused = false;
             self.completed = true;
             self.jobDone = true;
-            self.versionedUrl = response.headers("content-location");
+            self.versionedUrl = module.getResponseHeader(response)["content-location"];
             deferred.resolve(self.url);
         }, function(response) {
             // 403 - file exists but user can't read it -> create a new one
@@ -458,7 +458,7 @@ var ERMrest = (function(module) {
 
         }).then(function(response) {
             if (response) {
-                self.chunkUrl = response.headers('location');
+                self.chunkUrl = module.getResponseHeader(response).location;
                 deferred.resolve(self.chunkUrl);
             }
         }, function(response) {
@@ -573,8 +573,9 @@ var ERMrest = (function(module) {
         this.http.post(this._getAbsoluteUrl(this.chunkUrl), {}, config).then(function(response) {
             self.jobDone = true;
 
-            if (response.headers('location')) {
-                var versionedUrl = response.headers('location');
+            var loc = module.getResponseHeader(response).location;
+            if (loc) {
+                var versionedUrl = loc;
                 self.versionedUrl = versionedUrl;
                 deferred.resolve(versionedUrl);
             } else {
@@ -995,8 +996,10 @@ var ERMrest = (function(module) {
                         }
                     }
                 },
-                timeout : self.xhr.promise,
-                cancel : self.xhr
+                // the following is only doable in angularjs and not axios
+                // timeout : self.xhr.promise,
+                // the following is not an available config and doesn't affect anything
+                // cancel : self.xhr
             },
             data: blob
         };

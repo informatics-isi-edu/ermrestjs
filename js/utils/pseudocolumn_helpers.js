@@ -524,7 +524,22 @@
 
                 // NOTE this could be in the table.sourceDefinitions
                 // the only issue is that in there we don't have the mainTuple...
-                var pc = module._createPseudoColumn(baseReference, sd, mainTuple);
+                var pc = module._createPseudoColumn(
+                    baseReference,
+                    /**
+                     * cloning so,
+                     * - we're not referring to the same sd
+                     * - make sure the sourcekey is also part of the definition
+                     *   so the mapping of sourcekey to definition is not lost.
+                     *   this mapping is needed for the path prefix logic
+                     */
+                    sd.clone(
+                        {"sourcekey": wf},
+                        currentTable,
+                        module._constraintNames
+                    ),
+                    mainTuple
+                );
 
                 // ignore normal columns
                 if (!pc.isPseudo || pc.isAsset) return;
@@ -1552,7 +1567,7 @@
 
             return {
                 path: path,
-                outAlias: outAlias
+                usedOutAlias: usedOutAlias
             };
         },
 

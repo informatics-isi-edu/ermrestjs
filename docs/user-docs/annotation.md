@@ -306,6 +306,7 @@ Supported _columnlist_ patterns:
 
 - `[` ... _columndirective_ `,` ... `]`: Present content corresponding to each _columndirective_, in the order specified in the list. Ignore listed _columndirective_ values that do not correspond to content from the table. Do not present table columns that are not specified in the list. Please refer to [column directive](#column-directive) section for more information.
 
+
 Supported _facetlist_ pattern:
 
 - `[` ... _facetentry_ `,` ... `]`: Present content corresponding to each _facetentry_, in the order specified in the list. Ignore invalid listed _facetentry_. Do not present other facets that are not specified in the list.

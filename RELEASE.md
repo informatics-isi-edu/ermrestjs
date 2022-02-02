@@ -10,8 +10,31 @@ This document is a summary of code changes in ERMRestJS. This is the vocabulary 
   - `[Annotation]`: when the describe modification is related to annotation.
   - `[No changes]`: means that ERMRestJS hasn't been changed in the described duration.
 
-<!-- # 11/30/21 -->
-<!-- #912 PR -->
+# 1/31/22
+
+- [Changed] and upgraded the dependencies used in ERMrestJS ([link](https://github.com/informatics-isi-edu/ermrestjs/pull/933)).
+- [Improved] the `attributegroup` request in `Reference.read` to use scalar projection for all-outbound paths if possible ([link](https://github.com/informatics-isi-edu/ermrestjs/pull/931))
+- [Fixed] a bug in `wait_for` processing that would cause issues related to _path with prefix_ ([link](https://github.com/informatics-isi-edu/ermrestjs/commit/8b0f0c59f0386a638037ba637a584c623d76b5fe))
+- [Changed] default csv download link to always use the `detailed` context instead of contextualizing it ([link](https://github.com/informatics-isi-edu/ermrestjs/commit/8d28fc7ce7afe12f50c981507d56446e4c67345c))
+- [Added][Annotation] support for usage of filter in source path in `visible-foreign-keys` and `visible-columns`([link 1](https://github.com/informatics-isi-edu/ermrestjs/issues/685), [link](https://github.com/informatics-isi-edu/ermrestjs/pull/928))
+
+
+# 11/31/21
+
+- [Improved][Annotation] support for _path with prefix_ to allow just changing the end column.
+- [Improved][Annotation] the _path with prefix_ implementation ([link](https://github.com/informatics-isi-edu/ermrestjs/pull/912)),
+  - _path with prefix_ can be used to just change the projected column (doesn't require any foreign key paths).
+  - Avoid adding unused aliases.
+  - Properly sharing path when a `sourcekey` is used in facet ([more details](https://github.com/informatics-isi-edu/ermrestjs/pull/912)).
+- [Changed] the facet parsing logic to not optimize the last foreign key hop.
+- [Improved][Annotaion] support for more complicated search columns ([link](https://github.com/informatics-isi-edu/ermrestjs/issues/906)).
+- [Changed] heuristics for `hide_null_choice` and `hide_not_null_choice` in Facets to not check for ACL and versioned catalog ([link](https://github.com/informatics-isi-edu/ermrestjs/issues/888))
+- [Changed][Annotation] source-definition` annnotation by moving `search-box`  to be a top-level key ([link](https://github.com/informatics-isi-edu/ermrestjs/commit/eb7a1397e60bae6abeef9cd9d9df8ecb83c1aef0)).
+- [Added] `$session` and `$location` to templating environment ([link](https://github.com/informatics-isi-edu/ermrestjs/pull/911)).
+- [Added][Annotation] a new `export-fragment-definitions` annotation ([link](https://github.com/informatics-isi-edu/ermrestjs/pull/918)).
+- [Fixed] aggregate requests to use inner join ([link](https://github.com/informatics-isi-edu/ermrestjs/pull/923)).
+
+
 # 9/30/21
  - [Added] [Annotation] support for _path with prefix_ syntax where using `sourcekey`
    as the first attribute will create a shared table instance that can be used mulitple times ([link](https://github.com/informatics-isi-edu/ermrestjs/pull/838)).

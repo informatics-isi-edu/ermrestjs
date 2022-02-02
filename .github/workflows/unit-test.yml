@@ -16,6 +16,10 @@ jobs:
           path: ermrestjs
       - name: Setup the system
         run: |
+          echo "npm version:"
+          npm --version
+          echo "node version:"
+          node --version
           sudo timedatectl set-timezone America/Los_Angeles
           export PATH="$(systemd-path user-binaries):$PATH"
           sudo apt-get -y update

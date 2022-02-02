@@ -1313,7 +1313,7 @@
 
                 //  do the 'post' call
                 this._server.http.post(uri, data, config).then(function(response) {
-                    var etag = response.headers().etag;
+                    var etag = module.getResponseHeader(response).etag;
                     //  new page will have a new reference (uri that filters on a disjunction of ids of these tuples)
                     var uri = self._location.compactUri + '/',
                         keyName;
@@ -1498,7 +1498,7 @@
                         throw new InvalidServerResponse(uri, response.data, action);
                     }
 
-                    var etag = response.headers().etag;
+                    var etag = module.getResponseHeader(response).etag;
 
                     var hasPrevious, hasNext = false;
                     if (!ownReference._location.paging) { // first page
@@ -1890,7 +1890,7 @@
                         }
                     }
 
-                    var etag = response.headers().etag;
+                    var etag = module.getResponseHeader(response).etag;
                     var pageData = [];
 
                     var uri = self._location.service + "/catalog/" + self.table.schema.catalog.id + "/entity/" + urlEncode(self.table.schema.name) + ':' + urlEncode(self.table.name) + '/';
@@ -4065,8 +4065,17 @@
 
                             // the column must be part of outbounds, so we don't need to check for it
                             fkIndex = findAllOutBoundIndex(col.name);
-                            colName = fkAliasPreix + (allOutBounds.length + k++);
-                            sortMap[colName] = [fkAliasPreix + (fkIndex+1), module._fixedEncodeURIComponent(sortCols[j].column.name)].join(":");
+
+                            if (col.canUseScalarProjection) {
+                                // in this case the column itself is projected,
+                                // and sort can only be based on the column itself..
+                                // so we don't need sortMap and just need to
+                                // ensure the colName is referring to the proper fk
+                                colName = fkIndex;
+                            } else {
+                                colName = fkAliasPreix + (allOutBounds.length + k++);
+                                sortMap[colName] = [fkAliasPreix + (fkIndex+1), module._fixedEncodeURIComponent(sortCols[j].column.name)].join(":");
+                            }
                         } else {
                             colName = sortCols[j].column.name;
                             if (colName in sortColNames) {
@@ -4173,6 +4182,7 @@
                     sortColumn,
                     addedCols,
                     aggFn = "array_d",
+                    allOutBound,
                     pseudoPathRes,
                     rightSummFn;
 
@@ -4202,6 +4212,7 @@
 
                 // add all the allOutBounds
                 for (k = allOutBounds.length - 1; k >= 0; k--) {
+                    allOutBound = allOutBounds[k];
                     pseudoPathRes = getPseudoPath(k, fkAliasPreix + (k+1));
 
                     // TODO could be improved by adding $M to the begining?
@@ -4211,8 +4222,13 @@
                         uri += pseudoPathRes.path + "/$" + mainTableAlias + "/";
                     }
 
-                    // F2:array_d(F2:*),F1:array_d(F1:*)
-                    aggList.push(fkAliasPreix + (k+1) + ":=" + aggFn + "(" + pseudoPathRes.usedOutAlias + ":*)");
+                    // entity mode: F2:array_d(F2:*),F1:array_d(F1:*)
+                    // scalar mode: F2:F2:col,F1:F1:col
+                    if (allOutBound.isPathColumn && allOutBound.canUseScalarProjection) {
+                        aggList.push(fkAliasPreix + (k+1) + ":=" + pseudoPathRes.usedOutAlias + ":" + module._fixedEncodeURIComponent(allOutBound.baseColumn.name));
+                    } else {
+                        aggList.push(fkAliasPreix + (k+1) + ":=" + aggFn + "(" + pseudoPathRes.usedOutAlias + ":*)");
+                    }
                 }
 
                 // add trs or tcrs for main table
@@ -4835,7 +4851,7 @@
                         (associatonRef && associatonRef.canUseTRS);
 
         if (hasLinkedData) {
-            var fks = reference._table.foreignKeys.all(), i, j, colFKs, key;
+            var fks = reference._table.foreignKeys.all(), i, j, colFKs, d, key, fkData;
             var mTableAlias = this._ref.location.mainTableAlias;
 
             try {
@@ -4847,7 +4863,26 @@
                     // fk data
                     this._linkedData.push({});
                     for (j = allOutBounds.length - 1; j >= 0; j--) {
-                        this._linkedData[i][allOutBounds[j].name] = data[i][fkAliasPreix + (j+1)][0];
+                        /**
+                         * if we've used scalar value in the projection list,
+                         * then we have to create an object to mimic values of the table
+                         * other parts of the code (formatpresentation) relies on an object
+                         * where values of each column is encoded. In this case the object
+                         * will have the value of only one column
+                         */
+                        if (allOutBounds[j].isPathColumn && allOutBounds[j].canUseScalarProjection) {
+                            // the value will not be an array
+                            d = {};
+                            fkData = data[i][fkAliasPreix + (j+1)];
+                            if (fkData === undefined || fkData === null) {
+                                this._linkedData[i][allOutBounds[j].name] = null;
+                            } else {
+                                d[allOutBounds[j].baseColumn.name] = fkData;
+                                this._linkedData[i][allOutBounds[j].name] = d;
+                            }
+                        } else {
+                            this._linkedData[i][allOutBounds[j].name] = data[i][fkAliasPreix + (j+1)][0];
+                        }
                     }
 
                     // table rights
@@ -4877,7 +4912,26 @@
                     // fk data
                     this._extraLinkedData = {};
                     for (j = allOutBounds.length - 1; j >= 0; j--) {
-                        this._extraLinkedData[allOutBounds[j].name] = extraData[fkAliasPreix + (j+1)][0];
+                        /**
+                         * if we've used scalar value in the projection list,
+                         * then we have to create an object to mimic values of the table
+                         * other parts of the code (sort logic) relies on an object
+                         * where values of each column is encoded. In this case the object
+                         * will have the value of only one column
+                         */
+                        if (allOutBounds[j].isPathColumn && allOutBounds[j].canUseScalarProjection) {
+                            // the value will not be an array
+                            d = {};
+                            fkData = extraData[fkAliasPreix + (j+1)];
+                            if (fkData === undefined || fkData === null) {
+                                this._extraLinkedData[allOutBounds[j].name] = null;
+                            } else {
+                                d[allOutBounds[j].baseColumn.name] = fkData;
+                                this._extraLinkedData[allOutBounds[j].name] = d;
+                            }
+                        } else {
+                            this._extraLinkedData[allOutBounds[j].name] = extraData[fkAliasPreix + (j+1)][0];
+                        }
                     }
                 }
 

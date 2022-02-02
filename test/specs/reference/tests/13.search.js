@@ -703,7 +703,7 @@ exports.execute = function (options) {
                         "M:=search_schema:table_w_custom_search_4",
                         "M_P1:=(fk_to_vocab)=(search_schema:search_vocab_table:id)",
                         "name::ciregexp::term;second_name::ciregexp::term/$M",
-                        "RID;M:=array_d(M:*),F1:=array_d(M_P1:*)@sort(RID)"
+                        "RID;M:=array_d(M:*),F1:=M_P1:name@sort(RID)"
                     ].join("/")
                     expect(readPathRef.readPath).toEqual(readPath, "readPath missmatch");
 
@@ -736,7 +736,7 @@ exports.execute = function (options) {
                         "M:=search_schema:table_w_custom_search_4",
                         "M_P1:=(fk_to_vocab)=(search_schema:search_vocab_table:id)",
                         "name::ciregexp::term;second_name::ciregexp::term/$M",
-                        "$M_P1/name=name%202%20with%20term/$M/RID;M:=array_d(M:*),F1:=array_d(M_P1:*)@sort(RID)"
+                        "$M_P1/name=name%202%20with%20term/$M/RID;M:=array_d(M:*),F1:=M_P1:name@sort(RID)"
                     ].join("/");
                     expect(readPathRef.readPath).toEqual(readPath, "readPath missmatch");
 
