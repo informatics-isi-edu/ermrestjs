@@ -1,8 +1,9 @@
-# Column Directive Logic And Heuristics
+# Column Directive
 
 Column directive allows instruction of a data source and modification of its presentation. Column directives are defined relative to the table that they are part of. They can be used in `visible-columns` or a `visible-foreign-keys` annotation.
 
 - In [Overall structure](#overall-structure) we briefly explain different methods of defining a column directive.
+- In [Shorthand syntax](#shorthand-syntax) we mention the alternative and simpler way of defining column directives.
 - Using [Properties](#properties) section you can find all the available properties in column directive.
 - Please Find the examples in [this section](#examples).
 
@@ -96,7 +97,7 @@ The following is an overview of such column directive with all the available pro
 }
 ```
 
-# Properties
+## Properties
 
 Some properties are only available in special scenarios and are not used in all the scenarios. As you can see in the overall structure, there are three different ways that you can define a column directive:
 
@@ -182,6 +183,8 @@ Therefore the following are acceptable ways of defining source path:
   ```
   [{"inbound": ["S1", "FK1"]}, "Column2"]
   [{"inbound": ["S1", "FK1"]}, {"outbound": ["S2", "FK2"]}, "Column3"]
+  [{"sourcekey": "path_to_f1"}, {"outbound": ["S2", "FK2"]}, "Column3"]
+  [{"sourcekey": "path_to_f2"}, "Column3"]
   [{"inbound": ["S1", "FK1"]}, {"filter": "RCB", "operand_pattern": "{{{$session.id}}}"}, "Column3"]
   ```
 
@@ -452,6 +455,72 @@ cnt_d -> #
 -->
 
 
+
+## Shorthand syntax
+
+While the general syntax of column directives is defining a JSON object, depending on where the column directive is used, you can use the shorthand syntax which heavily relies on heuristics. The following are other acceptable ways of defining column directives:
+
+- In read-only non-filter context of `visible-columns` annotation, you can use string to refer to any of the columns in the table. For instance the two following syntax are alternative to each other:
+  ```
+  {
+    "source": "column"
+  }
+  ```
+  ```
+  "column"
+  ```
+- In non-filter context of `visible-columns` annotation you can use the two-element list of string literal which identifies a constituent foreign key of the table. The value of the external entity referenced by the foreign key will be presented, with representation guided by other annotations or heuristics. Therefore the follow are alternative:
+  ```
+  {
+    "source": [
+      {"outbound": ["schema", "fkey1"]},
+      "RID"
+    ],
+    "entity": true
+  }
+  ```
+  ```
+  ["schema", "fkey1"]
+  ```
+- In `detailed` context of `visible-columns` and `visible-foreign-keys` annotation you can use the two-element list of string literal which identifies a constituent foreign key that is referring to the current table (inbound relationship). Therefore the follow are alternative:
+  ```
+  {
+    "source": [
+      {"inbound": ["schema", "fkey_to_main"]},
+      "RID"
+    ],
+    "entity": true
+  }
+  ```
+  ```
+  ["schema", "fkey_to_main"]
+  ```
+- In `detailed` context of `visible-columns` and `visible-foreign-keys` annotation you can use the two-element list of string literal which identifies a constituent foreign key from a pure and binary association table to the current table. Therefore the follow are alternative:
+  ```
+  {
+    "source": [
+      {"inbound": ["schema", "fkey_from_assoc_to_main"]},
+      {"outbound": ["schema", "fkey_from_assoc_to_related"]},
+      "RID"
+    ],
+    "entity": true
+  }
+  ```
+  ```
+  ["schema", "fkey_from_assoc_to_main"]
+  ```
+- In read-only non-filter context of `visible-columns` annotation you can use the two-element list of string literal which identifies a constituent key of the table. The defined display of the key will be presented, with a link to the current displayed row of data. This is the same as the `self_link` property on column directive JSON object. Therefore the follow are alternative:
+  ```
+  {
+    "source": "RID",
+    "entity": true
+    "self_link": true
+  }
+  ```
+  ```
+  ["schema", "primary_key"]
+  ```
+
 ## Examples
 
 Let's assume the following is the ERD of our database. In all the examples we're defining column list for the `Main` table (assuming `S` is the schema name).
@@ -462,7 +531,7 @@ Let's assume the following is the ERD of our database. In all the examples we're
 
 The following summarizes the different types of columns and syntaxes that are acceptable:
 
-| Type                                     | General Syntax                                                                                               | Old Syntax                                                             | Acceptable Contexts | Behavior                                           |
+| Type                                     | General Syntax                                                                                               | Shorthand Syntax                                                             | Acceptable Contexts | Behavior                                           |
 |------------------------------------------|--------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------|---------------------|----------------------------------------------------|
 | Normal Columns                           | `{"source": "id"}`                                                                                           | `"id"`                                                                 | All                 |                                                    |
 | Asset Columns                            | `{"souce": "asset_col"}`                                                                                     | `"asset_col"` (assuming `asset_col` is a column with asset annotation) | All                 | dl button in read-only upload in edit mode         |
