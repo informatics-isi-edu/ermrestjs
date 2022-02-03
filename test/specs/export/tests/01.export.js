@@ -491,13 +491,14 @@ exports.execute = function (options) {
                 expect(noAnnotReference.csvDownloadLink).toEqual(baseURL + getDefaultOutputs(schemaName1)[0].source.path + qParam);
             });
 
-            it ("otherwise should use the detailed context", function () {
+            it ("otherwise should use the detailed context (even for compact context)", function () {
                 var res = options.url + "/catalog/" + process.env.DEFAULT_CATALOG +
                             "/attributegroup/M:=export_table_annot_schema:main/"+
-                            "RID;id,text_col,lgt,markdown_col,int_col,float_col,date_col,timestamp_col" +
+                            "RID;id,text_col,lgt" +
                             "?limit=none&accept=csv&uinit=1&cid=test&download=Main%20%2F%20table";
 
-                expect(reference.csvDownloadLink).toEqual(res);
+                            expect(reference.contextualize.compact.csvDownloadLink).toEqual(res, "missmatch for compact");
+                expect(reference.contextualize.detailed.csvDownloadLink).toEqual(res, "missmatch for detailed");
             });
 
             it ("should return null if visible-columns is empty", function () {

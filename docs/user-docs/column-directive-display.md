@@ -1,10 +1,10 @@
-# Pseudo-Column Display
+# Column Directive Display
 
-By using `display` attribute in the [source-syntax](pseudo-columns.md), you can customize the presented value to the users. The following is the accepted syntax:
+By using `display` attribute in a [column directive](column-directive.md), you can customize the presented value to the users. The following is the accepted syntax:
 
 ```
 {
-    "source": <any acceptable source>,
+    "source": <source path>,
     "display": {
         "markdown_pattern": <markdown pattern value>,
         "template_engine": <"handlebars" | "mustache">,
@@ -13,13 +13,13 @@ By using `display` attribute in the [source-syntax](pseudo-columns.md), you can 
 }
 ```
 
-## Accessing Pseudo-Column Values Using By Utilizing Source Definitions
+## Accessing Column Directive Values Using By Utilizing Source Definitions
 
-In the `markdown_pattern`  you have access to the columns, fkeys, and sources that are defined on the source definitions annotation. For more information please refer to [this document](pseudo-column-template.md).
+In the `markdown_pattern`  you have access to the columns, fkeys, and sources that are defined on the source definitions annotation. For more information please refer to [this document](column-directive-template.md).
 
-## Accessing Current Pseudo-Column Data
+## Accessing Current Column Directive Data
 
-Apart from accessing the source definitions, you can access the current pseudo-column data with `$self` namespace. The structure of the available data is going to be different based on pseudo-column type. In the following, we summarized the structure of object that you have access to. If you want to just look at some examples, go to the [examples](#examples) section. The examples follow the rules defined for handlebars templates, mostly the [Each Helper](handlebars.md#each-helper).
+Apart from accessing the source definitions, you can access the current column directive data with `$self` namespace. The structure of the available data is going to be different based on the defined column directive type. In the following, we summarized the structure of object that you have access to. If you want to just look at some examples, go to the [examples](#examples) section. The examples follow the rules defined for handlebars templates, mostly the [Each Helper](handlebars.md#each-helper).
 
 ### $self Data Structure
 
@@ -54,7 +54,7 @@ Apart from accessing the source definitions, you can access the current pseudo-c
     }
     ```
     Example (using [handlebars](handlebars.md)): `{{#each $self}}[{{{this.rowName}}}]({{{this.uri.detailed}}}){{/each}}`
-    
+
     Notes:
       - As it is demonstrated in the data structure, you can access the foreign key values of each row in here. Please refer to [examples](#examples) for an example of this use case.
 
@@ -144,7 +144,7 @@ Apart from accessing the source definitions, you can access the current pseudo-c
 
 Assume the following is the ERD and we're writing these annotations for the table `main`.
 
-![erd_01](https://raw.githubusercontent.com/informatics-isi-edu/ermrestjs/master/docs/resources/pseudo_columns_erd_01.png)
+![erd_01](https://raw.githubusercontent.com/informatics-isi-edu/ermrestjs/master/docs/resources/column-directive-erd-01.png)
 
 > CAUTION The newlines and extra space has been added for readability. You should remove them if you want to use the exact same value.
 

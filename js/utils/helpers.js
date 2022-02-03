@@ -1405,7 +1405,7 @@
      * @return {Object} error object
      */
     module.responseToError = function (response, reference, actionFlag) {
-        var status = response.status || response.statusCode;
+        var status = response.status;
         if (response instanceof module.ERMrestError) {
             return response;
         }

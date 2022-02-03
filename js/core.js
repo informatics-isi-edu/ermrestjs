@@ -3834,7 +3834,8 @@
                                 wrapper = new SourceObjectWrapper(orders[i], this._table, module._constraintNames);
                             } catch (exp) {
                                 // we might want to show a better error message later.
-                                wrapper = null;
+                                logErr(true, exp.message, i);
+                                invalid = true;
                             }
                         } else {
                             var def = definitions.sources[orders[i].sourcekey];
@@ -3848,11 +3849,11 @@
                         // 2. no inbound
                         // 3. not entity mode
                         // 4. has aggregate
-                        invalid = logErr(!wrapper || !wrapper.hasPath, wm.INVALID_FK, i) ||
+                        invalid = invalid ||
+                                  logErr(!wrapper || !wrapper.hasPath, wm.INVALID_FK, i) ||
                                   logErr(!wrapper.hasInbound, wm.INVALID_FK_NO_INBOUND, i) ||
                                   logErr(!wrapper.isEntityMode, wm.SCALAR_NOT_ALLOWED) ||
-                                  logErr(wrapper.hasAggregate, wm.AGG_NOT_ALLOWED) ||
-                                  logErr(wrapper.isFiltered, wm.FILTER_NOT_ALLOWED);
+                                  logErr(wrapper.hasAggregate, wm.AGG_NOT_ALLOWED);
 
                     } else {
                         invalid = true;
@@ -3862,6 +3863,7 @@
                     if (!invalid) {
                         addToList({isPath: true, sourceObjectWrapper: wrapper, name: wrapper.name});
                     }
+                    invalid = false;
                 }
             }
             this._contextualize_cached[context] = result;

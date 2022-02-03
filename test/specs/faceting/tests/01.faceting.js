@@ -357,7 +357,7 @@ exports.execute = function (options) {
                     })).toEqual(
                         ['id', 'int_col', 'float_col', 'date_col', 'timestamp_col', 'text_col', 'longtext_col',
                             'markdown_col', 'boolean_col', 'jsonb_col', 'id', 'id', 'term', 'id', 'col', 'id', 'RID', 'RID', 'id', 'numeric_col', 'int_col',
-                            'path_prefix_o1_o1_col', 'path_prefix_o1_o1_i1_col', 
+                            'path_prefix_o1_o1_col', 'path_prefix_o1_o1_i1_col',
                             'id', 'path_prefix_o1_col', 'path_prefix_o1_o1_col', 'path_prefix_o1_o1_i1_col'
                         ]
                     );
@@ -681,20 +681,19 @@ exports.execute = function (options) {
                 });
 
                 describe("should be able to handle sources with filter", function () {
-                    // TODO this requires a change in code...
-                    // I HAVE TO MAKE SURE THE HASH STAYS THE SAME BASED ON ALL THESE DIFFERENT PROPERTIES
-                    // THERE IS NO GUARANTEE THAT JSON.STRINGIFY JUST KEEPS THE ORDER
                     it ("when the facet exists in the annotation, should merge", function (done) {
                         facetObj = {
                             "and": [
                                 {
                                     "source": [
-                                        // {"filter": "id", "operand_pattern": "-1", "operator": "::gt::"},
                                         {"outbound": ["faceting_schema", "main_fk3"]},
-                                        {"and": [
-                                            {"filter": "date_col", "operand_pattern": "{{{$moment.year}}}-{{{$moment.month}}}-{{{$moment.day}}}", "operator": "::gt::"},
-                                            {"filter": "path_prefix_o1_col", "operand_pattern": "some_non_used_value"}
-                                        ], "negate": true},
+                                        {
+                                            "negate": true,
+                                            "and": [
+                                                {"operand_pattern": "some_non_used_value", "filter": "path_prefix_o1_col"},
+                                                {"operator": "::gt::", "filter": "date_col", "operand_pattern": "{{{$moment.year}}}-{{{$moment.month}}}-{{{$moment.day}}}"},
+                                            ]
+                                        },
                                         "path_prefix_o1_col"
                                     ],
                                     "choices": ["1"]
@@ -2291,7 +2290,7 @@ exports.execute = function (options) {
                 });
 
                 it ("should properly handle sourecs with path prefix and filter", function (done) {
-                    
+
                     testEntityCounts(
                         refMainAllData.facetColumns[25].scalarValuesReference,
                         "Path to o1_o1 with prefix and filter",
@@ -2480,7 +2479,7 @@ exports.execute = function (options) {
                                 "(id)=(faceting_schema:path_prefix_o1_o1_i1:fk_to_path_prefix_o1_o1)/path_prefix_o1_o1_i1_col=one_o1_o1_i1/$M",
                                 "$M_P1/path_prefix_o1_o1_col=two_o1_o1/$M",
                                 "$M_P1/F3:=left(fk_to_path_prefix_o1_o1_o1)=(faceting_schema:path_prefix_o1_o1_o1:id)/$M",
-                                "RID;M:=array_d(M:*),F3:=array_d(F3:*),F2:=array_d(M_P1:*),F1:=array_d(M_P2:*)@sort(RID)"
+                                "RID;M:=array_d(M:*),F3:=F3:path_prefix_o1_o1_o1_col,F2:=M_P1:path_prefix_o1_o1_col,F1:=M_P2:path_prefix_o1_col@sort(RID)"
                             ].join("/")
                         );
                     });
@@ -2509,7 +2508,7 @@ exports.execute = function (options) {
                                 "M_P1:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)/M_P2:=(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/path_prefix_o1_o1_col=two_o1_o1/$M",
                                 "$M_P2/(id)=(faceting_schema:path_prefix_o1_o1_i1:fk_to_path_prefix_o1_o1)/path_prefix_o1_o1_i1_col=one_o1_o1_i1/$M",
                                 "$M_P2/F3:=left(fk_to_path_prefix_o1_o1_o1)=(faceting_schema:path_prefix_o1_o1_o1:id)/$M",
-                                "RID;M:=array_d(M:*),F3:=array_d(F3:*),F2:=array_d(M_P2:*),F1:=array_d(M_P1:*)@sort(RID)"
+                                "RID;M:=array_d(M:*),F3:=F3:path_prefix_o1_o1_o1_col,F2:=M_P2:path_prefix_o1_o1_col,F1:=M_P1:path_prefix_o1_col@sort(RID)"
                             ].join("/")
                         );
                     });
@@ -2541,7 +2540,7 @@ exports.execute = function (options) {
                                 "M_P2:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)/M_P1:=(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/id=2/$M",
                                 "$M_P1/(id)=(faceting_schema:path_prefix_o1_o1_i1:fk_to_path_prefix_o1_o1)/path_prefix_o1_o1_i1_col=one_o1_o1_i1/$M",
                                 "$M_P1/F3:=left(fk_to_path_prefix_o1_o1_o1)=(faceting_schema:path_prefix_o1_o1_o1:id)/$M",
-                                "RID;M:=array_d(M:*),F3:=array_d(F3:*),F2:=array_d(M_P1:*),F1:=array_d(M_P2:*)@sort(RID)"
+                                "RID;M:=array_d(M:*),F3:=F3:path_prefix_o1_o1_o1_col,F2:=M_P1:path_prefix_o1_o1_col,F1:=M_P2:path_prefix_o1_col@sort(RID)"
                             ].join("/")
                         );
                     });
@@ -2572,7 +2571,7 @@ exports.execute = function (options) {
                                 "M:=right(id)=(faceting_schema:main:fk_to_path_prefix_o1)/M_P1:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)",
                                 "M_P2:=(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/path_prefix_o1_o1_col=two_o1_o1/$M",
                                 "$M_P2/F3:=left(fk_to_path_prefix_o1_o1_o1)=(faceting_schema:path_prefix_o1_o1_o1:id)/$M",
-                                "RID;M:=array_d(M:*),F3:=array_d(F3:*),F2:=array_d(M_P2:*),F1:=array_d(M_P1:*)@sort(RID)"
+                                "RID;M:=array_d(M:*),F3:=F3:path_prefix_o1_o1_o1_col,F2:=M_P2:path_prefix_o1_o1_col,F1:=M_P1:path_prefix_o1_col@sort(RID)"
                             ].join("/")
                         );
                     });
@@ -2602,7 +2601,7 @@ exports.execute = function (options) {
                                 "M:=right(id)=(faceting_schema:main:fk_to_path_prefix_o1)",
                                 "M_P1:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)/M_P2:=(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/path_prefix_o1_o1_col=two_o1_o1/$M",
                                 "$M_P2/F3:=left(fk_to_path_prefix_o1_o1_o1)=(faceting_schema:path_prefix_o1_o1_o1:id)/$M",
-                                "RID;M:=array_d(M:*),F3:=array_d(F3:*),F2:=array_d(M_P2:*),F1:=array_d(M_P1:*)@sort(RID)"
+                                "RID;M:=array_d(M:*),F3:=F3:path_prefix_o1_o1_o1_col,F2:=M_P2:path_prefix_o1_o1_col,F1:=M_P1:path_prefix_o1_col@sort(RID)"
                             ].join("/"),
                         );
                     });
@@ -2636,7 +2635,7 @@ exports.execute = function (options) {
                                 "M_P2:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)",
                                 "M_P1:=(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/id=2/$M",
                                 "$M_P1/F3:=left(fk_to_path_prefix_o1_o1_o1)=(faceting_schema:path_prefix_o1_o1_o1:id)/$M",
-                                "RID;M:=array_d(M:*),F3:=array_d(F3:*),F2:=array_d(M_P1:*),F1:=array_d(M_P2:*)@sort(RID)"
+                                "RID;M:=array_d(M:*),F3:=F3:path_prefix_o1_o1_o1_col,F2:=M_P1:path_prefix_o1_o1_col,F1:=M_P2:path_prefix_o1_col@sort(RID)"
                             ].join("/")
                         );
                     });
@@ -2825,7 +2824,7 @@ exports.execute = function (options) {
                         ].join("/")
                     );
                 });
-                
+
             });
         });
     });

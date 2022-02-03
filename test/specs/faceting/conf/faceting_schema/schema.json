@@ -195,12 +195,18 @@
                         {
                             "sourcekey": "path_to_path_prefix_o1",
                             "comment": "added to test integration with read logic",
-                            "display": {"show_foreign_key_link":false}
+                            "display": {
+                                "wait_for": ["path_to_path_prefix_o1_o1"],
+                                "show_foreign_key_link":false
+                            }
                         },
                         {
                             "sourcekey": "path_to_path_prefix_o1_o1",
                             "comment": "added to test integration with read logic",
-                            "display": {"show_foreign_key_link":false}
+                            "display": {
+                                "wait_for": ["path_to_path_prefix_o1_o1"],
+                                "show_foreign_key_link":false
+                            }
                         },
                         {
                             "source": [

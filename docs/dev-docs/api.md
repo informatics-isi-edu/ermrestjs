@@ -489,11 +489,13 @@ to use for ERMrest JavaScript agents.
         * [.isEntityMode](#ERMrest.PseudoColumn+isEntityMode) : <code>boolean</code>
         * [.isUnique](#ERMrest.PseudoColumn+isUnique) : <code>boolean</code>
         * [.hasAggregate](#ERMrest.PseudoColumn+hasAggregate) : <code>boolean</code>
+        * [.isFiltered](#ERMrest.PseudoColumn+isFiltered) : <code>boolean</code>
         * [.comment](#ERMrest.PseudoColumn+comment) : <code>Object</code>
         * [.commentDisplay](#ERMrest.PseudoColumn+commentDisplay) : <code>Object</code>
         * [.displayname](#ERMrest.PseudoColumn+displayname) : <code>Object</code>
         * [.key](#ERMrest.PseudoColumn+key) : <code>boolean</code>
         * [.reference](#ERMrest.PseudoColumn+reference) : [<code>Reference</code>](#ERMrest.Reference)
+        * [.canUseScalarProjection](#ERMrest.PseudoColumn+canUseScalarProjection) : <code>Object</code>
         * [.formatPresentation(data, [context], [templateVariables], [options])](#ERMrest.PseudoColumn+formatPresentation) ⇒ <code>Object</code>
         * [.getAggregatedValue(page, contextHeaderParams)](#ERMrest.PseudoColumn+getAggregatedValue) ⇒ <code>Promise</code>
     * [.ForeignKeyPseudoColumn](#ERMrest.ForeignKeyPseudoColumn)
@@ -533,6 +535,7 @@ to use for ERMrest JavaScript agents.
         * [.foreignKey](#ERMrest.InboundForeignKeyPseudoColumn+foreignKey) : [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)
         * [.isPseudo](#ERMrest.InboundForeignKeyPseudoColumn+isPseudo) : <code>boolean</code>
         * [.isInboundForeignKey](#ERMrest.InboundForeignKeyPseudoColumn+isInboundForeignKey) : <code>boolean</code>
+        * [.isFiltered](#ERMrest.InboundForeignKeyPseudoColumn+isFiltered) : <code>boolean</code>
     * [.FacetColumn](#ERMrest.FacetColumn)
         * [new FacetColumn(reference, index, facetObject, filters)](#new_ERMrest.FacetColumn_new)
         * [._column](#ERMrest.FacetColumn+_column) : [<code>Column</code>](#ERMrest.Column)
@@ -4562,11 +4565,13 @@ it will append "-<integer>" to it.
     * [.isEntityMode](#ERMrest.PseudoColumn+isEntityMode) : <code>boolean</code>
     * [.isUnique](#ERMrest.PseudoColumn+isUnique) : <code>boolean</code>
     * [.hasAggregate](#ERMrest.PseudoColumn+hasAggregate) : <code>boolean</code>
+    * [.isFiltered](#ERMrest.PseudoColumn+isFiltered) : <code>boolean</code>
     * [.comment](#ERMrest.PseudoColumn+comment) : <code>Object</code>
     * [.commentDisplay](#ERMrest.PseudoColumn+commentDisplay) : <code>Object</code>
     * [.displayname](#ERMrest.PseudoColumn+displayname) : <code>Object</code>
     * [.key](#ERMrest.PseudoColumn+key) : <code>boolean</code>
     * [.reference](#ERMrest.PseudoColumn+reference) : [<code>Reference</code>](#ERMrest.Reference)
+    * [.canUseScalarProjection](#ERMrest.PseudoColumn+canUseScalarProjection) : <code>Object</code>
     * [.formatPresentation(data, [context], [templateVariables], [options])](#ERMrest.PseudoColumn+formatPresentation) ⇒ <code>Object</code>
     * [.getAggregatedValue(page, contextHeaderParams)](#ERMrest.PseudoColumn+getAggregatedValue) ⇒ <code>Promise</code>
 
@@ -4620,6 +4625,12 @@ If the pseudoColumn is referring to a unique row (the path is one to one)
 If aggregate function is defined on the column.
 
 **Kind**: instance property of [<code>PseudoColumn</code>](#ERMrest.PseudoColumn)  
+<a name="ERMrest.PseudoColumn+isFiltered"></a>
+
+#### pseudoColumn.isFiltered : <code>boolean</code>
+If the pseudoColumn has filter in its path
+
+**Kind**: instance property of [<code>PseudoColumn</code>](#ERMrest.PseudoColumn)  
 <a name="ERMrest.PseudoColumn+comment"></a>
 
 #### pseudoColumn.comment : <code>Object</code>
@@ -4669,6 +4680,19 @@ This is how it behaves:
 3. if mainTuple is available, create the reference based on this path:
      <pseudoColumnSchema:PseudoColumnTable>/<path from pseudo-column to main table>/<facets based on value of shortestkey of main table>
 4. Otherwise create the path by traversing the path
+
+**Kind**: instance property of [<code>PseudoColumn</code>](#ERMrest.PseudoColumn)  
+<a name="ERMrest.PseudoColumn+canUseScalarProjection"></a>
+
+#### pseudoColumn.canUseScalarProjection : <code>Object</code>
+Whether we can use the raw column in the projection list or not.
+
+If we only need the value of scalar column and none of the other columns of the
+all-outbound path then we can simply use the scalar projection.
+Therefore the pseudo-column must:
+- be all-outbound path in scalar mode
+- the leaf column cannot have any column_display annotation
+- the leaf column cannot be sorted or doesn’t have a sort based on other columns of the table.
 
 **Kind**: instance property of [<code>PseudoColumn</code>](#ERMrest.PseudoColumn)  
 <a name="ERMrest.PseudoColumn+formatPresentation"></a>
@@ -5048,6 +5072,7 @@ Format the presentation value corresponding to this asset definition.
     * [.foreignKey](#ERMrest.InboundForeignKeyPseudoColumn+foreignKey) : [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)
     * [.isPseudo](#ERMrest.InboundForeignKeyPseudoColumn+isPseudo) : <code>boolean</code>
     * [.isInboundForeignKey](#ERMrest.InboundForeignKeyPseudoColumn+isInboundForeignKey) : <code>boolean</code>
+    * [.isFiltered](#ERMrest.InboundForeignKeyPseudoColumn+isFiltered) : <code>boolean</code>
 
 <a name="new_ERMrest.InboundForeignKeyPseudoColumn_new"></a>
 
@@ -5055,6 +5080,9 @@ Format the presentation value corresponding to this asset definition.
 Constructor for InboundForeignKeyPseudoColumn. This class is a wrapper for [ForeignKeyRef](#ERMrest.ForeignKeyRef).
 This is a bit different than the [ForeignKeyPseudoColumn](#ERMrest.ForeignKeyPseudoColumn), as that was for foreign keys
 of current table. This wrapper is for inbound foreignkeys. It is actually warpping the whole reference (table).
+
+Note: The sourceObjectWrapper might include filters and therefore the relatedReference
+      might not be a simple path from main to related table and it could have filters.
 
 This class extends the [ReferenceColumn](#ERMrest.ReferenceColumn)
 
@@ -5092,6 +5120,12 @@ indicates that this object represents a PseudoColumn.
 
 #### inboundForeignKeyPseudoColumn.isInboundForeignKey : <code>boolean</code>
 Indicates that this ReferenceColumn is an inbound foreign key.
+
+**Kind**: instance property of [<code>InboundForeignKeyPseudoColumn</code>](#ERMrest.InboundForeignKeyPseudoColumn)  
+<a name="ERMrest.InboundForeignKeyPseudoColumn+isFiltered"></a>
+
+#### inboundForeignKeyPseudoColumn.isFiltered : <code>boolean</code>
+Indicates that this related table has filters in its path
 
 **Kind**: instance property of [<code>InboundForeignKeyPseudoColumn</code>](#ERMrest.InboundForeignKeyPseudoColumn)  
 <a name="ERMrest.FacetColumn"></a>
