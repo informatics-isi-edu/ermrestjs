@@ -2125,7 +2125,10 @@
 
                 // create path using parentTuple and self
                 var fkRel = self.origFKR;
-                var compactPath = parentTuple.reference.location.compactPath + '/' + fkRel.toString() + '/';
+                var compactPath = associationRef.location.schemaName + ':' + associationRef.location.tableName + '/';
+                // append main tuple key information
+                var mainKeyCol = associationRef.origFKR.colset.columns[0];
+                compactPath += mainKeyCol.name + '=' + parentTuple.data[associationRef.origFKR.mapping.get(mainKeyCol).name] + '&(';
 
                 // keyColumns should be a set of columns that are unique and not-null
                 var keyColumns = associationRef.associationToRelatedFKR.colset.columns; // columns tells us what the key column names are in the fkr "_to" relationship
@@ -2163,7 +2166,7 @@
                         // any more filters will go over the url length limit so save the current path and count
                         // then clear both to start creating a new path
                         referencePathObjs.push({
-                            path: baseUri + currentPath,
+                            path: baseUri + currentPath + ')',
                             keyData: keyData
                         });
 
@@ -2180,7 +2183,7 @@
                 }
                 // After last iteration of loop, push the current path
                 referencePathObjs.push({
-                    path: baseUri + currentPath,
+                    path: baseUri + currentPath + ')',
                     keyData: keyData
                 });
 

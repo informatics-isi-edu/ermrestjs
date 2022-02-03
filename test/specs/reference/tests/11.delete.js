@@ -282,30 +282,49 @@ exports.execute = function (options) {
                 });
             });
 
-            it("should properly delete only the rows with canUnlink true", function (done) {
+            it("should fail to delete all rows with when some have canUlink false", function (done) {
                 // remove the first row that can be deleted
                 relatedLeafTuples.splice(0, 1);
 
                 // trying to delete rows (5, 55), (6, 66), (7, 77)
                 // user can only unlink (6, 66)
-                console.log(relatedLeafTuples)
                 filteredLeafReferenceWAcls.deleteBatchAssociationTuples(mainTuple, relatedLeafTuples).then(function (res) {
-                    expect(res.message).toBe("1 record successfully removed.")
-                    expect(res.successTupleData.length).toBe(1, "success count for batch delete is incorrect");
+                    expect(res.status).toBe("Batch Remove Summary", "error status for batch delete is incorrect");
+                    expect(res.message).toBe("3 records could not be removed. Check the error details below to see more information.", "error message for batch delete is incorrect");
+                    expect(res.subMessage).toBe("403 Forbidden\nThe requested delete access on one or more matching rows in table :delete_schema:association_table is forbidden.\n", "error sub message for batch delete is incorrect");
+                    expect(res.successTupleData.length).toBe(0, "success count for batch delete is incorrect");
+                    expect(res.failedTupleData.length).toBe(3, "failed count for batch delete is incorrect");
 
                     return relatedLeafReference.read(5);
                 }).then(function (page) {
-                    expect(page.tuples.length).toBe(3, "# of tuples after batch delete is incorrect");
+                    expect(page.tuples.length).toBe(4, "# of tuples after batch delete is incorrect");
 
                     expect(page.tuples.map(function (t) {
-                        // data should be (5, 55) and (7, 77)
+                        // data should be (4, 44), (5, 55), (6, 66), and (7, 77)
                         return t.data.int_col;
-                    })).toEqual([55, 77], "int_col values mismatch");
+                    })).toEqual([44, 55, 66, 77], "int_col values mismatch");
 
                     done();
                 }).catch(function (err) {
                     console.dir(err);
                     done.fail(err);
+                });
+            });
+
+            it("should verify leaf table rows were not removed during deletion", function (done) {
+                var leafUri = options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ":leaf_table";
+
+                options.ermRest.resolve(leafUri, {cid: "test"}).then(function (response) {
+                    leafReference = response;
+
+                    return response.read(8);
+                }).then(function (page) {
+                    expect(page.tuples.length).toBe(8, "leaf table rows length mismatch");
+
+                    done();
+                }).catch(function (error) {
+                    console.dir(error);
+                    done.fail();
                 });
             });
 
