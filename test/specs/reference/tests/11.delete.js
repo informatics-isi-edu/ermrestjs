@@ -203,7 +203,8 @@ exports.execute = function (options) {
             var mainUri = options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ":main_table",
                 restrictedUserId = process.env.RESTRICTED_AUTH_COOKIE_ID,
                 restrictedUserCookie = process.env.RESTRICTED_AUTH_COOKIE,
-                reference;
+                mainReference, relatedLeafReference, filteredLeafReferenceWAcls,
+                mainTuple, relatedLeafTuples;
 
             beforeAll(function(done) {
                 // leaf_table is deletable
@@ -233,7 +234,12 @@ exports.execute = function (options) {
                                             "can_delete_row": {
                                                 "types": ["delete"],
                                                 "projection": [
-                                                    {"filter": "leaf_key_col", "operand": 11}, "leaf_key_col"
+                                                    {
+                                                        "or": [
+                                                            {"filter": "leaf_key_col", "operand": 44},
+                                                            {"filter": "leaf_key_col", "operand": 66}
+                                                        ]
+                                                    }, "leaf_key_col"
                                                 ],
                                                 "projection_type": "nonnull"
                                             }
@@ -243,31 +249,69 @@ exports.execute = function (options) {
                             }
                         }
                     }
-                }, (response) => reference = response.contextualize.detailed, restrictedUserCookie);
+                }, (response) => mainReference = response.contextualize.detailed, restrictedUserCookie);
             });
 
             it("should return tuples with proper canUnlink values", function (done) {
-                reference.read(1).then(function (page) {
+                mainReference.read(1).then(function (page) {
                     expect(page.tuples.length).toBe(1, "main page tuples length mismatch");
+                    mainTuple = page.tuples[0];
 
-                    expect(reference.related.length).toBe(1, "related length mismatch");
+                    // will generate the related reference
+                    var relatedList = mainReference.generateRelatedList(page.tuples[0]);
 
-                    return reference.related[0].read(5, null, false, false, true, false, true);
+                    expect(mainReference.related.length).toBe(1, "related length mismatch");
+                    relatedLeafReference = mainReference.related[0];
+
+                    return relatedLeafReference.read(5, null, false, false, true, false, true);
                 }).then(function (page) {
                     expect(page.tuples.length).toBe(4, "related page tuples length mismatch");
+                    relatedLeafTuples = page.tuples;
+                    filteredLeafReferenceWAcls = relatedLeafTuples[0].reference;
 
-                    expect(page.tuples.map(function (t) {
+                    expect(relatedLeafTuples.map(function (t) {
                         // data should be (4, 44), (5, 55), (6, 66), (7, 77)
+                        // user can unlink (4, 44) and (6, 66)
                         return t.canUnlink;
-                    })).toEqual([false, true, true, true], "canUnlink mismatch");
+                    })).toEqual([true, false, true, false], "canUnlink mismatch");
 
                     done();
                 }).catch(function (err) {
+                    console.dir(err);
+                    done.fail(err);
+                });
+            });
+
+            it("should properly delete only the rows with canUnlink true", function (done) {
+                // remove the first row that can be deleted
+                relatedLeafTuples.splice(0, 1);
+
+                // trying to delete rows (5, 55), (6, 66), (7, 77)
+                // user can only unlink (6, 66)
+                console.log(relatedLeafTuples)
+                filteredLeafReferenceWAcls.deleteBatchAssociationTuples(mainTuple, relatedLeafTuples).then(function (res) {
+                    expect(res.message).toBe("1 record successfully removed.")
+                    expect(res.successTupleData.length).toBe(1, "success count for batch delete is incorrect");
+
+                    return relatedLeafReference.read(5);
+                }).then(function (page) {
+                    expect(page.tuples.length).toBe(3, "# of tuples after batch delete is incorrect");
+
+                    expect(page.tuples.map(function (t) {
+                        // data should be (5, 55) and (7, 77)
+                        return t.data.int_col;
+                    })).toEqual([55, 77], "int_col values mismatch");
+
+                    done();
+                }).catch(function (err) {
+                    console.dir(err);
                     done.fail(err);
                 });
             });
 
             afterAll(function (done) {
+                options.ermRest.setUserCookie(process.env.AUTH_COOKIE);
+                removeCachedCatalog(catalogId);
                 utils.resetCatalogAcls(done, {
                     "catalog": {
                         "id": catalogId,
