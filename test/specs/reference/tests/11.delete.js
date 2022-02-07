@@ -404,11 +404,7 @@ exports.execute = function (options) {
                                             "can_delete_row": {
                                                 "types": ["delete"],
                                                 "projection": [
-                                                    {
-                                                        "or": [
-                                                            {"filter": "l_key_col", "operand": "8500000000000000000000000000000000085"}
-                                                        ]
-                                                    }, "l_key_col"
+                                                    {"filter": "l_key_col", "operand": "8500000000000000000000000000000000085"}, "l_key_col"
                                                 ],
                                                 "projection_type": "nonnull"
                                             }
