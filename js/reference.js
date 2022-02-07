@@ -2169,7 +2169,7 @@
                     filter += ')';
 
                     // check url length limit if not first one;
-                    if (i != 0 && (baseUri + currentPath + (i != 0 ? ';' : '') + filter).length > module.URL_PATH_LENGTH_LIMIT) {
+                    if (i != 0 && (currentPath + (i != 0 ? ';' : '') + filter).length > module.URL_PATH_LENGTH_LIMIT) {
                         // any more filters will go over the url length limit so save the current path and count
                         // then clear both to start creating a new path
                         referencePathObjs.push({
