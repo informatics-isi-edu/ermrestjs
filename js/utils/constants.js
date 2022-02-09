@@ -223,6 +223,7 @@
         INVALID_FILTER: "Invalid Filter",
         INVALID_INPUT: "Invalid Input",
         INVALID_URI: "Invalid URI",
+        BATCH_UNLINK: "Batch Remove Summary",
         NO_DATA_CHANGED: "No Data Changed",
         NO_CONNECTION_ERROR: "No Connection Error",
         INVALID_SORT: "Invalid Sort Criteria",
