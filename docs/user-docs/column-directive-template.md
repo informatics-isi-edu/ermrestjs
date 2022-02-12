@@ -1,12 +1,12 @@
-# Pseudo Column in Templating Environments
+# Column directive in templating environments
 
 This document will explain which annotations you need to use and how to use them in order to be able to access more than the current table's values in the templating environment. To make this simpler, we will explain this using an example.
 
 Let's assume the following is the ERD of our database. In all the examples, we're defining column list for the `Main` table (assuming `schema` is the schema name). You can follow the same pattern in both `visible-foreign-keys` and `citation` annotations.
 
-![erd_01](https://raw.githubusercontent.com/informatics-isi-edu/ermrestjs/master/docs/resources/pseudo_columns_erd_01.png)
+![erd_01](https://raw.githubusercontent.com/informatics-isi-edu/ermrestjs/master/docs/resources/column-directive-erd-01.png)
 
-## 1. Defining Sources
+## 1. Defining sources
 
 First you need to define your source definitions. To do this, you have to define the [source-definitions](annotation.md#tag-2019-source-definitions) annotation which is in the following format:
 
@@ -24,7 +24,7 @@ First you need to define your source definitions. To do this, you have to define
 }
 ```
 
-Use the `sources` attribute to define the sources that you want to use in this table. You should be able to access the data by the given _sourcekey_. The available data will be [different based on the pseudo-column type](#Pseudo-Column-Templating-Variable-Data-Structure). Please make sure to follow these rules while specifying the _sourcekey_:
+Use the `sources` attribute to define the sources that you want to use in this table. You should be able to access the data by the given _sourcekey_. The available data will be [different based on the dolumn directive type](#Column-Directive-Templating-Variable-Data-Structure). Please make sure to follow these rules while specifying the _sourcekey_:
 
    - sourcekey cannot start with `$`.
    - sourcekey should not be any of the table's column names.
@@ -122,9 +122,9 @@ The following is the source definitions that we are going to use:
 }
 ```
 
-## 2. Defining Pseudo-Column Display
+## 2. Defining column directive display
 
-The following is the syntax for writing a custom display for a pseudo-column:
+The following is the syntax for writing a custom display for a column directive:
 
 ```javascript
 {
@@ -137,7 +137,7 @@ The following is the syntax for writing a custom display for a pseudo-column:
 }
 ```
 
-### Accessing Columns and Fkeys
+### Accessing columns and fkeys
 
 In the `markdown_pattern` defined, by default, you can access the `"columns"` and `"fkeys"` that you have in the `source-definitions` annotation.
 
@@ -179,9 +179,9 @@ formatted: {{{int_col}}}, raw: {{{_int_col}}}
 
 ```
 
-### Accessing Sources (Wait For)
+### Accessing sources (wait_for)
 
-If you want to access any extra `"sources"`, you need to list them in the `wait_for` of the pseudo-column. This will delay the processing of the pseudo-column value until the data for all the pseudo-columns defined in the `wait_for` list are available.
+If you want to access any extra `"sources"`, you need to list them in the `wait_for` of the column directive. This will delay the processing of the column directive value until the data for all the column directives specified in the `wait_for` list are available.
 
 ```javascript
 {
@@ -195,7 +195,7 @@ If you want to access any extra `"sources"`, you need to list them in the `wait_
 }
 ```
 
-#### Pseudo-Column Templating Variable Data Structure
+#### Column directive templating variable data structure
 
 The data structure of the object that you have access to by using the given sourcekey is different based on depending on the type. The data-structure is aligned with the $self structure which is as follows.
 
@@ -363,7 +363,7 @@ In this section you can find some examples of how you can use this feature. Thes
     }
     ```
 
-3. Summary of multiple pseudo-columns:
+3. Summary of multiple column directives:
 
     ```javascript
     "tag:isrd.isi.edu,2016:visible-columns": {
@@ -380,5 +380,5 @@ In this section you can find some examples of how you can use this feature. Thes
         ]
     }
     ```
-    
-    As you can see, you don't need to pass any `source` or `sourcekey` if you just want to show the value of multiple pseudo-columns together. Evidently since you're not providing any "source" column to Chaise, we won't be able to provide functionalities that require this source, e.g., sorting.
+
+    As you can see, you don't need to pass any `source` or `sourcekey` if you just want to show the value of multiple column directives together. Evidently since you're not providing any "source" column to Chaise, we won't be able to provide functionalities that require this source, e.g., sorting.

@@ -718,7 +718,7 @@ exports.execute = (options) => {
                         expect(page.length).toBe(1, "main page length missmatch");
 
                         // will generate the related reference
-                        var activeList = reference.generateActiveList(page.tuples[0]);
+                        var activeList = reference.generateRelatedList(page.tuples[0]);
 
                         expect(reference.related.length).toBe(1, "related length missmatch");
 
