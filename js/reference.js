@@ -2229,8 +2229,7 @@
                         k++;
                         recursiveDelete(referencePathObjs[k], catalogObj);
                     } else {
-                        var message = "";
-                        var deleteSubmessage = "";
+                        var deleteSubmessage = null;
                         var totalSuccess = 0;
                         var successTupleData = [];
                         if (successResponses.length > 0) {
@@ -2246,6 +2245,7 @@
                         var failedTupleData = [];
                         var errorsPresent = deleteErrors.length > 0;
                         if (errorsPresent) {
+                            deleteSubmessage = "";
                             deleteErrors.forEach(function (errPair, idx) {
                                 deleteSubmessage += errPair.error.data;
                                 if (idx < deleteErrors.length-1) deleteSubmessage += " \n";
@@ -2256,17 +2256,7 @@
                             });
                         }
 
-                        if (totalSuccess > 0) {
-                            message = totalSuccess + " record" + (totalSuccess > 1 ? "s" : "") + " successfully removed.";
-                            if (totalFail > 0) message += " ";
-                        }
-
-                        var err = new module.BatchUnlinkResponse(message);
-
-                        if (totalFail > 0) {
-                            message += totalFail + " record" + (totalFail > 1 ? "s" : "") + " could not be removed. Check the error details below to see more information.";
-                            err = new module.BatchUnlinkResponse(message, deleteSubmessage);
-                        }
+                        var err = new module.BatchUnlinkResponse(totalSuccess, totalFail, deleteSubmessage);
 
                         err.successTupleData = successTupleData;
                         err.failedTupleData = failedTupleData;

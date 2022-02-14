@@ -380,8 +380,19 @@
      * @constructor
      * @desc A malformed URI was passed to the API.
      */
-    function BatchUnlinkResponse(message, subMessage) {
+    function BatchUnlinkResponse(totalSuccess, totalFail, subMessage) {
+        var message = "";
+        if (totalSuccess > 0) {
+            message = totalSuccess + " record" + (totalSuccess > 1 ? "s" : "") + " successfully unlinked.";
+            if (totalFail > 0) message += " ";
+        }
+
+        if (totalFail > 0) {
+            message += totalFail + " record" + (totalFail > 1 ? "s" : "") + " could not be unlinked. Check the error details below to see more information.";
+        }
+
         this.message = message;
+        this.subMessage = subMessage;
         ERMrestError.call(this, '', module._errorStatus.BATCH_UNLINK, message, subMessage);
     }
 
