@@ -123,7 +123,7 @@ exports.execute = function (options) {
                 //   - an array of "leaf_table" tuples
                 //   - a filtered reference representing a single row from the leaf table
                 filteredLeafReference.deleteBatchAssociationTuples(mainTuple, relatedLeafTuples).then(function (res) {
-                    expect(res.message).toBe("3 records successfully removed.")
+                    expect(res.message).toBe("3 records successfully unlinked.")
                     expect(res.successTupleData.length).toBe(3, "success count for batch delete is incorrect");
 
                     return relatedLeafReference.read(7);
@@ -289,8 +289,8 @@ exports.execute = function (options) {
                 // trying to delete rows (5, 55), (6, 66), (7, 77)
                 // user can only unlink (6, 66)
                 filteredLeafReferenceWAcls.deleteBatchAssociationTuples(mainTuple, relatedLeafTuples).then(function (res) {
-                    expect(res.status).toBe("Batch Remove Summary", "error status for batch delete is incorrect");
-                    expect(res.message).toBe("3 records could not be removed. Check the error details below to see more information.", "error message for batch delete is incorrect");
+                    expect(res.status).toBe("Batch Unlink Summary", "error status for batch delete is incorrect");
+                    expect(res.message).toBe("3 records could not be unlinked. Check the error details below to see more information.", "error message for batch delete is incorrect");
                     expect(res.subMessage).toBe("403 Forbidden\nThe requested delete access on one or more matching rows in table :delete_schema:association_table is forbidden.\n", "error sub message for batch delete is incorrect");
                     expect(res.successTupleData.length).toBe(0, "success count for batch delete is incorrect");
                     expect(res.failedTupleData.length).toBe(3, "failed count for batch delete is incorrect");
@@ -467,7 +467,7 @@ exports.execute = function (options) {
                 //   - an array of "leaf_table" tuples
                 //   - a filtered reference representing a single row from the leaf table
                 filteredLeafReference.deleteBatchAssociationTuples(mainTuple, relatedLeafTuples).then(function (res) {
-                    expect(res.message).toBe("81 records could not be removed. Check the error details below to see more information.")
+                    expect(res.message).toBe("81 records could not be unlinked. Check the error details below to see more information.")
                     expect(res.successTupleData.length).toBe(0, "success count for batch delete is incorrect");
 
                     done();
@@ -484,7 +484,7 @@ exports.execute = function (options) {
                 //   - an array of "leaf_table" tuples
                 //   - a filtered reference representing a single row from the leaf table
                 filteredLeafReference.deleteBatchAssociationTuples(mainTuple, relatedLeafTuples).then(function (res) {
-                    expect(res.message).toBe("1 record successfully removed. 79 records could not be removed. Check the error details below to see more information.")
+                    expect(res.message).toBe("1 record successfully unlinked. 79 records could not be unlinked. Check the error details below to see more information.")
                     expect(res.successTupleData.length).toBe(1, "success count for batch delete is incorrect");
 
                     return relatedLeafReference.read(100);
@@ -620,7 +620,7 @@ exports.execute = function (options) {
                 //   - an array of "leaf_table" tuples
                 //   - a filtered reference representing a single row from the leaf table
                 filteredLeafReference.deleteBatchAssociationTuples(mainTuple, relatedLeafTuples).then(function (res) {
-                    expect(res.message).toBe("82 records successfully removed.")
+                    expect(res.message).toBe("82 records successfully unlinked.")
                     expect(res.successTupleData.length).toBe(82, "success count for batch delete is incorrect");
 
                     return relatedLeafReference.read(100);

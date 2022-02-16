@@ -3,19 +3,19 @@
 [Handlebars](http://handlebarsjs.com/) is almost similar to Mustache with some additional benefits. There are some things that you can't do in Mustache (e.g if-else statement) that Handlebars allows us to do easily using `helpers`.
 
 Handlebars supports most of the Mustache syntax. However, there are a few features that are not supported by Handlebars. For example:
-- Block syntax `{{#name}}...{{/name}}`: This is primarily used in Deriva annotations to perform boolean (or null) check. With handlebars you need to pass the variables to an `if` helper to do the check e.g. `{{#if name}}...{{/if}}`.
+- Block syntax `{{#name}}...{{/name}}`: This is primarily used in Deriva annotations to perform boolean (or null) checks. With handlebars you need to pass the variables to an `if` helper to do the check e.g. `{{#if name}}...{{/if}}`.
 
 ```js
 // Mustache
 
-{{#name}}Hello {{name}}{{/name}}{{^name}}No name available{{/name}}
+{{#name}}Hello {{{name}}}{{/name}}{{^name}}No name available{{/name}}
 
 // name="John" (or any object that evaluates to true in javascript)                 => Hello John
 // name=null (or any object that evaluate to false such as '', 0, false, [], etc)   => No name available
 
 // handlebards
 
-{{#if name}}Hello {{name}}{{else}}No name available{{/if}}
+{{#if name}}Hello {{{name}}}{{else}}No name available{{/if}}
 ```
 
 - encode/decode `{{#encode}}...{{/encode}}`/`{{#decode}}...{{/decode}}`: With handlebars the value to be encoded is passed to the `encode`/`decode` helper e.g. `{{#encode ...}}{{/encode}}` or `{{#decode ...}}{{/decode}}`.
@@ -30,8 +30,15 @@ Handlebars supports most of the Mustache syntax. However, there are a few featur
 
 Handlebars supports more complicated expression syntax and allow the comparison to be done at the finer level e.g. null v.s. false comparison. This document summarizes the key concepts of Handlebars that are relevant to Deriva.
 
+## Table of contents
 
 * [Handlebar Paths](#handlebars-paths)
+* [HTML-escaping](#html-escaping)
+* [Accessing current context](#accessing-current-context)
+* [Using Arrays](#using-arrays)
+* [Escaping Handlebars expressions](#escaping-handlebars-expressions)
+* [Accessing keys with spaces and special characters](#accessing-keys-with-spaces-and-special-characters)
+* [Subexpressions](#subexpressions)
 * [Helpers](#helpers)
    * [FormatDate](#formatdate-helper)
    * [Math Helpers](#math-helpers)
@@ -48,26 +55,44 @@ Handlebars supports more complicated expression syntax and allow the comparison 
    * [FindAll](#findall-helper)
    * [Replace](#replace-helper)
    * [ToTitleCase](#totitlecase-helper)
-* [Using Arrays](#using-arrays)
-* [Escaping Handlebars expressions](#escaping-handlebars-expressions)
-* [Accessing keys with spaces and special characters](#accessing-keys-with-spaces-and-special-characters)
-* [Subexpressions](#subexpressions)
 * [Boolean Helpers](#boolean-helpers)
   * [Comparison Helpers](#comparison-helpers)
   * [Logical Helpers](#Logical-helpers)
   * [Regular Expression Match](#regular-expression-match)
-* [Math Helpers](#math-helpers)
 
+## HTML-escaping
+
+In Handlebars, the values returned by the `{{expression}}` are HTML-escaped. Say, if the expression contains `&`, then the returned HTML-escaped output is generated as `&amp;`. If you don't want Handlebars to escape a value, use the "triple-stash", `{{{`:
+
+In the below template, you can learn how to produce the HTML escaped and raw output.
+
+```
+raw: {{{specialChars}}}
+html-escaped: {{specialChars}}
+```
+
+Pass the special characters to the template
+
+```
+{ specialChars: "& < > \" ' ` =" }
+```
+
+Expressions enclosed by "triple-stash" (`{{{`) produce the raw output. Otherwise, HTML-escaped output is generated as below.
+
+```
+raw: & < > " ' ` =
+html-escaped: &amp; &lt; &gt; &quot; &#x27; &#x60; &#x3D;
+```
 
 ## Handlebars Paths
 
 Handlebars supports simple paths, just like Mustache.
 
 ```
-<p>{{name}}</p>
+<p>{{{name}}}</p>
 ```
 
-Handlebars also supports nested paths, making it possible to look up properties nested below the current context.
+Handlebars also supports nested paths, making it possible to lookup properties nested below the current context.
 
 
 ```
@@ -77,12 +102,12 @@ The body for book with {{title}} authored by {{author.name}} is {{body}}
 That template works with this context
 ```js
 var context = {
-	title: "My First Blog Post!",
-	author: {
-		id: 47,
-		name: "Yehuda Katz"
-	},
-	body: "My first post. Wheeeee!"
+  title: "My First Blog Post!",
+  author: {
+    id: 47,
+    name: "Yehuda Katz"
+  },
+  body: "My first post. Wheeeee!"
 };
 ```
 
@@ -92,8 +117,8 @@ Nested handlebars paths can also include ../ segments, which evaluate their path
 
 ```
 {{#each comments}}
-	[{{title}}](/posts/{{../permalink}}#{{id}})
-	{{body}}
+  [{{title}}](/posts/{{../permalink}}#{{id}})
+  {{body}}
 {{/each}}
 ```
 
@@ -106,18 +131,131 @@ The exact value that `../` will resolve to varies based on the helper that is ca
     {{../permalink}}
 
     {{#if title}}
-    	{{../permalink}}
+      {{../permalink}}
     {{/if}}
 {{/each}}
 ```
 
 In this example all of the above reference the same `permalink` value even though they are located within different blocks.
 
-**NOTE**: Handlebars also allows for name conflict resolution between helpers and data fields via a this reference:
+**NOTE**: Handlebars also allows for name conflict resolution between helpers and data fields via a `this` reference:
 ```
 <p>{{./name}} or {{this/name}} or {{this.name}}</p> or {{this.[name with a space]}}
 ```
-Any of the above would cause the name field on the current context to be used rather than a helper of the same name.
+Any of the above would cause the name field in the current context to be used rather than a helper of the same name.
+
+## Accessing current context
+
+The `this` keyword can be used for accessing the current context. It's mainly useful when dealing with arrays or JSON objects where it will allow you to access the values of an array of objects. For example, if you have the following JSON column:
+
+```js
+{
+  person: {
+    firstname: "John",
+    lastname: "smith"
+  }
+}
+```
+
+While you can use `{{{person.firstname}}}` to access the values inside the object, you can use a block like the following and utilize the `this` keyword:
+
+```
+{{#person}}
+{{{this.firstname}}} {{{this.lastname}}}
+{{/person}}
+```
+
+As we mentioned `this` is also useful for arrays, for more information please refer to the [Each Helper](#each-helper) section. To expand on this, you can also use `this` in the case that you have an array of objects. For example:
+
+```js
+{
+  authors: [
+    {
+      firstname: "John",
+      lastname: "smith"
+    },
+    {
+      firstname: "Joe",
+      lastname: "Doe"
+    }
+  ]
+}
+```
+
+Where you can do
+
+```
+{{#each authors}}
+  {{{this.firstname}}} - {{{this.lastname}}}
+  {{#unless @last}}\n{{/unless}
+{{/each}}
+```
+
+In this case, `this` refers to each element of the array that is an object and can use the `.` notation to access their attributes.
+
+
+## Using Arrays
+
+You can use the [Each Helper](#each-helper) to iterate over its data. You can also use the `{{array.INDEX}}` pattern if you want to access array data by index; where the index starts from zero and it is the position of the element that you want to access.
+
+Template:
+```
+{{{arr.0.value}}}
+```
+
+When used in this context:
+```js
+{
+  arr: [
+      {value: "first element"},
+      {value: "second element"},
+      {value: "third element"}
+  ]
+}
+```
+
+Result:
+```
+first element
+```
+## Escaping Handlebars expressions
+
+Handlebars content may be escaped using inline escapes. Inline escapes are created by prefixing a mustache block with `\\`
+
+For example,
+```
+\\{{{escaped}}}
+```
+Would return
+```
+{{{escaped}}}
+```
+
+## Accessing keys with spaces and special characters
+
+Handlebars allows you to access keys/variables which have spaces ` ` or special characters like `{}` in their names. You need to enclose those variables in square brackets.
+
+
+```
+{{[str with a space]}}
+```
+
+To access these variables in another block helper
+
+```
+{{#encode [str with a space]}}{{/ecnode}}
+{{#escape [str with a space]}}{{/escape}}
+```
+
+## Subexpressions
+
+Handlebars offers support for `subexpressions`, which allows you to invoke multiple helpers within a single mustache `{{}}`, and pass in the results of inner helper invocations as arguments to outer helpers. Subexpressions are delimited by parentheses.
+
+```
+{{#escape (encode arg1) arg2}}{{/escape}}
+```
+
+In this case, `encode` will get invoked with the string argument `arg1`, and whatever the encode function returns will get passed in as the first argument to escape (and `arg2` will get passed in as the second argument to escape).
 
 ## Helpers
 
@@ -173,14 +311,14 @@ You can use the `if` helper to conditionally render a block. If its argument ret
 ```
 {{#if author}} {{firstName}} {{lastName}}</h1>{{/if}}
 ```
-when used with an empty (`{}`) context, `author` will be `undefined`, resulting in empty string:
+when used with an empty (`{}`) context, `author` will be `undefined`, resulting in an empty string:
 
 When using a block expression, you can specify a template section to run if the expression returns a falsy value. The section, marked by `{{else}}` is called an "else section".
 
 ```
 {{#if author}} {{firstName}} {{lastName}}{{else}} Unknown Author {{/if}}
 ```
-Above method will return `Unknown Author`.
+The above method will return `Unknown Author`.
 
 ### Unless helper
 
@@ -224,9 +362,9 @@ You can optionally provide an `{{else}}` section which will display only when th
 
 ```
 {{#each paragraphs}}
-	{{this}}
+  {{this}}
 {{else}}
- 	No content
+  No content
 {{/each}}
 ```
 
@@ -248,7 +386,7 @@ Additionally for object iteration, `{{@key}}` references the current key name:
 
 The first and last steps of iteration are noted via the `@first` and `@last` variables when iterating over an array. When iterating over an object only the `@first` is available.
 
-When looping throw items in `each`, you can reference the iterable object using `../` syntax. The following will allow you to access the array and calculate it's length:
+When looping throw items in `each`, you can reference the iterable object using `../` syntax. The following will allow you to access the array and calculate its length:
 ```
 {{#each array}}
   {{../array.length}}
@@ -256,9 +394,9 @@ When looping throw items in `each`, you can reference the iterable object using 
 ```
 
 
-Nested `each` blocks may access the iteration variables via depth based paths. To access the parent index, for example, `{{@../index}}` can be used.
+Nested `each` blocks may access the iteration variables via depth-based paths. To access the parent index, for example, `{{@../index}}` can be used.
 
-The each helper also supports block parameters, allowing for named references anywhere in the block.
+The `each` helper also supports block parameters, allowing for named references anywhere in the block.
 
 ```
 {{#each array as |value key|}}
@@ -272,7 +410,7 @@ Will create a `key` and `value` variable that children may access without the ne
 
 ### With helper
 
-Normally, Handlebars templates are evaluated against the context to the template.
+Normally, Handlebars templates are evaluated against the context of the template.
 
 ```
 template => {{lastName}}, {{firstName}}
@@ -288,11 +426,11 @@ You can shift the context for a section of a template by using the built-in `wit
 ```
 {{title}}
 {{#with author}}
-	By {{firstName}} {{lastName}}
+  By {{firstName}} {{lastName}}
 {{/with}}
 ```
 
-when used with this context:
+when used in this context:
 ```js
 {
   title: "My first post!",
@@ -312,30 +450,30 @@ My first post! By Charles Jolley
 ```
 {{title}}
 {{#with author as |myAuthor|}}
-	By {{myAuthor.firstName}} {{myAuthor.lastName}}</h2>
+  By {{myAuthor.firstName}} {{myAuthor.lastName}}</h2>
 {{/with}}
 ```
-Which allows for complex templates to potentially provide clearer code than `../` depthed references allow for.
+This allows for complex templates to potentially provide clearer code than `../` depthed references allow for.
 
 You can optionally provide an `{{else}}` section which will display only when the passed value is empty.
 
 ```
 {{#with author}}
-	{{name}}
+  {{name}}
 {{else}}
-	No content
+  No content
 {{/with}}
 ```
 
 ### Encode helper
 
-You can use the `encode` helper to get strings in URL encoded format. It accepts more than 1 strings which need to be encoded
+You can use the `encode` helper to get strings in URL encoded format. It accepts more than one string that needs to be encoded
 ```
 age={{#encode age}}{{/encode}}
 ```
 for context `age=10` will result in `age%3D10`
 
-In addition you can provide multiple inputs too which're concatenated and then encoded. For example,
+In addition, you can provide multiple inputs too which are concatenated and then encoded. For example,
 ```
 {{#encode key '=' value}}
 ```
@@ -343,13 +481,13 @@ for context `key="name" and value="John"` will result in `name%3DJohn`
 
 ### Escape helper
 
-You can use the `escape` helper to specifically escape values; for example hyphens "-" etc., you can use the escape block in this way. It accepts more than 1 strings which that needs to be escaped
+You can use the `escape` helper to specifically escape values; for example, hyphens "-" etc., you can use the escape block in this way. It accepts more than one string that needs to be escaped
 ```
 name={{#escape key}}{{/escape}}
 ```
 for context `key="**somevalue ] which is ! special"` will result in `name=\*\*somevalue \] which is \! special`
 
-In addition you can provide multiple inputs too which're concatenated and then encoded. For example,
+In addition, you can provide multiple inputs too which are concatenated and then encoded. For example,
 ```
 {{#escape key '-' value}}{{/escape}}
 ```
@@ -357,7 +495,7 @@ for context `key="**somevalue ] which is ! special" and value="John"` will resul
 
 ### Encodefacet helper
 
-You can use the `encodeFacet` helper to compress a JSON object. The compressed string can be used for creating a url path with facets. The string that you are passing as content MUST be JSON parsable. It will be ignored otherwise.
+You can use the `encodeFacet` helper to compress a JSON object. The compressed string can be used for creating a URL path with facets. The string that you are passing as content MUST be JSON parsable. It will be ignored otherwise.
 
 
 Template (newline and indentation added for readability and should be removed):
@@ -382,7 +520,7 @@ As you can see in this example I am escaping all the `"`s. This is because you a
 
 ### JsonStringify helper
 
-The `jsonStringify` helper will convert the supplied JSON object into a string representation of the JSON object. This helper behaves the same way as the `JSON.stringify` function in javascript. This can be used in conjunction with the `encodeFacet` helper for creating facet url strings.
+The `jsonStringify` helper will convert the supplied JSON object into a string representation of the JSON object. This helper behaves the same way as the `JSON.stringify` function in javascript. This can be used in conjunction with the `encodeFacet` helper for creating facet URL strings.
 
 Template (newline and indentation added for readability and should be removed):
 ```
@@ -406,7 +544,7 @@ Wher `col` is:
 }
 ```
 
-Would result in:
+This would result in:
 ```
 <a href="example.com/chaise/recordset/#1/S:T/*::facets::<facet-blob-representation>">caption</a>
 ```
@@ -438,7 +576,7 @@ Result:
 
 ### Findall helper
 
-The `regexFindAll` helper will take the input regular expression and return all the matching substrings from the supplied string in an array . Will return `[]` otherwise.
+The `regexFindAll` helper will take the input regular expression and return all the matching substrings from the supplied string in an array. Will return `[]` otherwise.
 
 A simple example where we try to match the file extension `jpg` or `png` with testString="jumpng-fox.jpg":
 ```
@@ -478,80 +616,17 @@ Result:
 This Is The Title Of My Page
 ```
 
-## Using Arrays
-
-You can use the [Each Helper](#each-helper) to iterate over its data. You can also use the `{{array.INDEX}}` pattern if you want to access array data by index; where index starts from zero and it is the position of element that you want to access.
-
-Template:
-```
-{{{arr.0.value}}}
-```
-
-When used with this context:
-```js
-{
-  arr: [
-      {value: "first element"},
-      {value: "second element"},
-      {value: "third element"}
-  ]
-}
-```
-
-Result:
-```
-first element
-```
-## Escaping Handlebars expressions
-
-Handlebars content may be escaped using inline escapes. Inline escapes created by prefixing a mustache block with `\\`
-
-For example,
-```
-\\{{{escaped}}}
-```
-Would return
-```
-{{{escaped}}}
-```
-
-## Accessing keys with spaces and special characters
-
-Handlebars allows you to access keys/variables which have spaces ` ` or special characters like `{}` in their names. You needs to enclose those variables in square brackets.
-
-
-```
-{{[str with a space]}}
-```
-
-To access these variables in another block helper
-
-```
-{{#encode [str with a space]}}{{/ecnode}}
-{{#escape [str with a space]}}{{/escape}}
-```
-
-## Subexpressions:
-
-Handlebars offers support for `subexpressions`, which allows you to invoke multiple helpers within a single mustache `{{}}`, and pass in the results of inner helper invocations as arguments to outer helpers. Subexpressions are delimited by parentheses.
-
-```
-{{#escape (encode arg1) arg2}}{{/escape}}
-```
-
-In this case, `encode` will get invoked with the string argument `arg1`, and whatever the encode function returns will get passed in as the first argument to escape (and `arg2` will get passed in as the second argument to escape).
-
 
 ## Boolean Helpers
 
-You can use following helper to check for specific equality checks using the default `if` helper
+You can use the following helper to check for specific equality checks using the default `if` helper
 
 ### Comparison Helpers
 
 - Equality (`eq`)
 ```
 {{#if (eq var1 var2)}}
-	.. content
+  .. content
 {{/if}}
 ```
 
@@ -559,7 +634,7 @@ You can use following helper to check for specific equality checks using the def
 
 ```
 {{#if (ne var1 var2)}}
-	.. content
+  .. content
 {{/if}}
 ```
 
@@ -567,7 +642,7 @@ You can use following helper to check for specific equality checks using the def
 
 ```
 {{#if (lt var1 var2)}}
-	.. content
+  .. content
 {{/if}}
 ```
 
@@ -575,7 +650,7 @@ You can use following helper to check for specific equality checks using the def
 
 ```
 {{#if (gt var1 var2)}}
-	.. content
+  .. content
 {{/if}}
 ```
 
@@ -583,7 +658,7 @@ You can use following helper to check for specific equality checks using the def
 
 ```
 {{#if (lte var1 var2)}}
-	.. content
+  .. content
 {{/if}}
 ```
 
