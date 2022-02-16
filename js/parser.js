@@ -441,15 +441,47 @@
             var self = this;
             var rightJoinIndex = -1, i;
             var uri = "", alias, temp;
-            var lastPathPartAliasMapping = {aliases: {}, usedSourceKeys: {},lastIndex: 0};
+            var lastPathPartAliasMapping = new PathPrefixAliasMapping();
 
             var getPathPartAliasMapping = function (index) {
-                var defVal = {aliases: {}, usedSourceKeys: {},lastIndex: 0};
                 if (index !== -1 && parsedPartsWithoutJoin[index].pathPrefixAliasMapping) {
                     return parsedPartsWithoutJoin[index].pathPrefixAliasMapping;
                 }
-                return defVal;
-            }
+                return new PathPrefixAliasMapping();
+            };
+
+            /**
+             * As part of `jonsStr`, if the table instance is already defined and added
+             * to the aliases, we might not add any new instances and just refer to the 
+             * previously defined instance. In this case, the `jonsStr` function will
+             * change the alias property of pathPart to properly refer to the table instance.
+             * 
+             * But the alias names used for the last pathPart is specific and should not be 
+             * changed. Therefore we're making sure if there's a sourcekey that is supposed
+             * to use a shared instance, is using the forced alias name.
+             * 
+             * Then the logic for generating new alias names will first look at the forced
+             * aliases and if the sourcekey is part of forced aliases will not generate a new
+             * one for it.
+             * @param {*} index 
+             * @returns an object that represent forcedAliases
+             * @ignore
+             */
+            var getForcedAliases = function (index) {
+                var res = {};
+
+                // if last: the given index, otherwise: the one after
+                var part = self.pathParts[Math.min(index+1, self.pathParts.length - 1)];
+
+                if (part.joins.length > 0 && part.joins[0].sourceObjectWrapper) {
+                    var sourceObject = part.joins[0].sourceObjectWrapper.sourceObject;
+                    // make sure the alias that we set for the join is also used for share path
+                    if (isStringAndNotEmpty(sourceObject.sourcekey)) {
+                        res[sourceObject.sourcekey] = part.alias;
+                    }
+                }
+                return res;
+            };
 
             // returns the proper string presentation of a series of joins
             // parameters:
@@ -481,16 +513,16 @@
                     // so while parsing the facets we're using the correct alias
                     part.alias = temp.usedOutAlias;
                     return temp.path;
+                } else {
+                    var fn = reverse ? "reduceRight" : "reduce";
+                    var joinStr = reverse ? "strReverse" : "str";
+                    var last = reverse ? 0 : part.joins.length - 1;
+                    var first = reverse ? part.joins.length -1 : 0;
+
+                    return part.joins[fn](function (res, join, i) {
+                        return res + (i !== first ? "/" : "") + ((i === last) ? (alias + ":=") : "") + join[joinStr];
+                    }, "");
                 }
-
-                var fn = reverse ? "reduceRight" : "reduce";
-                var joinStr = reverse ? "strReverse" : "str";
-                var last = reverse ? 0 : part.joins.length - 1;
-                var first = reverse ? part.joins.length -1 : 0;
-
-                return part.joins[fn](function (res, join, i) {
-                    return res + (i !== first ? "/" : "") + ((i === last) ? (alias + ":=") : "") + join[joinStr];
-                }, "");
             };
 
             // get the parsed one, and count the number of right joins
@@ -501,6 +533,7 @@
                 // facet
                 if (part.facets) {
                     var currUsedSourceObjects = null;
+                    var forcedAliases = getForcedAliases(index);
                     if (index == self.pathParts.length -1) {
                         currUsedSourceObjects = usedSourceObjects;
                     }
@@ -510,7 +543,7 @@
                         currUsedSourceObjects = [self.pathParts[index+1].joins[0].sourceObjectWrapper.sourceObject];
                     }
 
-                    facetRes = _renderFacet(part.facets.decoded, part.alias, part.schema, part.table, self.catalog, self.catalogObject, currUsedSourceObjects, module._constraintNames);
+                    facetRes = _renderFacet(part.facets.decoded, part.alias, part.schema, part.table, self.catalog, self.catalogObject, currUsedSourceObjects, forcedAliases, module._constraintNames);
                     if (!facetRes.successful) {
                         throw new module.InvalidFacetOperatorError(self.path, facetRes.message);
                     }
@@ -535,7 +568,7 @@
                     //      it requires preprocessing the usedSourcekeys based on both
                     //      facets and customFacets
                     if (part.customFacets.facets) {
-                        facetRes = _renderFacet(part.customFacets.facets.decoded, part.alias, part.schema, part.table, self.catalog, self.catalogObject, null, module._constraintNames);
+                        facetRes = _renderFacet(part.customFacets.facets.decoded, part.alias, part.schema, part.table, self.catalog, self.catalogObject, null, null, module._constraintNames);
                         if (!facetRes.successful) {
                             throw new module.InvalidCustomFacetOperatorError(self.path, facetRes.message);
                         }
@@ -1236,6 +1269,15 @@
             return this._catalogObject;
         },
 
+        /**
+         * Given a sourceObjectWrapper, return a Location object that uses this
+         * as the join to new table.
+         * @param {Object} sourceObjectWrapper the object that represents the join
+         * @param {string} toSchema the name of schema that this join refers to
+         * @param {string} toTable the name of table that this join refers to
+         * @param {boolean?} clone whether we should clone or use the existing object
+         * @returns Location object
+         */
         addJoin: function (sourceObjectWrapper, toSchema, toTable, clone) {
             var loc = clone ? this._clone() : this;
             // change alias of the previous part
@@ -1247,6 +1289,7 @@
 
             // add a join to parts based on the given input
             var pathPart = new PathPart(
+                // make sure the proper alias is used for the last part
                 module._parserAliases.MAIN_TABLE,
                 [new ParsedJoin(null, null, toSchema, toTable, null, sourceObjectWrapper)],
                 toSchema,
@@ -1496,7 +1539,7 @@
 
         // should not happen in the existing work flow, added just for sanity check
         if (!this.str || !this.strReverse) {
-            throw new InvalidInputError("Either str/strReverse or sourceObjectWrapper must be defined.")
+            throw new InvalidInputError("Either str/strReverse or sourceObjectWrapper must be defined.");
         }
     }
 

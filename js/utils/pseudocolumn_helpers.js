@@ -198,7 +198,7 @@
      * - parsed: String  (if the given string was parsable).
      * - message: String (if the given string was not parsable)
      */
-    _renderFacet = function(json, alias, schemaName, tableName, catalogId, catalogObject, usedSourceObjects, consNames) {
+    _renderFacet = function(json, alias, schemaName, tableName, catalogId, catalogObject, usedSourceObjects, forcedAliases, consNames) {
         var facetErrors = module._facetingErrors;
         var rootSchemaName = schemaName, rootTableName = tableName;
 
@@ -222,7 +222,12 @@
             encode = module._fixedEncodeURIComponent, sourcekey,
             i, term, col, path, ds, constraints, parsed, useRightJoin;
 
-        var pathPrefixAliasMapping = {aliases: {}, usedSourceKeys: {},lastIndex: 0};
+        var pathPrefixAliasMapping = new PathPrefixAliasMapping();
+
+        // add forcedAliases
+        if (isObjectAndNotNull(forcedAliases)) {
+            pathPrefixAliasMapping.forcedAliases = forcedAliases;
+        }
 
         // pre process the list of facets and find the path prefixes that are used
         _sourceColumnHelpers._populateUsedSourceKeys(
@@ -1499,7 +1504,12 @@
 
                     // if we have to use alias but it's already not defined, create one
                     if (!prefixAlias && (sn.pathPrefixSourcekey in pathPrefixAliasMapping.usedSourceKeys || addAliasToSourcekey)) {
-                        prefixAlias = mainTableAlias + "_P" + (++pathPrefixAliasMapping.lastIndex);
+                        prefixAlias = _sourceColumnHelpers._generateAliasName(
+                            // get the sourcekey that the prefix is going to be associated with
+                            addAliasToSourcekey ? sourcekey : sn.pathPrefixSourcekey, 
+                            mainTableAlias, 
+                            pathPrefixAliasMapping
+                        );
                     }
 
                     res = _sourceColumnHelpers.parseSourceNodesWithAliasMapping(
@@ -1549,7 +1559,7 @@
                 // if this thing is used by other parts, then we should add alias to ensure sharing
                 if (sn === lastForeignKeyNode && sourcekey && sourcekey in pathPrefixAliasMapping.usedSourceKeys) {
                     if (!outAlias) {
-                        outAlias = mainTableAlias + "_P" + (++pathPrefixAliasMapping.lastIndex);
+                        outAlias = _sourceColumnHelpers._generateAliasName(sourcekey, mainTableAlias, pathPrefixAliasMapping);
                     }
                     pathPrefixAliasMapping.aliases[sourcekey] = outAlias;
                 }
@@ -1639,7 +1649,12 @@
 
                     // if we have to use alias but it's already not defined, create one
                     if (!prefixAlias && (sn.pathPrefixSourcekey in pathPrefixAliasMapping.usedSourceKeys || addAliasToSourcekey)) {
-                        prefixAlias = mainTableAlias + "_P" + (++pathPrefixAliasMapping.lastIndex);
+                        prefixAlias = _sourceColumnHelpers._generateAliasName(
+                            // get the sourcekey that the prefix is going to be associated with
+                            addAliasToSourcekey ? sourcekey : sn.pathPrefixSourcekey, 
+                            mainTableAlias, 
+                            pathPrefixAliasMapping
+                        );
                     }
 
                     res = _sourceColumnHelpers.parseAllOutBoundNodes(
@@ -1680,7 +1695,7 @@
                 // if this thing is used by other parts, then we should add alias to ensure sharing
                 if (sn === lastForeignKeyNode && sourcekey && sourcekey in pathPrefixAliasMapping.usedSourceKeys) {
                     if (!outAlias) {
-                        outAlias = mainTableAlias + "_P" + (++pathPrefixAliasMapping.lastIndex);
+                        outAlias = _sourceColumnHelpers._generateAliasName(sourcekey, mainTableAlias, pathPrefixAliasMapping);
                     }
                     pathPrefixAliasMapping.aliases[sourcekey] = outAlias;
                 }
@@ -1804,6 +1819,25 @@
             }
 
             return res;
+        },
+
+        /**
+         * generate an alias that should be used for a sourcekey
+         * This function is added mainly to properly check the forced aliases.
+         * As part of `computeERMrestCompactPath`, some aliases are supposed to 
+         * have a specific meaning and cannot be changed. So the forcedAliases
+         * will ensure we're using those aliases instead of creating a new one.
+         * 
+         * @param {string} sourcekey 
+         * @param {string} mainTableAlias 
+         * @param {Object} pathPrefixAliasMapping 
+         * @returns string
+         */
+        _generateAliasName: function (sourcekey, mainTableAlias, pathPrefixAliasMapping) {
+            if (sourcekey in pathPrefixAliasMapping.forcedAliases) {
+                return pathPrefixAliasMapping.forcedAliases[sourcekey];
+            }
+            return mainTableAlias + "_P" + (++pathPrefixAliasMapping.lastIndex);
         },
 
         _sourceHasNodes: function (source) {
@@ -2210,3 +2244,32 @@
             return this._simpleConjunction;
         }
     };
+
+    /**
+     * This prototype is used for the shared prefix logic.
+     * @ignore
+     */
+    function PathPrefixAliasMapping () {
+        /**
+         * Aliases that already mapped to a join statement
+         * <sourcekey> -> <alias>
+         */
+        this.aliases = {};
+
+        /**
+         * sourcekeys that are used more than once and require alias
+         * <sourcekey> -> value is not important
+         */
+        this.usedSourceKeys = {};
+
+        /**
+         * The index of last added alias
+         */
+        this.lastIndex = 0;
+
+        /**
+         * The aliases that must be used for the given sourcekeys
+         * <sourcekey> -> <alias>
+         */
+        this.forcedAliases = {};
+    }

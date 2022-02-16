@@ -2847,6 +2847,8 @@ function FacetColumn (reference, index, facetObjectWrapper, filters) {
      */
     this.dataSource = facetObjectWrapper.sourceObject.source;
 
+    // this.sourcekey = facetObjectWrapper
+
     /**
      * the compressed version of data source data-source path
      * @type {obj|string}
@@ -3140,14 +3142,20 @@ FacetColumn.prototype = {
                 }
                 newLoc.customFacets = cfacet;
             }
-
+            
+            /**
+             * if it has path, we have to pass the whole facetObjectWrapper
+             * as a join. this is so we can properly share path
+             */
             if (self.hasPath) {
                 newLoc = newLoc.addJoin(
                     self._facetObjectWrapper,
                     table.schema.name,
                     table.name
                 );
-            } else if (self._facetObjectWrapper.isFiltered) {
+            } 
+            // if it only has filter (and no path, then we can just add the filter to path)
+            else if (self._facetObjectWrapper.isFiltered) {
                 // TODO can this be improved?
                 var filterPath = self._facetObjectWrapper.toString(false, false);
                 if (filterPath.length > 0) {

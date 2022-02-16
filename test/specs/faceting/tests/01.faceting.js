@@ -2277,7 +2277,6 @@ exports.execute = function (options) {
                         "path with complicated filters",
                         [
                             "T:=faceting_schema:main/int_col::geq::-2/$T",
-                            // "id::gt::-1",
                             "M:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)",
                             "!(date_col::gt::" +  currentDateString + "&path_prefix_o1_col=some_non_used_value)",
                             "!(path_prefix_o1_col::null::)/0:=path_prefix_o1_col;count:=cnt_d(T:RID)@sort(count::desc::,0)"
@@ -2295,13 +2294,11 @@ exports.execute = function (options) {
                         refMainAllData.facetColumns[25].scalarValuesReference,
                         "Path to o1_o1 with prefix and filter",
                         [
-                            // TODO why is this broken???
                             "T:=faceting_schema:main/int_col::geq::-2/$T",
-                            // "id::gt::-1",
-                            "T1:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)",
+                            "(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)",
                             "!(date_col::gt::" +  currentDateString + "&path_prefix_o1_col=some_non_used_value)",
                             "M:=(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)",
-                            "!(path_prefix_o1_o1_col::null::)/0:=path_prefix_o1_o1_col;count:=cnt_d(T1:RID)@sort(count::desc::,0)"
+                            "!(path_prefix_o1_o1_col::null::)/0:=path_prefix_o1_o1_col;count:=cnt_d(T:RID)@sort(count::desc::,0)"
                         ].join("/"),
                         3,
                         ['one_o1_o1', 'three_o1_o1', 'two_o1_o1' ],
@@ -2457,7 +2454,6 @@ exports.execute = function (options) {
                     });
 
                     if (expectedSourceRefs) {
-                        return;
                         expectedSourceRefs.forEach(function (expSourceRef) {
                             var sourceRef, facetIndex = expSourceRef.facetIndex;
                             describe("for facet index=" +  facetIndex, function () {
@@ -2519,12 +2515,14 @@ exports.execute = function (options) {
                                 {
                                     facetIndex: 21,
                                     sourceReadPath: [
-                                        // NOTE T_P2 is not needed but code doesn't handle it
-                                        // TODO HAS ISSUE CAUSE THE WHOLE JOIN IS JUST AN ALIAS
+                                        "T:=faceting_schema:main",
+                                        "T_P1:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)/M:=(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)",
+                                        "(id)=(faceting_schema:path_prefix_o1_o1_i1:fk_to_path_prefix_o1_o1)/path_prefix_o1_o1_i1_col=one_o1_o1_i1/$T",
+                                        "$M/F1:=left(fk_to_path_prefix_o1_o1_o1)=(faceting_schema:path_prefix_o1_o1_o1:id)/$M/RID;M:=array_d(M:*),F1:=array_d(F1:*)@sort(RID)"
                                     ].join("/"),
                                     read: {
-                                        length: 1,
-                                        firstID: 2
+                                        length: 2,
+                                        firstID: 1
                                     }
                                 },
                                 {
@@ -2574,12 +2572,14 @@ exports.execute = function (options) {
                                 {
                                     facetIndex: 21,
                                     sourceReadPath: [
-                                        // NOTE T_P2 is not needed but code doesn't handle it
-                                        // TODO HAS ISSUE CAUSE THE WHOLE JOIN IS JUST AN ALIAS
+                                        "T:=faceting_schema:main",
+                                        "T_P1:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)/M:=(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)",
+                                        "(id)=(faceting_schema:path_prefix_o1_o1_i1:fk_to_path_prefix_o1_o1)/path_prefix_o1_o1_i1_col=one_o1_o1_i1/$T",
+                                        "$M/F1:=left(fk_to_path_prefix_o1_o1_o1)=(faceting_schema:path_prefix_o1_o1_o1:id)/$M/RID;M:=array_d(M:*),F1:=array_d(F1:*)@sort(RID)"
                                     ].join("/"),
                                     read: {
-                                        length: 1,
-                                        firstID: 2
+                                        length: 2,
+                                        firstID: 1
                                     }
                                 },
                                 {
@@ -2633,8 +2633,10 @@ exports.execute = function (options) {
                                     facetIndex: 21,
                                     // the facet in url doesn't match with this facetColumn anymore
                                     sourceReadPath: [
-                                        // NOTE T_P2 is not needed but code doesn't handle it
-                                        // TODO HAS ISSUE CAUSE THE WHOLE JOIN IS JUST AN ALIAS
+                                        "T:=faceting_schema:main",
+                                        "T_P1:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)/M:=(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)",
+                                        "(id)=(faceting_schema:path_prefix_o1_o1_i1:fk_to_path_prefix_o1_o1)/path_prefix_o1_o1_i1_col=one_o1_o1_i1/$T/$M/id=2/$T",
+                                        "$M/F1:=left(fk_to_path_prefix_o1_o1_o1)=(faceting_schema:path_prefix_o1_o1_o1:id)/$M/RID;M:=array_d(M:*),F1:=array_d(F1:*)@sort(RID)"
                                     ].join("/"),
                                     read: {
                                         length: 1,
@@ -2816,7 +2818,11 @@ exports.execute = function (options) {
                                     facetIndex: 21,
                                     // the facet in url doesn't match with this facetColumn anymore
                                     sourceReadPath: [
-                                        // TODO HAS ISSUE CAUSE THE WHOLE JOIN IS JUST AN ALIAS
+                                        "faceting_schema:path_prefix_o1_o1_i1/path_prefix_o1_o1_i1_col=one_o1_o1_i1;path_prefix_o1_o1_i1_col::null::",
+                                        "(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/(id)=(faceting_schema:path_prefix_o1:fk_to_path_prefix_o1_o1)",
+                                        "T:=right(id)=(faceting_schema:main:fk_to_path_prefix_o1)",
+                                        "T_P1:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)/M:=(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/id=2/$T",
+                                        "$M/F1:=left(fk_to_path_prefix_o1_o1_o1)=(faceting_schema:path_prefix_o1_o1_o1:id)/$M/RID;M:=array_d(M:*),F1:=array_d(F1:*)@sort(RID)"
                                     ].join("/"),
                                     read: {
                                         length: 1,
@@ -2845,8 +2851,11 @@ exports.execute = function (options) {
             });
 
             /**
-             * NOTE filters cannot be used in visbile-columns
-             * and we just want to make sure the read path properly shares path for them
+             * NOTE filters used all-outbounds/local columns of visible-columns
+             *      will produce a separate request and won't be part of all-outbounds
+             *      added to the URL, so we don't need to test them in combination of each other
+             * and we just want to make sure the read path properly shares path for them.
+             * that's why the following is separated from the above.
              */
             describe('regarding usage of filter in source with path prefix,', function () {
                 var currRef;
