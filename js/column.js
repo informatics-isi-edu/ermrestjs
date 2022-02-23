@@ -2847,8 +2847,6 @@ function FacetColumn (reference, index, facetObjectWrapper, filters) {
      */
     this.dataSource = facetObjectWrapper.sourceObject.source;
 
-    // this.sourcekey = facetObjectWrapper
-
     /**
      * the compressed version of data source data-source path
      * @type {obj|string}
@@ -3055,15 +3053,10 @@ FacetColumn.prototype = {
     /**
      * uncontextualized {@link ERMrest.Reference} that has all the joins specified
      * in the source with all the filters of other FacetColumns in the reference.
+     * 
+     * The returned reference will be in the following format:
+     * <main-table>/<facets of main table except current facet>/<path to current facet>
      *
-     * NOTE needs refactoring,
-     * This should return a reference that referes to the current column's table
-     * having filters from other facetcolumns.
-     * We should not use the absolute path for the table and it must be a path
-     * from main to this table. Because if we use the absolute path we're completely
-     * ignoring the constraints that the main table will add to this reference.
-     * (For example if maximum possible value for this column is 100 but there's
-     * no data from the main that will leads to this maximum.)
      *
      * Consider the following scenario:
      * Table T has two foreignkeys to R1 (fk1), R2 (fk2), and R3 (fk3).
@@ -3071,10 +3064,16 @@ FacetColumn.prototype = {
      * Then the source reference for R3 will be the following:
      * T:=S:T/(fk1)/term=1/$T/(fk2)/term2/$T/M:=(fk3)
      * As you can see it has all the filters of the main table + join to current table.
-     *
-     * NOTE: assumptions:
-     *  - The main reference has no join.
-     *  - The returned reference has problem with faceting (cannot show faceting).
+     * 
+     * Notes:
+     * - This function used to reverse the path from the current facet to each of the
+     *   other facets in the main reference. Since this was very inefficient, we decided
+     *   to rewrite it to start from the main table instead.
+     * - The path from the main table to facet is based on the given column directive and
+     *   therefore might have filters or reused table instances (shared path). That's why
+     *   we're ensuring to pass the whole facetObjectWrapper to parser, so it can properly
+     *   parse it.
+     * 
      *
      * @type {ERMrest.Reference}
      */

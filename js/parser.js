@@ -1558,16 +1558,16 @@
         var strReverse = "(" + toParts[3] + ")=(" + fromSchemaTable + ":" + linking[1] + ")";
 
         return new ParsedJoin(
-            linking[0],
-            strReverse,
-            decodeURIComponent(toParts[1]),
-            decodeURIComponent(toParts[2]),
+            linking[0], // str
+            strReverse, // strReverse
+            decodeURIComponent(toParts[1]), // toSchema
+            decodeURIComponent(toParts[2]), // toTable
             {
                 fromCols: fromCols.map(function(colName) {return decodeURIComponent(colName);}),
                 fromColsStr: linking[1],
                 toCols: toCols.map(function(colName) {return decodeURIComponent(colName);}),
                 toColsStr: linking[2]
-            }
+            } // columnMapping
         );
     }
 
