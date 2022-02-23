@@ -2277,7 +2277,6 @@ exports.execute = function (options) {
                         "path with complicated filters",
                         [
                             "T:=faceting_schema:main/int_col::geq::-2/$T",
-                            // "id::gt::-1",
                             "M:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)",
                             "!(date_col::gt::" +  currentDateString + "&path_prefix_o1_col=some_non_used_value)",
                             "!(path_prefix_o1_col::null::)/0:=path_prefix_o1_col;count:=cnt_d(T:RID)@sort(count::desc::,0)"
@@ -2296,11 +2295,10 @@ exports.execute = function (options) {
                         "Path to o1_o1 with prefix and filter",
                         [
                             "T:=faceting_schema:main/int_col::geq::-2/$T",
-                            // "id::gt::-1",
-                            "T1:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)",
+                            "(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)",
                             "!(date_col::gt::" +  currentDateString + "&path_prefix_o1_col=some_non_used_value)",
                             "M:=(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)",
-                            "!(path_prefix_o1_o1_col::null::)/0:=path_prefix_o1_o1_col;count:=cnt_d(T1:RID)@sort(count::desc::,0)"
+                            "!(path_prefix_o1_o1_col::null::)/0:=path_prefix_o1_o1_col;count:=cnt_d(T:RID)@sort(count::desc::,0)"
                         ].join("/"),
                         3,
                         ['one_o1_o1', 'three_o1_o1', 'two_o1_o1' ],
@@ -2424,7 +2422,9 @@ exports.execute = function (options) {
             describe("regarding usage of path prefix,", function () {
                 var currRef;
 
-                var testReadAndReadPath = function (currFacetObj, expectedReadPath) {
+                // NOTE this function is making assumption about the facets and results,
+                // so we cannot just pass any arbitary inputs to it
+                var testReadAndReadPath = function (currFacetObj, expectedReadPath, expectedSourceRefs) {
                     it("readPath should be able to reuse the aliases in facet as part of all-outbound", function (done) {
                         options.ermRest.resolve(createURL(tableMain, currFacetObj)).then(function (ref) {
                             // visible-fks are defined for compact
@@ -2452,6 +2452,36 @@ exports.execute = function (options) {
                             done.fail(err);
                         })
                     });
+
+                    if (expectedSourceRefs) {
+                        expectedSourceRefs.forEach(function (expSourceRef) {
+                            var sourceRef, facetIndex = expSourceRef.facetIndex;
+                            describe("for facet index=" +  facetIndex, function () {
+                                it ("sourceReference should return the proper readPath", function () {
+                                    sourceRef = currRef.facetColumns[facetIndex].sourceReference;
+
+                                    expect(sourceRef).toBeDefined();
+                                    expect(sourceRef.readPath).toEqual(expSourceRef.sourceReadPath);
+                                });
+
+                                it ("sourceReference.read should return proper values", function (done) {
+                                    sourceRef.read(25).then(function (page) {
+                                        expect(page.length).toBe(expSourceRef.read.length, "page length missmatch");
+
+                                        var tuples = page.tuples;
+                                        expect(tuples[0].data.id).toBe(expSourceRef.read.firstID, "id raw value missmatch");
+
+                                        // var expectedValues = ['4', 'two', 'two_o1_o1', 'two_o1_o1_o1'];
+                                        // expect(tuples[0].values).toEqual(jasmine.arrayContaining(expectedValues), "values missmatch");
+
+                                        done();
+                                    }).catch(function (err) {
+                                        done.fail(err);
+                                    })
+                                });
+                            });
+                        });
+                    }
                 }
 
                 describe("when null is not in the choices", function () {
@@ -2480,7 +2510,35 @@ exports.execute = function (options) {
                                 "$M_P1/path_prefix_o1_o1_col=two_o1_o1/$M",
                                 "$M_P1/F3:=left(fk_to_path_prefix_o1_o1_o1)=(faceting_schema:path_prefix_o1_o1_o1:id)/$M",
                                 "RID;M:=array_d(M:*),F3:=F3:path_prefix_o1_o1_o1_col,F2:=M_P1:path_prefix_o1_o1_col,F1:=M_P2:path_prefix_o1_col@sort(RID)"
-                            ].join("/")
+                            ].join("/"),
+                            [
+                                {
+                                    facetIndex: 21,
+                                    sourceReadPath: [
+                                        "T:=faceting_schema:main",
+                                        "T_P1:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)/M:=(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)",
+                                        "(id)=(faceting_schema:path_prefix_o1_o1_i1:fk_to_path_prefix_o1_o1)/path_prefix_o1_o1_i1_col=one_o1_o1_i1/$T",
+                                        "$M/F1:=left(fk_to_path_prefix_o1_o1_o1)=(faceting_schema:path_prefix_o1_o1_o1:id)/$M/RID;M:=array_d(M:*),F1:=array_d(F1:*)@sort(RID)"
+                                    ].join("/"),
+                                    read: {
+                                        length: 2,
+                                        firstID: 1
+                                    }
+                                },
+                                {
+                                    facetIndex: 22,
+                                    sourceReadPath: [
+                                        "T:=faceting_schema:main",
+                                        "T_P1:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)/(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/path_prefix_o1_o1_col=two_o1_o1/$T",
+                                        "$T_P1/(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/M:=(id)=(faceting_schema:path_prefix_o1_o1_i1:fk_to_path_prefix_o1_o1)",
+                                        "F1:=left(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/$M/RID;M:=array_d(M:*),F1:=array_d(F1:*)@sort(RID)"
+                                    ].join("/"),
+                                    read: {
+                                        length: 1,
+                                        firstID: 2
+                                    }
+                                }
+                            ]
                         );
                     });
 
@@ -2509,7 +2567,35 @@ exports.execute = function (options) {
                                 "$M_P2/(id)=(faceting_schema:path_prefix_o1_o1_i1:fk_to_path_prefix_o1_o1)/path_prefix_o1_o1_i1_col=one_o1_o1_i1/$M",
                                 "$M_P2/F3:=left(fk_to_path_prefix_o1_o1_o1)=(faceting_schema:path_prefix_o1_o1_o1:id)/$M",
                                 "RID;M:=array_d(M:*),F3:=F3:path_prefix_o1_o1_o1_col,F2:=M_P2:path_prefix_o1_o1_col,F1:=M_P1:path_prefix_o1_col@sort(RID)"
-                            ].join("/")
+                            ].join("/"),
+                            [
+                                {
+                                    facetIndex: 21,
+                                    sourceReadPath: [
+                                        "T:=faceting_schema:main",
+                                        "T_P1:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)/M:=(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)",
+                                        "(id)=(faceting_schema:path_prefix_o1_o1_i1:fk_to_path_prefix_o1_o1)/path_prefix_o1_o1_i1_col=one_o1_o1_i1/$T",
+                                        "$M/F1:=left(fk_to_path_prefix_o1_o1_o1)=(faceting_schema:path_prefix_o1_o1_o1:id)/$M/RID;M:=array_d(M:*),F1:=array_d(F1:*)@sort(RID)"
+                                    ].join("/"),
+                                    read: {
+                                        length: 2,
+                                        firstID: 1
+                                    }
+                                },
+                                {
+                                    facetIndex: 22,
+                                    sourceReadPath: [
+                                        "T:=faceting_schema:main",
+                                        "T_P1:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)/(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/path_prefix_o1_o1_col=two_o1_o1/$T",
+                                        "$T_P1/(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/M:=(id)=(faceting_schema:path_prefix_o1_o1_i1:fk_to_path_prefix_o1_o1)",
+                                        "F1:=left(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/$M/RID;M:=array_d(M:*),F1:=array_d(F1:*)@sort(RID)"
+                                    ].join("/"),
+                                    read: {
+                                        length: 1,
+                                        firstID: 2
+                                    }
+                                }
+                            ]
                         );
                     });
 
@@ -2541,13 +2627,43 @@ exports.execute = function (options) {
                                 "$M_P1/(id)=(faceting_schema:path_prefix_o1_o1_i1:fk_to_path_prefix_o1_o1)/path_prefix_o1_o1_i1_col=one_o1_o1_i1/$M",
                                 "$M_P1/F3:=left(fk_to_path_prefix_o1_o1_o1)=(faceting_schema:path_prefix_o1_o1_o1:id)/$M",
                                 "RID;M:=array_d(M:*),F3:=F3:path_prefix_o1_o1_o1_col,F2:=M_P1:path_prefix_o1_o1_col,F1:=M_P2:path_prefix_o1_col@sort(RID)"
-                            ].join("/")
+                            ].join("/"),
+                            [
+                                {
+                                    facetIndex: 21,
+                                    // the facet in url doesn't match with this facetColumn anymore
+                                    sourceReadPath: [
+                                        "T:=faceting_schema:main",
+                                        "T_P1:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)/M:=(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)",
+                                        "(id)=(faceting_schema:path_prefix_o1_o1_i1:fk_to_path_prefix_o1_o1)/path_prefix_o1_o1_i1_col=one_o1_o1_i1/$T/$M/id=2/$T",
+                                        "$M/F1:=left(fk_to_path_prefix_o1_o1_o1)=(faceting_schema:path_prefix_o1_o1_o1:id)/$M/RID;M:=array_d(M:*),F1:=array_d(F1:*)@sort(RID)"
+                                    ].join("/"),
+                                    read: {
+                                        length: 1,
+                                        firstID: 2
+                                    }
+                                },
+                                {
+                                    facetIndex: 22,
+                                    sourceReadPath: [
+                                        "T:=faceting_schema:main",
+                                        // NOTE T_P2 is not needed but code doesn't handle it
+                                        "T_P2:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)/T_P1:=(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/id=2/$T",
+                                        "$T_P1/M:=(id)=(faceting_schema:path_prefix_o1_o1_i1:fk_to_path_prefix_o1_o1)",
+                                        "F1:=left(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/$M/RID;M:=array_d(M:*),F1:=array_d(F1:*)@sort(RID)"
+                                    ].join("/"),
+                                    read: {
+                                        length: 1,
+                                        firstID: 2
+                                    }
+                                }
+                            ]
                         );
                     });
                 });
 
                 describe("when null is in the choices", function () {
-                    describe("case 1", function () {
+                    describe("case 1 (null)", function () {
                         testReadAndReadPath(
                             {
                                 "and": [
@@ -2572,12 +2688,42 @@ exports.execute = function (options) {
                                 "M_P2:=(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/path_prefix_o1_o1_col=two_o1_o1/$M",
                                 "$M_P2/F3:=left(fk_to_path_prefix_o1_o1_o1)=(faceting_schema:path_prefix_o1_o1_o1:id)/$M",
                                 "RID;M:=array_d(M:*),F3:=F3:path_prefix_o1_o1_o1_col,F2:=M_P2:path_prefix_o1_o1_col,F1:=M_P1:path_prefix_o1_col@sort(RID)"
-                            ].join("/")
+                            ].join("/"),
+                            [
+                                {
+                                    facetIndex: 21,
+                                    sourceReadPath: [
+                                        "faceting_schema:path_prefix_o1_o1_i1/path_prefix_o1_o1_i1_col=one_o1_o1_i1;path_prefix_o1_o1_i1_col::null::",
+                                        "(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/(id)=(faceting_schema:path_prefix_o1:fk_to_path_prefix_o1_o1)",
+                                        "T:=right(id)=(faceting_schema:main:fk_to_path_prefix_o1)",
+                                        // TODO the code doesn't properly account for null that's why T_P1 is added
+                                        "T_P1:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)/M:=(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)",
+                                        "F1:=left(fk_to_path_prefix_o1_o1_o1)=(faceting_schema:path_prefix_o1_o1_o1:id)/$M/RID;M:=array_d(M:*),F1:=array_d(F1:*)@sort(RID)"
+                                    ].join("/"),
+                                    read: {
+                                        length: 3,
+                                        firstID: 1
+                                    }
+                                },
+                                {
+                                    facetIndex: 22,
+                                    sourceReadPath: [
+                                        "T:=faceting_schema:main",
+                                        "T_P1:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)/(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/path_prefix_o1_o1_col=two_o1_o1/$T",
+                                        "$T_P1/(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/M:=(id)=(faceting_schema:path_prefix_o1_o1_i1:fk_to_path_prefix_o1_o1)",
+                                        "F1:=left(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/$M/RID;M:=array_d(M:*),F1:=array_d(F1:*)@sort(RID)"
+                                    ].join("/"),
+                                    read: {
+                                        length: 1,
+                                        firstID: 2
+                                    }
+                                }
+                            ]
                         );
                     });
 
                     // sourcekey used before the prefix
-                    describe("case 2", function () {
+                    describe("case 2 (null)", function () {
                         testReadAndReadPath(
                             {
                                 "and": [
@@ -2603,11 +2749,41 @@ exports.execute = function (options) {
                                 "$M_P2/F3:=left(fk_to_path_prefix_o1_o1_o1)=(faceting_schema:path_prefix_o1_o1_o1:id)/$M",
                                 "RID;M:=array_d(M:*),F3:=F3:path_prefix_o1_o1_o1_col,F2:=M_P2:path_prefix_o1_o1_col,F1:=M_P1:path_prefix_o1_col@sort(RID)"
                             ].join("/"),
+                            [
+                                {
+                                    facetIndex: 21,
+                                    // TODO the code doesn't properly account for null that's why T_P1 is added
+                                    sourceReadPath: [
+                                        "faceting_schema:path_prefix_o1_o1_i1/path_prefix_o1_o1_i1_col=one_o1_o1_i1;path_prefix_o1_o1_i1_col::null::",
+                                        "(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/(id)=(faceting_schema:path_prefix_o1:fk_to_path_prefix_o1_o1)",
+                                        "T:=right(id)=(faceting_schema:main:fk_to_path_prefix_o1)",
+                                        "T_P1:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)/M:=(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)",
+                                        "F1:=left(fk_to_path_prefix_o1_o1_o1)=(faceting_schema:path_prefix_o1_o1_o1:id)/$M/RID;M:=array_d(M:*),F1:=array_d(F1:*)@sort(RID)"
+                                    ].join("/"),
+                                    read: {
+                                        length: 3,
+                                        firstID: 1
+                                    }
+                                },
+                                {
+                                    facetIndex: 22,
+                                    sourceReadPath: [
+                                        "T:=faceting_schema:main",
+                                        "T_P1:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)/(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/path_prefix_o1_o1_col=two_o1_o1/$T",
+                                        "$T_P1/(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/M:=(id)=(faceting_schema:path_prefix_o1_o1_i1:fk_to_path_prefix_o1_o1)",
+                                        "F1:=left(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/$M/RID;M:=array_d(M:*),F1:=array_d(F1:*)@sort(RID)"
+                                    ].join("/"),
+                                    read: {
+                                        length: 1,
+                                        firstID: 2
+                                    }
+                                }
+                            ]
                         );
                     });
 
                     // prefix with different end column
-                    describe("case 3", function () {
+                    describe("case 3 (null)", function () {
                         testReadAndReadPath(
                             {
                                 "and": [
@@ -2636,7 +2812,38 @@ exports.execute = function (options) {
                                 "M_P1:=(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/id=2/$M",
                                 "$M_P1/F3:=left(fk_to_path_prefix_o1_o1_o1)=(faceting_schema:path_prefix_o1_o1_o1:id)/$M",
                                 "RID;M:=array_d(M:*),F3:=F3:path_prefix_o1_o1_o1_col,F2:=M_P1:path_prefix_o1_o1_col,F1:=M_P2:path_prefix_o1_col@sort(RID)"
-                            ].join("/")
+                            ].join("/"),
+                            [
+                                {
+                                    facetIndex: 21,
+                                    // the facet in url doesn't match with this facetColumn anymore
+                                    sourceReadPath: [
+                                        "faceting_schema:path_prefix_o1_o1_i1/path_prefix_o1_o1_i1_col=one_o1_o1_i1;path_prefix_o1_o1_i1_col::null::",
+                                        "(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/(id)=(faceting_schema:path_prefix_o1:fk_to_path_prefix_o1_o1)",
+                                        "T:=right(id)=(faceting_schema:main:fk_to_path_prefix_o1)",
+                                        "T_P1:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)/M:=(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/id=2/$T",
+                                        "$M/F1:=left(fk_to_path_prefix_o1_o1_o1)=(faceting_schema:path_prefix_o1_o1_o1:id)/$M/RID;M:=array_d(M:*),F1:=array_d(F1:*)@sort(RID)"
+                                    ].join("/"),
+                                    read: {
+                                        length: 1,
+                                        firstID: 2
+                                    }
+                                },
+                                {
+                                    facetIndex: 22,
+                                    sourceReadPath: [
+                                        "T:=faceting_schema:main",
+                                        // NOTE T_P2 is not needed but code doesn't handle it
+                                        "T_P2:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)/T_P1:=(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/id=2/$T",
+                                        "$T_P1/M:=(id)=(faceting_schema:path_prefix_o1_o1_i1:fk_to_path_prefix_o1_o1)",
+                                        "F1:=left(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/$M/RID;M:=array_d(M:*),F1:=array_d(F1:*)@sort(RID)"
+                                    ].join("/"),
+                                    read: {
+                                        length: 1,
+                                        firstID: 2
+                                    }
+                                }
+                            ]
                         );
                     });
 
@@ -2644,8 +2851,11 @@ exports.execute = function (options) {
             });
 
             /**
-             * NOTE filters cannot be used in visbile-columns
-             * and we just want to make sure the read path properly shares path for them
+             * NOTE filters used all-outbounds/local columns of visible-columns
+             *      will produce a separate request and won't be part of all-outbounds
+             *      added to the URL, so we don't need to test them in combination of each other
+             * and we just want to make sure the read path properly shares path for them.
+             * that's why the following is separated from the above.
              */
             describe('regarding usage of filter in source with path prefix,', function () {
                 var currRef;

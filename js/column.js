@@ -3053,15 +3053,10 @@ FacetColumn.prototype = {
     /**
      * uncontextualized {@link ERMrest.Reference} that has all the joins specified
      * in the source with all the filters of other FacetColumns in the reference.
+     * 
+     * The returned reference will be in the following format:
+     * <main-table>/<facets of main table except current facet>/<path to current facet>
      *
-     * NOTE needs refactoring,
-     * This should return a reference that referes to the current column's table
-     * having filters from other facetcolumns.
-     * We should not use the absolute path for the table and it must be a path
-     * from main to this table. Because if we use the absolute path we're completely
-     * ignoring the constraints that the main table will add to this reference.
-     * (For example if maximum possible value for this column is 100 but there's
-     * no data from the main that will leads to this maximum.)
      *
      * Consider the following scenario:
      * Table T has two foreignkeys to R1 (fk1), R2 (fk2), and R3 (fk3).
@@ -3069,19 +3064,24 @@ FacetColumn.prototype = {
      * Then the source reference for R3 will be the following:
      * T:=S:T/(fk1)/term=1/$T/(fk2)/term2/$T/M:=(fk3)
      * As you can see it has all the filters of the main table + join to current table.
-     *
-     * NOTE: assumptions:
-     *  - The main reference has no join.
-     *  - The returned reference has problem with faceting (cannot show faceting).
+     * 
+     * Notes:
+     * - This function used to reverse the path from the current facet to each of the
+     *   other facets in the main reference. Since this was very inefficient, we decided
+     *   to rewrite it to start from the main table instead.
+     * - The path from the main table to facet is based on the given column directive and
+     *   therefore might have filters or reused table instances (shared path). That's why
+     *   we're ensuring to pass the whole facetObjectWrapper to parser, so it can properly
+     *   parse it.
+     * 
      *
      * @type {ERMrest.Reference}
      */
     get sourceReference () {
         if (this._sourceReference === undefined) {
             var jsonFilters = [],
-                pathFromSource = [], // the path from source reference to this facetColumn
                 self = this,
-                table = this.reference.table,
+                table = this._column.table,
                 loc = this.reference.location;
 
 
@@ -3117,6 +3117,7 @@ FacetColumn.prototype = {
             }
 
             // add custom facets as the facets of the parent
+            var alias =  module._parserAliases.JOIN_TABLE_PREFIX + (newLoc.hasJoin ? newLoc.pathParts.length : "");
             if (loc.customFacets) {
                 //NOTE this is just a hack, and since the whole feature is just a hack it's fine.
                 // In the ermrest_path we're allowing them to use the M alias. In here, we are making
@@ -3135,21 +3136,33 @@ FacetColumn.prototype = {
                 if (cfacet.ermrest_path && self.sourceObjectNodes.length > 0) {
                     // switch the alias names, the cfacet is originally written with the assumption of
                     // the main table having "M" alias. So we just have to swap the aliases.
-                    var alias = "T" + (newLoc.hasJoin ? newLoc.pathParts.length : "");
-                    cfacet.ermrest_path = cfacet.ermrest_path.replace(/\$\M/g, "$" + alias);
+                    var mainAlias = module._parserAliases.MAIN_TABLE;
+                    cfacet.ermrest_path = cfacet.ermrest_path.replaceAll("$" + mainAlias, "$" + alias);
                 }
                 newLoc.customFacets = cfacet;
             }
-
-            // create a path from reference to this facetColumn
-            pathFromSource = self._facetObjectWrapper.toString(false, false);
-
-            var uri = newLoc.compactUri;
-            if (pathFromSource.length > 0) {
-                uri += "/" + pathFromSource;
+            
+            /**
+             * if it has path, we have to pass the whole facetObjectWrapper
+             * as a join. this is so we can properly share path
+             */
+            if (self.hasPath) {
+                newLoc = newLoc.addJoin(
+                    self._facetObjectWrapper,
+                    table.schema.name,
+                    table.name
+                );
+            } 
+            // if it only has filter (and no path, then we can just add the filter to path)
+            else if (self._facetObjectWrapper.isFiltered) {
+                // TODO can this be improved?
+                var filterPath = self._facetObjectWrapper.toString(false, false);
+                if (filterPath.length > 0) {
+                    newLoc = module.parse(newLoc.compactUri + "/" + filterPath);
+                }
             }
 
-            this._sourceReference = new Reference(module.parse(uri), table.schema.catalog);
+            this._sourceReference = new Reference(newLoc, table.schema.catalog);
         }
         return this._sourceReference;
     },
