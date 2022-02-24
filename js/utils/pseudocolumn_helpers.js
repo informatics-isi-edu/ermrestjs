@@ -61,14 +61,14 @@
         },
 
         // parse search constraint
-        parseSearch: function (search, column) {
+        parseSearch: function (search, column, alias) {
             var res, invalid = false;
             res = search.reduce(function (prev, curr, i) {
                 if (curr == null) {
                     invalid = true;
                     return "";
                 } else {
-                    return prev + (i !== 0 ? ";": "") + _convertSearchTermToFilter(_renderFacetHelpers.valueToString(curr), column);
+                    return prev + (i !== 0 ? ";": "") + _convertSearchTermToFilter(_renderFacetHelpers.valueToString(curr), column, alias);
                 }
             }, "");
 
