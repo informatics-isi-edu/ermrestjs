@@ -117,7 +117,7 @@ exports.execute = function (options) {
                 reference2 = reference1.search("\"hanks\" 111111");
                 expect(reference2.location.searchTerm).toBe("\"hanks\" 111111", "searchTerm missmatch.");
                 expect(reference2.location.ermrestCompactPath).toBe(
-                    path + "*::ciregexp::hanks&*::ciregexp::" +  options.ermRest._fixedEncodeURIComponent(intRegexPrefix + "111111" + intRegexSuffix) + "/$M",
+                    path + "*::ciregexp::hanks&*::ciregexp::" +  options.ermRest._fixedEncodeURIComponent(intRegexPrefix + "111111" + intRegexSuffix),
                     "ermrestCompactPath missmatch."
                 );
 
@@ -148,7 +148,7 @@ exports.execute = function (options) {
                 reference2 = reference1.search(searchTerm);
                 expect(reference2.location.searchTerm).toBe(searchTerm, "searchTerm missmatch.");
                 expect(reference2.location.ermrestCompactPath).toBe(
-                    path + "*::ciregexp::" + options.ermRest._fixedEncodeURIComponent(intRegexPrefix + searchTerm + intRegexSuffix) + "/$M",
+                    path + "*::ciregexp::" + options.ermRest._fixedEncodeURIComponent(intRegexPrefix + searchTerm + intRegexSuffix),
                     "ermrestCompactPath missmatch."
                 );
 
@@ -178,7 +178,7 @@ exports.execute = function (options) {
                 expect(reference2.location.searchTerm).toBe(searchTerm, "searchTerm missmatch.");
                 // Can't use searchTerm in the encode function because the term has to be regular expression encoded first, '\' is the regex escape character
                 expect(reference2.location.ermrestCompactPath).toBe(
-                    path + "*::ciregexp::" + options.ermRest._fixedEncodeURIComponent(floatRegexPrefix + "11\\.1") + "/$M",
+                    path + "*::ciregexp::" + options.ermRest._fixedEncodeURIComponent(floatRegexPrefix + "11\\.1"),
                     "ermrestCompactPath missmatch."
                 );
 
@@ -209,7 +209,7 @@ exports.execute = function (options) {
                 expect(reference2.location.searchTerm).toBe(searchTerm, "searchTerm missmatch.");
                 // Can't use searchTerm in the encode function because the term has to be regular expression encoded first, '\' is the regex escape character
                 expect(reference2.location.ermrestCompactPath).toBe(
-                    path + "*::ciregexp::" + options.ermRest._fixedEncodeURIComponent(floatRegexPrefix + "11\\.") + "/$M",
+                    path + "*::ciregexp::" + options.ermRest._fixedEncodeURIComponent(floatRegexPrefix + "11\\."),
                     "ermrestCompactPath missmatch."
                 );
 
@@ -239,7 +239,7 @@ exports.execute = function (options) {
                 expect(reference2.location.searchTerm).toBe(searchTerm, "searchTerm missmatch.");
                 // Can't use searchTerm in the encode function because the term has to be regular expression encoded first, '\' is the regex escape character
                 expect(reference2.location.ermrestCompactPath).toBe(
-                    path + "*::ciregexp::" + options.ermRest._fixedEncodeURIComponent(floatRegexPrefix + "\\.1") + "/$M",
+                    path + "*::ciregexp::" + options.ermRest._fixedEncodeURIComponent(floatRegexPrefix + "\\.1"),
                     "ermrestCompactPath missmatch."
                 );
 
@@ -270,7 +270,7 @@ exports.execute = function (options) {
                 reference2 = reference1.search("\"harold\"");
                 expect(reference2.location.searchTerm).toBe("\"harold\"", "searchTerm missmatch.");
                 expect(reference2.location.ermrestCompactPath).toBe(
-                    path + "*::ciregexp::harold" + "/$M",
+                    path + "*::ciregexp::harold",
                     "ermrestCompactPath missmatch."
                 );
 
@@ -296,7 +296,7 @@ exports.execute = function (options) {
                 reference2 = reference1.search("\" william \"");
                 expect(reference2.location.searchTerm).toBe("\" william \"", "searchTerm missmatch.");
                 expect(reference2.location.ermrestCompactPath).toBe(
-                    path + "*::ciregexp::%20william%20" + "/$M",
+                    path + "*::ciregexp::%20william%20",
                     "ermrestCompactPath missmatch."
                 );
 
@@ -322,7 +322,7 @@ exports.execute = function (options) {
                 reference2 = reference1.search("\"wallace VIIII\"");
                 expect(reference2.location.searchTerm).toBe("\"wallace VIIII\"", "searchTerm missmatch.");
                 expect(reference2.location.ermrestCompactPath).toBe(
-                    path + "*::ciregexp::wallace%20VIIII" + "/$M",
+                    path + "*::ciregexp::wallace%20VIIII",
                     "ermrestCompactPath missmatch."
                 );
 
@@ -348,7 +348,7 @@ exports.execute = function (options) {
                 reference2 = reference1.search("\"wallace\" \"VIIII\"");
                 expect(reference2.location.searchTerm).toBe("\"wallace\" \"VIIII\"", "searchTerm missmatch.");
                 expect(reference2.location.ermrestCompactPath).toBe(
-                    path + "*::ciregexp::wallace&*::ciregexp::VIIII" + "/$M",
+                    path + "*::ciregexp::wallace&*::ciregexp::VIIII",
                     "ermrestCompactPath missmatch."
                 );
 
@@ -375,7 +375,7 @@ exports.execute = function (options) {
                 reference2 = reference1.search("\"william\" \"171717\"");
                 expect(reference2.location.searchTerm).toBe("\"william\" \"171717\"", "searchTerm missmatch.");
                 expect(reference2.location.ermrestCompactPath).toBe(
-                    path + "*::ciregexp::william&*::ciregexp::" + options.ermRest._fixedEncodeURIComponent(intRegexPrefix + "171717" + intRegexSuffix) + "/$M",
+                    path + "*::ciregexp::william&*::ciregexp::" + options.ermRest._fixedEncodeURIComponent(intRegexPrefix + "171717" + intRegexSuffix),
                     "ermrestCompactPath missmatch."
                 );
 
@@ -399,7 +399,7 @@ exports.execute = function (options) {
                 reference2 = reference1.search("\"wallace|VIIII\"");
                 expect(reference2.location.searchTerm).toBe("\"wallace|VIIII\"");
                 expect(reference2.location.ermrestCompactPath).toBe(
-                    path + "*::ciregexp::wallace%7CVIIII" + "/$M",
+                    path + "*::ciregexp::wallace%7CVIIII",
                     "ermrestCompactPath missmatch.");
 
                 reference2.read(limit).then(function (response) {
@@ -424,7 +424,7 @@ exports.execute = function (options) {
                 reference2 = reference1.search("\"harold");
                 expect(reference2.location.searchTerm).toBe("\"harold", "searchTerm missmatch.");
                 expect(reference2.location.ermrestCompactPath).toBe(
-                    path + "*::ciregexp::harold" + "/$M",
+                    path + "*::ciregexp::harold",
                     "ermrestCompactPath missmatch."
                 );
 
@@ -468,7 +468,7 @@ exports.execute = function (options) {
             it('location should have correct search parameters ', function() {
                 expect(reference3.location.searchTerm).toBe("hanks 111111", "searchTerm missmatch.");
                 expect(reference3.location.ermrestCompactPath).toBe(
-                    path + "*::ciregexp::hanks" + "&" + "*::ciregexp::" + options.ermRest._fixedEncodeURIComponent(intRegexPrefix + "111111" + intRegexSuffix) + "/$M",
+                    path + "*::ciregexp::hanks" + "&" + "*::ciregexp::" + options.ermRest._fixedEncodeURIComponent(intRegexPrefix + "111111" + intRegexSuffix),
                     "ermrestCompactPath missmatch."
                 );
             });
@@ -526,7 +526,7 @@ exports.execute = function (options) {
             schemaName = "search_schema",
             tableNameDefaultSearch = "search parser",
             tableNameCustomSearchInvalid = "table_w_custom_search_invalid",
-            tableNameCustomSearchDiffInstance = "table_w_custom_search_not_same_instance",
+            tableNameCustomSearchDiffInstanceNullok = "table_w_custom_search_not_same_instance_nullok_col",
             tableNameCustomSearchLocalCols = "table_w_custom_search_1",
             tableNameCustomSearchSinglePath = "table_w_custom_search_2",
             tableNameCustomSearchSamePrefix = "table_w_custom_search_3",
@@ -534,7 +534,7 @@ exports.execute = function (options) {
             searchTerm = "term";
 
         var searchFacet = {"and": [{"sourcekey": "search-box", "search": ["term"]}]},
-            customSearchLocalColsCompactPath = "M:=" + schemaName + ":" + tableNameCustomSearchLocalCols + "/search_col_2::ciregexp::" + searchTerm + ";search_col_1::ciregexp::" + searchTerm +"/$M",
+            customSearchLocalColsCompactPath = "M:=" + schemaName + ":" + tableNameCustomSearchLocalCols + "/search_col_2::ciregexp::" + searchTerm + ";search_col_1::ciregexp::" + searchTerm,
             customSearchSinglePathCompactPath = "M:=search_schema:table_w_custom_search_2/(id)=(search_schema:table_w_custom_search_2_vocab_assoc:fk_to_custom_search_2)/(fk_to_vocab)=(search_schema:search_vocab_table:id)/name::ciregexp::term/$M",
             customSearchSamePrefixCompactPath = "M:=search_schema:table_w_custom_search_3/(id)=(search_schema:table_w_custom_search_3_vocab_assoc:fk_to_custom_search_3)/(fk_to_vocab)=(search_schema:search_vocab_table:id)/name::ciregexp::term;second_name::ciregexp::term;third_name::ciregexp::term/$M",
             customSearchLocalColsResults = ["02", "03"],
@@ -549,7 +549,7 @@ exports.execute = function (options) {
             return res;
         }
 
-        var defaultSearchReference, invalidSearchColumnReference, invalidSearchColumnDiffInstanceReference,
+        var defaultSearchReference, invalidSearchColumnReference, invalidSearchColumnDiffInstanceReferenceNullok,
             customSearchLocalColsReference, customSearchSinglePathReference, customSearchSamePrefixReference;
 
         var testCustomSearchAPIs = function (ref, expectedColumnNames, expectedColumnDisplaynames) {
@@ -557,7 +557,7 @@ exports.execute = function (options) {
                 expect(ref.table.searchSourceDefinition).toBe(false, "searchSourceDefinition missmatch.");
                 expect(ref.searchColumns).toBe(false, "searchColumns missmatch.");
             } else {
-                var searchDef = ref.table.searchSourceDefinition;
+                var searchDef = ref.table.searchSourceDefinition.columns;
                 expect(searchDef.length).toBe(expectedColumnNames.length, "def length missmatch");
                 expect(searchDef.map(function (sd) {
                     return sd.column.name;
@@ -596,9 +596,9 @@ exports.execute = function (options) {
                 return options.ermRest.resolve(createURL(tableNameCustomSearchInvalid));
             }).then(function (ref2) {
                 invalidSearchColumnReference = ref2;
-                return options.ermRest.resolve(createURL(tableNameCustomSearchDiffInstance));
+                return options.ermRest.resolve(createURL(tableNameCustomSearchDiffInstanceNullok));
             }).then(function (ref3) {
-                invalidSearchColumnDiffInstanceReference = ref3;
+                invalidSearchColumnDiffInstanceReferenceNullok = ref3;
                 return options.ermRest.resolve(createURL(tableNameCustomSearchLocalCols));
             }).then(function (ref4) {
                 customSearchLocalColsReference = ref4;
@@ -623,8 +623,18 @@ exports.execute = function (options) {
                 testCustomSearchAPIs(invalidSearchColumnReference, false, false);
             });
 
-            it ("should return false if all columns are not the same type (local or same prefix)", function () {
-                testCustomSearchAPIs(invalidSearchColumnDiffInstanceReference, false, false);
+            describe ("should return false if we cannot guarauntee inner join for all columns.", function () {
+                // TODO
+                // it ("when at least one column has inbound fk.", function () {
+                // });
+
+                it ("when at least on column has not-nullable fk based on model.", function () {
+                    testCustomSearchAPIs(invalidSearchColumnDiffInstanceReferenceNullok, false, false);
+                });
+
+                // TODO
+                // it ("when at least on column has not-nullable fk based on acl.", function () {
+                // });
             });
 
             it ("should handle multiple local columns.", function () {
@@ -650,6 +660,10 @@ exports.execute = function (options) {
                     ["name", "second_name", "third name"]
                 );
             });
+
+            // TODO
+            // it ("should handle combination of columns that are inner join safe.", function () {
+            // });
         });
 
         describe("reference.search() method when custom search is defined, ", function () {

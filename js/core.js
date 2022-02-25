@@ -1626,7 +1626,12 @@
 
         /**
         * Returns an array of SourceObjectWrapper objects.
-        * @type {Object[]|false}
+        * The returned object will have the following properties:
+        * - columns: the search columns
+        * - allSamePathPrefix: if all using the same path prefix
+        * - pathPrefixSourcekey: the path prefix that all are using
+        * 
+        * @type {false|Object}
         */
         get searchSourceDefinition() {
             if (this._searchSourceDefinition === undefined) {
@@ -1637,29 +1642,28 @@
                  */
                 var _getSearchSourceDefinition = function (self) {
                     var consNames = module._constraintNames,
-                        sd = module._annotations.SOURCE_DEFINITIONS,
-                        sb = module._specialSourceDefinitions.SEARCH_BOX,
+                        sdAnnotName = module._annotations.SOURCE_DEFINITIONS,
+                        sbAnnotProp = module._specialSourceDefinitions.SEARCH_BOX,
                         orOperator = module._FacetsLogicalOperators.OR,
                         sbDef;
-                    var hasAnnot = self.annotations.contains(sd);
+                    var hasAnnot = self.annotations.contains(sdAnnotName);
 
-                    // annotation is missing
+                    // source-def annotation is missing
                     if (!hasAnnot) return false;
 
+                    var annot = self.annotations.get(sdAnnotName).content;
 
-                    var annot = self.annotations.get(sd).content;
+                    // source-def annotation is defined but doesn't have a valid value
+                    if (!annot) return false;
 
-                    if (!annot) {
-                        return false;
+                    // search-box directly under source-def annot
+                    if (isObjectAndNotNull(annot[sbAnnotProp])) {
+                        sbDef = annot[sbAnnotProp];
                     }
-
-                    if (isObjectAndNotNull(annot[sb])) {
-                        sbDef = annot[sb];
-                    }
-                    // backwards compatiblaity:
-                    else if (isObjectAndNotNull(annot.sources) && isObjectAndNotNull(annot.sources[sb])) {
+                    // backwards compatiblaity (search-box defined as part of sources)
+                    else if (isObjectAndNotNull(annot.sources) && isObjectAndNotNull(annot.sources[sbAnnotProp])) {
                         module._log.warn("usage of `search-box` in `sources` has been deprecated and eventually will be removed.");
-                        sbDef = annot.sources[sb];
+                        sbDef = annot.sources[sbAnnotProp];
                     }
                     // invalid format
                     else {
@@ -1680,15 +1684,16 @@
                         return false;
                     }
 
-                    var res = [], processedCols = {};
-                    sbDef[orOperator].forEach(function (src, index) {
+                    var res = [], processedCols = {}, allLocal = true, allInnerSafe = true, allSamePrefix = true, sharedPrefix = "";
+                    for (var index = 0; index < sbDef[orOperator].length; index++) {
+                        var src = sbDef[orOperator][index];
                         var pSource, sd;
 
                         if (src.sourcekey) {
                             sd = self.sourceDefinitions.sources[src.sourcekey];
                             if (!sd) {
                                 module._log.info(message + ", index=" + index + ": given sourcekey `" + src.sourcekey + "` is not valid.");
-                                return;
+                                return false;
                             }
 
                             pSource = sd.clone(src, self, consNames);
@@ -1697,78 +1702,78 @@
                                 pSource = new SourceObjectWrapper(src, self, consNames);
                             } catch(exp) {
                                 module._log.info(message + ", index=" + index + ":" + exp.message);
-                                return;
+                                return false;
                             }
                         }
 
                         if (pSource.name in processedCols) {
-                            return; // duplicate
+                            continue; // duplicate
                         }
                         processedCols[pSource.name] = true;
-                        res.push(pSource);
-                     });
+                        
+                        if (pSource.hasPath) {
+                            allLocal = false;
 
-                     if (res.length === 0) {
-                        module._log.info(message + ": none of the defined sources were valid, using all the columns.");
-                        return false;
-                     }
+                            // whether all the paths are inner join safe
+                            allInnerSafe = allInnerSafe && pSource.isAllOutboundNotNull;
 
-                    // if there are more than one search columns,
-                    // they all must come from the same table instance:
-                    // either local, or same path prefix
-                    if (res.length > 1) {
-                        // true: local, string: a prefix (or sourcekey), otherwise: invalid
-                        var isLocalOrGetPrefixSK = function (col) {
-                            if (!col.hasPath) {
-                                return true;
-                            }
-
-                            if (col.sourceObject && isStringAndNotEmpty(col.sourceObject.sourcekey)) {
-                                return col.sourceObject.sourcekey;
-                            }
-
-                            firstNode = col.sourceObjectNodes[0];
-                            if (!firstNode.isPathPrefix && col.foreignKeyPathLength !== firstNode.nodeObject.foreignKeyPathLength) {
-                                return false;
-                            }
-                            return firstNode.pathPrefixSourcekey;
-                        };
-
-                        var allLocal = false, prefixSK = "";
-                        var allSameInstsance = res.every(function (col, i) {
-                            var res = isLocalOrGetPrefixSK(col);
-
-                            if (res === false) return false;
-
-                            // set the values based on the first element
-                            if (i === 0) {
-                                if (res === true) {
-                                    allLocal = true;
+                            // check for the same prefix
+                            if (allSamePrefix) {
+                                // get the prefix of the current column directive
+                                var currPrefix;
+                                if (pSource.sourceObject && isStringAndNotEmpty(pSource.sourceObject.sourcekey)) {
+                                    currPrefix = pSource.sourceObject.sourcekey;
+                                } else {
+                                    var firstNode = pSource.sourceObjectNodes[0];
+                                    if (firstNode.isPathPrefix && pSource.foreignKeyPathLength === firstNode.nodeObject.foreignKeyPathLength) {
+                                        currPrefix = firstNode.pathPrefixSourcekey;
+                                    }
                                 }
-                                prefixSK = res;
-                                return true;
-                            }
 
-                            // if first was local, all the others must be local
-                            if (allLocal) {
-                                return res === true;
+                                // if it wasn't using prefix, then set it to false
+                                if (!currPrefix) {
+                                    allSamePrefix = false;
+                                }
+                                // make sure this prefix is the same as the other ones.
+                                else {
+                                    if (index === 0) {
+                                        sharedPrefix = currPrefix;
+                                    } else {
+                                        allSamePrefix = sharedPrefix == currPrefix;
+                                    }
+                                }
                             }
-                            return res == prefixSK;
-                        });
-
-                        if (!allSameInstsance) {
-                            module._log.info(message + ": all the search columns must come from the same table instance.");
-                            return false;
                         }
+
+                        res.push(pSource);
                     }
 
-                    return res;
+                    if (res.length === 0) {
+                        module._log.info(message + ": none of the defined sources were valid, using all the columns.");
+                        return false;
+                    }
+
+                    if (res.length > 1 && !allSamePrefix && !allInnerSafe) {
+                        module._log.info(message + ": all the search columns must be inner join safe or come from the same table instance.");
+                        return false;
+                    }
+
+                    if (!allSamePrefix) {
+                        sharedPrefix = "";
+                    }
+
+                    return {
+                        columns: res, 
+                        allLocal: allLocal,
+                        allSamePathPrefix: allSamePrefix, 
+                        pathPrefixSourcekey: sharedPrefix
+                    };
                 };
 
                 this._searchSourceDefinition = _getSearchSourceDefinition(this);
             }
             return this._searchSourceDefinition;
-         },
+        },
 
         // build foreignKeys of this table and referredBy of corresponding tables.
         _buildForeignKeys: function () {
@@ -4259,6 +4264,43 @@
             }
 
             return this._display[context];
+        },
+
+        /**
+         * Whether all the columns in the relationship are not-nullable,
+         *  - nullok: false
+         *  - select: true
+         * @type {Boolean}
+         */
+        get isNotNull() {
+            if (this._isNotNull === undefined) {
+                var colsetNotNull = function (colset) {
+                    return colset.columns.every(function (col) {
+                        return !col.nullok && col.rights.select === true;
+                    });
+                };
+
+                return colsetNotNull(this.colset) && colsetNotNull(this.key.colset);
+            }
+            return this._isNotNull;
+        },
+
+        /**
+         * Whether all the columns in the relationship are not-nullable per model,
+         *  - nullok: false
+         * @type {Boolean}
+         */
+        get isNotNullPerModel() {
+            if (this._isNotNullPerModel === undefined) {
+                var colsetNotNull = function (colset) {
+                    return colset.columns.every(function (col) {
+                        return !col.nullok;
+                    });
+                };
+
+                return colsetNotNull(this.colset) && colsetNotNull(this.key.colset);
+            }
+            return this._isNotNullPerModel;
         }
     };
 

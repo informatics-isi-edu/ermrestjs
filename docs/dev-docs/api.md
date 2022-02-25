@@ -168,7 +168,7 @@ to use for ERMrest JavaScript agents.
             * [.stableKey](#ERMrest.Table+stableKey) : [<code>Array.&lt;Column&gt;</code>](#ERMrest.Column)
             * [.uri](#ERMrest.Table+uri) : <code>string</code>
             * [.sourceDefinitions](#ERMrest.Table+sourceDefinitions) : <code>Object</code>
-            * [.searchSourceDefinition](#ERMrest.Table+searchSourceDefinition) : <code>Array.&lt;Object&gt;</code> \| <code>false</code>
+            * [.searchSourceDefinition](#ERMrest.Table+searchSourceDefinition) : <code>false</code> \| <code>Object</code>
                 * [~_getSearchSourceDefinition()](#ERMrest.Table+searchSourceDefinition.._getSearchSourceDefinition)
             * [.pureBinaryForeignKeys](#ERMrest.Table+pureBinaryForeignKeys) : [<code>Array.&lt;ForeignKeyRef&gt;</code>](#ERMrest.ForeignKeyRef)
             * [._getRowDisplayKey(context)](#ERMrest.Table+_getRowDisplayKey)
@@ -301,6 +301,8 @@ to use for ERMrest JavaScript agents.
         * [.compressedDataSource](#ERMrest.ForeignKeyRef+compressedDataSource)
         * [.name](#ERMrest.ForeignKeyRef+name) : <code>string</code>
         * [.simple](#ERMrest.ForeignKeyRef+simple) : <code>Boolean</code>
+        * [.isNotNull](#ERMrest.ForeignKeyRef+isNotNull) : <code>Boolean</code>
+        * [.isNotNullPerModel](#ERMrest.ForeignKeyRef+isNotNullPerModel) : <code>Boolean</code>
         * [.toString(reverse, isLeft)](#ERMrest.ForeignKeyRef+toString) ⇒ <code>string</code>
         * [.getDomainValues(limit)](#ERMrest.ForeignKeyRef+getDomainValues) ⇒ <code>Promise</code>
     * [.Type](#ERMrest.Type)
@@ -548,7 +550,6 @@ to use for ERMrest JavaScript agents.
         * [.isEntityMode](#ERMrest.FacetColumn+isEntityMode) : <code>Boolean</code>
         * [.isOpen](#ERMrest.FacetColumn+isOpen) : <code>Boolean</code>
         * [.preferredMode](#ERMrest.FacetColumn+preferredMode) : <code>string</code>
-        * [.isAllOutboundNotNull](#ERMrest.FacetColumn+isAllOutboundNotNull) : <code>Boolean</code>
         * [.barPlot](#ERMrest.FacetColumn+barPlot) : <code>Boolean</code>
         * [.histogramBucketCount](#ERMrest.FacetColumn+histogramBucketCount) : <code>Integer</code>
         * [.column](#ERMrest.FacetColumn+column) : [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)
@@ -1228,7 +1229,7 @@ check for table name existence
         * [.stableKey](#ERMrest.Table+stableKey) : [<code>Array.&lt;Column&gt;</code>](#ERMrest.Column)
         * [.uri](#ERMrest.Table+uri) : <code>string</code>
         * [.sourceDefinitions](#ERMrest.Table+sourceDefinitions) : <code>Object</code>
-        * [.searchSourceDefinition](#ERMrest.Table+searchSourceDefinition) : <code>Array.&lt;Object&gt;</code> \| <code>false</code>
+        * [.searchSourceDefinition](#ERMrest.Table+searchSourceDefinition) : <code>false</code> \| <code>Object</code>
             * [~_getSearchSourceDefinition()](#ERMrest.Table+searchSourceDefinition.._getSearchSourceDefinition)
         * [.pureBinaryForeignKeys](#ERMrest.Table+pureBinaryForeignKeys) : [<code>Array.&lt;ForeignKeyRef&gt;</code>](#ERMrest.ForeignKeyRef)
         * [._getRowDisplayKey(context)](#ERMrest.Table+_getRowDisplayKey)
@@ -1382,8 +1383,12 @@ Returns an object with
 **Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
 <a name="ERMrest.Table+searchSourceDefinition"></a>
 
-#### table.searchSourceDefinition : <code>Array.&lt;Object&gt;</code> \| <code>false</code>
+#### table.searchSourceDefinition : <code>false</code> \| <code>Object</code>
 Returns an array of SourceObjectWrapper objects.
+The returned object will have the following properties:
+- columns: the search columns
+- allSamePathPrefix: if all using the same path prefix
+- pathPrefixSourcekey: the path prefix that all are using
 
 **Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
 <a name="ERMrest.Table+searchSourceDefinition.._getSearchSourceDefinition"></a>
@@ -2392,6 +2397,8 @@ get the foreign key of the given column set
     * [.compressedDataSource](#ERMrest.ForeignKeyRef+compressedDataSource)
     * [.name](#ERMrest.ForeignKeyRef+name) : <code>string</code>
     * [.simple](#ERMrest.ForeignKeyRef+simple) : <code>Boolean</code>
+    * [.isNotNull](#ERMrest.ForeignKeyRef+isNotNull) : <code>Boolean</code>
+    * [.isNotNullPerModel](#ERMrest.ForeignKeyRef+isNotNullPerModel) : <code>Boolean</code>
     * [.toString(reverse, isLeft)](#ERMrest.ForeignKeyRef+toString) ⇒ <code>string</code>
     * [.getDomainValues(limit)](#ERMrest.ForeignKeyRef+getDomainValues) ⇒ <code>Promise</code>
 
@@ -2497,6 +2504,21 @@ A unique name that can be used for referring to this foreignkey.
 
 #### foreignKeyRef.simple : <code>Boolean</code>
 Indicates if the foreign key is simple (not composite)
+
+**Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
+<a name="ERMrest.ForeignKeyRef+isNotNull"></a>
+
+#### foreignKeyRef.isNotNull : <code>Boolean</code>
+Whether all the columns in the relationship are not-nullable,
+ - nullok: false
+ - select: true
+
+**Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
+<a name="ERMrest.ForeignKeyRef+isNotNullPerModel"></a>
+
+#### foreignKeyRef.isNotNullPerModel : <code>Boolean</code>
+Whether all the columns in the relationship are not-nullable per model,
+ - nullok: false
 
 **Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
 <a name="ERMrest.ForeignKeyRef+toString"></a>
@@ -5157,7 +5179,6 @@ Indicates that this related table has filters in its path
     * [.isEntityMode](#ERMrest.FacetColumn+isEntityMode) : <code>Boolean</code>
     * [.isOpen](#ERMrest.FacetColumn+isOpen) : <code>Boolean</code>
     * [.preferredMode](#ERMrest.FacetColumn+preferredMode) : <code>string</code>
-    * [.isAllOutboundNotNull](#ERMrest.FacetColumn+isAllOutboundNotNull) : <code>Boolean</code>
     * [.barPlot](#ERMrest.FacetColumn+barPlot) : <code>Boolean</code>
     * [.histogramBucketCount](#ERMrest.FacetColumn+histogramBucketCount) : <code>Integer</code>
     * [.column](#ERMrest.FacetColumn+column) : [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)
@@ -5284,17 +5305,6 @@ The logic is as follows,
 5. return ranges or choices based on the type.
 
 **Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
-<a name="ERMrest.FacetColumn+isAllOutboundNotNull"></a>
-
-#### facetColumn.isAllOutboundNotNull : <code>Boolean</code>
-Whether the facet is defining an all outbound path that the columns used
-in the path are all not-null.
-NOTE even if the column.nullok is false, ermrest could return null value for it
-if the user rights to select that column is `null`. But we decided not to check
-for that since it's not the desired behavior for us:
-https://github.com/informatics-isi-edu/ermrestjs/issues/888
-
-**Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
 <a name="ERMrest.FacetColumn+barPlot"></a>
 
 #### facetColumn.barPlot : <code>Boolean</code>
@@ -5322,14 +5332,9 @@ ReferenceColumn that this facetColumn is based on
 uncontextualized [Reference](#ERMrest.Reference) that has all the joins specified
 in the source with all the filters of other FacetColumns in the reference.
 
-NOTE needs refactoring,
-This should return a reference that referes to the current column's table
-having filters from other facetcolumns.
-We should not use the absolute path for the table and it must be a path
-from main to this table. Because if we use the absolute path we're completely
-ignoring the constraints that the main table will add to this reference.
-(For example if maximum possible value for this column is 100 but there's
-no data from the main that will leads to this maximum.)
+The returned reference will be in the following format:
+<main-table>/<facets of main table except current facet>/<path to current facet>
+
 
 Consider the following scenario:
 Table T has two foreignkeys to R1 (fk1), R2 (fk2), and R3 (fk3).
@@ -5338,9 +5343,14 @@ Then the source reference for R3 will be the following:
 T:=S:T/(fk1)/term=1/$T/(fk2)/term2/$T/M:=(fk3)
 As you can see it has all the filters of the main table + join to current table.
 
-NOTE: assumptions:
- - The main reference has no join.
- - The returned reference has problem with faceting (cannot show faceting).
+Notes:
+- This function used to reverse the path from the current facet to each of the
+  other facets in the main reference. Since this was very inefficient, we decided
+  to rewrite it to start from the main table instead.
+- The path from the main table to facet is based on the given column directive and
+  therefore might have filters or reused table instances (shared path). That's why
+  we're ensuring to pass the whole facetObjectWrapper to parser, so it can properly
+  parse it.
 
 **Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
 <a name="ERMrest.FacetColumn+displayname"></a>
