@@ -1883,7 +1883,7 @@ exports.execute = function (options) {
                     checkSourceReference(
                         "mainTable, index=0, with search",
                         ref.facetColumns[5],
-                        "M:=faceting_schema:main/*::ciregexp::sometext/$M/id=1/$M/int_col::geq::-2",
+                        "M:=faceting_schema:main/*::ciregexp::sometext/id=1/$M/int_col::geq::-2/$M",
                         "text_col"
                     );
                 });
