@@ -866,8 +866,9 @@ Supported _searchcolumn_ pattern:
       - `markdown_name`: The client will show the displayname of columns as placeholder in the search box. To modify this default behavior, you can use this attribute.
 
       While we allow defining a list of search columns, only the following combination of search columns are supported:
-        - A list containing only one source.
-          ```javascript
+      
+      - A list containing only one source.
+        ```javascript
           {
             "or": [
               {"source": <any valid path>}
@@ -891,8 +892,20 @@ Supported _searchcolumn_ pattern:
           ]
         }
         ```
+      - A list of column directives that we can safely use inner join for each one of them. This includes,
+        - Local columns
+        - All outbound paths that all the columns used in the foreign key relationships cannot be null. This means that the columns are `"nullok": false` per model and the user has static `select` access to the column.
+        ```javascript
+        {
+          "or": [
+            {"source": "col1"},
+            {"source": [{"outbound": ["schema", "const1"]}, "RID"]},
+            {"source": [{"outbound": ["schema", "const2"]}, {"outbound": ["schema", "const2"]}, "id"]},
+          ]
+        }
+        ```
 
-  Other combinations will be ignored and client will fallback to the default behavior.
+      Other combinations will be ignored and client will fallback to the default behavior (searching all the local columns).
 
 Supported _fkeylist_ patterns:
 
