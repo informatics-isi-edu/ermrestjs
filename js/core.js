@@ -1629,7 +1629,6 @@
         * The returned object will have the following properties:
         * - columns: the search columns
         * - allSamePathPrefix: if all using the same path prefix
-        * - pathPrefixSourcekey: the path prefix that all are using
         * 
         * @type {false|Object}
         */
@@ -1765,10 +1764,8 @@
                     }
 
                     return {
-                        columns: res, 
-                        allLocal: allLocal,
-                        allSamePathPrefix: allSamePrefix, 
-                        pathPrefixSourcekey: sharedPrefix
+                        columns: res,
+                        allSamePathPrefix: allSamePrefix
                     };
                 };
 

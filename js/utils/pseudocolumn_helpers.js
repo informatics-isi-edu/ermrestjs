@@ -1,3 +1,7 @@
+    /**
+     * The functions that are used by _renderFacet
+     * @ignore
+     */
     _renderFacetHelpers = {
         hasNullChoice: function (term) {
             var choice = module._facetFilterTypes.CHOICE;
@@ -75,7 +79,27 @@
             return invalid ? "" : res;
         },
 
-        // parse the facet part related to main search-box
+        /**
+         * parse the search box
+         * Depending on the definition of `search-box`, the returned path might
+         * include additional join statment for the column directives needed defined
+         * in the `search-box`.
+         * 
+         * Implementaion notes:
+         * - Related to additional aliases added by this function:
+         *   - If all the column directives are sharing the same prefix or 
+         *     the `search-box` is consist of just one column, 
+         *     this will not add any additional alias to the added join statment.
+         *   - Otherwise it will add aliases in the `<root-alias>_S<number>` format
+         * - There's no need to reset the path after this string as it will properly
+         *   handle it. 
+         * 
+         * @param {string} search  the search term
+         * @param {ERMrest.Table} rootTable the root table
+         * @param {string} alias the alias for the root table
+         * @param {Object} pathPrefixAliasMapping the path prefix alias mapping object (used for sharing prefix)
+         * @returns the path that represents the search and join statments needed for search
+         */
         parseSearchBox: function (search, rootTable, alias, pathPrefixAliasMapping) {
             // by default we're going to apply search to all the columns
             var searchColumns = [{name: "*"}], path = "", searchDef,
@@ -89,7 +113,7 @@
                 * alias:
                 * - length=1 -> no alias is needed, $M should be added after the whole thing
                 * - all same path prefix -> same as above
-                * - mix/match -> we need alias, $M should be added after each
+                * - mix/match -> we need alias, $M should be added after each path to reset
                 */
                 addAliasPerPath = searchDef.columns.length > 1 && !searchDef.allSamePathPrefix;
                 searchColumns = searchDef.columns.map(function (sd, i) {
@@ -220,6 +244,8 @@
      * - successful: Boolean (true means successful, false means cannot be parsed).
      * - parsed: String  (if the given string was parsable).
      * - message: String (if the given string was not parsable)
+     * 
+     * @ignore
      */
     _renderFacet = function(json, alias, schemaName, tableName, catalogId, catalogObject, usedSourceObjects, forcedAliases, consNames) {
         var facetErrors = module._facetingErrors;
