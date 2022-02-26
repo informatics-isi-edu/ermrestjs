@@ -1720,7 +1720,7 @@
                             // check for the same prefix
                             if (allSamePrefix) {
                                 // get the prefix of the current column directive
-                                var currPrefix;
+                                var currPrefix = null;
                                 if (pSource.sourceObject && isStringAndNotEmpty(pSource.sourceObject.sourcekey)) {
                                     currPrefix = pSource.sourceObject.sourcekey;
                                 } else {
@@ -1743,6 +1743,8 @@
                                     }
                                 }
                             }
+                        } else {
+                            allSamePrefix = false;
                         }
 
                         res.push(pSource);

@@ -78,7 +78,8 @@
         // parse the facet part related to main search-box
         parseSearchBox: function (search, rootTable, alias, pathPrefixAliasMapping) {
             // by default we're going to apply search to all the columns
-            var searchColumns = [{name: "*"}], path = "", searchDef, usedAlias = "", addAliasPerPath = false;
+            var searchColumns = [{name: "*"}], path = "", searchDef,
+                usedAlias = "", proposedAlias = "", addAliasPerPath = false, addedAliasIndex = 1;
 
             // map to the search columns, if they are defined
             if (rootTable && rootTable.searchSourceDefinition) {
@@ -95,7 +96,12 @@
                     usedAlias = "";
 
                     // getting the path from the first one is enough
-                    if (sd.hasPath && (searchDef.allSamePathPrefix && i == 0)) {
+                    if (sd.hasPath && (!searchDef.allSamePathPrefix || (searchDef.allSamePathPrefix && i == 0))) {
+                        // TODO the alias could be improved
+                        // currently this is not following the same alias as other shared prefixes
+                        // and instead doing a new convention for search which could later be merged with each other.
+                        proposedAlias = addAliasPerPath ? alias + "_S" + (addedAliasIndex++) : null;
+                        
                         var pathRes = _sourceColumnHelpers.parseSourceNodesWithAliasMapping(
                             sd.sourceObjectNodes,
                             sd.lastForeignKeyNode,
@@ -104,8 +110,7 @@
                             pathPrefixAliasMapping,
                             alias,
                             false,
-                            // TODO better alias
-                            addAliasPerPath ? alias + "_S" + (i+1) : null
+                            proposedAlias
                         );
 
                         // if it didn't produce a join path and only alias reset, ignore it
@@ -115,6 +120,9 @@
 
                         // if we wanted to add alias then use it
                         usedAlias = addAliasPerPath ? pathRes.usedOutAlias : "";
+                        if (proposedAlias && usedAlias != proposedAlias) {
+                            addedAliasIndex--;
+                        }
                     }
 
                     return {name: sd.column.name, alias: usedAlias};
@@ -1627,9 +1635,10 @@
          * @param {*} foreignKeyPathLength - the foreignkey path length
          * @param {*} sourcekey
          * @param {*} pathPrefixAliasMapping
+         * @param {string} mainTableAlias
          * @param {*} outAlias
          */
-        parseAllOutBoundNodes: function (sourceNodes, lastForeignKeyNode, foreignKeyPathLength, sourcekey, pathPrefixAliasMapping, outAlias, mainTableAlias) {
+        parseAllOutBoundNodes: function (sourceNodes, lastForeignKeyNode, foreignKeyPathLength, sourcekey, pathPrefixAliasMapping, mainTableAlias, outAlias) {
             var usedOutAlias;
 
             // TODO could be improved, we don't need to return any path
@@ -1691,8 +1700,8 @@
                         sn.nodeObject.foreignKeyPathLength,
                         sn.pathPrefixSourcekey,
                         pathPrefixAliasMapping,
-                        prefixAlias,
-                        mainTableAlias
+                        mainTableAlias,
+                        prefixAlias
                     );
 
                     // we should first parse the existing and then add it to list

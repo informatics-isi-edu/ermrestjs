@@ -4330,8 +4330,8 @@
                         allOutBounds[l].foreignKeyPathLength,
                         sourcekey,
                         pathPrefixAliasMapping,
-                        outAlias,
-                        mainTableAlias
+                        mainTableAlias,
+                        outAlias
                     );
                 };
 
