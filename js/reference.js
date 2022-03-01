@@ -73,7 +73,7 @@
      * @param {object}
      */
     module.setClientSession = function (session) {
-        module._session = session;
+        module._session = module._simpleDeepCopy(session);
     };
 
 
