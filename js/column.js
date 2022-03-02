@@ -2978,31 +2978,6 @@ FacetColumn.prototype = {
     },
 
     /**
-     * Whether the facet is defining an all outbound path that the columns used
-     * in the path are all not-null.
-     * NOTE even if the column.nullok is false, ermrest could return null value for it
-     * if the user rights to select that column is `null`. But we decided not to check
-     * for that since it's not the desired behavior for us:
-     * https://github.com/informatics-isi-edu/ermrestjs/issues/888
-     * @type {Boolean}
-     */
-    get isAllOutboundNotNull () {
-        if (this._isAllOutboundNotNull === undefined) {
-            var colsetNotNull = function (colset) {
-                return colset.columns.every(function (col) {
-                    return !col.nullok;
-                });
-            };
-
-            // TODO what about path prefix??
-            this._isAllOutboundNotNull = this.sourceObjectNodes.length > 0 && this.sourceObjectNodes.every(function (fk) {
-                return !fk.isForeignKey || (!fk.isInbound && colsetNotNull(fk.nodeObject.colset) && colsetNotNull(fk.nodeObject.key.colset));
-            });
-        }
-        return this._isAllOutboundNotNull;
-    },
-
-    /**
      * Returns true if the plotly histogram graph should be shown in the UI
      * If _facetObject.barPlot is not defined, the value is true. By default
      * the histogram should be shown unless specified otherwise
@@ -3314,7 +3289,7 @@ FacetColumn.prototype = {
                 }
 
                 // G5
-                if (self.isAllOutboundNotNull) {
+                if (self._facetObjectWrapper.isAllOutboundNotNullPerModel) {
                     return true;
                 }
 
@@ -3367,7 +3342,7 @@ FacetColumn.prototype = {
                 }
 
                 //if all outbound not-null don't show it.
-                return self.isAllOutboundNotNull;
+                return self._facetObjectWrapper.isAllOutboundNotNullPerModel;
             };
 
             this._hideNotNullChoice = getHideNotNull(this);

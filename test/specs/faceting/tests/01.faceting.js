@@ -1875,7 +1875,7 @@ exports.execute = function (options) {
                     checkSourceReference(
                         "secondpath_2, index=0",
                         refSP2.facetColumns[0],
-                        "M:=faceting_schema:secondpath_2/*::ciregexp::term/$M",
+                        "M:=faceting_schema:secondpath_2/*::ciregexp::term",
                         "id"
                     );
 
@@ -1883,7 +1883,7 @@ exports.execute = function (options) {
                     checkSourceReference(
                         "mainTable, index=0, with search",
                         ref.facetColumns[5],
-                        "M:=faceting_schema:main/*::ciregexp::sometext/$M/id=1/$M/int_col::geq::-2/$M",
+                        "M:=faceting_schema:main/*::ciregexp::sometext/id=1/$M/int_col::geq::-2/$M",
                         "text_col"
                     );
                 });

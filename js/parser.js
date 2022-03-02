@@ -1444,9 +1444,12 @@
      * @return {string} corresponding ermrest filter
      * @private
      */
-    _convertSearchTermToFilter = function (term, column) {
+    _convertSearchTermToFilter = function (term, column, alias) {
         var filterString = "";
         column = (typeof column !== 'string' || column === "*") ? "*": module._fixedEncodeURIComponent(column);
+        if (isStringAndNotEmpty(alias)) {
+            column = alias + ":" + column;
+        }
 
         if (term && term !== "") {
             // add a quote to the end if string has an odd amount

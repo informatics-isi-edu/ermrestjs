@@ -1,0 +1,52 @@
+[
+  {
+    "id": "01",
+    "main name": "with term",
+    "main second_name": "",
+    "fk_to_vocab": "01",
+    "fk_to_table_w_custom_search_multiple_w_inbound": "01"
+  },
+  {
+    "id": "02",
+    "main name": "",
+    "main second_name": "",
+    "fk_to_vocab": "02",
+    "fk_to_table_w_custom_search_multiple_w_inbound": "01"
+  },
+  {
+    "id": "03",
+    "main name": "",
+    "main second_name": "has the term",
+    "fk_to_vocab": "01",
+    "fk_to_table_w_custom_search_multiple_w_inbound": "01"
+  },
+  {
+    "id": "04",
+    "main name": "",
+    "main second_name": "",
+    "fk_to_vocab": "03",
+    "fk_to_table_w_custom_search_multiple_w_inbound": "01"
+  },
+  {
+    "id": "05",
+    "main name": "",
+    "main second_name": "",
+    "fk_to_vocab": "06",
+    "fk_to_table_w_custom_search_multiple_w_inbound": "01"
+  },
+  {
+    "id": "06",
+    "main name": "",
+    "main second_name": "",
+    "fk_to_vocab": "07",
+    "fk_to_table_w_custom_search_multiple_w_inbound": "01"
+  },
+  {
+    "id": "07",
+    "main name": "",
+    "main second_name": "",
+    "fk_to_vocab": "02",
+    "fk_to_table_w_custom_search_multiple_w_inbound": "01"
+  }
+  
+]

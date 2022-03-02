@@ -1,3 +1,7 @@
+    /**
+     * The functions that are used by _renderFacet
+     * @ignore
+     */
     _renderFacetHelpers = {
         hasNullChoice: function (term) {
             var choice = module._facetFilterTypes.CHOICE;
@@ -61,54 +65,97 @@
         },
 
         // parse search constraint
-        parseSearch: function (search, column) {
+        parseSearch: function (search, column, alias) {
             var res, invalid = false;
             res = search.reduce(function (prev, curr, i) {
                 if (curr == null) {
                     invalid = true;
                     return "";
                 } else {
-                    return prev + (i !== 0 ? ";": "") + _convertSearchTermToFilter(_renderFacetHelpers.valueToString(curr), column);
+                    return prev + (i !== 0 ? ";": "") + _convertSearchTermToFilter(_renderFacetHelpers.valueToString(curr), column, alias);
                 }
             }, "");
 
             return invalid ? "" : res;
         },
 
-        // parse the facet part related to main search-box
+        /**
+         * parse the search box
+         * Depending on the definition of `search-box`, the returned path might
+         * include additional join statment for the column directives needed defined
+         * in the `search-box`.
+         * 
+         * Implementaion notes:
+         * - Related to additional aliases added by this function:
+         *   - If all the column directives are sharing the same prefix or 
+         *     the `search-box` is consist of just one column, 
+         *     this will not add any additional alias to the added join statment.
+         *   - Otherwise it will add aliases in the `<root-alias>_S<number>` format
+         * - There's no need to reset the path after this string as it will properly
+         *   handle it. 
+         * 
+         * @param {string} search  the search term
+         * @param {ERMrest.Table} rootTable the root table
+         * @param {string} alias the alias for the root table
+         * @param {Object} pathPrefixAliasMapping the path prefix alias mapping object (used for sharing prefix)
+         * @returns the path that represents the search and join statments needed for search
+         */
         parseSearchBox: function (search, rootTable, alias, pathPrefixAliasMapping) {
             // by default we're going to apply search to all the columns
-            var searchColumns = ["*"], path = "", searchDefCols;
+            var searchColumns = [{name: "*"}], path = "", searchDef,
+                usedAlias = "", proposedAlias = "", addAliasPerPath = false, addedAliasIndex = 1;
 
             // map to the search columns, if they are defined
-            if (rootTable && Array.isArray(rootTable.searchSourceDefinition)) {
-                searchDefCols = rootTable.searchSourceDefinition;
-                searchColumns = searchDefCols.map(function (sd, i) {
+            if (rootTable && rootTable.searchSourceDefinition) {
+                searchDef = rootTable.searchSourceDefinition;
+
+                /**
+                * alias:
+                * - length=1 -> no alias is needed, $M should be added after the whole thing
+                * - all same path prefix -> same as above
+                * - mix/match -> we need alias, $M should be added after each path to reset
+                */
+                addAliasPerPath = searchDef.columns.length > 1 && !searchDef.allSamePathPrefix;
+                searchColumns = searchDef.columns.map(function (sd, i) {
+                    usedAlias = "";
+
                     // getting the path from the first one is enough
-                    if (i === 0 && sd.hasPath) {
-                        path = _sourceColumnHelpers.parseSourceNodesWithAliasMapping(
+                    if (sd.hasPath && (!searchDef.allSamePathPrefix || (searchDef.allSamePathPrefix && i == 0))) {
+                        // TODO the alias could be improved
+                        // currently this is not following the same alias as other shared prefixes
+                        // and instead doing a new convention for search which could later be merged with each other.
+                        proposedAlias = addAliasPerPath ? alias + "_S" + (addedAliasIndex++) : null;
+                        
+                        var pathRes = _sourceColumnHelpers.parseSourceNodesWithAliasMapping(
                             sd.sourceObjectNodes,
                             sd.lastForeignKeyNode,
                             sd.foreignKeyPathLength,
                             sd.sourceObject && isStringAndNotEmpty(sd.sourceObject.sourcekey) ? sd.sourceObject.sourcekey : null,
                             pathPrefixAliasMapping,
-                            alias
-                        ).path;
+                            alias,
+                            false,
+                            proposedAlias
+                        );
 
-                        if (path.length > 0) {
-                            path += "/";
+                        // if it didn't produce a join path and only alias reset, ignore it
+                        if (pathRes.path.length > 0 && pathRes.path != ("$" + pathRes.usedOutAlias)) {
+                            path += pathRes.path + (addAliasPerPath ? ("/$" + alias) : "") + "/";
+                        }
+
+                        // if we wanted to add alias then use it
+                        usedAlias = addAliasPerPath ? pathRes.usedOutAlias : "";
+                        if (proposedAlias && usedAlias != proposedAlias) {
+                            addedAliasIndex--;
                         }
                     }
 
-                    return sd.column.name;
+                    return {name: sd.column.name, alias: usedAlias};
                 });
             }
 
-            return path + searchColumns.map(function (cname) {
-                return _renderFacetHelpers.parseSearch(search, cname);
-            }).join(";");
-            // TODO alias is always added but it could be conditional:
-            // (path.length > 0 ?  "/$" + alias : "")
+            return path + searchColumns.map(function (col) {
+                return _renderFacetHelpers.parseSearch(search, col.name, col.alias);
+            }).join(";") + ((!addAliasPerPath && path.length > 0) ? ("/$" + alias) : "");
         },
 
         /**
@@ -197,6 +244,8 @@
      * - successful: Boolean (true means successful, false means cannot be parsed).
      * - parsed: String  (if the given string was parsable).
      * - message: String (if the given string was not parsable)
+     * 
+     * @ignore
      */
     _renderFacet = function(json, alias, schemaName, tableName, catalogId, catalogObject, usedSourceObjects, forcedAliases, consNames) {
         var facetErrors = module._facetingErrors;
@@ -264,7 +313,7 @@
                     }
 
                     // add the main search filter
-                    innerJoins.push(_renderFacetHelpers.parseSearchBox(term[module._facetFilterTypes.SEARCH], rootTable, alias, pathPrefixAliasMapping)+ "/$" + alias);
+                    innerJoins.push(_renderFacetHelpers.parseSearchBox(term[module._facetFilterTypes.SEARCH], rootTable, alias, pathPrefixAliasMapping));
 
                     // we can go to the next source in the and filter
                     continue;
@@ -1052,8 +1101,8 @@
             }
 
             var colName, col, colTable = table, source = sourceObject.source, sourceObjectNodes = [];
-            var hasPath = false, hasInbound = false, hasPrefix = false, isFiltered = false, foreignKeyPathLength = 0;
-            var lastForeignKeyNode, firstForeignKeyNode;
+            var hasPath = false, hasInbound = false, hasPrefix = false, isFiltered = false, isAllOutboundNotNull = false, isAllOutboundNotNullPerModel = false;
+            var lastForeignKeyNode, firstForeignKeyNode, foreignKeyPathLength = 0;
 
             // just the column name
             if (isStringAndNotEmpty(source)){
@@ -1079,6 +1128,9 @@
                 sourceObjectNodes = res.sourceObjectNodes;
                 colName = res.column.name;
                 isFiltered = res.isFiltered;
+                isAllOutboundNotNull =  res.isAllOutboundNotNull;
+                isAllOutboundNotNullPerModel = res.isAllOutboundNotNullPerModel;
+
             }  else {
                 return returnError("Invalid source definition");
             }
@@ -1118,6 +1170,9 @@
              * so for now we're not going to allow these type of pseudo-columns in visible-columns
              */
             self.isUniqueFiltered = !self.hasAggregate && self.isFiltered && (!hasPath || !hasInbound);
+
+            self.isAllOutboundNotNullPerModel = isAllOutboundNotNullPerModel;
+            self.isAllOutboundNotNull = isAllOutboundNotNull;
 
             // attach last fk
             if (lastForeignKeyNode != null) {
@@ -1321,7 +1376,8 @@
             };
 
             var i, fkAlias, constraint, isInbound, fkObj, fk, colTable = rootTable, hasInbound = false, firstForeignKeyNode, lastForeignKeyNode,
-                foreignKeyPathLength = 0, sourceObjectNodes = [], isFiltered = false, hasPrefix = false, hasOnlyPrefix = false, prefix;
+                foreignKeyPathLength = 0, sourceObjectNodes = [], isFiltered = false, hasPrefix = false, hasOnlyPrefix = false, prefix,
+                isAllOutboundNotNull = true, isAllOutboundNotNullPerModel = true;
 
             for (i = 0; i < source.length - 1; i++) {
                 if ("sourcekey" in source[i]) {
@@ -1356,6 +1412,8 @@
                     tableName = prefix.column.table.name;
                     hasInbound = hasInbound || prefix.hasInbound;
                     isFiltered = isFiltered || prefix.isFiltered;
+                    isAllOutboundNotNull = prefix.isAllOutboundNotNull;
+                    isAllOutboundNotNullPerModel = prefix.isAllOutboundNotNullPerModel;
                 }
                 else if ("filter" in source[i] || "and" in source[i] || "or" in source[i]) {
                     if (!isObjectAndNotNull(colTable)) {
@@ -1391,12 +1449,16 @@
 
                     // inbound
                     if (isInbound && fk.key.table.name === tableName) {
+                        isAllOutboundNotNull = isAllOutboundNotNullPerModel = false;
                         hasInbound = true;
                         colTable = fk._table;
                     }
                     // outbound
                     else if (!isInbound && fk._table.name === tableName) {
                         colTable = fk.key.table;
+
+                        isAllOutboundNotNull = isAllOutboundNotNull && fk.isNotNull;
+                        isAllOutboundNotNullPerModel = isAllOutboundNotNullPerModel && fk.isNotNullPerModel;
                     }
                     else {
                         // the given object was not valid
@@ -1434,7 +1496,9 @@
                 isFiltered: isFiltered,
                 hasInbound: hasInbound,
                 hasPrefix: hasPrefix,
-                hasOnlyPrefix: hasOnlyPrefix
+                hasOnlyPrefix: hasOnlyPrefix,
+                isAllOutboundNotNull: foreignKeyPathLength > 0 && isAllOutboundNotNull,
+                isAllOutboundNotNullPerModel: foreignKeyPathLength > 0 && isAllOutboundNotNullPerModel
             };
         },
 
@@ -1597,9 +1661,10 @@
          * @param {*} foreignKeyPathLength - the foreignkey path length
          * @param {*} sourcekey
          * @param {*} pathPrefixAliasMapping
+         * @param {string} mainTableAlias
          * @param {*} outAlias
          */
-        parseAllOutBoundNodes: function (sourceNodes, lastForeignKeyNode, foreignKeyPathLength, sourcekey, pathPrefixAliasMapping, outAlias, mainTableAlias) {
+        parseAllOutBoundNodes: function (sourceNodes, lastForeignKeyNode, foreignKeyPathLength, sourcekey, pathPrefixAliasMapping, mainTableAlias, outAlias) {
             var usedOutAlias;
 
             // TODO could be improved, we don't need to return any path
@@ -1661,8 +1726,8 @@
                         sn.nodeObject.foreignKeyPathLength,
                         sn.pathPrefixSourcekey,
                         pathPrefixAliasMapping,
-                        prefixAlias,
-                        mainTableAlias
+                        mainTableAlias,
+                        prefixAlias
                     );
 
                     // we should first parse the existing and then add it to list
@@ -2149,15 +2214,18 @@
                 if (typeof srcObj.sourcekey === "string") {
                     if (srcObj.sourcekey === module._specialSourceDefinitions.SEARCH_BOX) {
                         // add the search columns as well
-                        if (Array.isArray(rootTable.searchSourceDefinition)) {
-                            // since all the columns must be coming from the same instance,
-                            // just getting it from one is enough
-                            var col = rootTable.searchSourceDefinition[0];
-                            if (col.sourceObject && col.sourceObject.sourcekey) {
-                                addToSourceKey(col.sourceObject.sourcekey);
-                            } else if (col.sourceObjectNodes.length > 0 && col.sourceObjectNodes[0].isPathPrefix) {
-                                addToSourceKey(col.sourceObjectNodes[0].pathPrefixSourcekey);
-                            }
+                        if (rootTable.searchSourceDefinition && Array.isArray(rootTable.searchSourceDefinition.columns)) {
+                            rootTable.searchSourceDefinition.columns.forEach(function (col, index) {
+                                // if the all are coming from the same path prefix, just look at the first one
+                                if (index > 0 && rootTable.searchSourceDefinition.allSamePathPrefix) {
+                                    return;
+                                }
+                                if (col.sourceObject && col.sourceObject.sourcekey) {
+                                    addToSourceKey(col.sourceObject.sourcekey);
+                                } else if (col.sourceObjectNodes.length > 0 && col.sourceObjectNodes[0].isPathPrefix) {
+                                    addToSourceKey(col.sourceObjectNodes[0].pathPrefixSourcekey);
+                                }
+                            });
                         }
                         return;
                     }

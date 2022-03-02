@@ -896,8 +896,8 @@
             if (this._searchColumns === undefined) {
                 var self = this;
                 this._searchColumns = false;
-                if (Array.isArray(this.table.searchSourceDefinition)) {
-                    this._searchColumns = this.table.searchSourceDefinition.map(function (sd) {
+                if (this.table.searchSourceDefinition && Array.isArray(this.table.searchSourceDefinition.columns)) {
+                    this._searchColumns = this.table.searchSourceDefinition.columns.map(function (sd) {
                         return module._createPseudoColumn(self, sd, null);
                     });
                 }
@@ -4330,8 +4330,8 @@
                         allOutBounds[l].foreignKeyPathLength,
                         sourcekey,
                         pathPrefixAliasMapping,
-                        outAlias,
-                        mainTableAlias
+                        mainTableAlias,
+                        outAlias
                     );
                 };
 
