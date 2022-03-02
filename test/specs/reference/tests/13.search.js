@@ -663,17 +663,18 @@ exports.execute = function (options) {
                 testCustomSearchAPIs(invalidSearchColumnReference, false, false);
             });
 
-            it ("should return false if even one of the defined columns are invalid.", function () {
-                testCustomSearchAPIs(partialInvalidSearchColumnReference, false, false);
+            it ("should ignore the invalid columns and only return the valid ones.", function () {
+                testCustomSearchAPIs(partialInvalidSearchColumnReference, ["id"], ["id"]);
             });
 
-            describe ("should return false if we cannot guarauntee inner join for all columns.", function () {
-                it ("when at least one column has inbound fk.", function () {
+            describe ("should ignore the columns that we cannot guarantee inner join safe.", function () {
+                it ("a column directive with inbound fks", function () {
+                    // two columns and both have inbound, so returns false
                     testCustomSearchAPIs(customSearchInboundReference, false, false);
                 });
 
                 it ("when at least one of the columns involved in the fk path of column is nullok.", function () {
-                    testCustomSearchAPIs(customSearchNullokReference, false, false);
+                    testCustomSearchAPIs(customSearchNullokReference, ["nullable_fk_to_vocab"], ["nullable_fk_to_vocab"]);
                 });
 
                 // dynamic acl test has been moved to the end since it will change the catalog
@@ -906,8 +907,8 @@ exports.execute = function (options) {
             });
 
             describe("Table.searchSourceDefinition and Reference.searchColumns", function () {
-                it("should return false if at least on column in the all-outbound path cannot be selected by user (and therefore is nullable).", function () {
-                    testCustomSearchAPIs(tempRef, false, false);
+                it("should ignore columns in the all-outbound path cannot be selected by user (and therefore is nullable).", function () {
+                    testCustomSearchAPIs(tempRef, ["id"], ["id"]);
                 });
             });
 

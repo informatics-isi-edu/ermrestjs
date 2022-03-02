@@ -865,9 +865,9 @@ Supported _searchcolumn_ pattern:
   -  _searchcolumn_ supports the same patterns as _sourceentry_. Since the column directive defined here is special, you can only use the following optional parameters:
       - `markdown_name`: The client will show the displayname of columns as placeholder in the search box. To modify this default behavior, you can use this attribute.
 
-      While we allow defining a list of search columns, only the following combination of search columns are supported:
+      While processing the list of given column directives, any invalid definition (invalid column names or paths), will be ignored. If none of the columns are valid, the client will fall back to the default search (searching all the local columns). Also, because of performance limitations, only the following combination of search columns are supported:
       
-      - A list containing only one source.
+      - A list containing only one column directive.
         ```javascript
           {
             "or": [
@@ -894,7 +894,7 @@ Supported _searchcolumn_ pattern:
         ```
       - A list of column directives that we can safely use inner join for each one of them. This includes,
         - Local columns
-        - All outbound paths that all the columns used in the foreign key relationships cannot be null. This means that the columns are `"nullok": false` per model and the user has static `select` access to the column.
+        - All outbound paths that all the columns used in the foreign key relationships cannot be `null`. This means that the columns are `"nullok": false` per model and the user has static `select` access to the column.
         ```javascript
         {
           "or": [
@@ -904,8 +904,7 @@ Supported _searchcolumn_ pattern:
           ]
         }
         ```
-
-      Other combinations will be ignored and client will fallback to the default behavior (searching all the local columns).
+        > If `search-box` consists of multiple column directives that are not local or using the same _sourcekey prefix_, we will ignore the ones that are not inner join safe. And if none of the columns are inner join safe, the client will fall back to the default search (searching all the local columns).
 
 Supported _fkeylist_ patterns:
 

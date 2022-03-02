@@ -203,7 +203,7 @@
                                 ]
                             },
                             {
-                                "source": "id"
+                                "source": "nullable_fk_to_vocab"
                             }
                         ]
                     }
@@ -302,7 +302,11 @@
                                 ]
                             },
                             {
-                                "source": "id"
+                                "source": [
+                                    {"inbound": ["search_schema","table_w_custom_search_inner_safe_1_fk2"]},
+                                    {"outbound": ["search_schema","table_w_custom_search_inner_safe_1_fk1"]},
+                                    "RID"
+                                ]
                             }
                         ]
                     }

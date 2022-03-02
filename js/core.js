@@ -1683,7 +1683,7 @@
                         return false;
                     }
 
-                    var res = [], processedCols = {}, allLocal = true, allInnerSafe = true, allSamePrefix = true, sharedPrefix = "";
+                    var res = [], indices = [], processedCols = {}, allSamePrefix = true, sharedPrefix = "";
                     for (var index = 0; index < sbDef[orOperator].length; index++) {
                         var src = sbDef[orOperator][index];
                         var pSource, sd;
@@ -1692,7 +1692,7 @@
                             sd = self.sourceDefinitions.sources[src.sourcekey];
                             if (!sd) {
                                 module._log.info(message + ", index=" + index + ": given sourcekey `" + src.sourcekey + "` is not valid.");
-                                return false;
+                                continue; // ignore the faulty ones
                             }
 
                             pSource = sd.clone(src, self, consNames);
@@ -1701,7 +1701,7 @@
                                 pSource = new SourceObjectWrapper(src, self, consNames);
                             } catch(exp) {
                                 module._log.info(message + ", index=" + index + ":" + exp.message);
-                                return false;
+                                continue; // ignore the faulty ones
                             }
                         }
 
@@ -1710,12 +1710,8 @@
                         }
                         processedCols[pSource.name] = true;
                         
+                        // check if all the sources are using the same prefix or not
                         if (pSource.hasPath) {
-                            allLocal = false;
-
-                            // whether all the paths are inner join safe
-                            allInnerSafe = allInnerSafe && pSource.isAllOutboundNotNull;
-
                             // check for the same prefix
                             if (allSamePrefix) {
                                 // get the prefix of the current column directive
@@ -1747,15 +1743,24 @@
                         }
 
                         res.push(pSource);
+                        indices.push(index);
+                    }
+
+                    // if there are multiple and they are not using the same prefix,
+                    // then only allow the inner join safe ones.
+                    if (res.length > 1 && !allSamePrefix) {
+                        // ignore the ones that are not inner join safe
+                        res = res.filter(function (ps, i) {
+                            var innerSafe = !ps.hasPath || ps.isAllOutboundNotNull;
+                            if (!innerSafe) {
+                                module._log.info(message + ", index=" + indices[i] + ": column directive is not inner join safe and will be ignored.");        
+                            }
+                            return innerSafe;
+                        })
                     }
 
                     if (res.length === 0) {
-                        module._log.info(message + ": none of the defined sources were valid, using all the columns.");
-                        return false;
-                    }
-
-                    if (res.length > 1 && !allSamePrefix && !allInnerSafe) {
-                        module._log.info(message + ": all the search columns must be inner join safe or come from the same table instance.");
+                        module._log.info(message + ": none of the defined column directives can be supported, using search(*).");
                         return false;
                     }
 
