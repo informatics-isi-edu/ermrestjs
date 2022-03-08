@@ -1388,7 +1388,6 @@ Returns an array of SourceObjectWrapper objects.
 The returned object will have the following properties:
 - columns: the search columns
 - allSamePathPrefix: if all using the same path prefix
-- pathPrefixSourcekey: the path prefix that all are using
 
 **Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
 <a name="ERMrest.Table+searchSourceDefinition.._getSearchSourceDefinition"></a>

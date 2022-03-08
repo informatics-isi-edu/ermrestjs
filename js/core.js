@@ -1629,7 +1629,7 @@
         * The returned object will have the following properties:
         * - columns: the search columns
         * - allSamePathPrefix: if all using the same path prefix
-        * 
+        *
         * @type {false|Object}
         */
         get searchSourceDefinition() {
@@ -1709,7 +1709,7 @@
                             continue; // duplicate
                         }
                         processedCols[pSource.name] = true;
-                        
+
                         // check if all the sources are using the same prefix or not
                         if (pSource.hasPath) {
                             // check for the same prefix
@@ -1753,10 +1753,10 @@
                         res = res.filter(function (ps, i) {
                             var innerSafe = !ps.hasPath || ps.isAllOutboundNotNull;
                             if (!innerSafe) {
-                                module._log.info(message + ", index=" + indices[i] + ": column directive is not inner join safe and will be ignored.");        
+                                module._log.info(message + ", index=" + indices[i] + ": column directive is not inner join safe and will be ignored.");
                             }
                             return innerSafe;
-                        })
+                        });
                     }
 
                     if (res.length === 0) {
