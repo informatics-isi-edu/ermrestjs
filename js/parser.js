@@ -29,8 +29,57 @@
     };
 
     /**
+     * Create the proper path to search
+     * NOTE If searchColumnNames is passed, we will not use the built-in search
+     * feature anymore and will fallback to raw ermrest regular expression search.
+     * Therefore it's highly recommended that you don't use this parameter and instead
+     * modify the search-box source definition of the table.
+     * 
+     * @param  {string} schemaName          Name of schema, can be null
+     * @param  {string} tableName           Name of table
+     * @param  {string} searchTerm          the search keyword
+     * @param  {string[]?} searchColumNames the name of columns that should be used for search
+     * @return {string}                     a path that ERMrestJS understands and can parse, can be undefined
+     */
+    module.createSearchPath = function (catalogId, schemaName, tableName, searchTerm, searchColumNames) {
+        verify(typeof catalogId === "string" && catalogId.length > 0, "catalogId must be an string.");
+        verify(typeof tableName === "string" && tableName.length > 0, "tableName must be an string.");
+        
+        var hasSearch = (typeof searchTerm === "string" && searchTerm.trim().length > 0);
+        var encode = module._fixedEncodeURIComponent;
+
+        if (hasSearch && Array.isArray(searchColumNames) && searchColumNames.length > 0) {
+            var compactPath = "#" + catalogId + "/";
+            var parsedSearch = [];
+
+            if (schemaName) {
+                compactPath += encode(schemaName) + ":";
+            }
+            compactPath += encode(tableName);
+            
+            searchColumNames.forEach(function (col) {
+                parsedSearch.push(encode(col) + "::ciregexp::" + encode(searchTerm.trim()));
+            });
+
+            return compactPath + "/" + parsedSearch.join(";");
+        }
+
+        // create the facet object so we can pass it to ermrestjs
+        var facets;
+        if (hasSearch) {
+            facets = {
+                "and": [{ "sourcekey": "search-box", "search": [searchTerm.trim()] }]
+            };
+        }
+
+        return module.createPath(catalogId, schemaName, tableName, facets);
+        
+    };
+
+    /**
      * Given tableName, schemaName, and facets will generate a path in the following format:
      * #<catalogId>/<tableName>:<schemaName>/*::facets::<FACETSBLOB>/*::cfacets:<CUSTOMFACETBLOB>/
+     * @param  {string} catalogId  the id of catalog
      * @param  {string} schemaName Name of schema, can be null
      * @param  {string} tableName  Name of table
      * @param  {object} facets     an object

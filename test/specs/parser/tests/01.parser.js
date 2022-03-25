@@ -1437,7 +1437,6 @@ exports.execute = function(options) {
             });
         });
 
-        return;
 
         describe("CustomFacets, ", function () {
 
@@ -1552,9 +1551,9 @@ exports.execute = function(options) {
         });
 
         describe("createPath, ", function() {
-            var validBlob = "N4IghgdgJiBcDaoDOBTMAnAxgCziTA9gDYCuAthCADT7YECWmKSc8IALs+yALoC+-IA";
+            var validBlob = "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixQBs0BbCEAGgIAsUBLXJOeEAFxyTZAF0BffkA";
             var facetObj = {
-                "and":[{"search": "column", "choices": ["test"]}]
+                "and":[{"source": "column", "choices": ["test"]}]
             };
             var path;
 
@@ -1580,6 +1579,46 @@ exports.execute = function(options) {
             it("should return a valid path, given valid parameters.", function() {
                 path = options.ermRest.createPath("1", "schema", "table", facetObj);
                 expect(path).toEqual("#1/schema:table/*::facets::" + validBlob);
+            });
+        });
+
+        describe("createSearchPath, ", function() {
+            var validBlob = "N4IghgdgJiBcDaoDOB7ArgJwMYFMDWOAnnCEjmNgBYC0ARigB4gA0p5Vc8IALjktwAJeGALYgAugF8pQA";
+            var facetObj = {
+                "and":[{"sourcekey": "search-box", "search": ["test term"]}]
+            };
+            var path;
+
+            it('should throw error if parameters are invalid.', function() {
+                expect(function () {
+                    options.ermRest.createSearchPath(2, null, "table");
+                }).toThrow("catalogId must be an string.");
+                expect(function () {
+                    options.ermRest.createSearchPath("2", null);
+                }).toThrow("tableName must be an string.");
+            });
+
+            it("should handle not passing any schemaName", function() {
+                path = options.ermRest.createSearchPath("1", null, "table", "test term");
+                expect(path).toEqual("#1/table/*::facets::" + validBlob);
+            });
+
+            it("should handle passing no search term", function() {
+                path = options.ermRest.createSearchPath("1", "schema", "table", "");
+                expect(path).toEqual("#1/schema:table");
+            });
+
+            it("should return a valid path, given valid parameters.", function() {
+                path = options.ermRest.createSearchPath("1", "schema", "table", "test term");
+                expect(path).toEqual("#1/schema:table/*::facets::" + validBlob);
+            });
+
+            it ("should accept array of column names", function () {
+                path = options.ermRest.createSearchPath("2", "s1", "t1", "test term", ["col 1"]);
+                expect(path).toEqual("#2/s1:t1/col%201::ciregexp::test%20term", "case 1");
+
+                path = options.ermRest.createSearchPath("2", "s1", "t1", "another term", ["col1", "col 2"]);
+                expect(path).toEqual("#2/s1:t1/col1::ciregexp::another%20term;col%202::ciregexp::another%20term", "case 2");
             });
         });
 
