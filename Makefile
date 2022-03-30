@@ -6,6 +6,11 @@
 # set the default target to install
 .DEFAULT_GOAL:=install
 
+# make sure NOD_ENV is defined (use production if not defined or invalid)
+ifneq ($(NODE_ENV),development)
+NODE_ENV:=production
+endif
+
 # env variables needed for installation
 WEB_URL_ROOT?=/
 WEB_INSTALL_ROOT?=/var/www/html/
@@ -148,7 +153,7 @@ $(BIN): $(MODULES)
 
 # Rule to install Node modules locally
 $(MODULES): package.json
-	npm install --production
+	npm install
 	@touch $(MODULES)
 
 # generate makefile_variables file
@@ -165,6 +170,7 @@ dont_install_in_root:
 
 print_variables:
 	$(info =================)
+	$(info NODE_ENV:=$(NODE_ENV))
 	$(info BUILD_VERSION=$(BUILD_VERSION))
 	$(info building and deploying to: $(ERMRESTJSDIR))
 	$(info ERMrestJS will be accessed using: $(ERMRESTJS_BASE_PATH))
