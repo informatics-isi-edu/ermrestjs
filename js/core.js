@@ -8,8 +8,8 @@
     var _servers = {};
 
     /**
-     * Angular $http service object
-     * NOTE: This should not be used. This is the base _http module without our wrapper from http.js
+     * populated by configure function. An http service (like Angular $http or axios)
+     * NOTE: This should not be used. This is the base http module without our wrapper from http.js
      * When making requests using http, use server.http
      * @type {Object}
      * @private
@@ -17,7 +17,7 @@
     module._http = null;
 
     /**
-     * Angular $q service object
+     * populated by configure function. A promise library (like Angular $q or Q)
      * @type {Object}
      * @private
      */
@@ -64,8 +64,8 @@
     /**
      * @memberof ERMrest
      * @function
-     * @param {Object} http Angular $http service object
-     * @param {Object} q Angular $q service object
+     * @param {Object} http any http service (like Angular $http or axios)
+     * @param {Object} q Any promise library (like Angular $q or Q library)
      * @desc This function is used to configure the module
      */
     function configure(http, q) {
