@@ -2351,8 +2351,9 @@
                     }
 
                     // set whether the column headers should be hidden (applies to record app currently)
-                    if (annotation.hide_column_headers) {
-                        this._display.hideColumnHeaders = annotation.hide_column_headers;
+                    // backwards compatibility: the old name was hide_column_headers
+                    if (annotation.hide_column_header || annotation.hide_column_headers) {
+                        this._display.hideColumnHeaders = annotation.hide_column_header || annotation.hide_column_headers;
                     }
 
                     // set whether the table of contents should be collapsed by default (applies to record app currently)

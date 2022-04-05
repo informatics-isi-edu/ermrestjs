@@ -552,7 +552,7 @@ Supported JSON _option_ payload patterns:
 - `"row_order":` `[` _sortkey_ ... `]`: The list of one or more _sortkey_ defines the preferred or default order to present rows from a table. The ordered list of sort keys starts with a primary sort and optionally continues with secondary, tertiary, etc. sort keys. The given _sortkey_ s will be used as is (_columnorder_ SHOULD not be applied recursivly to this).
 - `"page_size":` `_number_`: The default number of rows to be shown on a page.
 - `"collapse_toc_panel":` `_boolean_`: Controls whether the table of contents panel is collapsed on page load (only supported in `detailed` context).
-- `"hide_column_headers":` `_boolean_`: Controls whether the column names headers and separators between column values are shown (only supported in `detailed` context).
+- `"hide_column_header":` `_boolean_`: Controls whether the column names headers and separators between column values are shown (only supported in `detailed` context).
 - `"page_markdown_pattern"`: _pagepattern_: Render the page by composing a markdown representation only when `page_markdown_pattern` is non-null.
   - Expand _pagepattern_ to obtain a markdown representation of whole page of dat via [Pattern Expansion](#pattern-expansion. In the pattern, you have access to a `$page` object that has the following attributes:
       - `values`: An array of values. You can access each column value using the `{{{$page.values.<index>.<column>}}}` where `<index>` is the index of array element that you want (starting with zero), and `<column>` is the column name (`{{{$page.values.0.RID}}}`).
@@ -866,7 +866,7 @@ Supported _searchcolumn_ pattern:
       - `markdown_name`: The client will show the displayname of columns as placeholder in the search box. To modify this default behavior, you can use this attribute.
 
       While processing the list of given column directives, any invalid definition (invalid column names or paths), will be ignored. If none of the columns are valid, the client will fall back to the default search (searching all the local columns). Also, because of performance limitations, only the following combination of search columns are supported:
-      
+
       - A list containing only one column directive.
         ```javascript
           {
