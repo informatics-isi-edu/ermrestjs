@@ -776,8 +776,25 @@
                     ]
                 }
             ],
-            "entityCount": 0,
-            "foreign_keys": [],
+            "foreign_keys": [
+                {
+                    "names": [["reference_schema", "sorted_table_fk1"]],
+                    "foreign_key_columns": [
+                        {
+                            "schema_name": "reference_schema",
+                            "table_name": "sorted_table",
+                            "column_name": "fk1_col_1"
+                        }
+                    ],
+                    "referenced_columns": [
+                        {
+                            "schema_name": "reference_schema",
+                            "table_name": "table_w_composite_key",
+                            "column_name": "id"
+                        }
+                    ]
+                }
+            ],
             "table_name": "sorted_table",
             "schema_name": "reference_schema",
             "column_definitions": [
@@ -811,6 +828,12 @@
                                 "column_order": ["name"]
                             }
                         }
+                    }
+                },
+                {
+                    "name": "fk1_col_1",
+                    "type": {
+                        "typename": "text"
                     }
                 }
             ],
@@ -1012,7 +1035,45 @@
             ],
             "annotations": {
                 "tag:isrd.isi.edu,2016:visible-columns" : {
-                    "*": ["id", ["reference_schema", "sorted_table_w_fk_fk1"], ["reference_schema", "sorted_table_w_fk_fk2"], ["reference_schema", "sorted_table_w_fk_fk3"]]
+                    "*": [
+                        "id",
+                        ["reference_schema", "sorted_table_w_fk_fk1"],
+                        ["reference_schema", "sorted_table_w_fk_fk3"],
+                        {
+                            "source": [
+                                {"outbound": ["reference_schema", "sorted_table_w_fk_fk3"]},
+                                "col. w. dot."
+                            ],
+                            "entity": false
+                        },
+                        {
+                            "source": [
+                                {"sourcekey": "path_to_main_sorted_table"},
+                                {"outbound": ["reference_schema", "sorted_table_fk1"]},
+                                "RID"
+                            ]
+                        },
+                        {
+                            "source": [
+                                {"sourcekey": "path_to_main_sorted_table"},
+                                {"outbound": ["reference_schema", "sorted_table_fk1"]},
+                                "id"
+                            ],
+                            "entity": false
+                        },
+                        {"sourcekey": "path_to_main_sorted_table"}
+                    ]
+                },
+                "tag:isrd.isi.edu,2019:source-definitions": {
+                    "sources": {
+                        "path_to_main_sorted_table": {
+                            "source": [
+                                {"outbound": ["reference_schema", "sorted_table_w_fk_fk2"]},
+                                "RID"
+                            ],
+                            "entity": true
+                        }
+                    }
                 }
             }
         },
