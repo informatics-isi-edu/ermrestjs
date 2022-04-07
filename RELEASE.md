@@ -10,6 +10,17 @@ This document is a summary of code changes in ERMRestJS. This is the vocabulary 
   - `[Annotation]`: when the describe modification is related to annotation.
   - `[No changes]`: means that ERMRestJS hasn't been changed in the described duration.
 
+# 3/31/22
+
+- [Changed] the documentations to use the new terminilogy and have more information ([link](https://github.com/informatics-isi-edu/ermrestjs/pull/934)).
+- [Added] new APIs related to the batch unlink association feature ([link1](https://github.com/informatics-isi-edu/ermrestjs/pull/929), [link2](https://github.com/informatics-isi-edu/ermrestjs/pull/936)).
+- [Deprecated] `Reference.getBatchAssociationRef` API since it's not needed anymore (link above).
+- [Fixed] the correctness issue related to shared path prefix for facets ([link](https://github.com/informatics-isi-edu/ermrestjs/pull/924)).
+- [Added][Annotation] support for ore complicated search columns ([link](https://github.com/informatics-isi-edu/ermrestjs/pull/937)).
+- [Added] a new `ERMrest.createSearchPath` API that can be used for generating chaise-supported search paths ([link](https://github.com/informatics-isi-edu/ermrestjs/commit/0f256c869c3eefa359834880cc3e24de74d1e985)).
+- [Changed] make targets to honor `NODE_ENV` while installing npm dependencies ([link](https://github.com/informatics-isi-edu/ermrestjs/commit/a23940b83d8bbc8a4032838722fd0e99cd1160ff)).
+
+
 # 1/31/22
 
 - [Changed] and upgraded the dependencies used in ERMrestJS ([link](https://github.com/informatics-isi-edu/ermrestjs/pull/933)).
