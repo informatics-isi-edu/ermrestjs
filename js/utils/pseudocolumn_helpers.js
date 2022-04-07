@@ -2228,35 +2228,46 @@
 
     /**
      * This prototype is used for the shared prefix logic.
+     *
+     * @param {Object} forcedAliases        The aliases that must be used for the given sourcekeys
+     * @param {Object[]?} usedSourceObjects The source objects that are used in the url
+     *                                      (used for populating usedSourceKeys)
+     * @param {ERMrest.Table?} rootTable    The table that the source objects start from
+     *                                      (used for populating usedSourceKeys)
      * @ignore
      */
     function PathPrefixAliasMapping (forcedAliases, usedSourceObjects, rootTable) {
         /**
          * Aliases that already mapped to a join statement
          * <sourcekey> -> <alias>
+         * @type {Object
          */
         this.aliases = {};
 
         /**
          * sourcekeys that are used more than once and require alias
          * <sourcekey> -> value is not important
+         * @type {Object
          */
         this.usedSourceKeys = {};
 
         /**
          * The index of last added alias
+         * @type {number}
          */
         this.lastIndex = 0;
 
         /**
          * The aliases that must be used for the given sourcekeys
          * <sourcekey> -> <alias>
+         * @type {Object}
          */
         this.forcedAliases = {};
         if (isObjectAndNotNull(forcedAliases)) {
             this.forcedAliases = forcedAliases;
         }
 
+        // populate the this.usedSourceKeys based on the given objects
         this._populateUsedSourceKeys(usedSourceObjects, rootTable);
     }
 
@@ -2281,10 +2292,8 @@
          * "key1_i1" as part of usedSourcekeys even though adding alias for "key1_i1" is enough and
          * we don't need any for "key1".
          *
-         * @param {string[]} usedSourceKeys - an array of strings representing the sourcekeys that are used
-         *                             more than once and therefore should add alias.
-         * @param {Object[]} sources
-         * @param {ERMrest.Table} rootTable
+         * @param {Object[]} sources the source objects that are used in the url
+         * @param {ERMrest.Table} rootTable the table that the source objects start from
          * @private
          */
         _populateUsedSourceKeys: function (sources, rootTable) {
