@@ -1053,6 +1053,7 @@
                                 "RID"
                             ]
                         },
+                        {"sourcekey": "path_to_main_sorted_table"},
                         {
                             "source": [
                                 {"sourcekey": "path_to_main_sorted_table"},
@@ -1060,8 +1061,7 @@
                                 "id"
                             ],
                             "entity": false
-                        },
-                        {"sourcekey": "path_to_main_sorted_table"}
+                        }
                     ]
                 },
                 "tag:isrd.isi.edu,2019:source-definitions": {

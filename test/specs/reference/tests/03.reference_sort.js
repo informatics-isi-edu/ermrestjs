@@ -9,8 +9,8 @@ exports.execute = function (options) {
 
         var outboundTableVisColNames = [
             'id', 'AmU5Bnpob57TlHBvLFLu8w', 'eYcW4ExSOlwtjNUvpNrZbA',
-            'DpOPZjKrep4VR09840YwRA', 'KSK3d0VUL0g8N4P1SZzDZw', '8tw62El12BT87wkFsN__1Q',
-            'HYUMN3Ihd6vR-0YnlIWR7Q'
+            'DpOPZjKrep4VR09840YwRA', 'KSK3d0VUL0g8N4P1SZzDZw',
+            '8tw62El12BT87wkFsN__1Q', 'HYUMN3Ihd6vR-0YnlIWR7Q',
         ];
 
         var multipleEntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + tableName;
@@ -187,12 +187,11 @@ exports.execute = function (options) {
                 colName;
             var readPathPrefix = [
                 "M:=reference_schema:sorted_table_w_fk/",
-                "F6:=left(fk2_col_1)=(reference_schema:sorted_table:id)/$M/",
-                "left(fk2_col_1)=(reference_schema:sorted_table:id)/F5:=left(fk1_col_1)=(reference_schema:table_w_composite_key:id)/$M/",
-                "left(fk2_col_1)=(reference_schema:sorted_table:id)/F4:=left(fk1_col_1)=(reference_schema:table_w_composite_key:id)/$M/",
+                "M_P1:=left(fk2_col_1)=(reference_schema:sorted_table:id)/F6:=left(fk1_col_1)=(reference_schema:table_w_composite_key:id)/$M/",
+                "$M_P1/F4:=left(fk1_col_1)=(reference_schema:table_w_composite_key:id)/$M/",
                 "F3:=left(fk3_col_1)=(reference_schema:table_w_composite_key:id)/$M/",
                 "F2:=left(fk3_col_1)=(reference_schema:table_w_composite_key:id)/$M/",
-                "F1:=left(fk1_col_1,fk1_col_2)=(reference_schema:table_w_composite_key:id_1,id_2)/$M/",
+                "F1:=left(fk1_col_1,fk1_col_2)=(reference_schema:table_w_composite_key:id_1,id_2)/$M/"
             ].join("");
 
             beforeAll(function(done) {
@@ -239,7 +238,7 @@ exports.execute = function (options) {
                         done,
                         [
                             readPathPrefix,
-                            "F7:=F6:row_order_col,F8:=F6:id,RID;M:=array_d(M:*),F6:=array_d(F6:*),F5:=F5:id,F4:=array_d(F4:*),F3:=F3:col.%20w.%20dot.,F2:=array_d(F2:*),F1:=array_d(F1:*)@sort(F7::desc::,F8,RID)"
+                            "F7:=M_P1:row_order_col,F8:=M_P1:id,RID;M:=array_d(M:*),F6:=F6:id,F5:=array_d(M_P1:*),F4:=array_d(F4:*),F3:=F3:col.%20w.%20dot.,F2:=array_d(F2:*),F1:=array_d(F1:*)@sort(F7::desc::,F8,RID)"
                         ].join("")
                     );
                 });
@@ -257,7 +256,7 @@ exports.execute = function (options) {
                         done,
                         [
                             readPathPrefix,
-                            "F7:=F3:col.%20w.%20dot.,RID;M:=array_d(M:*),F6:=array_d(F6:*),F5:=F5:id,F4:=array_d(F4:*),F3:=F3:col.%20w.%20dot.,F2:=array_d(F2:*),F1:=array_d(F1:*)@sort(F7,RID)"
+                            "F7:=F3:col.%20w.%20dot.,RID;M:=array_d(M:*),F6:=F6:id,F5:=array_d(M_P1:*),F4:=array_d(F4:*),F3:=F3:col.%20w.%20dot.,F2:=array_d(F2:*),F1:=array_d(F1:*)@sort(F7,RID)"
                         ].join("")
                     );
                 });
@@ -276,7 +275,7 @@ exports.execute = function (options) {
                             done,
                             [
                                 readPathPrefix,
-                                "F7:=F5:id,RID;M:=array_d(M:*),F6:=array_d(F6:*),F5:=F5:id,F4:=array_d(F4:*),F3:=F3:col.%20w.%20dot.,F2:=array_d(F2:*),F1:=array_d(F1:*)@sort(F7::desc::,RID)"
+                                "F7:=F6:id,RID;M:=array_d(M:*),F6:=F6:id,F5:=array_d(M_P1:*),F4:=array_d(F4:*),F3:=F3:col.%20w.%20dot.,F2:=array_d(F2:*),F1:=array_d(F1:*)@sort(F7::desc::,RID)"
                             ].join("")
                         );
                     });

@@ -84,16 +84,16 @@
          * Depending on the definition of `search-box`, the returned path might
          * include additional join statment for the column directives needed defined
          * in the `search-box`.
-         * 
+         *
          * Implementaion notes:
          * - Related to additional aliases added by this function:
-         *   - If all the column directives are sharing the same prefix or 
-         *     the `search-box` is consist of just one column, 
+         *   - If all the column directives are sharing the same prefix or
+         *     the `search-box` is consist of just one column,
          *     this will not add any additional alias to the added join statment.
          *   - Otherwise it will add aliases in the `<root-alias>_S<number>` format
          * - There's no need to reset the path after this string as it will properly
-         *   handle it. 
-         * 
+         *   handle it.
+         *
          * @param {string} search  the search term
          * @param {ERMrest.Table} rootTable the root table
          * @param {string} alias the alias for the root table
@@ -125,7 +125,7 @@
                         // currently this is not following the same alias as other shared prefixes
                         // and instead doing a new convention for search which could later be merged with each other.
                         proposedAlias = addAliasPerPath ? alias + "_S" + (addedAliasIndex++) : null;
-                        
+
                         var pathRes = _sourceColumnHelpers.parseSourceNodesWithAliasMapping(
                             sd.sourceObjectNodes,
                             sd.lastForeignKeyNode,
@@ -244,7 +244,7 @@
      * - successful: Boolean (true means successful, false means cannot be parsed).
      * - parsed: String  (if the given string was parsable).
      * - message: String (if the given string was not parsable)
-     * 
+     *
      * @ignore
      */
     _renderFacet = function(json, alias, schemaName, tableName, catalogId, catalogObject, usedSourceObjects, forcedAliases, consNames) {
@@ -271,16 +271,9 @@
             encode = module._fixedEncodeURIComponent, sourcekey,
             i, term, col, path, ds, constraints, parsed, useRightJoin;
 
-        var pathPrefixAliasMapping = new PathPrefixAliasMapping();
-
-        // add forcedAliases
-        if (isObjectAndNotNull(forcedAliases)) {
-            pathPrefixAliasMapping.forcedAliases = forcedAliases;
-        }
-
-        // pre process the list of facets and find the path prefixes that are used
-        _sourceColumnHelpers._populateUsedSourceKeys(
-            pathPrefixAliasMapping.usedSourceKeys,
+        var pathPrefixAliasMapping = new PathPrefixAliasMapping(
+            forcedAliases,
+            // pre process the list of facets and find the path prefixes that are used
             Array.isArray(usedSourceObjects) ? and.concat(usedSourceObjects) : and,
             rootTable
         );
@@ -1570,8 +1563,8 @@
                     if (!prefixAlias && (sn.pathPrefixSourcekey in pathPrefixAliasMapping.usedSourceKeys || addAliasToSourcekey)) {
                         prefixAlias = _sourceColumnHelpers._generateAliasName(
                             // get the sourcekey that the prefix is going to be associated with
-                            addAliasToSourcekey ? sourcekey : sn.pathPrefixSourcekey, 
-                            mainTableAlias, 
+                            addAliasToSourcekey ? sourcekey : sn.pathPrefixSourcekey,
+                            mainTableAlias,
                             pathPrefixAliasMapping
                         );
                     }
@@ -1714,8 +1707,8 @@
                     if (!prefixAlias && (sn.pathPrefixSourcekey in pathPrefixAliasMapping.usedSourceKeys || addAliasToSourcekey)) {
                         prefixAlias = _sourceColumnHelpers._generateAliasName(
                             // get the sourcekey that the prefix is going to be associated with
-                            addAliasToSourcekey ? sourcekey : sn.pathPrefixSourcekey, 
-                            mainTableAlias, 
+                            addAliasToSourcekey ? sourcekey : sn.pathPrefixSourcekey,
+                            mainTableAlias,
                             pathPrefixAliasMapping
                         );
                     }
@@ -1887,13 +1880,13 @@
         /**
          * generate an alias that should be used for a sourcekey
          * This function is added mainly to properly check the forced aliases.
-         * As part of `computeERMrestCompactPath`, some aliases are supposed to 
+         * As part of `computeERMrestCompactPath`, some aliases are supposed to
          * have a specific meaning and cannot be changed. So the forcedAliases
          * will ensure we're using those aliases instead of creating a new one.
-         * 
-         * @param {string} sourcekey 
-         * @param {string} mainTableAlias 
-         * @param {Object} pathPrefixAliasMapping 
+         *
+         * @param {string} sourcekey
+         * @param {string} mainTableAlias
+         * @param {Object} pathPrefixAliasMapping
          * @returns string
          */
         _generateAliasName: function (sourcekey, mainTableAlias, pathPrefixAliasMapping) {
@@ -2167,84 +2160,6 @@
             }
 
             return _sourceColumnHelpers.generateSourceObjectHashName({source: source}, false);
-        },
-
-        /**
-         * Given an array of source objects will populate the used source keys
-         * in the given first parameter.
-         * NOTE: this function doesn't account for cases where a recursive path
-         * is used twice. for example assume the following scenario:
-         * {
-         *   "key1": {
-         *     "source": [{"inbound": ["s", "const"]}, "RID"]
-         *   },
-         *   "key1_i1": {
-         *     "source": [{"sourcekey": "key1"}, {"inbound": ["s", "const2"]}, "RID"]
-         *   },
-             "key1_key1_i1": {
-         *     "source": [{"sourcekey": "key1_i1"}, {"inbound": ["s", "const3"]}, "RID"]
-         *   }
-         * }
-         * if "key1_i1" and "key1_key1_i1" are used in multiple sources, then it will include "key1" as well as
-         * "key1_i1" as part of usedSourcekeys even though adding alias for "key1_i1" is enough and
-         * we don't need any for "key1".
-         *
-         * @param {string[]} usedSourceKeys - an array of strings representing the sourcekeys that are used
-         *                             more than once and therefore should add alias.
-         * @param {Object[]} sources
-         * @param {ERMrest.Table} rootTable
-         * @private
-         */
-        _populateUsedSourceKeys: function (usedSourceKeys, sources, rootTable) {
-            if (!rootTable) return;
-            var addToSourceKey = function (key) {
-                if (!(key in rootTable.sourceDefinitions.sourceDependencies)) return;
-
-                rootTable.sourceDefinitions.sourceDependencies[key].forEach(function (dep) {
-                    if (dep in usedSourceKeys) {
-                        usedSourceKeys[dep]++;
-                    } else {
-                        usedSourceKeys[dep] = 1;
-                    }
-                });
-            };
-            sources.forEach(function (srcObj) {
-                if (typeof srcObj !== "object") return;
-
-                if (typeof srcObj.sourcekey === "string") {
-                    if (srcObj.sourcekey === module._specialSourceDefinitions.SEARCH_BOX) {
-                        // add the search columns as well
-                        if (rootTable.searchSourceDefinition && Array.isArray(rootTable.searchSourceDefinition.columns)) {
-                            rootTable.searchSourceDefinition.columns.forEach(function (col, index) {
-                                // if the all are coming from the same path prefix, just look at the first one
-                                if (index > 0 && rootTable.searchSourceDefinition.allSamePathPrefix) {
-                                    return;
-                                }
-                                if (col.sourceObject && col.sourceObject.sourcekey) {
-                                    addToSourceKey(col.sourceObject.sourcekey);
-                                } else if (col.sourceObjectNodes.length > 0 && col.sourceObjectNodes[0].isPathPrefix) {
-                                    addToSourceKey(col.sourceObjectNodes[0].pathPrefixSourcekey);
-                                }
-                            });
-                        }
-                        return;
-                    }
-                    addToSourceKey (srcObj.sourcekey);
-                    return;
-                }
-
-                if (!Array.isArray(srcObj.source) || !isStringAndNotEmpty(srcObj.source[0].sourcekey)) {
-                    return;
-                }
-                // if this is the case, then it's an invalid url that will throw error later
-                if (srcObj.source[0].sourcekey === module._specialSourceDefinitions.SEARCH_BOX) {
-                    return;
-                }
-                addToSourceKey(srcObj.source[0].sourcekey);
-            });
-            for (var k in usedSourceKeys) {
-                if (usedSourceKeys[k] < 2) delete usedSourceKeys[k];
-            }
         }
     };
 
@@ -2315,7 +2230,7 @@
      * This prototype is used for the shared prefix logic.
      * @ignore
      */
-    function PathPrefixAliasMapping () {
+    function PathPrefixAliasMapping (forcedAliases, usedSourceObjects, rootTable) {
         /**
          * Aliases that already mapped to a join statement
          * <sourcekey> -> <alias>
@@ -2338,4 +2253,90 @@
          * <sourcekey> -> <alias>
          */
         this.forcedAliases = {};
+        if (isObjectAndNotNull(forcedAliases)) {
+            this.forcedAliases = forcedAliases;
+        }
+
+        this._populateUsedSourceKeys(usedSourceObjects, rootTable);
     }
+
+    PathPrefixAliasMapping.prototype = {
+        /**
+         * Given an array of source objects will populate the used source keys
+         * in the given first parameter.
+         * NOTE: this function doesn't account for cases where a recursive path
+         * is used twice. for example assume the following scenario:
+         * {
+         *   "key1": {
+         *     "source": [{"inbound": ["s", "const"]}, "RID"]
+         *   },
+         *   "key1_i1": {
+         *     "source": [{"sourcekey": "key1"}, {"inbound": ["s", "const2"]}, "RID"]
+         *   },
+             "key1_key1_i1": {
+         *     "source": [{"sourcekey": "key1_i1"}, {"inbound": ["s", "const3"]}, "RID"]
+         *   }
+         * }
+         * if "key1_i1" and "key1_key1_i1" are used in multiple sources, then it will include "key1" as well as
+         * "key1_i1" as part of usedSourcekeys even though adding alias for "key1_i1" is enough and
+         * we don't need any for "key1".
+         *
+         * @param {string[]} usedSourceKeys - an array of strings representing the sourcekeys that are used
+         *                             more than once and therefore should add alias.
+         * @param {Object[]} sources
+         * @param {ERMrest.Table} rootTable
+         * @private
+         */
+        _populateUsedSourceKeys: function (sources, rootTable) {
+            if (!Array.isArray(sources) || sources.length == 0 || !rootTable) return;
+            var self = this;
+            var addToSourceKey = function (key) {
+                if (!(key in rootTable.sourceDefinitions.sourceDependencies)) return;
+
+                rootTable.sourceDefinitions.sourceDependencies[key].forEach(function (dep) {
+                    if (dep in self.usedSourceKeys) {
+                        self.usedSourceKeys[dep]++;
+                    } else {
+                        self.usedSourceKeys[dep] = 1;
+                    }
+                });
+            };
+            sources.forEach(function (srcObj) {
+                if (!isObjectAndNotNull(srcObj)) return;
+
+                if (typeof srcObj.sourcekey === "string") {
+                    if (srcObj.sourcekey === module._specialSourceDefinitions.SEARCH_BOX) {
+                        // add the search columns as well
+                        if (rootTable.searchSourceDefinition && Array.isArray(rootTable.searchSourceDefinition.columns)) {
+                            rootTable.searchSourceDefinition.columns.forEach(function (col, index) {
+                                // if the all are coming from the same path prefix, just look at the first one
+                                if (index > 0 && rootTable.searchSourceDefinition.allSamePathPrefix) {
+                                    return;
+                                }
+                                if (col.sourceObject && col.sourceObject.sourcekey) {
+                                    addToSourceKey(col.sourceObject.sourcekey);
+                                } else if (col.sourceObjectNodes.length > 0 && col.sourceObjectNodes[0].isPathPrefix) {
+                                    addToSourceKey(col.sourceObjectNodes[0].pathPrefixSourcekey);
+                                }
+                            });
+                        }
+                        return;
+                    }
+                    addToSourceKey (srcObj.sourcekey);
+                    return;
+                }
+
+                if (!Array.isArray(srcObj.source) || !isStringAndNotEmpty(srcObj.source[0].sourcekey)) {
+                    return;
+                }
+                // if this is the case, then it's an invalid url that will throw error later
+                if (srcObj.source[0].sourcekey === module._specialSourceDefinitions.SEARCH_BOX) {
+                    return;
+                }
+                addToSourceKey(srcObj.source[0].sourcekey);
+            });
+            for (var k in self.usedSourceKeys) {
+                if (self.usedSourceKeys[k] < 2) delete self.usedSourceKeys[k];
+            }
+        }
+    };
