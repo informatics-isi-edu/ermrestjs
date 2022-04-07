@@ -8021,8 +8021,8 @@ This function is used to configure the module
 
 | Param | Type | Description |
 | --- | --- | --- |
-| http | <code>Object</code> | Angular $http service object |
-| q | <code>Object</code> | Angular $q service object |
+| http | <code>Object</code> | any http service (like Angular $http or axios) |
+| q | <code>Object</code> | Any promise library (like Angular $q or Q library) |
 
 <a name="ERMrest.getServer"></a>
 

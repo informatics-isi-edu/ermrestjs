@@ -34,7 +34,7 @@
      * feature anymore and will fallback to raw ermrest regular expression search.
      * Therefore it's highly recommended that you don't use this parameter and instead
      * modify the search-box source definition of the table.
-     * 
+     *
      * @param  {string} schemaName          Name of schema, can be null
      * @param  {string} tableName           Name of table
      * @param  {string} searchTerm          the search keyword
@@ -44,7 +44,7 @@
     module.createSearchPath = function (catalogId, schemaName, tableName, searchTerm, searchColumNames) {
         verify(typeof catalogId === "string" && catalogId.length > 0, "catalogId must be an string.");
         verify(typeof tableName === "string" && tableName.length > 0, "tableName must be an string.");
-        
+
         var hasSearch = (typeof searchTerm === "string" && searchTerm.trim().length > 0);
         var encode = module._fixedEncodeURIComponent;
 
@@ -56,7 +56,7 @@
                 compactPath += encode(schemaName) + ":";
             }
             compactPath += encode(tableName);
-            
+
             searchColumNames.forEach(function (col) {
                 parsedSearch.push(encode(col) + "::ciregexp::" + encode(searchTerm.trim()));
             });
@@ -73,7 +73,7 @@
         }
 
         return module.createPath(catalogId, schemaName, tableName, facets);
-        
+
     };
 
     /**
@@ -490,7 +490,6 @@
             var self = this;
             var rightJoinIndex = -1, i;
             var uri = "", alias, temp;
-            var lastPathPartAliasMapping = new PathPrefixAliasMapping();
 
             var getPathPartAliasMapping = function (index) {
                 if (index !== -1 && parsedPartsWithoutJoin[index].pathPrefixAliasMapping) {
@@ -501,18 +500,18 @@
 
             /**
              * As part of `jonsStr`, if the table instance is already defined and added
-             * to the aliases, we might not add any new instances and just refer to the 
+             * to the aliases, we might not add any new instances and just refer to the
              * previously defined instance. In this case, the `jonsStr` function will
              * change the alias property of pathPart to properly refer to the table instance.
-             * 
-             * But the alias names used for the last pathPart is specific and should not be 
+             *
+             * But the alias names used for the last pathPart is specific and should not be
              * changed. Therefore we're making sure if there's a sourcekey that is supposed
              * to use a shared instance, is using the forced alias name.
-             * 
+             *
              * Then the logic for generating new alias names will first look at the forced
              * aliases and if the sourcekey is part of forced aliases will not generate a new
              * one for it.
-             * @param {*} index 
+             * @param {*} index
              * @returns an object that represent forcedAliases
              * @ignore
              */
@@ -573,6 +572,23 @@
                     }, "");
                 }
             };
+
+            var projectedTable = null;
+            try {
+                projectedTable = self.catalogObject.schemas.findTable(self.tableName, self.schemaName);
+            } catch(exp) {
+                // fail silently
+            }
+            /**
+             * make sure the lastPathPartAliasMapping is defined
+             * NOTE: if the location doesn't have any facets, this object will
+             * be used. otherwise we will use the one generated based on facets
+             */
+            var lastPathPartAliasMapping = new PathPrefixAliasMapping(
+                self.pathParts.length > 0 ? getForcedAliases(self.pathParts.length-1) : null,
+                usedSourceObjects,
+                projectedTable
+            );
 
             // get the parsed one, and count the number of right joins
             // NOTE: we have to do this at first to find the facets with null

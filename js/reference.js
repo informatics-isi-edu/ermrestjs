@@ -4130,12 +4130,14 @@
             var hasSort = Array.isArray(this._location.sortObject) && (this._location.sortObject.length !== 0),
                 locationPath = this.location.path,
                 fkAliasPreix = module._parserAliases.FOREIGN_KEY_PREFIX,
+                allOutBoundUsedAliases = [],
                 _modifiedSortObject = [], // the sort object that is used for url creation (if location has sort).
-                sortMap = {}, // maps an alias to PseudoColumn, used for sorting
+                allOutBoundSortMap = {}, // maps an alias to PseudoColumn, used for sorting
                 sortObject,  // the sort that will be accessible by this._location.sortObject
                 sortColNames = {}, // to avoid adding duplciate columns
                 sortObjectNames = {}, // to avoid computing sortObject logic more than once
                 addSort,
+                hasFKSort = false,
                 sortCols,
                 col, i, j, k, l;
 
@@ -4162,9 +4164,7 @@
              *           - The sort column name must be the "foreignkey_alias:column_name".
              * */
             var processSortObject= function (self) {
-                var foreignKeys = self._table.foreignKeys,
-                    colName,
-                    fkIndex, fk, desc;
+                var colName, desc;
 
                 for (i = 0, k = 1; i < sortObject.length; i++) {
                     // find the column in ReferenceColumns
@@ -4192,21 +4192,23 @@
                     // use the sort columns instead of the actual column.
                     for (j = 0; j < sortCols.length; j++) {
                         if (col.isForeignKey || (col.isPathColumn && col.isUnique)) {
-                            if (useEntity) addSort = false;
+                            // TODO if the code asks for entity read,
+                            // we should make sure only include the ones that are needed
+                            // for sort, but currently we're just switching to attributegroup
+                            hasFKSort = true;
 
                             // the column must be part of outbounds, so we don't need to check for it
+                            // NOTE what about the backward compatibility code?
                             fkIndex = findAllOutBoundIndex(col.name);
-
-                            if (col.canUseScalarProjection) {
-                                // in this case the column itself is projected,
-                                // and sort can only be based on the column itself..
-                                // so we don't need sortMap and just need to
-                                // ensure the colName is referring to the proper fk
-                                colName = fkIndex;
-                            } else {
-                                colName = fkAliasPreix + (allOutBounds.length + k++);
-                                sortMap[colName] = [fkAliasPreix + (fkIndex+1), module._fixedEncodeURIComponent(sortCols[j].column.name)].join(":");
-                            }
+                            // create a new projection alias to be used for this sort column
+                            colName = fkAliasPreix + (allOutBounds.length + k++);
+                            // store the actual column name and foreignkey info for later
+                            // the alias used for the fk might be different from what we expect now
+                            // (because of the shared prefix code)
+                            allOutBoundSortMap[colName] = {
+                                fkIndex: fkIndex,
+                                colName: module._fixedEncodeURIComponent(sortCols[j].column.name)
+                            };
                         } else {
                             colName = sortCols[j].column.name;
                             if (colName in sortColNames) {
@@ -4278,7 +4280,7 @@
             var associatonRef = this.derivedAssociationReference;
             var associationTableAlias = module._parserAliases.ASSOCIATION_TABLE;
 
-            var isAttributeGroup = !useEntity;
+            var isAttributeGroup = hasFKSort || !useEntity;
             if (isAttributeGroup) {
                 isAttributeGroup = allOutBounds.length > 0 ||
                                    (getTCRS && this.canUseTCRS) ||
@@ -4345,6 +4347,8 @@
                 for (k = allOutBounds.length - 1; k >= 0; k--) {
                     allOutBound = allOutBounds[k];
                     pseudoPathRes = getPseudoPath(k, fkAliasPreix + (k+1));
+                    // capture the used aliases (used in sorting)
+                    allOutBoundUsedAliases[k] = pseudoPathRes.usedOutAlias;
 
                     // TODO could be improved by adding $M to the begining?
                     // if the result is just the alias, we don't need to add it at all
@@ -4354,7 +4358,7 @@
                     }
 
                     // entity mode: F2:array_d(F2:*),F1:array_d(F1:*)
-                    // scalar mode: F2:F2:col,F1:F1:col
+                    // scalar mode: F2:=F2:col,F1:=F1:col
                     if (allOutBound.isPathColumn && allOutBound.canUseScalarProjection) {
                         aggList.push(fkAliasPreix + (k+1) + ":=" + pseudoPathRes.usedOutAlias + ":" + module._fixedEncodeURIComponent(allOutBound.baseColumn.name));
                     } else {
@@ -4388,9 +4392,13 @@
 
                 addedCols = {};
                 for(k = 0; k < sortCols.length; k++) {
-                    if (sortCols[k] in sortMap) {
-                        // sort column has been created via PseudoColumn, so we should use a new alias
-                        sortColumn = module._fixedEncodeURIComponent(sortCols[k]) + ":=" + sortMap[sortCols[k]];
+                    if (sortCols[k] in allOutBoundSortMap) {
+                        var allOutBoundSortMapInfo = allOutBoundSortMap[sortCols[k]];
+                        // the sortCols[k] is an alias that we assigned before
+                        // this will be in format of: <new-alias>:=<fk-alias>:<col-name>
+                        // so for example: F10:=F1:name
+                        sortColumn = sortCols[k] + ":=" +
+                                     allOutBoundUsedAliases[allOutBoundSortMapInfo.fkIndex] + ":" + allOutBoundSortMapInfo.colName;
                     } else {
                         sortColumn = module._fixedEncodeURIComponent(sortCols[k]);
                     }
