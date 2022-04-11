@@ -2315,7 +2315,7 @@
             if (this._display === undefined) {
                 var self = this;
 
-                // displaytype default valeu for compact/breif/inline should be markdown. otherwise table
+                // displaytype default value for compact/breif/inline should be markdown. otherwise table
                 var displayType =  (this._context === module._contexts.COMPACT_BRIEF_INLINE) ? module._displayTypes.MARKDOWN :  module._displayTypes.TABLE;
 
                 this._display = {
@@ -4526,6 +4526,14 @@
          */
         get compactSelect() {
             return this._contextualize(module._contexts.COMPACT_SELECT);
+        },
+
+        /**
+         * The _compact/select/association_ context of this reference.
+         * @type {ERMrest.Reference}
+         */
+        get compactSelectAssociation() {
+            return this._contextualize(module._contexts.COMPACT_SELECT_ASSOCIATION);
         },
 
         /**

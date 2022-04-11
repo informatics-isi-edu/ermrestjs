@@ -78,6 +78,20 @@ exports.execute = function (options) {
             extraExpectations(entryEditRef);
         });
 
+        it("contextualize should return a new 'compact/select' reference object.", function() {
+            var compactSelect = reference.contextualize.compactSelect;
+            expect(compactSelect._context).toBe("compact/select");
+
+            extraExpectations(compactSelect);
+        });
+
+        it("contextualize should return a new 'compact/select/association' reference object.", function() {
+            var compactSelectAssociation = reference.contextualize.compactSelectAssociation;
+            expect(compactSelectAssociation._context).toBe("compact/select/association");
+
+            extraExpectations(compactSelectAssociation);
+        });
+
         it("contextualize should return a new 'filter' reference object.", function() {
             expect(reference.contextualize.filter).toBeUndefined();
         });
