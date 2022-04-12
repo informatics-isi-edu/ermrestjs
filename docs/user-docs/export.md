@@ -37,7 +37,7 @@ To have a overall picture of how the export templates look like, you can refer t
     "templates": [
       {
         "displayname": <chaise-display-name>, // name displayed in dropdown menu in the client
-        "type": <FILE or BAG>, // whether we should call export module or send a direct request to ERMrest
+        "type": <FILE or BAG>,
         "outputs": [
           {
             "source": {
