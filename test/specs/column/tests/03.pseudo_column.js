@@ -906,23 +906,23 @@ exports.execute = function (options) {
             describe ("formatPresentation, ", function () {
                 it ("in entry mode should return null.", function () {
                     detailedPseudoColumnIndices.forEach(function (i) {
-                        expect(detailedColsWTuple[i].formatPresentation({"id":"1", "col":"1"}, "entry").value).toEqual("", "missmatch for index=" + i);
+                        expect(detailedColsWTuple[i].formatPresentation({"RID": "v", "id":"1", "col":"1"}, "entry").value).toEqual("", "missmatch for index=" + i);
                     });
                 });
 
                 it ("if aggregate is defined should return null.", function () {
                     for (var i = 11; i <= 15; i++) {
-                        expect(detailedColsWTuple[i].formatPresentation({"id":"1", "col":"1"}, "detailed").value).toEqual("", "missmatch for index=" + i);
+                        expect(detailedColsWTuple[i].formatPresentation({"RID": "v", "id":"1", "col":"1"}, "detailed").value).toEqual("", "missmatch for index=" + i);
                     }
                 });
 
                 it ("if it's not a one-to-one path, should return null.", function () {
-                    expect(detailedColsWTuple[9].formatPresentation({"main_table_id_col":"1", "col":"1"}, "detailed").value).toEqual("", "missmatch for index=" + i);
+                    expect(detailedColsWTuple[9].formatPresentation({"RID": "v", "main_table_id_col":"1", "col":"1"}, "detailed").value).toEqual("", "missmatch for index=" + i);
                 });
 
                 describe("if it's a self-link (KeyPseudoColumn in entity mode), ", function () {
                     it ("should honor the given `show_key_link`.", function () {
-                        expect(detailedColsWTuple[2].formatPresentation({"main_table_id_col": "1"},"detailed").value).toEqual('1', "index=5 missmatch.");
+                        expect(detailedColsWTuple[2].formatPresentation({"RID": "v", "main_table_id_col": "1"},"detailed").value).toEqual('1', "index=5 missmatch.");
                     });
                     // the rest of test cases are in 02.reference_column.js
                 });

@@ -6048,7 +6048,7 @@
                     if (Array.isArray(sm[col.name])) {
                         // compute it once and use it for all the self-links.
                         if (!selfLinkValue) {
-                            selfLinkValue = module._getRowTemplateVariables(col.table, context, self._data, null, col.key);
+                            selfLinkValue = module._getRowTemplateVariables(col.table, context, self._data, null);
                         }
 
                         sm[col.name].forEach(function (key) {

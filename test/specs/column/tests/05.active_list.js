@@ -407,7 +407,7 @@ exports.execute = function (options) {
                 "title": "self_link_rowname",
                 "waitFor": [],
                 "hasWaitFor": false,
-                "value": '<a href="' + recordURL + '/' + schemaName + ':' + tableName + '/rowname_col=main%20one">main one</a>'
+                "value": '<a href="' + getRecordURL(tableName, 'rowname_col', 'main one') + '">main one</a>'
             },
             {
                 "title": "self_link_id",

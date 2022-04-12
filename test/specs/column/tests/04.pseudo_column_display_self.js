@@ -70,7 +70,7 @@ exports.execute = function (options) {
             detailedExpectedValues = [
                 {
                     title: 'self-link',
-                    value: '<p>self_link <a href="' + recordURL + '/pseudo_column_display_self_schema:main/main_id=01">main one(1234501, 1,234,501)</a></p>\n'
+                    value: '<p>self_link <a href="' + getRecordURL('main', 'main_id', '01') + '">main one(1234501, 1,234,501)</a></p>\n'
                 },
                 {
                     title: 'normal column',

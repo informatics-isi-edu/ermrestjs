@@ -294,7 +294,8 @@ exports.execute = function(options) {
             }
 
             var testFKValue = function (col, context) {
-                var val = col.formatPresentation({table_1_int_key: 101}, context).value;
+                // since we're using the RID value for the link, its value is needed.
+                var val = col.formatPresentation({table_1_int_key: 101, RID: "test"}, context).value;
                 expect(val).toEqual("101");
             };
 

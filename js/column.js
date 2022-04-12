@@ -2142,7 +2142,7 @@ KeyPseudoColumn.prototype.formatPresentation = function(data, context, templateV
     }
     if (this.display.sourceMarkdownPattern) {
         var keyValues = {}, selfTemplateVariables = {
-            "$self": module._getRowTemplateVariables(this.table, context, data, null, this.key)
+            "$self": module._getRowTemplateVariables(this.table, context, data, null)
         };
         Object.assign(keyValues, templateVariables, selfTemplateVariables);
         return module.processMarkdownPattern(
@@ -3028,7 +3028,7 @@ FacetColumn.prototype = {
     /**
      * uncontextualized {@link ERMrest.Reference} that has all the joins specified
      * in the source with all the filters of other FacetColumns in the reference.
-     * 
+     *
      * The returned reference will be in the following format:
      * <main-table>/<facets of main table except current facet>/<path to current facet>
      *
@@ -3039,7 +3039,7 @@ FacetColumn.prototype = {
      * Then the source reference for R3 will be the following:
      * T:=S:T/(fk1)/term=1/$T/(fk2)/term2/$T/M:=(fk3)
      * As you can see it has all the filters of the main table + join to current table.
-     * 
+     *
      * Notes:
      * - This function used to reverse the path from the current facet to each of the
      *   other facets in the main reference. Since this was very inefficient, we decided
@@ -3048,7 +3048,7 @@ FacetColumn.prototype = {
      *   therefore might have filters or reused table instances (shared path). That's why
      *   we're ensuring to pass the whole facetObjectWrapper to parser, so it can properly
      *   parse it.
-     * 
+     *
      *
      * @type {ERMrest.Reference}
      */
@@ -3116,7 +3116,7 @@ FacetColumn.prototype = {
                 }
                 newLoc.customFacets = cfacet;
             }
-            
+
             /**
              * if it has path, we have to pass the whole facetObjectWrapper
              * as a join. this is so we can properly share path
@@ -3127,7 +3127,7 @@ FacetColumn.prototype = {
                     table.schema.name,
                     table.name
                 );
-            } 
+            }
             // if it only has filter (and no path, then we can just add the filter to path)
             else if (self._facetObjectWrapper.isFiltered) {
                 // TODO can this be improved?

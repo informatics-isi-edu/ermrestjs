@@ -937,11 +937,11 @@
      * @param  {string} context    current context
      * @param  {Object} data       the raw data
      * @param  {Object} linkedData the raw data of foreignkeys
-     * @param  {ERMrest.Reference=} ref to avoid creating a new reference
      * @return {Object}
      */
-    module._getRowTemplateVariables = function (table, context, data, linkedData, key) {
-        var uri = _generateRowURI(table, data, key);
+    module._getRowTemplateVariables = function (table, context, data, linkedData) {
+        // generate the uri based on the shortest key
+        var uri = _generateRowURI(table, data);
         if (uri == null) return {};
         var ref = new Reference(module.parse(uri), table.schema.catalog);
         return {
@@ -1077,7 +1077,8 @@
 
         var value, caption, unformatted, i;
         var cols = key.colset.columns,
-            rowURI = _generateRowURI(key.table, data, key);
+            // generate the uri based on the shortestkey
+            rowURI = _generateRowURI(key.table, data);
 
         // if any of key columns don't have data, this link is not valid.
         if (rowURI == null) {
@@ -1218,6 +1219,8 @@
 
         var value, rowname, i, caption, unformatted;
         var table = key.table;
+        // this is mainly used for making sure the data is valid,
+        // the actual url will use the shortest key
         var rowURI = _generateRowURI(table, data, key);
 
         // if any of key columns don't have data, this link is not valid.

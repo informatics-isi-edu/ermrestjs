@@ -94,6 +94,7 @@ exports.execute = function (options) {
 
         var referenceRawData = [
             {
+                "RID": "rid-1", // needed by the self_link logic
                 "id": "1",
                 "col_1": "9000",
                 "col_2": null,
@@ -105,6 +106,7 @@ exports.execute = function (options) {
                 "columns_schema_outbound_fk_7": "12"
             },
             {
+                "RID": "rid-2", // needed by the self_link logic
                 "id": "2",
                 "col_1": "9001",
                 "col_2": null,
@@ -118,7 +120,7 @@ exports.execute = function (options) {
         ];
 
         var compactRefExpectedPartialValue = [
-            '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:columns_table/id=1">1</a>',
+            '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:columns_table/RID=rid-1">1</a>',
             '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key/id=9000">9000</a>',
             '',
             '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key/id=4000">4000</a>',
@@ -341,7 +343,7 @@ exports.execute = function (options) {
             });
 
             compactRefExpectedLinkedValue = [
-                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:columns_table/id=1">1</a>',
+                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:columns_table/RID=' + utils.findEntityRID(options, schemaName, "columns_table", "id", "1") +'">1</a>',
                 '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key/RID=' + utils.findEntityRID(options, schemaName, "table_w_simple_key", "id", "9000") + '">Hank</a>',
                 '',
                 '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key/RID=' + utils.findEntityRID(options, schemaName, "table_w_simple_key", "id", "4000") + '">John</a>',
@@ -360,7 +362,7 @@ exports.execute = function (options) {
             ];
             var html = "";
             assetCompactExpectedValue = [
-                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_asset/id=1">1</a>',
+                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_asset/RID=' + utils.findEntityRID(options, schemaName, "table_w_asset", "id", "1") + '">1</a>',
                 '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:columns_table/RID=' + utils.findEntityRID(options, schemaName, "columns_table", "id", "1") + '">1</a>',
                 '1000', '10001', 'filename', '1,242', 'md5', 'sha256',
                 '',
