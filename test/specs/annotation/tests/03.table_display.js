@@ -105,6 +105,9 @@ exports.execute = function (options) {
 
         beforeAll(function() {
             options.ermRest.appLinkFn(appLinkFn);
+            options.ermRest.setClientConfig({
+                facetPanelDisplay: { open: ["compact/select/association"] }
+            });
         });
 
         describe('table entities without name/title nor table-display:row_name context annotation, ', function() {
@@ -474,16 +477,16 @@ exports.execute = function (options) {
                 var rowContent = function (id, caption) {
                     var ridVal = utils.findEntityRID(options, schemaName, tableName7, "id", id);
                     var iframeURL = 'https://dev.isrd.isi.edu/chaise/record/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/RID=' + ridVal;
-                    return '<figure class="embed-block -chaise-post-load">' + 
-                                '<div class="figcaption-wrapper" style="width: 100%;">' + 
-                                    '<figcaption class="embed-caption">' + caption + '</figcaption>' + 
-                                    '<div class="iframe-btn-container">' + 
+                    return '<figure class="embed-block -chaise-post-load">' +
+                                '<div class="figcaption-wrapper" style="width: 100%;">' +
+                                    '<figcaption class="embed-caption">' + caption + '</figcaption>' +
+                                    '<div class="iframe-btn-container">' +
                                         '<a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="' + iframeURL + '">' +
-                                            '<span class="glyphicon glyphicon-fullscreen"></span> Full screen' + 
-                                        '</a>' + 
-                                    '</div>' + 
-                                '</div>' + 
-                                '<iframe src="' + iframeURL + '"></iframe>' + 
+                                            '<span class="glyphicon glyphicon-fullscreen"></span> Full screen' +
+                                        '</a>' +
+                                    '</div>' +
+                                '</div>' +
+                                '<iframe src="' + iframeURL + '"></iframe>' +
                             '</figure>';
                 }
                 var content = '<h2>Movie titles</h2>\n';
@@ -636,13 +639,21 @@ exports.execute = function (options) {
             it ('should be able to access options in annotation.', function (done) {
                 options.ermRest.resolve(tableCompactOptionsEntityUri, {cid: "test"}).then(function (ref) {
                     var ref = ref.contextualize.compact
-                    expect(ref.display.collapseToc).toBeTruthy("Collapse ToC compact missmatch");
-                    expect(ref.display.hideColumnHeaders).toBeTruthy("Hide Column Headers compact missmatch");
+                    expect(ref.display.collapseToc).toBeTruthy("Collapse ToC compact mismatch");
+                    expect(ref.display.hideColumnHeaders).toBeTruthy("Hide Column Headers compact mismatch");
+                    expect(ref.display.facetPanelOpen).toBeTruthy("Facet Panel Open compact mismatch"); // should be true based on default value
 
                     // other contexts should return false values
                     ref = ref.contextualize.detailed;
-                    expect(ref.display.collapseToc).toBeFalsy("Collapse ToC detailed missmatch");
-                    expect(ref.display.hideColumnHeaders).toBeFalsy("Hide Column Headers detailed missmatch");
+                    expect(ref.display.collapseToc).toBeFalsy("Collapse ToC detailed mismatch");
+                    expect(ref.display.hideColumnHeaders).toBeFalsy("Hide Column Headers detailed mismatch");
+                    expect(ref.display.facetPanelOpen).toBeFalsy("Facet Panel Open detailed mismatch"); // should be false since not available in this context
+
+                    ref = ref.contextualize.compactSelect;
+                    expect(ref.display.facetPanelOpen).toBeFalsy("Facet Panel Open compact select mismatch"); // should be false based on default value
+
+                    ref = ref.contextualize.compactSelectAssociation;
+                    expect(ref.display.facetPanelOpen).toBeTruthy("Facet Panel Open compact select association mismatch"); // should be true based on chaise-config catalog annotation
 
                     done();
                 }).catch(function (err) {
@@ -660,7 +671,7 @@ exports.execute = function (options) {
 
                     expect(ref.contextualize.compact.display.hideRowCount).toBeFalsy("hide Row Count compact missmatch");
                     expect(ref.contextualize.compactSelect.display.hideRowCount).toBeTruthy("hide Row Count compact/select missmatch");
-                    
+
                     done();
                 }).catch(function (err) {
                     done.fail(err);
@@ -686,7 +697,7 @@ exports.execute = function (options) {
                 expect(refWithoutHideRowCountAnnot.contextualize.detailed.display.hideRowCount).toBeFalsy("missmatch for second reference");
             });
         });
-        
+
     });
-    
+
 };

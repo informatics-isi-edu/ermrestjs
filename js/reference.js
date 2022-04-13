@@ -36,7 +36,13 @@
 
         var defaultConfig = {
             internalHosts: {"type": "array", "value": []},
-            disableExternalLinkModal: {"type": "boolean", "value": false}
+            disableExternalLinkModal: {"type": "boolean", "value": false},
+            // NOTE: will be expanded later to include `closed` and `hidden`
+            facetPanelDisplay: {"type": "object", "value": {
+                    "open": ["compact"],
+                    "closed": ["compact/select"]
+                }
+            }
         };
 
         // make sure the value is correct and has the valid type
@@ -52,6 +58,12 @@
                 res[key] = def.value;
             }
         }
+
+        // properly initialize facetPanelDisplay
+        var ccFacetDisplay = res.facetPanelDisplay;
+        // initialize open/closed if not set in chaiseConfig or it's not an array
+        if (!ccFacetDisplay.open || !Array.isArray(ccFacetDisplay.open)) ccFacetDisplay.open = defaultConfig.facetPanelDisplay.value.open;
+        if (!ccFacetDisplay.closed || !Array.isArray(ccFacetDisplay.closed)) ccFacetDisplay.closed = defaultConfig.facetPanelDisplay.value.closed;
 
         module._clientConfig = res;
 
@@ -2409,6 +2421,39 @@
                     this._display.sourceWaitFor = [];
                     this._display.sourceHasWaitFor = false;
                 }
+
+                // current default chaise uses is open for compact and close for all other contexts
+                // facet panel is only available in COMPACT, COMPACT_SELECT, and COMPACT_SELECT_ASSOCIATION
+                // NOTE: will be extended to support COMPACT_SELECT_FOREIGN_KEY and COMPACT_SELECT_SHOW_MORE later
+                var fpo = this._context === module._contexts.COMPACT ? true : false;
+                if (this._context && module._clientConfig) {
+                    var ccFacetDisplay = module._clientConfig.facetPanelDisplay,
+                        context = this._context;
+
+                    // check inheritence
+                    if (context.startsWith(module._contexts.COMPACT) && !context.startsWith(module._contexts.COMPACT_BRIEF)) {
+                        // check "compact" in open/closed for inheritence
+                        if (ccFacetDisplay.closed.includes(module._contexts.COMPACT)) fpo = false;
+                        if (ccFacetDisplay.open.includes(module._contexts.COMPACT)) fpo = true;
+
+                        // check "compact/select" in open/closed for inheritence
+                        if (context.startsWith(module._contexts.COMPACT_SELECT)) {
+                            if (ccFacetDisplay.closed.includes(module._contexts.COMPACT_SELECT)) fpo = false;
+                            if (ccFacetDisplay.open.includes(module._contexts.COMPACT_SELECT)) fpo = true;
+                        }
+
+                        // check exact context
+                        // check closed first, but open will override if this specific reference's context is present in both
+                        if (ccFacetDisplay.closed.includes(context)) fpo = false;
+                        // If this specific context is defined in open, set to true
+                        if (ccFacetDisplay.open.includes(context)) fpo = true;
+                    } else {
+                        // facetpanel won't be used, set to false regardless
+                        fpo = false;
+                    }
+                }
+                this._display.facetPanelOpen = fpo;
+
 
                 /**
                  * Check the catalog, schema, and table to see if the saved query UI should show
