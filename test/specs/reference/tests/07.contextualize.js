@@ -92,6 +92,41 @@ exports.execute = function (options) {
             extraExpectations(compactSelectAssociation);
         });
 
+        it("contextualize should return a new 'compact/select/association/link' reference object.", function() {
+            var compactSelectAssociationLink = reference.contextualize.compactSelectAssociationLink;
+            expect(compactSelectAssociationLink._context).toBe("compact/select/association/link");
+
+            extraExpectations(compactSelectAssociationLink);
+        });
+
+        it("contextualize should return a new 'compact/select/association/unlink' reference object.", function() {
+            var compactSelectAssociationUnlink = reference.contextualize.compactSelectAssociationUnlink;
+            expect(compactSelectAssociationUnlink._context).toBe("compact/select/association/unlink");
+
+            extraExpectations(compactSelectAssociationUnlink);
+        });
+
+        it("contextualize should return a new 'compact/select/foreign_key' reference object.", function() {
+            var compactSelectFK = reference.contextualize.compactSelectForeignKey;
+            expect(compactSelectFK._context).toBe("compact/select/foreign_key");
+
+            extraExpectations(compactSelectFK);
+        });
+
+        it("contextualize should return a new 'compact/select/saved_queries' reference object.", function() {
+            var compactSelectSQ = reference.contextualize.compactSelectSavedQueries;
+            expect(compactSelectSQ._context).toBe("compact/select/saved_queries");
+
+            extraExpectations(compactSelectSQ);
+        });
+
+        it("contextualize should return a new 'compact/select/show_more' reference object.", function() {
+            var compactSelectSM = reference.contextualize.compactSelectShowMore;
+            expect(compactSelectSM._context).toBe("compact/select/show_more");
+
+            extraExpectations(compactSelectSM);
+        });
+
         it("contextualize should return a new 'filter' reference object.", function() {
             expect(reference.contextualize.filter).toBeUndefined();
         });

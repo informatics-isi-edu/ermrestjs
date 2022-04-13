@@ -2423,30 +2423,27 @@
                 }
 
                 // current default chaise uses is open for compact and close for all other contexts
-                // facet panel is only available in COMPACT, COMPACT_SELECT, and COMPACT_SELECT_ASSOCIATION
-                // NOTE: will be extended to support COMPACT_SELECT_FOREIGN_KEY and COMPACT_SELECT_SHOW_MORE later
                 var fpo = this._context === module._contexts.COMPACT ? true : false;
                 if (this._context && module._clientConfig) {
-                    var ccFacetDisplay = module._clientConfig.facetPanelDisplay,
-                        context = this._context;
+                    var context = this._context;
 
-                    // check inheritence
+                    // facet panel is not available in COMPACT_BRIEF and it's subcontexts
                     if (context.startsWith(module._contexts.COMPACT) && !context.startsWith(module._contexts.COMPACT_BRIEF)) {
-                        // check "compact" in open/closed for inheritence
-                        if (ccFacetDisplay.closed.includes(module._contexts.COMPACT)) fpo = false;
-                        if (ccFacetDisplay.open.includes(module._contexts.COMPACT)) fpo = true;
+                        var ccFacetDisplay = module._clientConfig.facetPanelDisplay;
+                        // check inheritence
+                        // array is in order from parent context to more specific sub contexts
+                        for (var i=0; i < module._compactFacetingContexts.length; i++) {
+                            var ctx = module._compactFacetingContexts[i];
+                            // only check contexts that match
+                            // "compact/select/*"" where * can be association, foreign_key, saved_queries, or show_more
+                            if (context.startsWith(ctx)) {
+                                if (ccFacetDisplay.closed.includes(ctx)) fpo = false;
+                                if (ccFacetDisplay.open.includes(ctx)) fpo = true;
 
-                        // check "compact/select" in open/closed for inheritence
-                        if (context.startsWith(module._contexts.COMPACT_SELECT)) {
-                            if (ccFacetDisplay.closed.includes(module._contexts.COMPACT_SELECT)) fpo = false;
-                            if (ccFacetDisplay.open.includes(module._contexts.COMPACT_SELECT)) fpo = true;
+                                // stop checking if we found the current context in the array, inheritence checks should be complete
+                                if (context === ctx) break;
+                            }
                         }
-
-                        // check exact context
-                        // check closed first, but open will override if this specific reference's context is present in both
-                        if (ccFacetDisplay.closed.includes(context)) fpo = false;
-                        // If this specific context is defined in open, set to true
-                        if (ccFacetDisplay.open.includes(context)) fpo = true;
                     } else {
                         // facetpanel won't be used, set to false regardless
                         fpo = false;
@@ -4579,6 +4576,46 @@
          */
         get compactSelectAssociation() {
             return this._contextualize(module._contexts.COMPACT_SELECT_ASSOCIATION);
+        },
+
+        /**
+         * The _compact/select/association/link_ context of this reference.
+         * @type {ERMrest.Reference}
+         */
+        get compactSelectAssociationLink() {
+            return this._contextualize(module._contexts.COMPACT_SELECT_ASSOCIATION_LINK);
+        },
+
+        /**
+         * The _compact/select/association/unlink_ context of this reference.
+         * @type {ERMrest.Reference}
+         */
+        get compactSelectAssociationUnlink() {
+            return this._contextualize(module._contexts.COMPACT_SELECT_ASSOCIATION_UNLINK);
+        },
+
+        /**
+         * The _compact/select/foreign_key_ context of this reference.
+         * @type {ERMrest.Reference}
+         */
+        get compactSelectForeignKey() {
+            return this._contextualize(module._contexts.COMPACT_SELECT_FOREIGN_KEY);
+        },
+
+        /**
+         * The _compact/select/saved_queries_ context of this reference.
+         * @type {ERMrest.Reference}
+         */
+        get compactSelectSavedQueries() {
+            return this._contextualize(module._contexts.COMPACT_SELECT_SAVED_QUERIES);
+        },
+
+        /**
+         * The _compact/select/show_more_ context of this reference.
+         * @type {ERMrest.Reference}
+         */
+        get compactSelectShowMore() {
+            return this._contextualize(module._contexts.COMPACT_SELECT_SHOW_MORE);
         },
 
         /**
