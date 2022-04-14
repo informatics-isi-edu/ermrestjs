@@ -105,9 +105,6 @@ exports.execute = function (options) {
 
         beforeAll(function() {
             options.ermRest.appLinkFn(appLinkFn);
-            options.ermRest.setClientConfig({
-                facetPanelDisplay: { open: ["compact/select/association"] }
-            });
         });
 
         describe('table entities without name/title nor table-display:row_name context annotation, ', function() {
@@ -641,19 +638,169 @@ exports.execute = function (options) {
                     var ref = ref.contextualize.compact
                     expect(ref.display.collapseToc).toBeTruthy("Collapse ToC compact mismatch");
                     expect(ref.display.hideColumnHeaders).toBeTruthy("Hide Column Headers compact mismatch");
-                    expect(ref.display.facetPanelOpen).toBeTruthy("Facet Panel Open compact mismatch"); // should be true based on default value
 
                     // other contexts should return false values
                     ref = ref.contextualize.detailed;
                     expect(ref.display.collapseToc).toBeFalsy("Collapse ToC detailed mismatch");
                     expect(ref.display.hideColumnHeaders).toBeFalsy("Hide Column Headers detailed mismatch");
-                    expect(ref.display.facetPanelOpen).toBeFalsy("Facet Panel Open detailed mismatch"); // should be false since not available in this context
+
+                    done();
+                }).catch(function (err) {
+                    done.fail(err);
+                });
+            });
+        });
+
+        describe("display.facetPanelOpen", function () {
+            it ("should be set properly on references of different contexts based on the chaise defaults (defined using setClientConfig)", function (done) {
+                // chaise defaults
+                options.ermRest.setClientConfig({
+                    facetPanelDisplay: { open: ["compact"], closed: ["compact/select"] }
+                });
+                options.ermRest.resolve(tableCompactOptionsEntityUri, {cid: "test"}).then(function (ref) {
+                    var ref = ref.contextualize.compact
+                     // based on supplied default value
+                    expect(ref.display.facetPanelOpen).toBeTruthy("Facet Panel Open compact mismatch");
+
+                    ref = ref.contextualize.detailed;
+                     // not available in this context
+                    expect(ref.display.facetPanelOpen).toBeFalsy("Facet Panel Open detailed mismatch");
 
                     ref = ref.contextualize.compactSelect;
-                    expect(ref.display.facetPanelOpen).toBeFalsy("Facet Panel Open compact select mismatch"); // should be false based on default value
+                     // based on supplied default value
+                    expect(ref.display.facetPanelOpen).toBeFalsy("Facet Panel Open compact select mismatch");
 
                     ref = ref.contextualize.compactSelectAssociation;
-                    expect(ref.display.facetPanelOpen).toBeTruthy("Facet Panel Open compact select association mismatch"); // should be true based on chaise-config catalog annotation
+                     // based on inheritence
+                    expect(ref.display.facetPanelOpen).toBeFalsy("Facet Panel Open compact select association mismatch");
+
+                    ref = ref.contextualize.compactSelectAssociationLink;
+                    // based on inheritence
+                    expect(ref.display.facetPanelOpen).toBeFalsy("Facet Panel Open compact select association link mismatch");
+
+                    ref = ref.contextualize.compactSelectForeignKey;
+                    // based on supplied value
+                    expect(ref.display.facetPanelOpen).toBeFalsy("Facet Panel Open compact select foreign_key mismatch");
+
+                    done();
+                }).catch(function (err) {
+                    done.fail(err);
+                });
+            });
+
+            it ("should be set properly on references of different contexts based on the open: ['*']", function (done) {
+                // chaise defaults
+                options.ermRest.setClientConfig({
+                    facetPanelDisplay: { open: ["*"], closed: ["compact/select/foreign_key"] }
+                });
+                options.ermRest.resolve(tableCompactOptionsEntityUri, {cid: "test"}).then(function (ref) {
+                    var ref = ref.contextualize.compact
+                    expect(ref.display.facetPanelOpen).toBeTruthy("Facet Panel Open compact mismatch");
+
+                    ref = ref.contextualize.detailed;
+                    expect(ref.display.facetPanelOpen).toBeFalsy("Facet Panel Open detailed mismatch");
+
+                    ref = ref.contextualize.compactSelect;
+                    expect(ref.display.facetPanelOpen).toBeTruthy("Facet Panel Open compact select mismatch");
+
+                    ref = ref.contextualize.compactSelectAssociation;
+                    expect(ref.display.facetPanelOpen).toBeTruthy("Facet Panel Open compact select association mismatch");
+
+                    ref = ref.contextualize.compactSelectAssociationLink;
+                    expect(ref.display.facetPanelOpen).toBeTruthy("Facet Panel Open compact select association link mismatch");
+
+                    ref = ref.contextualize.compactSelectForeignKey;
+                    expect(ref.display.facetPanelOpen).toBeFalsy("Facet Panel Open compact select foreign_key mismatch");
+
+                    done();
+                }).catch(function (err) {
+                    done.fail(err);
+                });
+            });
+
+            it ("should be set properly on references of different contexts based on defaults and association open", function (done) {
+                // chaise defaults
+                options.ermRest.setClientConfig({
+                    facetPanelDisplay: { open: ["compact", "compact/select/association"], closed: ["compact/select"] }
+                });
+                options.ermRest.resolve(tableCompactOptionsEntityUri, {cid: "test"}).then(function (ref) {
+                    var ref = ref.contextualize.compact
+                    expect(ref.display.facetPanelOpen).toBeTruthy("Facet Panel Open compact mismatch");
+
+                    ref = ref.contextualize.detailed;
+                    expect(ref.display.facetPanelOpen).toBeFalsy("Facet Panel Open detailed mismatch");
+
+                    ref = ref.contextualize.compactSelect;
+                    expect(ref.display.facetPanelOpen).toBeFalsy("Facet Panel Open compact select mismatch");
+
+                    ref = ref.contextualize.compactSelectAssociation;
+                    expect(ref.display.facetPanelOpen).toBeTruthy("Facet Panel Open compact select association mismatch");
+
+                    ref = ref.contextualize.compactSelectAssociationLink;
+                    expect(ref.display.facetPanelOpen).toBeTruthy("Facet Panel Open compact select association link mismatch");
+
+                    ref = ref.contextualize.compactSelectForeignKey;
+                    expect(ref.display.facetPanelOpen).toBeFalsy("Facet Panel Open compact select foreign_key mismatch");
+
+                    done();
+                }).catch(function (err) {
+                    done.fail(err);
+                });
+            });
+
+            it ("should be set properly on references of different contexts based on open overriding closed", function (done) {
+                // chaise defaults
+                options.ermRest.setClientConfig({
+                    facetPanelDisplay: { open: ["compact/select/association", "compact/select"], closed: ["compact/select"] }
+                });
+                options.ermRest.resolve(tableCompactOptionsEntityUri, {cid: "test"}).then(function (ref) {
+                    var ref = ref.contextualize.compact
+                    expect(ref.display.facetPanelOpen).toBeFalsy("Facet Panel Open compact mismatch");
+
+                    ref = ref.contextualize.detailed;
+                    expect(ref.display.facetPanelOpen).toBeFalsy("Facet Panel Open detailed mismatch");
+
+                    ref = ref.contextualize.compactSelect;
+                    expect(ref.display.facetPanelOpen).toBeTruthy("Facet Panel Open compact select mismatch");
+
+                    ref = ref.contextualize.compactSelectAssociation;
+                    expect(ref.display.facetPanelOpen).toBeTruthy("Facet Panel Open compact select association mismatch");
+
+                    ref = ref.contextualize.compactSelectAssociationLink;
+                    expect(ref.display.facetPanelOpen).toBeTruthy("Facet Panel Open compact select association link mismatch");
+
+                    ref = ref.contextualize.compactSelectForeignKey;
+                    expect(ref.display.facetPanelOpen).toBeTruthy("Facet Panel Open compact select foreign_key mismatch");
+
+                    done();
+                }).catch(function (err) {
+                    done.fail(err);
+                });
+            });
+
+            it ("should be set properly on references of different contexts if only one property is defined", function (done) {
+                // chaise defaults
+                options.ermRest.setClientConfig({
+                    facetPanelDisplay: { open: ["compact/select/association"] }
+                });
+                options.ermRest.resolve(tableCompactOptionsEntityUri, {cid: "test"}).then(function (ref) {
+                    var ref = ref.contextualize.compact
+                    expect(ref.display.facetPanelOpen).toBeFalsy("Facet Panel Open compact mismatch");
+
+                    ref = ref.contextualize.detailed;
+                    expect(ref.display.facetPanelOpen).toBeFalsy("Facet Panel Open detailed mismatch");
+
+                    ref = ref.contextualize.compactSelect;
+                    expect(ref.display.facetPanelOpen).toBeFalsy("Facet Panel Open compact select mismatch");
+
+                    ref = ref.contextualize.compactSelectAssociation;
+                    expect(ref.display.facetPanelOpen).toBeTruthy("Facet Panel Open compact select association mismatch");
+
+                    ref = ref.contextualize.compactSelectAssociationLink;
+                    expect(ref.display.facetPanelOpen).toBeTruthy("Facet Panel Open compact select association link mismatch");
+
+                    ref = ref.contextualize.compactSelectForeignKey;
+                    expect(ref.display.facetPanelOpen).toBeFalsy("Facet Panel Open compact select foreign_key mismatch");
 
                     done();
                 }).catch(function (err) {

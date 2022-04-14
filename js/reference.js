@@ -34,15 +34,11 @@
         var inp = isObjectAndNotNull(clientConfig) ? clientConfig : {};
         var res = {};
 
+        // defaults used when `clientConfig` wasn't properly initialized in chaise or other webapps
         var defaultConfig = {
             internalHosts: {"type": "array", "value": []},
             disableExternalLinkModal: {"type": "boolean", "value": false},
-            // NOTE: will be expanded later to include `closed` and `hidden`
-            facetPanelDisplay: {"type": "object", "value": {
-                    "open": ["compact"],
-                    "closed": ["compact/select"]
-                }
-            }
+            facetPanelDisplay: {"type": "object", "value": {}}
         };
 
         // make sure the value is correct and has the valid type
@@ -58,12 +54,6 @@
                 res[key] = def.value;
             }
         }
-
-        // properly initialize facetPanelDisplay
-        var ccFacetDisplay = res.facetPanelDisplay;
-        // initialize open/closed if not set in chaiseConfig or it's not an array
-        if (!ccFacetDisplay.open || !Array.isArray(ccFacetDisplay.open)) ccFacetDisplay.open = defaultConfig.facetPanelDisplay.value.open;
-        if (!ccFacetDisplay.closed || !Array.isArray(ccFacetDisplay.closed)) ccFacetDisplay.closed = defaultConfig.facetPanelDisplay.value.closed;
 
         module._clientConfig = res;
 
@@ -2422,35 +2412,35 @@
                     this._display.sourceHasWaitFor = false;
                 }
 
-                // current default chaise uses is open for compact and close for all other contexts
-                var fpo = this._context === module._contexts.COMPACT ? true : false;
+                // if facetpanel won't be used, set to false
+                var fpo = false;
+                // NOTE: clientConfig should always be defined if used by a client, some ermrestJS tests don't always set it, so don't calculate this for those tests
                 if (this._context && module._clientConfig) {
-                    var context = this._context;
+                    // _clientConfig.facetPanelDisplay will be defined from configuration or based on chaise defaults
+                    var ccFacetDisplay = module._clientConfig.facetPanelDisplay,
+                        context = this._context;
 
-                    // facet panel is not available in COMPACT_BRIEF and it's subcontexts
+                    // facet panel is not available in COMPACT_BRIEF and it's subcontexts, and other non-compact contexts
                     if (context.startsWith(module._contexts.COMPACT) && !context.startsWith(module._contexts.COMPACT_BRIEF)) {
-                        var ccFacetDisplay = module._clientConfig.facetPanelDisplay;
+                        if (ccFacetDisplay.closed && ccFacetDisplay.closed.includes("*")) fpo = false;
+                        if (ccFacetDisplay.open && ccFacetDisplay.open.includes("*")) fpo = true;
                         // check inheritence
                         // array is in order from parent context to more specific sub contexts
                         for (var i=0; i < module._compactFacetingContexts.length; i++) {
                             var ctx = module._compactFacetingContexts[i];
                             // only check contexts that match
-                            // "compact/select/*"" where * can be association, foreign_key, saved_queries, or show_more
+                            // "compact/select/*"" where * can be association (or subcontexts), foreign_key, saved_queries, or show_more
                             if (context.startsWith(ctx)) {
-                                if (ccFacetDisplay.closed.includes(ctx)) fpo = false;
-                                if (ccFacetDisplay.open.includes(ctx)) fpo = true;
+                                if (ccFacetDisplay.closed && ccFacetDisplay.closed.includes(ctx)) fpo = false;
+                                if (ccFacetDisplay.open && ccFacetDisplay.open.includes(ctx)) fpo = true;
 
                                 // stop checking if we found the current context in the array, inheritence checks should be complete
                                 if (context === ctx) break;
                             }
                         }
-                    } else {
-                        // facetpanel won't be used, set to false regardless
-                        fpo = false;
                     }
                 }
                 this._display.facetPanelOpen = fpo;
-
 
                 /**
                  * Check the catalog, schema, and table to see if the saved query UI should show
