@@ -445,13 +445,13 @@ exports.execute = function (options) {
         });
 
         it('module._renderMustacheTemplate() should inject $session obj', function () {
-            expect(module._renderMustacheTemplate("{{$session.display_name}}", {})).not.toBeNull("display_name is null");
-            expect(module._renderMustacheTemplate("{{$session.id}}", {})).not.toBeNull("id is null");
-            expect(module._renderMustacheTemplate("{{$session.identities}}", {})).not.toBeNull("identities is null");
+            expect(module._renderMustacheTemplate("{{$session.client.display_name}}", {})).not.toBeNull("display_name is null");
+            expect(module._renderMustacheTemplate("{{$session.client.id}}", {})).not.toBeNull("id is null");
+            expect(module._renderMustacheTemplate("{{$session.client.identities}}", {})).not.toBeNull("identities is null");
             expect(module._renderMustacheTemplate("{{$session.attributes}}", {})).not.toBeNull("attributes is null");
 
-            expect(module._renderMustacheTemplate("{{$session.display_name}}", {})).toBe(options.session.client.display_name, "display_name not set");
-            expect(module._renderMustacheTemplate("{{{$session.id}}}", {})).toBe(options.session.client.id, "id not set");
+            expect(module._renderMustacheTemplate("{{$session.client.display_name}}", {})).toBe(options.session.client.display_name, "display_name not set");
+            expect(module._renderMustacheTemplate("{{{$session.client.id}}}", {})).toBe(options.session.client.id, "id not set");
         });
 
         it('module._renderMustacheTemplate() should NOT inject $location obj', function () {
@@ -754,17 +754,17 @@ exports.execute = function (options) {
 
             it('injecting $session obj', function () {
                 // test cases dependent on which user runs them
-                expect(module.renderHandlebarsTemplate("{{$session.display_name}}", {})).not.toBeNull();
-                expect(module.renderHandlebarsTemplate("{{$session.id}}", {})).not.toBeNull();
-                expect(module.renderHandlebarsTemplate("{{$session.identities}}", {})).not.toBeNull();
+                expect(module.renderHandlebarsTemplate("{{$session.client.display_name}}", {})).not.toBeNull();
+                expect(module.renderHandlebarsTemplate("{{$session.client.id}}", {})).not.toBeNull();
+                expect(module.renderHandlebarsTemplate("{{$session.client.identities}}", {})).not.toBeNull();
                 expect(module.renderHandlebarsTemplate("{{$session.attributes}}", {})).not.toBeNull();
 
-                expect(module.renderHandlebarsTemplate("{{$session.display_name}}", {})).toBe(options.session.client.display_name);
-                expect(module.renderHandlebarsTemplate("{{$session.id}}", {})).toBe(options.session.client.id);
+                expect(module.renderHandlebarsTemplate("{{$session.client.display_name}}", {})).toBe(options.session.client.display_name);
+                expect(module.renderHandlebarsTemplate("{{$session.client.id}}", {})).toBe(options.session.client.id);
 
                 expect(module.renderHandlebarsTemplate("{{#each $session.attributes}}{{#if @first}}{{../$session.attributes.length}}{{/if}}{{/each}}", {})).not.toBeNull();
                 expect(module.renderHandlebarsTemplate("{{#each $session.attributes}}{{#if @first}}{{this.type}}{{/if}}{{/each}}", {})).not.toBeNull();
-                expect(module.renderHandlebarsTemplate("{{#each $session.identities}}{{#if @first}}{{../$session.identities.length}}{{/if}}{{/each}}", {})).not.toBeNull();
+                expect(module.renderHandlebarsTemplate("{{#each $session.client.identities}}{{#if @first}}{{../$session.client.identities.length}}{{/if}}{{/each}}", {})).not.toBeNull();
             });
 
             it('NOT injecting $location obj', function () {
