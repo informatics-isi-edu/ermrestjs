@@ -2761,6 +2761,9 @@
             obj.$session = {
                 display_name: session.client.display_name,
                 email: session.client.email,
+                // expectation is that extensions will always be defined by webauthn, but not until the changes are on master
+                // default to empty object to make checking has_ras_permissions simpler in templating
+                extensions: session.client.extensions || {},
                 full_name: session.client.full_name,
                 id: session.client.id,
                 identities: session.client.identities,
