@@ -34,9 +34,11 @@
         var inp = isObjectAndNotNull(clientConfig) ? clientConfig : {};
         var res = {};
 
+        // defaults used when `clientConfig` wasn't properly initialized in chaise or other webapps
         var defaultConfig = {
             internalHosts: {"type": "array", "value": []},
-            disableExternalLinkModal: {"type": "boolean", "value": false}
+            disableExternalLinkModal: {"type": "boolean", "value": false},
+            facetPanelDisplay: {"type": "object", "value": {}}
         };
 
         // make sure the value is correct and has the valid type
@@ -2315,7 +2317,7 @@
             if (this._display === undefined) {
                 var self = this;
 
-                // displaytype default valeu for compact/breif/inline should be markdown. otherwise table
+                // displaytype default value for compact/breif/inline should be markdown. otherwise table
                 var displayType =  (this._context === module._contexts.COMPACT_BRIEF_INLINE) ? module._displayTypes.MARKDOWN :  module._displayTypes.TABLE;
 
                 this._display = {
@@ -2409,6 +2411,36 @@
                     this._display.sourceWaitFor = [];
                     this._display.sourceHasWaitFor = false;
                 }
+
+                // if facetpanel won't be used or the _clientConfig.facetPanelDisplay doesn't include the current context or a parent context, set to null
+                var fpo = null;
+                // NOTE: clientConfig should always be defined if used by a client, some ermrestJS tests don't always set it, so don't calculate this for those tests
+                if (this._context && module._clientConfig) {
+                    // _clientConfig.facetPanelDisplay will be defined from configuration or based on chaise defaults
+                    var ccFacetDisplay = module._clientConfig.facetPanelDisplay,
+                        context = this._context;
+
+                    // facet panel is not available in COMPACT_BRIEF and it's subcontexts, and other non-compact contexts
+                    if (context.startsWith(module._contexts.COMPACT) && !context.startsWith(module._contexts.COMPACT_BRIEF)) {
+                        if (ccFacetDisplay.closed && ccFacetDisplay.closed.includes("*")) fpo = false;
+                        if (ccFacetDisplay.open && ccFacetDisplay.open.includes("*")) fpo = true;
+                        // check inheritence
+                        // array is in order from parent context to more specific sub contexts
+                        for (var i=0; i < module._compactFacetingContexts.length; i++) {
+                            var ctx = module._compactFacetingContexts[i];
+                            // only check contexts that match
+                            // "compact/select/*"" where * can be association (or subcontexts), foreign_key, saved_queries, or show_more
+                            if (context.startsWith(ctx)) {
+                                if (ccFacetDisplay.closed && ccFacetDisplay.closed.includes(ctx)) fpo = false;
+                                if (ccFacetDisplay.open && ccFacetDisplay.open.includes(ctx)) fpo = true;
+
+                                // stop checking if we found the current context in the array, inheritence checks should be complete
+                                if (context === ctx) break;
+                            }
+                        }
+                    }
+                }
+                this._display.facetPanelOpen = fpo;
 
                 /**
                  * Check the catalog, schema, and table to see if the saved query UI should show
@@ -4526,6 +4558,54 @@
          */
         get compactSelect() {
             return this._contextualize(module._contexts.COMPACT_SELECT);
+        },
+
+        /**
+         * The _compact/select/association_ context of this reference.
+         * @type {ERMrest.Reference}
+         */
+        get compactSelectAssociation() {
+            return this._contextualize(module._contexts.COMPACT_SELECT_ASSOCIATION);
+        },
+
+        /**
+         * The _compact/select/association/link_ context of this reference.
+         * @type {ERMrest.Reference}
+         */
+        get compactSelectAssociationLink() {
+            return this._contextualize(module._contexts.COMPACT_SELECT_ASSOCIATION_LINK);
+        },
+
+        /**
+         * The _compact/select/association/unlink_ context of this reference.
+         * @type {ERMrest.Reference}
+         */
+        get compactSelectAssociationUnlink() {
+            return this._contextualize(module._contexts.COMPACT_SELECT_ASSOCIATION_UNLINK);
+        },
+
+        /**
+         * The _compact/select/foreign_key_ context of this reference.
+         * @type {ERMrest.Reference}
+         */
+        get compactSelectForeignKey() {
+            return this._contextualize(module._contexts.COMPACT_SELECT_FOREIGN_KEY);
+        },
+
+        /**
+         * The _compact/select/saved_queries_ context of this reference.
+         * @type {ERMrest.Reference}
+         */
+        get compactSelectSavedQueries() {
+            return this._contextualize(module._contexts.COMPACT_SELECT_SAVED_QUERIES);
+        },
+
+        /**
+         * The _compact/select/show_more_ context of this reference.
+         * @type {ERMrest.Reference}
+         */
+        get compactSelectShowMore() {
+            return this._contextualize(module._contexts.COMPACT_SELECT_SHOW_MORE);
         },
 
         /**

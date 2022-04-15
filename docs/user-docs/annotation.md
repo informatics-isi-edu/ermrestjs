@@ -1026,6 +1026,12 @@ List of _context_ names that are used in ERMrest:
   - `"compact/brief"`: A limited compact, tabular presentation of data from multiple entities to be shown under the `detailed` context. In this context, only a page of data will be shown with a link to the access the `compact` context for more detail (related entities section).
   - `"compact/brief/inline"`: A limited inline, compact, tabular presentation of data from multiple entities to be shown under the `detailed` context. In this context, only a page of data will be shown with a link to the access the `compact` context for more detail (inline related entities section).
   - `"compact/select"`: A sub-context of `compact` that is used for selecting entities, e.g. when prompting the user for choosing a foreign key or facet value.
+    - `"compact/select/association"`: A sub-context of `compact/select` used for selecting entities to link to or unlink from the main record.
+      - `"compact/select/association/link"`: A sub-context of `compact/select/association` used for selecting entities to link to the main record.
+      - `"compact/select/association/unlink"`: A sub-context of `compact/select/association` used for selecting entities to unlink from the main record.
+    - `"compact/select/foreign_key"`: A sub-context of `compact/select` used for selecting entities for a foreign key value in an `entry` context.
+    - `"compact/select/saved_queries"`: A sub-context of `compact/select` used for selecting a saved query to apply in `compact` context.
+    - `"compact/select/show_more"`: A sub-context of `compact/select` used for selecting entities as a facet value.
 - `"detailed"`: Any detailed read-only, entity-level presentation context.
 - `"entry"`: Any data-entry presentation context, i.e. when prompting the user for input column values.
   - `"entry/edit"`: A sub-context of `entry` that only applies to editing existing resources.
