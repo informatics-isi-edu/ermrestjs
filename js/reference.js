@@ -2412,8 +2412,8 @@
                     this._display.sourceHasWaitFor = false;
                 }
 
-                // if facetpanel won't be used, set to false
-                var fpo = false;
+                // if facetpanel won't be used or the _clientConfig.facetPanelDisplay doesn't include the current context or a parent context, set to null
+                var fpo = null;
                 // NOTE: clientConfig should always be defined if used by a client, some ermrestJS tests don't always set it, so don't calculate this for those tests
                 if (this._context && module._clientConfig) {
                     // _clientConfig.facetPanelDisplay will be defined from configuration or based on chaise defaults
