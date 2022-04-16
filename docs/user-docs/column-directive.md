@@ -185,7 +185,7 @@ Therefore the following are acceptable ways of defining source path:
   [{"inbound": ["S1", "FK1"]}, {"outbound": ["S2", "FK2"]}, "Column3"]
   [{"sourcekey": "path_to_f1"}, {"outbound": ["S2", "FK2"]}, "Column3"]
   [{"sourcekey": "path_to_f2"}, "Column3"]
-  [{"inbound": ["S1", "FK1"]}, {"filter": "RCB", "operand_pattern": "{{{$session.id}}}"}, "Column3"]
+  [{"inbound": ["S1", "FK1"]}, {"filter": "RCB", "operand_pattern": "{{{$session.client.id}}}"}, "Column3"]
   ```
 
 ##### Source path with reusable prefix

@@ -275,15 +275,16 @@ ISO datetime is {{{$moment.ISOString}}}
 ```
 
 #### $session Usage
-`$session` is an object that gives you access to information about the current logged in user's session. The properties are mostly the same properties returned from webauthn from the `client` object in the response. The following properties are included:
+`$session` is an object that gives you access to information about the current logged in user's session. The properties are the same properties returned from the webauthn response. The following are some of the properties included (subject to change as properties are added and removed from webauthn):
 ```
-{
+attributes: "the `attributes` array from the webauthn response. More info below about the objects in the `attributes` array"
+client: {
     display_name: "the `display_name` of the user from webauthn client object",
     email: "the `email` of the user from webauthn client object",
+    extensions: "an object containing more permissions the user might have. Used in the CFDE project for communicating ras permissions.",
     full_name: "the `full_name` of the user from webauthn client object",
     id: "the `id` of the user from webauthn client object",
     identities: "the `identities` array of the user from webauthn client object",
-    attributes: "the `attributes` array from the webauthn response. More info below about the objects in the `attributes` array"
 }
 ```
 
@@ -293,7 +294,5 @@ Each object in the `attributes` array has the same values as the objects returne
  - `full_name`: the full_name of the identity (if present)
  - `id`: the id of the group or identity
  - `identities`: the identities array of the current identity (if present)
- - `type`: the type of the entry (`identity` or `globus_group`). The type is set as a `globus_group` if the display_name is defined and the id is not in the list of identities associated with the logged in user. Otherwise it's set as an `identity`.
+ - `type`: the type of the entry (`identity` or `globus_group`). The type is set as a `globus_group` if the display_name is defined and the id is NOT in the list of identities associated with the logged in user. The type is set as an `identity` if the id is in the list of identities associated with the logged in user (`client.identities`). Otherwise, no type will be set.
  - `webpage`: If the `type` is set to `globus_group`, the webpage is then set to the globus group page. If the globus group id is "https://auth.globus.org/ff766864-a03f-11e5-b097-22000aef184d", then the webpage will be created by extracting the id value and setting it like "https://app.globus.org/groups/ff766864-a03f-11e5-b097-22000aef184d/about".
-
- 

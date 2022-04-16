@@ -2758,54 +2758,10 @@
 
         if (module._session) {
             var session = module._session;
-            obj.$session = {
-                display_name: session.client.display_name,
-                email: session.client.email,
-                // expectation is that extensions will always be defined by webauthn, but not until the changes are on master
-                // default to empty object to make checking has_ras_permissions simpler in templating
-                extensions: session.client.extensions || {},
-                full_name: session.client.full_name,
-                id: session.client.id,
-                identities: session.client.identities,
-                attributes: []
-            };
 
-            session.attributes.forEach(function (attr) {
-                var tempAttr = attr;
-                // NOTE: the current assumption is that everything in session.attributes is a globus group or an identity
-                // a globus group if:
-                //   - display_name is defined
-                //   - display_name is not the same as the user's display_name
-                //   - current id is not in the identities array
-                if (attr.display_name && attr.display_name !== session.client.display_name && session.client.identities.indexOf(attr.id) == -1) {
-                    if (attr.id.indexOf("https://auth.globus.org/") === 0) {
-                        // assume id is always "https://auth.globus.org/ff766864-a03f-11e5-b097-22000aef184d"
-                        tempAttr.webpage = "https://app.globus.org/groups/" + attr.id.substring(24) + "/about";
-                        tempAttr.type = "globus_group";
-                    } else {
-                        // NOTE: currently no example for this case
-                        // tempAttr.type = "other_group";
-                    }
-                } else {
-                    tempAttr.type = "identity";
-                }
-
-                var matchIdx = null;
-                // determine if 'tempAttr' exists in $session.attributes
-                matchIdx = obj.$session.attributes.findIndex(function (targetAttr) {
-                    return targetAttr.id === tempAttr.id;
-                });
-
-                if (matchIdx !== -1) {
-                    Object.assign(obj.$session.attributes[matchIdx], tempAttr);
-                } else {
-                    obj.$session.attributes.push(tempAttr);
-                }
-            });
-
-            // sort the newly created atrtibutes array by display_name
-            obj.$session.attributes.sort(function(a, b) {
-                if (a.display_name && b.display_name) return a.display_name.localeCompare(b.display_name);
+            obj.$session = {};
+            Object.keys(session).forEach(function (key) {
+                obj.$session[key] = session[key];
             });
         }
     };
