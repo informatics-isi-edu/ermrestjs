@@ -543,6 +543,21 @@
                     "name": "int8_improper",
                     "default": null,
                     "type": { "typename": "int8" }
+                },
+                {
+                    "name": "color_rgb_hex_proper",
+                    "default": "#123456",
+                    "type": {"typename": "color_rgb_hex"}
+                },
+                {
+                    "name": "color_rgb_hex_improper_1",
+                    "default": null,
+                    "type": {"typename": "color_rgb_hex"}
+                },
+                {
+                    "name": "color_rgb_hex_improper_2",
+                    "default": "#invalidvalue",
+                    "type": {"typename": "color_rgb_hex"}
                 }
             ],
             "foreign_keys": [],
@@ -601,9 +616,6 @@
         }
     },
     "schema_name": "common_schema_2",
-    "table_names": [
-        "table_1_schema_2"
-    ],
     "annotations": {
         "tag:misd.isi.edu,2015:display": {
             "show_null": {

@@ -2935,6 +2935,16 @@
                     if (module._ignoreDefaultsNames.includes(this.name)) {
                         throw new Error("" + this.type.name + " is in the list of ignored default types");
                     }
+
+                    // validate default value based on type name
+                    if (this.type.name === 'color_rgb_hex') {
+                        if (!isValidColorRGBHex(defaultVal)) {
+                            throw new Error("Val: " + defaultVal + " is not a valid color rgb hex value.");
+                        }
+                        // the root type of color is text, so the next switch won't do anything
+                    }
+
+                    // validate default value based on the root type name
                     switch (this.type.rootName) {
                         case "boolean":
                             if (typeof(defaultVal) !== "boolean") {

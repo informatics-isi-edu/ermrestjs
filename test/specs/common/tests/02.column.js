@@ -417,8 +417,17 @@ exports.execute = function(options) {
             describe('column defaults, ', function () {
                 var table;
                 var tableName = "table_w_defaults",
-                    nullColumns = ["boolean_improper", "date_improper", "timestamp_improper", "timestamptz_improper", "float4_improper", "float8_improper", "numeric_improper", "int2_improper", "int4_improper", "int8_improper", "RID", "RCB", "RMB", "RCT", "RMT"],
-                    notNullColumns = ["boolean_proper", "date_proper", "timestamp_proper", "timestamptz_proper", "float4_proper", "float8_proper", "numeric_proper", "int2_proper", "int4_proper", "int8_proper"];
+                    nullColumns = [
+                        "boolean_improper", "date_improper", "timestamp_improper", "timestamptz_improper",
+                        "float4_improper", "float8_improper", "numeric_improper", "int2_improper", "int4_improper",
+                        "int8_improper", "color_rgb_hex_improper_1", "color_rgb_hex_improper_2",
+                        "RID", "RCB", "RMB", "RCT", "RMT"
+                    ],
+                    notNullColumns = [
+                        "boolean_proper", "date_proper", "timestamp_proper",
+                        "timestamptz_proper", "float4_proper", "float8_proper", "numeric_proper",
+                        "int2_proper", "int4_proper", "int8_proper", "color_rgb_hex_proper"
+                    ];
 
                 beforeAll(function (done) {
                     table = options.catalog.schemas.get(schemaName2).tables.get(tableName);
