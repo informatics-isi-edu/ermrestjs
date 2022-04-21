@@ -101,11 +101,11 @@
     /**
      * Whether the given value is a valid color_rgb_hex value
      * @param {*} value
-     * @returns
+     * @returns {boolean}
      */
     var isValidColorRGBHex = function (value) {
         return isStringAndNotEmpty(value) && (/#[0-9a-fA-F]{6}$/i.test(value));
-    }
+    };
 
     /**
      * Returns true if given paramter is object.
