@@ -613,6 +613,48 @@
                     "*": [["common_schema_2", "table_show_fk_links_fk1"]]
                 }
             }
+        },
+        "table_wo_history_capture": {
+            "kind": "table",
+            "table_name": "table_wo_history_capture",
+            "keys": [{"unique_columns": ["id"]}],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {"typename": "int4"}
+                }
+            ]
+        },
+        "table_w_history_capture_true": {
+            "kind": "table",
+            "table_name": "table_w_history_capture_true",
+            "keys": [{"unique_columns": ["id"]}],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {"typename": "int4"}
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu:2020,history-capture": true
+            }
+        },
+        "table_w_history_capture_false": {
+            "kind": "table",
+            "table_name": "table_w_history_capture_false",
+            "keys": [{"unique_columns": ["id"]}],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {"typename": "int4"}
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu:2020,history-capture": false
+            }
         }
     },
     "schema_name": "common_schema_2",

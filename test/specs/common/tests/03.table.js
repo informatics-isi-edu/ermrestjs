@@ -29,6 +29,21 @@ exports.execute = function(options) {
         });
 
 
+        describe("supportHistory", function () {
+            it ("if annotation is missing, should return true", function () {
+                checkSupportHistory("table_wo_history_capture", true);
+            });
+
+            it ("if annotation is defined and true, should return true", function () {
+                checkSupportHistory("table_w_history_capture_true", true);
+            });
+
+            it ("if annotation is defined and false, should return false", function () {
+                checkSupportHistory("table_w_history_capture_false", false);
+            });
+        });
+
+
         // Helper Functions:
 
         function checkError(tableName, errorMessage) {
@@ -47,6 +62,10 @@ exports.execute = function(options) {
             expect(tables.get(tableName).displayKey.map(function (col) {
                 return col.name;
             })).toEqual(expectedCols);
+        }
+
+        function checkSupportHistory (tableName, expectedVal) {
+            expect(tables.get(tableName).supportHistory).toBe(expectedVal);
         }
     });
 };

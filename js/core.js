@@ -1097,6 +1097,16 @@
          */
         this.kind = jsonTable.kind;
 
+        /**
+         * Whether the table supports history features:
+         *  - it's a table (not view)
+         *  - it doesn't have the history-capture annotation, or has it with any value other than false
+         */
+        this.supportHistory = this.kind === "table";
+        if (this.supportHistory && this.annotations.contains(module._annotations.HISTORY_CAPTURE)) {
+            this.supportHistory = this.annotations.get(module._annotations.HISTORY_CAPTURE).content !== false;
+        }
+
         if (this.annotations.contains(module._annotations.APP_LINKS)) {
             this._appLinksAnnotation = this.annotations.get(module._annotations.APP_LINKS).content;
         }

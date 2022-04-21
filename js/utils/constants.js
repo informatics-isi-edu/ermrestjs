@@ -59,6 +59,7 @@
         GENERATED: "tag:isrd.isi.edu,2016:generated",
         GOOGLE_DATASET_METADATA: "tag:isrd.isi.edu,2021:google-dataset",
         HIDDEN: "tag:misd.isi.edu,2015:hidden", //TODO deprecated and should be deleted.
+        HISTORY_CAPTURE: "tag:isrd.isi.edu:2020,history-capture",
         IGNORE: "tag:isrd.isi.edu,2016:ignore", //TODO should not be used in column and foreign key
         IMMUTABLE: "tag:isrd.isi.edu,2016:immutable",
         KEY_DISPLAY: "tag:isrd.isi.edu,2017:key-display",
