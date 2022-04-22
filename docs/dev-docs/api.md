@@ -163,6 +163,7 @@ to use for ERMrest JavaScript agents.
             * [._showSavedQuery](#ERMrest.Table+_showSavedQuery) : <code>boolean</code>
             * [.favoritesPath](#ERMrest.Table+favoritesPath) : <code>string</code>
             * [.kind](#ERMrest.Table+kind) : <code>string</code>
+            * [.supportHistory](#ERMrest.Table+supportHistory)
             * [.shortestKey](#ERMrest.Table+shortestKey)
             * [.displayKey](#ERMrest.Table+displayKey) : [<code>Array.&lt;Column&gt;</code>](#ERMrest.Column)
             * [.stableKey](#ERMrest.Table+stableKey) : [<code>Array.&lt;Column&gt;</code>](#ERMrest.Column)
@@ -1224,6 +1225,7 @@ check for table name existence
         * [._showSavedQuery](#ERMrest.Table+_showSavedQuery) : <code>boolean</code>
         * [.favoritesPath](#ERMrest.Table+favoritesPath) : <code>string</code>
         * [.kind](#ERMrest.Table+kind) : <code>string</code>
+        * [.supportHistory](#ERMrest.Table+supportHistory)
         * [.shortestKey](#ERMrest.Table+shortestKey)
         * [.displayKey](#ERMrest.Table+displayKey) : [<code>Array.&lt;Column&gt;</code>](#ERMrest.Column)
         * [.stableKey](#ERMrest.Table+stableKey) : [<code>Array.&lt;Column&gt;</code>](#ERMrest.Column)
@@ -1341,6 +1343,14 @@ The path to the table where the favorite terms are stored
 
 #### table.kind : <code>string</code>
 The type of this table
+
+**Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
+<a name="ERMrest.Table+supportHistory"></a>
+
+#### table.supportHistory
+Whether the table supports history features:
+ - it's a table (not view)
+ - it doesn't have the history-capture annotation, or has it with any value other than false
 
 **Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
 <a name="ERMrest.Table+shortestKey"></a>
