@@ -879,6 +879,11 @@ With attributes
 
 This is not part of commonMark specification and it will result in an [inline](#inline-vs-block) element.  Opening tag is `:span:` and closing is `:/span:`.
 
+This tag is only designed for attaching attributes to text. In any other scenarios, you don't need this tag. It's also very limited and has the following side effects/limitations:
+
+- Doesn't allow usage of span inside another span.
+- Escapes the markdown content of span and shows the content as is (without rendering markdown). As a result you cannot mix span with other markdown tags.
+
 ```html
 This :span:text:/span:{.cl-name style="color:red"} has new color.
 
