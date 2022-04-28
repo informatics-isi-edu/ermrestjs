@@ -1596,6 +1596,18 @@
             newReference._location.beforeObject = null;
             newReference._location.afterObject = null;
 
+            // if facet columns are already computed, just update them.
+            // if we don't do this here, then facet columns will recomputed after each sort
+            // TODO can be refactored
+            if (this._facetColumns !== undefined) {
+                newReference._facetColumns = [];
+                this.facetColumns.forEach(function (fc) {
+                    newReference._facetColumns.push(
+                        new FacetColumn(newReference, fc.index, fc._facetObjectWrapper, fc.filters.slice())
+                    );
+                });
+            }
+
             return newReference;
         },
 
@@ -2884,14 +2896,17 @@
             newReference._location.afterObject = null;
             newReference._location.search(term);
 
-            // update facet columns list
+            // if facet columns are already computed, just update them.
+            // if we don't do this here, then facet columns will recomputed after each search
             // TODO can be refactored
-            newReference._facetColumns = [];
-            this.facetColumns.forEach(function (fc) {
-                newReference._facetColumns.push(
-                    new FacetColumn(newReference, fc.index, fc._facetObjectWrapper, fc.filters.slice())
-                );
-            });
+            if (this._facetColumns !== undefined) {
+                newReference._facetColumns = [];
+                this.facetColumns.forEach(function (fc) {
+                    newReference._facetColumns.push(
+                        new FacetColumn(newReference, fc.index, fc._facetObjectWrapper, fc.filters.slice())
+                    );
+                });
+            }
 
             return newReference;
         },
