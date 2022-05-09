@@ -23,8 +23,13 @@ exports.execute = function(options) {
         });
 
         describe("Display key, ", function () {
-            it ('should return the shortest key.', function () {
+            it ('should return the proper key.', function () {
                 checkDisplayKey("table_w_dif_len_keys", ["col_3"]);
+            });
+
+            // the existing nullable_col should be ignored and RID should be used instead.
+            it ("should ignore the nullable keys.", function () {
+                checkDisplayKey("table_w_nullable_key", ["RID"]);
             });
         });
 

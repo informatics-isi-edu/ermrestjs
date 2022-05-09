@@ -1245,7 +1245,19 @@
                         return res;
                     };
 
-                    this._displayKey = this.keys.all().sort(function (keyA, keyB) {
+                    // find the keys with not-null columns
+                    var keys = this.keys.all().filter(function (key) {
+                        return key._notNull;
+                    });
+
+                    // NOTE we're doing the same thing for shortestkey,
+                    //      if we decided to throw an error instead,
+                    //      we should be consistent
+                    if (keys.length === 0) {
+                        keys = this.keys.all();
+                    }
+
+                    this._displayKey = keys.sort(function (keyA, keyB) {
 
                         // shorter
                         if (keyA.colset.columns.length != keyB.colset.columns.length) {

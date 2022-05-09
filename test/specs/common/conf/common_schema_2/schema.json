@@ -297,6 +297,39 @@
             ],
             "annotations": {}
         },
+        "table_w_nullable_key": {
+            "kind": "table",
+            "keys": [
+                {"unique_columns": ["nullable_col"]},
+                {"unique_columns": ["not_null_col_1", "not_null_col_2"]}
+            ],
+            "table_name": "table_w_nullable_key",
+            "schema_name": "common_schema_2",
+            "column_definitions": [
+                {
+                    "name": "nullable_col",
+                    "nullok": true,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "not_null_col_1",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "not_null_col_2",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                }
+            ]
+
+        },
         "multi_w_same_len_keys_w_all_serial": {
             "comment": "",
             "kind": "table",
