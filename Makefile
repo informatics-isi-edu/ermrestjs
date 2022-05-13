@@ -223,6 +223,12 @@ install: $(DIST) dont_install_in_root
 	$(info - deploying the package)
 	@rsync -avz --exclude=$(MAKEFILE_VAR) $(DIST)/ $(ERMRESTJSDIR)
 
+# Rule to deploy the already built package
+deploy: dont_install_in_root
+	$(info - deploying the package)
+	@rsync -avz --exclude=$(MAKEFILE_VAR) $(DIST)/ $(ERMRESTJSDIR)
+
+
 # Rules for help/usage
 .PHONY: help usage
 help: usage
