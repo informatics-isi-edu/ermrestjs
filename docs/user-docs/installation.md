@@ -24,10 +24,9 @@ Even though this command will not deploy the package, during build we will injec
 
 ## Deploying
 
-
 1. First you need to setup some environment variables to tell ERMRestJS where it should install the package. The following are the variables and their default values:
 
-    ```
+    ```sh
     WEB_URL_ROOT=/
     WEB_INSTALL_ROOT=/var/www/html/
     ERMRESTJS_REL_PATH=ermrestjs/
@@ -37,17 +36,28 @@ Even though this command will not deploy the package, during build we will injec
     Notes:
     - All the variables MUST have a trailing `/`.
 
-    - If you're installing remotely, since we're using the `WEB_INSTALL_ROOT` in `rsync` command, you can use a remote location `username@host:public_html/` for this variable.
+    - If you're deploying remotely, since we're using the `WEB_INSTALL_ROOT` in `rsync` command, you can use a remote location `username@host:public_html/` for this variable.
 
-    - A very silly thing to do would be to set your deployment directory to root `/` and run `make install` with `sudo`. This would be very silly indeed, and would probably result in some corruption of your operating system. Surely, no one would ever do this. But, in the off chance that one might attempt such silliness, the `make install` rule specifies a `dont_install_in_root` prerequisite that attempts to put a stop to any such silliness before it goes too far.
+    - A very silly thing to do would be to set your deployment directory to root `/` and run `make deploy` with `sudo`. This would be very silly indeed, and would probably result in some corruption of your operating system. Surely, no one would ever do this. But, in the off chance that one might attempt such silliness, the `make deploy` rule specifies a `dont_deploy_in_root` prerequisite that attempts to put a stop to any such silliness before it goes too far.
 
-2. After making sure the variables are properly set, run the following command:
 
+2. Build the ERMrestJS bundles by running the following command:
+
+    ```sh
+    make dist
     ```
-    $ make install
+
+    Notes:
+    - Make sure to run this command with the owner of the current folder. If you attempt to run this with a different user, it will complain.
+
+3. To deploy the package, run the following:
+
+    ```sh
+    make deploy
     ```
 
-    > If the given directory does not exist, it will first create it. So you may need to run `make install` with _super user_ privileges depending on the installation directory you choose.
+    Notes:
+    - If the given directory does not exist, it will first create it. So you may need to run `make deploy` with _super user_ privileges depending on the deployment directory you choose (by default it's `/var/www/html/`).
 
 
 
