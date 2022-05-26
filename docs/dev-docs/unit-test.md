@@ -35,7 +35,7 @@ test/
 |   |   |-- tests                       # All the possible test cases for a spec should be in this folder
 |   |   |   |-- 01.TEST_NAME1.js
 |   |   |   `-- 02.TEST_NAME2.js
-|   |   `-- spec.js                     # include configuration and tests to be run here                 
+|   |   `-- spec.js                     # include configuration and tests to be run here
 |-- support
 |   `-- jasmine.json                    # change spec_files to include your spec
 |-- utils
@@ -204,14 +204,16 @@ export RESTRICTED_AUTH_COOKIE=YOUR_SECOND_USER_WEBAUTHN_COOKIE
 The build needs to be generated for the tests to work, which means running the following commands to execute the test cases.
 
 ```sh
-$ make install
-$ make test
+make dist
+make deploy
+make test
 ```
 or
 
 ```sh
-$ make install
-$ node test/jasmine-runner.js
+make dist
+make deploy
+node test/jasmine-runner.js
 ```
 
 ### How To Get Your AUTH_COOKIE
