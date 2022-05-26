@@ -192,8 +192,8 @@ clean:
 	@rm -f .make-*
 
 # Rule to clean the dependencies too
-.PHONY: clean-deps
-clean-deps: clean
+.PHONY: distclean
+distclean: clean
 	rm -rf $(MODULES)
 
 # Rule to run the unit tests
@@ -232,5 +232,5 @@ usage:
 	@echo "    updeps        - update local dependencies"
 	@echo "    lint          - lint the source"
 	@echo "    test          - run tests"
-	@echo "    clean         - cleans the build environment"
-	@echo "    clean-deps    - cleans and removes dependencies"
+	@echo "    clean         - remove the files and folders created during build"
+	@echo "    distclean     - the same as clean, and also removes npm dependencies"
