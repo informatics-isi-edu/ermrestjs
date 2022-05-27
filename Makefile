@@ -3,9 +3,6 @@
 # Disable built-in rules
 .SUFFIXES:
 
-# set the default target to install
-.DEFAULT_GOAL:=install
-
 # make sure NOD_ENV is defined (use production if not defined or invalid)
 ifneq ($(NODE_ENV),development)
 NODE_ENV:=production
@@ -165,7 +162,7 @@ $(DIST)/$(MAKEFILE_VAR): FORCE
 	@echo 'ermrestjsBuildVariables.ermrestjsBasePath="$(ERMRESTJS_BASE_PATH)";' >> $(DIST)/$(MAKEFILE_VAR)
 
 # make sure ERMRESTJSDIR is not the root
-dont_install_in_root:
+dont_deploy_in_root:
 	@echo "$(ERMRESTJSDIR)" | egrep -vq "^/$$|.*:/$$"
 
 print_variables:
@@ -206,7 +203,7 @@ test: ../ErmrestDataUtils
 
 # Rule to run the unit tests
 .PHONY: testsingle
-testsingle: ../ErmrestDataUtils
+test-single: ../ErmrestDataUtils
 	node test/single-test-runner.js
 
 # Rule to run the linter
@@ -217,28 +214,23 @@ lint: $(LINT)
 .PHONY: all
 all: $(LINT) $(DIST) $(DOC)
 
-# Rule to install (deploy) the package
-.PHONY: install dont_install_in_root
-install: $(DIST) dont_install_in_root
-	$(info - deploying the package)
-	@rsync -avz --exclude=$(MAKEFILE_VAR) $(DIST)/ $(ERMRESTJSDIR)
-
 # Rule to deploy the already built package
-deploy: dont_install_in_root
+.PHONY: deploy
+deploy: dont_deploy_in_root
 	$(info - deploying the package)
 	@rsync -avz --exclude=$(MAKEFILE_VAR) $(DIST)/ $(ERMRESTJSDIR)
-
 
 # Rules for help/usage
 .PHONY: help usage
 help: usage
 usage:
 	@echo "Available 'make' targets:"
-	@echo "    all       - build and docs"
-	@echo "    install   - build andinstalls the package (ERMRESTJSDIR=$(ERMRESTJSDIR))"
-	@echo "    deps      - local install of node dependencies"
-	@echo "    updeps    - update local dependencies"
-	@echo "    lint      - lint the source"
-	@echo "    test      - run tests"
-	@echo "    clean     - cleans the build environment"
-	@echo "    distclean - cleans and removes dependencies"
+	@echo "    all           - run linter, build the pacakge andand docs"
+	@echo "    dist   	     - local install of node dependencies, and build the pacakge"
+	@echo "    deploy   	   - deploy the package to $(ERMRESTJSDIR)"
+	@echo "    deps          - local install of node dependencies"
+	@echo "    updeps        - update local dependencies"
+	@echo "    lint          - lint the source"
+	@echo "    test          - run tests"
+	@echo "    clean         - remove the files and folders created during build"
+	@echo "    distclean     - the same as clean, and also removes npm dependencies"

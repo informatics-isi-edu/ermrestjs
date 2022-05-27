@@ -6,8 +6,8 @@
   "private": true,
   "main": "build/ermrest.min.js",
   "scripts": {
-    "build": "make install",
-    "pretest": "make install",
+    "build": "make dist",
+    "pretest": "make dist && make deploy",
     "test": "make test"
   },
   "repository": {

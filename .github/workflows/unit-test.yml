@@ -88,8 +88,8 @@ jobs:
       - name: Install ermrestjs
         run: |
           cd ermrestjs
-          sudo npm install
-          sudo make install
+          make dist
+          sudo make deploy
       - name: Add tests users
         run: |
           sudo -H -u webauthn webauthn2-manage adduser test1
