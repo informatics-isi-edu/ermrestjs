@@ -140,6 +140,21 @@
                 });
             },
 
+            /**
+             * {{#if (hasKey structure key}}
+             *  ... content
+             * {{/if}}
+             *
+             * @returns boolean stating if value is present in array
+             */
+            hasKey: function (structure, key) {
+                if (Array.isArray(structure)) {
+                    return array.includes(value);
+                } else if (typeof structure === "object") {
+                    return (key in structure);
+                }
+            }
+
         });
 
         // compare helpers

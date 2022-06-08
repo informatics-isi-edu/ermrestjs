@@ -208,7 +208,7 @@
         "regexMatch", "regexFindFirst", "regexFindAll",
         "jsonStringify", "toTitleCase", "replace",
         // math helpers
-        "add", "subtract"
+        "add", "subtract", "lookup"
     ];
 
     module._operationsFlag = Object.freeze({

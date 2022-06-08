@@ -2772,6 +2772,22 @@
             Object.keys(session).forEach(function (key) {
                 obj.$session[key] = session[key];
             });
+
+            // If extensions is present, put all dbgap permissions into a map
+            if (session.client.extensions && session.client.extensions.ras_dbgap_permissions) {
+                var map = {};
+                session.client.extensions.ras_dbgap_permissions.forEach(function (perm) {
+                    map[perm.phs_id] = true;
+                });
+
+                obj.$session.client.extensions.phs_ids = map;
+
+                // extensions = {
+                //     has_dbgap_permisisons
+                //     ras_dbgap_permissions: ["phs000012678"] | [{phs_id: "phs000012678", ras_id: "", }]
+                //     ras_permission_ids
+                //     ras_dbgap_phs_ids
+            }
         }
     };
 
