@@ -138,21 +138,6 @@
                 return str.replace(/\w\S*/g, function(txt) {
                     return txt.charAt(0).toUpperCase() + txt.substr(1);
                 });
-            },
-
-            /**
-             * {{#if (hasKey structure key}}
-             *  ... content
-             * {{/if}}
-             *
-             * @returns boolean stating if value is present in array
-             */
-            hasKey: function (structure, key) {
-                if (Array.isArray(structure)) {
-                    return array.includes(value);
-                } else if (typeof structure === "object") {
-                    return (key in structure);
-                }
             }
 
         });
