@@ -201,7 +201,7 @@
 
     module._handlebarsHelpersList = [
         // default helpers - NOTE: 'log' and 'lookup' not included
-        "blockHelperMissing", "each", "if", "helperMissing", "unless", "with",
+        "blockHelperMissing", "each", "if", "helperMissing", "unless", "with", "lookup",
         // ermrestJS helpers
         "eq", "ne", "lt", "gt", "lte", "gte", "and", "or", "not", "ifCond",
         "escape", "encode", "formatDate", "encodeFacet",

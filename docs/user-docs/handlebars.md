@@ -47,6 +47,7 @@ Handlebars supports more complicated expression syntax and allow the comparison 
    * [Unless](#unless-helper)
    * [Each](#each-helper)
    * [With](#with-helper)
+   * [Lookup](#lookup-helper)
    * [Encode](#encode-helper)
    * [Escape](#escape-helper)
    * [EncodeFacet](#encodefacet-helper)
@@ -464,6 +465,24 @@ You can optionally provide an `{{else}}` section which will display only when th
   No content
 {{/with}}
 ```
+
+### Lookup helper
+
+You can use the `lookup` helper to do dynamic parameter resolution with Handlebars variables.
+
+One example assumes you have a map similar to what is defined below and use an `id` to resolve the value of one of the keys in the map.
+```
+var map = {"id1": true, "id2": "alpha", "id3": 123}
+
+{{lookup map id}}
+```
+
+The example that will be used in CFDE uses a map attached to the `$session` template variable:
+```
+{{lookup $session.client.extensions.ras_dbgap_phs_ids dbgap_study_id}}
+```
+
+NOTE: When looking up a key to get its value, `null` (if value is `null`) or `undefined` (if key is not present) will be returned so make sure to guard against those negative cases in templating.
 
 ### Encode helper
 

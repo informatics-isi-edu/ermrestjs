@@ -296,3 +296,8 @@ Each object in the `attributes` array has the same values as the objects returne
  - `identities`: the identities array of the current identity (if present)
  - `type`: the type of the entry (`identity` or `globus_group`). The type is set as a `globus_group` if the display_name is defined and the id is NOT in the list of identities associated with the logged in user. The type is set as an `identity` if the id is in the list of identities associated with the logged in user (`client.identities`). Otherwise, no type will be set.
  - `webpage`: If the `type` is set to `globus_group`, the webpage is then set to the globus group page. If the globus group id is "https://auth.globus.org/ff766864-a03f-11e5-b097-22000aef184d", then the webpage will be created by extracting the id value and setting it like "https://app.globus.org/groups/ff766864-a03f-11e5-b097-22000aef184d/about".
+
+ The `extensions` object currently contains 3 properties with permissions for dbgap studies. These properties are:
+  - `has_ras_permissions`: boolean value if ras dbgap permissions are present
+  - `ras_dbgap_permissions`: array of objects with information about which dbgap studies the user has permissions for
+  - `ras_dbgap_phs_ids`: map of `phs_id` values as the keys with `true` as the value

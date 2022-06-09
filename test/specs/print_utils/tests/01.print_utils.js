@@ -720,6 +720,16 @@ exports.execute = function (options) {
                 expect(module.renderHandlebarsTemplate(template2, {string: string2})).toBe("HellO World MiXed Case TitleCase String", "missmatch for 2nd test");
             });
 
+            it('lookup helper', function () {
+                var map = {"id1": true, "id2": "alpha", "id3": 123}
+                var template = "{{lookup map id}}"
+
+                expect(module.renderHandlebarsTemplate("boolean: " + template, {map: map, id: "id1"})).toBe("boolean: true", "missmatch for 1st test");
+                expect(module.renderHandlebarsTemplate("string: " + template, {map: map, id: "id2"})).toBe("string: alpha", "missmatch for 2nd test");
+                expect(module.renderHandlebarsTemplate("integer: " + template, {map: map, id: "id3"})).toBe("integer: 123", "missmatch for 3rd test");
+                expect(module.renderHandlebarsTemplate("undefined: " + template, {map: map, id: "id4"})).toBe("undefined: ", "missmatch for 4th test");
+            });
+
             it('suppressed default helper log', function () {
                 try {
                     module.renderHandlebarsTemplate("{{log 'Hello World'}}", {});
