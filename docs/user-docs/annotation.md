@@ -701,7 +701,9 @@ Default heuristics:
   - `md5_hex` for hex
   - `md5_base64` for base64
   - `filename` for filename
+  - `filename_ext` for the file extension based on the filename
   - `size` for size in bytes
+  - `mimetype` for mimetype of the selected file.
 - Nothing may be inferred without additional payload patterns present.
 
 Protocol-specific metadata retrieval MAY be applied once an asset location is known. How to present or reconcile contradictions in metadata found in multiple sources is beyond the scope of this specification.

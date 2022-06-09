@@ -209,6 +209,24 @@ var ERMrest = (function(module) {
         headers[module.contextHeaderName] = contextHeaderParams;
         return headers;
     };
+    
+    /**
+     * given a filename, will return the extension
+     * By default, it will extract the last of the filename after the last `.`.
+     * The second parameter can be used for passing a regular expression
+     * if we want a different method of extracting the extension.
+     * @param {string} filename 
+     * @param {string?} regexp 
+     * @returns 
+     */
+    var _getFilenameExtension = function (filename, regexp) {
+        if (typeof regexp !== 'string' || regexp.length === 0) {
+            regexp = '[^\.]+$';
+        }
+        var filenameExtRegex = new RegExp(regexp, 'g');
+        var matches = filename.match(filenameExtRegex);
+        return (matches && matches[0]) || "";
+    }
 
     /**
      * @desc upload Object
@@ -291,11 +309,13 @@ var ERMrest = (function(module) {
             ignoredColumns.push("filename");
             ignoredColumns.push("size");
             ignoredColumns.push("mimetype");
+            ignoredColumns.push("filename_ext");
             ignoredColumns.push(this.column.name + ".md5_hex");
             ignoredColumns.push(this.column.name + ".md5_base64");
             ignoredColumns.push(this.column.name + ".filename");
             ignoredColumns.push(this.column.name + ".size");
             ignoredColumns.push(this.column.name + ".mimetype");
+            ignoredColumns.push(this.column.name + ".filename_ext");
 
             // TODO we can improve this (should not rely on _validateTemplate to format them)
             return module._validateTemplate(template, row, this.reference.table, this.reference._context, { ignoredColumns: ignoredColumns, templateEngine: this.column.templateEngine });
@@ -743,6 +763,7 @@ var ERMrest = (function(module) {
         row[this.column.name].md5_hex = this.hash.md5_hex;
         row[this.column.name].md5_base64 = this.hash.md5_base64;
         row[this.column.name].sha256 = this.hash.sha256;
+        row[this.column.name].filename_ext = _getFilenameExtension(this.file.name);
 
         // Generate url
 

@@ -13,7 +13,7 @@ exports.execute = function (options) {
             column,
             columnNameWOHatrac = "uri_wo_hatrac",
             columnWOHatrac,
-            template = "/hatrac/js/ermrestjs/{{{_timestamp}}}/{{{_uri.md5_hex}}}",
+            template = "/hatrac/js/ermrestjs/{{{_timestamp}}}/{{{_uri.filename_ext}}}/{{{_uri.md5_hex}}}",
             ermRest,
             reference;
 
@@ -24,21 +24,24 @@ exports.execute = function (options) {
             type: "application/pdf",
             hash: "d54ead2fe9e6e2bf801bb62b3af43b91",
             hash_64: "1U6tL+nm4r+AG7YrOvQ7kQ==",
-            doNotRunInCI: true
+            doNotRunInCI: true,
+            expectedFilenameExtension: "pdf"
         }, {
             name: "testfile5MB.txt",
             size: 5242880,
             displaySize: "5MB",
             type: "text/plain",
             hash: "08b46181d7094b5ece88bb389c7499af",
-            hash_64: "CLRhgdcJS17OiLs4nHSZrw=="
+            hash_64: "CLRhgdcJS17OiLs4nHSZrw==",
+            expectedFilenameExtension: "txt"
         }, {
             name: "testfile500kb.png",
             size: 512000,
             displaySize: "500KB",
             type: "image/png",
             hash: "4b178700e5f3b15ce799f2c6c1465741",
-            hash_64: "SxeHAOXzsVznmfLGwUZXQQ=="
+            hash_64: "SxeHAOXzsVznmfLGwUZXQQ==",
+            expectedFilenameExtension: "png"
         }];
 
         if (process.env.CI) files = files.filter(function(f) { if (!f.doNotRunInCI) return f; });
@@ -81,8 +84,8 @@ exports.execute = function (options) {
                     var currentTime = Date.now();
 
                     var uploadObj, uploadObj2,
-                        invalidRow = { timestamp: null, uri : { md5_hex: "wfqewf4234" } },
-                        validRow = { timestamp: currentTime, uri : { md5_hex: "wfqewf4234" } };
+                        invalidRow = { timestamp: null, uri : { md5_hex: "wfqewf4234", filename_ext: "png" } },
+                        validRow = { timestamp: currentTime, uri : { md5_hex: "wfqewf4234", filename_ext: "png" } };
 
                     it("should create an upload object", function(done) {
 
@@ -134,7 +137,7 @@ exports.execute = function (options) {
                         uploadObj.calculateChecksum(validRow).then(function(url) {
                             expect(uploadObj.hash instanceof ermRest.Checksum).toBeTruthy("Upload object hash is not of type ermRest.Checksum");
 
-                            expect(url).toBe("/hatrac/js/ermrestjs/" + currentTime + "/" + file.hash, "File generated url is not the same");
+                            expect(url).toBe("/hatrac/js/ermrestjs/" + currentTime + "/" + file.expectedFilenameExtension + "/" + file.hash, "File generated url is not the same");
 
                             expect(validRow.filename).toBe(file.name, "valid row filename is incorrect");
                             expect(validRow.bytes).toBe(file.size, "valid row bytes is incorrect");

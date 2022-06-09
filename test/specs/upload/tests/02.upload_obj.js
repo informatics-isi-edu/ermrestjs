@@ -27,10 +27,10 @@ exports.execute = function (options) {
         var firstTime = Date.now();
         var validRow = {
             timestamp: firstTime,
-            uri: { md5_hex: file.hash }
+            uri: { md5_hex: file.hash, filename_ext: "png" }
         };
 
-        var serverFilePath = "/hatrac/js/ermrestjs/" + validRow.timestamp + "/" + file.hash;
+        var serverFilePath = "/hatrac/js/ermrestjs/" + validRow.timestamp + "/png/" + file.hash;
 
         beforeAll(function (done) {
             filePath = "test/specs/upload/files/" + file.name;
