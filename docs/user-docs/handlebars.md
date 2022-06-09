@@ -482,6 +482,8 @@ The example that will be used in CFDE uses a map attached to the `$session` temp
 {{lookup $session.client.extensions.ras_dbgap_phs_ids dbgap_study_id}}
 ```
 
+NOTE: When looking up a key to get its value, `null` (if value is `null`) or `undefined` (if key is not present) will be returned so make sure to guard against those negative cases in templating.
+
 ### Encode helper
 
 You can use the `encode` helper to get strings in URL encoded format. It accepts more than one string that needs to be encoded
