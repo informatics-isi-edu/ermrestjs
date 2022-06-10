@@ -2635,7 +2635,7 @@ Object.defineProperty(AssetPseudoColumn.prototype, "sha256", {
 
 /**
  * The column object that file extension is stored in.
- * @member {ERMrest.Column} filenameExtFilter
+ * @member {string[]} filenameExtFilter
  * @memberof ERMrest.AssetPseudoColumn#
  */
 Object.defineProperty(AssetPseudoColumn.prototype, "filenameExtFilter", {
@@ -2651,6 +2651,27 @@ Object.defineProperty(AssetPseudoColumn.prototype, "filenameExtFilter", {
             }
         }
         return this._filenameExtFilter;
+    }
+});
+
+/**
+ * The regular expressions that will be used for extracting the extension
+ * @member {string[]} filenameExtRegex
+ * @memberof ERMrest.AssetPseudoColumn#
+ */
+ Object.defineProperty(AssetPseudoColumn.prototype, "filenameExtRegex", {
+    get: function () {
+        if (this._filenameExtRegex === undefined) {
+            this._filenameExtRegex = [];
+
+            var reg = this._annotation.filename_ext_regex;
+            if (typeof reg == 'string') {
+                this._filenameExtRegex.push(ext);
+            } else if (Array.isArray(reg)) {
+                this._filenameExtRegex = reg;
+            }
+        }
+        return this._filenameExtRegex;
     }
 });
 

@@ -216,17 +216,33 @@ var ERMrest = (function(module) {
      * The second parameter can be used for passing a regular expression
      * if we want a different method of extracting the extension.
      * @param {string} filename 
-     * @param {string?} regexp 
+     * @param {string[]} allowedExtensions
+     * @param {string[]} regexArr 
      * @returns 
      */
-    var _getFilenameExtension = function (filename, regexp) {
-        if (typeof regexp !== 'string' || regexp.length === 0) {
-            regexp = '[^\.]+$';
+    var _getFilenameExtension = function (filename, allowedExtensions, regexArr) {
+        // first find in the list of allowed extensions
+        var res = allowedExtensions.some(function (ext) {
+            return typeof ext === "string" && ext.length > 0 &&  filename.endsWith(ext);
+        });
+        if (res) {
+            return res;
         }
-        var filenameExtRegex = new RegExp(regexp, 'g');
-        var matches = filename.match(filenameExtRegex);
-        return (matches && matches[0]) || "";
-    }
+
+        // no matching allowed extension, try the regular expressions
+        if (!Array.isArray(regexArr) || regexArr.length === 0) {
+            regexArr = ['\.[^\.]+$'];
+        }
+        
+        regexArr.some(function (regexp) {
+            var filenameExtRegex = new RegExp(regexp, 'g');
+            var matches = filename.match(filenameExtRegex);
+            res = (matches && matches[0]) || "";
+            return res && res.length > 0;
+        });
+
+        return res;
+    };
 
     /**
      * @desc upload Object
@@ -763,7 +779,7 @@ var ERMrest = (function(module) {
         row[this.column.name].md5_hex = this.hash.md5_hex;
         row[this.column.name].md5_base64 = this.hash.md5_base64;
         row[this.column.name].sha256 = this.hash.sha256;
-        row[this.column.name].filename_ext = _getFilenameExtension(this.file.name);
+        row[this.column.name].filename_ext = _getFilenameExtension(this.file.name, this.column.filenameExtFilter, this.column.filenameExtRegex);
 
         // Generate url
 
