@@ -1004,7 +1004,8 @@
                             "byte_count_column": "col_byte",
                             "md5": "col_md5",
                             "sha256": "col_sha256",
-                            "filename_ext_filter": ["*.jpg"]
+                            "filename_ext_filter": ["*.jpg"],
+                            "filename_ext_regexp": [".special.jpg", ".jpg"]
                         }
                     }
                 },

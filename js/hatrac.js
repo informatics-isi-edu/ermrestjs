@@ -222,23 +222,32 @@ var ERMrest = (function(module) {
      */
     var _getFilenameExtension = function (filename, allowedExtensions, regexArr) {
         // first find in the list of allowed extensions
-        var res = allowedExtensions.some(function (ext) {
+        var res = -1;
+        var isInAllowed = Array.isArray(allowedExtensions) && allowedExtensions.some(function (ext) {
+            res = ext;
             return typeof ext === "string" && ext.length > 0 &&  filename.endsWith(ext);
         });
-        if (res) {
+        if (isInAllowed) {
             return res;
         }
+        res = "";
 
         // no matching allowed extension, try the regular expressions
-        if (!Array.isArray(regexArr) || regexArr.length === 0) {
-            regexArr = ['\.[^\.]+$'];
-        }
+        regexArr = Array.isArray(regexArr) ? regexArr : [];
+
+        // always add the default regular exprsesion to ensure a valid result
+        regexArr.push(['\.[^\.]+$']);
         
         regexArr.some(function (regexp) {
-            var filenameExtRegex = new RegExp(regexp, 'g');
-            var matches = filename.match(filenameExtRegex);
-            res = (matches && matches[0]) || "";
-            return res && res.length > 0;
+            // since regular expression comes from annotation, it might not be valid
+            try {
+                var matches = filename.match(new RegExp(regexp, 'g'));
+                res = (matches && matches[0]) || "";
+                return res && res.length > 0;
+            } catch (exp) {
+                res = "";
+                return false;
+            }
         });
 
         return res;
@@ -779,7 +788,7 @@ var ERMrest = (function(module) {
         row[this.column.name].md5_hex = this.hash.md5_hex;
         row[this.column.name].md5_base64 = this.hash.md5_base64;
         row[this.column.name].sha256 = this.hash.sha256;
-        row[this.column.name].filename_ext = _getFilenameExtension(this.file.name, this.column.filenameExtFilter, this.column.filenameExtRegex);
+        row[this.column.name].filename_ext = _getFilenameExtension(this.file.name, this.column.filenameExtFilter, this.column.filenameExtRegexp);
 
         // Generate url
 

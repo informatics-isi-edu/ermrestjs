@@ -67,7 +67,7 @@ exports.execute = function (options) {
                     hash: "4b178700e5f3b15ce799f2c6c1465741",
                     hash_64: "SxeHAOXzsVznmfLGwUZXQQ=="
                 }, {
-                    name: "testfile5MB.txt",
+                    name: "testfile5MB.tiff",
                     size: 5242880,
                     displaySize: "5MB",
                     type: "text/plain",
@@ -125,7 +125,8 @@ exports.execute = function (options) {
                     chunkSize: 5 * 1024 * 1024
                 });
                 // File 1
-                uploadUtils.uploadFileForTests(files[0], 1, file1_validRow, uploadObj1, options).then(function(response) {
+                var expectedURL = "/hatrac/js/ermrestjs/" + file1_validRow.timestamp + "/.png/" + files[0].hash;
+                uploadUtils.uploadFileForTests(files[0], 1, file1_validRow, expectedURL, uploadObj1, options).then(function(response) {
                     file1_url = response.url;
                     file1_validRow = response.validRow;
 
@@ -150,7 +151,8 @@ exports.execute = function (options) {
                     chunkSize: 5 * 1024 * 1024
                 });
                 // File 2
-                uploadUtils.uploadFileForTests(files[1], 2, file2_validRow, uploadObj2, options).then(function(response) {
+                var expectedURL = "/hatrac/js/ermrestjs/" + file2_validRow.timestamp + "/.tiff/" + files[1].hash;
+                uploadUtils.uploadFileForTests(files[1], 2, file2_validRow, expectedURL, uploadObj2, options).then(function(response) {
                     file2_url = response.url;
                     file2_validRow = response.validRow;
 

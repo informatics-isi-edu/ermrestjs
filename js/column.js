@@ -2656,22 +2656,22 @@ Object.defineProperty(AssetPseudoColumn.prototype, "filenameExtFilter", {
 
 /**
  * The regular expressions that will be used for extracting the extension
- * @member {string[]} filenameExtRegex
+ * @member {string[]} filenameExtRegexp
  * @memberof ERMrest.AssetPseudoColumn#
  */
- Object.defineProperty(AssetPseudoColumn.prototype, "filenameExtRegex", {
+ Object.defineProperty(AssetPseudoColumn.prototype, "filenameExtRegexp", {
     get: function () {
-        if (this._filenameExtRegex === undefined) {
-            this._filenameExtRegex = [];
+        if (this._filenameExtRegexp === undefined) {
+            this._filenameExtRegexp = [];
 
-            var reg = this._annotation.filename_ext_regex;
+            var reg = this._annotation.filename_ext_regexp;
             if (typeof reg == 'string') {
-                this._filenameExtRegex.push(ext);
+                this._filenameExtRegexp.push(ext);
             } else if (Array.isArray(reg)) {
-                this._filenameExtRegex = reg;
+                this._filenameExtRegexp = reg;
             }
         }
-        return this._filenameExtRegex;
+        return this._filenameExtRegexp;
     }
 });
 
