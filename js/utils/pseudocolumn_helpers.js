@@ -2240,14 +2240,14 @@
         /**
          * Aliases that already mapped to a join statement
          * <sourcekey> -> <alias>
-         * @type {Object
+         * @type {Object}
          */
         this.aliases = {};
 
         /**
          * sourcekeys that are used more than once and require alias
          * <sourcekey> -> value is not important
-         * @type {Object
+         * @type {Object}
          */
         this.usedSourceKeys = {};
 

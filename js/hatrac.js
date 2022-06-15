@@ -218,7 +218,9 @@ var ERMrest = (function(module) {
      * @param {string} filename 
      * @param {string[]} allowedExtensions
      * @param {string[]} regexArr 
-     * @returns 
+     * @returns the filename extension string
+     * @private
+     * @ignore
      */
     var _getFilenameExtension = function (filename, allowedExtensions, regexArr) {
         // first find in the list of allowed extensions
