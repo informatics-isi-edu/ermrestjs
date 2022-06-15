@@ -209,6 +209,51 @@ var ERMrest = (function(module) {
         headers[module.contextHeaderName] = contextHeaderParams;
         return headers;
     };
+    
+    /**
+     * given a filename, will return the extension
+     * By default, it will extract the last of the filename after the last `.`.
+     * The second parameter can be used for passing a regular expression
+     * if we want a different method of extracting the extension.
+     * @param {string} filename 
+     * @param {string[]} allowedExtensions
+     * @param {string[]} regexArr 
+     * @returns the filename extension string
+     * @private
+     * @ignore
+     */
+    var _getFilenameExtension = function (filename, allowedExtensions, regexArr) {
+        // first find in the list of allowed extensions
+        var res = -1;
+        var isInAllowed = Array.isArray(allowedExtensions) && allowedExtensions.some(function (ext) {
+            res = ext;
+            return typeof ext === "string" && ext.length > 0 &&  filename.endsWith(ext);
+        });
+        if (isInAllowed) {
+            return res;
+        }
+        res = "";
+
+        // no matching allowed extension, try the regular expressions
+        regexArr = Array.isArray(regexArr) ? regexArr : [];
+
+        // always add the default regular exprsesion to ensure a valid result
+        regexArr.push(['\.[^\.]+$']);
+        
+        regexArr.some(function (regexp) {
+            // since regular expression comes from annotation, it might not be valid
+            try {
+                var matches = filename.match(new RegExp(regexp, 'g'));
+                res = (matches && matches[0]) || "";
+                return res && res.length > 0;
+            } catch (exp) {
+                res = "";
+                return false;
+            }
+        });
+
+        return res;
+    };
 
     /**
      * @desc upload Object
@@ -291,11 +336,13 @@ var ERMrest = (function(module) {
             ignoredColumns.push("filename");
             ignoredColumns.push("size");
             ignoredColumns.push("mimetype");
+            ignoredColumns.push("filename_ext");
             ignoredColumns.push(this.column.name + ".md5_hex");
             ignoredColumns.push(this.column.name + ".md5_base64");
             ignoredColumns.push(this.column.name + ".filename");
             ignoredColumns.push(this.column.name + ".size");
             ignoredColumns.push(this.column.name + ".mimetype");
+            ignoredColumns.push(this.column.name + ".filename_ext");
 
             // TODO we can improve this (should not rely on _validateTemplate to format them)
             return module._validateTemplate(template, row, this.reference.table, this.reference._context, { ignoredColumns: ignoredColumns, templateEngine: this.column.templateEngine });
@@ -743,6 +790,7 @@ var ERMrest = (function(module) {
         row[this.column.name].md5_hex = this.hash.md5_hex;
         row[this.column.name].md5_base64 = this.hash.md5_base64;
         row[this.column.name].sha256 = this.hash.sha256;
+        row[this.column.name].filename_ext = _getFilenameExtension(this.file.name, this.column.filenameExtFilter, this.column.filenameExtRegexp);
 
         // Generate url
 

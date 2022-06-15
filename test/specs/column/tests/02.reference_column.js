@@ -1117,6 +1117,16 @@ exports.execute = function (options) {
                 });
             });
 
+            describe('.filenameExtRegexp', function() {
+                it('should return empty array if file_name_ext is not present.', function () {
+                    expect(assetRefCompactCols[9].filenameExtFilter.length).toBe(0, "Returned value is not an empty array");
+                });
+
+                it('otherwise should return the defined array of file name extensions.', function () {
+                    expect(assetRefCompactCols[10].filenameExtRegexp).toEqual([".special.jpg", ".jpg"]);
+                });
+            });
+
             describe(".getMetadata", function () {
                 var testMetadata = function (col, data, context, message, expectedCaption, expectedHostInformation, expectedSameOrigin, expectedFilename, expectedByte, expectedMd5, expectedSha256) {
                     var m = col.getMetadata(data, context);

@@ -2635,7 +2635,7 @@ Object.defineProperty(AssetPseudoColumn.prototype, "sha256", {
 
 /**
  * The column object that file extension is stored in.
- * @member {ERMrest.Column} filenameExtFilter
+ * @member {string[]} filenameExtFilter
  * @memberof ERMrest.AssetPseudoColumn#
  */
 Object.defineProperty(AssetPseudoColumn.prototype, "filenameExtFilter", {
@@ -2651,6 +2651,27 @@ Object.defineProperty(AssetPseudoColumn.prototype, "filenameExtFilter", {
             }
         }
         return this._filenameExtFilter;
+    }
+});
+
+/**
+ * The regular expressions that will be used for extracting the extension
+ * @member {string[]} filenameExtRegexp
+ * @memberof ERMrest.AssetPseudoColumn#
+ */
+ Object.defineProperty(AssetPseudoColumn.prototype, "filenameExtRegexp", {
+    get: function () {
+        if (this._filenameExtRegexp === undefined) {
+            this._filenameExtRegexp = [];
+
+            var reg = this._annotation.filename_ext_regexp;
+            if (typeof reg == 'string') {
+                this._filenameExtRegexp.push(ext);
+            } else if (Array.isArray(reg)) {
+                this._filenameExtRegexp = reg;
+            }
+        }
+        return this._filenameExtRegexp;
     }
 });
 
@@ -3153,7 +3174,8 @@ FacetColumn.prototype = {
      *  4. Otherwise use the table name.
      *    - If it's in `scalar` mode, append the column name. `table_name (column_name)`.
      *
-     * @type {object} Object with `value`, `unformatted`, and `isHTML` as its attributes.
+     * Returned object has `value`, `unformatted`, and `isHTML` properties.
+     * @type {Object} 
      */
     get displayname() {
         if (this._displayname === undefined) {
@@ -4235,10 +4257,10 @@ ColumnGroupAggregateFn.prototype = {
      * The result is based on shortest key of the parent table. If we have join
      * in the path, we are counting the shortest key of the parent table (not the end table).
      * NOTE: Will create a new reference by each call.
-     * @type {Object=} columnDisplayname the displayname of main column.
-     * @type {Object=} sortColumns the sort column object that you want to pass
-     * @type {Boolean=} hideNumOccurrences whether we should add number of Occurrences or not.
-     * @type {Boolean=} dontAllowNull whether the null value should be returned for the facet or not.
+     * @param {Object=} columnDisplayname the displayname of main column.
+     * @param {Object=} sortColumns the sort column object that you want to pass
+     * @param {Boolean=} hideNumOccurrences whether we should add number of Occurrences or not.
+     * @param {Boolean=} dontAllowNull whether the null value should be returned for the facet or not.
      * @returns {ERMrest.AttributeGroupReference}
      */
     entityCounts: function(columnDisplayname, sortColumns, hideNumOccurrences, dontAllowNull) {

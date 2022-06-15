@@ -527,7 +527,8 @@ to use for ERMrest JavaScript agents.
         * [.filenameColumn](#ERMrest.AssetPseudoColumn+filenameColumn) : [<code>Column</code>](#ERMrest.Column)
         * [.md5](#ERMrest.AssetPseudoColumn+md5) : [<code>Column</code>](#ERMrest.Column)
         * [.sha256](#ERMrest.AssetPseudoColumn+sha256) : [<code>Column</code>](#ERMrest.Column)
-        * [.filenameExtFilter](#ERMrest.AssetPseudoColumn+filenameExtFilter) : [<code>Column</code>](#ERMrest.Column)
+        * [.filenameExtFilter](#ERMrest.AssetPseudoColumn+filenameExtFilter) : <code>Array.&lt;string&gt;</code>
+        * [.filenameExtRegexp](#ERMrest.AssetPseudoColumn+filenameExtRegexp) : <code>Array.&lt;string&gt;</code>
         * [._determineInputDisabled(context)](#ERMrest.AssetPseudoColumn+_determineInputDisabled) ⇒ <code>boolean</code> \| <code>object</code>
         * [.getMetadata(data, context, options)](#ERMrest.AssetPseudoColumn+getMetadata) ⇒ <code>Object</code>
         * [.formatPresentation(data, [context], [templateVariables], [options])](#ERMrest.AssetPseudoColumn+formatPresentation) ⇒ <code>Object</code>
@@ -555,7 +556,7 @@ to use for ERMrest JavaScript agents.
         * [.histogramBucketCount](#ERMrest.FacetColumn+histogramBucketCount) : <code>Integer</code>
         * [.column](#ERMrest.FacetColumn+column) : [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)
         * [.sourceReference](#ERMrest.FacetColumn+sourceReference) : [<code>Reference</code>](#ERMrest.Reference)
-        * [.displayname](#ERMrest.FacetColumn+displayname) : <code>object</code>
+        * [.displayname](#ERMrest.FacetColumn+displayname) : <code>Object</code>
         * [.comment](#ERMrest.FacetColumn+comment) : <code>string</code>
         * [.hideNullChoice](#ERMrest.FacetColumn+hideNullChoice) : <code>Boolean</code>
         * [.hideNotNullChoice](#ERMrest.FacetColumn+hideNotNullChoice) : <code>Boolean</code>
@@ -602,7 +603,7 @@ to use for ERMrest JavaScript agents.
         * [.countDistinctAgg](#ERMrest.ColumnAggregateFn+countDistinctAgg) : <code>Object</code>
     * [.ColumnGroupAggregateFn](#ERMrest.ColumnGroupAggregateFn)
         * [new ColumnGroupAggregateFn(column)](#new_ERMrest.ColumnGroupAggregateFn_new)
-        * [.entityCounts()](#ERMrest.ColumnGroupAggregateFn+entityCounts) ⇒ [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)
+        * [.entityCounts([columnDisplayname], [sortColumns], [hideNumOccurrences], [dontAllowNull])](#ERMrest.ColumnGroupAggregateFn+entityCounts) ⇒ [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)
         * [.histogram(bucketCount, min, max)](#ERMrest.ColumnGroupAggregateFn+histogram) ⇒ [<code>BucketAttributeGroupReference</code>](#ERMrest.BucketAttributeGroupReference)
     * [.AttributeGroupReference](#ERMrest.AttributeGroupReference)
         * [new AttributeGroupReference(keyColumns, aggregateColumns, location, catalog, sourceTable, context)](#new_ERMrest.AttributeGroupReference_new)
@@ -4975,7 +4976,8 @@ The following is the logic:
     * [.filenameColumn](#ERMrest.AssetPseudoColumn+filenameColumn) : [<code>Column</code>](#ERMrest.Column)
     * [.md5](#ERMrest.AssetPseudoColumn+md5) : [<code>Column</code>](#ERMrest.Column)
     * [.sha256](#ERMrest.AssetPseudoColumn+sha256) : [<code>Column</code>](#ERMrest.Column)
-    * [.filenameExtFilter](#ERMrest.AssetPseudoColumn+filenameExtFilter) : [<code>Column</code>](#ERMrest.Column)
+    * [.filenameExtFilter](#ERMrest.AssetPseudoColumn+filenameExtFilter) : <code>Array.&lt;string&gt;</code>
+    * [.filenameExtRegexp](#ERMrest.AssetPseudoColumn+filenameExtRegexp) : <code>Array.&lt;string&gt;</code>
     * [._determineInputDisabled(context)](#ERMrest.AssetPseudoColumn+_determineInputDisabled) ⇒ <code>boolean</code> \| <code>object</code>
     * [.getMetadata(data, context, options)](#ERMrest.AssetPseudoColumn+getMetadata) ⇒ <code>Object</code>
     * [.formatPresentation(data, [context], [templateVariables], [options])](#ERMrest.AssetPseudoColumn+formatPresentation) ⇒ <code>Object</code>
@@ -5043,8 +5045,14 @@ The column object that sha256 hash is stored in.
 **Kind**: instance property of [<code>AssetPseudoColumn</code>](#ERMrest.AssetPseudoColumn)  
 <a name="ERMrest.AssetPseudoColumn+filenameExtFilter"></a>
 
-#### assetPseudoColumn.filenameExtFilter : [<code>Column</code>](#ERMrest.Column)
+#### assetPseudoColumn.filenameExtFilter : <code>Array.&lt;string&gt;</code>
 The column object that file extension is stored in.
+
+**Kind**: instance property of [<code>AssetPseudoColumn</code>](#ERMrest.AssetPseudoColumn)  
+<a name="ERMrest.AssetPseudoColumn+filenameExtRegexp"></a>
+
+#### assetPseudoColumn.filenameExtRegexp : <code>Array.&lt;string&gt;</code>
+The regular expressions that will be used for extracting the extension
 
 **Kind**: instance property of [<code>AssetPseudoColumn</code>](#ERMrest.AssetPseudoColumn)  
 <a name="ERMrest.AssetPseudoColumn+_determineInputDisabled"></a>
@@ -5192,7 +5200,7 @@ Indicates that this related table has filters in its path
     * [.histogramBucketCount](#ERMrest.FacetColumn+histogramBucketCount) : <code>Integer</code>
     * [.column](#ERMrest.FacetColumn+column) : [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)
     * [.sourceReference](#ERMrest.FacetColumn+sourceReference) : [<code>Reference</code>](#ERMrest.Reference)
-    * [.displayname](#ERMrest.FacetColumn+displayname) : <code>object</code>
+    * [.displayname](#ERMrest.FacetColumn+displayname) : <code>Object</code>
     * [.comment](#ERMrest.FacetColumn+comment) : <code>string</code>
     * [.hideNullChoice](#ERMrest.FacetColumn+hideNullChoice) : <code>Boolean</code>
     * [.hideNotNullChoice](#ERMrest.FacetColumn+hideNotNullChoice) : <code>Boolean</code>
@@ -5364,7 +5372,7 @@ Notes:
 **Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
 <a name="ERMrest.FacetColumn+displayname"></a>
 
-#### facetColumn.displayname : <code>object</code>
+#### facetColumn.displayname : <code>Object</code>
 Returns the displayname object that should be used for this facetColumn.
 TODO the heuristics should be changed to be aligned with PseudoColumn
 Heuristics are as follows (first applicable rule):
@@ -5374,6 +5382,8 @@ Heuristics are as follows (first applicable rule):
  3. If last foreignkey is inbound and has from_name, use it.
  4. Otherwise use the table name.
    - If it's in `scalar` mode, append the column name. `table_name (column_name)`.
+
+Returned object has `value`, `unformatted`, and `isHTML` properties.
 
 **Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
 <a name="ERMrest.FacetColumn+comment"></a>
@@ -5846,7 +5856,7 @@ distinct count aggregate representation
 
 * [.ColumnGroupAggregateFn](#ERMrest.ColumnGroupAggregateFn)
     * [new ColumnGroupAggregateFn(column)](#new_ERMrest.ColumnGroupAggregateFn_new)
-    * [.entityCounts()](#ERMrest.ColumnGroupAggregateFn+entityCounts) ⇒ [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)
+    * [.entityCounts([columnDisplayname], [sortColumns], [hideNumOccurrences], [dontAllowNull])](#ERMrest.ColumnGroupAggregateFn+entityCounts) ⇒ [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)
     * [.histogram(bucketCount, min, max)](#ERMrest.ColumnGroupAggregateFn+histogram) ⇒ [<code>BucketAttributeGroupReference</code>](#ERMrest.BucketAttributeGroupReference)
 
 <a name="new_ERMrest.ColumnGroupAggregateFn_new"></a>
@@ -5865,13 +5875,21 @@ Usage:
 
 <a name="ERMrest.ColumnGroupAggregateFn+entityCounts"></a>
 
-#### columnGroupAggregateFn.entityCounts() ⇒ [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)
+#### columnGroupAggregateFn.entityCounts([columnDisplayname], [sortColumns], [hideNumOccurrences], [dontAllowNull]) ⇒ [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference)
 Will return a compact/select attribute group reference which can be used to show distinct values and their counts
 The result is based on shortest key of the parent table. If we have join
 in the path, we are counting the shortest key of the parent table (not the end table).
 NOTE: Will create a new reference by each call.
 
 **Kind**: instance method of [<code>ColumnGroupAggregateFn</code>](#ERMrest.ColumnGroupAggregateFn)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| [columnDisplayname] | <code>Object</code> | the displayname of main column. |
+| [sortColumns] | <code>Object</code> | the sort column object that you want to pass |
+| [hideNumOccurrences] | <code>Boolean</code> | whether we should add number of Occurrences or not. |
+| [dontAllowNull] | <code>Boolean</code> | whether the null value should be returned for the facet or not. |
+
 <a name="ERMrest.ColumnGroupAggregateFn+histogram"></a>
 
 #### columnGroupAggregateFn.histogram(bucketCount, min, max) ⇒ [<code>BucketAttributeGroupReference</code>](#ERMrest.BucketAttributeGroupReference)

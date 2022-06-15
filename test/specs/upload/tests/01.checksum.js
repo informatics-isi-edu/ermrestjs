@@ -24,21 +24,21 @@ exports.execute = function (options) {
             type: "application/pdf",
             hash: "d54ead2fe9e6e2bf801bb62b3af43b91",
             hash_64: "1U6tL+nm4r+AG7YrOvQ7kQ==",
-            doNotRunInCI: true
+            doNotRunInCI: true,
         }, {
             name: "testfile5MB.txt",
             size: 5242880,
             displaySize: "5MB",
             type: "text/plain",
             hash: "08b46181d7094b5ece88bb389c7499af",
-            hash_64: "CLRhgdcJS17OiLs4nHSZrw=="
+            hash_64: "CLRhgdcJS17OiLs4nHSZrw==",
         }, {
             name: "testfile500kb.png",
             size: 512000,
             displaySize: "500KB",
             type: "image/png",
             hash: "4b178700e5f3b15ce799f2c6c1465741",
-            hash_64: "SxeHAOXzsVznmfLGwUZXQQ=="
+            hash_64: "SxeHAOXzsVznmfLGwUZXQQ==",
         }];
 
         if (process.env.CI) files = files.filter(function(f) { if (!f.doNotRunInCI) return f; });
@@ -136,6 +136,7 @@ exports.execute = function (options) {
 
                             expect(url).toBe("/hatrac/js/ermrestjs/" + currentTime + "/" + file.hash, "File generated url is not the same");
 
+                            // values that are attached to the row
                             expect(validRow.filename).toBe(file.name, "valid row filename is incorrect");
                             expect(validRow.bytes).toBe(file.size, "valid row bytes is incorrect");
                             expect(validRow.checksum).toBe(file.hash, "valid row checksum is incorrect");
