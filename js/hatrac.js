@@ -218,11 +218,15 @@ var ERMrest = (function(module) {
      * @param {string} filename 
      * @param {string[]} allowedExtensions
      * @param {string[]} regexArr 
-     * @returns the filename extension string
+     * @returns the filename extension string. if we cannot find any matches, it will return null
      * @private
      * @ignore
      */
     var _getFilenameExtension = function (filename, allowedExtensions, regexArr) {
+        if (typeof filename !== 'string' || filename.length === 0) {
+            return null;
+        }
+        
         // first find in the list of allowed extensions
         var res = -1;
         var isInAllowed = Array.isArray(allowedExtensions) && allowedExtensions.some(function (ext) {
@@ -232,26 +236,34 @@ var ERMrest = (function(module) {
         if (isInAllowed) {
             return res;
         }
-        res = "";
 
+        // we will return null if we cannot find anything
+        res = null;
         // no matching allowed extension, try the regular expressions
-        regexArr = Array.isArray(regexArr) ? regexArr : [];
-
-        // always add the default regular exprsesion to ensure a valid result
-        regexArr.push(['\.[^\.]+$']);
-        
-        regexArr.some(function (regexp) {
-            // since regular expression comes from annotation, it might not be valid
-            try {
-                var matches = filename.match(new RegExp(regexp, 'g'));
-                res = (matches && matches[0]) || "";
-                return res && res.length > 0;
-            } catch (exp) {
-                res = "";
-                return false;
+        if (Array.isArray(regexArr) && regexArr.length > 0) {
+            regexArr.some(function (regexp) {
+                // since regular expression comes from annotation, it might not be valid
+                try {
+                    var matches = filename.match(new RegExp(regexp, 'g'));
+                    if (matches && matches[0] && typeof matches[0] === "string") {
+                        res = matches[0];
+                    } else {
+                        res = null;
+                    }
+                    return res;
+                } catch (exp) {
+                    res = null;
+                    return false;
+                }
+            });
+        } else {
+            var dotIndex = filename.lastIndexOf('.');
+            // it's only a valid filename if there's some string after `.`
+            if (dotIndex !== -1 && dotIndex !== filename.length-1) {
+                res = filename.slice(dotIndex);
             }
-        });
-
+        }
+        
         return res;
     };
 
