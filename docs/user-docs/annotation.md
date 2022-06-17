@@ -705,6 +705,7 @@ Default heuristics:
   - `mimetype` for mimetype of the selected file.
   - `filename` for filename
   - `filename_ext` for the file extension based on the filename. This value is derived based on the optionally defined `filename_ext_filter` and `filename_ext_regexp`. If these annotations are missing, the last part of the filename after the last dot will be returned (also includes the `.` e.g. `.png`).
+    - If we cannot find any matches, this property will return an empty string. So make sure you're properly doing null/empty value checking while using this property.
 - Nothing may be inferred without additional payload patterns present.
 
 Protocol-specific metadata retrieval MAY be applied once an asset location is known. How to present or reconcile contradictions in metadata found in multiple sources is beyond the scope of this specification.
