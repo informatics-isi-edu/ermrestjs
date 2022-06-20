@@ -662,7 +662,7 @@ exports.execute = function(options) {
                     }).toThrow(errorMessage ? errorMessage : facetError);
                 };
 
-                var expectLocation = function (blob, facetObject, path, errMessage, woSchema, woPrefix, aliases) {
+                var expectLocation = function (blob, facetObject, path, hasNonSearchBoxVisibleFacets, errMessage, woSchema, woPrefix, aliases) {
                     var url = baseUri;
                     if (woSchema) {
                         url = baseUriWOSchema;
@@ -681,6 +681,8 @@ exports.execute = function(options) {
 
                     expect(JSON.stringify(loc.facets.decoded)).toEqual(JSON.stringify(facetObject), "facets decoded missmatch" + (errMessage ? errMessage : "."));
                     expect(loc.facets.encoded).toEqual(blob, "facets encoded missmatch" + (errMessage ? errMessage : "."));
+
+                    expect(loc.facets.hasNonSearchBoxVisibleFacets).toBe(hasNonSearchBoxVisibleFacets, "hasNonSearchBoxVisibleFacets missmatch" + (errMessage ? errMessage : "."));
 
                     var st = "M:=parse_schema:parse_table/";
                     if (woSchema) {
@@ -720,7 +722,8 @@ exports.execute = function(options) {
                         expectLocation(
                             "N4IghgdgJiBcDaoDOB7ArgJwMYFM4gEYQAaELACxQEtck55CQBdAX1aA",
                             {"and": [ {"source": "1", "choices": ["1"]} ]},
-                            "1=1/$M"
+                            "1=1/$M",
+                            true
                         );
                     });
 
@@ -739,6 +742,7 @@ exports.execute = function(options) {
                                     }
                                 ]},
                                 "(fk1_col1)=(parse_schema:outbound1:id)/(id)=(parse_schema:outbound1_inbound1:id)/RID=1/$M",
+                                true,
                                 "",
                                 false,
                                 false,
@@ -760,6 +764,7 @@ exports.execute = function(options) {
                                     }
                                 ]},
                                 "parse_schema:outbound1_inbound1/RID::null::/(id)=(parse_schema:outbound1:id)/M:=right(id)=(parse_schema:parse_table:fk1_col1)",
+                                true,
                                 "",
                                 false,
                                 true,
@@ -785,6 +790,7 @@ exports.execute = function(options) {
                                     }
                                 ]},
                                 "M_P1:=(fk1_col1)=(parse_schema:outbound1:id)/RID=1/$M/$M_P1/(id)=(parse_schema:outbound1_inbound1:id)/RID=2/$M",
+                                true,
                                 "",
                                 false,
                                 false,
@@ -823,6 +829,7 @@ exports.execute = function(options) {
                                     "M_P1:=(fk1_col1)=(parse_schema:outbound1:id)/RID=1/$M",
                                     "$M_P1/(id)=(parse_schema:outbound1_outbound1:id)/RID=2/$M"
                                 ].join("/"),
+                                true,
                                 "",
                                 false,
                                 true,
@@ -844,6 +851,7 @@ exports.execute = function(options) {
                                     }
                                 ]},
                                 "(fk1_col1)=(parse_schema:outbound1:id)/(id)=(parse_schema:outbound1_inbound1:id)/(id)=(parse_schema:outbound1_inbound1_inbound1:id)/RID=1/$M",
+                                true,
                                 "",
                                 false,
                                 false,
@@ -865,6 +873,7 @@ exports.execute = function(options) {
                                     }
                                 ]},
                                 "parse_schema:outbound1_inbound1_inbound1/RID::null::/(id)=(parse_schema:outbound1_inbound1:id)/(id)=(parse_schema:outbound1:id)/M:=right(id)=(parse_schema:parse_table:fk1_col1)",
+                                true,
                                 "",
                                 false,
                                 true
@@ -901,6 +910,7 @@ exports.execute = function(options) {
                                     "(id)=(parse_schema:outbound1_inbound1_inbound1:id)/RID=1/$M/$M_P1/RID=2/$M",
                                     "$M_P2/(id)=(parse_schema:outbound1_outbound1:id)/RID=3;RID=4/$M",
                                 ].join("/"),
+                                true,
                                 "",
                                 false,
                                 false,
@@ -919,6 +929,7 @@ exports.execute = function(options) {
 
                                 ]},
                                 "(fk1_col1)=(parse_schema:outbound1:id)/id=1/$M",
+                                true,
                                 "",
                                 false,
                                 false,
@@ -934,6 +945,7 @@ exports.execute = function(options) {
                                     }
                                 ]},
                                 "(fk1_col1)=(parse_schema:outbound1:id)/(id)=(parse_schema:outbound1_outbound1:id)/RID=1/$M",
+                                true,
                                 " case 2",
                                 false,
                                 false,
@@ -952,6 +964,7 @@ exports.execute = function(options) {
 
                                 ]},
                                 "parse_schema:outbound1/id::null::/M:=right(id)=(parse_schema:parse_table:fk1_col1)",
+                                true,
                                 " case 1",
                                 false,
                                 true,
@@ -973,6 +986,7 @@ exports.execute = function(options) {
                                     }
                                 ]},
                                 "M_P1:=(fk1_col1)=(parse_schema:outbound1:id)/id=1/$M/$M_P1/col=2/$M",
+                                true,
                                 " case 1",
                                 false,
                                 false,
@@ -996,6 +1010,7 @@ exports.execute = function(options) {
                                     }
                                 ]},
                                 "M_P1:=(fk1_col1)=(parse_schema:outbound1:id)/id=1/$M/$M_P1/(id)=(parse_schema:outbound1_outbound1:id)/RID=2/$M/$M_P1/col=3/$M",
+                                true,
                                 " case 2",
                                 false,
                                 false,
@@ -1024,6 +1039,7 @@ exports.execute = function(options) {
                                     "M_P1:=(fk1_col1)=(parse_schema:outbound1:id)/id=1/$M",
                                     "$M_P1/col=3/$M"
                                 ].join("/"),
+                                true,
                                 " case 3",
                                 false,
                                 true,
@@ -1077,6 +1093,7 @@ exports.execute = function(options) {
                                     "$M_P2/(id)=(parse_schema:outbound1_outbound1:id)/RID=2/$M",
                                     "$M_P2/col=3/$M"
                                 ].join("/"),
+                                true,
                                 "",
                                 false,
                                 false,
@@ -1100,6 +1117,7 @@ exports.execute = function(options) {
                                 }
                             ]},
                             "M_P2:=(fk1_col1)=(parse_schema:outbound1:id)/M_P1:=(id)=(parse_schema:outbound1_inbound1:id)/id=1/$M",
+                            true,
                             " case 4 (recursive path where last node will be ignored)",
                             false,
                             false
@@ -1119,6 +1137,7 @@ exports.execute = function(options) {
                                 }
                             ]},
                             "parse_schema:outbound1_inbound1/id::null::/(id)=(parse_schema:outbound1:id)/M:=right(id)=(parse_schema:parse_table:fk1_col1)",
+                            true,
                             " case 5 (recursive path where lawst node will be ignored with null)",
                             false,
                             true
@@ -1140,6 +1159,7 @@ exports.execute = function(options) {
                                 }
                             ]},
                             "(fk1_col1)=(parse_schema:outbound1:id)/(id)=(parse_schema:outbound1_inbound1:id)/RID=1/$M",
+                            true,
                             " case 1 (foreign key path)",
                             false,
                             false
@@ -1158,6 +1178,7 @@ exports.execute = function(options) {
                                 }
                             ]},
                             "parse_schema:outbound1_inbound1/RID::null::/(id)=(parse_schema:outbound1:id)/M:=right(id)=(parse_schema:parse_table:fk1_col1)",
+                            true,
                             " case 2 (foreign key path with null)",
                             false,
                             true
@@ -1167,8 +1188,6 @@ exports.execute = function(options) {
 
                     // other array for source test cases are in faceting spec.
                 });
-
-                return;
 
                 describe("regarding sourcekey attribute, ", function () {
                     var searchFacet = {"and": [{"sourcekey": "search-box", "search": ["term"]}]};
@@ -1186,8 +1205,18 @@ exports.execute = function(options) {
 
                     // NOTE extra test cases are in refererence/13.search.js
                     it ("should support search-box.", function () {
-                        expectLocation(searchBlob, searchFacet, "*::ciregexp::term/$M", "with schema");
-                        expectLocation(searchBlob, searchFacet, "*::ciregexp::term/$M", "without schema", true);
+                        expectLocation(searchBlob, searchFacet, "*::ciregexp::term", false, "with schema");
+                        expectLocation(searchBlob, searchFacet, "*::ciregexp::term", false, "without schema", true);
+                        expectLocation(
+                            "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixQBsQAaAgCxQEtck54QBGEAXQF9Tl1scBrHAE98SHGGwUAtACMUADzIhR4rBQYgAbmBIcOQA",
+                            {"and": [
+                                {"source": "col", "choices": ["1"]},
+                                {"sourcekey": "search-box", "search": ["val"]}
+                            ]},
+                            "col=1/$M/*::ciregexp::val",
+                            true,
+                            "mixed with other facets"
+                        );
                     });
 
                     it ("should handle valid sourcekeys.", function () {
@@ -1196,6 +1225,7 @@ exports.execute = function(options) {
                             "N4IghgdgJiBcDaoDOB7ArgJwMYFMDWOAnnCOgC4BG60AjAPo4RkCWZxANCFgBYrO5I48EADcaIALoBfaUA",
                             {"and": [ {"sourcekey": "outbound1_entity", "choices": ["v1"]} ]},
                             "(fk1_col1)=(parse_schema:outbound1:id)/RID=v1/$M",
+                            true,
                             " case 1"
                         );
 
@@ -1203,11 +1233,12 @@ exports.execute = function(options) {
                         expectLocation(
                             "N4IghgdgJiBcDaoDOB7ArgJwMYFMDWOAnnCOgC4BG60AjAPoCWEVatjz1U9A7nRjlkxIGANxx0ADvwBmDAB50cEMgzLEANCCwALFA1xI48ECJogAugF8rQA",
                             {"and": [ {"sourcekey": "outbound1_inbound1_inbound1_w_recursive_prefix_entity", "choices": ["v1"]} ]},
-                            "M_P2:=(fk1_col1)=(parse_schema:outbound1:id)/M_P1:=(id)=(parse_schema:outbound1_inbound1:id)/(id)=(parse_schema:outbound1_inbound1_inbound1:id)/RID=v1/$M",
+                            "(fk1_col1)=(parse_schema:outbound1:id)/(id)=(parse_schema:outbound1_inbound1:id)/(id)=(parse_schema:outbound1_inbound1_inbound1:id)/RID=v1/$M",
+                            true,
                             " case 2 (with path prefix)",
                             false,
                             false,
-                            {"outbound1_entity":"M_P2","outbound1_inbound1_w_prefix_entity":"M_P1"}
+                            {} // alias won't be added since it's not used by other parts of the URL
                         );
 
                         // multiple sourcekeys using the same prefix
@@ -1219,14 +1250,15 @@ exports.execute = function(options) {
                                 {"sourcekey": "outbound1_inbound1_w_prefix_entity", "choices": ["v2"]}
                             ]},
                             [
-                                "(fk1_col1)=(parse_schema:outbound1:id)/RID=v1/$M",
-                                "M_P2:=(fk1_col1)=(parse_schema:outbound1:id)/M_P1:=(id)=(parse_schema:outbound1_inbound1:id)/(id)=(parse_schema:outbound1_inbound1_inbound1:id)/RID=v3/$M",
-                                "$M_P1/RID=v2/$M"
+                                "M_P1:=(fk1_col1)=(parse_schema:outbound1:id)/RID=v1/$M",
+                                "$M_P1/M_P2:=(id)=(parse_schema:outbound1_inbound1:id)/(id)=(parse_schema:outbound1_inbound1_inbound1:id)/RID=v3/$M",
+                                "$M_P2/RID=v2/$M"
                             ].join("/"),
+                            true,
                             " case 3 (multiple sourcekeys with path prefix)",
                             false,
                             false,
-                            {"outbound1_entity":"M_P2","outbound1_inbound1_w_prefix_entity":"M_P1"}
+                            {"outbound1_entity":"M_P1","outbound1_inbound1_w_prefix_entity":"M_P2"}
                         )
                     });
 
@@ -1235,6 +1267,7 @@ exports.execute = function(options) {
                             "N4IghgdgJiBcDaoDOB7ArgJwMYFMDWOAnnCOgC4BG60AjAPo4RkCWZxANCFgBYrO5I48EADcaIALoBfaUA",
                             {"and": [ {"sourcekey": "outbound1_entity", "choices": ["v1"]} ]},
                             "(fk1_col1)=(parse_schema:outbound1:id)/RID=v1/$M",
+                            true,
                             "without schema",
                              true
                         );
@@ -1251,7 +1284,8 @@ exports.execute = function(options) {
                         expectLocation(
                             "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoCALFAS1yTngjQBsGBdAXzaA",
                             {"and": [ {"source": "c", "choices": [null]} ]},
-                            "c::null::/$M"
+                            "c::null::/$M",
+                            true
                         );
                     });
 
@@ -1259,7 +1293,8 @@ exports.execute = function(options) {
                         expectLocation(
                             "N4IghgdgJiBcDaoDOB7ArgJwMYFM4kAUgAAkBUgEAGhCwAsUBLXJOeQ0kAXQF8ug",
                             {"and": [ {"source": unicodeSample, "choices": [unicodeSample]} ]},
-                            encodedUnicodeSample + "=" + encodedUnicodeSample + "/$M"
+                            encodedUnicodeSample + "=" + encodedUnicodeSample + "/$M",
+                            true
                         );
                     });
 
@@ -1267,7 +1302,8 @@ exports.execute = function(options) {
                         expectLocation(
                             "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoCALFAS1yTnhAEZiAmIgZgF0BfLoA",
                             {"and": [ {"source": "c", "choices": ["1", 2, 3]} ]},
-                            "c=1;c=2;c=3/$M"
+                            "c=1;c=2;c=3/$M",
+                            true
                         );
                     });
                 });
@@ -1291,13 +1327,15 @@ exports.execute = function(options) {
                         expectLocation(
                             "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoQkcxsALOeARgF0BfJoA",
                             {"and": [ {"source": "c", "search": [1]} ]},
-                            "c::ciregexp::" + options.ermRest._fixedEncodeURIComponent(intRegexPrefix + "1" + intRegexSuffix) + "/$M"
+                            "c::ciregexp::" + options.ermRest._fixedEncodeURIComponent(intRegexPrefix + "1" + intRegexSuffix) + "/$M",
+                            true
                         );
 
                         expectLocation(
                             "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoQkcxsALOecAAgCMQBdAXzaA",
                             {"and": [ {"source": "c", "search": ["a b"]} ]},
-                            "c::ciregexp::a&c::ciregexp::b/$M"
+                            "c::ciregexp::a&c::ciregexp::b/$M",
+                            true
                         );
                     });
 
@@ -1305,7 +1343,8 @@ exports.execute = function(options) {
                         expectLocation(
                             "N4IghgdgJiBcDaoDOB7ArgJwMYFM4kAUgAAkBUgEAGhCRzGwAs55wQBdAX3aA",
                             {"and": [ {"source": unicodeSample, "search": ["a"] } ]},
-                            encodedUnicodeSample + "::ciregexp::a/$M"
+                            encodedUnicodeSample + "::ciregexp::a/$M",
+                            true
                         );
                     });
 
@@ -1313,7 +1352,8 @@ exports.execute = function(options) {
                         expectLocation(
                             "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoQkcxsALOecYkAIxAF0BfNoA",
                             {"and": [ {"source": "c", "search": ["a", "b"]} ]},
-                            "c::ciregexp::a;c::ciregexp::b/$M"
+                            "c::ciregexp::a;c::ciregexp::b/$M",
+                            true
                         );
                     });
                 });
@@ -1333,13 +1373,15 @@ exports.execute = function(options) {
                         expectLocation(
                             "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoQNIBzHJOREAWwEsI4BGAXwF1O2g",
                             {"and": [ {"source": "c", "ranges": [{"min":1}]} ]},
-                            "c::geq::1/$M"
+                            "c::geq::1/$M",
+                            true
                         );
 
                         expectLocation(
                             "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoQNIBzHJOREAWzAA98AXEAXwF0v2g",
                             {"and": [ {"source": "c", "ranges": [{"max":"t"}]} ]},
-                            "c::leq::t/$M"
+                            "c::leq::t/$M",
+                            true
                         );
                     });
 
@@ -1347,30 +1389,30 @@ exports.execute = function(options) {
                         expectLocation(
                             "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoQNIBzHJOREAWwEsI4BGExiAfRwA8sAbNEgYA3PLAAuGNDgC+AXQWygA",
                             {"and": [ {"source": "c", "ranges": [{"min":1, "min_exclusive": true}]} ]},
-                            "c::gt::1/$M", "min exclusive"
+                            "c::gt::1/$M", true, "min exclusive"
                         );
                         expectLocation(
                             "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoQNIBzHJOREAWzAA84BWEhxgfR0awBs0SAJYA3PLAAuGNDgC+AXQWygA",
                             {"and": [ {"source": "c", "ranges": [{"max":5, "max_exclusive": true}]} ]},
-                            "c::lt::5/$M", "max exclusive"
+                            "c::lt::5/$M", true, "max exclusive"
                         );
 
                         expectLocation(
                             "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoQNIBzHJOREAWwEsI4BGExiAfRwA8sAbNEgYA3PLAAuGNDnZgecAKxye3PoOFi4UmQF8Augd1A",
                             {"and": [ {"source": "c", "ranges": [{"min":1, "min_exclusive": true, "max":5, "max_exclusive": true}]} ]},
-                            "c::gt::1&c::lt::5/$M", "min and max exclusive"
+                            "c::gt::1&c::lt::5/$M", true, "min and max exclusive"
                         );
 
                         expectLocation(
                             "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoQNIBzHJOREAWwEsI4BGEusADzgFZ2uA+jk5YANmiQMAbnlgAXDGhwBfALprlQA",
                             {"and": [ {"source": "c", "ranges": [{"min":1, "max":5, "max_exclusive": true}]} ]},
-                            "c::geq::1&c::lt::5/$M", "min inclusive, max exclusive"
+                            "c::geq::1&c::lt::5/$M", true, "min inclusive, max exclusive"
                         );
 
                         expectLocation(
                             "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoQNIBzHJOREAWwEsI4BGExiAfRwA8sAbNEgYA3PLAAuGNDnZgecAKwBfALprlQA",
                             {"and": [ {"source": "c", "ranges": [{"min":1, "min_exclusive": true, "max":5}]} ]},
-                            "c::gt::1&c::leq::5/$M", "min inclusive, max exclusive"
+                            "c::gt::1&c::leq::5/$M", true, "min inclusive, max exclusive"
                         );
                     });
 
@@ -1378,7 +1420,8 @@ exports.execute = function(options) {
                         expectLocation(
                             "N4IghgdgJiBcDaoDOB7ArgJwMYFM4kAUgAAkBUgEAGhA0gHMck5EQBbASwn2LMubAA9OpEAF8AumOFA",
                             {"and": [ {"source": unicodeSample, "ranges": [{"min": unicodeSample, "max": unicodeSample}] } ]},
-                            encodedUnicodeSample + "::geq::" + encodedUnicodeSample + "&" + encodedUnicodeSample + "::leq::" + encodedUnicodeSample + "/$M"
+                            encodedUnicodeSample + "::geq::" + encodedUnicodeSample + "&" + encodedUnicodeSample + "::leq::" + encodedUnicodeSample + "/$M",
+                            true
                         );
                     });
 
@@ -1386,7 +1429,8 @@ exports.execute = function(options) {
                         expectLocation(
                             "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoQNIBzHJOREAWwEsI4BGAXyNDrAA98AXEBy5M4AWhYlufWAFY2AXUVsgA",
                             {"and": [ {"source": "c", "ranges": [{"min":1}, {"max":"t"}, {"min": -1, "max": 5}]} ]},
-                            "c::geq::1;c::leq::t;c::geq::-1&c::leq::5/$M"
+                            "c::geq::1;c::leq::t;c::geq::-1&c::leq::5/$M",
+                            true
                         );
                     });
                 });
@@ -1396,7 +1440,8 @@ exports.execute = function(options) {
                         expectLocation(
                             "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoCALFAS1yTngjQBsGBdEiFAFwH16naQAjCGYBfUUA",
                             {"and": [ {"source": "c", "choices": [null], "not_null": ["1"] }]},
-                            "c::null::/$M"
+                            "c::null::/$M",
+                            true
                         );
                     });
 
@@ -1404,7 +1449,8 @@ exports.execute = function(options) {
                         expectLocation(
                             "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoQIUAXAfQjQBta5yM0cBfAXVaA",
                             {"and": [ {"source": "c", "not_null": true} ]},
-                            "!(c::null::)/$M"
+                            "!(c::null::)/$M",
+                            true
                         );
                     });
 
@@ -1412,7 +1458,8 @@ exports.execute = function(options) {
                         expectLocation(
                             "N4IghgdgJiBcDaoDOB7ArgJwMYFM4kAUgAAkBUgEAGhAhQBcB9CNAGybhozRwF8BdLoA",
                             {"and": [ {"source": unicodeSample, "not_null": true} ] },
-                            "!(" + encodedUnicodeSample + "::null::)/$M"
+                            "!(" + encodedUnicodeSample + "::null::)/$M",
+                            true
                         );
                     });
 
@@ -1420,7 +1467,8 @@ exports.execute = function(options) {
                         expectLocation(
                             "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoCALFAS1yTngjQBsGBdEiFAFwH16m4OMaHAF9mwoA",
                             {"and": [ {"source": "c", "choices": [null], "not_null": true} ]},
-                            "c::null::;!(c::null::)/$M"
+                            "c::null::;!(c::null::)/$M",
+                            true
                         );
                     });
                 });

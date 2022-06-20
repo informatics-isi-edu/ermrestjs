@@ -2057,6 +2057,14 @@
         });
 
         /**
+         * Whether facet blob has any visible filters that is not based on search-box
+         * @type {boolean}
+         */
+        this.hasNonSearchBoxVisibleFacets = obj[andOperator].some(function (f) {
+            return !f.hidden && (!f.sourcekey || f.sourcekey !== module._specialSourceDefinitions.SEARCH_BOX);
+        });
+
+        /**
          * and array of conjunctive filters defined in the facet blob
          * @type {Array}
          */
