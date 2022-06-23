@@ -109,6 +109,19 @@ Using `open` you can force the facet to open by default.
   - `ranges`: for providing a range input.
   - `check_presence`: Will present only two options to the users, "null" and "not-null".
 
+Notes:
+- If the facet definition already has preselected constraints that don't match the given `ux_mode`, the `ux_mode` will be ignored, For example:
+  - `{"source": "id", "choices": ["1"], "ux_mode": "ranges"}` will display a choice picker.
+  - `{"source": "id", "choices": ["1"], "ux_mode": "check_presence"}` will display a choice picker.
+  - `{"source": "id", "choices": [null], "ux_mode": "check_presence"}` will honor the `check_presence` since `null` is a valid value for this mode.
+
+- If `ux_mode` is unavailable or invalid, the following are the heuristics for deriving its value (the first applicable rule):
+  - As we mentioned we first check for the preselected constraint. If there are any, we will honor them.
+  - If it's in `entity` mode, `choices` will be used.
+  - `choices` will be used if the end column is not-null, part of a unique key constraint, and a variant of `serial` or `int` type.
+  - `ranges` will be used if the end column's type is a variant of `serial`, `int`, `float`, `date`, `timestamp`, or `timestamptz`.
+  - Otherwise, `choices` will be used.
+
 ### hide_null_choice/hide_not_null_choice
 
 If applicable we are going to add "null" and "not-null" options in the choice picker by default. Setting any of these variables to `true`, will hide its respective option.
@@ -238,7 +251,6 @@ In chaise we have two facet types:
 ### Example 4 (Choice Vs. Range)
 
 In scalar mode, you can define your preferred UX mode. You can set that by setting the `ux_mode` attribute to `choices` or `ranges`.
-By default (If `ux_mode` is unavailable or invalid) we are showing range for the following column types:
 
 ```JavaScript
 {"source": "id", "ux_mode": "choices"}
