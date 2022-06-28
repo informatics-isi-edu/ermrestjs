@@ -565,6 +565,7 @@ exports.execute = function (options) {
                             it ("should return null if any of the key columns are null.", function (done) {
                                 refWithModifiers.sort([{"column": "alias", "descending": false}]).read(7).then(function (page) {
                                     expect(page).toBeDefined("page was not defined.");
+                                    expect(page.length).toBe(7, "page length missmatch");
                                     expect(page.tuples[6].uniqueId).toBe(null, "uniqueId missmatch.");
                                     done();
                                 }).catch(function (err) {
@@ -641,6 +642,7 @@ exports.execute = function (options) {
                 it ("read should return the correct values.", function (done) {
                     unicodeRef.read(1).then(function (page) {
                         expect(page).toBeDefined("page was not defined.");
+                        expect(page.length).toBe(1, "page length missmatch");
                         expect(page.tuples[0].values).toEqual(["4", "val test 4"], "value missmatch.");
                         done();
                     }).catch(function (err) {

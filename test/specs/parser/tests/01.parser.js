@@ -662,7 +662,7 @@ exports.execute = function(options) {
                     }).toThrow(errorMessage ? errorMessage : facetError);
                 };
 
-                var expectLocation = function (blob, facetObject, path, hasNonSearchBoxVisibleFacets, errMessage, woSchema, woPrefix, aliases) {
+                var expectLocation = function (blob, facetObject, path, hasNonSearchBoxVisibleFilters, errMessage, woSchema, woPrefix, aliases) {
                     var url = baseUri;
                     if (woSchema) {
                         url = baseUriWOSchema;
@@ -682,7 +682,7 @@ exports.execute = function(options) {
                     expect(JSON.stringify(loc.facets.decoded)).toEqual(JSON.stringify(facetObject), "facets decoded missmatch" + (errMessage ? errMessage : "."));
                     expect(loc.facets.encoded).toEqual(blob, "facets encoded missmatch" + (errMessage ? errMessage : "."));
 
-                    expect(loc.facets.hasNonSearchBoxVisibleFacets).toBe(hasNonSearchBoxVisibleFacets, "hasNonSearchBoxVisibleFacets missmatch" + (errMessage ? errMessage : "."));
+                    expect(loc.facets.hasNonSearchBoxVisibleFilters).toBe(hasNonSearchBoxVisibleFilters, "hasNonSearchBoxVisibleFilters missmatch" + (errMessage ? errMessage : "."));
 
                     var st = "M:=parse_schema:parse_table/";
                     if (woSchema) {
