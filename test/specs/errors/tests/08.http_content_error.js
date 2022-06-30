@@ -17,25 +17,27 @@ exports.execute = function (options) {
                     + '<p>The requested URL /t.html was not found on this server.</p>'
                 + '</body>'
             + '</html>';
-
-        var terminalErrorMessage = "An unexpected error has occurred. Please report this problem to your system administrators.";
+        
+        var internalServerErrorMessage = "An unexpected error has occurred. ";
+        internalServerErrorMessage += "Please report this problem to your system administrators."
 
         beforeAll(function () {
             server = options.server;
             catalog = options.catalog;
             url = options.url.replace('ermrest', '');
 
-            server._http.max_retries = 0;
+            server.http.max_retries = 0;
         });
 
         it("should be returned as a 500 error.", function (done) {
             nock(url, ops)
-                .get("/ermrest/catalog/" + id + "/schema")
+                .get("/ermrest/catalog/" + id)
                 .reply(404, htmlResponseMessage, {"Content-Type": "text/html"});
 
             server.catalogs.get(id).then(null, function(err) {
                 expect(err.code).toBe(500);
-                expect(err.message).toBe(terminalErrorMessage);
+                expect(err.message).toBe(internalServerErrorMessage, "message missmatch");
+                expect(err.subMessage).toBe(htmlResponseMessage, "subMessage missmatch");
                 done();
             }).catch(function() {
                 expect(false).toBe(true);

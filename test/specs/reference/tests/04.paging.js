@@ -1,3 +1,5 @@
+var utils = require('./../../../utils/utilities.js');
+
 exports.execute = function (options) {
 
     // Test Cases:
@@ -20,6 +22,14 @@ exports.execute = function (options) {
 
         var tableNoSortUri = options.url + "/catalog/" + catalog_id + "/entity/" +
                       schemaName + ":" + tableNameNoSort;
+
+        var createURL = function (tableName, facet) {
+            var res =  options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + tableName;
+            if (facet) {
+                res += "/*::facets::" + options.ermRest.encodeFacet(facet);
+            }
+            return res;
+        }
 
         describe("Paging table with no sort", function() {
             var uri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
@@ -55,7 +65,11 @@ exports.execute = function (options) {
                 });
             });
 
-            it('tuples should be sorted by ascending value by default. ', function() {
+            it("length should return number of returned data.", function () {
+                expect(page1.length).toBe(10);
+            });
+
+            it('tuples should be sorted by ascending value of shortestkey by default. ', function() {
                 tuples = page1.tuples;
                 expect(tuples.length).toBe(10);
                 var shortestkey = tuples[0].reference._shortestKey[0].name; // only 1 column
@@ -63,7 +77,7 @@ exports.execute = function (options) {
                     expect(tuples[i].reference._location.uri).toBe(
                         options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
                         + tableNameNoSort + "/" + encodeURIComponent(shortestkey) + "=" + tuples[i]._data[shortestkey]);
-                    expect(tuples[i]._data["value x"]).toBeLessThan(tuples[i+1]._data["value x"]);
+                    expect(tuples[i]._data["RID"]).toBeLessThan(tuples[i+1]._data["RID"]);
                 }
             });
 
@@ -87,7 +101,11 @@ exports.execute = function (options) {
                     });
                 });
 
-                it('tuples should be sorted by ascending id by default. ', function() {
+                it("length should return number of returned data.", function () {
+                    expect(page2.length).toBe(6);
+                });
+
+                it('tuples should be sorted by ascending value of shortestkey by default. ', function() {
                     tuples = page2.tuples;
                     expect(tuples.length).toBe(6);
                     var shortestkey = tuples[0].reference._shortestKey[0].name; // only 1 column
@@ -95,7 +113,7 @@ exports.execute = function (options) {
                         expect(tuples[i].reference._location.uri).toBe(
                             options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
                             + tableNameNoSort + "/" + encodeURIComponent(shortestkey) + "=" + tuples[i]._data[shortestkey]);
-                        expect(tuples[i]._data["value x"]).toBeLessThan(tuples[i+1]._data["value x"]);
+                        expect(tuples[i]._data["RID"]).toBeLessThan(tuples[i+1]._data["RID"]);
                     }
                 });
 
@@ -130,22 +148,26 @@ exports.execute = function (options) {
                     });
                 });
 
+                it("length should return number of returned data.", function () {
+                    expect(page3.length).toBe(10);
+                });
+
                 it('tuples should be sorted by ascending id by default. ', function() {
                     tuples = page3.tuples;
-                    expect(tuples.length === 10);
+                    expect(tuples.length).toBe(10);
                     var shortestkey = tuples[0].reference._shortestKey[0].name; // only 1 column
                     for(var i = 0; i < tuples.length - 1; i++) {
                         expect(tuples[i].reference._location.uri).toBe(
                             options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
                             + tableNameNoSort + "/" + encodeURIComponent(shortestkey) + "=" + tuples[i]._data[shortestkey]);
-                        expect(tuples[i]._data["value x"]).toBeLessThan(tuples[i+1]._data["value x"]);
+                        expect(tuples[i]._data["RID"]).toBeLessThan(tuples[i+1]._data["RID"]);
                     }
                 });
             });
 
             // limit was changed after paging back
             describe("with navigating back to the first page,", function() {
-                var uri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + tableNameNoSort + "@sort(value%20x)@before(33)?limit=" + limit;
+                var uri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + tableNameNoSort + "@sort(value%20x,RID)@before(33,ZZZZZ)?limit=" + limit;
                 var reference5;
 
                 beforeAll(function(done) {
@@ -161,6 +183,17 @@ exports.execute = function (options) {
                     });
                 });
 
+                it("read with an increased limit and dontCorrectPage should return a Page object that is defined and honors the paging.", function(done) {
+                    reference5.read(15, {}, false, true).then(function (response) {
+                        expect(response).toEqual(jasmine.any(Object));
+                        expect(response.tuples.length).toBe(11);
+                        done();
+                    }, function (err) {
+                        console.dir(err);
+                        done.fail();
+                    });
+                });
+
                 it("read with an increased limit should return a Page object that is defined and doesn't have a previous page.", function(done) {
                     var increasedLimitPage, increasedLimitPreviousReference,
                         increasedLimit = 15;
@@ -168,11 +201,12 @@ exports.execute = function (options) {
                     reference5.read(increasedLimit).then(function (response) {
                         increasedLimitPage = response;
 
-                        expect(increasedLimitPage).toEqual(jasmine.any(Object));
-                        expect(increasedLimitPage.tuples.length).toBe(increasedLimit);
+                        expect(increasedLimitPage).toEqual(jasmine.any(Object), "invalid page object");
+                        expect(increasedLimitPage.length).toBe(increasedLimit, "length missmatch")
+                        expect(increasedLimitPage.tuples.length).toBe(increasedLimit, "tuples length missmatch");
 
                         increasedLimitPreviousReference = increasedLimitPage.previous;
-                        expect(increasedLimitPreviousReference).toBe(null);
+                        expect(increasedLimitPreviousReference).toBe(null, "previous missmatch");
 
                         done();
                     }, function (err) {
@@ -188,11 +222,12 @@ exports.execute = function (options) {
                     reference5.read(decreasedLimit).then(function (response) {
                         decreasedLimitPage = response;
 
-                        expect(decreasedLimitPage).toEqual(jasmine.any(Object));
-                        expect(decreasedLimitPage.tuples.length).toBe(decreasedLimit);
+                        expect(decreasedLimitPage).toEqual(jasmine.any(Object), "invalid page object");
+                        expect(decreasedLimitPage.length).toBe(decreasedLimit, "length missmatch");
+                        expect(decreasedLimitPage.tuples.length).toBe(decreasedLimit, "tuples length missmatch");
 
                         decreasedLimitPreviousReference = decreasedLimitPage.previous;
-                        expect(decreasedLimitPreviousReference).toBe(null);
+                        expect(decreasedLimitPreviousReference).toBe(null, "previous missmatch");
 
                         done();
                     }, function (err) {
@@ -248,6 +283,10 @@ exports.execute = function (options) {
                 });
             });
 
+            it("length should return number of returned data.", function () {
+                expect(page1.length).toBe(10);
+            });
+
             it('tuples should be sorted by name. ', function() {
                 tuples = page1.tuples;
                 expect(tuples.length).toBe(10);
@@ -279,6 +318,10 @@ exports.execute = function (options) {
                         console.dir(err);
                         done.fail();
                     });
+                });
+
+                it("length should return number of returned data.", function () {
+                    expect(page2.length).toBe(10);
                 });
 
                 it('tuples should be sorted by name. ', function() {
@@ -325,9 +368,13 @@ exports.execute = function (options) {
                     });
                 });
 
+                it("length should return number of returned data.", function () {
+                    expect(page3.length).toBe(10);
+                });
+
                 it('tuples should be sorted by ascending id by default. ', function() {
                     tuples = page3.tuples;
-                    expect(tuples.length === 10);
+                    expect(tuples.length).toBe(10);
                     var shortestkey = tuples[0].reference._shortestKey[0].name; // only 1 column
                     for(var i = 0; i < tuples.length - 1; i++) {
                         expect(tuples[i].reference._location.uri).toBe(
@@ -383,6 +430,10 @@ exports.execute = function (options) {
                 });
             });
 
+            it("length should return number of returned data.", function () {
+                expect(page1.length).toBe(10);
+            });
+
             it('tuples should be sorted by ascending id by default. ', function() {
                 tuples = page1.tuples;
                 expect(tuples.length).toBe(10);
@@ -414,6 +465,10 @@ exports.execute = function (options) {
                         console.dir(err);
                         done.fail();
                     });
+                });
+
+                it("length should return number of returned data.", function () {
+                    expect(page2.length).toBe(6);
                 });
 
                 it('tuples should be sorted by ascending id by default. ', function() {
@@ -460,9 +515,13 @@ exports.execute = function (options) {
                     });
                 });
 
+                it("length should return number of returned data.", function () {
+                    expect(page3.length).toBe(10);
+                });
+
                 it('tuples should be sorted by ascending id by default. ', function() {
                     tuples = page3.tuples;
-                    expect(tuples.length === 10);
+                    expect(tuples.length).toBe(10);
                     var shortestkey = tuples[0].reference._shortestKey[0].name; // only 1 column
                     for(var i = 0; i < tuples.length - 1; i++) {
                         expect(tuples[i].reference._location.uri).toBe(
@@ -518,6 +577,10 @@ exports.execute = function (options) {
                 });
             });
 
+            it("length should return number of returned data.", function () {
+                expect(page1.length).toBe(10);
+            });
+
             it('tuples should be sorted by ascending id by default. ', function() {
                 tuples = page1.tuples;
                 expect(tuples.length).toBe(10);
@@ -526,7 +589,7 @@ exports.execute = function (options) {
                     expect(tuples[i].reference._location.uri).toBe(
                         options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
                         + tableNameNoSort + "/" + encodeURIComponent(shortestkey) + "=" + tuples[i]._data[shortestkey]);
-                    expect(tuples[i]._data["value x"]).toBeLessThan(tuples[i+1]._data["value x"]);
+                    expect(tuples[i]._data["RID"]).toBeLessThan(tuples[i+1]._data["RID"]);
                 }
             });
 
@@ -549,6 +612,10 @@ exports.execute = function (options) {
                     });
                 });
 
+                it("length should return number of returned data.", function () {
+                    expect(page2.length).toBe(6);
+                });
+
                 it('tuples should be sorted by ascending id by default. ', function() {
                     tuples = page2.tuples;
                     expect(tuples.length).toBe(6);
@@ -557,7 +624,7 @@ exports.execute = function (options) {
                         expect(tuples[i].reference._location.uri).toBe(
                             options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
                             + tableNameNoSort + "/" + encodeURIComponent(shortestkey) + "=" + tuples[i]._data[shortestkey]);
-                        expect(tuples[i]._data["value x"]).toBeLessThan(tuples[i+1]._data["value x"]);
+                        expect(tuples[i]._data["RID"]).toBeLessThan(tuples[i+1]._data["RID"]);
                     }
                 });
             });
@@ -583,15 +650,19 @@ exports.execute = function (options) {
                     });
                 });
 
+                it("length should return number of returned data.", function () {
+                    expect(page3.length).toBe(10);
+                });
+
                 it('tuples should be sorted by ascending id by default. ', function() {
                     tuples = page3.tuples;
-                    expect(tuples.length === 10);
+                    expect(tuples.length).toBe(10);
                     var shortestkey = tuples[0].reference._shortestKey[0].name; // only 1 column
                     for(var i = 0; i < tuples.length - 1; i++) {
                         expect(tuples[i].reference._location.uri).toBe(
                             options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
                             + tableNameNoSort + "/" + encodeURIComponent(shortestkey) + "=" + tuples[i]._data[shortestkey]);
-                        expect(tuples[i]._data["value x"]).toBeLessThan(tuples[i+1]._data["value x"]);
+                        expect(tuples[i]._data["RID"]).toBeLessThan(tuples[i+1]._data["RID"]);
                     }
                 });
             });
@@ -599,7 +670,7 @@ exports.execute = function (options) {
 
         describe("Paging with sort based on foreignkey with null data ", function () {
             // reference_schema_paging_table_no_sort_fk1
-            var fkHash = "bITRC1H37ph9chTodns5cw";
+            var fkHash = "SgqbHJAVFJyKddPY93Eq-w";
             var uri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" +
                       tableNameNoSort + "@sort(" + fkHash + ",value%20x)";
 
@@ -626,7 +697,8 @@ exports.execute = function (options) {
                 it ("tuples should be on the expected order.", function (done) {
                     newRef.read(5).then(function (res) {
                         page = res;
-                        expect(page.tuples.length).toEqual(5, "length missmatch.");
+                        expect(page.length).toBe(5, "length missmatch");
+                        expect(page.tuples.length).toEqual(5, "tuples length missmatch.");
                         expect(page.tuples[0].data['value x']).toEqual(19,"data missmatch.");
                         done();
                     }).catch(function (err) {
@@ -647,7 +719,8 @@ exports.execute = function (options) {
 
                 it ("tuples should be on the expected order.", function (done) {
                     newRef.read(5).then(function (page) {
-                        expect(page.tuples.length).toEqual(5, "length missmatch.");
+                        expect(page.length).toBe(5, "length missmatch");
+                        expect(page.tuples.length).toEqual(5, "tuples length missmatch.");
                         expect(page.tuples[0].data['value x']).toEqual(1,"data missmatch.");
                         done();
                     }).catch(function (err) {
@@ -779,7 +852,8 @@ exports.execute = function (options) {
         describe("setSamePaging, ", function () {
             var baseUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":";
             var refUri = baseUri + tableNameInboundRelated + "@sort(id)",
-                refUriJoin = baseUri + "/(id)=(reference_schema:inbound_related_reference_table:fk_to_reference_with_fromname)";
+                refUriWithoutSort = baseUri + tableNameInboundRelated,
+                refUriJoin = baseUri + "reference_table/(id)=(reference_schema:inbound_related_reference_table:fk_to_reference_with_fromname)";
 
             var currRef, newRef;
 
@@ -821,13 +895,18 @@ exports.execute = function (options) {
                 });
             });
 
+            // for refUri:
+            //   - use 85 as limit for inbound_related_reference_table
+            //   - set is ordered based on id in inbound_related_reference_table
+            //   - ordered 1, 2, 3, 3xxxxxxxxxx, ..., 4, ..., 9, 91, 9x
             describe("if page didn't have any extra data, ", function () {
                 it ("if page didn't have any paging options should return a reference without any page setting.", function (done) {
-                    testUri(done, refUri, 25, null, null);
+                    testUri(done, refUri, 85, null, null);
                 });
 
                 it ("if page had before, should return a reference with before.", function (done) {
-                    testUri(done, refUri + "@before(6)", 5, null, ["6"]);
+                    // only 9 records after "id=9", so before should be 85 total rows - (9 after + id=9 itself), hence read with limit=75
+                    testUri(done, refUri + "@before(9)", 75, null, ["9"]);
                 });
 
                 it ("if page had after, should return a reference with after.", function (done) {
@@ -839,11 +918,11 @@ exports.execute = function (options) {
 
             describe("if page had extra data, ", function () {
                 it ("if page didn't have any paging options should return a reference with before.", function (done) {
-                    testUri(done, refUri, 5, null, ["6"]);
+                    testUri(done, refUri, 75, null, ["9"]);
                 });
 
                 it ("if page had before, should return a reference with same before and new after.", function (done) {
-                    testUri(done, refUri + "@before(7)", 5, ["1"], ["7"]);
+                    testUri(done, refUri + "@before(91)", 5, ["4"], ["91"]);
                 });
 
                 it ("if page had after, should return a reference with same after and new before.", function (done) {
@@ -854,9 +933,11 @@ exports.execute = function (options) {
             });
 
             it ("if page had search, it should change the search accordingly.", function (done) {
+                // same comment above as refUri, has 85 rows in table inbound_related_reference_table
                 options.ermRest.resolve(baseUri + tableNameInboundRelated + "@sort(id)").then(function (ref) {
+                    //this might match the values or RID, therefore we are reading all the existing rows
                     ref = ref.search("9");
-                    return ref.read(5);
+                    return ref.read(85);
                 }).then(function (page) {
                     newRef = currRef.setSamePaging(page);
                     expect(newRef.location.beforeObject).toEqual(null, "beforeObject missmatch.");
@@ -866,6 +947,103 @@ exports.execute = function (options) {
                 }).catch(function (err) {
                     done.fail();
                     console.log(err);
+                });
+            });
+
+            describe("regarding facets, ", function () {
+                var refWFacet1, refWFacet2, refWOFacet, pageWFacet1, pageWFacet2, pageWOFacet, mainTableRID;
+
+                beforeAll(function (done) {
+                    mainTableRID = {
+                        "9004": utils.findEntityRID(options, schemaName, tableNameReference, "id", "9004"),
+                        "9005": utils.findEntityRID(options, schemaName, tableNameReference, "id", "9005"),
+                        "9006": utils.findEntityRID(options, schemaName, tableNameReference, "id", "9006")
+                    };
+
+                    var facet1 = {
+                        "and": [
+                            {"source": "*", "search": ["9"]},
+                            {"source": [{"outbound": ["reference_schema", "hidden_fk_inbound_related_to_reference"]}, "RID"], "choices": [mainTableRID["9006"]]},
+                            {"source": [{"outbound": ["reference_schema", "fromname_fk_inbound_related_to_reference"]}, "RID"], "choices": [mainTableRID["9005"]]}
+                        ]
+                    };
+                    var facet2 = {
+                        "and": [
+                            {"source": [{"outbound": ["reference_schema", "fromname_fk_inbound_related_to_reference"]}, "RID"], "choices": [mainTableRID["9004"]]}
+                        ]
+                    };
+
+                    options.ermRest.resolve(createURL(tableNameInboundRelated) + "@sort(id)").then(function (ref1) {
+                        refWOFacet = ref1;
+                        return refWOFacet.read(40);
+                    }).then (function (page1) {
+                        pageWOFacet = page1;
+                        return options.ermRest.resolve(createURL(tableNameInboundRelated, facet1) + "@sort(id)");
+                    }).then(function (ref2) {
+                        refWFacet1 = ref2;
+                        return refWFacet1.read(40);
+                    }).then(function (page2) {
+                        pageWFacet1 = page2;
+                        return options.ermRest.resolve(createURL(tableNameInboundRelated, facet2) + "@sort(id)");
+                    }).then(function (ref3) {
+                        refWFacet2 = ref3;
+                        return refWFacet2.read(40);
+                    }).then (function (page3) {
+                        pageWFacet2 = page3;
+                        done();
+                    }).catch(function (err) {
+                        done.fail(err);
+                    });
+                });
+
+                it ("if the main reference has a facet, the returned reference must have it too.", function () {
+                    var ref = refWFacet1.setSamePaging(pageWOFacet);
+                    var expectedPath = [
+                        "M:=reference_schema:inbound_related_reference_table",
+                        "*::ciregexp::%5E%28.%2A%5B%5E0-9.%5D%29%3F0%2A9%28%5B%5E0-9%5D.%2A%7C%24%29/$M",
+                        "(fk_to_reference_hidden)=(reference_schema:reference_table:id)/RID=" + mainTableRID["9006"] + "/$M",
+                        "(fk_to_reference_with_fromname)=(reference_schema:reference_table:id)/RID=" + mainTableRID["9005"] + "/$M"
+                    ].join("/");
+                    expect(ref.location.ermrestCompactPath).toEqual(expectedPath);
+                });
+
+                it ("if the main reference doesn't have facet, but the page has, the returned reference must have it too.", function () {
+                    var ref = refWOFacet.setSamePaging(pageWFacet2);
+                    var expectedPath = [
+                        "M:=reference_schema:inbound_related_reference_table",
+                        "(fk_to_reference_with_fromname)=(reference_schema:reference_table:id)/RID=" + mainTableRID["9004"] + "/$M"
+                    ].join("/");
+                    expect(ref.location.ermrestCompactPath).toEqual(expectedPath);
+                });
+
+                it ("if both the main reference and page have facets, the retuerned reference must have all the facets.", function () {
+                    var ref = refWFacet1.setSamePaging(pageWFacet2);
+                    var expectedPath = [
+                        "M:=reference_schema:inbound_related_reference_table",
+                        "*::ciregexp::%5E%28.%2A%5B%5E0-9.%5D%29%3F0%2A9%28%5B%5E0-9%5D.%2A%7C%24%29/$M",
+                        "(fk_to_reference_hidden)=(reference_schema:reference_table:id)/RID=" + mainTableRID["9006"] + "/$M",
+                        "(fk_to_reference_with_fromname)=(reference_schema:reference_table:id)/RID=" + mainTableRID["9005"] + "/$M",
+                        "(fk_to_reference_with_fromname)=(reference_schema:reference_table:id)/RID=" + mainTableRID["9004"] + "/$M"
+                    ].join("/");
+                    expect(ref.location.ermrestCompactPath).toEqual(expectedPath);
+                });
+            });
+
+
+            describe("when page is sorted based on foreignkey column, ", function () {
+                // since the shoretestkey is going to be RID, we cannot know its value therefore, the test case
+                // is sorting based on fk value and a key value.
+                var url = refUriWithoutSort + "@sort(reference_schema_fromname_fk_inbound_related_to_reference,id)";
+                it ("if page didn't have any paging options should return a reference with before.", function (done) {
+                    testUri(done, url, 3, null, ["9004", "4"]);
+                });
+
+                it ("if page had before, should return a reference with same before and new after.", function (done) {
+                    testUri(done, url + "@before(9005,93)", 5, ["9005", "6"], ["9005", "93"]);
+                });
+
+                it ("if page had after, should return a reference with same after and new before.", function (done) {
+                    testUri(done, url + "@after(9005,8)", 5, ["9005", "8"], ["9005", "95"]);
                 });
             });
         });
@@ -880,7 +1058,8 @@ exports.execute = function (options) {
             }).then(function (res) {
                 page = res;
 
-                expect(page.tuples.length).toBe(expectedIds.length, "length missmatch.");
+                expect(page.length).toBe(expectedIds.length, "length missmatch.");
+                expect(page.tuples.length).toBe(expectedIds.length, "tuples length missmatch.");
                 expect(page.tuples.map(function (t) {
                     return t.data[idCol];
                 })).toEqual(expectedIds, "data missmatch.");
@@ -894,7 +1073,8 @@ exports.execute = function (options) {
 
         it ('next should return the correct reference.', function (done) {
             page.next.read(limit).then(function (p) {
-                expect(p.tuples.length).toBe(nextExpectedIds.length, "length missmatch for next.");
+                expect(page.length).toBe(nextExpectedIds.length, "length missmatch for next.");
+                expect(p.tuples.length).toBe(nextExpectedIds.length, "tuples length missmatch for next.");
                 expect(p.tuples.map(function (t) {
                     return t.data[idCol];
                 })).toEqual(nextExpectedIds, "data missmatch for next.");
@@ -908,7 +1088,8 @@ exports.execute = function (options) {
 
         it ("previous shoudl return the correct reference.", function (done) {
             page.previous.read(limit).then(function (p) {
-                expect(p.tuples.length).toBe(prevExpectedIds.length, "length missmatch for previous.");
+                expect(p.length).toBe(prevExpectedIds.length, "length missmatch for previous.");
+                expect(p.tuples.length).toBe(prevExpectedIds.length, "tuples length missmatch for previous.");
                 expect(p.tuples.map(function (t) {
                     return t.data[idCol];
                 })).toEqual(prevExpectedIds, "data missmatch for previous.");

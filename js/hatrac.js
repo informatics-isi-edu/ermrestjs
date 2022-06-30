@@ -94,13 +94,28 @@ var ERMrest = (function(module) {
     };
 
     /**
+     * This callback will be called for progress during checksum calculation
+     * @callback checksumOnProgres
+     * @param {number} uploaded the amount that has been uploaded
+     * @param {number} fileSize the total size of the file.
+     */
+
+    /**
+     * This callback will be called for success of checksum calculation
+     * @callback checksumOnSuccess
+     */
+
+    /**
+     * This callback will be called when we counter an error during checksum calculation
+     * @callback checksumOnError
+     * @param {Error} err the error object
+     */
+
+    /**
      * @param {number} chunkSize size of the chunks, in which the file is supposed to be broken
-     * @callback onProgress
-     * @param {onProgress} fn callback function to be called for progress
-     * @callback onSuccess
-     * @param {onSuccess} fn callback function to be called for success
-     * @callback onError
-     * @param {onError} fn callback function to be called for error
+     * @param {checksumOnProgress} fn callback function to be called for progress
+     * @param {checksumOnSuccess} fn callback function to be called for success
+     * @param {checksumOnError} fn callback function to be called for error
      * @returns {Promise} if the schema exists or not
      * @desc Calculates  MD5 checksum for a file using spark-md5 library
      */
@@ -191,8 +206,65 @@ var ERMrest = (function(module) {
         }
 
         var headers = {};
-        headers[module._contextHeaderName] = contextHeaderParams;
+        headers[module.contextHeaderName] = contextHeaderParams;
         return headers;
+    };
+    
+    /**
+     * given a filename, will return the extension
+     * By default, it will extract the last of the filename after the last `.`.
+     * The second parameter can be used for passing a regular expression
+     * if we want a different method of extracting the extension.
+     * @param {string} filename 
+     * @param {string[]} allowedExtensions
+     * @param {string[]} regexArr 
+     * @returns the filename extension string. if we cannot find any matches, it will return null
+     * @private
+     * @ignore
+     */
+    var _getFilenameExtension = function (filename, allowedExtensions, regexArr) {
+        if (typeof filename !== 'string' || filename.length === 0) {
+            return null;
+        }
+        
+        // first find in the list of allowed extensions
+        var res = -1;
+        var isInAllowed = Array.isArray(allowedExtensions) && allowedExtensions.some(function (ext) {
+            res = ext;
+            return typeof ext === "string" && ext.length > 0 &&  filename.endsWith(ext);
+        });
+        if (isInAllowed) {
+            return res;
+        }
+
+        // we will return null if we cannot find anything
+        res = null;
+        // no matching allowed extension, try the regular expressions
+        if (Array.isArray(regexArr) && regexArr.length > 0) {
+            regexArr.some(function (regexp) {
+                // since regular expression comes from annotation, it might not be valid
+                try {
+                    var matches = filename.match(new RegExp(regexp, 'g'));
+                    if (matches && matches[0] && typeof matches[0] === "string") {
+                        res = matches[0];
+                    } else {
+                        res = null;
+                    }
+                    return res;
+                } catch (exp) {
+                    res = null;
+                    return false;
+                }
+            });
+        } else {
+            var dotIndex = filename.lastIndexOf('.');
+            // it's only a valid filename if there's some string after `.`
+            if (dotIndex !== -1 && dotIndex !== filename.length-1) {
+                res = filename.slice(dotIndex);
+            }
+        }
+        
+        return res;
     };
 
     /**
@@ -200,8 +272,8 @@ var ERMrest = (function(module) {
      * Create a new instance with new upload(file, otherInfo)
      * To validate url generation for a file call validateUrl(row) with row of data
      * To calculate checksum call calculateChecksum(row) with row of data
-     * To create an upload call createUploadJob()
      * To check for existing file call fileExists()
+     * To create an upload call createUploadJob()
      * To start uploading, call start()
      * To complete upload job call completeUploadJob()
      * You can pause with pause()
@@ -222,7 +294,7 @@ var ERMrest = (function(module) {
 
         this.PART_SIZE = otherInfo.chunkSize || 5 * 1024 * 1024; //minimum part size defined by hatrac 5MB
 
-        this.CHUNK_QUEUE_SIZE = otherInfo.chunkQueueSize || 10;
+        this.CHUNK_QUEUE_SIZE = otherInfo.chunkQueueSize || 4;
 
         this.file = file;
 
@@ -236,7 +308,7 @@ var ERMrest = (function(module) {
 
         this.SERVER_URI = this.reference._server.uri.replace("/ermrest", "");
 
-        this.http = this.reference._server._http;
+        this.http = this.reference._server.http;
 
         this.isPaused = false;
         this.otherInfo = otherInfo;
@@ -251,7 +323,7 @@ var ERMrest = (function(module) {
     };
 
     /**
-     * @desc Call this function with the ermrestjs column object and the json object row To determine it is able to generate a url
+     * @desc Call this function with the ERMrestJS column object and the json object row To determine it is able to generate a url
      * If any properties in the template are found null without null handling then return false
      * @param {object} row - row object containing keyvalues of entity
      *
@@ -276,13 +348,16 @@ var ERMrest = (function(module) {
             ignoredColumns.push("filename");
             ignoredColumns.push("size");
             ignoredColumns.push("mimetype");
+            ignoredColumns.push("filename_ext");
             ignoredColumns.push(this.column.name + ".md5_hex");
             ignoredColumns.push(this.column.name + ".md5_base64");
             ignoredColumns.push(this.column.name + ".filename");
             ignoredColumns.push(this.column.name + ".size");
             ignoredColumns.push(this.column.name + ".mimetype");
+            ignoredColumns.push(this.column.name + ".filename_ext");
 
-            return module._validateTemplate(template, row, this.reference.table, this.reference._context, {ignoredColumns: ignoredColumns});
+            // TODO we can improve this (should not rely on _validateTemplate to format them)
+            return module._validateTemplate(template, row, this.reference.table, this.reference._context, { ignoredColumns: ignoredColumns, templateEngine: this.column.templateEngine });
         }
 
         return true;
@@ -328,6 +403,61 @@ var ERMrest = (function(module) {
 
 
     /**
+     * @desc Call this function to determine file exists on the server
+     * If it doesn't then resolve the promise with url.
+     * If it does then set isPaused, completed and jobDone to true
+     * @returns {Promise}
+     */
+    upload.prototype.fileExists = function(contextHeaderParams) {
+        var self = this;
+
+        var deferred = module._q.defer();
+
+        if (!contextHeaderParams || !_isObject(contextHeaderParams)) {
+            contextHeaderParams = {
+                action: "upload/file-exists",
+                referrer: this.reference.defaultLogInfo
+            };
+            contextHeaderParams.referrer.column = this.column.name;
+        }
+
+        var config = {
+            headers: _generateContextHeader(contextHeaderParams)
+        };
+
+        this.http.head(this._getAbsoluteUrl(this.url), config).then(function(response) {
+
+            var headers = module.getResponseHeader(response);
+            var md5 = headers["content-md5"];
+            var length = headers["content-length"];
+
+            // If the file is not same, then simply resolve the promise without setting completed and jobDone
+            if ((md5 != self.hash.md5_base64) || (length != self.file.size)) {
+                deferred.resolve(self.url);
+                return;
+            }
+
+            self.isPaused = false;
+            self.completed = true;
+            self.jobDone = true;
+            self.versionedUrl = module.getResponseHeader(response)["content-location"];
+            deferred.resolve(self.url);
+        }, function(response) {
+            // 403 - file exists but user can't read it -> create a new one
+            // 404 - file doesn't exist -> create new one
+            // 409 - The parent path does not denote a namespace OR the namespace already exists (from hatrac docs)
+            if (response.status == 403 || response.status == 404 || response.status == 409) {
+              deferred.resolve(self.url);
+            } else {
+              deferred.reject(module.responseToError(response));
+            }
+        });
+
+        return deferred.promise;
+    };
+
+
+    /**
      * @desc Call this function to create an upload job for chunked uploading
      *
      * @returns {Promise} A promise resolved with a url where we will upload the file
@@ -339,6 +469,10 @@ var ERMrest = (function(module) {
 
         var deferred = module._q.defer();
 
+        if (this.completed && this.jobDone) {
+            deferred.resolve(this.chunkUrl);
+            return deferred.promise;
+        }
 
         // Check whether an existing upload job is available for current file
         this._getExistingJobStatus().then(function(response) {
@@ -383,69 +517,17 @@ var ERMrest = (function(module) {
 
         }).then(function(response) {
             if (response) {
-                self.chunkUrl = response.headers('location');
+                self.chunkUrl = module.getResponseHeader(response).location;
                 deferred.resolve(self.chunkUrl);
             }
         }, function(response) {
-            var error = module._responseToError(response);
+            var error = module.responseToError(response);
             deferred.reject(error);
         });
 
         return deferred.promise;
     };
 
-
-    /**
-     * @desc Call this function to determine file exists on the server
-     * If it doesn't then resolve the promise with url.
-     * If it does then set isPaused, completed and jobDone to true
-     * @returns {Promise}
-     */
-    upload.prototype.fileExists = function(contextHeaderParams) {
-        var self = this;
-
-        var deferred = module._q.defer();
-
-        if (!contextHeaderParams || !_isObject(contextHeaderParams)) {
-            contextHeaderParams = {
-                action: "upload/file-exists",
-                referrer: this.reference.defaultLogInfo
-            };
-            contextHeaderParams.referrer.column = this.column.name;
-        }
-
-        var config = {
-            headers: _generateContextHeader(contextHeaderParams)
-        };
-
-        this.http.head(this._getAbsoluteUrl(this.url), config).then(function(response) {
-
-            var headers = response.headers();
-            var md5 = headers["content-md5"];
-            var length = headers["content-length"];
-            var filename = headers["content-disposition"].replace("filename*=UTF-8''","");
-
-            // If the md5, length of filename are not same then simply resolve the promise without setting completed and jobDone
-            if ((md5 != self.hash.md5_base64) || (length != self.file.size) || (filename != self.file.name)) {
-                deferred.resolve(self.url);
-                return;
-            }
-
-            self.isPaused = false;
-            self.completed = true;
-            self.jobDone = true;
-            deferred.resolve(self.url);
-        }, function(response) {
-
-            if (response.status == 404 || response.status == 409) {
-              deferred.resolve(self.url);
-            } else {
-              deferred.reject(module._responseToError(response));
-            }
-        });
-
-        return deferred.promise;
-    };
 
     /**
      * @desc Call this function to start chunked upload to server. It reads the file and divides in into chunks
@@ -529,7 +611,7 @@ var ERMrest = (function(module) {
         var deferred = module._q.defer();
 
         if (this.completed && this.jobDone) {
-            deferred.resolve(this.url);
+            deferred.resolve(this.versionedUrl ? this.versionedUrl : this.url);
             return deferred.promise;
         }
 
@@ -550,14 +632,17 @@ var ERMrest = (function(module) {
         this.http.post(this._getAbsoluteUrl(this.chunkUrl), {}, config).then(function(response) {
             self.jobDone = true;
 
-            if (response.headers('location')) {
-                deferred.resolve(response.headers('location'));
+            var loc = module.getResponseHeader(response).location;
+            if (loc) {
+                var versionedUrl = loc;
+                self.versionedUrl = versionedUrl;
+                deferred.resolve(versionedUrl);
             } else {
-                deferred.reject(module._responseToError(response));
+                deferred.reject(module.responseToError(response));
             }
 
         }, function(response) {
-            deferred.reject(module._responseToError(response));
+            deferred.reject(module.responseToError(response));
         });
 
         return deferred.promise;
@@ -664,7 +749,7 @@ var ERMrest = (function(module) {
         this.http.delete(this._getAbsoluteUrl(this.url), config).then(function (response) {
             deferred.resolve();
         }, function () {
-            deferred.reject(module._responseToError(response));
+            deferred.reject(module.responseToError(response));
         });
 
         return deferred.promise;
@@ -717,9 +802,15 @@ var ERMrest = (function(module) {
         row[this.column.name].md5_hex = this.hash.md5_hex;
         row[this.column.name].md5_base64 = this.hash.md5_base64;
         row[this.column.name].sha256 = this.hash.sha256;
+        row[this.column.name].filename_ext = _getFilenameExtension(this.file.name, this.column.filenameExtFilter, this.column.filenameExtRegexp);
 
         // Generate url
-        var url = module._renderTemplate(template, row, this.reference.table, this.reference._context, { avoidValidation: true });
+
+        // TODO should use the tuple.templateVariables
+        // the hatrac value in row is an object, which can be improved
+        var keyValues = module._getFormattedKeyValues(this.reference.table, this.reference._context, row);
+
+        var url = module._renderTemplate(template, keyValues, this.reference.table.schema.catalog, { avoidValidation: true, templateEngine: this.column.templateEngine });
 
         // check for having hatrac
         if ((module._parseUrl(url).pathname.indexOf('/hatrac/') !== 0)) {
@@ -815,16 +906,18 @@ var ERMrest = (function(module) {
      * In addition if the upload has been combleted then it will call onUploadCompleted for regular upload
      * and completeUpload to complete the chunk upload
      */
-    upload.prototype._updateProgressBar = function(xhr) {
+    upload.prototype._updateProgressBar = function() {
         var length = this.chunks.length;
-        var done = 0;
-        for (var i = 0; i < this.chunks.length; i++) {
-            done = done + this.chunks[i].progress;
+        var progressDone = 0;
+        var chunksComplete = 0;
+        for (var i = 0; i < length; i++) {
+            progressDone = progressDone + this.chunks[i].progress;
+            if (this.chunks[i].completed) chunksComplete++;
         }
 
-        if (this.uploadPromise) this.uploadPromise.notify(this.completed ? this.file.size : done, this.file.size);
+        if (this.uploadPromise) this.uploadPromise.notify(this.completed ? this.file.size : progressDone, this.file.size);
 
-        if (done >= this.file.size && !this.completed && (!xhr || (xhr && (xhr.status >= 200 && xhr.status < 300)))) {
+        if (chunksComplete === length && !this.completed) {
             this.completed = true;
             if (this.uploadPromise) this.uploadPromise.resolve(this.url);
         }
@@ -874,7 +967,7 @@ var ERMrest = (function(module) {
     upload.prototype._onUploadError = function(response) {
         if (this.erred) return;
         this.erred = true;
-        this.uploadPromise.reject(module._responseToError(response));
+        this.uploadPromise.reject(module.responseToError(response));
     };
 
     module.Upload = upload;
@@ -959,12 +1052,14 @@ var ERMrest = (function(module) {
                         // To track progress on upload
                         if (e.lengthComputable) {
                             self.progress = e.loaded;
-                            upload._updateProgressBar(self.xhr);
+                            upload._updateProgressBar();
                         }
                     }
                 },
-                timeout : self.xhr.promise,
-                cancel : self.xhr
+                // the following is only doable in angularjs and not axios
+                // timeout : self.xhr.promise,
+                // the following is not an available config and doesn't affect anything
+                // cancel : self.xhr
             },
             data: blob
         };
@@ -991,10 +1086,10 @@ var ERMrest = (function(module) {
             // and the status code is in range of 500 then there is a server error, keep retrying for 5 times
             // else the error is in 400 series which is some client error
             if (!upload.isPaused) {
-                upload._updateProgressBar(self.xhr);
+                upload._updateProgressBar();
                 upload._onUploadError(response);
             } else {
-                upload._updateProgressBar(self.xhr);
+                upload._updateProgressBar();
             }
         });
 

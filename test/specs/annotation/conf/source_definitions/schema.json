@@ -1,0 +1,917 @@
+{
+  "tables": {
+      "main": {
+          "table_name": "main",
+          "schema_name": "source_definitions_schema",
+          "kind": "table",
+          "keys": [
+              {"unique_columns": ["id"]}
+          ],
+          "foreign_keys": [
+              {
+                  "names": [["source_definitions_schema", "main_fk1"]],
+                  "foreign_key_columns": [
+                      {
+                          "column_name": "id",
+                          "table_name": "main",
+                          "schema_name": "source_definitions_schema"
+                      }
+                  ],
+                  "referenced_columns": [
+                      {
+                          "column_name": "id",
+                          "table_name": "outbound1",
+                          "schema_name": "source_definitions_schema"
+                      }
+                  ]
+              },
+              {
+                  "names": [["source_definitions_schema", "main_fk2"]],
+                  "foreign_key_columns": [
+                      {
+                          "column_name": "id",
+                          "table_name": "main",
+                          "schema_name": "source_definitions_schema"
+                      }
+                  ],
+                  "referenced_columns": [
+                      {
+                          "column_name": "id",
+                          "table_name": "outbound2",
+                          "schema_name": "source_definitions_schema"
+                      }
+                  ]
+              }
+          ],
+          "column_definitions": [
+              {
+                  "name": "id",
+                  "nullok": false,
+                  "type": {
+                      "typename": "text"
+                  }
+              },
+              {
+                  "name": "col",
+                  "type": {
+                      "typename": "text"
+                  }
+              },
+              {
+                  "name": "col w space",
+                  "type": {
+                      "typename": "text"
+                  }
+              }
+          ],
+          "annotations": {
+              "tag:isrd.isi.edu,2019:source-definitions": {
+                  "columns": ["invalid_col_1", "col", "invalid_col_2"],
+                  "fkeys": [["source_definitions_schema", "main_fk2"], ["source_definitions_schema", "main_fk_invalid_2"]],
+                  "search-box": {
+                    "or": [
+                        {"source": "col"}
+                    ]
+                  },
+                  "sources": {
+                      "new_col": {"source": "col"},
+                      "new_col_2": {"source": "col"},
+                      "new_col_invalid": {"source": "col_invalid"},
+                      "fk1_col_entity": {
+                          "source": [{"outbound": ["source_definitions_schema", "main_fk1"]}, "RID"],
+                          "entity": true
+                      },
+                      "fk1_col_scalar": {
+                          "source": [{"outbound": ["source_definitions_schema", "main_fk1"]}, "RID"],
+                          "entity": false
+                      },
+                      "fk1_col_invalid": {
+                          "source": [{"inbound": ["source_definitions_schema", "main_fk1"]}, "RID"],
+                          "entity": true
+                      },
+                      "fk1_col_entity_duplicate": {
+                          "source": [{"outbound": ["source_definitions_schema", "main_fk1"]}, "RID"],
+                          "entity": true
+                      },
+                      "fk1_col_scalar_duplicate": {
+                          "source": [{"outbound": ["source_definitions_schema", "main_fk1"]}, "RID"],
+                          "entity": false
+                      },
+                      "all_outbound_col": {
+                          "source": [
+                              {"outbound": ["source_definitions_schema", "main_fk1"]},
+                              {"outbound": ["source_definitions_schema", "outbound1_fk1"]},
+                              "RID"
+                          ],
+                          "entity": true
+                      },
+                      "inbound1_col": {
+                          "source": [{"inbound": ["source_definitions_schema", "inbound1_fk1"]}, "RID"],
+                          "entity": true
+                      },
+                      "inbound1_col_2": {
+                          "source": [{"inbound": ["source_definitions_schema", "inbound1_fk1"]}, "RID"],
+                          "entity": true
+                      },
+                      "agg1_invalid": {
+                          "source": [{"inbound": ["source_definitions_schema", "inbound1_fk1"]}, "RID"],
+                          "entity": true,
+                          "aggregate": "invalid_fn"
+                      },
+                      "agg1_cnt": {
+                          "source": [{"inbound": ["source_definitions_schema", "inbound1_fk1"]}, "RID"],
+                          "entity": true,
+                          "aggregate": "cnt"
+                      },
+                      "agg1_cnt_d": {
+                          "source": [{"inbound": ["source_definitions_schema", "inbound1_fk1"]}, "RID"],
+                          "entity": true,
+                          "aggregate": "cnt_d"
+                      },
+                      "agg1_min": {
+                          "source": [{"inbound": ["source_definitions_schema", "inbound1_fk1"]}, "RID"],
+                          "entity": true,
+                          "aggregate": "min"
+                      },
+                      "agg1_max": {
+                          "source": [{"inbound": ["source_definitions_schema", "inbound1_fk1"]}, "RID"],
+                          "entity": true,
+                          "aggregate": "max"
+                      },
+                      "agg1_array": {
+                          "source": [{"inbound": ["source_definitions_schema", "inbound1_fk1"]}, "RID"],
+                          "entity": true,
+                          "aggregate": "array"
+                      },
+                      "agg1_array_d_entity": {
+                          "source": [{"inbound": ["source_definitions_schema", "inbound1_fk1"]}, "RID"],
+                          "entity": true,
+                          "aggregate": "array_d"
+                      },
+                      "agg1_array_d": {
+                          "source": [{"inbound": ["source_definitions_schema", "inbound1_fk1"]}, "RID"],
+                          "entity": false,
+                          "aggregate": "array_d"
+                      },
+                      "agg1_array_d_duplicate": {
+                          "source": [{"inbound": ["source_definitions_schema", "inbound1_fk1"]}, "RID"],
+                          "entity": false,
+                          "aggregate": "array_d"
+                      },
+                      "col": {
+                          "source": "id"
+                      },
+                      "$new_name": {
+                          "source": [{"inbound": ["source_definitions_schema", "inbound1_fk1"]}, "RID"],
+                          "entity": false,
+                          "aggregate": "array_d"
+                      },
+                      "path_to_outbound2_outbound1": {
+                          "source": [
+                              {"outbound": ["source_definitions_schema", "main_fk2"]},
+                              {"outbound": ["source_definitions_schema", "outbound2_fk1"]},
+                              "RID"
+                          ]
+                      },
+                      "path_to_outbound2_outbound1_add_filter": {
+                          "source": [
+                              {"sourcekey": "path_to_outbound2_outbound1"},
+                              {"filter": "col w space", "operator": "::ciregexp::", "operand_pattern": "some val"},
+                              "RID"
+                          ]
+                      },
+                      "path_to_outbound2_outbound1_outbound1_w_prefix": {
+                          "source": [
+                              {"sourcekey": "path_to_outbound2_outbound1"},
+                              {"outbound": ["source_definitions_schema", "outbound2_outbound1_fk1"]},
+                              "RID"
+                          ]
+                      },
+                      "path_to_outbound2_outbound1_outbound1_wo_prefix": {
+                          "source": [
+                              {"outbound": ["source_definitions_schema", "main_fk2"]},
+                              {"outbound": ["source_definitions_schema", "outbound2_fk1"]},
+                              {"outbound": ["source_definitions_schema", "outbound2_outbound1_fk1"]},
+                              "RID"
+                          ]
+                      },
+                      "path_to_outbound2_outbound1_inbound1_w_prefix": {
+                          "source": [
+                              {"sourcekey": "path_to_outbound2_outbound1"},
+                              {"inbound": ["source_definitions_schema", "outbound2_outbound1_inbound1_fk1"]},
+                              "RID"
+                          ]
+                      },
+                      "path_to_outbound2_outbound1_inbound1_inbound1_w_recursive_prefix": {
+                          "source": [
+                              {"sourcekey": "path_to_outbound2_outbound1_inbound1_w_prefix"},
+                              {"inbound": ["source_definitions_schema", "outbound2_outbound1_inbound1_inbound1_fk1"]},
+                              "RID"
+                          ]
+                      },
+                      "path_to_outbound2_outbound1_inbound1_inbound1_wo_prefix": {
+                          "source": [
+                              {"outbound": ["source_definitions_schema", "main_fk2"]},
+                              {"outbound": ["source_definitions_schema", "outbound2_fk1"]},
+                              {"inbound": ["source_definitions_schema", "outbound2_outbound1_inbound1_fk1"]},
+                              {"inbound": ["source_definitions_schema", "outbound2_outbound1_inbound1_inbound1_fk1"]},
+                              "RID"
+                          ]
+                      },
+                      "path_to_outbound2_outbound1_w_prefix_diff_col": {
+                        "source": [
+                            {"sourcekey": "path_to_outbound2_outbound1"},
+                            "id"
+                        ]
+                      },
+                      "path_to_outbound2_outbound1_w_prefix_diff_col_recursive": {
+                        "source": [
+                            {"sourcekey": "path_to_outbound2_outbound1_w_prefix_diff_col"},
+                            "col"
+                        ]
+                      },
+                      "path_w_invalid_prefix": {
+                          "source": [
+                              {"sourcekey": "path_that_doesnt_exist"},
+                              {"outbound": ["source_definitions_schema", "main_fk1"]},
+                              "RID"
+                          ]
+                      },
+                      "circular_path_1": {
+                          "source": [
+                              {"sourcekey": "circular_path_2"},
+                              {"outbound": ["source_definitions_schema", "main_fk1"]},
+                              "RID"
+                          ]
+                      },
+                      "circular_path_2": {
+                          "source": [
+                              {"sourcekey": "circular_path_1"},
+                              {"outbound": ["source_definitions_schema", "main_fk1"]},
+                              "RID"
+                          ]
+                      },
+                      "invalid_path_w_two_prefix": {
+                        "source": [
+                            {"sourcekey": "path_to_outbound2_outbound1"},
+                            {"sourcekey": "inbound1_col"},
+                            {"outbound": ["source_definitions_schema", "main_fk1"]},
+                            "RID"
+                        ]
+                      },
+                      "use_normal_column_prefix": {
+                          "source": [
+                              {"sourcekey": "new_col"},
+                              {"outbound": ["source_definitions_schema", "main_fk1"]},
+                              "RID"
+                          ]
+                      },
+                      "use_special_sourcekey_as_prefix": {
+                          "source": [
+                            {"sourcekey": "search-box"},
+                            {"outbound": ["source_definitions_schema", "main_fk1"]},
+                            "RID"
+                          ]
+                      },
+                      "fk1_col_entity_w_filter_invalid_1": {
+                          "source": [
+                              {"outbound": ["source_definitions_schema", "main_fk1"]},
+                              {"filter": "invalid_col", "negate": true, "operand_pattern": "1"},
+                              "RID"
+                          ],
+                          "entity": true
+                      },
+                      "fk1_col_entity_w_filter_invalid_2": {
+                          "source": [
+                              {"outbound": ["source_definitions_schema", "main_fk1"]},
+                              {"filter": "RID", "operator": "some_unknown_operator", "operand_pattern": "1"},
+                              "RID"
+                          ],
+                          "entity": true
+                      },
+                      "fk1_col_entity_w_filter_invalid_3": {
+                          "source": [
+                              {"outbound": ["source_definitions_schema", "main_fk1"]},
+                              {"filter": "RID", "operator": "::null::", "operand_pattern": "1"},
+                              "RID"
+                          ],
+                          "entity": true
+                      },
+                      "fk1_col_entity_w_filter_invalid_4": {
+                          "source": [
+                              {"outbound": ["source_definitions_schema", "main_fk1"]},
+                              {"filter": "RID", "operator": "::lt::"},
+                              "RID"
+                          ],
+                          "entity": true
+                      },
+                      "fk1_col_entity_w_filter_invalid_5": {
+                          "source": [
+                              {"outbound": ["source_definitions_schema", "main_fk1"]},
+                              {"filter": "RID", "operand_pattern": "{{{invalid_column}}}"},
+                              "RID"
+                          ],
+                          "entity": true
+                      },
+                      "col_w_filter": {
+                          "source": [
+                              {"filter": "col w space", "operator": "::ciregexp::", "operand_pattern": "val w space"},
+                              "id"
+                          ]
+                      },
+                      "fk1_col_entity_w_filter_1": {
+                          "source": [
+                              {"filter": "id", "operator": "::gt::", "operand_pattern": "1"},
+                              {"outbound": ["source_definitions_schema", "main_fk1"]},
+                              "RID"
+                          ],
+                          "entity": true
+                      },
+                      "fk1_col_entity_w_filter_2": {
+                          "source": [
+                              {"filter": "RID", "negate": true, "operand_pattern": "1"},
+                              {"outbound": ["source_definitions_schema", "main_fk1"]},
+                              "RID"
+                          ],
+                          "entity": true
+                      },
+                      "fk1_col_entity_w_filter_3": {
+                          "source": [
+                              {
+                                  "or": [
+                                      {
+                                          "and": [
+                                              {"filter": "id", "operand_pattern": "{{{$moment.year}}}"},
+                                              {"filter": "col w space", "operator": "::null::", "negate": true}
+                                          ]
+                                      },
+                                      {"filter": "col", "operator": "::ts::", "operand_pattern": "some val"},
+                                      {
+                                          "or": [
+                                              {"filter": "RMB", "operator": "::null::"},
+                                              {"filter": "id", "operator": "::null::"}
+                                          ],
+                                          "negate": true
+                                      }
+                                  ]
+                              },
+                              {"outbound": ["source_definitions_schema", "main_fk1"]},
+                              "RID"
+                          ],
+                          "entity": true
+                      },
+                      "fk1_col_entity_w_filter_3_second_name": {
+                          "comment": "same as above and just added for testing hashname logic",
+                          "source": [
+                              {
+                                  "or": [
+                                      {
+                                          "and": [
+                                              {"operand_pattern": "{{{$moment.year}}}", "filter": "id"},
+                                              {"negate": true, "filter": "col w space", "operator": "::null::"}
+                                          ]
+                                      },
+                                      {"operand_pattern": "some val", "operator": "::ts::", "filter": "col"},
+                                      {
+                                          "negate": true,
+                                          "or": [
+                                              {"filter": "RMB", "operator": "::null::"},
+                                              {"operator": "::null::", "filter": "id"}
+                                          ]
+                                      }
+                                  ]
+                              },
+                              {"outbound": ["source_definitions_schema", "main_fk1"]},
+                              "RID"
+                          ],
+                          "entity": true
+                      },
+                      "fk1_col_entity_w_filter_3_third_name": {
+                          "comment": "same as above with diff order of filters and just added for testing hashname logic",
+                          "source": [
+                              {
+                                  "or": [
+                                      {"operand_pattern": "some val", "operator": "::ts::", "filter": "col"},
+                                      {
+                                          "or": [
+                                              {"operator": "::null::", "filter": "id"},
+                                              {"operator": "::null::", "filter": "RMB"}
+                                          ],
+                                          "negate": true
+                                      },
+                                      {
+                                        "and": [
+                                            {"filter": "col w space", "negate": true, "operator": "::null::"},
+                                            {"operand_pattern": "{{{$moment.year}}}", "filter": "id"}
+                                        ]
+                                    }
+                                  ]
+                              },
+                              {"outbound": ["source_definitions_schema", "main_fk1"]},
+                              "RID"
+                          ],
+                          "entity": true
+                      },
+                      "path_to_outbound2_outbound1_w_filter_1": {
+                          "source": [
+                              {"outbound": ["source_definitions_schema", "main_fk2"]},
+                              {"filter": "id", "operator": "::ts::", "operand_pattern": "1"},
+                              {"outbound": ["source_definitions_schema", "outbound2_fk1"]},
+                              "RID"
+                          ]
+                      },
+                      "path_to_outbound2_outbound1_w_filter_2": {
+                          "source": [
+                              {"outbound": ["source_definitions_schema", "main_fk2"]},
+                              {"outbound": ["source_definitions_schema", "outbound2_fk1"]},
+                              {"filter": "col", "operator": "::ts::", "operand_pattern": "sample val"},
+                              "RID"
+                          ]
+                      },
+                      "path_to_outbound2_outbound1_w_filter_2_diff_col": {
+                          "source": [
+                              {"sourcekey": "path_to_outbound2_outbound1_w_filter_2"},
+                              "col"
+                          ]
+                      },
+                      "path_to_outbound2_outbound1_w_filter_2_outbound1_w_prefix": {
+                          "source": [
+                              {"sourcekey": "path_to_outbound2_outbound1_w_filter_2"},
+                              {"outbound": ["source_definitions_schema", "outbound2_outbound1_fk1"]},
+                              "RID"
+                          ]
+                      }
+                  }
+              }
+          }
+      },
+      "main_no_annot": {
+          "table_name": "main_no_annot",
+          "schema_name": "source_definitions_schema",
+          "kind": "table",
+          "keys": [
+              {"unique_columns": ["id"]}
+          ],
+          "foreign_keys": [
+              {
+                  "names": [["source_definitions_schema", "main_no_annot_fk1"]],
+                  "foreign_key_columns": [
+                      {
+                          "column_name": "id",
+                          "table_name": "main_no_annot",
+                          "schema_name": "source_definitions_schema"
+                      }
+                  ],
+                  "referenced_columns": [
+                      {
+                          "column_name": "id",
+                          "table_name": "outbound1",
+                          "schema_name": "source_definitions_schema"
+                      }
+                  ]
+              },
+              {
+                  "names": [["source_definitions_schema", "main_no_annot_fk2"]],
+                  "foreign_key_columns": [
+                      {
+                          "column_name": "id",
+                          "table_name": "main_no_annot",
+                          "schema_name": "source_definitions_schema"
+                      }
+                  ],
+                  "referenced_columns": [
+                      {
+                          "column_name": "id",
+                          "table_name": "outbound2",
+                          "schema_name": "source_definitions_schema"
+                      }
+                  ]
+              }
+          ],
+          "column_definitions": [
+              {
+                  "name": "id",
+                  "nullok": false,
+                  "type": {
+                      "typename": "text"
+                  }
+              },
+              {
+                  "name": "col",
+                  "type": {
+                      "typename": "text"
+                  }
+              }
+          ]
+      },
+      "main_true_col_true_fkeys": {
+          "table_name": "main_true_col_true_fkeys",
+          "schema_name": "source_definitions_schema",
+          "kind": "table",
+          "keys": [
+              {"unique_columns": ["id"]}
+          ],
+          "foreign_keys": [
+              {
+                  "names": [["source_definitions_schema", "main_true_col_true_fkeys_fk1"]],
+                  "foreign_key_columns": [
+                      {
+                          "column_name": "id",
+                          "table_name": "main_true_col_true_fkeys",
+                          "schema_name": "source_definitions_schema"
+                      }
+                  ],
+                  "referenced_columns": [
+                      {
+                          "column_name": "id",
+                          "table_name": "outbound1",
+                          "schema_name": "source_definitions_schema"
+                      }
+                  ]
+              },
+              {
+                  "names": [["source_definitions_schema", "main_true_col_true_fkeys_fk2"]],
+                  "foreign_key_columns": [
+                      {
+                          "column_name": "id",
+                          "table_name": "main_true_col_true_fkeys",
+                          "schema_name": "source_definitions_schema"
+                      }
+                  ],
+                  "referenced_columns": [
+                      {
+                          "column_name": "id",
+                          "table_name": "outbound2",
+                          "schema_name": "source_definitions_schema"
+                      }
+                  ]
+              }
+          ],
+          "column_definitions": [
+              {
+                  "name": "id",
+                  "nullok": false,
+                  "type": {
+                      "typename": "text"
+                  }
+              },
+              {
+                  "name": "col",
+                  "type": {
+                      "typename": "text"
+                  }
+              }
+          ],
+          "annotations": {
+              "tag:isrd.isi.edu,2019:source-definitions": {
+                  "columns": true,
+                  "fkeys": true
+              }
+          }
+      },
+      "main_no_col_no_fkeys": {
+          "table_name": "main_no_col_no_fkeys",
+          "schema_name": "source_definitions_schema",
+          "kind": "table",
+          "keys": [
+              {"unique_columns": ["id"]}
+          ],
+          "foreign_keys": [
+              {
+                  "names": [["source_definitions_schema", "main_no_col_no_fkeys_fk1"]],
+                  "foreign_key_columns": [
+                      {
+                          "column_name": "id",
+                          "table_name": "main_no_col_no_fkeys",
+                          "schema_name": "source_definitions_schema"
+                      }
+                  ],
+                  "referenced_columns": [
+                      {
+                          "column_name": "id",
+                          "table_name": "outbound1",
+                          "schema_name": "source_definitions_schema"
+                      }
+                  ]
+              }
+          ],
+          "column_definitions": [
+              {
+                  "name": "id",
+                  "nullok": false,
+                  "type": {
+                      "typename": "text"
+                  }
+              }
+          ],
+          "annotations": {
+              "tag:isrd.isi.edu,2019:source-definitions": {
+                  "sources": {
+                      "new_id": {"source": "id"}
+                  }
+              }
+          }
+      },
+      "outbound1": {
+          "table_name": "outbound1",
+          "schema_name": "source_definitions_schema",
+          "kind": "table",
+          "keys": [
+              {"unique_columns": ["id"]}
+          ],
+          "foreign_keys": [
+              {
+                  "names": [["source_definitions_schema", "outbound1_fk1"]],
+                  "foreign_key_columns": [
+                      {
+                          "column_name": "id",
+                          "table_name": "outbound1",
+                          "schema_name": "source_definitions_schema"
+                      }
+                  ],
+                  "referenced_columns": [
+                      {
+                          "column_name": "id",
+                          "table_name": "outbound1_outbound1",
+                          "schema_name": "source_definitions_schema"
+                      }
+                  ]
+              }
+          ],
+          "column_definitions": [
+              {
+                  "name": "id",
+                  "nullok": false,
+                  "type": {
+                      "typename": "text"
+                  }
+              }
+          ]
+      },
+      "outbound1_outbound1": {
+          "table_name": "outbound1_outbound1",
+          "schema_name": "source_definitions_schema",
+          "kind": "table",
+          "keys": [
+              {"unique_columns": ["id"]}
+          ],
+          "column_definitions": [
+              {
+                  "name": "id",
+                  "nullok": false,
+                  "type": {
+                      "typename": "text"
+                  }
+              }
+          ]
+      },
+      "outbound2": {
+          "table_name": "outbound2",
+          "schema_name": "source_definitions_schema",
+          "kind": "table",
+          "keys": [
+              {"unique_columns": ["id"]}
+          ],
+          "foreign_keys": [
+              {
+                  "names": [["source_definitions_schema", "outbound2_fk1"]],
+                  "foreign_key_columns": [
+                      {
+                          "column_name": "id",
+                          "table_name": "outbound2",
+                          "schema_name": "source_definitions_schema"
+                      }
+                  ],
+                  "referenced_columns": [
+                      {
+                          "column_name": "id",
+                          "table_name": "outbound2_outbound1",
+                          "schema_name": "source_definitions_schema"
+                      }
+                  ]
+              }
+          ],
+          "column_definitions": [
+              {
+                  "name": "id",
+                  "nullok": false,
+                  "type": {
+                      "typename": "text"
+                  }
+              }
+          ]
+      },
+      "outbound2_outbound1": {
+          "table_name": "outbound2_outbound1",
+          "schema_name": "source_definitions_schema",
+          "kind": "table",
+          "keys": [
+              {"unique_columns": ["id"]}
+          ],
+          "foreign_keys": [
+              {
+                  "names": [["source_definitions_schema", "outbound2_outbound1_fk1"]],
+                  "foreign_key_columns": [
+                      {
+                          "column_name": "id",
+                          "table_name": "outbound2_outbound1",
+                          "schema_name": "source_definitions_schema"
+                      }
+                  ],
+                  "referenced_columns": [
+                      {
+                          "column_name": "id",
+                          "table_name": "outbound2_outbound1_outbound1",
+                          "schema_name": "source_definitions_schema"
+                      }
+                  ]
+              }
+          ],
+          "column_definitions": [
+              {
+                  "name": "id",
+                  "nullok": false,
+                  "type": {
+                      "typename": "text"
+                  }
+              },
+              {
+                "name": "col",
+                "nullok": true,
+                "type": {
+                    "typename": "text"
+                }
+              },
+              {
+                "name": "col w space",
+                "nullok": true,
+                "type": {
+                    "typename": "text"
+                }
+              }
+          ]
+      },
+      "outbound2_outbound1_outbound1": {
+          "table_name": "outbound2_outbound1_outbound1",
+          "schema_name": "source_definitions_schema",
+          "kind": "table",
+          "keys": [
+              {"unique_columns": ["id"]}
+          ],
+          "foreign_keys": [
+              {
+                  "names": [["source_definitions_schema", "outbound2_outbound1_outbound1_fk1"]],
+                  "foreign_key_columns": [
+                      {
+                          "column_name": "id",
+                          "table_name": "outbound2_outbound1_outbound1",
+                          "schema_name": "source_definitions_schema"
+                      }
+                  ],
+                  "referenced_columns": [
+                      {
+                          "column_name": "id",
+                          "table_name": "outbound2_outbound1_outbound1_outbound1",
+                          "schema_name": "source_definitions_schema"
+                      }
+                  ]
+              }
+          ],
+          "column_definitions": [
+              {
+                  "name": "id",
+                  "nullok": false,
+                  "type": {
+                      "typename": "text"
+                  }
+              }
+          ]
+      },
+      "outbound2_outbound1_outbound1_outbound1": {
+          "table_name": "outbound2_outbound1_outbound1_outbound1",
+          "schema_name": "source_definitions_schema",
+          "kind": "table",
+          "keys": [
+              {"unique_columns": ["id"]}
+          ],
+          "column_definitions": [
+              {
+                  "name": "id",
+                  "nullok": false,
+                  "type": {
+                      "typename": "text"
+                  }
+              }
+          ]
+      },
+      "outbound2_outbound1_inbound1": {
+          "table_name": "outbound2_outbound1_inbound1",
+          "schema_name": "source_definitions_schema",
+          "kind": "table",
+          "keys": [
+              {"unique_columns": ["id"]}
+          ],
+          "foreign_keys": [
+              {
+                  "names": [["source_definitions_schema", "outbound2_outbound1_inbound1_fk1"]],
+                  "foreign_key_columns": [
+                      {
+                          "column_name": "id",
+                          "table_name": "outbound2_outbound1_inbound1",
+                          "schema_name": "source_definitions_schema"
+                      }
+                  ],
+                  "referenced_columns": [
+                      {
+                          "column_name": "id",
+                          "table_name": "outbound2_outbound1",
+                          "schema_name": "source_definitions_schema"
+                      }
+                  ]
+              }
+          ],
+          "column_definitions": [
+              {
+                  "name": "id",
+                  "nullok": false,
+                  "type": {
+                      "typename": "text"
+                  }
+              }
+          ]
+      },
+      "outbound2_outbound1_inbound1_inbound1": {
+          "table_name": "outbound2_outbound1_inbound1_inbound1",
+          "schema_name": "source_definitions_schema",
+          "kind": "table",
+          "keys": [
+              {"unique_columns": ["id"]}
+          ],
+          "foreign_keys": [
+              {
+                  "names": [["source_definitions_schema", "outbound2_outbound1_inbound1_inbound1_fk1"]],
+                  "foreign_key_columns": [
+                      {
+                          "column_name": "id",
+                          "table_name": "outbound2_outbound1_inbound1_inbound1",
+                          "schema_name": "source_definitions_schema"
+                      }
+                  ],
+                  "referenced_columns": [
+                      {
+                          "column_name": "id",
+                          "table_name": "outbound2_outbound1_inbound1",
+                          "schema_name": "source_definitions_schema"
+                      }
+                  ]
+              }
+          ],
+          "column_definitions": [
+              {
+                  "name": "id",
+                  "nullok": false,
+                  "type": {
+                      "typename": "text"
+                  }
+              }
+          ]
+      },
+      "inbound1": {
+          "table_name": "inbound1",
+          "schema_name": "source_definitions_schema",
+          "kind": "table",
+          "keys": [
+              {"unique_columns": ["id"]}
+          ],
+          "foreign_keys": [
+              {
+                  "names": [["source_definitions_schema", "inbound1_fk1"]],
+                  "foreign_key_columns": [
+                      {
+                          "column_name": "id",
+                          "table_name": "inbound1",
+                          "schema_name": "source_definitions_schema"
+                      }
+                  ],
+                  "referenced_columns": [
+                      {
+                          "column_name": "id",
+                          "table_name": "main",
+                          "schema_name": "source_definitions_schema"
+                      }
+                  ]
+              }
+          ],
+          "column_definitions": [
+              {
+                  "name": "id",
+                  "nullok": false,
+                  "type": {
+                      "typename": "text"
+                  }
+              }
+          ]
+      }
+  },
+  "schema_name": "source_definitions_schema"
+}

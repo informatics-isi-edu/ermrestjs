@@ -1,0 +1,1006 @@
+{
+    "schema_name": "search_schema",
+    "tables": {
+        "search parser": {
+            "comment": "",
+            "kind": "table",
+            "keys": [
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": [
+                        "id x"
+                    ]
+                }
+            ],
+            "entityCount": 0,
+            "foreign_keys": [],
+            "table_name": "search parser",
+            "schema_name": "search_schema",
+            "column_definitions": [
+                {
+                    "name": "id x",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "name x",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "value x",
+                    "type": {
+                        "typename": "integer"
+                    }
+                },
+                {
+                    "name": "decimal x",
+                    "type": {
+                        "typename": "float4"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2016:table-display": {
+                    "*": {
+                        "row_order": [
+                            {
+                                "column": "name x",
+                                "descending": false
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        "table_w_custom_search_invalid": {
+            "kind": "table",
+            "schema_name": "search_schema",
+            "table_name": "table_w_custom_search_invalid",
+            "keys": [
+                {
+                    "unique_columns": [
+                        "id"
+                    ]
+                }
+            ],
+            "foreign_keys": [],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2019:source-definitions": {
+                    "search-box": {
+                        "or": [
+                            {
+                                "source": "invalid_col"
+                            },
+                            {
+                                "source": "invalid_col_2"
+                            },
+                            {
+                                "source": [
+                                    {
+                                        "inbound": [
+                                            "schema",
+                                            "some_invalid_const"
+                                        ]
+                                    },
+                                    "RID"
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        "table_w_custom_search_partial_valid": {
+            "kind": "table",
+            "schema_name": "search_schema",
+            "table_name": "table_w_custom_search_partial_valid",
+            "keys": [
+                {
+                    "unique_columns": [
+                        "id"
+                    ]
+                }
+            ],
+            "foreign_keys": [],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2019:source-definitions": {
+                    "search-box": {
+                        "or": [
+                            {
+                                "source": "id"
+                            },
+                            {
+                                "source": "invalid_col_2"
+                            },
+                            {
+                                "source": [
+                                    {
+                                        "inbound": [
+                                            "schema",
+                                            "some_invalid_const"
+                                        ]
+                                    },
+                                    "RID"
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        "table_w_custom_search_nullok_col": {
+            "kind": "table",
+            "schema_name": "search_schema",
+            "table_name": "table_w_custom_search_nullok_col",
+            "keys": [
+                {
+                    "unique_columns": [
+                        "id"
+                    ]
+                }
+            ],
+            "foreign_keys": [
+                {
+                    "names": [["search_schema","table_w_custom_search_nullok_col_fk1"]],
+                    "foreign_key_columns": [{
+                        "schema_name": "search_schema",
+                        "table_name": "table_w_custom_search_nullok_col",
+                        "column_name": "nullable_fk_to_vocab"
+                    }],
+                    "referenced_columns": [{
+                        "schema_name": "search_schema",
+                        "table_name": "search_vocab_table",
+                        "column_name": "id"
+                    }]
+                }
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "nullable_fk_to_vocab",
+                    "type": {
+                        "typename": "text"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2019:source-definitions": {
+                    "search-box": {
+                        "or": [
+                            {
+                                "source": [
+                                    {"outbound": ["search_schema","table_w_custom_search_nullok_col_fk1"]},
+                                    "name"
+                                ]
+                            },
+                            {
+                                "source": "nullable_fk_to_vocab"
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        "table_w_custom_search_dynamic_select_col": {
+            "kind": "table",
+            "schema_name": "search_schema",
+            "table_name": "table_w_custom_search_dynamic_select_col",
+            "keys": [
+                {
+                    "unique_columns": [
+                        "id"
+                    ]
+                }
+            ],
+            "foreign_keys": [
+                {
+                    "names": [["search_schema","table_w_custom_search_dynamic_select_col_fk1"]],
+                    "foreign_key_columns": [{
+                        "schema_name": "search_schema",
+                        "table_name": "table_w_custom_search_dynamic_select_col",
+                        "column_name": "fk_to_vocab"
+                    }],
+                    "referenced_columns": [{
+                        "schema_name": "search_schema",
+                        "table_name": "search_vocab_table",
+                        "column_name": "id"
+                    }]
+                }
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "fk_to_vocab",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2019:source-definitions": {
+                    "search-box": {
+                        "or": [
+                            {
+                                "source": [
+                                    {"outbound": ["search_schema","table_w_custom_search_dynamic_select_col_fk1"]},
+                                    "name"
+                                ]
+                            },
+                            {
+                                "source": "id"
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        "table_w_custom_search_multiple_w_inbound": {
+            "kind": "table",
+            "schema_name": "search_schema",
+            "table_name": "table_w_custom_search_multiple_w_inbound",
+            "keys": [
+                {
+                    "unique_columns": [
+                        "id"
+                    ]
+                }
+            ],
+            "foreign_keys": [],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2019:source-definitions": {
+                    "search-box": {
+                        "or": [
+                            {
+                                "source": [
+                                    {"inbound": ["search_schema","table_w_custom_search_inner_safe_1_fk2"]},
+                                    "RID"
+                                ]
+                            },
+                            {
+                                "source": [
+                                    {"inbound": ["search_schema","table_w_custom_search_inner_safe_1_fk2"]},
+                                    {"outbound": ["search_schema","table_w_custom_search_inner_safe_1_fk1"]},
+                                    "RID"
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        "table_w_custom_search_inner_safe_1": {
+            "kind": "table",
+            "comment": "multiple all-outbound paths that sharing prefix and adding more",
+            "schema_name": "search_schema",
+            "table_name": "table_w_custom_search_inner_safe_1",
+            "keys": [
+                {
+                    "unique_columns": [
+                        "id"
+                    ]
+                }
+            ],
+            "foreign_keys": [
+                {
+                    "names": [["search_schema","table_w_custom_search_inner_safe_1_fk1"]],
+                    "foreign_key_columns": [{
+                        "schema_name": "search_schema",
+                        "table_name": "table_w_custom_search_inner_safe_1",
+                        "column_name": "fk_to_vocab"
+                    }],
+                    "referenced_columns": [{
+                        "schema_name": "search_schema",
+                        "table_name": "search_vocab_table",
+                        "column_name": "id"
+                    }]
+                },
+                {
+                    "names": [["search_schema","table_w_custom_search_inner_safe_1_fk2"]],
+                    "foreign_key_columns": [{
+                        "schema_name": "search_schema",
+                        "table_name": "table_w_custom_search_inner_safe_1",
+                        "column_name": "fk_to_table_w_custom_search_multiple_w_inbound"
+                    }],
+                    "referenced_columns": [{
+                        "schema_name": "search_schema",
+                        "table_name": "table_w_custom_search_multiple_w_inbound",
+                        "column_name": "id"
+                    }]
+                }
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "fk_to_vocab",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "fk_to_table_w_custom_search_multiple_w_inbound",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "main name",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "main second_name",
+                    "type": {
+                        "typename": "text"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2019:source-definitions": {
+                    "sources": {
+                        "path_to_vocab_name": {
+                            "source": [
+                                {"outbound": ["search_schema","table_w_custom_search_inner_safe_1_fk1"]},
+                                "name"
+                            ],
+                            "entity": false
+                        }
+                    },
+                    "search-box": {
+                        "or": [
+                            {
+                                "source": [
+                                    {"sourcekey": "path_to_vocab_name"},
+                                    "second_name"
+                                ],
+                                "markdown_name": "vocab second_name"
+                            },
+                            {
+                                "source": [
+                                    {"sourcekey": "path_to_vocab_name"},
+                                    "third_name"
+                                ],
+                                "markdown_name": "vocab third_name"
+                            },
+                            {
+                                "source": [
+                                    {"sourcekey": "path_to_vocab_name"},
+                                    {"outbound": ["search_schema", "search_vocab_table_fk1"]},
+                                    "name"
+                                ],
+                                "markdown_name": "vocab o1 name"
+                            },
+                            {
+                                "source": "main name"
+                            },
+                            {
+                                "source": "main second_name"
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        "table_w_custom_search_inner_safe_2": {
+            "kind": "table",
+            "comment": "search is using two different paths without sharing",
+            "schema_name": "search_schema",
+            "table_name": "table_w_custom_search_inner_safe_2",
+            "keys": [
+                {
+                    "unique_columns": [
+                        "id"
+                    ]
+                }
+            ],
+            "foreign_keys": [
+                {
+                    "names": [["search_schema","table_w_custom_search_inner_safe_2_fk1"]],
+                    "foreign_key_columns": [{
+                        "schema_name": "search_schema",
+                        "table_name": "table_w_custom_search_inner_safe_2",
+                        "column_name": "fk_to_vocab"
+                    }],
+                    "referenced_columns": [{
+                        "schema_name": "search_schema",
+                        "table_name": "search_vocab_table",
+                        "column_name": "id"
+                    }]
+                },
+                {
+                    "names": [["search_schema","table_w_custom_search_inner_safe_2_fk2"]],
+                    "foreign_key_columns": [{
+                        "schema_name": "search_schema",
+                        "table_name": "table_w_custom_search_inner_safe_2",
+                        "column_name": "fk_to_vocab_2"
+                    }],
+                    "referenced_columns": [{
+                        "schema_name": "search_schema",
+                        "table_name": "search_vocab_table_2",
+                        "column_name": "id"
+                    }]
+                }
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "fk_to_vocab",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "fk_to_vocab_2",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "main name",
+                    "nullok": true,
+                    "type": {
+                        "typename": "text"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2019:source-definitions": {
+                    "sources": {
+                        "path_to_vocab_name": {
+                            "source": [
+                                {"outbound": ["search_schema","table_w_custom_search_inner_safe_2_fk1"]},
+                                "name"
+                            ],
+                            "entity": false
+                        }
+                    },
+                    "search-box": {
+                        "or": [
+                            {
+                                "source": "main name"
+                            },
+                            {
+                                "source": [
+                                    {"sourcekey": "path_to_vocab_name"},
+                                    "second_name"
+                                ],
+                                "markdown_name": "vocab second_name"
+                            },
+                            {
+                                "sourcekey": "path_to_vocab_name",
+                                "markdown_name": "vocab name"
+                            },
+                            {
+                                "source": [
+                                    {"outbound": ["search_schema","table_w_custom_search_inner_safe_2_fk2"]},
+                                    "name"
+                                ],
+                                "markdown_name": "vocab 2 name"
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        "table_w_custom_search_local_cols": {
+            "kind": "table",
+            "schema_name": "search_schema",
+            "table_name": "table_w_custom_search_local_cols",
+            "keys": [
+                {
+                    "unique_columns": [
+                        "id"
+                    ]
+                }
+            ],
+            "foreign_keys": [],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "search_col_1",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "search_col_2",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "search_col_ignored",
+                    "type": {
+                        "typename": "text"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2019:source-definitions": {
+                    "sources": {
+                        "search-box": {
+                            "or": [
+                                {
+                                    "source": "search_col_2",
+                                    "markdown_name": "**some name**"
+                                },
+                                {
+                                    "source": "search_col_1"
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "table_w_custom_search_single_path": {
+            "kind": "table",
+            "comment": "has just one search column that has path",
+            "schema_name": "search_schema",
+            "table_name": "table_w_custom_search_single_path",
+            "keys": [
+                {
+                    "unique_columns": [
+                        "id"
+                    ]
+                }
+            ],
+            "foreign_keys": [],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2019:source-definitions": {
+                    "search-box": {
+                        "or": [
+                            {
+                                "sourcekey": "path_to_vocab_name",
+                                "markdown_name": "Vocab"
+                            }
+                        ]
+                    },
+                    "sources": {
+                        "path_to_vocab_name": {
+                            "source": [
+                                {"inbound": ["search_schema","table_w_custom_search_single_path_vocab_assoc_fk1"]},
+                                {"outbound": ["search_schema","table_w_custom_search_single_path_vocab_assoc_fk2"]},
+                                "name"
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "table_w_custom_search_single_path_vocab_assoc": {
+            "kind": "table",
+            "comment": "has just one search column that has path",
+            "schema_name": "search_schema",
+            "table_name": "table_w_custom_search_single_path_vocab_assoc",
+            "keys": [
+                {
+                    "unique_columns": [
+                        "fk_to_custom_search_2",
+                        "fk_to_vocab"
+                    ]
+                }
+            ],
+            "foreign_keys": [
+                {
+                    "names": [["search_schema","table_w_custom_search_single_path_vocab_assoc_fk1"]],
+                    "foreign_key_columns": [{
+                        "schema_name": "search_schema",
+                        "table_name": "table_w_custom_search_single_path_vocab_assoc",
+                        "column_name": "fk_to_custom_search_2"
+                    }],
+                    "referenced_columns": [{
+                        "schema_name": "search_schema",
+                        "table_name": "table_w_custom_search_single_path",
+                        "column_name": "id"
+                    }]
+                },
+                {
+                    "names": [["search_schema","table_w_custom_search_single_path_vocab_assoc_fk2"]],
+                    "foreign_key_columns": [{
+                        "schema_name": "search_schema",
+                        "table_name": "table_w_custom_search_single_path_vocab_assoc",
+                        "column_name": "fk_to_vocab"
+                    }],
+                    "referenced_columns": [{
+                        "schema_name": "search_schema",
+                        "table_name": "search_vocab_table",
+                        "column_name": "id"
+                    }]
+                }
+            ],
+            "column_definitions": [
+                {
+                    "name": "fk_to_custom_search_2",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "fk_to_vocab",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                }
+            ],
+            "annotations": {}
+        },
+        "table_w_custom_search_same_prefix_1": {
+            "kind": "table",
+            "comment": "search columns are using the same path prefix",
+            "schema_name": "search_schema",
+            "table_name": "table_w_custom_search_same_prefix_1",
+            "keys": [
+                {
+                    "unique_columns": [
+                        "id"
+                    ]
+                }
+            ],
+            "foreign_keys": [],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2019:source-definitions": {
+                    "sources": {
+                        "path_to_vocab_name": {
+                            "source": [
+                                {"inbound": ["search_schema","table_w_custom_search_same_prefix_1_vocab_assoc_fk1"]},
+                                {"outbound": ["search_schema","table_w_custom_search_same_prefix_1_vocab_assoc_fk2"]},
+                                "name"
+                            ]
+                        },
+                        "search-box": {
+                            "or": [
+                                {"sourcekey": "path_to_vocab_name"},
+                                {"source": [{"sourcekey": "path_to_vocab_name"}, "second_name"]},
+                                {"source": [{"sourcekey": "path_to_vocab_name"}, "third_name"], "markdown_name": "third name"}
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "table_w_custom_search_same_prefix_1_vocab_assoc": {
+            "kind": "table",
+            "comment": "has just one search column that has path",
+            "schema_name": "search_schema",
+            "table_name": "table_w_custom_search_same_prefix_1_vocab_assoc",
+            "keys": [
+                {
+                    "unique_columns": [
+                        "fk_to_custom_search_3",
+                        "fk_to_vocab"
+                    ]
+                }
+            ],
+            "foreign_keys": [
+                {
+                    "names": [["search_schema","table_w_custom_search_same_prefix_1_vocab_assoc_fk1"]],
+                    "foreign_key_columns": [{
+                        "schema_name": "search_schema",
+                        "table_name": "table_w_custom_search_same_prefix_1_vocab_assoc",
+                        "column_name": "fk_to_custom_search_3"
+                    }],
+                    "referenced_columns": [{
+                        "schema_name": "search_schema",
+                        "table_name": "table_w_custom_search_same_prefix_1",
+                        "column_name": "id"
+                    }]
+                },
+                {
+                    "names": [["search_schema","table_w_custom_search_same_prefix_1_vocab_assoc_fk2"]],
+                    "foreign_key_columns": [{
+                        "schema_name": "search_schema",
+                        "table_name": "table_w_custom_search_same_prefix_1_vocab_assoc",
+                        "column_name": "fk_to_vocab"
+                    }],
+                    "referenced_columns": [{
+                        "schema_name": "search_schema",
+                        "table_name": "search_vocab_table",
+                        "column_name": "id"
+                    }]
+                }
+            ],
+            "column_definitions": [
+                {
+                    "name": "fk_to_custom_search_3",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "fk_to_vocab",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                }
+            ],
+            "annotations": {}
+        },
+        "table_w_custom_search_same_prefix_2": {
+            "kind": "table",
+            "comment": "search columns are using the same path prefix, test the readPath",
+            "schema_name": "search_schema",
+            "table_name": "table_w_custom_search_same_prefix_2",
+            "keys": [
+                {
+                    "unique_columns": [
+                        "id"
+                    ]
+                }
+            ],
+            "foreign_keys": [
+                {
+                    "names": [["search_schema","table_w_custom_search_same_prefix_2_fk1"]],
+                    "foreign_key_columns": [{
+                        "schema_name": "search_schema",
+                        "table_name": "table_w_custom_search_same_prefix_2",
+                        "column_name": "fk_to_vocab"
+                    }],
+                    "referenced_columns": [{
+                        "schema_name": "search_schema",
+                        "table_name": "search_vocab_table",
+                        "column_name": "id"
+                    }]
+                }
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "fk_to_vocab",
+                    "type": {
+                        "typename": "text"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2016:visible-columns": {
+                    "*": [
+                        "id", {"sourcekey": "path_to_vocab_name"}
+                    ]
+                },
+                "tag:isrd.isi.edu,2019:source-definitions": {
+                    "search-box": {
+                        "or": [
+                            {"sourcekey": "path_to_vocab_name"},
+                            {"source": [{"sourcekey": "path_to_vocab_name"}, "second_name"]}
+                        ]
+                    },
+                    "sources": {
+                        "path_to_vocab_name": {
+                            "source": [
+                                {"outbound": ["search_schema","table_w_custom_search_same_prefix_2_fk1"]},
+                                "name"
+                            ],
+                            "entity": false
+                        }
+                    }
+                }
+            }
+        },
+        "search_vocab_table": {
+            "kind": "table",
+            "comment": "other tables search ends up here",
+            "schema_name": "search_schema",
+            "table_name": "search_vocab_table",
+            "keys": [
+                {
+                    "unique_columns": [
+                        "id"
+                    ]
+                }
+            ],
+            "foreign_keys": [
+                {
+                    "names": [["search_schema","search_vocab_table_fk1"]],
+                    "foreign_key_columns": [{
+                        "schema_name": "search_schema",
+                        "table_name": "search_vocab_table",
+                        "column_name": "fk_to_outbound1"
+                    }],
+                    "referenced_columns": [{
+                        "schema_name": "search_schema",
+                        "table_name": "search_vocab_table_outbound1",
+                        "column_name": "id"
+                    }]
+                }
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "name",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "second_name",
+                    "nullok": true,
+                    "type": {"typename": "text"}
+                },
+                {
+                    "name": "third_name",
+                    "nullok": true,
+                    "type": {"typename": "text"}
+                },
+                {
+                    "name": "fk_to_outbound1",
+                    "nullok": false,
+                    "type": {"typename": "text"}
+                }
+            ],
+            "annotations": {}
+        },
+        "search_vocab_table_2": {
+            "kind": "table",
+            "comment": "other tables search ends up here",
+            "schema_name": "search_schema",
+            "table_name": "search_vocab_table_2",
+            "keys": [
+                {
+                    "unique_columns": [
+                        "id"
+                    ]
+                }
+            ],
+            "foreign_keys": [
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "name",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "second_name",
+                    "nullok": true,
+                    "type": {"typename": "text"}
+                },
+                {
+                    "name": "third_name",
+                    "nullok": true,
+                    "type": {"typename": "text"}
+                }
+            ],
+            "annotations": {}
+        },
+        "search_vocab_table_outbound1": {
+            "kind": "table",
+            "schema_name": "search_schema",
+            "table_name": "search_vocab_table_outbound1",
+            "keys": [
+                {
+                    "unique_columns": [
+                        "id"
+                    ]
+                }
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "name", 
+                    "nullok": true,
+                    "type": {
+                        "typename": "text"
+                    }
+                }
+            ]
+        }
+    }
+}

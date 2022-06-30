@@ -1,0 +1,11 @@
+{
+    "catalog": {},
+    "schema": {
+        "name": "export_schema_annot_schema",
+        "createNew": true,
+        "path": "test/specs/export/conf/export_schema_annot_schema/schema.json"
+    },
+    "tables": {
+        "createNew": true
+    }
+}

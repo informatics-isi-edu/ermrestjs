@@ -4,19 +4,18 @@ var httpError = require('../helpers/http_error.js');
 exports.execute = function (options) {
 
     describe('For determining Schema exceptions, ', function () {
-        var server = options.server, ermRest = options.ermRest, url = options.url.replace('ermrest', ''), ops = {allowUnmocked: true}, 
-        			catalog, id = "3423423";
+        var ermRest, catalog, id = "3423423", schema;
 
-		httpError.setup(options);
 
         beforeAll(function () {
+            ermRest = options.ermRest;
             catalog = options.catalog;
             schema = catalog.schemas.get('error_schema');
         });
 
         var schemaName = "non_existing_schema";
-        
-        httpError.testForErrors([{ message: "Schema " + schemaName + " not found in catalog.", type: 'NotFoundError' }], function(error, done) {
+
+        httpError.testForErrors(options, [{ message: "Schema " + schemaName + " not found in catalog.", type: 'NotFoundError' }], function(error, done) {
             expect(function() { catalog.schemas.get(schemaName); } )
                 .toThrow(error);
             done();

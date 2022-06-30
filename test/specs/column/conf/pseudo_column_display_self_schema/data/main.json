@@ -1,0 +1,4 @@
+[
+    {"main_id": "01", "rowname_col": "main one", "int_col": 1234501, "fk1_col1": "o011", "fk1_col2": "o012"},
+    {"main_id": "02", "rowname_col": "main two", "int_col": 1234502}
+]

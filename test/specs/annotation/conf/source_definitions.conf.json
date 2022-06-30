@@ -1,0 +1,11 @@
+{
+  "catalog": {},
+  "schema": {
+    "name": "source_definitions_schema",
+    "createNew": true,
+    "path": "test/specs/annotation/conf/source_definitions/schema.json"
+  },
+  "tables": {
+    "createNew": true
+  }
+}

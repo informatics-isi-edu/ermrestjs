@@ -29,7 +29,14 @@
             "typename": "text"
           }
         }
-      ]
+      ],
+      "annotations": {
+          "tag:isrd.isi.edu,2016:visible-columns": {
+              "*": [
+                  "id", "description"
+              ]
+          }
+      }
     },
     "table_wo_annotation": {
       "kind": "table",
@@ -68,7 +75,7 @@
               "typename": "text"
           }
         }
-    ]
+      ]
     },
     "table_w_title_wo_annotation": {
       "kind": "table",
@@ -94,12 +101,26 @@
           }
         },
         {
+            "name": "accessionid",
+            "comment": "since title exists, this should not be used for row-name",
+            "type": {
+                "typename": "text"
+            }
+        },
+        {
           "name": "title",
           "type": {
             "typename": "text"
           }
         }
-      ]
+      ],
+      "annotations": {
+          "tag:isrd.isi.edu,2016:visible-columns": {
+              "*": [
+                  "id", "title"
+              ]
+          }
+      }
     },
     "table_w_accession_id_wo_annotation": {
       "kind": "table",
@@ -216,6 +237,51 @@
         }
       }
     },
+    "table_w_table_display_annotation_handlebars": {
+      "kind": "table",
+      "keys": [
+        {
+          "comment": null,
+          "annotations": {},
+          "unique_columns": [
+            "id"
+          ]
+        }
+      ],
+      "entityCount": 0,
+      "foreign_keys": [],
+      "table_name": "table_w_table_display_annotation_handlebars",
+      "schema_name": "schema_table_display",
+      "column_definitions": [
+        {
+          "name": "id",
+          "nullok": false,
+          "type": {
+            "typename": "integer"
+          }
+        },
+        {
+          "name": "firstname",
+          "type": {
+            "typename": "text"
+          }
+        },
+        {
+          "name": "lastname",
+          "type": {
+            "typename": "text"
+          }
+        }
+      ],
+      "annotations": {
+        "tag:isrd.isi.edu,2016:table-display": {
+          "row_name": {
+            "template_engine": "handlebars",
+            "row_markdown_pattern": "{{#if firstname}}{{firstname}} {{/if}}{{lastname}}"
+          }
+        }
+      }
+    },
     "table_w_table_display_annotation_w_title": {
       "kind": "table",
       "keys": [
@@ -258,15 +324,12 @@
             "row_markdown_pattern": "**{{firstname}} {{lastname}}**"
           },
           "row_name/title": {
-              "row_markdown_pattern": "**{{lastname}}**"
-          },
-          "row_name/unformatted/title": {
-              "row_markdown_pattern": "{{lastname}}"
+              "row_markdown_pattern": ":span:{{lastname}}:/span:{.new-class}"
           }
         }
       }
     },
-    "table_w_table_display_annotation_w_unformatted": {
+    "table_w_table_display_annotation_w_row_name_context": {
       "kind": "table",
       "keys": [
         {
@@ -277,9 +340,8 @@
           ]
         }
       ],
-      "entityCount": 0,
       "foreign_keys": [],
-      "table_name": "table_w_table_display_annotation_w_unformatted",
+      "table_name": "table_w_table_display_annotation_w_row_name_context",
       "schema_name": "schema_table_display",
       "column_definitions": [
         {
@@ -307,8 +369,8 @@
           "row_name": {
             "row_markdown_pattern": "**{{firstname}} {{lastname}}**"
           },
-          "row_name/unformatted": {
-            "row_markdown_pattern": "{{firstname}} {{lastname}}"
+          "row_name/compact": {
+            "row_markdown_pattern": "**{{lastname}}**"
           }
         }
       }
@@ -325,7 +387,19 @@
         }
       ],
       "entityCount": 0,
-      "foreign_keys": [],
+      "foreign_keys": [{
+          "names": [["schema_table_display", "table_w_t_disp_annot_w_mp_fkey"]],
+          "foreign_key_columns": [{
+              "table_name": "table_w_table_display_annotation_w_markdown_pattern",
+              "schema_name": "schema_table_display",
+              "column_name": "fk_col"
+          }],
+          "referenced_columns": [{
+              "table_name": "table_w_table_display_annotation",
+              "schema_name": "schema_table_display",
+              "column_name": "id"
+          }]
+      }],
       "table_name": "table_w_table_display_annotation_w_markdown_pattern",
       "schema_name": "schema_table_display",
       "column_definitions": [
@@ -342,18 +416,32 @@
             "typename": "text"
           },
           "annotations": {
-            "tag:isrd.isi.edu,2016:column-display" : {
-                "*" : {
-                    "markdown_pattern" : "## {{title}}"
-                }
+            "tag:isrd.isi.edu,2016:column-display": {
+              "*": {
+                "markdown_pattern": "## {{title}}"
+              }
             }
+          }
+        },
+        {
+          "name": "fk_col",
+          "type": {
+            "typename": "integer"
           }
         }
       ],
       "annotations" : {
         "tag:isrd.isi.edu,2016:table-display": {
           "*" : {
-            "row_markdown_pattern": ":::iframe [{{title}}](https://dev.isrd.isi.edu/chaise/record-two/1/schema_table_display:table_w_table_display_annotation_w_markdown_pattern/id={{_id}}) \n:::",
+            "row_markdown_pattern": "ignored markdown pattern",
+            "prefix_markdown": "ignored prefix",
+            "page_size": 5
+          },
+          "row_name": {
+            "row_markdown_pattern": "{{{title}}}"
+          },
+          "detailed" : {
+            "row_markdown_pattern": ":::iframe [{{{$self.rowName}}}{{#$fkeys.schema_table_display.table_w_t_disp_annot_w_mp_fkey}}(with {{{rowName}}} from catalog {{{$catalog.snapshot}}}){{/$fkeys.schema_table_display.table_w_t_disp_annot_w_mp_fkey}}]({{{$self.uri.detailed}}}) \n:::",
             "prefix_markdown": "## Movie titles \n\n",
             "page_size": 10
           }
@@ -395,8 +483,8 @@
                 }
             },
             {
-                "name": "col_fk1"
-,                "type": {
+                "name": "col_fk1",
+                "type": {
                     "typename": "integer"
                 }
             }
@@ -508,13 +596,90 @@
             }
         ],
         "annotations": {
-          "tag:isrd.isi.edu,2016:table-display": {
-            "row_name": {
-              "row_markdown_pattern": "{{ $fkeys.schema_table_display.table_w_rowname_fkeys3_fk1.values.col_ w_ dot_ }}: {{$fkeys.schema_table_display.table_w_rowname_fkeys3_fk1.values._col_ w_ dot_}}"
+            "tag:isrd.isi.edu,2016:table-display": {
+                "row_name": {
+                    "row_markdown_pattern": "{{ $fkeys.schema_table_display.table_w_rowname_fkeys3_fk1.values.col_ w_ dot_ }}: {{$fkeys.schema_table_display.table_w_rowname_fkeys3_fk1.values._col_ w_ dot_}}"
+                }
             }
-          }
+        }
+    },
+    "table_w_rowname_catalog_snapshot": {
+        "table_name": "table_w_rowname_catalog_snapshot",
+        "schema_name": "schema_table_display",
+        "kind": "table",
+        "keys": [
+            {"unique_columns": ["id"]}
+        ],
+        "foreign_keys": [],
+        "column_definitions": [
+            {
+                "name": "id",
+                "nullok": false,
+                "type": {
+                    "typename": "integer"
+                }
+            },
+            {
+                "name": "text_col",
+                "type": {
+                    "typename": "text"
+                }
+            }
+        ],
+        "annotations": {
+            "tag:isrd.isi.edu,2016:table-display": {
+                "row_name": {
+                    "row_markdown_pattern": "catalog_snapshot:{{$catalog.snapshot}}, catalog_id:{{$catalog.id}}"
+                }
+            }
+        }
+    },
+    "table_w_compact_options": {
+        "table_name": "table_w_compact_options",
+        "schema_name": "schema_table_display",
+        "kind": "table",
+        "keys": [
+            {"unique_columns": ["id"]}
+        ],
+        "foreign_keys": [],
+        "column_definitions": [
+            {
+                "name": "id",
+                "nullok": false,
+                "type": {
+                    "typename": "integer"
+                }
+            },
+            {
+                "name": "text_col",
+                "type": {
+                    "typename": "text"
+                }
+            }
+        ],
+        "annotations": {
+            "tag:misd.isi.edu,2015:display": {
+              "hide_row_count": {
+                  "compact": false,
+                  "compact/select": true
+              }
+            },
+            "tag:isrd.isi.edu,2016:table-display": {
+                "compact": {
+                    "collapse_toc_panel": true,
+                    "hide_column_header": true
+                }
+            }
         }
     }
   },
-  "schema_name": "schema_table_display"
+  "schema_name": "schema_table_display",
+  "annotations": {
+      "tag:misd.isi.edu,2015:display": {
+          "hide_row_count": {
+              "compact": true,
+              "compact/select": false
+          }
+      }
+  }
 }

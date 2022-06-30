@@ -24,16 +24,16 @@ exports.execute = function (options) {
 
         it("should make default 2 http retries with initial 50ms delay and then call error callback for error code 503", function (done) {
 
-        	server._http.max_retries = 2;
-        	server._http.initial_delay = 50;
-        	var delay  = server._http.initial_delay, i = 0;
-        	while (i > server._http.max_retries) {
+        	server.http.max_retries = 2;
+        	server.http.initial_delay = 50;
+        	var delay  = server.http.initial_delay, i = 0;
+        	while (i > server.http.max_retries) {
         		delay *= 2;
         	}
-        	delay += server._http.initial_delay;
+        	delay += server.http.initial_delay;
 
 	        nock(url, ops)
-	          .get("/ermrest/catalog/" + id + "/schema")
+	          .get("/ermrest/catalog/" + id)
 	          .reply(503, 'Service Unavailable')
 	          .persist();
 
@@ -54,16 +54,16 @@ exports.execute = function (options) {
 
         it("should make 5 http retries with initial 50ms delay and then call error callback for error code 500", function(done) {
 
-        	server._http.max_retries = 5;
-        	server._http.initial_delay = 50;
-        	var delay  = server._http.initial_delay, i = 0;
-        	while (i > server._http.max_retries) {
+        	server.http.max_retries = 5;
+        	server.http.initial_delay = 50;
+        	var delay  = server.http.initial_delay, i = 0;
+        	while (i > server.http.max_retries) {
         		delay *= 2;
         	}
-        	delay += server._http.initial_delay;
+        	delay += server.http.initial_delay;
 
 	        nock(url, ops)
-	          .get("/ermrest/catalog/" + id + "/schema")
+	          .get("/ermrest/catalog/" + id)
 	          .reply(500, 'Internal Server Error')
 	          .persist();
 
@@ -84,21 +84,21 @@ exports.execute = function (options) {
 
 	    it("should make 3 http retry with initial 500ms delay and then call success callback for entity delete", function(done) {
 
-        	server._http.max_retries = 3;
-        	server._http.initial_delay = 500;
-        	var delay  = server._http.initial_delay, i = 0;
-        	while (i < server._http.max_retries-1) {
+        	server.http.max_retries = 3;
+        	server.http.initial_delay = 500;
+        	var delay  = server.http.initial_delay, i = 0;
+        	while (i < server.http.max_retries-1) {
         		delay *= 2;
         		i++;
         	}
-        	delay += server._http.initial_delay;
+        	delay += server.http.initial_delay;
 
         	var uri = "/ermrest/catalog/" + catalog.id + "/entity/a:=error_schema:valid_table_name/id=8001"
 
 	        nock(url, ops)
               .filteringPath(function(path){ return uri; })
               .delete(uri)
-              .times(server._http.max_retries)
+              .times(server.http.max_retries)
 	          .reply(500, 'Internal Server Error');
 
             var startTime = (new Date()).getTime();

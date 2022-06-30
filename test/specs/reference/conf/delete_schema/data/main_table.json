@@ -1,0 +1,6 @@
+[
+  {"key_col": 1, "int_col": 10},
+  {"key_col": 2, "int_col": 20},
+  {"key_col": 3, "int_col": 30},
+  {"key_col": 4, "int_col": 40}
+]

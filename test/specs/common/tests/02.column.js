@@ -44,6 +44,10 @@ exports.execute = function(options) {
                 expect(column.memberOfForeignKeys.length).toBe(0);
             });
 
+            it('should have nullok false if required annotation is present.', function() {
+                expect(table1_schema2.columns.get('table_1_required').nullok).toBeFalsy();
+            });
+
             it('should have a .getInputDisabled method', function() {
                 expect(column.getInputDisabled).toBeDefined();
             });
@@ -110,39 +114,47 @@ exports.execute = function(options) {
             describe('the .formatvalue property, ', function() {
                 var formatUtils = options.includes.ermRest._formatUtils;
 
+                var testFormatvalue = function (colName, value, expected, errMessage) {
+                    expect(table1_schema2.columns.get(colName).formatvalue(value)).toEqual(expected, errMessage ? errMessage : "");
+                }
+
                 describe('when column value is null, ', function() {
                     var columnWithAnnotation, columnWithoutAnnotation;
 
                     beforeAll(function(done){
-                        columnWithAnnotation = table1_schema2.columns.get('table_1_show_nulls_annotation');
+                        columnWithAnnotation = table1_schema2.columns.get('table_1_show_null_annotation');
                         columnWithoutAnnotation = table1_schema2.columns.get(columnName);
                         done();
                     });
 
                     function runShowNullTestCases (column, testCases){
                         for(key in testCases){
-                            expect(column.formatvalue(null, key)).toBe(testCases[key]);
+                            expect(column.formatvalue(null, key)).toBe(testCases[key], "missmatch for context=" + key);
                         }
                     }
-                    it('should return the value that is defined in its `show_nulls` display annotation based on context.', function() {
+                    it('should return the value that is defined in its `show_null` display annotation based on context.', function() {
                         runShowNullTestCases(
                             columnWithAnnotation,
-                            {"record": "empty", "detailed": "", "compact": "", "entry/edit": null, "*": "default"}
+                            {"compact/brief": "empty", "detailed": "", "entry/edit": null}
                         );
                     });
-                    it('when the specified context is not defined in its `show_nulls` display annotation should return the value that is defined in default context .', function() {
+                    it ("should use `show_nulls` if `show_null` is not defined in display annotation for the context.", function () {
+                        runShowNullTestCases(columnWithAnnotation, {"compact": "backward compatibility", "*": "default"});
+                    });
+
+                    it('when the specified context is not defined in its `show_null` display annotation should return the value that is defined in default context .', function() {
                         runShowNullTestCases(columnWithAnnotation,{"filter": "default"});
                     });
-                    it('when `show_nulls` annotation is not defined in column, should return the value that is defined in its table `show_nulls` display annotation based on context.', function() {
+                    it('when `show_null` annotation is not defined in column, should return the value that is defined in its table `show_null` display annotation based on context.', function() {
                         runShowNullTestCases(columnWithoutAnnotation, {"entry/create": "table"});
                     });
-                    it('when `show_nulls` annotation is not defined in column or table, should return the value that is defined in its schema `show_nulls` display annotation based on context.', function() {
+                    it('when `show_null` annotation is not defined in column or table, should return the value that is defined in its schema `show_null` display annotation based on context.', function() {
                         runShowNullTestCases(columnWithoutAnnotation, {"entry": "schema"});
                     });
-                    it('when `show_nulls` annotation is not defined and context is `detailed`, should return null.', function() {
+                    it('when `show_null` annotation is not defined and context is `detailed`, should return null.', function() {
                         runShowNullTestCases(columnWithoutAnnotation, {"detailed": null});
                     });
-                    it('when `show_nulls` annotation is not defined and context is not `detailed`, should return empty string.', function() {
+                    it('when `show_null` annotation is not defined and context is not `detailed`, should return empty string.', function() {
                         runShowNullTestCases(columnWithoutAnnotation,{"filter": ""});
                     });
                     it('when context is not specified in options and default context is defined in annotation, should use the default context.', function() {
@@ -152,11 +164,17 @@ exports.execute = function(options) {
                     it('when context is not specified in options and default context it not defined in annotation, should return an empty string.', function() {
                         expect(columnWithoutAnnotation.formatvalue(null)).toBe("");
                     });
-                })
+                });
 
+                it ("should not format the value if column is part of a simple key.", function () {
+                    var col = table1_schema2.columns.get("table_1_int_key");
+                    expect(col.formatvalue("1234567")).toBe("1234567", "int missmatch.");
+                    col = table1_schema2.columns.get("table_1_serial_key");
+                    expect(col.formatvalue("1234567")).toBe("1234567", "int missmatch.");
+                });
 
                 describe('should call printText() to format,', function() {
-                    var formattedValue = undefined;
+                    formattedValue = undefined;
 
                     it('text columns correctly.', function() {
                         var textCol = table1_schema2.columns.get(columnName);
@@ -281,7 +299,7 @@ exports.execute = function(options) {
                     });
                 });
 
-                describe('should not call printMarkdown() to format,', function() {
+                describe('should not call renderMarkdown() to format,', function() {
                     it('Markdown columns correctly.', function() {
                         var testVal = '*taylor ^swift^*';
                         var col = table1_schema2.columns.get('table_1_markdown');
@@ -302,13 +320,114 @@ exports.execute = function(options) {
                         expect(formattedValue).toBe('<code>GATCGATCGC GTATT</code>');
                     });
                 });
+
+                describe('should call printColor() to format,', function () {
+                    it('color_rgb_hex columns correctly.', function () {
+                        testFormatvalue('table_1_color_rgb_hex', null, '', 'empty value');
+                        testFormatvalue('table_1_color_rgb_hex', '00ff00', '', 'invalid value 1');
+                        testFormatvalue('table_1_color_rgb_hex', '#00kj00', '', 'invalid value 2');
+                        testFormatvalue('table_1_color_rgb_hex', '#00ff00', ':span: :/span:{.chaise-color-preview style=background-color:#00FF00} #00FF00', 'valid value');
+                    });
+                });
+
+                describe('should handle array columns.', function () {
+                    var cases = [
+                        {
+                            type: "text",
+                            column: "table_1_text_array",
+                            tests: [
+                                {value: ["val 1", "val 2", null, ""], expected: ["val 1", "val 2", null, ""]}
+                            ]
+                        },
+                        {
+                            type: "boolean",
+                            column: "table_1_boolean_array",
+                            tests: [
+                                {value: [true, null, false], expected: ["true", null, "false"]}
+                            ]
+                        },
+                        {
+                            type: "date",
+                            column: "table_1_date_array",
+                            tests: [
+                                {value: ["2016/05/02 13:00:00.00 PST", null, "2015/03/02 13:00:00.00 PST"], expected: ["2016-05-02", null, "2015-03-02"]}
+                            ]
+                        },
+                        {
+                            type: "timestamp",
+                            column: "table_1_timestamp_array",
+                            tests: [
+                                {value: ["2016/05/02 13:00:00", null, "2015/03/02 14:00:00"], expected: ["2016-05-02 13:00:00", null, "2015-03-02 14:00:00"]}
+                            ]
+                        },
+                        {
+                            type: "float4",
+                            column: "table_1_float4_array",
+                            tests: [
+                                {value: [31231.1, null, 2413.3], expected: ['31,231.1000', null, '2,413.3000']}
+                            ]
+                        },
+                        {
+                            type: "float8",
+                            column: "table_1_float8_array",
+                            tests: [
+                                {value: [234523523.1, null, 241235.3], expected: ['234,523,523.1000', null, '241,235.3000']}
+                            ]
+                        },
+                        {
+                            type: "numeric",
+                            column: "table_1_numeric_array",
+                            tests: [
+                                {value: [1223, null, 4133], expected: ['1,223.0000', null, '4,133.0000']}
+                            ]
+                        },
+                        {
+                            type: "int2",
+                            column: "table_1_int2_array",
+                            tests: [
+                                {value: [4031, null, 32768], expected: ['4,031', null, '32,768']}
+                            ]
+                        },
+                        {
+                            type: "int4",
+                            column: "table_1_int4_array",
+                            tests: [
+                                {value: [-2147483648, null, 214748364], expected: ['-2,147,483,648', null, '214,748,364']}
+                            ]
+                        },
+                        {
+                            type: "int8",
+                            column: "table_1_int8_array",
+                            tests: [
+                                {value: [9007199254740991, null, 9007199254740990], expected: ['9,007,199,254,740,991', null, '9,007,199,254,740,990']}
+                            ]
+                        }
+                    ];
+
+                    cases.forEach(function (c) {
+                        it ("for column type " + c.type + ".", function () {
+                            c.tests.forEach(function (t) {
+                                testFormatvalue(c.column, t.value, t.expected, t.errMessage);
+                            });
+                        });
+                    });
+                });
             });
 
             describe('column defaults, ', function () {
                 var table;
                 var tableName = "table_w_defaults",
-                    nullColumns = ["boolean_improper", "date_improper", "timestamp_improper", "timestamptz_improper", "float4_improper", "float8_improper", "numeric_improper", "int2_improper", "int4_improper", "int8_improper", "RID", "RCB", "RMB", "RCT", "RMT"],
-                    notNullColumns = ["boolean_proper", "date_proper", "timestamp_proper", "timestamptz_proper", "float4_proper", "float8_proper", "numeric_proper", "int2_proper", "int4_proper", "int8_proper"];
+                    nullColumns = [
+                        "boolean_improper", "date_improper", "timestamp_improper", "timestamptz_improper",
+                        "float4_improper", "float8_improper", "numeric_improper", "int2_improper", "int4_improper",
+                        "int8_improper", "color_rgb_hex_improper_1", "color_rgb_hex_improper_2",
+                        "RID", "RCB", "RMB", "RCT", "RMT"
+                    ],
+                    notNullColumns = [
+                        "boolean_proper", "date_proper", "timestamp_proper",
+                        "timestamptz_proper", "float4_proper", "float8_proper", "numeric_proper",
+                        "int2_proper", "int4_proper", "int8_proper", "color_rgb_hex_proper"
+                    ];
 
                 beforeAll(function (done) {
                     table = options.catalog.schemas.get(schemaName2).tables.get(tableName);
@@ -334,6 +453,23 @@ exports.execute = function(options) {
                         });
                     }) (notNullColumns[i]);
                 }
+            });
+
+            describe('being a system column, ', function(){
+                var systemColumns = ["RID", "RCB", "RMB", "RCT", "RMT"];
+                var comments = {
+                    "RID": "Persistent, citable resource identifier",
+                    "RCB": "Record creator",
+                    "RMB": "Record last modifier",
+                    "RCT": "Record creation timestamp",
+                    "RMT": "Record last modified timestamp"
+                };
+
+                it('should have a default comment.', function(){
+                    for(var i=0;i<systemColumns.length;i++){
+                        expect(table1_schema2.columns.get(systemColumns[i]).comment).toBe(comments[systemColumns[i]], "Column "+ systemColumns[i]+ " doesn't have the correct default comment.");
+                    }
+                });
             });
         });
     });

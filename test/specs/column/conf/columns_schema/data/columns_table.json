@@ -8,7 +8,8 @@
         "col 5": "4002",
         "col_6": "4003",
         "col_7": null,
-        "columns_schema_outbound_fk_7": "12"
+        "columns_schema_outbound_fk_7": "12",
+        "columns_schema_handlebars_col": "text1"
     },
     {
         "id": "2",
@@ -19,7 +20,8 @@
         "col 5": "4002",
         "col_6": "4004",
         "col_7": "4002",
-        "columns_schema_outbound_fk_7": "13"
+        "columns_schema_outbound_fk_7": "13",
+        "columns_schema_handlebars_col": "text2"
     },
     {
         "id": "3",
@@ -30,7 +32,8 @@
         "col 5": "4001",
         "col_6": "4008",
         "col_7": "4002",
-        "columns_schema_outbound_fk_7": "14"
+        "columns_schema_outbound_fk_7": "14",
+        "columns_schema_handlebars_col": "text3"
     },
     {
         "id": "4",
@@ -41,7 +44,8 @@
         "col 5": "4003",
         "col_6": "4007",
         "col_7": null,
-        "columns_schema_outbound_fk_7": "15"
+        "columns_schema_outbound_fk_7": "15",
+        "columns_schema_handlebars_col": "text4"
     },
     {
         "id": "5",
@@ -52,7 +56,8 @@
         "col 5": "4000",
         "col_6": "4006",
         "col_7": null,
-        "columns_schema_outbound_fk_7": "17"
+        "columns_schema_outbound_fk_7": "17",
+        "columns_schema_handlebars_col": "text5"
     },
     {
         "id": "6",
@@ -63,6 +68,7 @@
         "col 5": "4003",
         "col_6": "4005",
         "col_7": null,
-        "columns_schema_outbound_fk_7": "16"
+        "columns_schema_outbound_fk_7": "16",
+        "columns_schema_handlebars_col": "text6"
     }
 ]

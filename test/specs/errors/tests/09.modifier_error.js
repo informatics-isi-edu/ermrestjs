@@ -9,8 +9,8 @@ exports.execute = function(options) {
 
         var invalidPageConditionErrorObjWOSort = {
             'status': 'Invalid Page Criteria',
-            'messageWithCondition': "Invalid uri: " + options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ":" + tableName + "/id=269@after(). Sort modifier is required with paging.",
-            'messageWithConditions': "Invalid uri: " + options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ":" + tableName + "/id=269@after(3)@before(7). Sort modifier is required with paging.",
+            'messageWithCondition': "Sort modifier is required with paging.",
+            'messageWithConditions': "Sort modifier is required with paging.",
             'errorData': {
                 'redirectPath': schemaName + ":" + tableName + '/id=269'
             }
@@ -26,11 +26,11 @@ exports.execute = function(options) {
 
         var invalidFilterOperatorErrorObj = {
             'status': 'Invalid Filter',
-            'message': "Invalid uri: " + options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ":" + tableName + "/id::gt:269. Couldn't parse 'id::gt:269' filter.",
+            'message': "Couldn't parse 'id::gt:269' filter.",
             'errorData': {
                 'redirectPath': schemaName + ":" + tableName + '/'
             },
-            'messageWithSort': "Invalid uri: " + options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ":" + tableName + "/id::gt:269@sort(). Couldn't parse 'id::gt:269' filter.",
+            'messageWithSort': "Couldn't parse 'id::gt:269' filter.",
             'errorDataWithSort': {
                 'redirectPath': schemaName + ":" + tableName + '/@sort()'
             }
@@ -61,7 +61,7 @@ exports.execute = function(options) {
 
             it("should throw an error for invalid facet filter errors with sort() modifier.", function() {
                 try {
-                    options.ermRest.parse(baseUri + "/*::facets::invalidblob@sort()");
+                    options.ermRest.parse(baseUri + "/*::facets::invalidblob@sort()", options.catalog);
                     expect(false).toBe(true, "invalid facet filter didn't throw any errors.");
                 } catch (e) {
                     expect(e.status).toEqual(invalidFacetFilterErrorObj.status, "Error status did not match");
@@ -71,7 +71,7 @@ exports.execute = function(options) {
             });
             it("should throw an error for invalid facet filter errors without sort() modifier.", function() {
                 try {
-                    options.ermRest.parse(baseUri + "/*::facets::invalidblob");
+                    options.ermRest.parse(baseUri + "/*::facets::invalidblob", options.catalog);
                     expect(false).toBe(true, "invalid facet filter without sort() didn't throw any errors.");
                 } catch (e) {
                     expect(e.status).toEqual(invalidFacetFilterErrorObj.status, "Error status did not match");
@@ -84,7 +84,7 @@ exports.execute = function(options) {
         describe("when uri has invalid paging Criteria", function() {
             it("it should throw an error for invalid pageing criteria.", function() {
                 try {
-                    options.ermRest.parse(baseUri + "/id=269@after()");
+                    options.ermRest.parse(baseUri + "/id=269@after()", options.catalog);
                     expect(false).toBe(true, "invalid paging Criteria didn't throw any errors.");
                 } catch (e) {
                     expect(e.status).toEqual(invalidPageConditionErrorObjWOSort.status, "Error status did not match");
@@ -95,7 +95,7 @@ exports.execute = function(options) {
 
             it("it should throw an error for invalid pageing criteria with both after() and before().", function() {
                 try {
-                    options.ermRest.parse(baseUri + "/id=269@after(3)@before(7)");
+                    options.ermRest.parse(baseUri + "/id=269@after(3)@before(7)", options.catalog);
                     expect(false).toBe(true, "invalid paging Criteria didn't throw any errors.");
                 } catch (e) {
                     expect(e.status).toEqual(invalidPageConditionErrorObjWOSort.status, "Error status did not match");
@@ -135,7 +135,7 @@ exports.execute = function(options) {
         describe("when uri has invalid filter", function() {
             it("it should throw an error for invalid filter.", function() {
                 try {
-                    options.ermRest.parse(baseUri + "/id::gt:269");
+                    options.ermRest.parse(baseUri + "/id::gt:269", options.catalog);
                     expect(false).toBe(true, "invalid filter didn't throw any errors.");
                 } catch (e) {
                     expect(e.status).toEqual(invalidFilterOperatorErrorObj.status, "Error status did not match");
@@ -146,7 +146,7 @@ exports.execute = function(options) {
 
             it("it should throw an error for invalid filter with sort() modifier.", function() {
                 try {
-                    options.ermRest.parse(baseUri + "/id::gt:269@sort()");
+                    options.ermRest.parse(baseUri + "/id::gt:269@sort()", options.catalog);
                     expect(false).toBe(true, "invalid filter with sort() modifier didn't throw any errors.");
                 } catch (e) {
                     expect(e.status).toEqual(invalidFilterOperatorErrorObj.status, "Error status did not match");

@@ -11,39 +11,40 @@ exports.execute = function(options) {
 
         // Test Cases:
         describe('Shortest key, ', function () {
+            //NOTE shortest key will always be RID
+
             it("should return RID as the shortest key.", function () {
                 checkShortestKey("table_w_rid_key", ["RID"]);
             });
 
             it("should return the shortest key.", function () {
-                checkShortestKey("table_w_dif_len_keys", ["col_3"]);
-            });
-
-            it('when keys have the same length, should return the one that is all integer/serial.', function () {
-                checkShortestKey("multi_w_same_len_keys_w_all_serial", ["col_2", "col_3"]);
-            });
-
-            // position of columns: col_1: 2 col_2: 1 col_3: 0
-            // I named them this way to make sure we're actually going by position and not the column name
-            it("otherwise should return the key that its constituent columns have smaller index.", function () {
-                checkShortestKey("multi_w_same_len_keys", ["col_2", "col_3"]);
+                checkShortestKey("table_w_dif_len_keys", ["RID"]);
             });
         });
 
         describe("Display key, ", function () {
-            it ('should return the shortest key.', function () {
+            it ('should return the proper key.', function () {
                 checkDisplayKey("table_w_dif_len_keys", ["col_3"]);
             });
 
-            // col_1 is text therefore is going to be chosen.
-            it ("when keys have the same length, should return the one that has more text columns.", function () {
-                checkDisplayKey("multi_w_same_len_keys_w_all_serial", ["col_1", "col_2"]);
+            // the existing nullable_col should be ignored and RID should be used instead.
+            it ("should ignore the nullable keys.", function () {
+                checkDisplayKey("table_w_nullable_key", ["RID"]);
+            });
+        });
+
+
+        describe("supportHistory", function () {
+            it ("if annotation is missing, should return true", function () {
+                checkSupportHistory("table_wo_history_capture", true);
             });
 
-            // position of columns: col_1: 2 col_2: 1 col_3: 0
-            // I named them this way to make sure we're actually going by position and not the column name
-            it("otherwise should return the key that its constituent columns have smaller index", function () {
-                checkDisplayKey("multi_w_same_len_keys", ["col_2", "col_3"]);
+            it ("if annotation is defined and true, should return true", function () {
+                checkSupportHistory("table_w_history_capture_true", true);
+            });
+
+            it ("if annotation is defined and false, should return false", function () {
+                checkSupportHistory("table_w_history_capture_false", false);
             });
         });
 
@@ -66,6 +67,10 @@ exports.execute = function(options) {
             expect(tables.get(tableName).displayKey.map(function (col) {
                 return col.name;
             })).toEqual(expectedCols);
+        }
+
+        function checkSupportHistory (tableName, expectedVal) {
+            expect(tables.get(tableName).supportHistory).toBe(expectedVal);
         }
     });
 };

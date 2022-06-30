@@ -1,0 +1,15 @@
+{
+    "catalog": {},
+    "schema": {
+        "name": "pseudo_column_display_self_schema",
+        "createNew": true,
+        "path": "test/specs/column/conf/pseudo_column_display_self_schema/schema.json"
+    },
+    "tables": {
+        "createNew": true
+    },
+    "entities": {
+        "createNew": true,
+        "path": "test/specs/column/conf/pseudo_column_display_self_schema/data"
+    }
+}

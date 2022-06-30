@@ -7,16 +7,13 @@ exports.init = function (options) {
 	var url = options.url || process.env.ERMREST_URL,
 	    authCookie = options.ermrest_cookie || process.env.AUTH_COOKIE;
 
-	var ermRest = requireReload(process.env.PWD + "/build/ermrest.js");
+	var ermRest = requireReload(process.env.PWD + "/dist/ermrest.js");
 
 	ermRest.setUserCookie(authCookie);
-
-	var server = ermRest.ermrestFactory.getServer(url);
 
 	return {
 		ermrestUtils: require(process.env.PWD + "/../ErmrestDataUtils/import.js"),
 		ermRest: ermRest,
-		server: server,
 		url: url,
 		authCookie: authCookie,
 		restrictedAuthCookie: process.env.RESTRICTED_AUTH_COOKIE,

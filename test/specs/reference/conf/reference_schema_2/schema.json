@@ -200,7 +200,7 @@
                     "type": {"typename": "text"}
                 },
                 {
-                    "name": "name", 
+                    "name": "name",
                     "type": {"typename": "text"}
                 }
             ],
@@ -209,9 +209,9 @@
                     "*": ["reference_schema_2", "alternate_for_table_w_alternate"]
                 }
             }
-        }, 
+        },
         "alternate_for_table_w_alternate": {
-            "comment": "alternative table for table_w_alternate", 
+            "comment": "alternative table for table_w_alternate",
             "kind": "table",
             "schema_name": "reference_schema_2",
             "table_name": "alternate_for_table_w_alternate",

@@ -1,7 +1,53 @@
-[{"id":4000, "some_markdown": "**date is :**", "name":"Hank", "url": "https://www.google.com", "some_gene_sequence": "GATCGATCGCGTATT", "video_col": "http://techslides.com/demos/sample-videos/small.mp4" },
- {"id":4001, "name":"Harold","some_invisible_column": "Junior", "fk_col": 1},
- {"id":4002, "url": "https://www.google.com", "fk_col": 2},
- {"id":4003 ,"some_invisible_column": "Freshmen", "fk_col": 3},
- {"id":4004, "name": "weird & HTML < ", "fk_col": 4},
- {"id":4005, "name": "<a href='javascript:alert();'></a>", "some_invisible_column": "Senior", "fk_col": 5},
- {"id":4006, "name": "<script>alert();</script>", "some_gene_sequence": "GATCGATCGCGTATT", "some_invisible_column": "Sophomore", "fk_col": 6}]
+[{
+        "id": 4000,
+        "some_markdown": "**date is :**",
+        "name": "Hank",
+        "url": "https://www.google.com",
+        "some_gene_sequence": "GATCGATCGCGTATT",
+        "video_col": "http://techslides.com/demos/sample-videos/small.mp4",
+        "catalog_snapshot": "schema:table",
+        "color_rgb_hex_col": "#00ff00"
+    },
+    {
+        "id": 4001,
+        "some_markdown": "**This is some markdown** with some `code` and a [link](http://www.example.com)",
+        "name": "Harold",
+        "some_invisible_column": "Junior",
+        "fk_col": 1,
+        "color_rgb_hex_col": "#0000ff"
+    },
+    {
+        "id": 4002,
+        "some_markdown": "**This is some markdown** with some `code` and a [link](http://www.example.com)",
+        "url": "https://www.google.com",
+        "fk_col": 2,
+        "color_rgb_hex_col": "#ff3411"
+    },
+    {
+        "id": 4003,
+        "some_markdown": "**This is some markdown** with some `code` and a [link](http://www.example.com)",
+        "some_invisible_column": "Freshmen",
+        "fk_col": 3
+    },
+    {
+        "id": 4004,
+        "some_markdown": "**This is some markdown** with some `code` and a [link](http://www.example.com)",
+        "name": "weird & HTML < ",
+        "fk_col": 4
+    },
+    {
+        "id": 4005,
+        "some_markdown": "**This is some markdown** with some `code` and a [link](http://www.example.com)",
+        "name": "<a href='javascript:alert();'></a>",
+        "some_invisible_column": "Senior",
+        "fk_col": 5
+    },
+    {
+        "id": 4006,
+        "some_markdown": "**This is some markdown** with some `code` and a [link](http://www.example.com)",
+        "name": "<script>alert();</script>",
+        "some_gene_sequence": "GATCGATCGCGTATT",
+        "some_invisible_column": "Sophomore",
+        "fk_col": 6
+    }
+]

@@ -87,7 +87,6 @@ exports.execute = function (options) {
                 options.ermRest.appLinkFn(appLinkFn);
                 options.ermRest.resolve(base1Uri, {cid: "test"}).then(function (response) {
                     reference = response;
-                    reference.session = { attributes: [] };
 
                     // uncontextualized
                     result = recordURL + "/" + reference.location.path;
@@ -127,7 +126,6 @@ exports.execute = function (options) {
                 options.ermRest.appLinkFn(appLinkFn);
                 options.ermRest.resolve(base2Uri, {cid: "test"}).then(function (response) {
                     reference = response;
-                    reference.session = { attributes: [] };
 
                     // uncontextualized
                     result = recordURL + "/" + reference.location.path;

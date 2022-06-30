@@ -13,29 +13,80 @@
      * @memberof ERMrest
      * @function parse
      * @param {String} uri An ERMrest resource URI to be parsed.
+     * @param {ERMrest.Catalog?} catalogObject the catalog object that the uri is based on
      * @returns {ERMrest.Location} Location object created from the URI.
      * @throws {ERMrest.InvalidInputError} If the URI does not contain the
      * service name.
      */
-    module.parse = function (uri) {
+    module.parse = function (uri, catalogObject) {
         var svc_idx = uri.indexOf(_service_name);
         if (svc_idx < 0) {
-            throw new module.InvalidInputError("Invalid uri: " + uri + '. Does not contain the expected service name: ' + _service_name);
+            throw new module.InvalidInputError('uri not contain the expected service name: ' + _service_name);
         }
 
-        return new Location(uri);
+        return new Location(uri, catalogObject);
+
+    };
+
+    /**
+     * Create the proper path to search
+     * NOTE If searchColumnNames is passed, we will not use the built-in search
+     * feature anymore and will fallback to raw ermrest regular expression search.
+     * Therefore it's highly recommended that you don't use this parameter and instead
+     * modify the search-box source definition of the table.
+     *
+     * @param  {string} schemaName          Name of schema, can be null
+     * @param  {string} tableName           Name of table
+     * @param  {string} searchTerm          the search keyword
+     * @param  {string[]?} searchColumNames the name of columns that should be used for search
+     * @return {string}                     a path that ERMrestJS understands and can parse, can be undefined
+     */
+    module.createSearchPath = function (catalogId, schemaName, tableName, searchTerm, searchColumNames) {
+        verify(typeof catalogId === "string" && catalogId.length > 0, "catalogId must be an string.");
+        verify(typeof tableName === "string" && tableName.length > 0, "tableName must be an string.");
+
+        var hasSearch = (typeof searchTerm === "string" && searchTerm.trim().length > 0);
+        var encode = module._fixedEncodeURIComponent;
+
+        if (hasSearch && Array.isArray(searchColumNames) && searchColumNames.length > 0) {
+            var compactPath = "#" + catalogId + "/";
+            var parsedSearch = [];
+
+            if (schemaName) {
+                compactPath += encode(schemaName) + ":";
+            }
+            compactPath += encode(tableName);
+
+            searchColumNames.forEach(function (col) {
+                parsedSearch.push(encode(col) + "::ciregexp::" + encode(searchTerm.trim()));
+            });
+
+            return compactPath + "/" + parsedSearch.join(";");
+        }
+
+        // create the facet object so we can pass it to ermrestjs
+        var facets;
+        if (hasSearch) {
+            facets = {
+                "and": [{ "sourcekey": "search-box", "search": [searchTerm.trim()] }]
+            };
+        }
+
+        return module.createPath(catalogId, schemaName, tableName, facets);
 
     };
 
     /**
      * Given tableName, schemaName, and facets will generate a path in the following format:
-     * #<catalogId>/<tableName>:<schemaName>/*::facets::<FACETSBLOB>
+     * #<catalogId>/<tableName>:<schemaName>/*::facets::<FACETSBLOB>/*::cfacets:<CUSTOMFACETBLOB>/
+     * @param  {string} catalogId  the id of catalog
      * @param  {string} schemaName Name of schema, can be null
      * @param  {string} tableName  Name of table
      * @param  {object} facets     an object
-     * @return {string}            a path that ermrestjs understands and can parse, can be undefined
+     * @param  {object} cfacets    an object
+     * @return {string}            a path that ERMrestJS understands and can parse, can be undefined
      */
-    module.createPath = function (catalogId, schemaName, tableName, facets) {
+    module.createPath = function (catalogId, schemaName, tableName, facets, cfacets) {
         verify(typeof catalogId === "string" && catalogId.length > 0, "catalogId must be an string.");
         verify(typeof tableName === "string" && tableName.length > 0, "tableName must be an string.");
 
@@ -49,36 +100,76 @@
             compactPath += "/*::facets::" + module.encodeFacet(facets);
         }
 
+        if (cfacets && typeof cfacets === "object" && Object.keys(cfacets).length !== 0) {
+            compactPath += "/*::cfacets::" + module.encodeFacet(cfacets);
+        }
+
         return compactPath;
+    };
+
+
+    /**
+     * Given tableName, schemaName, and facets will return a location object
+     * @param  {string} service    the service url
+     * @param  {string} schemaName Name of schema, can be null
+     * @param  {string} tableName  Name of table
+     * @param  {object} facets     an object
+     * @param  {object} cfacets    an object
+     * @param  {ERMrest.Catalog} [catalogObject] the catalog object (optional)
+     * @return {string}            a path that ERMrestJS understands and can parse, can be undefined
+     */
+    module.createLocation = function (service, catalogId, schemaName, tableName, facets, cfacets, catalogObject) {
+        verify(typeof service === "string" && service.length > 0, "service must be an string.");
+        verify(typeof catalogId === "string" && catalogId.length > 0, "catalogId must be an string.");
+        verify(typeof tableName === "string" && tableName.length > 0, "tableName must be an string.");
+
+        var compactPath = "";
+        if (schemaName) {
+            compactPath += module._fixedEncodeURIComponent(schemaName) + ":";
+        }
+        compactPath += module._fixedEncodeURIComponent(tableName);
+
+        if (facets && typeof facets === "object" && Object.keys(facets).length !== 0) {
+            compactPath += "/*::facets::" + module.encodeFacet(facets);
+        }
+
+        if (cfacets && typeof cfacets === "object" && Object.keys(cfacets).length !== 0) {
+            compactPath += "/*::cfacets::" + module.encodeFacet(cfacets);
+        }
+
+        if (service.endsWith("/")) service = service.slice(0, -1);
+        return module.parse(service + "/catalog/" + catalogId + "/entity/" + compactPath, catalogObject);
     };
 
     /**
      * The parse handles URI in this format
-     * <service>/catalog/<catalog_id>/<api>/<schema>:<table>/[/filter(s)][/facets][/join(s)][@sort(col...)][@before(...)/@after(...)][?]
+     *  <service>/catalog/<catalog_id>/<api>/<schema>:<table>/[path parts][modifiers][query params]
      *
-     * path =  <filters(s)>/<join(s)>/<facets>/<search>
+     * where
+     *  - path part: [facet][cfacet][filter]
+     *  - modifiers: [@sort(col...)][@before(...)/@after(...)]
+     *
      *
      * uri = <service>/catalog/<catalog>/<api>/<path><sort><paging>?<limit>
      * service: the ERMrest service endpoint such as https://www.example.com/ermrest.
-     * catalog: the catalog identifier for one dataset such as 42.
+     * catalog: the catalog identifier for one dataset.
      * api: the API or data resource space identifier such as entity, attribute, attributegroup, or aggregate.
      * path: the data path which identifies one filtered entity set with optional joined context.
      * sort: optional @sort
      * paging: optional @before/@after
      * query params: optional ?
      *
+     *
+     * NOTE: For parsing the facet, Location object needs the catalog object.
+     *       it should either be passed while creating the location object, or set after.
      * @param {String} uri full path
+     * @param {ERMrest.Catalog} the catalog object for parsing some parts of url might be needed.
      * @constructor
      */
-    function Location(uri) {
+    function Location(uri, catalogObject) {
 
         // full uri
         this._uri = uri;
-
-        var parts;
-
-        var joinRegExp = /(?:left|right|full|^)\((.*)\)=\((.*:.*:.*)\)/;
-        var facetsRegExp = /\*::facets::(.+)/;
 
         // extract the query params
         if (uri.indexOf("?") !== -1) {
@@ -100,13 +191,27 @@
         } else {
             this._compactUri = uri;
         }
+        // there might be an extra slash at the end of the url
+        this._compactUri = module._stripTrailingSlash(this._compactUri);
 
         // service
         parts = uri.match(/(.*)\/catalog\/([^\/]*)\/(entity|attribute|aggregate|attributegroup)\/(.*)/);
         this._service = parts[1];
 
         // catalog id
-        this._catalog = parts[2];
+        this._catalogSnapshot = parts[2];
+
+        var catalogParts = this._catalogSnapshot.split('@');
+        this._catalog = catalogParts[0];
+        this._version = catalogParts[1] || null;
+
+        if (catalogObject) {
+            if (catalogObject.id !== this._catalogSnapshot) {
+                throw new module.InvalidInputError("Given catalog object is not the same catalog used in the url.");
+            }
+
+            this._catalogObject = catalogObject;
+        }
 
         // api
         this._api = parts[3];
@@ -119,6 +224,9 @@
         // compactPath is path without modifiers
         this._compactPath = (modifiers === "" ? this._path : this._path.split(modifiers)[0]);
 
+        // there might be an extra slash at the end of the url
+        this._compactPath = module._stripTrailingSlash(this._compactPath);
+
         // <sort>/<page>
         // sort and paging
         if (modifiers) {
@@ -130,7 +238,7 @@
                 if (this._sort) {
                     this._before = modifiers.match(/(@before\([^\)]*\))/)[1];
                 } else {
-                    throw new module.InvalidPageCriteria("Invalid uri: " + this._uri + ". Sort modifier is required with paging.", this._path);
+                    throw new module.InvalidPageCriteria("Sort modifier is required with paging.", this._path);
                 }
             }
 
@@ -138,144 +246,101 @@
                 if (this._sort) {
                     this._after = modifiers.match(/(@after\([^\)]*\))/)[1];
                 } else {
-                    throw new module.InvalidPageCriteria("Invalid uri: " + this._uri + ". Sort modifier is required with paging.", this._path);
+                    throw new module.InvalidPageCriteria("Sort modifier is required with paging.", this._path);
                 }
             }
         }
 
         // Split compact path on '/'
-        // Expected format: "<schema:table>/<filter(s)>/<facets>/<joins(s)>/<facets>"
-        parts = this._compactPath.split('/');
+        var parts = this._compactPath.split('/');
 
+        if (parts.length === 0) throw new ERMrest.MalformedURIError("Given url must start with `schema:table.");
 
         //<schema:table>
         // first schema name and first table name
-        // we can't handle complex path right now, only knows the first schema and table
-        // so after doing a Reference.relate() and generate a new uri/location, we don't have schema/table information here
-        if (parts[0]) {
-            var params = parts[0].split(':');
-            if (params.length > 1) {
-                this._projectionSchemaName = decodeURIComponent(params[0]);
-                this._projectionTableName = decodeURIComponent(params[1]);
-            } else {
-                this._projectionSchemaName = null;
-                this._projectionTableName = decodeURIComponent(params[0]);
-            }
+        var params = parts[0].split(':');
+        if (params.length > 1) {
+            this._rootSchemaName = decodeURIComponent(params[0]);
+            this._rootTableName = decodeURIComponent(params[1]);
+        } else {
+            this._rootSchemaName = "";
+            this._rootTableName = decodeURIComponent(params[0]);
         }
 
-        // from start to end can be filter, facets, and joins
-        var endIndex = parts.length - 1, startIndex = 1;
-        var searchTerm = null;
+        // pathParts: <joins/facet/cfacet/filter/>
+        var aliasJoinRegExp = /\$.*/,
+            joinRegExp = /(?:left|right|full|^)\((.*)\)=\((.*:.*:.*)\)/,
+            facetsRegExp = /\*::facets::(.+)/,
+            customFacetsRegExp = /\*::cfacets::(.+)/;
 
-        //<facets>
-        if (startIndex <= endIndex) {
-            match = parts[endIndex].match(facetsRegExp);
-            if (match) { // this is the facets blob
-                this._facets = new ParsedFacets(match[1], this._path);
+        var schemaTable = parts[0], table = this._rootTableName, schema = this._rootSchemaName;
+        var self = this, pathParts = [], alias, match, prevJoin = false;
+        var facets, cfacets, filter, filtersString, searchTerm, join, joins = [];
 
-                // extract the search term
-                searchTerm = _getSearchTerm(this._facets.decoded);
-                endIndex--;
-            }
-        }
-        this._searchTerm = searchTerm;
+        // go through each of the parts
+        parts.forEach(function (part, index) {
+            // this is the schema:table
+            if (index === 0) return;
 
-        // <projectionFacets>/<join(s)>
-        this._joins = [];
-        // parts[startIndex] to parts[endIndex] might be joins
-        var linking;
-        for (var ji = startIndex; ji <= endIndex; ji++) {
-            linking = parts[ji].match(joinRegExp);
-            if (!linking) continue;
-            this._joins.push(_createJoin(linking));
-        }
+            // slash at the end of the url
+            if (index === parts.length - 1 && part === "") return;
 
-        if (this._joins.length > 0) {
-            match = parts[startIndex].match(facetsRegExp);
-            if (match) { // this is the facets blob
-                this._projectionFacets = new ParsedFacets(match[1], this._path);
-                startIndex++;
-            }
-        }
-
-        //<filter(s)>
-        // If there are filters appended after projection table
-        // modify the columns to the linked table
-        this._filtersString = '';
-        if (parts[1]) {
-            // TODO should refactor these checks into one match statement
-            var isJoin = parts[1].match(joinRegExp);
-            var isFacet = parts[1].match(facetsRegExp);
-
-            // parts[1] could be linking or search
-            if (!isJoin && !isFacet) {
-                this._filtersString = parts[1];
-
-                // split by ';' and '&'
-                var regExp = new RegExp('(;|&|[^;&]+)', 'g');
-                var items = parts[1].match(regExp);
-
-                // if a single filter
-                if (items.length === 1) {
-                    this._filter = _processSingleFilterString(items[0], this._uri, this._path);
-
-                } else {
-                    var filters = [];
-                    var type = null;
-                    for (var i = 0; i < items.length; i++) {
-                        // process anything that's inside () first
-                        if (items[i].startsWith("(")) {
-                            items[i] = items[i].replace("(", "");
-                            // collect all filters until reaches ")"
-                            var subfilters = [];
-                            while (true) {
-                                if (items[i].endsWith(")")) {
-                                    items[i] = items[i].replace(")", "");
-                                    subfilters.push(items[i]);
-                                    // get out of while loop
-                                    break;
-                                } else {
-                                    subfilters.push(items[i]);
-                                    i++;
-                                }
-                            }
-
-                            filters.push(_processMultiFilterString(subfilters, this._uri, this._path));
-
-                        } else if (type === null && items[i] === "&") {
-                            // first level filter type
-                            type = module.filterTypes.CONJUNCTION;
-                        } else if (type === null && items[i] === ";") {
-                            // first level filter type
-                            type = module.filterTypes.DISJUNCTION;
-                        } else if (type === module.filterTypes.CONJUNCTION && items[i] === ";") {
-                            // using combination of ! and & without ()
-                            throw new module.InvalidFilterOperatorError("Invalid uri: " + this._uri + ". Parser doesn't support combination of conjunction and disjunction filters.", this._path,  this._filtersString);
-                        } else if (type === module.filterTypes.DISJUNCTION && items[i] === "&") {
-                            // using combination of ! and & without ()
-                            throw new module.InvalidFilterOperatorError("Invalid uri: " + this._uri + ". Parser doesn't support combination of conjunction and disjunction filters.", this._path, this._filtersString);
-                        } else if (items[i] !== "&" && items[i] !== ";") {
-                            // single filter on the first level
-                            var binaryFilter = _processSingleFilterString(items[i], this._uri, this._path);
-                            filters.push(binaryFilter);
-                        }
-                    }
-
-                    this._filter = new ParsedFilter(type);
-                    this._filter.setFilters(filters);
+            // join
+            match = part.match(joinRegExp);
+            if (match) {
+                // there wasn't any join before, so this is the start of new path,
+                // so we should create an object for the previous one.
+                if (!prevJoin && index !== 1) {
+                    // we're creating this for the previous section, so we should use the previous index
+                    // Alias will be T, T1, T2, ... (notice we don't have T0)
+                    alias = module._parserAliases.JOIN_TABLE_PREFIX + (pathParts.length > 0 ? pathParts.length : "");
+                    pathParts.push(new PathPart(alias, joins, schema, table, facets, cfacets, filter, filtersString));
+                    filter = undefined; filtersString = undefined; cfacets = undefined; facets = undefined; join = undefined; joins = [];
                 }
+
+                join = _createParsedJoinFromStr(match, table, schema);
+                joins.push(join);
+                prevJoin = true;
+
+                // will be used for the next join
+                table = joins[joins.length-1].toTable;
+                schema = joins[joins.length-1].toSchema;
+                return;
             }
 
-            // change filter to facet if possible
-            if (this._filter) {
-                var f = _filterToFacet(this._filter);
-                if (f) {
-                    this._filter.facet = f.facet;
-                    this._filter.depth = f.depth;
+            prevJoin = false;
+
+            // facet
+            match = part.match(facetsRegExp);
+            if (match) {
+                if (facets) {
+                    throw new module.InvalidFacetOperatorError(self._path, module._facetingErrors.duplicateFacets);
                 }
+                facets = new ParsedFacets(match[1], self._path);
+                return;
             }
+
+            // custom facet
+            match = part.match(customFacetsRegExp);
+            if (match) {
+                if (cfacets) {
+                    throw new module.InvalidCustomFacetOperatorError(self._path, module._facetingErrors.duplicateFacets);
+                }
+                cfacets = new CustomFacets(match[1], self._path);
+                return;
+            }
+
+            // filter
+            filtersString = part;
+            filter = _processFilterPathPart(part, self._path);
+        });
+
+        // this is for the last part of url that might not end with join.
+        if (filter || cfacets || facets || joins.length > 0) {
+            pathParts.push(new PathPart(module._parserAliases.MAIN_TABLE, joins, schema, table, facets, cfacets, filter, filtersString));
         }
 
+        this._pathParts = pathParts;
     }
 
     Location.prototype = {
@@ -290,7 +355,7 @@
 
 
         /**
-         * <service>/catalog/<catalogId>/<api>/<projectionSchema:projectionTable>/<filters>/<joins>/<sort>/<page>?<queryParams>
+         * The complete uri that is understandable by ermrestjs
          * NOTE: some of the components might not be understanable by ermrest, because of pseudo operator (e.g., ::facets::).
          *
          * @returns {String} The full URI of the location
@@ -303,7 +368,7 @@
         },
 
         /**
-         * <service>/catalog/<catalogId>/<api>/<projectionSchema:projectionTable>/<filters>/<joins>/<search>
+         * <service>/catalog/<catalogId>/<api>/<rootSchema:rootTable>/<filters>/<joins>/<search>
          *
          * NOTE: some of the components might not be understanable by ermrest, because of pseudo operator (e.g., ::search::).
          * @returns {String} The URI without modifiers or queries
@@ -317,7 +382,7 @@
         },
 
         /**
-         * <projectionSchema:projectionTable>/<filters>/<joins>/<search>/<sort>/<page>
+         * A path that is understanable by ermrestjs. It includes the modifiers.
          *  NOTE: some of the components might not be understanable by ermrest, because of pseudo operator (e.g., ::search::).
          *
          * @returns {String} Path portion of the URI
@@ -331,65 +396,48 @@
         },
 
         /**
-         * <projectionSchema:projectionTable>/<filters>/<<projectionFacets>>/<joins>/<<facets>>
+         * A path that is understanable by ermrestjs. It doesn't inlcude the modifiers
          * NOTE: some of the components might not be understanable by ermrest, because of pseudo operator (e.g., ::facets::).
          *
          * @returns {String} Path without modifiers or queries
          */
         get compactPath() {
             if (this._compactPath === undefined) {
+                var self = this;
                 var uri = "";
-                if (this.projectionSchemaName) {
-                    uri += module._fixedEncodeURIComponent(this.projectionSchemaName) + ":";
+                if (this.rootSchemaName) {
+                    uri += module._fixedEncodeURIComponent(this.rootSchemaName) + ":";
                 }
-                uri += module._fixedEncodeURIComponent(this.projectionTableName);
+                uri += module._fixedEncodeURIComponent(this.rootTableName);
 
-                if (this.filtersString) {
-                    uri += "/" + this.filtersString;
-                }
-
-                if (this.projectionFacets) {
-                    uri += "/*::facets::" + this.projectionFacets.encoded;
-                }
-
-                if (this.joins.length > 0) {
-                    uri += "/" + this.joins.reduce(function (prev, join, i) {
-                        return prev + (i > 0 ? "/" : "") + join.str;
-                    }, "");
-                }
-
-                if (this.facets) {
-                    uri += "/*::facets::" + this.facets.encoded;
-                }
+                uri += this.pathParts.reduce(function (prev, part, i) {
+                    var res = prev;
+                    if (part.joins) {
+                        res += part.joins.reduce(function (prev, join, i) {
+                            return prev + "/" + join.str;
+                        }, "");
+                    }
+                    if (part.facets) {
+                        res += "/*::facets::" + part.facets.encoded;
+                    }
+                    if (part.customFacets) {
+                        res += "/*::cfacets::" + part.customFacets.encoded;
+                    }
+                    if (part.filtersString) {
+                        res += "/" + part.filtersString;
+                    }
+                    return res;
+                }, "");
 
                 this._compactPath = uri;
             }
             return this._compactPath;
         },
 
-
         /**
+         * Returns a uri that ermrest understands.
          * should only be used for internal usage and sending request to ermrest
-         * NOTE: returns a uri that ermrest understands
          *
-         * TODO This might produce a url that is not understandable by ermrest (because of sort).
-         * TODO should be removed or changed.
-         *
-         * <service>/catalog/<catalogId>/<api>/<projectionSchema:projectionTable>/<filters>/<projectionFacets>/<joins>/<facets>/<sort>/<page>
-         * @returns {String} The full URI of the location for ermrest
-         */
-        get ermrestUri() {
-            if (this._ermrestUri === undefined) {
-                this._ermrestUri = this.ermrestCompactUri + this._modifiers;
-            }
-            return this._ermrestUri;
-        },
-
-        /**
-         * should only be used for internal usage and sending request to ermrest
-         * <projectionSchema:projectionTable>/<filters>/<joins>/<search>
-         *
-         * NOTE: returns a uri that ermrest understands
          * @returns {String} The URI without modifiers or queries for ermrest
          */
         get ermrestCompactUri() {
@@ -401,10 +449,9 @@
         },
 
         /**
-         * should only be used for internal usage and sending request to ermrest
-         * <projectionSchema:projectionTable>/<filters>/<projectionFacets>/<joins>/<facets>/<sort>/<page>
+         * Returns a path that ermrest understands.
+         * should only be used for internal usage and sending request to ermrest.
          *
-         * NOTE: returns a path that ermrest understands
          * @returns {String} Path portion of the URI
          * This is everything after the catalog id for ermrest
          */
@@ -416,66 +463,294 @@
         },
 
         /**
-         * should only be used for internal usage and sending request to ermrest
-         * <projectionSchema:projectionTable>/<filters>/<projectionFacets>/<joins>/<projectionFacets>
+         * Returns a path that ermrest understands. It doesn't include the modifiers.
+         * This attribute will add extra aliases to the url, so the facets can refer to those
+         * aliases. So assuming that the follwoing is the path (F means the combination of filter, facet, and cfacet):
          *
-         * NOTE:
-         *  1. returns a path that ermrest understands
-         *  2. Adds `M` alias to the last table.
-         * @returns {String} Path without modifiers or queries for ermrest
+         * S:R /F0 /J1 /F1 /J2 /F2 /…/Ji-1 /Fi-1 /Ji /Fi /Ji+1 /Fi+1 /… /Jn /Fn
+         *
+         * This will be the ermrest path:
+         *
+         * T:=S:R /F0 /T1:=J1 /F1 /… /Ti-1:=Ji-1 /Fi-1 /Ti:=Ji /Fi /Ti+1:=Ji+1 /Fi+1 /…./M:=Jn /Fn
+         *
+         * And if Fi has null filter, and therefore is using a right join,
+         * the following will be the ermest path:
+         *
+         * Ti:=Fi /Ti-1:=RevJi /Fi-1 /Ti-2:=RevJi-1 /… /T1:=RevJ2 /F1 /T:=RevJ1 /F0 /$Ti /Ti+1:=Ji+1 /Fi+1 /… /M:=Jn/Fn
+         *
+         * Which will be in this format:
+         * (<parsed facets starting from the facet with null>/<rev join of the parsed facets>)+/$T(facet with null)/(<parsed facet and join of parts after the null index>)*
+         *
+         * @param {Array} usedSourceObjects (optional) the source objects that are used in other parts of url (passed for path prefix logic)
+         * @returns {Object} an object wit the following properties:
+         *   - `path`: Path without modifiers or queries for ermrest
+         *   - `pathPrefixAliasMapping`: alias mapping that are used in the url
          */
-        get ermrestCompactPath() {
-            if (this._ermrestCompactPath === undefined) {
-                var joinsLength = this.joins.length,
-                    mainTableAlias = this.mainTableAlias,
-                    mainTableName = this.tableName,
-                    facetFilter;
+        computeERMrestCompactPath: function (usedSourceObjects) {
+            var self = this;
+            var rightJoinIndex = -1, i;
+            var uri = "", alias, temp;
 
-                // add tableAlias
-                var uri = this.projectionTableAlias + ":=";
-
-                if (this.projectionSchemaName) {
-                    uri += module._fixedEncodeURIComponent(this.projectionSchemaName) + ":";
+            var getPathPartAliasMapping = function (index) {
+                if (index !== -1 && parsedPartsWithoutJoin[index].pathPrefixAliasMapping) {
+                    return parsedPartsWithoutJoin[index].pathPrefixAliasMapping;
                 }
-                uri += module._fixedEncodeURIComponent(this.projectionTableName);
+                return new PathPrefixAliasMapping();
+            };
 
-                if (this.filtersString) {
-                    uri += "/" + this.filtersString;
+            /**
+             * As part of `jonsStr`, if the table instance is already defined and added
+             * to the aliases, we might not add any new instances and just refer to the
+             * previously defined instance. In this case, the `jonsStr` function will
+             * change the alias property of pathPart to properly refer to the table instance.
+             *
+             * But the alias names used for the last pathPart is specific and should not be
+             * changed. Therefore we're making sure if there's a sourcekey that is supposed
+             * to use a shared instance, is using the forced alias name.
+             *
+             * Then the logic for generating new alias names will first look at the forced
+             * aliases and if the sourcekey is part of forced aliases will not generate a new
+             * one for it.
+             * @param {*} index
+             * @returns an object that represent forcedAliases
+             * @ignore
+             */
+            var getForcedAliases = function (index) {
+                var res = {};
+
+                // if last: the given index, otherwise: the one after
+                var part = self.pathParts[Math.min(index+1, self.pathParts.length - 1)];
+
+                if (part.joins.length > 0 && part.joins[0].sourceObjectWrapper) {
+                    var sourceObject = part.joins[0].sourceObjectWrapper.sourceObject;
+                    // make sure the alias that we set for the join is also used for share path
+                    if (isStringAndNotEmpty(sourceObject.sourcekey)) {
+                        res[sourceObject.sourcekey] = part.alias;
+                    }
                 }
+                return res;
+            };
 
-                if (this.projectionFacets) {
-                    facetFilter = _JSONToErmrestFilter(this.projectionFacets.decoded, this.projectionTableAlias, this.projectionTableName, this.catalog, module._constraintNames);
-                    if (!facetFilter) throw new module.InvalidFacetOperatorError('', this.path);
-                    uri += "/" + facetFilter;
-                }
+            // returns the proper string presentation of a series of joins
+            // parameters:
+            //  - joins: array of ParsedJoin objects.
+            //  - alias: the alias that will be attached to the end of the path
+            //  - reverse: whether we want to return the reversed join string
+            var joinsStr = function (part, alias, index, reverse) {
+                if (part.joins[0].sourceObjectWrapper) {
 
-                if (joinsLength > 0) {
-                    uri += "/" + this.joins.reduce(function (prev, join, i) {
-                        return prev + (i > 0 ? "/" : "") + ((i == joinsLength - 1) ? mainTableAlias + ":=" : "") + join.str;
+                    // when reversed, we're not using shared paths
+                    if (reverse) {
+                        return part.joins[0].sourceObjectWrapper.toString(true, false, alias);
+                    }
+
+                    // this join should be using the alias mapping of the previous facet
+                    var wrapper = part.joins[0].sourceObjectWrapper;
+                    temp =  _sourceColumnHelpers.parseSourceNodesWithAliasMapping(
+                        wrapper.sourceObjectNodes,
+                        wrapper.lastForeignKeyNode,
+                        wrapper.foreignKeyPathLength,
+                        wrapper.sourceObject && isStringAndNotEmpty(wrapper.sourceObject.sourcekey) ? wrapper.sourceObject.sourcekey : null,
+                        getPathPartAliasMapping(index -1), // share with the previous path part (facet)
+                        index > 0 ? self.pathParts[index-1].alias : self.mainTableAlias, // the alias of previous part??
+                        false,
+                        alias
+                    );
+
+                    // make sure alias is updated based on what's used
+                    // so while parsing the facets we're using the correct alias
+                    part.alias = temp.usedOutAlias;
+                    return temp.path;
+                } else {
+                    var fn = reverse ? "reduceRight" : "reduce";
+                    var joinStr = reverse ? "strReverse" : "str";
+                    var last = reverse ? 0 : part.joins.length - 1;
+                    var first = reverse ? part.joins.length -1 : 0;
+
+                    return part.joins[fn](function (res, join, i) {
+                        return res + (i !== first ? "/" : "") + ((i === last) ? (alias + ":=") : "") + join[joinStr];
                     }, "");
                 }
+            };
 
-                if (this.facets) {
-                    facetFilter = _JSONToErmrestFilter(this.facets.decoded, mainTableAlias, mainTableName, this.catalog, module._constraintNames);
-                    if (!facetFilter)
-                     throw new module.InvalidFacetOperatorError('', this.path);
-                    uri += "/" + facetFilter;
+            var projectedTable = null;
+            try {
+                projectedTable = self.catalogObject.schemas.findTable(self.tableName, self.schemaName);
+            } catch(exp) {
+                // fail silently
+            }
+            /**
+             * make sure the lastPathPartAliasMapping is defined
+             * NOTE: if the location doesn't have any facets, this object will
+             * be used. otherwise we will use the one generated based on facets
+             */
+            var lastPathPartAliasMapping = new PathPrefixAliasMapping(
+                self.pathParts.length > 0 ? getForcedAliases(self.pathParts.length-1) : null,
+                usedSourceObjects,
+                projectedTable
+            );
+
+            // get the parsed one, and count the number of right joins
+            // NOTE: we have to do this at first to find the facets with null
+            var parsedPartsWithoutJoin = self.pathParts.map(function (part, index) {
+                var res = [], facetRes;
+
+                // facet
+                if (part.facets) {
+                    var currUsedSourceObjects = null;
+                    var forcedAliases = getForcedAliases(index);
+                    if (index == self.pathParts.length -1) {
+                        currUsedSourceObjects = usedSourceObjects;
+                    }
+                    // the next join might have a sourceObjectWrapper that
+                    // should be taken into account
+                    else if (self.pathParts[index+1].joins.length > 0 && self.pathParts[index+1].joins[0].sourceObjectWrapper) {
+                        currUsedSourceObjects = [self.pathParts[index+1].joins[0].sourceObjectWrapper.sourceObject];
+                    }
+
+                    facetRes = _renderFacet(part.facets.decoded, part.alias, part.schema, part.table, self.catalog, self.catalogObject, currUsedSourceObjects, forcedAliases, module._constraintNames);
+                    if (!facetRes.successful) {
+                        throw new module.InvalidFacetOperatorError(self.path, facetRes.message);
+                    }
+                    if (facetRes.rightJoin) {
+                        // we only allow one right join (null fitler)
+                        if (rightJoinIndex !== -1) {
+                            throw new module.MalformedURIError("Only one facet in url can have `null` filter.");
+                        }
+                        rightJoinIndex = index;
+                    }
+                    if (index == self.pathParts.length -1 ) {
+                        lastPathPartAliasMapping = facetRes.pathPrefixAliasMapping;
+                    }
+
+                    res.push(facetRes.parsed);
                 }
 
-                this._ermrestCompactPath = uri;
+                // cfacet
+                if (part.customFacets) {
+                    // TODO customFacets is not properly sharing prefix path
+                    //      and should be changed
+                    //      it requires preprocessing the usedSourcekeys based on both
+                    //      facets and customFacets
+                    if (part.customFacets.facets) {
+                        facetRes = _renderFacet(part.customFacets.facets.decoded, part.alias, part.schema, part.table, self.catalog, self.catalogObject, null, null, module._constraintNames);
+                        if (!facetRes.successful) {
+                            throw new module.InvalidCustomFacetOperatorError(self.path, facetRes.message);
+                        }
+                        if (facetRes.rightJoin) {
+                            throw new module.InvalidCustomFacetOperatorError(self.path, "`null` choice facet is not allowed in custom facets");
+                        }
+                        res.push(facetRes.parsed);
+                    }
+
+                    if (typeof part.customFacets.ermrestPath === "string") {
+                        res.push(part.customFacets.ermrestPath);
+                    }
+                }
+
+                //filter
+                if (part.filtersString) {
+                    res.push(part.filtersString);
+                }
+
+                return {
+                    parsed: res.join("/"),
+                    pathPrefixAliasMapping: facetRes ? facetRes.pathPrefixAliasMapping : null
+                };
+            });
+
+            // no rightJoin: s:t/<parths>
+            if (rightJoinIndex === -1) {
+                uri = self.rootTableAlias + ":=";
+                if (self.rootSchemaName) {
+                    uri += module._fixedEncodeURIComponent(self.rootSchemaName) + ":";
+                }
+                uri += module._fixedEncodeURIComponent(self.rootTableName);
+            }
+            // we have right index, then every path before null must be reversed
+            else {
+                // url format:
+                // (<parsed facets starting from the faect with null>/<rev join of the parsed facets>)+/$T(facet with null)/(<parsed facet and join of parts after the null index>)*
+                for (i = rightJoinIndex; i >= 0; i--) {
+                    temp = parsedPartsWithoutJoin[i];
+                    if (temp.parsed) {
+                        uri += (uri.length > 0 ? "/" : "") + temp.parsed;
+                    }
+
+                    if (self.pathParts[i].joins.length > 0) {
+                        // since we're reversing, we have to make sure we're using the
+                        // alias of the previous pathpart
+                        alias = i > 0 ? self.pathPart[i-1].alias : self.rootTableAlias;
+                        uri += "/" + joinsStr(self.pathParts[i], alias, i, true);
+                    }
+                }
+
+                // if there was pathParts before facet with null, change back to the facet with null
+                if (self.pathParts[rightJoinIndex].joins.length > 0) {
+                    uri += "/$" + self.pathParts[i].alias;
+                }
+            }
+
+            // from the facet with null to end, we have to add path parts in the same order.
+            for (i = rightJoinIndex + 1; i < self.pathParts.length; i++) {
+                var part = self.pathParts[i];
+
+                // add the join
+                if (part.joins.length > 0) {
+                    uri += "/" + joinsStr(part, part.alias, i, false);
+                }
+
+                // add the facet and filters
+                temp = parsedPartsWithoutJoin[i];
+                if (temp.parsed) {
+                    uri += "/" + temp.parsed;
+                }
+            }
+
+
+            return {
+                path: uri,
+                // TODO could be replaced with the function
+                pathPrefixAliasMapping: lastPathPartAliasMapping
+            };
+        },
+
+        get ermrestCompactPath() {
+            if (this._ermrestCompactPath === undefined) {
+                var res = this.computeERMrestCompactPath();
+                this._ermrestCompactPath = res.path;
+                this._pathPrefixAliasMapping = res.pathPrefixAliasMapping;
+
             }
             return this._ermrestCompactPath;
         },
 
-        get projectionTableAlias () {
-            if (this._projectionTableAlias === undefined) {
-                this._projectionTableAlias = (this.joins.length === 0) ? this.mainTableAlias : "T";
+        /**
+         * alias mapping for the last path part
+         * can be used for retrieving the existing sourcekey paths
+         * so we can refer to them instead of repeating the path.
+         *
+         * The returned object has the following attributes:
+         * - aliases: An object of sourcekey name to alias
+         * - lastIndex: The last index used for the aliases,
+         *              aliases are written in format of <mainalias>_<index>
+         *              and the lastIndex will make it easier to generate new ones if needed
+         * @type {Object}
+         */
+        get pathPrefixAliasMapping() {
+            if (this._pathPrefixAliasMapping === undefined) {
+                // this API will populate this
+                var dummy = this.ermrestCompactPath;
             }
-            return this._projectionTableAlias;
+            return this._pathPrefixAliasMapping;
         },
 
-        get mainTableAlias() {
-            return "M";
+        /**
+         * Array of path parts
+         * @type {PathPart[]}
+         */
+        get pathParts() {
+            return this._pathParts;
         },
 
         /**
@@ -488,88 +763,154 @@
 
         /**
          *
-         * @returns {String} catalog id
+         * @returns {String} catalog id with version
          */
         get catalog() {
+            return this._catalogSnapshot;
+        },
+
+        /**
+         *
+         * @returns {String} just the catalog id without version
+         */
+        get catalogId() {
             return this._catalog;
         },
 
         /**
          *
-         * @returns {String} API of the ermrest service.
+         * @returns {String} just the catalog version
+         */
+        get version() {
+            return this._version;
+        },
+
+        /**
+        * version is a 64-bit integer representing microseconds since the Unix "epoch"
+        * The 64-bit integer is encoded using a custom base32 encoding scheme
+        * @param {String} version - optional, include this param if no version in uri
+        * @returns {String} the version decoded to it's time since epoch in milliseconds
+        */
+        get versionAsMillis() {
+            if (this._versionAsMillis === undefined) {
+                this._versionAsMillis = module.versionDecodeBase32(this._version);
+            }
+            return this._versionAsMillis;
+        },
+
+        /**
+         * API of the ermrest service.
          * API includes entity, attribute, aggregate, attributegroup
+         * @type {String}
          */
         get api() {
             return this._api;
         },
 
         /**
-         *
-         * @returns {string} The schema name in the projection table, null if schema is not specified
+         * The first schema name in the projection table, null if schema is not specified
+         * @type {string}
          */
-        get projectionSchemaName() {
-            return this._projectionSchemaName;
+        get rootSchemaName() {
+            return this._rootSchemaName;
         },
 
         /**
-         * Subject to change soon
-         * @returns {string} The table name in the projection table
+         * The first table name in the projection table
+         * @type {string}
          */
-        get projectionTableName() {
-            return this._projectionTableName;
+        get rootTableName() {
+            return this._rootTableName;
         },
 
         /**
-         *
-         * @returns {string} the schema name which the uri referres to, null if schema is not specified
+         * the schema name which the uri referres to, null if schema is not specified
+         * @type {string}
          */
         get schemaName() {
             if (this._schemaName === undefined) {
-                var joinLen = this._joins.length;
-                if (joinLen > 0) {
-                    this._schemaName = this._joins[joinLen-1].toSchema;
-                } else {
-                    this._schemaName = this._projectionSchemaName;
-                }
+                this._schemaName = this.lastJoin ? this.lastJoin.toSchema : this._rootSchemaName;
             }
             return this._schemaName;
         },
 
         /**
-         *
-         * @returns {string} the table name which the uri referres to
+         * the table name which the uri referres to
+         * @type {string}
          */
         get tableName() {
             if (this._tableName === undefined) {
-                var joinLen = this._joins.length;
-                if (joinLen > 0) {
-                    this._tableName = this._joins[joinLen-1].toTable;
-                } else {
-                    this._tableName = this._projectionTableName;
-                }
+                this._tableName = this.lastJoin ? this.lastJoin.toTable : this._rootTableName;
             }
             return this._tableName;
         },
+
+        /**
+         * Name of the schema name for the base table of faceting
+         * @type {String}
+         */
+        get facetBaseSchemaName() {
+            if (this._baseSchemaName === undefined) {
+                var secondTolast = this.facetBasePathPart;
+                this._baseSchemaName = secondTolast ? secondTolast.schema : this.rootSchemaName;
+            }
+            return this._baseSchemaName;
+        },
+
+        /**
+         * Name of the base table for faceting
+         * @type{String}
+         */
+        get facetBaseTableName() {
+            if (this._baseTableName === undefined) {
+                var secondTolast = this.facetBasePathPart;
+                this._baseTableName = secondTolast ? secondTolast.table : this.rootTableName;
+            }
+            return this._baseTableName;
+        },
+
+        /**
+         * The alias that will be used for the base table that should be used for faceting
+         * @type {String}
+         */
+        get facetBaseTableAlias() {
+            if (this._facetBaseTableAlias === undefined) {
+                var secondTolast = this.facetBasePathPart;
+                this._facetBaseTableAlias = secondTolast ? secondTolast.alias : this.rootTableAlias;
+            }
+            return this._facetBaseTableAlias;
+        },
+
+        /**
+         * The alias that will be used for the root table
+         * @type {String}
+         */
+        get rootTableAlias () {
+            if (this._rootTableAlias === undefined) {
+                this._rootTableAlias = this.hasJoin ? "T" : this.mainTableAlias;
+            }
+            return this._rootTableAlias;
+        },
+
+        /**
+         * The alias that will be used for the main table (the projection table)
+         * @type {String}
+         */
+        get mainTableAlias() {
+            return module._parserAliases.MAIN_TABLE;
+        },
+
 
         /**
          * filter is converted to the last join table (if uri has join)
          * @returns {ParsedFilter} undefined if there is no filter
          */
         get filter() {
-            return this._filter;
+            return this.lastPathPart ? this.lastPathPart.filter : undefined;
         },
 
         get filtersString() {
-            return this._filtersString;
-        },
-
-        /**
-         * Remove the filters from the location
-         */
-        removeFilters: function () {
-          delete this._filter;
-          delete this._filtersString;
-          this._setDirty();
+            return this.lastPathPart ? this.lastPathPart.filtersString : undefined;
         },
 
         /**
@@ -589,28 +930,15 @@
         },
 
         /**
-         * Array of joins that are in the given uri.
-         * Each join has the following attributes:
-         *  `fromCols`: array of column names.
-         *  `fromColsStr`: complete string of left part of join
-         *  `toCols`: array of column names
-         *  `toColsStr`: complete string of right part of join
-         *  `toSchema`: the schema names
-         *  `toTable`: the table names
-         *  `str`: complete string of join
-         *
-         * @return {object}
-         */
-        get joins() {
-            return this._joins;
-        },
-
-        /**
         * If there's a join(linking) at the end or not.
         * @return {boolean}
         */
         get hasJoin() {
-            return this._joins.length > 0;
+            if (this._hasJoin === undefined) {
+                var len = this.pathParts.length;
+                this._hasJoin =  (len > 1) || (len == 1 && this.pathParts[0].joins.length > 0);
+            }
+            return this._hasJoin;
         },
 
         /**
@@ -618,54 +946,79 @@
          * @return {object}
          */
         get lastJoin() {
-            var joinLen = this._joins.length;
-            if (joinLen > 0) {
-                return this._joins[joinLen-1];
+            if (this.hasJoin) {
+                var joins = this.pathParts[this.pathParts.length-1].joins;
+                return joins[joins.length-1];
             }
             return null;
         },
 
         /**
-         * set the facets.decoded to the given JSON. will populate the .encoded too.
+         * The last part of path. could be null
+         * @type {PathPart}
+         */
+        get lastPathPart() {
+            return this.pathParts.length > 0 ? this.pathParts[this.pathParts.length-1] : undefined;
+        },
+
+        /**
+         * The second to last part of path. This part is important because the
+         * facets are based on this.
+         * @type {PathPart}
+         */
+        get facetBasePathPart() {
+            var len = this.pathParts.length;
+            return len >= 2 ? this.pathParts[len-2] : undefined;
+        },
+
+        /**
+         * set the facet of the last path part
          * @param  {object} json the json object of facets
          */
         set facets(json) {
-            delete this._facets;
-            this._searchTerm = null;
+            var newFacet;
             if (typeof json === 'object' && json !== null) {
-                this._facets = new ParsedFacets(json);
-
-                this._searchTerm = _getSearchTerm(this._facets.decoded);
+                newFacet = new ParsedFacets(json, '');
             }
+            if (!this.lastPathPart) {
+                this._pathParts.push(new PathPart(this.mainTableAlias, [], this.rootSchemaName, this.rootTableName));
+            }
+            delete this.lastPathPart.facets;
+            this.lastPathPart.facets = newFacet;
             this._setDirty();
         },
 
         /**
-         * facets object. It has .encoded and .decoded apis.
+         * facets object of the last path part
          * @return {ParsedFacets} facets object
          */
         get facets() {
-            return this._facets;
+            return this.lastPathPart ? this.lastPathPart.facets : undefined;
         },
 
         /**
-         * set the facet on the projection table
-         * @param  {object} json the json object of facets
+         * Chnge the custom facet of the last path part
+         * @param  {Object} json
          */
-        set projectionFacets(json) {
-            delete this._projectionFacets;
+        set customFacets(json) {
+            var newFacet;
             if (typeof json === 'object' && json !== null) {
-                this._projectionFacets = new ParsedFacets(json);
+                newFacet = new CustomFacets(json, '');
             }
+            if (!this.lastPathPart) {
+                this._pathParts.push(new PathPart(this.mainTableAlias, [], this.rootSchemaName, this.rootTableName));
+            }
+            delete this.lastPathPart.customFacets;
+            this.lastPathPart.customFacets = newFacet;
             this._setDirty();
         },
 
         /**
-         * facet on the projection table
-         * @return {ParsedFacets} facets object
+         * the custom facet of the last path part
+         * @type {CustomFacets}
          */
-        get projectionFacets() {
-            return this._projectionFacets;
+        get customFacets() {
+            return this.lastPathPart ? this.lastPathPart.customFacets : undefined;
         },
 
         /**
@@ -677,72 +1030,23 @@
         },
 
         /**
-         * Apply, replace, clear filter term on the location
-         * @param {string} term - optional, set or clear search
-         */
-        search: function(t) {
-            var term = (t == null || t === "") ? null : t;
-
-            if (term === this._searchTerm) {
-                return;
-            }
-
-            var newSearchFacet = {"source": "*", "search": [term]};
-            var hasSearch = this._searchTerm != null;
-            var hasFacets = this._facets != null;
-            var andOperator = module._FacetsLogicalOperators.AND;
-
-            var facetObject, andFilters;
-            if (term === null) {
-                // hasSearch must be true, if not there's something wrong with logic.
-                // if term === null, that means the searchTerm is not null, therefore has search
-                facetObject = [];
-                this._facets.decoded[andOperator].forEach(function (f) {
-                    if (f.source !== "*") {
-                        facetObject.push(f);
-                    }
-                });
-
-                if (facetObject.length !== 0) {
-                    facetObject = {"and": facetObject};
-                }
-            } else {
-                if (hasFacets) {
-                    facetObject = JSON.parse(JSON.stringify(this.facets.decoded));
-                    if (!hasSearch) {
-                        facetObject[andOperator].unshift(newSearchFacet);
-                    } else {
-                        andFilters  = facetObject[andOperator];
-                        for (var i = 0; i < andFilters.length; i++) {
-                            if (andFilters[i].source === "*") {
-                                if (Array.isArray(andFilters[i].search)) {
-                                    andFilters[i].search = [term];
-                                }
-                                break;
-                            }
-                        }
-                    }
-                } else {
-                    facetObject = {"and": [newSearchFacet]};
-                }
-            }
-
-            this._searchTerm = term;
-            delete this._facets;
-            if (facetObject && facetObject.and) {
-                this._facets = new ParsedFacets(facetObject);
-            }
-
-            // enforce updating uri
-            this._setDirty();
-        },
-
-        /**
-         * Not saved because new search
+         * last searchTerm of the last path part
          * @returns {string} the search term
          */
         get searchTerm() {
-            return this._searchTerm;
+            if (this.lastPathPart) {
+                return this.lastPathPart.searchTerm;
+            }
+            return null;
+        },
+
+        /**
+         * if the location has visible facet/filter/customfacet
+         * NOTE: if location only has hidden facets, this will return false.
+         * @return {Boolean}]
+         */
+        get isConstrained() {
+            return (this.facets && this.facets.hasVisibleFilters) || this.searchTerm || this.filter || this.customFacets;
         },
 
         /**
@@ -799,8 +1103,7 @@
         },
 
         /**
-         * String representation of before
-         * @before(..)
+         * String representation of before: @before(..)
          * @type {string}
          */
         get before () {
@@ -808,8 +1111,7 @@
         },
 
         /**
-         * String representation of before
-         * @after(..)
+         * String representation of before: @after(..)
          * @type {string}
          */
         get after () {
@@ -921,20 +1223,80 @@
         },
 
         /**
-         * Makes a shallow copy of the Location object
+         * Apply, replace, clear filter term on the location
+         * @param {string} term - optional, set or clear search
+         */
+        search: function(t) {
+            var term = (t == null || t === "") ? null : t;
+
+            if (term === this.searchTerm) {
+                return;
+            }
+
+            var newSearchFacet = {"sourcekey": module._specialSourceDefinitions.SEARCH_BOX, "search": [term]};
+            var hasSearch = this.searchTerm != null;
+            var hasFacets = this.facets != null;
+            var andOperator = module._FacetsLogicalOperators.AND;
+
+            var facetObject, andFilters;
+            if (term === null) {
+                // hasSearch must be true, if not there's something wrong with logic.
+                // if term === null, that means the searchTerm is not null, therefore has search
+                facetObject = [];
+                this.facets.decoded[andOperator].forEach(function (f) {
+                    if (f.sourcekey !== module._specialSourceDefinitions.SEARCH_BOX) {
+                        facetObject.push(f);
+                    }
+                });
+
+                if (facetObject.length !== 0) {
+                    facetObject = {"and": facetObject};
+                }
+            } else {
+                if (hasFacets) {
+                    facetObject = JSON.parse(JSON.stringify(this.facets.decoded));
+                    if (!hasSearch) {
+                        facetObject[andOperator].unshift(newSearchFacet);
+                    } else {
+                        andFilters  = facetObject[andOperator];
+                        for (var i = 0; i < andFilters.length; i++) {
+                            if (andFilters[i].sourcekey === module._specialSourceDefinitions.SEARCH_BOX) {
+                                if (Array.isArray(andFilters[i].search)) {
+                                    andFilters[i].search = [term];
+                                }
+                                break;
+                            }
+                        }
+                    }
+                } else {
+                    facetObject = {"and": [newSearchFacet]};
+                }
+            }
+
+            this.facets = (facetObject && facetObject.and) ? facetObject : null;
+
+            // enforce updating uri
+            this._setDirty();
+        },
+
+        /**
+         * Remove the filters from the location
+         */
+        removeFilters: function () {
+          if (this.lastPathPart) {
+              delete this.lastPathPart.filter;
+              delete this.lastPathPart.filtersString;
+              this._setDirty();
+          }
+        },
+
+        /**
+         * Create a new location object with the same uri and catalogObject
          * @returns {ERMrest.Location} new location object
          * @private
          */
         _clone: function() {
-            var copy = Object.create(Location.prototype);
-            for (var key in this) {
-                // only copy those properties that were set in the object, this
-                // will skip properties from the source object's prototype
-                if (this.hasOwnProperty(key)) {
-                    copy[key] = this[key];
-                }
-            }
-            return copy;
+            return module.parse(this.uri, this.catalogObject);
         },
 
         _setDirty: function() {
@@ -946,6 +1308,133 @@
             delete this._ermrestPath;
             delete this._ermrestCompactUri;
             delete this._ermrestCompactPath;
+            delete this._pathPrefixAliasMapping;
+        },
+
+        /**
+         * mechanism to pass catalog object to parser object.
+         * parser initially was designed so it would just return the different
+         * url sections, and it is the reference and other apis responsibility
+         * to check the model (therefore parser didn't need to know anything about the model).
+         * But now the facet part of url, needs information about the model structure since
+         * we have to support the sourcekey syntax in there here.
+         * TODO we migth be able to improve how this is setup.
+         */
+        set catalogObject(obj) {
+            if (obj.id !== this.catalog) {
+                throw new module.InvalidInputError("Given catalog object is not the same catalog used in the url.");
+            }
+            this._catalogObject = obj;
+        },
+
+        /**
+         * @type {ERMrest.catalog}
+         */
+        get catalogObject() {
+            return this._catalogObject;
+        },
+
+        /**
+         * Given a sourceObjectWrapper, return a Location object that uses this
+         * as the join to new table.
+         * @param {Object} sourceObjectWrapper the object that represents the join
+         * @param {string} toSchema the name of schema that this join refers to
+         * @param {string} toTable the name of table that this join refers to
+         * @param {boolean?} clone whether we should clone or use the existing object
+         * @returns Location object
+         */
+        addJoin: function (sourceObjectWrapper, toSchema, toTable, clone) {
+            var loc = clone ? this._clone() : this;
+            // change alias of the previous part
+            var lastPart = loc.lastPathPart;
+            if (lastPart) {
+                var alias = module._parserAliases.JOIN_TABLE_PREFIX + (loc.pathParts.length > 1 ? (loc.pathParts.length-1) : "");
+                lastPart.alias = alias;
+            }
+
+            // add a join to parts based on the given input
+            var pathPart = new PathPart(
+                // make sure the proper alias is used for the last part
+                module._parserAliases.MAIN_TABLE,
+                [new ParsedJoin(null, null, toSchema, toTable, null, sourceObjectWrapper)],
+                toSchema,
+                toTable
+            );
+
+            loc._pathParts.push(pathPart);
+
+            loc._setDirty();
+
+            // make sure all the properties related to join are computed again
+            delete loc._schemaName;
+            delete loc._tableName;
+            delete loc._baseSchemaName;
+            delete loc._baseTableName;
+            delete loc._facetBaseTableAlias;
+            delete loc._rootTableAlias;
+            delete loc._hasJoin;
+
+            return loc;
+        }
+    };
+
+    /**
+     * Container for the path part, It will have the following attributes:
+     * - joins: an array of ParsedJoin objects.
+     * - alias: The alias that the facets should refer to
+     * - schema: The schema that the join ends up with
+     * - table: the table that the joins end up with
+     * - facets: the facets object
+     * - searchTerm: the search term that is in the facets
+     * - customFacets: the custom facets objects.
+     * - fitler: the filter object
+     * - filtersString: the string representation of the filter
+     * @param       {String} alias              The alias that the facets should refer to
+     * @param       {ParsedJoin[]} joins        an array of ParsedJoin objects.
+     * @param       {String} schema             The schema that the join ends up with
+     * @param       {String} table              The table that the join ends up with
+     * @param       {ParsedFacets} facets       the facets object
+     * @param       {CustomFacets} cfacets      the custom facets object
+     * @param       {ParsedFilter} filter       the filter object
+     * @param       {String} filtersString      the string representation of the filter
+     * @constructor
+     */
+    function PathPart(alias, joins, schema, table, facets, cfacets, filter, filtersString) {
+        this._alias = alias;
+        this.joins = Array.isArray(joins) ? joins : [];
+        this.schema = (typeof schema === "string") ? schema : "";
+        this.table = table;
+        this._facets = facets;
+        this.searchTerm = (facets && facets.decoded) ? _getSearchTerm(facets.decoded) : null;
+        this.customFacets = cfacets;
+        this.filter = filter;
+        this.filtersString = filtersString;
+    }
+
+    PathPart.prototype = {
+        /**
+         * Set the facets, this will take crea of the searchTerm attribute.
+         */
+        set facets(facets) {
+            delete this._facets;
+            this._facets = facets;
+            this.searchTerm = (facets && facets.decoded) ? _getSearchTerm(facets.decoded) : null;
+        },
+
+        get facets() {
+            return this._facets;
+        },
+
+        set alias(alias) {
+            // sanity check to make sure code is working as expected
+            if (!isStringAndNotEmpty(alias)) {
+                throw new module.InvalidInputError("Given alias must be string.");
+            }
+            this._alias = alias;
+        },
+
+        get alias () {
+            return this._alias;
         }
     };
 
@@ -1020,9 +1509,12 @@
      * @return {string} corresponding ermrest filter
      * @private
      */
-    _convertSearchTermToFilter = function (term, column) {
+    _convertSearchTermToFilter = function (term, column, alias) {
         var filterString = "";
         column = (typeof column !== 'string' || column === "*") ? "*": module._fixedEncodeURIComponent(column);
+        if (isStringAndNotEmpty(alias)) {
+            column = alias + ":" + column;
+        }
 
         if (term && term !== "") {
             // add a quote to the end if string has an odd amount
@@ -1054,33 +1546,11 @@
                     exp = module._encodeRegexp(t);
                 }
 
-                filterString += (index === 0? "" : "&") + column + "::ciregexp::" + module._fixedEncodeURIComponent(exp);
+                filterString += (index === 0? "" : "&") + column + module._ERMrestFilterPredicates.CASE_INS_REG_EXP + module._fixedEncodeURIComponent(exp);
             });
         }
 
         return filterString;
-    };
-
-    /**
-     * Create a join object given the linking
-     * @private
-     * @param  {string[]} linking the linking array
-     * @return {object}
-     */
-    _createJoin = function (linking) {
-        var fromCols = linking[1].split(",");
-        var toParts = linking[2].match(/([^:]*):([^:]*):([^\)]*)/);
-        var toCols = toParts[3].split(",");
-
-        return {
-            "fromCols": fromCols.map(function(colName) {return decodeURIComponent(colName);}),
-            "fromColsStr": linking[1],
-            "toCols": toCols.map(function(colName) {return decodeURIComponent(colName);}),
-            "toColsStr": linking[2],
-            "toSchema": decodeURIComponent(toParts[1]),
-            "toTable": decodeURIComponent(toParts[2]),
-            "str": linking[0]
-        };
     };
 
     /**
@@ -1095,7 +1565,7 @@
             searchTerm = "";
 
         for (var i = 0; i < andFilters.length; i++) {
-            if (andFilters[i].source === "*") {
+            if (andFilters[i].sourcekey === module._specialSourceDefinitions.SEARCH_BOX) {
                 if (Array.isArray(andFilters[i].search)) {
                     searchTerm = andFilters[i].search.join("|");
                 }
@@ -1104,6 +1574,70 @@
         }
         return searchTerm.length === 0 ? null : searchTerm;
     };
+
+    /**
+     * The object representing a join
+     * (could be multiple joins or just a single one)
+     * @param {string?} str - the string representation (could have aliases)
+     * @param {string?} strReverse - the reverse string representation
+     * @param {string} toSchema
+     * @param {string} toTable
+     * @param {object?} colMapping - the column mapping info ({fromCols: [<string>], fromColsStr: <string>, toCols: [<string>, toColsStr: <string>]})
+     * @param {object?} sourceObjectWrapper - the source object that represents the join
+     */
+    function ParsedJoin(str, strReverse, toSchema, toTable, colMapping, sourceObjectWrapper) {
+        this.str = str;
+        this.strReverse = strReverse;
+        this.toSchema = toSchema;
+        this.toTable = toTable;
+        if (colMapping) {
+            this.hasColumnMapping = true;
+            this.fromCols = colMapping.fromCols;
+            this.fromColsStr = colMapping.fromColsStr;
+            this.toCols = colMapping.toCols;
+            this.toColsStr = colMapping.toColsStr;
+        }
+
+        if (sourceObjectWrapper) {
+            this.sourceObjectWrapper = sourceObjectWrapper;
+
+            this.str = sourceObjectWrapper.toString();
+            this.strReverse = sourceObjectWrapper.toString(true);
+        }
+
+        // should not happen in the existing work flow, added just for sanity check
+        if (!this.str || !this.strReverse) {
+            throw new InvalidInputError("Either str/strReverse or sourceObjectWrapper must be defined.");
+        }
+    }
+
+    /**
+     * Given the string representation of join create ParsedJoin
+     * @param {string} linking - string representation
+     * @param {string} table - from table
+     * @param {string} schema - from schema
+     * @returns {ParsedJoin}
+     */
+    function _createParsedJoinFromStr (linking, table, schema) {
+        var fromSchemaTable = schema ? [table,schema].join(":") : table;
+        var fromCols = linking[1].split(",");
+        var toParts = linking[2].match(/([^:]*):([^:]*):([^\)]*)/);
+        var toCols = toParts[3].split(",");
+        var strReverse = "(" + toParts[3] + ")=(" + fromSchemaTable + ":" + linking[1] + ")";
+
+        return new ParsedJoin(
+            linking[0], // str
+            strReverse, // strReverse
+            decodeURIComponent(toParts[1]), // toSchema
+            decodeURIComponent(toParts[2]), // toTable
+            {
+                fromCols: fromCols.map(function(colName) {return decodeURIComponent(colName);}),
+                fromColsStr: linking[1],
+                toCols: toCols.map(function(colName) {return decodeURIComponent(colName);}),
+                toColsStr: linking[2]
+            } // columnMapping
+        );
+    }
 
     /**
      *
@@ -1153,18 +1687,97 @@
              this.column = colname;
              this.operator = operator;
              this.value = value;
+         },
+
+         get facet() {
+             if (this._facet === undefined) {
+                 this._toFacet();
+             }
+             return this._facet;
+         },
+
+         get depth() {
+             if (this._depth === undefined) {
+                 this._toFacet();
+             }
+             return this._depth;
+         },
+
+         _toFacet: function () {
+             var f = _filterToFacet(this);
+             this._facet = f ? f.facet : null;
+             this._depth = f ? f.depth : null;
          }
      };
+
+     function _processFilterPathPart(part, path) {
+         // split by ';' and '&'
+         var regExp = new RegExp('(;|&|[^;&]+)', 'g');
+         var items = part.match(regExp);
+
+         if (!items) {
+             throw new module.InvalidFilterOperatorError("Couldn't parse '" + part + "' in the url.", path, part);
+         }
+
+         // if a single filter
+         if (items.length === 1) {
+             return _processSingleFilterString(items[0], path);
+         }
+
+         var filters = [];
+         var type = null;
+         for (var i = 0; i < items.length; i++) {
+             // process anything that's inside () first
+             if (items[i].startsWith("(")) {
+                 items[i] = items[i].replace("(", "");
+                 // collect all filters until reaches ")"
+                 var subfilters = [];
+                 while (true) {
+                     if (items[i].endsWith(")")) {
+                         items[i] = items[i].replace(")", "");
+                         subfilters.push(items[i]);
+                         // get out of while loop
+                         break;
+                     } else {
+                         subfilters.push(items[i]);
+                         i++;
+                     }
+                 }
+
+                 filters.push(_processMultiFilterString(subfilters, path));
+
+             } else if (type === null && items[i] === "&") {
+                 // first level filter type
+                 type = module.filterTypes.CONJUNCTION;
+             } else if (type === null && items[i] === ";") {
+                 // first level filter type
+                 type = module.filterTypes.DISJUNCTION;
+             } else if (type === module.filterTypes.CONJUNCTION && items[i] === ";") {
+                 // using combination of ! and & without ()
+                 throw new module.InvalidFilterOperatorError("Parser doesn't support combination of conjunction and disjunction filters.", path,  part);
+             } else if (type === module.filterTypes.DISJUNCTION && items[i] === "&") {
+                 // using combination of ! and & without ()
+                 throw new module.InvalidFilterOperatorError("Parser doesn't support combination of conjunction and disjunction filters.", path, part);
+             } else if (items[i] !== "&" && items[i] !== ";") {
+                 // single filter on the first level
+                 var binaryFilter = _processSingleFilterString(items[i], path);
+                 filters.push(binaryFilter);
+             }
+         }
+
+         var filter = new ParsedFilter(type);
+         filter.setFilters(filters);
+         return filter;
+     }
 
     /**
      *
      * @param {stirng} filterString
-     * @param {string} fullURI used for loggin purposes
      * @param {string} path used for redirect link generation
      * @returns {ParsedFilter} returns the parsed representation of the filter
      * @desc converts a filter string to ParsedFilter
      */
-    function _processSingleFilterString(filterString, fullURI, path) {
+    function _processSingleFilterString(filterString, path) {
         //check for '=' or '::' to decide what split to use
         var f, filter;
         if (filterString.indexOf("=") !== -1) {
@@ -1183,19 +1796,18 @@
                 return filter;
             }
         }
-        throw new module.InvalidFilterOperatorError("Invalid uri: " + fullURI + ". Couldn't parse '" + filterString + "' filter.", path, filterString);
+        throw new module.InvalidFilterOperatorError("Couldn't parse '" + filterString + "' filter.", path, filterString);
     }
 
     /**
      *
      * @param {String} filterStrings array representation of conjunction and disjunction of filters
      *     without parenthesis. i.e., ['id=123', ';', 'id::gt::234', ';', 'id::le::345']
-     * @param {string} fullURI used for logging purposes
      * @param {string} path used for redirect link generation
      * @return {ParsedFilter}
      *
      */
-    function _processMultiFilterString(filterStrings, fullURI, path) {
+    function _processMultiFilterString(filterStrings, path) {
         var filters = [];
         var type = null;
         for (var i = 0; i < filterStrings.length; i++) {
@@ -1207,13 +1819,13 @@
                 type = module.filterTypes.DISJUNCTION;
             } else if (type === module.filterTypes.CONJUNCTION && filterStrings[i] === ";") {
                 // throw invalid filter error (using combination of ! and &)
-                throw new module.InvalidFilterOperatorError("Invalid uri: " + fullURI + ". Couldn't parse '" + filterString + "' filter.", path, filterString);
+                throw new module.InvalidFilterOperatorError("Couldn't parse '" + filterString + "' filter.", path, filterString);
             } else if (type === module.filterTypes.DISJUNCTION && filterStrings[i] === "&") {
                 // throw invalid filter error (using combination of ! and &)
-                throw new module.InvalidFilterOperatorError("Invalid uri: " + fullURI + ". Couldn't parse '" + filterString + "' filter.", path, filterString);
+                throw new module.InvalidFilterOperatorError("Couldn't parse '" + filterString + "' filter.", path, filterString);
             } else if (filterStrings[i] !== "&" && filterStrings[i] !== ";") {
                 // single filter on the first level
-                var binaryFilter = _processSingleFilterString(filterStrings[i], fullURI);
+                var binaryFilter = _processSingleFilterString(filterStrings[i]);
                 filters.push(binaryFilter);
             }
         }
@@ -1259,20 +1871,26 @@
         if (parsedFilter instanceof ParsedFilter && parsedFilter.type === module.filterTypes.BINARYPREDICATE){
             facet.source = parsedFilter.column;
             switch (parsedFilter.operator) {
-                case module.OPERATOR.GREATER_THAN_OR_EQUAL_TO:
-                    facet.ranges = [{min: parsedFilter.value}];
+                case module._ERMrestFilterPredicates.GREATER_THAN_OR_EQUAL_TO:
+                    facet[module._facetFilterTypes.RANGE] = [{min: parsedFilter.value}];
                     break;
-                case module.OPERATOR.LESS_THAN_OR_EQUAL_TO:
-                    facet.ranges = [{max: parsedFilter.value}];
+                case module._ERMrestFilterPredicates.LESS_THAN_OR_EQUAL_TO:
+                    facet[module._facetFilterTypes.RANGE] = [{max: parsedFilter.value}];
                     break;
-                case module.OPERATOR.NULL:
-                    facet.choices = [null];
+                case module._ERMrestFilterPredicates.GREATER_THAN:
+                    facet[module._facetFilterTypes.RANGE] = [{min: parsedFilter.value, min_exclusive: true}];
                     break;
-                case module.OPERATOR.CASE_INS_REG_EXP:
-                    facet.search = [parsedFilter.value];
+                case module._ERMrestFilterPredicates.LESS_THAN:
+                    facet[module._facetFilterTypes.RANGE] = [{max: parsedFilter.value, max_exclusive: true}];
                     break;
-                case module.OPERATOR.EQUAL:
-                    facet.choices = [parsedFilter.value];
+                case module._ERMrestFilterPredicates.NULL:
+                    facet[module._facetFilterTypes.CHOICE] = [null];
+                    break;
+                case module._ERMrestFilterPredicates.CASE_INS_REG_EXP:
+                    facet[module._facetFilterTypes.SEARCH] = [parsedFilter.value];
+                    break;
+                case module._ERMrestFilterPredicates.EQUAL:
+                    facet[[module._facetFilterTypes.CHOICE]] = [parsedFilter.value];
                     break;
                 default:
                     // operator is not supported by facet
@@ -1322,12 +1940,12 @@
 
                 // if operator is or and the filter is binary we can merge them
                 // for example id=1;id=2 can turned into {source: "id", choices: ["1", "2"]}
-                // or id=1;id::geq::2 can be {source: "id", "choices": ["1"], :ranges: {min: 2}}
+                // or id=1;id::geq::2 can be {source: "id", "choices": ["1"], "ranges": [{min: 2}]}
                 if (op === "or" && f.type === module.filterTypes.BINARYPREDICATE) {
                     if (orSources[parsed.source] > -1) {
                         // the source existed before, so it can be merged
                         var index = orSources[parsed.source];
-                        ["ranges", "choices", "search"].forEach(mergeFacets);
+                        module._facetFilterTypeNames.forEach(mergeFacets);
                         continue;
                     } else {
                         orSources[parsed.source] = facet[op].length;
@@ -1401,7 +2019,7 @@
      * https://github.com/informatics-isi-edu/ermrestjs/issues/447
      *
      * @param       {String|Object} str Can be blob or json (object).
-     * @param       {String|Object} path to generate rediretUrl in error module.
+     * @param       {String} path to generate rediretUrl in error module.
      * @constructor
      */
     function ParsedFacets (str, path) {
@@ -1417,472 +2035,121 @@
              * JSON object that represents facets
              * @type {string}
              */
-            this.encoded = this._encodeJSON(str);
+            this.encoded = module.encodeFacet(str);
         } else {
             this.encoded = str;
-            this.decoded = this._decodeJSON(str, path);
+            this.decoded = module.decodeFacet(str, path);
         }
 
         var andOperator = module._FacetsLogicalOperators.AND, obj = this.decoded;
         if (!obj.hasOwnProperty(andOperator) || !Array.isArray(obj[andOperator])) {
             // we cannot actually parse the facet now, because we haven't
             // introspected the whole catalog yet, and don't have access to the constraint objects.
-            throw new module.InvalidFacetOperatorError('', path);
+            throw new module.InvalidFacetOperatorError(path, module._facetingErrors.invalidBooleanOperator);
         }
-
-    }
-
-    ParsedFacets.prototype = {
-        constructor: ParsedFacets,
 
         /**
-         * Given a JSON return an encoded blob.
-         *
-         * @private
-         * @param       {object} json JSON object
-         * @return      {string} string blob
+         * Whether facet blob has any visible filters
+         * @type {boolean}
          */
-        _encodeJSON: function (obj) {
-            return module.encodeFacet(obj);
-        },
-
-        /**
-         * Given a blob string return the JSON object.
-         *
-         * @private
-         * @param       {string} blob the encoded JSON object.
-         * @param       {String|Object} path to generate rediretUrl in error module.
-         * @return      {object} decoded JSON object.
-         */
-        _decodeJSON: function (blob, path) {
-            return module.decodeFacet(blob, path);
-        }
-    };
-
-    /**
-     * For the structure of JSON, take a look at ParsedFacets documentation.
-     *
-     * NOTE:
-     * If any part of the facet is not as expected, it will throw emtpy string.
-     * Any part of the code that is using this function should guard against the result
-     * being empty, and throw error in that case.
-     *
-     * @param       {object} json  JSON representation of filters
-     * @param       {string} alias the table alias
-     * @constructor
-     * @return      {string} A string representation of filters that is understanable by ermrest
-     */
-    _JSONToErmrestFilter = function(json, alias, tableName, catalogId, consNames) {
-        var findConsName = function (catalogId, schemaName, constraintName) {
-            var result;
-            if ((catalogId in consNames) && (schemaName in consNames[catalogId])){
-                result = consNames[catalogId][schemaName][constraintName];
-            }
-            return (result === undefined) ? null : result;
-        };
-
-
-        var isDefinedAndNotNull = function (v) {
-            return v !== undefined && v !== null;
-        };
-
-        var valueToString = function (v) {
-            return (typeof v === "string") ? v :JSON.stringify(v);
-        };
-
-        // parse choices constraint
-        var parseChoices = function (choices, column) {
-            return choices.reduce(function (prev, curr, i) {
-                var res = prev += (i !== 0 ? ";": "");
-                if (isDefinedAndNotNull(curr)) {
-                    res += module._fixedEncodeURIComponent(column) + "=" + module._fixedEncodeURIComponent(valueToString(curr));
-                } else {
-                    res += module._fixedEncodeURIComponent(column) + "::null::";
-                }
-                return res;
-            }, "");
-        };
-
-        // parse ranges constraint
-        var parseRanges = function (ranges, column) {
-            var res = "", hasFilter = false;
-            ranges.forEach(function (range, index) {
-                if (hasFilter) {
-                    res += ";";
-                    hasFilter = false;
-                }
-
-                if (isDefinedAndNotNull(range.min)) {
-                    res += module._fixedEncodeURIComponent(column) + module.OPERATOR.GREATER_THAN_OR_EQUAL_TO + module._fixedEncodeURIComponent(valueToString(range.min));
-                    hasFilter = true;
-                }
-
-                if (isDefinedAndNotNull(range.max)) {
-                    if (hasFilter) {
-                        res += "&";
-                    }
-                    res += module._fixedEncodeURIComponent(column) + module.OPERATOR.LESS_THAN_OR_EQUAL_TO + module._fixedEncodeURIComponent(valueToString(range.max));
-                    hasFilter = true;
-                }
-            });
-            return res;
-        };
-
-        // parse search constraint
-        var parseSearch = function (search, column) {
-            var res, invalid = false;
-            res = search.reduce(function (prev, curr, i) {
-                if (curr == null) {
-                    invalid = true;
-                    return "";
-                } else {
-                    return prev + (i !== 0 ? ";": "") + _convertSearchTermToFilter(valueToString(curr), column);
-                }
-            }, "");
-
-            return res;
-        };
-
-        // returns null if the path is invalid
-        var parseDataSource = function (source, tableName, catalogId) {
-            var res = [], fk, fkObj, i, table = tableName, isInbound, constraint;
-            // from 0 to source.length-1 we have paths
-            for (i = 0; i < source.length - 1; i++) {
-
-                if ("inbound" in source[i]) {
-                    constraint = source[i].inbound;
-                    isInbound = true;
-                } else if ("outbound" in source[i]) {
-                    constraint = source[i].outbound;
-                    isInbound = false;
-                } else {
-                    // given object was invalid
-                    return null;
-                }
-
-                fkObj = findConsName(catalogId, constraint[0], constraint[1]);
-
-                // constraint name was not valid
-                if (fkObj == null || fkObj.subject !== module._constraintTypes.FOREIGN_KEY) {
-                    console.log("Invalid data source. fk with the following constraint is not available on catalog: " + constraint.toString());
-                    return null;
-                }
-
-                fk = fkObj.object;
-
-                // inbound
-                if (isInbound && fk.key.table.name === table) {
-                    res.push(fk.toString(false, true));
-                    table = fk._table.name;
-                }
-                // outbound
-                else if (!isInbound && fk._table.name === table) {
-                    res.push(fk.toString(true, true));
-                    table = fk.key.table.name;
-                }
-                else {
-                    // the given object was not valid
-                    return null;
-                }
-            }
-            return res.length === 0 ? null : res.join("/");
-        };
-
-        // parse TERM (it will not do it recursively)
-        // returns null if it's not valid
-        var parseAnd = function (and) {
-            var res = [], i, term, col, path, constraints, parsed;
-
-            for (i = 0; i < and.length; i++) {
-                path = ""; // the source path if there are some joins
-                constraints = []; // the current constraints for this source
-                term = and[i];
-
-                if (typeof term !== "object") {
-                    return "";
-                }
-
-                // parse the source
-                if (_isFacetSourcePath(term.source)) {
-                    path = parseDataSource(term.source, tableName, catalogId);
-                    col = term.source[term.source.length - 1];
-                } else {
-                    col = _getFacetSourceColumnStr(term.source);
-                    if (typeof col !== "string") {
-                        return "";
-                    }
-                }
-
-                // if the data-path was invalid, ignore this facet
-                if (path === null) {
-                    return "";
-                }
-
-                // parse the constraints
-                if (Array.isArray(term.choices)) {
-                    parsed = parseChoices(term.choices, col);
-                    if (!parsed) {
-                        return "";
-                    }
-                    constraints.push(parsed);
-                }
-
-                if (Array.isArray(term.ranges)) {
-                    parsed = parseRanges(term.ranges, col);
-                    if (!parsed) {
-                        return "";
-                    }
-                    constraints.push(parsed);
-                }
-
-                if (Array.isArray(term.search)) {
-                    parsed = parseSearch(term.search, col);
-                    if (!parsed) {
-                        return "";
-                    }
-                    constraints.push(parsed);
-                }
-
-                if (term.not_null === true) {
-                    constraints.push("!(" + module._fixedEncodeURIComponent(col) + "::null::)");
-                }
-
-                if (constraints.length == 0) {
-                    return "";
-                }
-
-                res.push((path.length !== 0 ? path + "/" : "") + constraints.join(";") + "/$" + alias);
-            }
-            return res.join("/");
-        };
-
-        var andOperator = module._FacetsLogicalOperators.AND;
-
-        // NOTE we only support and at the moment.
-        if (!json.hasOwnProperty(andOperator) || !Array.isArray(json[andOperator])) {
-            return "";
-        }
-
-        var ermrestFilter = parseAnd(json[andOperator]);
-
-        return !ermrestFilter ? "" : ermrestFilter;
-    };
-
-    _isFacetSourcePath = function (source) {
-        return Array.isArray(source) && !(source.length === 1 && typeof source[0] === "string");
-    };
-
-    /**
-     * Returns the last foreignkey in the source path.
-     *
-     * NOTE since constraint names is an object attached to ERMrest module,
-     * in test environments sometimes it would return null, that's why we are
-     * passing consNames to this function.
-     * @param  {Object} source    the source object (path)
-     * @param  {String} catalogId catalog id
-     * @param  {Object} consNames constraint names defined (take a look at the note)
-     * @return {Object} has `obj` (the actual fk object), and `isInbound`
-     * @private
-     */
-    _getFacetSourceLastForeignKey = function (source, catalogId, consNames) {
-        if (!_isFacetSourcePath(source)) {
-            return null;
-        }
-
-        var lastJoin = source[source.length-2];
-        var isInbound = false, constraint;
-
-        if ("inbound" in lastJoin) {
-            isInbound = true;
-            constraint = lastJoin.inbound;
-        } else {
-            constraint = lastJoin.outbound;
-        }
-
-        return {
-            "obj": consNames[catalogId][constraint[0]][constraint[1]].object,
-            "isInbound": isInbound
-        };
-    };
-
-    /**
-     * Returns an array of foreignkeys that are in the given source path.
-     *
-     * NOTE since constraint names is an object attached to ERMrest module,
-     * in test environments sometimes it would return null, that's why we are
-     * passing consNames to this function.
-     *
-     * @param  {Object} source    the source object (path)
-     * @param  {String} catalogId catalog id
-     * @param  {Object} consNames constraint names defined (take a look at the note)
-     * @return {Object[]} each object has `obj` (the actual fk object), and `isInbound`
-     * @private
-     */
-    _getFacetSourceForeignKeys = function (source, catalogId, consNames) {
-        var res = [];
-        if (_isFacetSourcePath(source)) {
-            var isInbound = false, constraint;
-            for (var i = 0; i < source.length - 1; i++) {
-                if ("inbound" in source[i]) {
-                    isInbound = true;
-                    constraint = source[i].inbound;
-                } else {
-                    isInbound = false;
-                    constraint = source[i].outbound;
-                }
-
-                res.push({
-                    "obj": consNames[catalogId][constraint[0]][constraint[1]].object,
-                    "isInbound": isInbound
-                });
-            }
-        }
-        return res;
-    };
-
-    /**
-     * get facet's source column string
-     * @param  {Object} source source object
-     * @return {string|Object}
-     * @private
-     */
-    _getFacetSourceColumnStr = function (source) {
-        return Array.isArray(source) ? source[source.length-1] : source;
-    };
-
-    /**
-     * Given the source object, validates the path and returns the corresponding column object.
-     * It will return `false` if the source is invalid.
-     *
-     * NOTE since constraint names is an object attached to ERMrest module,
-     * in test environments sometimes it would return null, that's why we are
-     * passing consNames to this function.
-     *
-     * @private
-     *
-     * @param  {Object} source    source object
-     * @param  {ERMrest.Table} table the starting table of the path
-     * @param  {object} consNames The constraint names (will be used for constraint lookup)
-     * @return {ERMrest.Column|false}
-     */
-    _getFacetSourceColumn = function (source, table, consNames) {
-        var colName, colTable = table;
-
-        var findConsName = function (catalogId, schemaName, constraintName) {
-            var result;
-            if ((catalogId in consNames) && (schemaName in consNames[catalogId])){
-                result = consNames[catalogId][schemaName][constraintName];
-            }
-            return (result === undefined) ? null : result;
-        };
-
-        // from 0 to source.length-1 we have paths
-        if (_isFacetSourcePath(source)) {
-            var fk, i, isInbound, constraint, fkObj;
-            for (i = 0; i < source.length - 1; i++) {
-
-                if ("inbound" in source[i]) {
-                    constraint = source[i].inbound;
-                    isInbound = true;
-                } else if ("outbound" in source[i]) {
-                    constraint = source[i].outbound;
-                    isInbound = false;
-                } else {
-                    // given object was invalid
-                    return false;
-                }
-
-                fkObj = findConsName(colTable.schema.catalog.id, constraint[0], constraint[1]);
-
-                // constraint name was not valid
-                if (fkObj === null || fkObj.subject !== module._constraintTypes.FOREIGN_KEY) {
-                    return false;
-                }
-
-                fk = fkObj.object;
-
-                // inbound
-                if (isInbound && fk.key.table === colTable) {
-                    colTable = fk._table;
-                }
-                // outbound
-                else if (!isInbound && fk._table === colTable) {
-                    colTable = fk.key.table;
-                }
-                else {
-                    // the given object was not valid
-                    return false;
-                }
-            }
-            colName = source[source.length-1];
-        } else {
-            colName = _getFacetSourceColumnStr(source);
-        }
-
-        try {
-            return colTable.columns.get(colName);
-        } catch (exp) {
-            return false;
-        }
-
-    };
-
-    /**
-     * If the column that the facetObject is representing is in entity mode
-     * @param  {Object} facetObject the facet object
-     * @param  {ERMrest.Column} column      the column objKey
-     * @return {boolean} true if entity mode otherwise false.
-     */
-    _isFacetEntityMode = function (facetObject, column) {
-        if (facetObject.entity === false) {
-            return false;
-        }
-
-        // column is part of simple key
-        return !column.nullok && column.memberOfKeys.filter(function (key) {
-            return key.simple;
-        }).length > 0;
-    };
-
-    _sourceHasInbound = function (source) {
-        if (!_isFacetSourcePath(source)) return false;
-        return source.some(function (n, index) {
-            return (index != source.length-1) && ("inbound" in n);
+        this.hasVisibleFilters = obj[andOperator].some(function (f) {
+            return !f.hidden;
         });
-    };
 
-    _sourceIsInboundForeignKey = function (sourceObject, column, consNames) {
-        var findConsName = function (catalogId, schemaName, constraintName) {
-            var result;
-            if ((catalogId in consNames) && (schemaName in consNames[catalogId])){
-                result = consNames[catalogId][schemaName][constraintName];
-            }
-            return (result === undefined) ? null : result;
-        };
+        /**
+         * Whether facet blob has any visible filters that is not based on search-box
+         * @type {boolean}
+         */
+        this.hasNonSearchBoxVisibleFilters = obj[andOperator].some(function (f) {
+            return !f.hidden && (!f.sourcekey || f.sourcekey !== module._specialSourceDefinitions.SEARCH_BOX);
+        });
 
-        var invalid = !_isFacetSourcePath(sourceObject.source) || !_isFacetEntityMode(sourceObject, column) ||
-                      sourceObject.aggregate || sourceObject.source.length > 3;
-
-        if (invalid) {
-            return false;
-        }
-
-        var source = sourceObject.source;
-        var fks = _getFacetSourceForeignKeys(source, column.table.schema.catalog.id, consNames);
-        if (fks.length === 2) {
-            if (!fks[0].isInbound || fks[1].isInbound) {
-                return false;
-            }
-
-            return fks[0].obj._table._isPureBinaryAssociation();
-        }
-        return fks[0].isInbound;
-    };
-
+        /**
+         * and array of conjunctive filters defined in the facet blob
+         * @type {Array}
+         */
+        this.andFilters = obj[andOperator];
+    }
     /**
-     * List of logical operators that parser accepts in JSON facets.
-     * @type {Object}
+     * An object that will have the follwoing attributes:
+     *  - facets: "the facet object"
+     *  - ermrest_path: "ermrest path string"
+     *  - displayname: {value: "the value", isHTML: boolean} (optional)
+     *
+     *
+     * @param       {String|Object} str Can be blob or json (object).
+     * @param       {String} path to generate rediretUrl in error module.
+     * @constructor
      */
-    module._FacetsLogicalOperators = Object.freeze({
-        AND: "and"
-    });
+    function CustomFacets (str, path) {
+
+        // the eror that we should throw if it's invalid
+        var error = new module.InvalidCustomFacetOperatorError('', path);
+
+        if (typeof str === 'object') {
+            /**
+             * encode JSON object that represents facets
+             * @type {object}
+             */
+            this.decoded = str;
+
+            /**
+             * JSON object that represents facets
+             * @type {string}
+             */
+            this.encoded = module.encodeFacet(str);
+        } else {
+            this.encoded = str;
+
+            try {
+                this.decoded = module.decodeFacet(str, path);
+            } catch(exp) {
+                // the exp will be InvalidFacetOperatorError, so we should change it to custom-facet
+                throw error;
+            }
+        }
+
+        var obj = this.decoded;
+        if ((!obj.hasOwnProperty("facets") && !obj.hasOwnProperty("ermrest_path"))) {
+            throw error;
+        }
+
+        if (obj.facets) {
+            /**
+            * the facet that this custom facet is representing
+            * @type {ParsedFacets}
+            */
+            this.facets = new ParsedFacets(obj.facets);
+        }
+
+        if (typeof obj.ermrest_path === "string") {
+            /**
+             * The ermrset string path that will be appended to the url
+             * @type {String}
+             */
+            this.ermrestPath = module.trimSlashes(obj.ermrest_path);
+        }
+
+        this.removable = true;
+        if (typeof obj.removable === "boolean") {
+            /**
+             * Whether user can remove the facet or not
+             * @type {string}
+             */
+            this.removable = obj.removable;
+        }
+
+        if (isStringAndNotEmpty(obj.displayname)) {
+            /**
+             * The name that should be used to represent the facet value (optional)
+             * @type {Object}
+             */
+            this.displayname = {
+                value: obj.displayname,
+                unformatted: obj.displayname,
+                isHTML: false
+            };
+        } else if (isObjectAndNotNull(obj.displayname) && ("value" in obj.displayname)) {
+            this.displayname = obj.displayname;
+        }
+    }

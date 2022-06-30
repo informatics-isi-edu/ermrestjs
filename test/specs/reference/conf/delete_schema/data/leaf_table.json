@@ -1,0 +1,10 @@
+[
+  {"key_col": 1, "int_col": 11},
+  {"key_col": 2, "int_col": 22},
+  {"key_col": 3, "int_col": 33},
+  {"key_col": 4, "int_col": 44},
+  {"key_col": 5, "int_col": 55},
+  {"key_col": 6, "int_col": 66},
+  {"key_col": 7, "int_col": 77},
+  {"key_col": 8, "int_col": 88}
+]

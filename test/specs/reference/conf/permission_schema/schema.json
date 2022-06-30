@@ -13,7 +13,35 @@
                     ]
                 }
             ],
-            "foreign_keys": [],
+            "foreign_keys": [
+                {
+                    "names": [["permission_schema", "perm_table_fk1"]],
+                    "foreign_key_columns": [
+                        {
+                            "schema_name": "permission_schema",
+                            "table_name": "perm_table",
+                            "column_name": "fk_col_1"
+                        },
+                        {
+                            "schema_name": "permission_schema",
+                            "table_name": "perm_table",
+                            "column_name": "fk_col_2"
+                        }
+                    ],
+                    "referenced_columns": [
+                        {
+                            "schema_name": "reference_schema",
+                            "table_name": "table_w_only_composite_key",
+                            "column_name": "id_1"
+                        },
+                        {
+                            "schema_name": "reference_schema",
+                            "table_name": "table_w_only_composite_key",
+                            "column_name": "id_2"
+                        }
+                    ]
+                }
+            ],
             "table_name": "perm_table",
             "schema_name": "permission_schema",
             "column_definitions": [
@@ -37,14 +65,175 @@
                     "type": {
                         "typename": "text"
                     }
+                },
+                {
+                    "name": "fk_col_1",
+                    "nullok": true,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "fk_col_2",
+                    "nullok": true,
+                    "type": {
+                        "typename": "text"
+                    }
                 }
             ],
-            "annotations": {}
+            "annotations": {
+                "tag:isrd.isi.edu,2016:visible-columns": {
+                    "*": [
+                        "key", "name", "term", ["permission_schema", "perm_table_fk1"]
+                    ]
+                },
+                "tag:isrd.isi.edu,2016:visible-foreign-keys": {
+                    "detailed": [
+                        ["permission_schema", "perm_association_table_fk_1"]
+                    ]
+                }
+            }
+        },
+        "table_w_disabled_columns": {
+            "kind": "table",
+            "table_name": "table_w_disabled_columns",
+            "schema_name": "permission_schema",
+            "keys": [
+                {"unique_columns": ["col_id"]}
+            ],
+            "column_definitions": [
+                {
+                    "name": "col_id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "col_serial",
+                    "type": {
+                        "typename": "serial4"
+                    }
+                },
+                {
+                    "name": "col_generated",
+                    "default": "default generated",
+                    "type": {
+                        "typename": "text"
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:generated": {}
+                    }
+                },
+                {
+                    "name": "col_no_insert",
+                    "default": "default no insert",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "col",
+                    "type": {
+                        "typename": "text"
+                    }
+                }
+            ]
+        },
+        "perm_association_table": {
+            "kind": "table",
+            "keys": [
+                {
+                    "unique_columns": [
+                        "id_1", "id_2"
+                    ]
+                }
+            ],
+            "foreign_keys": [
+                {
+                    "names": [["permission_schema", "perm_association_table_fk_1"]],
+                    "foreign_key_columns": [
+                        {
+                            "schema_name": "permission_schema",
+                            "table_name": "perm_association_table",
+                            "column_name": "id_1"
+                        }
+                    ],
+                    "referenced_columns": [
+                        {
+                            "schema_name": "permission_schema",
+                            "table_name": "perm_table",
+                            "column_name": "key"
+                        }
+                    ]
+                },
+                {
+                    "names": [["permission_schema", "perm_association_table_fk_2"]],
+                    "foreign_key_columns": [
+                        {
+                            "schema_name": "permission_schema",
+                            "table_name": "perm_association_table",
+                            "column_name": "id_2"
+                        }
+                    ],
+                    "referenced_columns": [
+                        {
+                            "schema_name": "permission_schema",
+                            "table_name": "perm_related_table",
+                            "column_name": "id"
+                        }
+                    ]
+                }
+            ],
+            "table_name": "perm_association_table",
+            "schema_name": "permission_schema",
+            "column_definitions": [
+                {
+                    "name": "id_1",
+                    "nullok": false,
+                    "type": {
+                        "typename": "int"
+                    }
+                },
+                {
+                    "name": "id_2",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2016:visible-columns": {
+                    "*": [
+                        "name"
+                    ]
+                }
+            }
+        },
+        "perm_related_table": {
+            "kind": "table",
+            "keys":  [{"unique_columns": ["id"]}],
+            "foreign_keys": [],
+            "table_name": "perm_related_table",
+            "schema_name": "permission_schema",
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "name",
+                    "type": {
+                        "typename": "text"
+                    }
+                }
+            ]
         }
     },
-    "table_names": [
-        "perm_table"
-    ],
     "comment": null,
     "annotations": {}
 }

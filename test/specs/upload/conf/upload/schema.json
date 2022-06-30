@@ -189,7 +189,7 @@
                     "comment": null,
                     "name": "file1_name",
                     "default": null,
-                    "nullok": false,
+                    "nullok": true,
                     "type": {
                         "typename": "text"
                     },
@@ -206,7 +206,7 @@
                     "comment": "asset/reference",
                     "name": "file1_uri",
                     "default": null,
-                    "nullok": false,
+                    "nullok": true,
                     "type": {
                         "typename": "text"
                     },
@@ -217,7 +217,8 @@
                         ],
                         "tag:isrd.isi.edu,2017:asset": {
                             "byte_count_column": "file1_bytes",
-                            "url_pattern": "/hatrac/js/ermrestjs/{{{_timestamp}}}/{{{_file1_MD5}}}",
+                            "url_pattern": "{{#if true}}/hatrac/js/ermrestjs/{{{_timestamp}}}/{{{_file1_uri.filename_ext}}}/{{{_file1_MD5}}}{{/if}}",
+                            "template_engine": "handlebars",
                             "md5": "file1_MD5",
                             "filename_column": "file1_name"
                         }
@@ -275,9 +276,10 @@
                         ],
                         "tag:isrd.isi.edu,2017:asset": {
                             "byte_count_column": "file2_bytes",
-                            "url_pattern": "/hatrac/js/ermrestjs/{{{_timestamp}}}/{{{_file2_MD5}}}",
+                            "url_pattern": "/hatrac/js/ermrestjs/{{{_timestamp}}}/{{{_file2_uri.filename_ext}}}/{{{_file2_MD5}}}",
                             "md5": "file2_MD5",
-                            "filename_column": "file2_name"
+                            "filename_column": "file2_name",
+                            "filename_ext_regexp": [".whatever", ".omni.tiff", ".tiff"] 
                         }
                     }
                 },
@@ -333,9 +335,10 @@
                         ],
                         "tag:isrd.isi.edu,2017:asset": {
                             "byte_count_column": "file3_bytes",
-                            "url_pattern": "/hatrac/js/ermrestjs/{{{_timestamp}}}/{{{_file3_MD5}}}",
+                            "url_pattern": "/hatrac/js/ermrestjs/{{{_timestamp}}}/{{{_file3_uri.filename_ext}}}/{{{_file3_MD5}}}",
                             "md5": "file3_MD5",
-                            "filename_column": "file3_name"
+                            "filename_column": "file3_name",
+                            "filename_ext_filter": [".some.extension", ".txt"]
                         }
                     }
                 }

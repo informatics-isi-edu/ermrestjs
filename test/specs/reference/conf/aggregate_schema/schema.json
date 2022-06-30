@@ -59,6 +59,12 @@
                     "type": {
                         "typename": "timestamptz"
                     }
+                },
+                {
+                    "name": "column_that_has_a_very_long_name_and_long_values_to_test_limit",
+                    "type": {
+                        "typename": "text"
+                    }
                 }
             ],
             "annotations": {}

@@ -18,7 +18,9 @@ require('./../../utils/starter.spec.js').runTests({
         "/reference/tests/14.default_value.js",
         "/reference/tests/15.aggregates.js",
         "/reference/tests/16.disabled_system_columns.js",
-        "/reference/tests/17.reference_pre_format_values.js"
+        "/reference/tests/17.reference_pre_format_values.js",
+        "/reference/tests/18.comment_display_inline.js",
+        "/reference/tests/19.comment_display_related.js"
     ],
     schemaConfigurations: [
         "/reference/conf/generated.conf.json",
@@ -32,6 +34,9 @@ require('./../../utils/starter.spec.js').runTests({
         "/reference/conf/delete.conf.json",
         "/reference/conf/default_value.conf.json",
         "/reference/conf/aggregate.conf.json",
-        "/reference/conf/permission.conf.json"
+        "/reference/conf/permission.conf.json",
+        "/reference/conf/search.conf.json",
+        "/reference/conf/comment_display_inline.conf.json",
+        "/reference/conf/comment_display_related.conf.json"
     ]
 });

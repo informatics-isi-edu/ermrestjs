@@ -1,0 +1,127 @@
+{
+    "catalog": {
+        "annotations": {
+            "tag:isrd.isi.edu,2019:export": {
+                "compact/select": {
+                    "templates": [
+                        {
+                            "displayname": "contextualized catalog template",
+                            "type": "BAG",
+                            "outputs": [
+                                {"fragment_key": "$chaise_default_bdbag_outputs"}
+                            ]
+                        }
+                    ]
+                }
+            },
+            "tag:isrd.isi.edu,2021:export-fragment-definitions": {
+                "template_w_circular_dep": {
+                    "displayname": "recursive",
+                    "type": "BAG",
+                    "outputs": [
+                        {
+                            "source": {
+                                "api": "entity"
+                            },
+                            "destination": {
+                                "type": "csv",
+                                "name": "valid_output"
+                            }
+                        },
+                        {"fragment_key": "output_w_circular_dep"}
+                    ]
+                },
+                "output_w_circular_dep": {
+                    "source": {
+                        "api": "entity"
+                    },
+                    "destination": {"fragment_key": "destination_w_circular_dep"}
+                },
+                "destination_w_circular_dep": {"fragment_key": "output_w_circular_dep"},
+                "template_w_invalid_fragment_key": {
+                    "displayname": "invalid fragment key",
+                    "type": "BAG",
+                    "outputs": [
+                        {
+                            "source": {
+                                "api": "entity"
+                            },
+                            "destination": {
+                                "type": "csv",
+                                "name": "valid_output"
+                            }
+                        },
+                        {"fragment_key": "some_invalid_frag_key_that_doesnt_exist"}
+                    ]
+                },
+                "$ignored_template": {
+                    "displayname": "$ in fragment key",
+                    "type": "BAG",
+                    "outputs": [
+                        {
+                            "source": {
+                                "api": "entity"
+                            },
+                            "destination": {
+                                "type": "csv",
+                                "name": "valid_output"
+                            }
+                        }
+                    ]
+                },
+                "defined_default_outputs": [
+                    {
+                        "source": {
+                            "api": "entity"
+                        },
+                        "destination": {
+                            "type": "csv",
+                            "name": "catalog_default_output_1"
+                        }
+                    },
+                    {
+                        "source": {
+                            "api": "entity"
+                        },
+                        "destination": {
+                            "type": "csv",
+                            "name": "catalog_default_output_2"
+                        }
+                    }
+                ],
+                "defined_default_templates": [
+                    {
+                        "displayname": "default temp1",
+                        "type": "BAG",
+                        "outputs": [{"fragment_key": "defined_default_outputs"}]
+                    },
+                    {
+                        "displayname": "default temp2",
+                        "type": "BAG",
+                        "outputs": [{"fragment_key": "defined_default_outputs"}],
+                        "postprocessors": [
+                            {
+                                "processor": "identifier",
+                                "processor_params": {
+                                    "test": "True"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    "schema": {
+        "name": "export_table_annot_schema",
+        "createNew": true,
+        "path": "test/specs/export/conf/export_table_annot_schema/schema.json"
+    },
+    "tables": {
+        "createNew": true
+    },
+    "entities": {
+        "createNew": true,
+        "path": "test/specs/export/conf/export_table_annot_schema/data"
+    }
+}

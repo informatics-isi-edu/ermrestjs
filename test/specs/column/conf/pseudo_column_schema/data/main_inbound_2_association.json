@@ -26,18 +26,18 @@
     },
     {
         "id": "06",
-        "fk_to_main": "10",
-        "fk_to_inbound_2": "01"
+        "fk_to_main": "01",
+        "fk_to_inbound_2": "06"
     },
     {
         "id": "07",
-        "fk_to_main": "10",
-        "fk_to_inbound_2": "02"
+        "fk_to_main": "01",
+        "fk_to_inbound_2": "07"
     },
     {
         "id": "08",
-        "fk_to_main": "10",
-        "fk_to_inbound_2": "03"
+        "fk_to_main": "01",
+        "fk_to_inbound_2": "08"
     },
     {
         "id": "09",

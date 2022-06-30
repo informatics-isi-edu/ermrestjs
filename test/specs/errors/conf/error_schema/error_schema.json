@@ -255,7 +255,7 @@
       ],
       "entityCount": 0,
       "foreign_keys": [  {
-          "names" : [["error_schema", "fk_test"]],
+          "names" : [["error_schema", "fk_test2"]],
           "comment": null,
           "foreign_key_columns": [
             {
@@ -414,6 +414,41 @@
                    "name": "id_from_inbound_related_table",
                    "nullok": false,
                    "type": {"typename":"serial4"}
+               }
+           ]
+       },
+       "duplicate_key_conflict": {
+           "kind": "table",
+           "table_name": "duplicate_key_conflict",
+           "schema_name": "error_schema",
+           "keys": [{
+               "unique_columns": ["duplicate id"]
+           }],
+           "column_definitions": [
+               {
+                   "name": "duplicate id",
+                   "nullok": false,
+                   "type": {"typename":"int4"}
+               }
+           ]
+       },
+       "duplicate_composite_key_conflict": {
+           "kind": "table",
+           "table_name": "duplicate_composite_key_conflict",
+           "schema_name": "error_schema",
+           "keys": [{
+               "unique_columns": ["duplicate_id", "another_id"]
+           }],
+           "column_definitions": [
+               {
+                   "name": "duplicate_id",
+                   "nullok": false,
+                   "type": {"typename":"int4"}
+               },
+               {
+                   "name": "another_id",
+                   "nullok": false,
+                   "type": {"typename":"int4"}
                }
            ]
        }

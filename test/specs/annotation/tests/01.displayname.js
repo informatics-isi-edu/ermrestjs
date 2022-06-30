@@ -67,6 +67,22 @@ exports.execute = function (options) {
             checkColumn("table_without_display_annotation", "column_without_display_annotation_2", "column without display annotation 2", "column without display annotation 2", false);
         });
 
+        describe("regarding system columns,", function () {
+          it ("if display annotation is defined on the column, should be honored.", function () {
+              checkColumn("table_with_titlecase", "RID", "<em>RID</em>", "_RID_", true);
+              checkColumn("table_with_titlecase", "RCT", "Created Time", "Created Time", false);
+              checkColumn("table_with_titlecase", "RMT", "Rmt", "Rmt", false);
+          });
+
+          it ("otherwise should not honor parent display settings and return the database name.", function () {
+              checkColumn("table_with_titlecase_without_underlinespace", "RID", "RID", "RID", false);
+              checkColumn("table_with_titlecase_without_underlinespace", "RCT", "RCT", "RCT", false);
+              checkColumn("table_with_titlecase_without_underlinespace", "RMT", "RMT", "RMT", false);
+              checkColumn("table_with_titlecase_without_underlinespace", "RCB", "RCB", "RCB", false);
+              checkColumn("table_with_titlecase_without_underlinespace", "RMB", "RMB", "RMB", false);
+          });
+        });
+
         // Helpers:
 
         function checkTable(tableName, expectedValue, expectedUnformatted, expectedHTML) {

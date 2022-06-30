@@ -1,0 +1,103 @@
+{
+    "schema_name": "google_metadata_schema",
+    "tables": {
+        "google_metadata_w_handlebars": {
+            "kind": "table",
+            "table_name": "google_metadata_w_handlebars",
+            "schema_name": "google_metadata_schema",
+            "keys": [
+                {
+                    "unique_columns": [
+                        "id"
+                    ]
+                }
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "integer"
+                    }
+                },
+                {
+                    "name": "title",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "website",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "category",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "summary",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "luxurious",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "DataCatalog",
+                    "type": {
+                        "typename": "jsonb"
+                    }
+                },
+                {
+                    "name": "citation_jsonb",
+                    "type": {
+                        "typename": "jsonb"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2021:google-dataset": {
+                    "detailed": {
+                        "dataset": {
+                            "name": "{{{title}}}",
+                            "@type": "Dataset",
+                            "creator": {
+                                "url": "https://data.world/smartcolumbusos",
+                                "name": "{{{website}}}",
+                                "@type": "Organization",
+                                "image": "https://cdn.filepicker.io/api/file/78EkoXuSX2KkkOM3Y7zQ",
+                                "description": "{{{category}}}",
+                                "parentOrganization": "Smart Columbus Operating System"
+                            },
+                            "@context": "http://schema.org",
+                            "keywords": [
+                                "sales",
+                                "{{{category}}}",
+                                "ice cream",
+                                "ice cream brands",
+                                "brands"
+                            ],
+                            "description": "{{{summary}}}",
+                            "dateModified": "{{{RMT}}}",
+                            "datePublished": "{{{RCT}}}",
+                            "isAccessibleForFree": "{{{luxurious}}}",
+                            "url": "{{{$self.uri.detailed}}}",
+                            "funder": "{{#jsonStringify}}{{{_DataCatalog.funder}}}{{/jsonStringify}}",
+                            "citation": "{{{citation_jsonb}}}"
+                        },
+                        "template_engine": "handlebars"
+                    }
+                }
+            }
+        }
+    }
+}

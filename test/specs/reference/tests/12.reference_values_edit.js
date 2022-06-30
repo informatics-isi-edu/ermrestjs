@@ -9,11 +9,11 @@ exports.execute = function (options) {
             limit = 7;
 
         var multipleEntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"
-            + tableName + "/id::gt::" + lowerLimit + "&id::lt::" + upperLimit;
+            + tableName + "/id::gt::" + lowerLimit + "&id::lt::" + upperLimit + "/@sort(id)";
 
         var reference, page, tuples;
-        
-        
+
+
         var chaiseURL = "https://dev.isrd.isi.edu/chaise";
         var recordURL = chaiseURL + "/record";
         var record2URL = chaiseURL + "/record-two";
@@ -106,6 +106,7 @@ exports.execute = function (options) {
                 var isHTML = tuple.isHTML[valueIndex];
 
                 // Check isHTML is same as expected; either true or false
+                // none of the values should be presented as html values, so isHTML is false for all
                 expect(isHTML).toBe(false, columnName + " column isHTML should be set to false but was found to be true" );
             });
 
@@ -120,10 +121,10 @@ exports.execute = function (options) {
          */
         var testTupleValidity = function(tupleIndex, expectedValues) {
 
-            it("should return 14 values for a tuple", function() {
+            it("should return 17 values for a tuple", function() {
                 var values = tuples[tupleIndex].values;
 
-                expect(values.length).toBe(14);
+                expect(values.length).toBe(17);
             });
 
             checkValueAndIsHTML("id", tupleIndex, 0, expectedValues);
@@ -138,43 +139,46 @@ exports.execute = function (options) {
             checkValueAndIsHTML("some_gene_sequence", tupleIndex, 9, expectedValues);
             checkValueAndIsHTML("video_col", tupleIndex, 11, expectedValues);
             checkValueAndIsHTML("fkeys_col", tupleIndex, 12, expectedValues);
-            checkValueAndIsHTML("moment_col", tupleIndex, 13, expectedValues);
+            checkValueAndIsHTML("catalog_snapshot", tupleIndex, 13, expectedValues);
+            checkValueAndIsHTML("moment_col", tupleIndex, 14, expectedValues);
+            checkValueAndIsHTML("encodefacet_col", tupleIndex, 15, expectedValues);
+            checkValueAndIsHTML("color_rgb_hex_col", tupleIndex, 16, expectedValues);
 
         };
 
 
 
-        
-        
+
+
         describe("Testing tuples values", function() {
             var testObjects ={
                 "test1": {
-                        "rowValue" : ["id=4000, some_markdown= **date is :**, name=Hank, url= https://www.google.com, some_gene_sequence= GATCGATCGCGTATT, video_col= http://techslides.com/demos/sample-videos/small.mp4" ],
-                        "expectedValue": ["4000", "Hank", "https://www.google.com", null, null, null, null, '**date is :**', '**Name is :**', "GATCGATCGCGTATT",null, "http://techslides.com/demos/sample-videos/small.mp4", null, null] 
+                        "rowValue" : ["id=4000, some_markdown= **date is :**, name=Hank, url= https://www.google.com, some_gene_sequence= GATCGATCGCGTATT, video_col= http://techslides.com/demos/sample-videos/small.mp4, catalog_snapshot=schema:table" ],
+                        "expectedValue": ["4000", "Hank", "https://www.google.com", null, null, null, null, '**date is :**', '**Name is :**', "GATCGATCGCGTATT",null, "http://techslides.com/demos/sample-videos/small.mp4", null, "schema:table", null, null, "#00ff00"]
                         },
                 "test2": {
                         "rowValue" : ["id=4001, name=Harold,some_invisible_column= Junior, video_col= http://techslides.com/demos/sample-videos/small.mp4"],
-                        "expectedValue" : ["4001", "Harold", null, null, null, null, null, '**This is some markdown** with some `code` and a [link](http://www.example.com)', '**Name is :**', null, null, null, null, null]
+                        "expectedValue" : ["4001", "Harold", null, null, null, null, null, '**This is some markdown** with some `code` and a [link](http://www.example.com)', '**Name is :**', null, null, null, null, null, null, null, "#0000ff"]
                         },
                 "test3": {
                         "rowValue" : ["id=4002, url= https://www.google.com, video_col= http://techslides.com/demos/sample-videos/small.mp4"],
-                        "expectedValue" : ["4002", null, "https://www.google.com", null, null, null, null, '**This is some markdown** with some `code` and a [link](http://www.example.com)', '**Name is :**', null, null, null, null, null]
+                        "expectedValue" : ["4002", null, "https://www.google.com", null, null, null, null, '**This is some markdown** with some `code` and a [link](http://www.example.com)', '**Name is :**', null, null, null, null, null, null, null, "#ff3411"]
                         },
                 "test4": {
                         "rowValue" : ["id=4003 ,some_invisible_column= Freshmen, video_col= http://techslides.com/demos/sample-videos/small.mp4"],
-                        "expectedValue" :["4003", null, null, null, null, null, null, '**This is some markdown** with some `code` and a [link](http://www.example.com)', '**Name is :**',null, null, null, null, null]
+                        "expectedValue" :["4003", null, null, null, null, null, null, '**This is some markdown** with some `code` and a [link](http://www.example.com)', '**Name is :**',null, null, null, null, null, null, null, null]
                         },
                 "test5": {
                         "rowValue" :["id=4004, name= weird & HTML < , video_col= http://techslides.com/demos/sample-videos/small.mp4"],
-                        "expectedValue" :["4004", "weird & HTML < ", null, null, null, null, null, '**This is some markdown** with some `code` and a [link](http://www.example.com)', '**Name is :**', null, null, null, null, null]
+                        "expectedValue" :["4004", "weird & HTML < ", null, null, null, null, null, '**This is some markdown** with some `code` and a [link](http://www.example.com)', '**Name is :**', null, null, null, null, null, null, null, null]
                         },
                 "test6": {
                         "rowValue": ["id=4005, name= <a href='javascript:alert();'></a>, some_invisible_column= Senior, video_col= http://techslides.com//small.mp4"],
-                        "expectedValue": ["4005", "<a href='javascript:alert();'></a>", null, null, null, null, null, '**This is some markdown** with some `code` and a [link](http://www.example.com)', '**Name is :**', null, null, null, null, null]
+                        "expectedValue": ["4005", "<a href='javascript:alert();'></a>", null, null, null, null, null, '**This is some markdown** with some `code` and a [link](http://www.example.com)', '**Name is :**', null, null, null, null, null, null, null, null]
                         },
                 "test7": {
                         "rowValue" :["id=4006, name= <script>alert();</script>, some_gene_sequence= GATCGATCGCGTATT, some_invisible_column= Sophomore, video_col= http://techs.com/sample/small.mp4"],
-                        "expectedValue": ["4006", "<script>alert();</script>", null, null, null, null, null, '**This is some markdown** with some `code` and a [link](http://www.example.com)', '**Name is :**', "GATCGATCGCGTATT", null, null, null, null]
+                        "expectedValue": ["4006", "<script>alert();</script>", null, null, null, null, null, '**This is some markdown** with some `code` and a [link](http://www.example.com)', '**Name is :**', "GATCGATCGCGTATT", null, null, null, null, null, null, null]
                         }
                 }
             var i =0;
@@ -184,11 +188,11 @@ exports.execute = function (options) {
                 describe('Testing for tuple '+ i +" with row values {"+ rowValue + "}", function(){
                     testTupleValidity(i, expectedValue);
                 })
-                i++;    
+                i++;
             }
         });
-        
-        
+
+
         describe("Testing for EDIT JSON and JSONB Values", function() {
             //Tested these values as formatted values inside it, to get the exact string after JSON.stringify()
             var expectedValues=[{"id":"1001","json_col":true,"jsonb_col":true, "json_col_with_markdownpattern": "\"processed\""},
@@ -205,7 +209,7 @@ exports.execute = function (options) {
                 upperLimit = 2001,
                 limit = 6;
 
-            var multipleEntityUri=options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"+ tableName ;
+            var multipleEntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":"+ tableName + "/@sort(id)";
 
             var reference, page, tuples;
 
@@ -221,14 +225,14 @@ exports.execute = function (options) {
                     return reference.read(limit);
                 }).then(function (response) {
                     page = response;
-                    
+
                     expect(page).toEqual(jasmine.any(Object));
                     expect(page._data.length).toBe(limit);
-                    
+
                     expect(page.tuples).toBeDefined();
                     tuples = page.tuples;
                     expect(tuples.length).toBe(limit);
-                    
+
                     done();
                 }, function (err) {
                     console.dir(err);
@@ -238,9 +242,9 @@ exports.execute = function (options) {
                     done.fail();
                 });
             });
-            
+
             it("JSON and JSONB column should return the expected values in Edit Context", function() {
-                
+
                 for( var i=0; i<limit; i++){
                     var values=tuples[i].values;
                     var json=JSON.stringify(expectedValues[i].json_col,undefined,2);

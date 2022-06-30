@@ -5,20 +5,19 @@
         getServer: getServer
     };
 
-
     var _servers = {};
 
     /**
-     * Angular $http service object
+     * populated by configure function. An http service (like Angular $http or axios)
+     * NOTE: This should not be used. This is the base http module without our wrapper from http.js
+     * When making requests using http, use server.http
      * @type {Object}
      * @private
-     * NOTE: This should not be used. This is the base _http module without our wrapper from http.js
-     * When making requests using http, use server._http
      */
     module._http = null;
 
     /**
-     * Angular $q service object
+     * populated by configure function. A promise library (like Angular $q or Q)
      * @type {Object}
      * @private
      */
@@ -26,26 +25,47 @@
 
     /**
      * function that converts app tag to app URL
-     * @callback appLinkFn
      * @type {appLinkFn}
      * @private
      */
     module._appLinkFn = null;
 
     /**
+     * Given an app tag, location object and context will return the full url.
+     * @callback appLinkFn
+     * @param {string} tag the tag that is defined in the annotation. If null, should use context.
+     * @param {ERMrest.Location} location the location object that ERMrest will return.
+     * @param {string} context - optional, used to determine default app if tag is null/undefined
+     */
+
+    /**
      * function that resets the storage expiration time
      * initialized to empty function so function runs properly when not defined in `chaise`
-     * @callback onHTTPSuccess
      * @type {onHTTPSuccess}
      * @private
      */
     module._onHTTPSuccess = function () {};
 
     /**
+     * This function will be called on success of http calls.
+     * @callback onHTTPSuccess
+     */
+
+     module._systemColumnsHeuristicsMode = function () {};
+
+     /**
+      * the client configs. this includes the following attributes:
+      * - originAliases
+      * - disableExternalLinkModal
+      * @type {Object}
+      */
+     module._clientConfig = null;
+
+    /**
      * @memberof ERMrest
      * @function
-     * @param {Object} http Angular $http service object
-     * @param {Object} q Angular $q service object
+     * @param {Object} http any http service (like Angular $http or axios)
+     * @param {Object} q Any promise library (like Angular $q or Q library)
      * @desc This function is used to configure the module
      */
     function configure(http, q) {
@@ -71,7 +91,7 @@
         if (uri === undefined || uri === null)
             throw new module.InvalidInputError("URI undefined or null");
 
-        if (typeof contextHeaderParams === 'undefined' || contextHeaderParams === null) {
+        if (contextHeaderParams == null || typeof contextHeaderParams !== 'object') {
             // Set default cid to a truthy string because a true null will not
             // appear as a query parameter but we want to track cid even when cid
             // isn't provided
@@ -93,10 +113,10 @@
     /**
      * @memberof ERMrest
      * @param {string} uri URI of the ERMrest service.
+     * @param {Object} contextHeaderParams an object with at least `cid`
      * @constructor
      */
     function Server(uri, contextHeaderParams) {
-
         /**
          * The URI of the ERMrest service
          * @type {string}
@@ -104,19 +124,73 @@
         this.uri = uri;
 
         /**
+         * The host of the uri
+         * @type {String}
+         */
+        this.host = "";
+        var hasProtocol = new RegExp('^(?:[a-z]+:)?//', 'i').test(uri);
+        if (hasProtocol) {
+            var urlParts = uri.split("/");
+            if (urlParts.length >= 3) {
+                this.host = urlParts[2];
+            }
+        }
+
+        /**
          * The wrapped http service for this server instance.
          * @private
          * @type {Object}
          */
-        this._http = module._wrap_http(module._http);
-        this._http.contextHeaderParams = contextHeaderParams || {};
-        this._http.contextHeaderParams.cid = this._http.contextHeaderParams.cid || null;
+        this.http = module._wrap_http(module._http);
+        this.http.contextHeaderParams = contextHeaderParams;
+
+        /**
+         * context-id: shows the id of app that this server is being used for
+         * @type {string}
+         */
+        this.cid = this.http.contextHeaderParams.cid;
+
+        /**
+         * page-id: shows the id of the page that this server is being used for
+         * @type {string=}
+         */
+        this.pid = this.http.contextHeaderParams.pid;
 
         /**
          *
          * @type {ERMrest.Catalogs}
          */
         this.catalogs = null;
+
+        /**
+         * should be used to log client action information on the server
+         * @param {Object} headers - the headers to be logged, should include action
+         **/
+        this.logClientAction = function (contextHeaderParams) {
+            var defer = module._q.defer();
+
+            // make sure contextHeaderParams is an object and NOT an array
+            if (!contextHeaderParams || (contextHeaderParams === Object(contextHeaderParams) && Array.isArray(contextHeaderParams))) {
+                var error = new module.InvalidInputError("Context header params were not passed");
+                // Errors for client action logging should not force a terminal error
+                return defer.reject(error), defer.promise;
+            }
+
+            var headers = {};
+            headers[module.contextHeaderName] = contextHeaderParams;
+
+            var config = {
+                headers: headers
+            };
+
+            this.http.head(this.uri + "/client_action", config).then(function () {
+                defer.resolve();
+            }, function (error) {
+                defer.reject(error);
+            });
+
+            return defer.promise;
+        };
     }
 
 
@@ -158,35 +232,34 @@
 
         /**
          * @param {string} id Catalog ID.
+         * @param {Boolean} dontFetchSchema whether we should fetch the schemas
          * @return {Promise} a promise that returns the catalog  if resolved or
          *     {@link ERMrest.TimedOutError}, {@link ERMrest.InternalServerError}, {@link ERMrest.ServiceUnavailableError},
          *     {@link ERMrest.NotFoundError}, {@link ERMrest.ForbiddenError} or {@link ERMrest.UnauthorizedError} if rejected
          * @desc Get a catalog by id. This call does catalog introspection.
          */
-        get: function (id) {
+        get: function (id, dontFetchSchema) {
             // do introspection here and return a promise
 
-            var self = this;
-            var defer = module._q.defer();
+            var self = this, defer = module._q.defer(), catalog;
 
-            // load catalog only when requested
+            // create a new catalog object if the object has not been created before
             if (id in this._catalogs) {
-
-                defer.resolve(self._catalogs[id]);
-                return defer.promise;
-
+                catalog = self._catalogs[id];
             } else {
-
-                var catalog = new Catalog(self._server, id);
-                catalog._introspect().then(function () {
-                    self._catalogs[id] = catalog;
-                    defer.resolve(catalog);
-                }, function (error) {
-                    defer.reject(error);
-                });
-
-                return defer.promise;
+                catalog = new Catalog(self._server, id);
             }
+
+            // make sure the catalog is introspected.
+            // the introspect function might or might not
+            catalog._introspect(dontFetchSchema).then(function () {
+                self._catalogs[id] = catalog;
+                defer.resolve(catalog);
+            }, function (error) {
+                defer.reject(error);
+            });
+
+            return defer.promise;
         }
     };
 
@@ -203,8 +276,8 @@
 
         /**
          * For internal use only. A reference to the server instance.
-         * @private
          * @type {ERMrest.Server}
+         * @private
          */
         this.server = server;
 
@@ -214,6 +287,11 @@
          */
         this.id = id;
 
+        var catalogSnapshot = id.split("@");
+        if (catalogSnapshot.length === 2) {
+            this.version = catalogSnapshot[1];
+        }
+
         this._uri = server.uri + "/catalog/" + id;
 
         /**
@@ -221,6 +299,20 @@
          * @type {ERMrest.Schemas}
          */
         this.schemas = new Schemas();
+
+        /**
+         * The ERMrest features that the catalog supports
+         * @type {Object}
+         */
+        this.features = {};
+
+        for (var f in module._ERMrestFeatures) {
+            this.features[module._ERMrestFeatures[f]] = false;
+        }
+
+        this._jsonCatalog = null;
+
+        this._schemaFetched = false;
     }
 
     Catalog.prototype = {
@@ -231,17 +323,87 @@
         },
 
         /**
-         *
+         * Can be used to send a request and get the catalog object from server.
+         * @param {Object} contextHeaderParams - properties to log under the dcctx header
+         * @param {Boolean} ignoreCache - whether we should ignore the cach and fetch new object
+         * @return {Promise} a promise that returns the catalog json if resolved or
+         *      {@link ERMrest.ERMrestError} if rejected
          * @private
-         * @return {Promise} a promise that returns json object or catalog schema if resolved or
-         *     {@link ERMrest.TimedOutError}, {@link ERMrest.InternalServerError}, {@link ERMrest.ServiceUnavailableError},
-         *     {@link ERMrest.NotFoundError}, {@link ERMrest.ForbiddenError} or {@link ERMrest.UnauthorizedError} if rejected
          */
-        _introspect: function () {
-            // load all schemas
-            var self = this;
-            return this.server._http.get(this._uri + "/schema").then(function (response) {
+        _get: function (contextHeaderParams, ignoreCache) {
+            var self = this, defer = module._q.defer(), headers = {};
+
+            if (ignoreCache !== true && isObjectAndNotNull(self._jsonCatalog)) {
+                return defer.resolve(self._jsonCatalog), defer.promise;
+            }
+
+            if (contextHeaderParams) {
+                headers[module.contextHeaderName] = contextHeaderParams;
+            } else {
+                headers[module.contextHeaderName] = {
+                    action: ":,catalog;load",
+                    catalog: self.id
+                };
+            }
+
+            this.server.http.get(this._uri, {headers: headers}).then(function (response) {
+                if (!isObjectAndNotNull(self._jsonCatalog)) {
+                    self._jsonCatalog = response.data;
+                }
+                defer.resolve(response.data);
+            }, function (error) {
+                defer.reject(error);
+            });
+
+            return defer.promise;
+        },
+
+        /**
+         * This will return the snapshot from the catalog request instead of schema,
+         * because it will return the snapshot based on the model changes.
+         * @param {Object} contextHeaderParams - properties to log under the dcctx header
+         * @return {Promise} a promise that returns json object or snaptime if resolved or
+         *      {@link ERMrest.ERMrestError} if rejected
+         */
+        currentSnaptime: function (contextHeaderParams) {
+            var defer = module._q.defer(), self = this;
+            if (!isObjectAndNotNull(contextHeaderParams)) {
+                contextHeaderParams = {
+                    action: ":,catalog/snaptime;load",
+                    catalog: self.id
+                };
+            }
+
+            self._get(contextHeaderParams, true).then(function (response) {
+                defer.resolve(response.snaptime);
+            }, function (error) {
+                defer.reject(error);
+            });
+
+            return defer.promise;
+        },
+
+        /**
+         * fetch the schemas of the catalog and create the appropriate objects
+         * @private
+         */
+        _fetchSchema: function () {
+            var defer = module._q.defer(), self = this;
+
+            if (self._schemaFetched) {
+                return defer.resolve(), defer.promise;
+            }
+
+            var headers = {};
+            headers[module.contextHeaderName] = {
+                action: ":,catalog/schema;load",
+                catalog: self.id
+            };
+
+            self.server.http.get(self._uri + "/schema", {headers: headers}).then(function (response) {
                 var jsonSchemas = response.data;
+
+                self._schemaFetched = true;
 
                 self.rights = jsonSchemas.rights;
 
@@ -262,8 +424,9 @@
                     }
                 }
 
-                // find alternative tables
+                // find alternative tables and populate source definitions
                 // requires foreign keys built
+                // and source definitions need to be populated beforehand
                 for (s = 0; s < schemaNames.length; s++) {
                     schema = self.schemas.get(schemaNames[s]);
                     tables = schema.tables.names();
@@ -273,11 +436,55 @@
                     }
                 }
 
-                return self.schemas;
+                defer.resolve();
             }, function (response) {
-                var error = module._responseToError(response);
-                return module._q.reject(error);
+                defer.reject(response);
             });
+
+            return defer.promise;
+        },
+
+        /**
+         *
+         * @return {Promise} a promise that returns json object or catalog schema if resolved or
+         *     {@link ERMrest.TimedOutError}, {@link ERMrest.InternalServerError}, {@link ERMrest.ServiceUnavailableError},
+         *     {@link ERMrest.NotFoundError}, {@link ERMrest.ForbiddenError} or {@link ERMrest.UnauthorizedError} if rejected
+         * @private
+         */
+        _introspect: function (dontFetchSchema) {
+            var defer = module._q.defer(), self = this;
+
+            // load the catalog (or use the one that is cached)
+            this._get().then(function(response) {
+                self.snaptime = response.snaptime;
+
+                if ("features" in response) {
+                    for (var k in self.features) {
+                        self.features[k] = response.features[k];
+                    }
+                }
+
+                self.annotations = new Annotations();
+                for (var uri in response.annotations) {
+                    self.annotations._push(new Annotation("catalog", uri, response.annotations[uri]));
+                }
+
+                if (dontFetchSchema === true || self._schemaFetched) {
+                    defer.resolve();
+                } else {
+                    // load all schemas
+                    self._fetchSchema().then(function () {
+                        defer.resolve();
+                    }).catch(function (err) {
+                        throw err;
+                    });
+                }
+
+            }).catch(function (response) {
+                defer.reject(module.responseToError(response));
+            });
+
+            return defer.promise;
         },
 
         /**
@@ -325,6 +532,20 @@
             }
 
             return schema.tables.get(tableName);
+        },
+
+        /**
+         * @return {Object} the chaise config object from the catalog annotation
+         */
+        get chaiseConfig () {
+            if (this._chaiseConfig === undefined) {
+                if (this.annotations.contains(module._annotations.CHAISE_CONFIG)) {
+                    this._chaiseConfig = this.annotations.get(module._annotations.CHAISE_CONFIG).content;
+                } else {
+                    this._chaiseConfig = null;
+                }
+            }
+            return this._chaiseConfig;
         }
     };
 
@@ -401,6 +622,39 @@
          */
         has: function (name) {
             return name in this._schemas;
+        },
+
+        /**
+         * @param  {string} tableName  the name of table
+         * @param  {string=} schemaName the name of schema (optional)
+         * @return {ERMrest.Table}
+         * @throws {ERMrest.MalformedURIError}
+         * @throws  {ERMrest.NotFoundError}
+         * Given table name and schema will find the table object.
+         * If schema name is not given, it will still try to find the table.
+         * If the table name exists in multiple schemas or it doesn't exist,
+         * it will throw an error
+         */
+        findTable: function (tableName, schemaName) {
+            if (schemaName) {
+                return this.get(schemaName).tables.get(tableName);
+            }
+
+            var schemas = this.all(), schema;
+            for (var i = 0; i < schemas.length; i++) {
+                if (schemas[i].tables.names().indexOf(tableName) !== -1) {
+                    if (!schema){
+                        schema = schemas[i];
+                    } else{
+                        throw new module.MalformedURIError("Ambiguous table name " + tableName + ". Schema name is required.");
+                    }
+                }
+            }
+            if (!schema) {
+                throw new module.MalformedURIError("Table " + tableName + " not found");
+            }
+
+            return schema.tables.get(tableName);
         }
     };
 
@@ -422,9 +676,16 @@
         this.catalog = catalog;
 
         /**
-         *
+         * @desc the database name of the schema
+         * @type {string}
          */
         this.name = jsonSchema.schema_name;
+
+        /**
+         * @desc The RID of this schema (might not be defined)
+         * @type {?string}
+         */
+        this.RID = jsonSchema.RID;
 
         //this._uri = catalog._uri + "/schema/" + module._fixedEncodeURIComponent(this.name);
 
@@ -460,18 +721,27 @@
         /**
          * whether schema is generated.
          * This should be done before initializing tables because tables require this field.
-         * @type {boolean}
+         * @type {boolean|null}
          * @private
          */
-        this._isGenerated = this.annotations.contains(module._annotations.GENERATED);
+        this._isGenerated = _processACLAnnotation(this.annotations, module._annotations.GENERATED, false);
 
         /**
          * whether schema is immutable.
-         * This should be done before initializing tables because tables require this field.
+         * true: schema is immutable (per annotation)
+         * false: schema is mutable (per annotation)
+         * null: annotation is not defined
+         * @type {boolean|null}
+         * @private
+         */
+        this._isImmutable = _processACLAnnotation(this.annotations, module._annotations.IMMUTABLE, null);
+
+        /**
+         * whether schema is non-deletable
          * @type {boolean}
          * @private
          */
-        this._isImmutable = this.annotations.contains(module._annotations.IMMUTABLE);
+        this._isNonDeletable = _processACLAnnotation(this.annotations, module._annotations.NON_DELETABLE, false);
 
         this._nameStyle = {}; // Used in the displayname to store the name styles.
 
@@ -499,6 +769,12 @@
          * @type {string}
          */
         this.comment = jsonSchema.comment;
+        if (this.annotations.contains(module._annotations.DISPLAY)) {
+            var cm = _processModelComment(this.annotations.get(module._annotations.DISPLAY).content.comment);
+            if (typeof cm === "string") {
+                this.comment = cm;
+            }
+        }
 
         if (this.annotations.contains(module._annotations.APP_LINKS)) {
             this._appLinksAnnotation = this.annotations.get(module._annotations.APP_LINKS).content;
@@ -511,15 +787,6 @@
 
         delete: function () {
 
-        },
-
-        /**
-         * whether schema is non-deletable
-         * @type {boolean}
-         * @private
-         */
-        get _isNonDeletable() {
-            return (this.annotations.contains(module._annotations.NON_DELETABLE));
         },
 
         _getAppLink: function (context) {
@@ -607,6 +874,15 @@
             }
 
             return this._tables[name];
+        },
+
+        /**
+         * @param {string} name table name
+         * @returns {boolean} if the table exists or not
+         * @desc check for table name existence
+         */
+         has: function (name) {
+            return name in this._tables;
         }
 
     };
@@ -629,10 +905,17 @@
         this.schema = schema;
 
         /**
-         *
+         * @desc the database name of the table
+         * @type {string}
          */
         this.name = jsonTable.table_name;
         this._jsonTable = jsonTable;
+
+        /**
+         * @desc The RID of this table (might not be defined)
+         * @type {?string}
+         */
+        this.RID = jsonTable.RID;
 
 
         this._nullValue = {}; // used to avoid recomputation of null value for different contexts.
@@ -681,15 +964,25 @@
          * @type {boolean}
          * @private
          */
-        this._isGenerated = (this.annotations.contains(module._annotations.GENERATED) || this.schema._isGenerated);
+        this._isGenerated = _processACLAnnotation(this.annotations, module._annotations.GENERATED, this.schema._isGenerated);
 
         /**
          * whether table is immutable
          * inherits from schema
+         * true: table is immutable (per annotation)
+         * false: table is mutable (per annotation)
+         * null: annotation is not defined on table nor schema
          * @type {boolean}
          * @private
          */
-        this._isImmutable = (this.annotations.contains(module._annotations.IMMUTABLE) || this.schema._isImmutable);
+        this._isImmutable = _processACLAnnotation(this.annotations, module._annotations.IMMUTABLE, this.schema._isImmutable);
+
+        /**
+         * whether table is non-deletable
+         * @type {boolean}
+         * @private
+         */
+        this._isNonDeletable = _processACLAnnotation(this.annotations, module._annotations.NON_DELETABLE, this.schema._isNonDeletable);
 
         this._nameStyle = {}; // Used in the displayname to store the name styles.
         this._rowDisplayKeys = {}; // Used for display key
@@ -746,6 +1039,57 @@
          * @type {string}
          */
         this.comment = jsonTable.comment;
+        if (this.annotations.contains(module._annotations.DISPLAY)) {
+            var cm = _processModelComment(this.annotations.get(module._annotations.DISPLAY).content.comment);
+            if (typeof cm === "string") {
+                this.comment = cm;
+            }
+        }
+
+        var _getHierarchicalDisplayAnnotationValue = function (table, annotKey) {
+            var hierarchy = [table], annot, value = -1;
+            var displayAnnot = module._annotations.DISPLAY;
+
+            // hierarchy should be an array of [table, schema, catalog]
+            hierarchy.push(table.schema, table.schema.catalog);
+
+            for (var i = 0; i < hierarchy.length; i++) {
+                // if the display annotation is not defined, skip this model element
+                if (!hierarchy[i].annotations.contains(displayAnnot)) continue;
+
+                annot = hierarchy[i].annotations.get(displayAnnot);
+                if (annot && annot.content && typeof annot.content[annotKey] === "boolean") {
+                    value = annot.content[annotKey];
+                    if (value !== -1) break;
+                }
+            }
+
+            // no match was found, turn off the feature
+            if (value === -1) value = false;
+            return value;
+        };
+        /**
+         * @type {boolean}
+         */
+        this._showSavedQuery = _getHierarchicalDisplayAnnotationValue(this, "show_saved_query");
+
+        /**
+         * @desc The path to the table where the favorite terms are stored
+         * @type {string}
+         */
+        this.favoritesPath = null;
+        if (this.annotations.contains(module._annotations.TABLE_CONFIG)) {
+            var userFavorites = this.annotations.get(module._annotations.TABLE_CONFIG).content.user_favorites;
+            // make sure user_favorites is defined
+            // make sure storage table is an object
+            if (userFavorites && typeof userFavorites.storage_table == "object") {
+                var favoritesTable = userFavorites.storage_table;
+                // make sure each key is present and the value is a non empty string
+                if (isStringAndNotEmpty(favoritesTable.catalog) && isStringAndNotEmpty(favoritesTable.schema) && isStringAndNotEmpty(favoritesTable.table)) {
+                    this.favoritesPath = "/ermrest/catalog/" + favoritesTable.catalog + "/entity/" + favoritesTable.schema + ":" + favoritesTable.table;
+                }
+            }
+        }
 
         /**
          * @desc The type of this table
@@ -753,10 +1097,23 @@
          */
         this.kind = jsonTable.kind;
 
+        /**
+         * Whether the table supports history features:
+         *  - it's a table (not view)
+         *  - it doesn't have the history-capture annotation, or has it with any value other than false
+         */
+        this.supportHistory = this.kind === "table";
+        if (this.supportHistory && this.annotations.contains(module._annotations.HISTORY_CAPTURE)) {
+            this.supportHistory = this.annotations.get(module._annotations.HISTORY_CAPTURE).content !== false;
+        }
+
         if (this.annotations.contains(module._annotations.APP_LINKS)) {
             this._appLinksAnnotation = this.annotations.get(module._annotations.APP_LINKS).content;
         }
 
+        this._exportTemplates = {};
+
+        this._display = {};
     }
 
     Table.prototype = {
@@ -766,13 +1123,48 @@
 
         },
 
-        /**
-         * whether table is non-deletable
-         * @type {boolean}
-         * @private
-         */
-        get _isNonDeletable() {
-            return (this.annotations.contains(module._annotations.NON_DELETABLE) || this.schema._isNonDeletable);
+        getDisplay: function (context) {
+            // check _display for information about current context
+            if (!(context in this._display)) {
+                var comment_annotation = null, comment_display_annotation = null;
+                if (this.annotations.contains(module._annotations.DISPLAY)) {
+                    // comment can be a string or an object
+                    comment_annotation = this.annotations.get(module._annotations.DISPLAY).get("comment");
+                    // point to comment since that is what is contextualized in this annotation
+                    // if it's an object, that means it's contextualized
+                    if (typeof comment_annotation == "object") {
+                        comment_annotation = module._getAnnotationValueByContext(context, comment_annotation);
+                    }
+
+                    comment_display_annotation = module._getAnnotationValueByContext(context, this.annotations.get(module._annotations.DISPLAY).get("comment_display"));
+                }
+
+                var comment = this.comment,
+                    tableCommentDisplay = module._commentDisplayModes.tooltip,
+                    columnCommentDisplay = module._commentDisplayModes.tooltip;
+
+                // comment is contextualized
+                if (_isValidModelComment(comment_annotation)) {
+                    comment = _processModelComment(comment_annotation);
+                }
+
+                // since in the model we cannot define the comment_display settings,
+                // this annotation can be used in conjunction with the model's comments
+                // and we don't need to make sure the comment is coming from annotation
+                if (comment_display_annotation && _isValidModelCommentDisplay(comment_display_annotation.column_comment_display)) {
+                    columnCommentDisplay = comment_display_annotation.column_comment_display;
+                }
+                if (comment_display_annotation && _isValidModelCommentDisplay(comment_display_annotation.table_comment_display)) {
+                    tableCommentDisplay = comment_display_annotation.table_comment_display;
+                }
+
+                this._display[context] = {
+                    "columnCommentDisplay": columnCommentDisplay,
+                    "comment": comment, // coming from the model, or annotation
+                    "tableCommentDisplay": tableCommentDisplay
+                };
+            }
+            return this._display[context];
         },
 
         /**
@@ -827,7 +1219,7 @@
                             }
 
                             // the one that has lower column position
-                            return a.colset._getColumnPositions() > b.colset._getColumnPositions();
+                            return (a.colset._getColumnPositions() > b.colset._getColumnPositions()) ? 1 : -1;
                         })[0].colset.columns;
                     }
 
@@ -853,28 +1245,109 @@
                         return res;
                     };
 
-                    this._displayKey = this.keys.all().sort(function (keyA, keyB) {
+                    // find the keys with not-null columns
+                    var keys = this.keys.all().filter(function (key) {
+                        return key._notNull;
+                    });
+
+                    // NOTE we're doing the same thing for shortestkey,
+                    //      if we decided to throw an error instead,
+                    //      we should be consistent
+                    if (keys.length === 0) {
+                        keys = this.keys.all();
+                    }
+
+                    this._displayKey = keys.sort(function (keyA, keyB) {
 
                         // shorter
                         if (keyA.colset.columns.length != keyB.colset.columns.length) {
-                            return keyA.colset.columns.length > keyB.colset.columns.length;
+                            return keyA.colset.columns.length - keyB.colset.columns.length;
                         }
 
                         // has more text
                         var aTextCount = countTextColumns(keyA);
                         var bTextCount = countTextColumns(keyB);
                         if (aTextCount != bTextCount) {
-                            return aTextCount < bTextCount;
+                            return bTextCount - aTextCount;
                         }
 
                         // the one that has lower column position
-                        return keyA.colset._getColumnPositions() > keyB.colset._getColumnPositions();
+                        return (keyA.colset._getColumnPositions() > keyB.colset._getColumnPositions()) ? 1 : -1;
                     })[0].colset.columns;
                 } else {
                     this._displayKey = this.columns.all();
                 }
             }
             return this._displayKey;
+        },
+
+        /**
+         * The columns that create the stable key
+         * NOTE doesn't support composite keys for now
+         *
+         * @type {ERMrest.Column[]}
+         */
+        get stableKey() {
+            if (this._stabelKey === undefined) {
+                var getStableKey = function (self) {
+                    // find the table config annot
+                    if (!self.annotations.contains(module._annotations.TABLE_CONFIG)) {
+                        return null;
+                    }
+                    var annot = self.annotations.get(module._annotations.TABLE_CONFIG).content;
+
+                    // make sure it's defined and is an object
+                    if (!isObjectAndNotNull(annot)) {
+                        return null;
+                    }
+
+                    // get it from the stable_key_columns attribute (all the columns must be nullok=false)
+                    if (Array.isArray(annot.stable_key_columns) && annot.stable_key_columns.length > 0) {
+                        var keyCols = [];
+
+                        // make sure all the columns are valid
+                        var allValid = annot.stable_key_columns.every(function (colName) {
+                            try {
+                                // all the columns must be valid
+                                var col = self.columns.get(colName);
+
+                                // all the columns must be not-null
+                                if (col.nullok) {
+                                    return false;
+                                }
+                                keyCols.push(col);
+                                return true;
+                            } catch(err) {
+                                return false;
+                            }
+                        });
+
+                        if (allValid) {
+                            return keyCols;
+                        }
+                    }
+
+                    // get it from the stable_key attribute (all the columns must be nullok=false)
+                    if (Array.isArray(annot.stable_key) && annot.stable_key.length == 2) {
+                        var obj = self.schema.catalog.constraintByNamePair(annot.stable_key, module._constraintTypes.KEY);
+                        if (obj && obj.object && obj.object._notNull) {
+                            return obj.object.colset.columns;
+                        }
+                    }
+
+                    return null;
+                };
+
+                var stableKey = getStableKey(this);
+
+                // NOTE we're not supporting composite keys now
+                if (stableKey == null || stableKey.length > 1) {
+                    stableKey = this.shortestKey;
+                }
+
+                this._stabelKey = stableKey;
+            }
+            return this._stabelKey;
         },
 
         /**
@@ -923,18 +1396,18 @@
 
                             // shorter
                             if (keyA.colset.columns.length != keyB.colset.columns.length) {
-                                return keyA.colset.columns.length > keyB.colset.columns.length;
+                                return keyA.colset.columns.length - keyB.colset.columns.length;
                             }
 
                             // has more text
                             var aTextCount = countTextColumns(keyA);
                             var bTextCount = countTextColumns(keyB);
                             if (aTextCount != bTextCount) {
-                                return aTextCount < bTextCount;
+                                return bTextCount - aTextCount;
                             }
 
                             // the one that has lower column position
-                            return keyA.colset._getColumnPositions() > keyB.colset._getColumnPositions();
+                            return (keyA.colset._getColumnPositions() > keyB.colset._getColumnPositions()) ? 1 : -1;
                         })[0];
                     }
                 }
@@ -951,12 +1424,381 @@
             return this._uri;
         },
 
+        //TODO should be removed but chaise is using this
         get reference() {
             if (!this._reference) {
                 this._reference = module._createReference(module.parse(this._uri), this.schema.catalog);
             }
 
             return this._reference;
+        },
+
+        /**
+         * Returns an object with
+         * - fkeys: array of ForeignKeyRef objects
+         * - columns: Array of columns
+         * - sources: hash-map of name to the SourceObjectWrapper object.
+         * - sourceMapping: hashname to all the names
+         * - sourceDependencies: for each sourcekey, what are the other sourcekeys that it depends on (includes self as well)
+         *                       this has been added because of path prefix where a sourcekey might rely on other sourcekeys
+         * @type {Object}
+         */
+        get sourceDefinitions() {
+            if (this._sourceDefinitions === undefined) {
+                this._populateSourceDefinitions();
+            }
+            return this._sourceDefinitions;
+        },
+
+        _populateSourceDefinitions: function () {
+            var self = this;
+            var sd = module._annotations.SOURCE_DEFINITIONS;
+            var hasAnnot = self.annotations.contains(sd);
+            var res = {columns: [], fkeys: [], sources: {}, sourceMapping: {}, sourceDependencies: {}};
+            var addedCols = {}, addedFks = {}, processedSources = {};
+            var allColumns = self.columns.all(),
+                allForeignKeys = self.foreignKeys.all();
+            var consNames = module._constraintNames;
+
+            var findConsName = function (catalogId, schemaName, constraintName) {
+                var result;
+                if ((catalogId in consNames) && (schemaName in consNames[catalogId])){
+                    result = consNames[catalogId][schemaName][constraintName];
+                }
+                return (result === undefined) ? null : result;
+            };
+
+            // TODO this is way too ugly, rewrite this!
+            var processSourceDefinitionList = function (val, isFkey) {
+                if (val === true) {
+                    return isFkey ? allForeignKeys : allColumns;
+                }
+
+                var resultList = [], mapName = function (item) {return item.name;};
+                var allListNames = isFkey ? allForeignKeys.map(mapName) : allColumns.map(mapName);
+                if (Array.isArray(val)) {
+                    val.forEach(function (cname, index) {
+                        if (isFkey) {
+                            if (!Array.isArray(cname) || cname.length !== 2) {
+                                // TODO log the error
+                                return;
+                            }
+                            var fkObj = findConsName(self.schema.catalog.id, cname[0], cname[1]);
+                            if (fkObj === null || fkObj.subject !== module._constraintTypes.FOREIGN_KEY) {
+                                return;
+                            }
+                            cname = fkObj.object.name;
+                        }
+
+                        var elIndex = allListNames.indexOf(cname);
+                        if (isFkey) {
+                            if (addedFks[elIndex]) return;
+                            addedFks[elIndex] = true;
+                        } else {
+                            if (addedCols[elIndex]) return;
+                            addedCols[elIndex] = true;
+                        }
+                        if (elIndex === -1) {
+                            module._log.warn("invalid source definition, ", (isFkey ? "fkeys" : "columns"), ", index=" + index);
+                            return;
+                        }
+                        resultList.push(isFkey ? allForeignKeys[elIndex] : allColumns[elIndex]);
+                    });
+                }
+                return resultList;
+            };
+
+            var addSourceDef = function (key, keysThatDependOnThis) {
+                var message = "source definition, table =" + self.name + ", name=" + key;
+
+                // detec circular dependency
+                keysThatDependOnThis = Array.isArray(keysThatDependOnThis) ? keysThatDependOnThis : [];
+                if (keysThatDependOnThis.indexOf(key) != -1) {
+                    module._log.info(message + ": " + " circular dependency detected.");
+                    return false;
+                }
+
+                // key must be non empty and string
+                if (!isStringAndNotEmpty(key)) {
+                    module._log.info(message + ": " + " `sourcekey` must be string and non-empty.");
+                    return false;
+                }
+
+                // already processed
+                if (key in processedSources) {
+                    return processedSources[key];
+                }
+
+                // key is not in the list of definitions
+                if (!(key in annot.sources)) {
+                    module._log.info(message + ": " + " `sourcekey` didn't exist.");
+                    return false;
+                }
+
+                // if the key is special
+                if (Object.values(module._specialSourceDefinitions).indexOf(key) !== -1) {
+                    // removed the message because it was misleading
+                    // this makes sure special source keys are not used for path prefix
+                    return false;
+                }
+
+                // why? make sure key is not the same as table columns
+                if (self.columns.has(key)) {
+                    module._log.info(message +  ": `sourcekey` cannot be any of the table column names.");
+                    return false;
+                }
+
+                // why? make sure key doesn't start with $
+                if (key.startsWith("$")) {
+                    module._log.info(message + ": `sourcekey` cannot start with $");
+                    return false;
+                }
+
+                var sourceDef = annot.sources[key], pSource, hasPrefix;
+                try {
+                    // if it has prefix, we have to make sure the prefix is processed beforehand
+                    hasPrefix = typeof sourceDef === "object" && Array.isArray(sourceDef.source) &&
+                                sourceDef.source.length > 1 && ("sourcekey" in sourceDef.source[0]);
+
+                    if (hasPrefix) {
+
+                        // keep track of dependencies for cycle detection
+                        keysThatDependOnThis.push(key);
+
+                        // make sure we've processed the prefix
+                        var valid = addSourceDef(sourceDef.source[0].sourcekey, keysThatDependOnThis);
+                        processedSources[key] = valid;
+                        if (!valid) {
+                            module._log.info(message + ": " + "given sourcekey (path prefix) is invalid.");
+                            return false;
+                        }
+                    }
+
+                    // NOTE we're passing the list of processed sources
+                    //      because some of them might have prefix and need that
+                    pSource = new SourceObjectWrapper(sourceDef, self, consNames, false, res.sources);
+                } catch (exp) {
+                    module._log.info(message + ": " + exp.message);
+                    return false;
+                }
+
+                // attach to sources
+                res.sources[key] = pSource;
+
+                // attach to sourceMapping
+                if (!(pSource.name in res.sourceMapping)) {
+                    res.sourceMapping[pSource.name] = [];
+                }
+                res.sourceMapping[pSource.name].push(key);
+
+                processedSources[key] = true;
+                return true;
+            };
+
+            var processSourceDependencies = function (key) {
+                if (!res.sources[key].hasPrefix) {
+                    return [key];
+                }
+                return processSourceDependencies(res.sources[key].sourceObjectNodes[0].pathPrefixSourcekey).concat(key);
+            };
+
+            if (!hasAnnot) {
+                res.columns = allColumns;
+                res.fkeys = allForeignKeys;
+                self._sourceDefinitions = res;
+                return;
+            }
+
+            var annot = self.annotations.get(sd).content;
+
+            // columns
+            if (annot.columns) {
+                res.columns = processSourceDefinitionList(annot.columns, false);
+            }
+
+            // fkeys
+            if (annot.fkeys) {
+                res.fkeys = processSourceDefinitionList(annot.fkeys, true);
+            }
+
+            // sources
+            if (annot.sources && typeof annot.sources === "object") {
+                var sKey;
+                for (sKey in annot.sources) {
+                    if (!annot.sources.hasOwnProperty(sKey)) continue;
+
+                    // process once
+                    if (sKey in processedSources) continue;
+
+                    // ignore special definitions
+                    if (Object.values(module._specialSourceDefinitions).indexOf(sKey) !== -1) continue;
+
+                    processedSources[sKey] = addSourceDef(sKey);
+                }
+
+                // populate sourceDependencies (might be able to do it with previous one)
+                for (sKey in res.sources) {
+                    if (!res.sources.hasOwnProperty(sKey)) continue;
+                    res.sourceDependencies[sKey] = processSourceDependencies(sKey);
+                }
+            }
+
+            self._sourceDefinitions = res;
+        },
+
+        /**
+        * Returns an array of SourceObjectWrapper objects.
+        * The returned object will have the following properties:
+        * - columns: the search columns
+        * - allSamePathPrefix: if all using the same path prefix
+        *
+        * @type {false|Object}
+        */
+        get searchSourceDefinition() {
+            if (this._searchSourceDefinition === undefined) {
+
+                /**
+                 * search-box is either on the first level below the annotation,
+                 * or parts of sources.
+                 */
+                var _getSearchSourceDefinition = function (self) {
+                    var consNames = module._constraintNames,
+                        sdAnnotName = module._annotations.SOURCE_DEFINITIONS,
+                        sbAnnotProp = module._specialSourceDefinitions.SEARCH_BOX,
+                        orOperator = module._FacetsLogicalOperators.OR,
+                        sbDef;
+                    var hasAnnot = self.annotations.contains(sdAnnotName);
+
+                    // source-def annotation is missing
+                    if (!hasAnnot) return false;
+
+                    var annot = self.annotations.get(sdAnnotName).content;
+
+                    // source-def annotation is defined but doesn't have a valid value
+                    if (!annot) return false;
+
+                    // search-box directly under source-def annot
+                    if (isObjectAndNotNull(annot[sbAnnotProp])) {
+                        sbDef = annot[sbAnnotProp];
+                    }
+                    // backwards compatiblaity (search-box defined as part of sources)
+                    else if (isObjectAndNotNull(annot.sources) && isObjectAndNotNull(annot.sources[sbAnnotProp])) {
+                        module._log.warn("usage of `search-box` in `sources` has been deprecated and eventually will be removed.");
+                        sbDef = annot.sources[sbAnnotProp];
+                    }
+                    // invalid format
+                    else {
+                        return false;
+                    }
+
+                    var message = "search column definition, table=" + self.name;
+
+                    /*
+                     * accepted format:
+                     * "or": [
+                     *    // source def
+                     * ]
+                     */
+                    // make sure it's properly defined as `or` of sources
+                    if (!sbDef.hasOwnProperty(orOperator) || !Array.isArray(sbDef[orOperator])) {
+                        module._log.info(message + ": search-box must be defined as `or` of sources.");
+                        return false;
+                    }
+
+                    var res = [], indices = [], processedCols = {}, allSamePrefix = true, sharedPrefix = "";
+                    for (var index = 0; index < sbDef[orOperator].length; index++) {
+                        var src = sbDef[orOperator][index];
+                        var pSource, sd;
+
+                        if (src.sourcekey) {
+                            sd = self.sourceDefinitions.sources[src.sourcekey];
+                            if (!sd) {
+                                module._log.info(message + ", index=" + index + ": given sourcekey `" + src.sourcekey + "` is not valid.");
+                                continue; // ignore the faulty ones
+                            }
+
+                            pSource = sd.clone(src, self, consNames);
+                        } else {
+                            try {
+                                pSource = new SourceObjectWrapper(src, self, consNames);
+                            } catch(exp) {
+                                module._log.info(message + ", index=" + index + ":" + exp.message);
+                                continue; // ignore the faulty ones
+                            }
+                        }
+
+                        if (pSource.name in processedCols) {
+                            continue; // duplicate
+                        }
+                        processedCols[pSource.name] = true;
+
+                        // check if all the sources are using the same prefix or not
+                        if (pSource.hasPath) {
+                            // check for the same prefix
+                            if (allSamePrefix) {
+                                // get the prefix of the current column directive
+                                var currPrefix = null;
+                                if (pSource.sourceObject && isStringAndNotEmpty(pSource.sourceObject.sourcekey)) {
+                                    currPrefix = pSource.sourceObject.sourcekey;
+                                } else {
+                                    var firstNode = pSource.sourceObjectNodes[0];
+                                    if (firstNode.isPathPrefix && pSource.foreignKeyPathLength === firstNode.nodeObject.foreignKeyPathLength) {
+                                        currPrefix = firstNode.pathPrefixSourcekey;
+                                    }
+                                }
+
+                                // if it wasn't using prefix, then set it to false
+                                if (!currPrefix) {
+                                    allSamePrefix = false;
+                                }
+                                // make sure this prefix is the same as the other ones.
+                                else {
+                                    if (index === 0) {
+                                        sharedPrefix = currPrefix;
+                                    } else {
+                                        allSamePrefix = sharedPrefix == currPrefix;
+                                    }
+                                }
+                            }
+                        } else {
+                            allSamePrefix = false;
+                        }
+
+                        res.push(pSource);
+                        indices.push(index);
+                    }
+
+                    // if there are multiple and they are not using the same prefix,
+                    // then only allow the inner join safe ones.
+                    if (res.length > 1 && !allSamePrefix) {
+                        // ignore the ones that are not inner join safe
+                        res = res.filter(function (ps, i) {
+                            var innerSafe = !ps.hasPath || ps.isAllOutboundNotNull;
+                            if (!innerSafe) {
+                                module._log.info(message + ", index=" + indices[i] + ": column directive is not inner join safe and will be ignored.");
+                            }
+                            return innerSafe;
+                        });
+                    }
+
+                    if (res.length === 0) {
+                        module._log.info(message + ": none of the defined column directives can be supported, using search(*).");
+                        return false;
+                    }
+
+                    if (!allSamePrefix) {
+                        sharedPrefix = "";
+                    }
+
+                    return {
+                        columns: res,
+                        allSamePathPrefix: allSamePrefix
+                    };
+                };
+
+                this._searchSourceDefinition = _getSearchSourceDefinition(this);
+            }
+            return this._searchSourceDefinition;
         },
 
         // build foreignKeys of this table and referredBy of corresponding tables.
@@ -1003,7 +1845,7 @@
                         altTable = this.schema.catalog.schemas.get(schema).tables.get(table);
                     } catch (error) {
                         // schema or table not found
-                        console.log(error.message);
+                        module._log.error(error.message);
                         continue;
                     }
 
@@ -1025,15 +1867,15 @@
 
                     // 1. alt should have no incoming foreign keys
                     if (altTable.referredBy.length() > 0) {
-                        console.log("Invalid schema: " + altTable.name + " is an alternative table with incoming reference");
-                        console.log("Ignoring " + altTable.name);
+                        module._log.info("Invalid schema: " + altTable.name + " is an alternative table with incoming reference");
+                        module._log.info("Ignoring " + altTable.name);
                         continue;
                     }
 
                     // 2. two level only
                     if (altTable.annotations.contains(module._annotations.TABLE_ALTERNATIVES)) {
-                        console.log("Invalid schema: " + altTable.name + " is an alternative table and a base table");
-                        console.log("Ignoring " + altTable.name);
+                        module._log.info("Invalid schema: " + altTable.name + " is an alternative table and a base table");
+                        module._log.info("Ignoring " + altTable.name);
                         continue;
                     }
 
@@ -1041,7 +1883,7 @@
                     if (altTable._baseTable !== altTable) {
                         // base table has previously been set
                         // more than one base table
-                        console.log("Invalid schema: " + altTable.name + " has more than one base table");
+                        module._log.info("Invalid schema: " + altTable.name + " has more than one base table");
                         continue;
                     }
 
@@ -1084,8 +1926,8 @@
                         }
 
                         if (!this._altSharedKey) {
-                            console.log("Invalid schema: alternative table " + altTable.name + " should have a key that is a foreign key to the base table");
-                            console.log(altTable.name + " ignored");
+                            module._log.info("Invalid schema: alternative table " + altTable.name + " should have a key that is a foreign key to the base table");
+                            module._log.info(altTable.name + " ignored");
                             continue;
                         }
                     } else {
@@ -1106,9 +1948,9 @@
                             }
 
                         } catch (error) {
-                            console.log("Invalid schema: base table " + this.name);
-                            console.log("alternative tables should have a key that is a foreign key to the base table, and it shoud be shared among all alternative tables");
-                            console.log("All alternative tables of base table " + this.name + " are ignored");
+                            module._log.error("Invalid schema: base table " + this.name);
+                            module._log.error("alternative tables should have a key that is a foreign key to the base table, and it shoud be shared among all alternative tables");
+                            module._log.error("All alternative tables of base table " + this.name + " are ignored");
 
                             // since alt tables don't share the same key, ignore all the alt tables
                             this._alternatives = {};
@@ -1174,41 +2016,105 @@
 
         },
 
-        // figure out if Table is pure and binary association table.
-        // binary: Has 2 outbound foreign keys. there is only a composite key constraint. This key includes all the columns from both foreign keys.
-        // pure: There is no extra column that is not part of any keys.
-        // NOTE: (As an exception, the table can have an extra key that is made of one serial type column.)
-        _isPureBinaryAssociation: function () {
-            if(this._isPureBinaryAssociation_cached === undefined) {
-                this._isPureBinaryAssociation_cached = this._computePureBinaryAssociation();
+        /**
+         * @private
+         * @desc
+         * figure out if Table is pure and binary association table.
+         * binary: Has 2 outbound foreign keys. there is only a composite key constraint. This key includes all the columns from both foreign keys.
+         * pure: There is no extra column that is not part of any keys.
+         * Execptions
+         *  - the table can have an extra key that is made of one serial type column.
+         *  - system columns are ignored completely (even if they are part of a simple fk)
+         * @type {boolean}
+         */
+        get isPureBinaryAssociation () {
+            if(this._isPureBinaryAssociation === undefined) {
+                this._isPureBinaryAssociation = this._computePureBinaryAssociation();
             }
-            return this._isPureBinaryAssociation_cached;
+            return this._isPureBinaryAssociation;
+        },
+
+        /**
+         * if the table is pure and binary, will return the two foreignkeys that create it
+         * @type {ERMrest.ForeignKeyRef[]}
+         */
+        get pureBinaryForeignKeys () {
+            if(this._pureBinaryForeignKeys_cached === undefined) {
+                // will attach the value of _pureBinaryForeignKeys_cached
+                this._computePureBinaryAssociation();
+            }
+            return this._pureBinaryForeignKeys_cached;
         },
 
         _computePureBinaryAssociation: function () {
-            if (this.referredBy.length() > 0 || this.foreignKeys.length() != 2) {
+            var isSystemCol = function (col) {
+                return module._systemColumns.indexOf(col.name) !== -1;
+            };
+
+
+            if (this.referredBy.length() > 0) {
                 return false; // not binary
             }
 
-            var serialTypes = ["serial", "serial2", "serial4", "serial8"];
-            var fkColset = new ColSet(this.foreignKeys.colsets().reduce(function(res, colset){
-                return res.concat(colset.columns);
-            }, [])); // set of foreignkey columns
+            // ignore the fks that are simple and their constituent column is system col
+            var nonSystemColumnFks = this.foreignKeys.all().filter(function (fk) {
+                return !(fk.simple && isSystemCol(fk.colset.columns[0]));
+            });
 
+            if (nonSystemColumnFks.length != 2) {
+                return false; //not binary
+            }
+
+            // set of foreignkey columns (they might be overlapping so we're not using array)
+            var fkCols = {};
+            nonSystemColumnFks.forEach(function(fk){
+                fk.colset.columns.forEach(function (col) {
+                    fkCols[col] = true;
+                });
+            });
+
+            // the key that should contain foreign key columns
             var tempKeys = this.keys.all().filter(function(key) {
                 var keyCols = key.colset.columns;
-                return !(keyCols.length == 1 && (serialTypes.indexOf(keyCols[0].type.name) != -1 ||  module._systemColumns.indexOf(keyCols[0].name) != -1) && !(keyCols[0] in fkColset.columns));
-            }); // the key that should contain foreign key columns.
+                return !(keyCols.length == 1 && (module._serialTypes.indexOf(keyCols[0].type.name) != -1 ||  module._systemColumns.indexOf(keyCols[0].name) != -1) && !(keyCols[0] in fkCols));
+            });
 
-            if (tempKeys.length != 1 || !fkColset._equals(tempKeys[0].colset)) {
+            if (tempKeys.length != 1) {
                 return false; // not binary
             }
 
-            var nonKeyCols = this.columns.all().filter(function(col) {
-            	return col.memberOfKeys.length === 0 && module._systemColumns.indexOf(col.name) === -1;
-            }); // columns that are not part of any keys.
+            //make sure the key has all the foreign key columns
+            var keyHasAllCols = tempKeys[0].colset.columns.every(function (col) {
+                return col in fkCols;
+            });
+            if (!keyHasAllCols) {
+                return false; // not pure
+            }
 
-            return nonKeyCols.length === 0; // check for purity
+            // columns that are not part of any keys (excluding system columns).
+            var nonKeyCols = this.columns.all().filter(function(col) {
+            	return col.memberOfKeys.length === 0 && !isSystemCol(col);
+            });
+
+            // check for purity
+            if (nonKeyCols.length === 0) {
+                // attach the value of _pureBinaryForeignKeys
+                this._pureBinaryForeignKeys_cached = nonSystemColumnFks;
+
+                return true;
+            }
+
+            this._pureBinaryForeignKeys_cached = null;
+            return false;
+        },
+
+        /**
+         * return the null value that should be shown for the columns under
+         * this table for the given context.
+         * @type {object}
+         */
+        _getNullValue: function (context) {
+            return module._getNullValue(this, context, true);
         }
     };
 
@@ -1354,10 +2260,10 @@
 
             uri = uri + "/row_count:=cnt(*)";
 
-            return this._server._http.get(uri).then(function(response) {
+            return this._server.http.get(uri).then(function(response) {
                 return response.data[0].row_count;
             }, function (response) {
-                var error = module._responseToError(response);
+                var error = module.responseToError(response);
                 return module._q.reject(error);
             });
         },
@@ -1381,10 +2287,10 @@
             var uri = this._toURI(filter, columns, sortby, null, null, limit);
 
             var self = this;
-            return this._server._http.get(uri).then(function(response) {
+            return this._server.http.get(uri).then(function(response) {
                 return new Rows(self._table, response.data, filter, limit, columns, sortby);
             }, function (response) {
-                var error = module._responseToError(response);
+                var error = module.responseToError(response);
                 return module._q.reject(error);
             });
         },
@@ -1410,10 +2316,10 @@
                 this._toURI(filter, columns, sortby, "before", row, limit);
 
             var self = this;
-            return this._server._http.get(uri).then(function(response) {
+            return this._server.http.get(uri).then(function(response) {
                 return new Rows(self._table, response.data, filter, limit, columns, sortby);
             }, function (response) {
-                var error = module._responseToError(response);
+                var error = module.responseToError(response);
                 return module._q.reject(error);
             });
         },
@@ -1437,10 +2343,10 @@
                 this._toURI(filter, columns, sortby, "after", row, limit);
 
             var self = this;
-            return this._server._http.get(uri).then(function(response) {
+            return this._server.http.get(uri).then(function(response) {
                 return new Rows(self._table, response.data, filter, limit, columns, sortby);
             }, function (response) {
-                var error = module._responseToError(response);
+                var error = module.responseToError(response);
                 return module._q.reject(error);
             });
         },
@@ -1457,10 +2363,10 @@
         delete: function (filter) {
             var uri = this._toURI(filter);
 
-            return this._server._http.delete(uri).then(function(response) {
+            return this._server.http.delete(uri).then(function(response) {
                 return response.data;
             }, function (response) {
-                var error = module._responseToError(response);
+                var error = module.responseToError(response);
                 return module._q.reject(error);
             });
         },
@@ -1477,10 +2383,10 @@
 
             var uri = this._toURI();
 
-            return this._server._http.put(uri, rows).then(function(response) {
+            return this._server.http.put(uri, rows).then(function(response) {
                 return response.data;
             }, function (response) {
-                var error = module._responseToError(response);
+                var error = module.responseToError(response);
                 return module._q.reject(error);
             });
         },
@@ -1510,10 +2416,10 @@
                 }
             }
 
-            return this._server._http.post(uri, rows).then(function(response) {
+            return this._server.http.post(uri, rows).then(function(response) {
                return response.data;
             }, function(response) {
-                var error = module._responseToError(response);
+                var error = module.responseToError(response);
                 return module._q.reject(error);
             });
         }
@@ -1687,9 +2593,9 @@
          * @returns {boolean} whether Columns has this column or not
          */
         has: function (name) {
-            return this._columns.filter(function (column) {
+            return this._columns.some(function (column) {
                     return column.name == name;
-                }).length > 0;
+            });
         },
 
         /**
@@ -1722,9 +2628,6 @@
     /**
      * Constructs a Column.
      *
-     * TODO: The Column will need to change. We need to be able to use the
-     * column in the context the new {@link ERMrest.Reference+columns} where
-     * a Column _may not_ be a part of a Table.
      * @memberof ERMrest
      * @constructor
      * @param {ERMrest.Table} table the table object.
@@ -1744,14 +2647,18 @@
 
         /**
          * Formats a value corresponding to this column definition.
-         * If a column display annotation with preformat property is available then use prvided format string
-         * else use the default formatValue function
+         * It will take care of pre-formatting and any default formatting based on column type.
+         * If column is array, the returned value will be array of values. The value is either
+         * a string or `null`. We're not returning string because we need to distinguish between
+         * null and value. `null` for arrays is a valid value. [`null`] is different from `null`.
          *
          * @param {Object} data The 'raw' data value.
          * @param {String} context the app context
-         * @returns {string} The formatted value.
+         * @returns {string|string[]} The formatted value. If column is array, it will be an array of values.
          */
         this.formatvalue = function (data, context, options) {
+
+            var self = this;
 
             //This check has been added to show "null" in all the rows if the user inputs blank string
             //We are opting json out here because we want null in the UI instead of "", so we do not call _getNullValue for json
@@ -1762,49 +2669,97 @@
             }
 
             var display = this.getDisplay(context);
+            var isPartOfSimpleFk = self.memberOfForeignKeys.filter(function (fk) {
+                return fk.simple;
+            }).length > 0;
 
-            if (display.isPreformat) {
-                try {
-                    return module._printf(display.preformatConfig, data, this.type.rootName);
-                } catch(e) {
-                    console.log(e);
+            var getFormattedValue = function (v) {
+                // in case of array, null and empty strings are valid values and we
+                // need to distinguish them.
+                if (self.type.isArray && (v == null || v === "")) {
+                    return v;
                 }
-            }
 
-            return _formatValueByType(this.type, data, options);
+                if (display.isPreformat) {
+                    try {
+                        return module._printf(display.preformatConfig, v, self.type.rootName);
+                    } catch(e) {
+                        module._log.error(e);
+                    }
+                }
+
+                // if int/serial and part of simple key or simple fk we don't want to format the value
+                if ((self.type.name.indexOf("int") === 0 || self.type.name.indexOf("serial") === 0) &&
+                    (self.isUniqueNotNull || isPartOfSimpleFk)) {
+                    return v.toString();
+                }
+
+                return _formatValueByType(self.type, v, options);
+            };
+
+            if (this.type.isArray) {
+                return data.map(getFormattedValue);
+            }
+            return getFormattedValue(data);
         };
 
         /**
          * Formats the presentation value corresponding to this column definition.
-         * @param {String} data The 'formatted' data value.
+         * For getting the value of a column we should use this function and not formatvalue directly.
+         * This will call `formatvalue` for the current column and other columns if necessary.
+         *
+         * @param {Object} data The `raw` data for the table.
          * @param {String} context the app context
-         * @param {Object} options The key value pair of possible options with all formatted values in '.formattedValues' key
+         * @param {Object} templateVariables tempalte variables
+         * @param {Object} options
          * @returns {Object} A key value pair containing value and isHTML that detemrines the presentation.
          */
-        this.formatPresentation = function(data, context, options) {
+        this.formatPresentation = function(data, context, templateVariables, options) {
+            data = data || {};
 
-            var utils = module._formatUtils;
+            if (options === undefined || options !== Object(options)) {
+                options = {};
+            }
 
             var display = this.getDisplay(context);
+
+            var formattedValue, unformatted;
+            formattedValue = this.formatvalue(data[this.name], context, options);
 
             /*
              * If column doesn't has column-display annotation and is not of type markdown
              * but the column type is json then append <pre> tag and return the value
              */
-
             if (!display.isHTML && this.type.name.indexOf('json') !== -1) {
-                return { isHTML: true, value: '<pre>' + data + '</pre>', unformatted: data};
+                return { isHTML: true, value: '<pre>' + formattedValue + '</pre>', unformatted: formattedValue};
+            }
+
+            // in this case data must be an array
+            if (!display.isMarkdownPattern && this.type.isArray) {
+                unformatted = module._formatUtils.printArray(formattedValue, {isMarkdown: display.isHTML});
+
+                // If value is null or empty, return value on basis of `show_null`
+                if (unformatted === null || unformatted.trim() === '') {
+                    return { isHTML: false, value: this._getNullValue(context), unformatted: this._getNullValue(context) };
+                }
+
+                return {
+                    isHTML: true,
+                    unformatted: unformatted,
+                    value: module.renderMarkdown(unformatted, options.inline)
+                };
             }
 
             /*
              * If column doesn't has column-display annotation and is not of type markdown
-             * then return data as it is
+             * then return formattedValue as it is
              */
             if (!display.isHTML) {
-                return { isHTML: false, value: data, unformatted: data };
+                return { isHTML: false, value: formattedValue, unformatted: formattedValue };
             }
 
-            var unformatted = data;
+            // the string with markdown syntax in it and not HTML
+            unformatted = formattedValue;
 
             // If there is any markdown pattern then evaluate it
             if (display.isMarkdownPattern) {
@@ -1813,20 +2768,15 @@
                 var template = display.markdownPattern; // pattern
 
                 // Code to do template/string replacement using keyValues
-                if (options === undefined || options !== Object(options)) {
-                    options = {};
-                }
-                if (options.formattedValues === undefined) {
-                    options.formattedValues = module._getFormattedKeyValues(this.table, context, data);
+                if (!isObjectAndNotNull(templateVariables)) {
+                    templateVariables = module._getFormattedKeyValues(this.table, context, data);
                 }
 
-                options.formatted = true; // to avoid creating formattedValues again
-                unformatted = module._renderTemplate(template, options.formattedValues, this.table, context, options);
+                unformatted = module._renderTemplate(template, templateVariables, this.table.schema.catalog, {templateEngine: display.templateEngine});
             }
 
 
-            // If value is null or empty, return value on basis of `show_nulls`
-
+            // If value is null or empty, return value on basis of `show_null`
             if (unformatted === null || unformatted.trim() === '') {
                 return { isHTML: false, value: this._getNullValue(context), unformatted: this._getNullValue(context) };
             }
@@ -1834,7 +2784,7 @@
             /*
              * Call printmarkdown to generate HTML from the final generated string after templating and return it
              */
-             value = utils.printMarkdown(unformatted, options);
+             value = module.renderMarkdown(unformatted, options.inline);
 
              return { isHTML: true, value: value, unformatted: unformatted };
 
@@ -1856,14 +2806,14 @@
          * Mentions whether we should hide the value for this column
          * @type {Boolean}
          */
-        this.isHidden = this.rights.select === false;
+        this.isHiddenPerACLs = this.rights.select === false;
 
         /**
          * Mentions whether this column is generated depending on insert rights
          * or if column is system generated then return true so that it is disabled.
          * @type {Boolean}
          */
-        this.isGenerated = this.rights.insert === false;
+        this.isGeneratedPerACLs = this.rights.insert === false;
 
         /**
          * If column is system generated then this should true so that it is disabled during create and update.
@@ -1875,29 +2825,25 @@
          * Mentions whether this column is immutable depending on update rights
          * @type {Boolean}
          */
-        this.isImmutable = this.rights.update === false;
+        this.isImmutablePerACLs = this.rights.update === false;
 
         /**
+         * The database name of this column
          * @type {string}
          */
         this.name = jsonColumn.name;
+
+        /**
+         * @desc The RID of this column (might not be defined)
+         * @type {?string}
+         */
+        this.RID = jsonColumn.RID;
 
         /**
          *
          * @type {ERMrest.Type}
          */
         this.type = new Type(jsonColumn.type);
-
-        /**
-         * @type {Boolean}
-         */
-        this.nullok = jsonColumn.nullok;
-
-        /**
-         * @desc Documentation for this column
-         * @type {string}
-         */
-        this.comment = jsonColumn.comment;
 
         /**
          *
@@ -1920,6 +2866,32 @@
                 (jsonAnnotation === null || jsonAnnotation === [])) {
                 this.ignore = true;
             }
+        }
+
+        /**
+         * @desc Documentation for this column
+         * @type {string}
+         */
+        this.comment = jsonColumn.comment;
+        if (this.annotations.contains(module._annotations.DISPLAY)) {
+            var cm = _processModelComment(this.annotations.get(module._annotations.DISPLAY).content.comment);
+            if (typeof cm === "string") {
+                this.comment = cm;
+            }
+        }
+
+        // If the comment is not defined for a system column, then it is assigned a default comment
+        if((this.comment == null || this.comment == undefined) && this.isSystemColumn){
+            this.comment = module._defaultColumnComment[this.name];
+        }
+
+        /**
+        * @type {Boolean}
+        */
+        this.nullok = jsonColumn.nullok;
+        // if false we don't even need to check for the presence of the annotation
+        if (this.nullok) {
+            this.nullok = !this.annotations.contains(module._annotations.REQUIRED);
         }
 
         this._nameStyle = {}; // Used in the displayname to store the name styles.
@@ -1950,6 +2922,14 @@
          */
         this.memberOfForeignKeys = [];
 
+
+        /**
+         * This is the actual default that is defined on schema document.
+         * To get the default value that is suitable for client-side, please use .default
+         * @type {object}
+         */
+        this.ermrestDefault = jsonColumn.default;
+
     }
 
     Column.prototype = {
@@ -1977,6 +2957,16 @@
                     if (module._ignoreDefaultsNames.includes(this.name)) {
                         throw new Error("" + this.type.name + " is in the list of ignored default types");
                     }
+
+                    // validate default value based on type name
+                    if (this.type.name === 'color_rgb_hex') {
+                        if (!isValidColorRGBHex(defaultVal)) {
+                            throw new Error("Val: " + defaultVal + " is not a valid color rgb hex value.");
+                        }
+                        // the root type of color is text, so the next switch won't do anything
+                    }
+
+                    // validate default value based on the root type name
                     switch (this.type.rootName) {
                         case "boolean":
                             if (typeof(defaultVal) !== "boolean") {
@@ -2018,7 +3008,7 @@
                     }
                     this._default = defaultVal;
                 } catch(e) {
-                    console.dir(e.message);
+                    module._log.error(e.message);
                     this._default = null;
                 }
             }
@@ -2035,26 +3025,47 @@
             column.name === this.name);
         },
 
-        // find the null value for the column based on context and annotation
+        /**
+         * return the null value for the column based on context and annotation
+         * @type {object}
+         */
         _getNullValue: function (context) {
-            return module._getNullValue(this, context, [this, this.table, this.table.schema]);
+            return module._getNullValue(this, context);
         },
 
         getInputDisabled: function(context) {
-            var isGenerated = this.annotations.contains(module._annotations.GENERATED);
-            var isImmutable = this.annotations.contains(module._annotations.IMMUTABLE);
+            // TODO we might want to add inheritence here
+            var isGenerated = _processACLAnnotation(this.annotations, module._annotations.GENERATED, false);
+            var isImmutable = _processACLAnnotation(this.annotations, module._annotations.IMMUTABLE, null);
             var isSerial = (this.type.name.indexOf('serial') === 0);
 
             if (context == module._contexts.CREATE) {
-                if (this.isSystemColumn || this.isGenerated || isGenerated || isSerial) {
+                // only if insert: false in the ACLs
+                // (system columns also have insert:false but we want a better message for them)
+                if (this.isGeneratedPerACLs && !this.isSystemColumn) {
+                    return {
+                        message: "Not allowed"
+                    };
+                }
+
+                // if system column, serial type, or generated based on annotation
+                if (this.isSystemColumn || isGenerated || isSerial) {
                     return {
                         message: "Automatically generated"
                     };
                 }
             } else if (context == module._contexts.EDIT || context == module._contexts.ENTRY) {
-                if (this.isSystemColumn || this.isImmutable || isGenerated || isImmutable || isSerial) {
+                if (this.isSystemColumn || this.isImmutablePerACLs || isSerial) {
                     return true;
                 }
+                // if specifically immutable is set to false, then honor it
+                if (isImmutable === false) {
+                    return false;
+                }
+                if (isGenerated || isImmutable) {
+                    return true;
+                }
+
             } else {
                 // other contexts are not in entry/create/edit modes, which means any "input" is disabled anyway
                 return true;
@@ -2069,56 +3080,97 @@
          */
         getDisplay: function (context) {
             if (!(context in this._display)) {
-                var annotation = -1, columnOrder = [], hasPreformat;
+                var annotation = -1, columnOrder, hasPreformat;
                 if (this.annotations.contains(module._annotations.COLUMN_DISPLAY)) {
                     annotation = module._getRecursiveAnnotationValue(context, this.annotations.get(module._annotations.COLUMN_DISPLAY).content);
                 }
 
-                if (Array.isArray(annotation.column_order)) {
-                    var col;
-                    for (var i = 0 ; i < annotation.column_order.length; i++) {
-                        try {
-                            col = this.table.columns.get(annotation.column_order[i]);
-
-                            // make sure it's sortable
-                            if (module._nonSortableTypes.indexOf(col.type.name) !== -1) {
-                                continue;
-                            }
-
-                            // avoid duplicates
-                            if (columnOrder.indexOf(col) !== -1) {
-                                continue;
-                            }
-
-                            columnOrder.push(col);
-                        } catch(exception) {}
-                    }
-                } else {
-                    columnOrder = annotation.column_order;
-                }
+                columnOrder = _processColumnOrderList(annotation.column_order, this.table);
 
                 if (typeof annotation.pre_format === 'object') {
                     if (typeof annotation.pre_format.format !== 'string') {
-                        console.log(" pre_format annotation provided for column " + this.name + " doesn't has format string property");
+                        module._log.info(" pre_format annotation provided for column " + this.name + " doesn't has format string property");
                     } else {
                         hasPreformat = true;
                     }
                 }
 
                 this._display[context] = {
+                    "hideColumnHeader": annotation.hide_column_header || false, // only hide if the annotation value is true
                     "isPreformat": hasPreformat,
                     "preformatConfig": hasPreformat ? annotation.pre_format : null,
                     "isMarkdownPattern": (typeof annotation.markdown_pattern === 'string'),
                     "isMarkdownType" : this.type.name === 'markdown',
-                    "isHTML": (typeof annotation.markdown_pattern === 'string') || this.type.name === 'markdown',
+                    "isHTML": (typeof annotation.markdown_pattern === 'string') || (module._HTMLColumnType.indexOf(this.type.name) != -1),
                     "markdownPattern": annotation.markdown_pattern,
+                    "templateEngine": annotation.template_engine,
                     "columnOrder": columnOrder
                 };
             }
             return this._display[context];
         },
 
-        // get the sort columns using the context
+        /**
+         * can be used for comparing two values of the column.
+         * Will return
+         *   - 1: if a is greater than b
+         *   - -1: if b is greater than a
+         *   - 0: if a is equal to b, or cannot compare the values
+         * NOTE: null is greater than any not-null values.
+         * @param  {*} a raw value
+         * @param  {*} b raw value
+         * @return {integer} 1: a > b, -1: b > a, 0: a = b
+         */
+        compare: function (a, b) {
+            // not comparabale
+            if (module._nonSortableTypes.indexOf(this.type.name) !== -1) {
+                return 0;
+            }
+
+            // null is considered "greater" than any other value
+            if (a == null || b == null) {
+                if (a == null && b == null) return 0;
+                if (a == null) return 1;
+                return -1;
+            }
+
+            try {
+                switch (this.type.rootName) {
+                    case "date":
+                    case "timestamp":
+                    case "timestamptz":
+                        var ma = module._moment(a), mb = module._moment(b);
+                        if (ma.isAfter(mb)) {
+                            return 1;
+                        }
+                        if (ma.isBefore(mb)) {
+                            return -1;
+                        }
+                        return 0;
+                    case "text":
+                    case "longtext":
+                    case "markdown":
+                        return a.localeCompare(b);
+                    default:
+                        if (a > b) return 1;
+                        if (a < b) return -1;
+                        return 0;
+                }
+            } catch(e) {
+                // invalid data, couldn't compare
+                return 0;
+            }
+        },
+
+        /**
+         * Returns the columns that this column should be sorted based on and its direction.
+         * It will return an array of objects that has:
+         * - `column`: The {@link ERMrest.Column} object.
+         * - `descending`: Whether we should change the order of sort or not.
+         * @private
+         * @param  {string} context the context that we want the sort columns for
+         * @return {Array}
+         */
         _getSortColumns: function (context) {
             var display = this.getDisplay(context);
 
@@ -2134,8 +3186,36 @@
                 return undefined;
             }
 
-            return [this];
-        }
+            return [{column: this}];
+        },
+
+        /**
+         * Whether this column is unique (part of a simple key) and not-null
+         * @type {Boolean}
+         */
+        get isUniqueNotNull () {
+            if (this._isUniqueNotNull === undefined) {
+                var key = this.memberOfKeys.filter(function (key) {
+                    return key.simple;
+                })[0];
+                this._isUniqueNotNull = !this.nullok && (key !== undefined);
+                this._uniqueNotNullKey = key ? key : null;
+            }
+            return this._isUniqueNotNull;
+        },
+
+        /**
+         * If the column is unique and not-null, will return the simple key
+         * that is made of this column. Otherwise it will return `null`
+         * @type {ERMrest.Key}
+         */
+        get uniqueNotNullKey () {
+            if (this._uniqueNotNullKey === undefined) {
+                // will populate the _uniqueNotNullKey
+                var dummy = this.isUniqueNotNull;
+            }
+            return this._uniqueNotNullKey;
+         }
     };
 
     /**
@@ -2386,6 +3466,18 @@
          * @type {string}
          */
         this.comment = jsonKey.comment;
+        if (this.annotations.contains(module._annotations.DISPLAY)) {
+            var cm = _processModelComment(this.annotations.get(module._annotations.DISPLAY).content.comment);
+            if (typeof cm === "string") {
+                this.comment = cm;
+            }
+        }
+
+        /**
+         * @desc The RID of this key (might not be defined)
+         * @type {?string}
+         */
+        this.RID = jsonKey.RID;
 
         /**
          * The exact `names` array in key definition
@@ -2419,9 +3511,9 @@
             if (this._name === undefined) {
                 var obj = this._constraintName;
                 if (this.simple) {
-                    obj = {source: this.colset.columns[0].name};
+                    obj = {source: this.colset.columns[0].name, self_link: true};
                 }
-                this._name = _generatePseudoColumnHashName(obj);
+                this._name = _sourceColumnHelpers.generateSourceObjectHashName(obj, false);
             }
             return this._name;
         },
@@ -2464,12 +3556,17 @@
             return (this.colset.columns.indexOf(column) !== -1);
         },
 
-        // will return true if all the columns are not null and not html.
+        /**
+         * Will return true if all the columns are not not, not html, and not array.
+         * @private
+         * @param  {string} context the context (used for checking the markdown_pattern)
+         * @return {boolean} whether it's well formed or not
+         */
         _isWellFormed: function(context) {
             if (!(context in this._wellFormed)) {
                 var cols = this.colset.columns, result = true;
                 for (var c = 0; c < cols.length; c++) {
-                    if (cols[c].nullok || cols[c].getDisplay(context).isHTML) {
+                    if (cols[c].nullok || cols[c].type.isArray || cols[c].getDisplay(context).isHTML) {
                         result = false;
                         break;
                     }
@@ -2481,39 +3578,36 @@
 
         getDisplay: function(context) {
             if (!(context in this._display)) {
-                var annotation = -1, columnOrder = [];
+                var self = this, annotation = -1, columnOrder = [], showKeyLink =  null;
                 if (this.annotations.contains(module._annotations.KEY_DISPLAY)) {
                     annotation = module._getAnnotationValueByContext(context, this.annotations.get(module._annotations.KEY_DISPLAY).content);
                 }
 
-                if (Array.isArray(annotation.column_order)) {
-                    columnOrder = [];
-                    for (var i = 0 ; i < annotation.column_order.length; i++) {
-                        try {
-                            // column-order is just a list of column names
-                            var col = this.table.columns.get(annotation.column_order[i]);
+                columnOrder = _processColumnOrderList(annotation.column_order, this.table);
+                showKeyLink = annotation.show_key_link;
+                if (typeof showFKLink !== "boolean") {
+                    showKeyLink = module._getHierarchicalDisplayAnnotationValue(
+                        self, context, "show_key_link"
+                    );
 
-                            // make sure it's sortable
-                            if (module._nonSortableTypes.indexOf(col.type.name) !== -1) {
-                                continue;
-                            }
-
-                            // avoid duplicates
-                            if (columnOrder.indexOf(col) !== -1) {
-                                continue;
-                            }
-
-                            columnOrder.push(col);
-                        } catch(exception) {}
+                    // default:
+                    //   compact/select: false
+                    //   *: true
+                    if (typeof showKeyLink !== "boolean") {
+                        if (context === module._contexts.COMPACT_SELECT) {
+                            showKeyLink = false;
+                        } else {
+                            showKeyLink = true;
+                        }
                     }
-                } else {
-                    columnOrder = annotation.column_order;
                 }
 
                 this._display[context] = {
                     "columnOrder": columnOrder,
                     "isMarkdownPattern": (typeof annotation.markdown_pattern === 'string'),
-                    "markdownPattern": annotation.markdown_pattern
+                    "templateEngine": annotation.template_engine,
+                    "markdownPattern": annotation.markdown_pattern,
+                    "showKeyLink": showKeyLink
                 };
             }
 
@@ -2734,18 +3828,17 @@
                 orders = module._getRecursiveAnnotationValue(context, this._table.annotations.get(module._annotations.VISIBLE_FOREIGN_KEYS).content);
             }
 
-            if (orders == -1) {
+            if (orders == -1 || !Array.isArray(orders)) {
                 this._contextualize_cached[context] = -1;
                 return -1;
             }
 
             var self = this, fkNames = {}, col, colName, invalid, fk, i;
-
-            var wm = module._warningMessages;
+            var definitions = this._table.sourceDefinitions, wm = module._warningMessages;
             var logErr = function (bool, message, i) {
                 if (bool) {
-                    console.log("inbound foreignkeys list for table: " + self._table.name + ", context: " + context + ", fk index:" + i);
-                    console.log(message);
+                    module._log.info("inbound foreignkeys list for table: " + self._table.name + ", context: " + context + ", fk index:" + i);
+                    module._log.info(message);
                 }
                 return bool;
             };
@@ -2767,28 +3860,51 @@
                     // valid fk
                     fk = this._table.schema.catalog.constraintByNamePair(orders[i], module._constraintTypes.FOREIGN_KEY);
                     if (fk !== null && this._foreignKeys.indexOf(fk.object) !== -1) {
-                        colName = _generateForeignKeyName(fk.object, true);
+                        colName = _sourceColumnHelpers.generateForeignKeyName(fk.object, true);
                         addToList({foreignKey: fk.object, name: colName});
                     } else {
                         logErr(true, wm.INVALID_FK, i);
                     }
                 }
                 // path
-                else if (typeof orders[i] === "object" && orders[i].source) {
-                    col = _getFacetSourceColumn(orders[i].source, this._table, module._constraintNames);
+                else if (typeof orders[i] === "object") {
+                    var wrapper;
+                    if (orders[i].source || orders[i].sourcekey) {
+                        if (orders[i].source) {
+                            try {
+                                wrapper = new SourceObjectWrapper(orders[i], this._table, module._constraintNames);
+                            } catch (exp) {
+                                // we might want to show a better error message later.
+                                logErr(true, exp.message, i);
+                                invalid = true;
+                            }
+                        } else {
+                            var def = definitions.sources[orders[i].sourcekey];
+                            if (def) {
+                                wrapper = def.clone(orders[i], this._table, module._constraintNames);
+                            }
+                        }
 
-                    // invalid if:
-                    // 1. invalid source and not a path.
-                    // 2. not entity mode
-                    // 3. has aggregate
-                    invalid = logErr(!col || !_isFacetSourcePath(orders[i].source), wm.INVALID_FK, i) ||
-                              logErr(!_isFacetEntityMode(orders[i], col), wm.SCALAR_NOT_ALLOWED) ||
-                              logErr(orders[i].aggregate, wm.AGG_NOT_ALLOWED);
+                        // invalid if:
+                        // 1. invalid source and not a path.
+                        // 2. no inbound
+                        // 3. not entity mode
+                        // 4. has aggregate
+                        invalid = invalid ||
+                                  logErr(!wrapper || !wrapper.hasPath, wm.INVALID_FK, i) ||
+                                  logErr(!wrapper.hasInbound, wm.INVALID_FK_NO_INBOUND, i) ||
+                                  logErr(!wrapper.isEntityMode, wm.SCALAR_NOT_ALLOWED) ||
+                                  logErr(wrapper.hasAggregate, wm.AGG_NOT_ALLOWED);
+
+                    } else {
+                        invalid = true;
+                        logErr(true, wm.INVALID_SOURCE, i);
+                    }
 
                     if (!invalid) {
-                        colName = _generatePseudoColumnName(orders[i], col).name;
-                        addToList({isPath: true, object: orders[i], column: col, name: colName});
+                        addToList({isPath: true, sourceObjectWrapper: wrapper, name: wrapper.name});
                     }
+                    invalid = false;
                 }
             }
             this._contextualize_cached[context] = result;
@@ -2890,7 +4006,25 @@
      */
     function ForeignKeyRef(table, jsonFKR) {
 
+        /*
+         * @deprecated
+         * TODO
+         * I added `this.table` below and we should remove `this._table`. But
+         * I'm leaving it in for now because I am not sure what I might break.
+         */
         this._table = table;
+
+        /**
+         * @desc The table that this foreignkey is defined on (from table)
+         * @type {ERMrest.Table}
+         */
+        this.table = table;
+
+        /**
+         * @desc The RID of this column (might not be defined)
+         * @type {?string}
+         */
+        this.RID = jsonFKR.RID;
 
         var catalog = table.schema.catalog;
 
@@ -2966,6 +4100,26 @@
         this.to_name = "";
 
         /**
+         * @type {string}
+         */
+        this.to_comment = "";
+
+        /**
+         * @type {string}
+         */
+        this.from_comment = "";
+
+        /**
+         * @type {string}
+         */
+        this.to_comment_display = module._commentDisplayModes.tooltip;
+
+        /**
+         * @type {string}
+         */
+        this.from_comment_display = module._commentDisplayModes.tooltip;
+
+        /**
          * @type {boolean}
          */
         this.ignore = false;
@@ -2993,6 +4147,18 @@
                 if(jsonAnnotation.to_name){
                     this.to_name = jsonAnnotation.to_name;
                 }
+
+                if (_isValidModelComment(jsonAnnotation.to_comment)) {
+                    // check for null, false, empty string when digesting comment for first time
+                    this.to_comment = _processModelComment(jsonAnnotation.to_comment);
+                    if (_isValidModelCommentDisplay(jsonAnnotation.to_comment_display)) this.to_comment_display = jsonAnnotation.to_comment_display;
+                }
+
+                if (_isValidModelComment(jsonAnnotation.from_comment)) {
+                    // check for null, false, empty string when digesting comment for first time
+                    this.from_comment = _processModelComment(jsonAnnotation.from_comment);
+                    if (_isValidModelCommentDisplay(jsonAnnotation.from_comment_display)) this.from_comment_display = jsonAnnotation.from_comment_display;
+                }
             }
         }
 
@@ -3010,12 +4176,30 @@
         constructor: ForeignKeyRef,
 
         /**
-         * A unique nam that can be used for referring to this foreignkey.
+         * the compressed source path from the main reference to this column
+         * @type{Object}
+         */
+        get compressedDataSource() {
+            if (this._compressedDataSource === undefined) {
+                var ds = null;
+                if (this.table.shortestKey.length === 1) {
+                    ds = [
+                        {"outbound": this.constraint_names[0]},
+                        this.table.shortestKey[0].name
+                    ];
+                }
+                this._compressedDataSource = _compressSource(ds);
+            }
+            return this._compressedDataSource;
+        },
+
+        /**
+         * A unique name that can be used for referring to this foreignkey.
          * @type {string}
          */
         get name () {
             if (this._name === undefined) {
-                this._name = _generateForeignKeyName(this);
+                this._name = _sourceColumnHelpers.generateForeignKeyName(this);
             }
             return this._name;
         },
@@ -3074,42 +4258,85 @@
 
         getDisplay: function(context) {
             if (!(context in this._display)) {
-                var annotation = -1, columnOrder = [];
+                var self = this, annotation = -1, columnOrder = [], showFKLink = true;
+                // NOTE: commenting out contextualized functionality since it isn't being supported just yet
+                // var fromComment = null, fromCommentDisplay = "tooltip", toComment = null, toCommentDisplay = "tooltip";
                 if (this.annotations.contains(module._annotations.FOREIGN_KEY)) {
                     annotation = module._getAnnotationValueByContext(context, this.annotations.get(module._annotations.FOREIGN_KEY).get("display"));
-
                 }
 
-                if (Array.isArray(annotation.column_order)) {
-                    columnOrder = [];
-                    for (var i = 0 ; i < annotation.column_order.length; i++) {
-                        try {
-                            // column-order is just a list of column names
-                            var col = this.key.table.columns.get(annotation.column_order[i]);
+                columnOrder = _processColumnOrderList(annotation.column_order, this.key.table);
+                showFKLink = annotation.show_foreign_key_link;
+                if (typeof showFKLink !== "boolean") {
+                    showFKLink = module._getHierarchicalDisplayAnnotationValue(
+                        self, context, "show_foreign_key_link"
+                    );
 
-                            // make sure it's sortable
-                            if (module._nonSortableTypes.indexOf(col.type.name) !== -1) {
-                                continue;
-                            }
-
-                            // avoid duplicates
-                            if (columnOrder.indexOf(col) !== -1) {
-                                continue;
-                            }
-
-                            columnOrder.push(col);
-                        } catch(exception) {}
+                    // default:
+                    //   compact/select: false
+                    //   *: true
+                    if (typeof showFKLink !== "boolean") {
+                        if (context === module._contexts.COMPACT_SELECT) {
+                            showFKLink = false;
+                        } else {
+                            showFKLink = true;
+                        }
                     }
-                } else {
-                    columnOrder = annotation.column_order;
                 }
+
+                // fromComment = _processModelComment(annotation.from_comment);
+                // toComment = _processModelComment(annotation.to_comment);
+                // fromCommentDisplay = (annotation.from_comment && typeof annotation.from_comment_display === "string") ? annotation.from_comment_display : "tooltip";
+                // toCommentDisplay = (annotation.to_comment && typeof annotation.to_comment_display === "string") ? annotation.to_comment_display : "tooltip";
 
                 this._display[context] = {
                     "columnOrder": columnOrder,
+                    // "fromComment": fromComment,
+                    // "fromCommentDisplay": fromCommentDisplay,
+                    "showForeignKeyLink": showFKLink,
+                    // "toComment": toComment,
+                    // "toCommentDisplay": toCommentDisplay
                 };
             }
 
             return this._display[context];
+        },
+
+        /**
+         * Whether all the columns in the relationship are not-nullable,
+         *  - nullok: false
+         *  - select: true
+         * @type {Boolean}
+         */
+        get isNotNull() {
+            if (this._isNotNull === undefined) {
+                var colsetNotNull = function (colset) {
+                    return colset.columns.every(function (col) {
+                        return !col.nullok && col.rights.select === true;
+                    });
+                };
+
+                return colsetNotNull(this.colset) && colsetNotNull(this.key.colset);
+            }
+            return this._isNotNull;
+        },
+
+        /**
+         * Whether all the columns in the relationship are not-nullable per model,
+         *  - nullok: false
+         * @type {Boolean}
+         */
+        get isNotNullPerModel() {
+            if (this._isNotNullPerModel === undefined) {
+                var colsetNotNull = function (colset) {
+                    return colset.columns.every(function (col) {
+                        return !col.nullok;
+                    });
+                };
+
+                return colsetNotNull(this.colset) && colsetNotNull(this.key.colset);
+            }
+            return this._isNotNullPerModel;
         }
     };
 
@@ -3130,7 +4357,7 @@
          * Currently used to signal whether there is a base type for this column
          * @type {boolean}
          */
-        this._isArray = jsonType.is_array;
+        this.isArray = jsonType.is_array;
 
         /**
          * Currently used to signal whether there is a base type for this column
@@ -3152,7 +4379,7 @@
         /**
          * The column name of the base. This goes to the first level which
          * will be a type understandable by database.
-         * @type {string} type name
+         * @type {string}
          */
         get rootName() {
             if (this._rootName === undefined) {
@@ -3164,3 +4391,8 @@
             return this._rootName;
         }
     };
+
+    function SourceDefinition(key, obj) {
+        this.key = key;
+        this.sourceObject = obj;
+    }

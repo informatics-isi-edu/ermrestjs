@@ -1,0 +1,344 @@
+{
+    "schema_name": "table_config",
+    "tables": {
+        "favorites_path": {
+            "comment": "Table with table-config annotation to save favorites",
+            "kind": "table",
+            "keys": [
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": [
+                        "id"
+                    ]
+                }
+            ],
+            "foreign_keys": [],
+            "table_name": "favorites_path",
+            "schema_name": "table_config",
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "int"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2021:table-config": {
+                    "user_favorites": {
+                        "storage_table": {
+                            "catalog": "1",
+                            "schema": "table_config",
+                            "table": "my_favorites"
+                        }
+                    }
+                }
+            }
+        },
+        "no_annotation": {
+            "comment": "Table with NO table-config annotation for testing defaults",
+            "kind": "table",
+            "keys": [
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": [
+                        "id"
+                    ]
+                }
+            ],
+            "foreign_keys": [],
+            "table_name": "no_annotation",
+            "schema_name": "table_config",
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "int"
+                    }
+                }
+            ],
+            "annotations": {}
+        },
+        "favorites_null": {
+            "comment": "Table with an improperly configured table-config annotation for the user_favorites property",
+            "kind": "table",
+            "keys": [
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": [
+                        "id"
+                    ]
+                }
+            ],
+            "foreign_keys": [],
+            "table_name": "favorites_null",
+            "schema_name": "table_config",
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "int"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2021:table-config": {
+                    "user_favorites": {}
+                }
+            }
+        },
+        "table_w_invalid_stable_key": {
+            "kind": "table",
+            "keys": [{"unique_columns": ["id"]}],
+            "foreign_keys": [],
+            "table_name": "table_w_invalid_stable_key",
+            "schema_name": "table_config",
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "int"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2021:table-config": {
+                    "stable_key": "invalid value"
+                }
+            }
+        },
+        "table_w_invalid_stable_key_columns": {
+            "kind": "table",
+            "keys": [{"unique_columns": ["id"]}],
+            "foreign_keys": [],
+            "table_name": "table_w_invalid_stable_key_columns",
+            "schema_name": "table_config",
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "int"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2021:table-config": {
+                    "stable_key_columns": ["invalid column"]
+                }
+            }
+        },
+        "table_w_stable_key_composite": {
+            "kind": "table",
+            "keys": [
+                {"unique_columns": ["id"]},
+                {
+                    "names": [["table_config", "table_w_stable_key_composite_key1"]],
+                    "unique_columns": ["id1", "id2"]
+                }
+            ],
+            "foreign_keys": [],
+            "table_name": "table_w_stable_key_composite",
+            "schema_name": "table_config",
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "int"
+                    }
+                },
+                {
+                    "name": "id1",
+                    "nullok": false,
+                    "type": {
+                        "typename": "int"
+                    }
+                },
+                {
+                    "name": "id2",
+                    "nullok": false,
+                    "type": {
+                        "typename": "int"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2021:table-config": {
+                    "stable_key": ["table_config", "table_w_stable_key_composite_key1"]
+                }
+            }
+        },
+        "table_w_stable_key_columns_composite": {
+            "comment": "table with invalid stable key columns",
+            "kind": "table",
+            "keys": [
+                {"unique_columns": ["id"]},
+                {"unique_columns": ["id1", "id2"]}
+            ],
+            "foreign_keys": [],
+            "table_name": "table_w_stable_key_columns_composite",
+            "schema_name": "table_config",
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "int"
+                    }
+                },
+                {
+                    "name": "id1",
+                    "nullok": false,
+                    "type": {
+                        "typename": "int"
+                    }
+                },
+                {
+                    "name": "id2",
+                    "nullok": false,
+                    "type": {
+                        "typename": "int"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2021:table-config": {
+                    "stable_key_columns": ["id1", "id2"]
+                }
+            }
+        },
+        "table_w_stable_key_nullable": {
+            "comment": "table with invalid stable key columns",
+            "kind": "table",
+            "keys": [
+                {"unique_columns": ["id"]},
+                {
+                    "names": [["table_config", "table_w_stable_key_nullable_key1"]],
+                    "unique_columns": ["id1"]
+                }
+            ],
+            "foreign_keys": [],
+            "table_name": "table_w_stable_key_nullable",
+            "schema_name": "table_config",
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "int"
+                    }
+                },
+                {
+                    "name": "id1",
+                    "nullok": true,
+                    "type": {
+                        "typename": "int"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2021:table-config": {
+                    "stable_key": ["table_config", "table_w_stable_key_nullable_key1"]
+                }
+            }
+        },
+        "table_w_stable_key_columns_nullable": {
+            "comment": "table with invalid stable key columns",
+            "kind": "table",
+            "keys": [
+                {"unique_columns": ["id"]},
+                {"unique_columns": ["id1"]}
+            ],
+            "foreign_keys": [],
+            "table_name": "table_w_stable_key_columns_nullable",
+            "schema_name": "table_config",
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "int"
+                    }
+                },
+                {
+                    "name": "id1",
+                    "nullok": true,
+                    "type": {
+                        "typename": "int"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2021:table-config": {
+                    "stable_key": ["id1"]
+                }
+            }
+        },
+        "table_w_valid_stable_key": {
+            "comment": "table with invalid stable key columns",
+            "kind": "table",
+            "keys": [
+                {
+                    "names": [["table_config", "table_w_valid_stable_key_key1"]],
+                    "unique_columns": ["id"]
+                }
+            ],
+            "foreign_keys": [],
+            "table_name": "table_w_valid_stable_key",
+            "schema_name": "table_config",
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "int"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2021:table-config": {
+                    "stable_key": ["table_config", "table_w_valid_stable_key_key1"]
+                }
+            }
+        },
+        "table_w_valid_stable_key_columns": {
+            "comment": "table with invalid stable key columns",
+            "kind": "table",
+            "keys": [
+                {"unique_columns": ["id"]}
+            ],
+            "foreign_keys": [],
+            "table_name": "table_w_valid_stable_key_columns",
+            "schema_name": "table_config",
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "int"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2021:table-config": {
+                    "stable_key_columns": ["id"]
+                }
+            }
+        }
+    },
+    "table_names": [
+        "favorites_path",
+        "no_annotation",
+        "favorites_null"
+    ],
+    "comment": null,
+    "annotations": {}
+}

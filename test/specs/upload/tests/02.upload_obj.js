@@ -65,14 +65,14 @@ exports.execute = function (options) {
             });
 
             expect(uploadObj.PART_SIZE).toBe(chunkSize, "chunk size is incorrect");
-            expect(uploadObj.CHUNK_QUEUE_SIZE).toBe(10, "chunk queue size is incorrect");
+            expect(uploadObj.CHUNK_QUEUE_SIZE).toBe(4, "chunk queue size is incorrect");
             expect(uploadObj.file).toEqual(file.file, "file is not an Object");
             expect(uploadObj.column).toEqual(column, "column is incorrect");
 
             // reference associated
             expect(uploadObj.reference).toEqual(reference, "reference is incorrect");
             expect(uploadObj.SERVER_URI).toBe(serverUri, "server uri is incorrect");
-            expect(uploadObj.http).toEqual(reference._server._http, "http is incorrect");
+            expect(uploadObj.http).toEqual(reference._server.http, "http is incorrect");
 
             // initial values
             expect(uploadObj.isPaused).toBeFalsy("is paused is incorrect");

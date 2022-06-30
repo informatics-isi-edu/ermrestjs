@@ -1,3 +1,5 @@
+var utils = require("../../../utils/utilities.js");
+
 exports.execute = function (options) {
 
     describe("deleting reference objects, ", function () {
@@ -45,6 +47,607 @@ exports.execute = function (options) {
                     // response should be a positive status code triggering the success calback
                     // response object should be undefined
                     expect(response).not.toBeDefined();
+
+                    done();
+                }).catch(function (error) {
+                    console.dir(error);
+                    done.fail();
+                });
+            });
+        });
+
+        describe("when unlinking a set of rows from the main tuple (deleting association references)", function () {
+            var mainTableName = "main_table",
+                associationTableName = "association_table",
+                leafTableName = "leaf_table",
+                mainReference, assocReference, leafReference,
+                relatedLeafReference, filteredLeafReference,
+                mainTuple, relatedLeafTuples, assocTuples, leafTuples;
+
+            var mainUri = options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ':' + mainTableName,
+                assocUri = options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ':' + associationTableName,
+                leafUri = options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ':' + leafTableName;
+
+            beforeAll(function (done) {
+                options.ermRest.resolve(mainUri + "/key_col=1", {cid: "test"}).then(function (response) {
+                    mainReference = response;
+                    relatedLeafReference = mainReference.related[0]
+
+                    return mainReference.read(1);
+                }).then(function (page) {
+                    mainTuple = page.tuples[0];
+
+                    return relatedLeafReference.read(7);
+                }).then(function (page) {
+                    relatedLeafTuples = page.tuples;
+                    filteredLeafReference = relatedLeafTuples[0].reference;
+
+                    return options.ermRest.resolve(assocUri, {cid: "test"});
+                }).then(function (response) {
+                    assocReference = response;
+
+                    return assocReference.read(10);
+                }).then(function (page) {
+                    assocTuples = page.tuples;
+
+                    return options.ermRest.resolve(leafUri, {cid: "test"});
+                }).then(function (response) {
+                    leafReference = response;
+
+                    return leafReference.read(8);
+                }).then(function (page) {
+                    leafTuples = page.tuples;
+
+                    done();
+                }).catch(function (error) {
+                    console.dir(error);
+                    done.fail();
+                });
+            });
+
+            it("should get back defined references and expected set of rows", function (done) {
+                expect(mainTuple).toBeDefined("the tuple for main_table is not defined");
+                expect(relatedLeafTuples.length).toBe(7, "the tuples related to main for leaf_table are not what is expected");
+                expect(filteredLeafReference).toBeDefined("leaf reference from a leaf tuple is not defined");
+                expect(leafTuples.length).toBe(8, "the tuples for leaf_table are not what is expected");
+                expect(assocTuples.length).toBe(10, "the tuples for association_table are not what is expected");
+                done();
+            });
+
+            it("should delete multiple rows when calling deleteBatchAssociationTuples", function (done) {
+                // remove the last four of the tuples from the array so we only delete 3 rows and check that 4 still remain
+                // tuples to delete are (1, 11), (2, 22), (3, 33)
+                relatedLeafTuples.splice(3, 4);
+                // for deleteBatchAssociationTuples we need:
+                //   - a "main_table" tuple
+                //   - an array of "leaf_table" tuples
+                //   - a filtered reference representing a single row from the leaf table
+                filteredLeafReference.deleteBatchAssociationTuples(mainTuple, relatedLeafTuples).then(function (res) {
+                    expect(res.message).toBe("3 records successfully unlinked.")
+                    expect(res.successTupleData.length).toBe(3, "success count for batch delete is incorrect");
+
+                    return relatedLeafReference.read(7);
+                }).then(function (page) {
+                    expect(page.tuples.length).toBe(4, "# of tuples after batch delete is incorrect");
+
+                    expect(page.tuples.map(function (t) {
+                        // data should be (4, 44), (5, 55), (6, 66), (7, 77)
+                        return t.data.int_col;
+                    })).toEqual([44, 55, 66, 77], "int_col values mismatch");
+
+                    done();
+                }).catch(function (error) {
+                    console.dir(error);
+                    done.fail();
+                });
+            });
+
+            it("should verify association table rows were removed during deletion", function (done) {
+                assocReference.read(10).then(function (page) {
+                    expect(page.tuples.length).toBe(7, "leaf table rows length mismatch");
+
+                    done();
+                }).catch(function (error) {
+                    console.dir(error);
+                    done.fail();
+                });
+            });
+
+            it("should verify leaf table rows were not removed during deletion", function (done) {
+                leafReference.read(8).then(function (page) {
+                    expect(page.tuples.length).toBe(8, "leaf table rows length mismatch");
+
+                    done();
+                }).catch(function (error) {
+                    console.dir(error);
+                    done.fail();
+                });
+            });
+
+            it("should check failure cases for deleteBatchAssociationTuples", function (done) {
+                // no mainTuple defined
+                filteredLeafReference.deleteBatchAssociationTuples(null, relatedLeafTuples).then(null, function (err) {
+                    expect(err.message).toBe("Error: 'parentTuple' must be specified");
+
+                    // no tuuples set defined
+                    return filteredLeafReference.deleteBatchAssociationTuples(mainTuple, null);
+                }).then(null, function (err) {
+                    expect(err.message).toBe("Error: 'tuples' must be specified");
+
+                    // tuples set is empty
+                    return filteredLeafReference.deleteBatchAssociationTuples(mainTuple, [])
+                }).then(null, function (err) {
+                    expect(err.message).toBe("Error: 'tuples' must have at least one row to delete");
+
+                    // the reference is not filtered (no derived association)
+                    return filteredLeafReference.unfilteredReference.deleteBatchAssociationTuples(mainTuple, relatedLeafTuples);
+                }).then(null, function (err) {
+                    expect(err.message).toBe("Error: The current reference ('self') must have a derived association reference defined");
+
+                    // one of the tuples has an empty data object
+                    newTuples = relatedLeafTuples;
+                    newTuples.push({data: {}});
+                    return filteredLeafReference.deleteBatchAssociationTuples(mainTuple, newTuples)
+                }).then(null, function (err) {
+                    expect(err.message).toBe("One or more association_table tuples have a null value for int_col");
+
+                    done();
+                }).catch(function (error) {
+                    console.dir(error);
+                    done.fail();
+                });
+            });
+        });
+
+        describe("when trying to unlink with dynamic acls", function () {
+            var mainUri = options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ":main_table",
+                restrictedUserId = process.env.RESTRICTED_AUTH_COOKIE_ID,
+                restrictedUserCookie = process.env.RESTRICTED_AUTH_COOKIE,
+                mainReference, relatedLeafReference, filteredLeafReferenceWAcls,
+                mainTuple, relatedLeafTuples;
+
+            beforeAll(function(done) {
+                // leaf_table is deletable
+                // only row with leaf_key_col=11 is nondeletable for assoc for "non restricted user"
+                utils.setCatalogAcls(options.ermRest, done, mainUri + "/key_col=1", catalogId, {
+                    "catalog": {
+                        "id": catalogId,
+                        "schemas" : {
+                            "delete_schema": {
+                                "tables" : {
+                                    "main_table": {
+                                        "acls": {
+                                            "select": [restrictedUserId]
+                                        }
+                                    },
+                                    "leaf_table": {
+                                        "acls": {
+                                            "select": [restrictedUserId],
+                                            "delete": [restrictedUserId]
+                                        }
+                                    },
+                                    "association_table": {
+                                        "acls": {
+                                            "select": [restrictedUserId]
+                                        },
+                                        "acl_bindings": {
+                                            "can_delete_row": {
+                                                "types": ["delete"],
+                                                "projection": [
+                                                    {
+                                                        "or": [
+                                                            {"filter": "leaf_key_col", "operand": 44},
+                                                            {"filter": "leaf_key_col", "operand": 66}
+                                                        ]
+                                                    }, "leaf_key_col"
+                                                ],
+                                                "projection_type": "nonnull"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }, (response) => mainReference = response.contextualize.detailed, restrictedUserCookie);
+            });
+
+            it("should return tuples with proper canUnlink values", function (done) {
+                mainReference.read(1).then(function (page) {
+                    expect(page.tuples.length).toBe(1, "main page tuples length mismatch");
+                    mainTuple = page.tuples[0];
+
+                    // will generate the related reference
+                    var relatedList = mainReference.generateRelatedList(page.tuples[0]);
+
+                    expect(mainReference.related.length).toBe(1, "related length mismatch");
+                    relatedLeafReference = mainReference.related[0];
+
+                    return relatedLeafReference.read(5, null, false, false, true, false, true);
+                }).then(function (page) {
+                    expect(page.tuples.length).toBe(4, "related page tuples length mismatch");
+                    relatedLeafTuples = page.tuples;
+                    filteredLeafReferenceWAcls = relatedLeafTuples[0].reference;
+
+                    expect(relatedLeafTuples.map(function (t) {
+                        // data should be (4, 44), (5, 55), (6, 66), (7, 77)
+                        // user can unlink (4, 44) and (6, 66)
+                        return t.canUnlink;
+                    })).toEqual([true, false, true, false], "canUnlink mismatch");
+
+                    done();
+                }).catch(function (err) {
+                    console.dir(err);
+                    done.fail(err);
+                });
+            });
+
+            it("should fail to delete all rows with when some have canUlink false", function (done) {
+                // remove the first row that can be deleted
+                relatedLeafTuples.splice(0, 1);
+
+                // trying to delete rows (5, 55), (6, 66), (7, 77)
+                // user can only unlink (6, 66)
+                filteredLeafReferenceWAcls.deleteBatchAssociationTuples(mainTuple, relatedLeafTuples).then(function (res) {
+                    expect(res.status).toBe("Batch Unlink Summary", "error status for batch delete is incorrect");
+                    expect(res.message).toBe("3 records could not be unlinked. Check the error details below to see more information.", "error message for batch delete is incorrect");
+                    expect(res.subMessage).toBe("403 Forbidden\nThe requested delete access on one or more matching rows in table :delete_schema:association_table is forbidden.\n", "error sub message for batch delete is incorrect");
+                    expect(res.successTupleData.length).toBe(0, "success count for batch delete is incorrect");
+                    expect(res.failedTupleData.length).toBe(3, "failed count for batch delete is incorrect");
+
+                    return relatedLeafReference.read(5);
+                }).then(function (page) {
+                    expect(page.tuples.length).toBe(4, "# of tuples after batch delete is incorrect");
+
+                    expect(page.tuples.map(function (t) {
+                        // data should be (4, 44), (5, 55), (6, 66), and (7, 77)
+                        return t.data.int_col;
+                    })).toEqual([44, 55, 66, 77], "int_col values mismatch");
+
+                    done();
+                }).catch(function (err) {
+                    console.dir(err);
+                    done.fail(err);
+                });
+            });
+
+            it("should verify leaf table rows were not removed during deletion", function (done) {
+                var leafUri = options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ":leaf_table";
+
+                options.ermRest.resolve(leafUri, {cid: "test"}).then(function (response) {
+                    leafReference = response;
+
+                    return response.read(8);
+                }).then(function (page) {
+                    expect(page.tuples.length).toBe(8, "leaf table rows length mismatch");
+
+                    done();
+                }).catch(function (error) {
+                    console.dir(error);
+                    done.fail();
+                });
+            });
+
+            afterAll(function (done) {
+                options.ermRest.setUserCookie(process.env.AUTH_COOKIE);
+                utils.removeCachedCatalog(options.ermRest, catalogId);
+                utils.resetCatalogAcls(done, {
+                    "catalog": {
+                        "id": catalogId,
+                        "schemas" : {
+                            "delete_schema": {
+                                "tables" : {
+                                    "main_table": {
+                                        "acls": {
+                                            "select": []
+                                        }
+                                    },
+                                    "leaf_table": {
+                                        "acls": {
+                                            "select": [],
+                                            "delete": []
+                                        }
+                                    },
+                                    "association_table": {
+                                        "acls": {
+                                            "select": []
+                                        },
+                                        "acl_bindings": {}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+        });
+
+        describe("when unlinking a set of rows from the main tuple with url limit issues and dynamic acls", function () {
+            var mainTableName = "main_table",
+                associationTableName = "association_table_long_ids",
+                leafTableName = "leaf_table_long_ids",
+                restrictedUserId = process.env.RESTRICTED_AUTH_COOKIE_ID,
+                restrictedUserCookie = process.env.RESTRICTED_AUTH_COOKIE,
+                mainReference, assocReference, leafReference,
+                relatedLeafReference, filteredLeafReference,
+                mainTuple, relatedLeafTuples, assocTuples, leafTuples;
+
+            var mainUri = options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ':' + mainTableName,
+                assocUri = options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ':' + associationTableName,
+                leafUri = options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ':' + leafTableName;
+
+            beforeAll(function (done) {
+                // leaf_table is deletable
+                // only row with leaf_key_col=11 is nondeletable for assoc for "non restricted user"
+                utils.setCatalogAcls(options.ermRest, done, mainUri + "/key_col=1", catalogId, {
+                    "catalog": {
+                        "id": catalogId,
+                        "schemas" : {
+                            "delete_schema": {
+                                "tables" : {
+                                    "main_table": {
+                                        "acls": {
+                                            "select": [restrictedUserId]
+                                        }
+                                    },
+                                    "leaf_table_long_ids": {
+                                        "acls": {
+                                            "select": [restrictedUserId],
+                                            "delete": [restrictedUserId]
+                                        }
+                                    },
+                                    "association_table_long_ids": {
+                                        "acls": {
+                                            "select": [restrictedUserId]
+                                        },
+                                        "acl_bindings": {
+                                            "can_delete_row": {
+                                                "types": ["delete"],
+                                                "projection": [
+                                                    {"filter": "l_key_col", "operand": "8500000000000000000000000000000000085"}, "l_key_col"
+                                                ],
+                                                "projection_type": "nonnull"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }, (response) => mainReference = response.contextualize.detailed, restrictedUserCookie);
+            });
+
+            it("should get back defined references and expected set of rows", function (done) {
+                // NOTE: should only be the reference that was based off projections
+                expect(mainReference.related.length).toBe(1, "number of related references is incorrect")
+                relatedLeafReference = mainReference.related[0];
+
+                mainReference.read(1).then(function (page) {
+                    mainTuple = page.tuples[0];
+
+                    expect(mainTuple).toBeDefined("the tuple for main_table is not defined");
+
+                    return relatedLeafReference.read(100);
+                }).then(function (page) {
+                    relatedLeafTuples = page.tuples;
+                    expect(relatedLeafTuples.length).toBe(85, "the tuples related to main for leaf_table_long_ids are not what is expected");
+
+                    filteredLeafReference = relatedLeafTuples[0].reference;
+                    expect(filteredLeafReference).toBeDefined("leaf reference from a leaf tuple is not defined");
+
+                    return options.ermRest.resolve(assocUri, {cid: "test"});
+                }).then(function (response) {
+                    assocReference = response;
+
+                    return assocReference.read(100);
+                }).then(function (page) {
+                    assocTuples = page.tuples;
+                    expect(assocTuples.length).toBe(91, "the tuples for association_table_long_ids are not what is expected");
+
+                    return options.ermRest.resolve(leafUri, {cid: "test"});
+                }).then(function (response) {
+                    leafReference = response;
+
+                    return leafReference.read(100);
+                }).then(function (page) {
+                    leafTuples = page.tuples;
+                    expect(leafTuples.length).toBe(88, "the tuples for leaf_table_long_ids are not what is expected");
+
+                    done();
+                }).catch(function (error) {
+                    console.dir(error);
+                    done.fail();
+                });
+            });
+
+            it("should create 2 paths for deletion, both paths should fail. One path has no deletable rows and the other has a mix of deletable and non-deletable rows when calling deleteBatchAssociationTuples", function (done) {
+                relatedLeafTuples.splice(0, 4);
+                // for deleteBatchAssociationTuples we need:
+                //   - a "main_table" tuple
+                //   - an array of "leaf_table" tuples
+                //   - a filtered reference representing a single row from the leaf table
+                filteredLeafReference.deleteBatchAssociationTuples(mainTuple, relatedLeafTuples).then(function (res) {
+                    expect(res.message).toBe("81 records could not be unlinked. Check the error details below to see more information.")
+                    expect(res.successTupleData.length).toBe(0, "success count for batch delete is incorrect");
+
+                    done();
+                }).catch(function (error) {
+                    console.dir(error);
+                    done.fail();
+                });
+            });
+
+            it("should create 2 paths for deletion, one path fails to delete rows while the other succesfully deletes 1 row when calling deleteBatchAssociationTuples", function (done) {
+                relatedLeafTuples.splice(0, 1);
+                // for deleteBatchAssociationTuples we need:
+                //   - a "main_table" tuple
+                //   - an array of "leaf_table" tuples
+                //   - a filtered reference representing a single row from the leaf table
+                filteredLeafReference.deleteBatchAssociationTuples(mainTuple, relatedLeafTuples).then(function (res) {
+                    expect(res.message).toBe("1 record successfully unlinked. 79 records could not be unlinked. Check the error details below to see more information.")
+                    expect(res.successTupleData.length).toBe(1, "success count for batch delete is incorrect");
+
+                    return relatedLeafReference.read(100);
+                }).then(function (page) {
+                    expect(page.tuples.length).toBe(84, "# of tuples after batch delete is incorrect");
+
+                    done();
+                }).catch(function (error) {
+                    console.dir(error);
+                    done.fail();
+                });
+            });
+
+            it("should verify association table rows were removed during deletion", function (done) {
+                assocReference.read(100).then(function (page) {
+                    expect(page.tuples.length).toBe(90, "leaf table rows length mismatch");
+
+                    done();
+                }).catch(function (error) {
+                    console.dir(error);
+                    done.fail();
+                });
+            });
+
+            it("should verify leaf table rows were not removed during deletion", function (done) {
+                leafReference.read(100).then(function (page) {
+                    expect(page.tuples.length).toBe(88, "leaf table rows length mismatch");
+
+                    done();
+                }).catch(function (error) {
+                    console.dir(error);
+                    done.fail();
+                });
+            });
+
+            afterAll(function (done) {
+                options.ermRest.setUserCookie(process.env.AUTH_COOKIE);
+                utils.removeCachedCatalog(options.ermRest, catalogId);
+                utils.resetCatalogAcls(done, {
+                    "catalog": {
+                        "id": catalogId,
+                        "schemas" : {
+                            "delete_schema": {
+                                "tables" : {
+                                    "main_table": {
+                                        "acls": {
+                                            "select": []
+                                        }
+                                    },
+                                    "leaf_table_long_ids": {
+                                        "acls": {
+                                            "select": [],
+                                            "delete": []
+                                        }
+                                    },
+                                    "association_table_long_ids": {
+                                        "acls": {
+                                            "select": []
+                                        },
+                                        "acl_bindings": {}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+        });
+
+        describe("when unlinking a set of rows from the main tuple with url limit issues and NO dynamic acls", function () {
+            var mainTableName = "main_table",
+                associationTableName = "association_table_long_ids",
+                leafTableName = "leaf_table_long_ids",
+                mainReference, assocReference, leafReference,
+                relatedLeafReference, filteredLeafReference,
+                mainTuple, relatedLeafTuples, assocTuples, leafTuples;
+
+            var mainUri = options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ':' + mainTableName,
+                assocUri = options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ':' + associationTableName,
+                leafUri = options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ':' + leafTableName;
+
+            beforeAll(function (done) {
+                options.ermRest.resolve(mainUri + "/key_col=1", {cid: "test"}).then(function (res) {
+                    mainReference = res;
+                    // there are 2 related references, we want the 2nd one
+                    relatedLeafReference = mainReference.related[1];
+
+                    return mainReference.read(1)
+                }).then(function (page) {
+                    mainTuple = page.tuples[0];
+
+                    return relatedLeafReference.read(100);
+                }).then(function (page) {
+                    relatedLeafTuples = page.tuples;
+                    filteredLeafReference = relatedLeafTuples[0].reference;
+
+                    return options.ermRest.resolve(assocUri, {cid: "test"});
+                }).then(function (response) {
+                    assocReference = response;
+
+                    return assocReference.read(100);
+                }).then(function (page) {
+                    assocTuples = page.tuples;
+
+                    return options.ermRest.resolve(leafUri, {cid: "test"});
+                }).then(function (response) {
+                    leafReference = response;
+
+                    return leafReference.read(100);
+                }).then(function (page) {
+                    leafTuples = page.tuples;
+
+                    done();
+                }).catch(function (error) {
+                    console.dir(error);
+                    done.fail();
+                });
+            });
+
+            it("should get back defined references and expected set of rows", function (done) {
+                expect(mainTuple).toBeDefined("the tuple for main_table is not defined");
+                expect(relatedLeafTuples.length).toBe(84, "the tuples related to main for leaf_table_long_ids are not what is expected");
+                expect(filteredLeafReference).toBeDefined("leaf reference from a leaf tuple is not defined");
+                expect(leafTuples.length).toBe(88, "the tuples for leaf_table_long_ids are not what is expected");
+                expect(assocTuples.length).toBe(90, "the tuples for association_table_long_ids are not what is expected");
+                done();
+            });
+
+            it("should create 2 paths for deletion, with both succeeding when calling deleteBatchAssociationTuples", function (done) {
+                relatedLeafTuples.splice(0, 2);
+                // for deleteBatchAssociationTuples we need:
+                //   - a "main_table" tuple
+                //   - an array of "leaf_table" tuples
+                //   - a filtered reference representing a single row from the leaf table
+                filteredLeafReference.deleteBatchAssociationTuples(mainTuple, relatedLeafTuples).then(function (res) {
+                    expect(res.message).toBe("82 records successfully unlinked.")
+                    expect(res.successTupleData.length).toBe(82, "success count for batch delete is incorrect");
+
+                    return relatedLeafReference.read(100);
+                }).then(function (page) {
+                    expect(page.tuples.length).toBe(2, "# of tuples after batch delete is incorrect");
+
+                    done();
+                }).catch(function (error) {
+                    console.dir(error);
+                    done.fail();
+                });
+            });
+
+            it("should verify association table rows were removed during deletion", function (done) {
+                assocReference.read(100).then(function (page) {
+                    expect(page.tuples.length).toBe(8, "leaf table rows length mismatch");
+
+                    done();
+                }).catch(function (error) {
+                    console.dir(error);
+                    done.fail();
+                });
+            });
+
+            it("should verify leaf table rows were not removed during deletion", function (done) {
+                leafReference.read(100).then(function (page) {
+                    expect(page.tuples.length).toBe(88, "leaf table rows length mismatch");
 
                     done();
                 }).catch(function (error) {

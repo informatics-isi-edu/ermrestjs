@@ -10,6 +10,44 @@ exports.execute = function (options) {
         var catalogId = process.env.DEFAULT_CATALOG,
             schemaName = "upload";
 
+        var chaiseURL = "https://dev.isrd.isi.edu/chaise";
+        var recordURL = chaiseURL + "/record";
+        var record2URL = chaiseURL + "/record-two";
+        var viewerURL = chaiseURL + "/viewer";
+        var searchURL = chaiseURL + "/search";
+        var recordsetURL = chaiseURL + "/recordset";
+        var appLinkFn = function (tag, location) {
+            var url;
+            switch (tag) {
+                case "tag:isrd.isi.edu,2016:chaise:record":
+                    url = recordURL;
+                    break;
+                case "tag:isrd.isi.edu,2016:chaise:record-two":
+                    url = record2URL;
+                    break;
+                case "tag:isrd.isi.edu,2016:chaise:viewer":
+                    url = viewerURL;
+                    break;
+                case "tag:isrd.isi.edu,2016:chaise:search":
+                    url = searchURL;
+                    break;
+                case "tag:isrd.isi.edu,2016:chaise:recordset":
+                    url = recordsetURL;
+                    break;
+                default:
+                    url = recordURL;
+                    break;
+            }
+
+            url = url + "/" + location.path;
+
+            return url;
+        };
+
+        beforeAll(function() {
+            options.ermRest.appLinkFn(appLinkFn);
+        });
+
         describe("for updating asset columns, ", function() {
             var reference, file1_column, file2_column,
                 file1_columnName = "file1_uri",
@@ -29,7 +67,7 @@ exports.execute = function (options) {
                     hash: "4b178700e5f3b15ce799f2c6c1465741",
                     hash_64: "SxeHAOXzsVznmfLGwUZXQQ=="
                 }, {
-                    name: "testfile5MB.txt",
+                    name: "testfile5MB.tiff",
                     size: 5242880,
                     displaySize: "5MB",
                     type: "text/plain",
@@ -87,7 +125,8 @@ exports.execute = function (options) {
                     chunkSize: 5 * 1024 * 1024
                 });
                 // File 1
-                uploadUtils.uploadFileForTests(files[0], 1, file1_validRow, uploadObj1, options).then(function(response) {
+                var expectedURL = "/hatrac/js/ermrestjs/" + file1_validRow.timestamp + "/.png/" + files[0].hash;
+                uploadUtils.uploadFileForTests(files[0], 1, file1_validRow, expectedURL, uploadObj1, options).then(function(response) {
                     file1_url = response.url;
                     file1_validRow = response.validRow;
 
@@ -112,7 +151,8 @@ exports.execute = function (options) {
                     chunkSize: 5 * 1024 * 1024
                 });
                 // File 2
-                uploadUtils.uploadFileForTests(files[1], 2, file2_validRow, uploadObj2, options).then(function(response) {
+                var expectedURL = "/hatrac/js/ermrestjs/" + file2_validRow.timestamp + "/.tiff/" + files[1].hash;
+                uploadUtils.uploadFileForTests(files[1], 2, file2_validRow, expectedURL, uploadObj2, options).then(function(response) {
                     file2_url = response.url;
                     file2_validRow = response.validRow;
 
@@ -185,6 +225,45 @@ exports.execute = function (options) {
                     expect(pageData.file2_name).toBe(updateData.file2_name, "Entity file2 name does not match new file2 name");
                     expect(pageData.file2_name).not.toBe(tuple._oldData.file2_name, "Entity file2 name matches old file2 name");
 
+                    done();
+                }).catch(function (error) {
+                    console.dir(error);
+                    done.fail();
+                });
+            });
+
+            it ("clearing the asset column value should clear the metadata columns as well.", function (done) {
+                var tuples, tuple, updateData = {},
+                    baseUrl = options.url.replace("/ermrest", "");
+
+                reference.read(1).then(function(response) {
+                    tuples = response.tuples;
+                    tuple = tuples[0];
+
+                    updateData = {
+                        file1_uri: null
+                    }
+                    var data = tuple.data;
+
+                    for (var key in updateData) {
+                        data[key] = updateData[key];
+                    }
+
+                    return reference.update(tuples);
+                }).then(function (response) {
+                    response = response.successful;
+                    expect(response._data.length).toBe(1, "Update data set that was returned is not the right length");
+
+                    utils.checkPageValues(response._data, tuples, sortBy);
+
+                    // verify that reading the reference again returns the updated row
+                    return reference.read(1);
+                }).then(function (response) {
+                    var pageData = response._data[0];
+                    expect(pageData.file1_uri).toBe(null, "Entity file1 uri is not null.");
+                    expect(pageData.file1_bytes).toBe(null, "Entity file1 bytes is not null.");
+                    expect(pageData.file1_MD5).toBe(null, "Entity file1 md5 does is not null.");
+                    expect(pageData.file1_name).toBe(null, "Entity file1 name does is not null.");
                     done();
                 }).catch(function (error) {
                     console.dir(error);

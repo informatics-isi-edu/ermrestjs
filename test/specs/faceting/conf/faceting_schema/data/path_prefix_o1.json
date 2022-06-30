@@ -1,0 +1,6 @@
+[
+  {"id": "1", "path_prefix_o1_col": "one", "fk_to_path_prefix_o1_o1": "1", "date_col": "2000-01-01"},
+  {"id": "2", "path_prefix_o1_col": "two", "fk_to_path_prefix_o1_o1": "2", "date_col": "2000-01-01"},
+  {"id": "3", "path_prefix_o1_col": "three", "fk_to_path_prefix_o1_o1": "3", "date_col": "2000-01-01"},
+  {"id": "4", "path_prefix_o1_col": "four", "date_col": "2000-01-01"}
+]

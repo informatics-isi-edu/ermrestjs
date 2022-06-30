@@ -27,6 +27,58 @@
                     "type": {
                         "typename": "text"
                     }
+                },
+                {
+                    "name": "col_w_pre_format",
+                    "type": {
+                        "typename": "boolean"
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:column-display" : {
+                            "compact": {
+                                "pre_format": {
+                                    "format": "%t",
+                                    "bool_true_value": "YES",
+                                    "bool_false_value": "NO"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "col_w_column_order",
+                    "type": {
+                        "typename": "text"
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:column-display": {
+                            "compact/select": {
+                                "column_order": [
+                                    {"column": "order_col", "descending": true},
+                                    {"column": "col", "descending": false}
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "col_w_column_order_false",
+                    "type": {
+                        "typename": "text"
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:column-display": {
+                            "*": {
+                                "column_order": false
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "order_col",
+                    "type": {
+                        "typename": "text"
+                    }
                 }
             ]
         },

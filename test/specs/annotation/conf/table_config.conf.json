@@ -1,0 +1,12 @@
+{
+    "catalog": {},
+    "schema": {
+        "name": "table_config",
+        "createNew": true,
+        "path": "test/specs/annotation/conf/table_config/schema.json"
+    },
+    "tables": {
+        "createNew": true
+    },
+    "entities": {}
+}

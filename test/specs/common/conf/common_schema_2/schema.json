@@ -5,9 +5,21 @@
             "kind": "table",
             "table_name": "table_1_schema_2",
             "keys": [
-                { "unique_columns": ["table_1_first_key", "table_1_second_key"] }
+                { "unique_columns": ["table_1_first_key", "table_1_second_key"] },
+                { "unique_columns": ["table_1_int_key"]},
+                { "unique_columns": ["table_1_serial_key"]}
             ],
             "column_definitions": [
+                {
+                    "name": "table_1_int_key",
+                    "nullok": false,
+                    "type": {"typename": "int4"}
+                },
+                {
+                    "name": "table_1_serial_key",
+                    "nullok": false,
+                    "type": {"typename": "serial4"}
+                },
                 {
                     "name": "table_1_first_key",
                     "nullok": false,
@@ -67,15 +79,17 @@
                     "type": { "typename": "markdown" }
                 },
                 {
-                    "name": "table_1_show_nulls_annotation",
+                    "name": "table_1_show_null_annotation",
                     "type": {"typename": "text"},
                     "annotations": {
                         "tag:misd.isi.edu,2015:display": {
-                            "show_nulls": {
-                                "record": "empty",
+                            "show_null": {
+                                "compact/brief": "empty",
                                 "detailed": true,
-                                "compact": "",
-                                "entry/edit": false,
+                                "entry/edit": false
+                            },
+                            "show_nulls": {
+                                "compact": "backward compatibility",
                                 "*": "default"
                             }
                         }
@@ -100,14 +114,135 @@
                     }
                 },
                 {
+                    "name": "table_1_required",
+                    "type": { "typename": "text" },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2018:required": null
+                    }
+                },
+                {
                     "name": "table_1_serial4",
                     "type": { "typename": "serial4" }
+                },
+                {
+                    "name": "table_1_color_rgb_hex",
+                    "type": { "typename": "color_rgb_hex" }
+                },
+                {
+                    "name": "table_1_text_array",
+                    "type": {
+                        "is_array": true,
+                        "typename": "text[]",
+                        "base_type": {
+                            "typename": "text"
+                        }
+                    }
+                },
+                {
+                    "name": "table_1_boolean_array",
+                    "type": {
+                        "is_array": true,
+                        "typename": "boolean[]",
+                        "base_type": {
+                            "typename": "boolean"
+                        }
+                    }
+                },
+                {
+                    "name": "table_1_date_array",
+                    "type": {
+                        "is_array": true,
+                        "typename": "date[]",
+                        "base_type": {
+                            "typename": "date"
+                        }
+                    }
+                },
+                {
+                    "name": "table_1_timestamp_array",
+                    "type": {
+                        "is_array": true,
+                        "typename": "timestamp[]",
+                        "base_type": {
+                            "typename": "timestamp"
+                        }
+                    }
+                },
+                {
+                    "name": "table_1_timestamptz_array",
+                    "type": {
+                        "is_array": true,
+                        "typename": "timestamptz[]",
+                        "base_type": {
+                            "typename": "timestamptz"
+                        }
+                    }
+                },
+                {
+                    "name": "table_1_float4_array",
+                    "type": {
+                        "is_array": true,
+                        "typename": "float4[]",
+                        "base_type": {
+                            "typename": "float4"
+                        }
+                    }
+                },
+                {
+                    "name": "table_1_float8_array",
+                    "type": {
+                        "is_array": true,
+                        "typename": "float8[]",
+                        "base_type": {
+                            "typename": "float8"
+                        }
+                    }
+                },
+                {
+                    "name": "table_1_numeric_array",
+                    "type": {
+                        "is_array": true,
+                        "typename": "numeric[]",
+                        "base_type": {
+                            "typename": "numeric"
+                        }
+                    }
+                },
+                {
+                    "name": "table_1_int2_array",
+                    "type": {
+                        "is_array": true,
+                        "typename": "int2[]",
+                        "base_type": {
+                            "typename": "int2"
+                        }
+                    }
+                },
+                {
+                    "name": "table_1_int4_array",
+                    "type": {
+                        "is_array": true,
+                        "typename": "int4[]",
+                        "base_type": {
+                            "typename": "int4"
+                        }
+                    }
+                },
+                {
+                    "name": "table_1_int8_array",
+                    "type": {
+                        "is_array": true,
+                        "typename": "int8[]",
+                        "base_type": {
+                            "typename": "int8"
+                        }
+                    }
                 }
             ],
             "foreign_keys": [],
             "annotations": {
                 "tag:misd.isi.edu,2015:display": {
-                    "show_nulls": {
+                    "show_null": {
                         "entry/create": "table"
                     }
                 }
@@ -161,6 +296,39 @@
                 }
             ],
             "annotations": {}
+        },
+        "table_w_nullable_key": {
+            "kind": "table",
+            "keys": [
+                {"unique_columns": ["nullable_col"]},
+                {"unique_columns": ["not_null_col_1", "not_null_col_2"]}
+            ],
+            "table_name": "table_w_nullable_key",
+            "schema_name": "common_schema_2",
+            "column_definitions": [
+                {
+                    "name": "nullable_col",
+                    "nullok": true,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "not_null_col_1",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "not_null_col_2",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                }
+            ]
+
         },
         "multi_w_same_len_keys_w_all_serial": {
             "comment": "",
@@ -273,11 +441,6 @@
                     "comment": null,
                     "annotations": {},
                     "unique_columns": ["serial_col"]
-                },
-                {
-                    "comment": null,
-                    "annotations": {},
-                    "unique_columns": ["RID"]
                 }
             ],
             "foreign_keys": [],
@@ -296,13 +459,6 @@
                     "nullok": false,
                     "type": {
                         "typename": "serial"
-                    }
-                },
-                {
-                    "name": "RID",
-                    "nullok": false,
-                    "type": {
-                        "typename": "text"
                     }
                 }
             ],
@@ -328,7 +484,7 @@
                 },
                 {
                     "name": "boolean_improper",
-                    "default": "",
+                    "default": null,
                     "type": { "typename": "boolean" }
                 },
                 {
@@ -338,7 +494,7 @@
                 },
                 {
                     "name": "date_improper",
-                    "default": "",
+                    "default": null,
                     "type": { "typename": "date" }
                 },
                 {
@@ -348,7 +504,7 @@
                 },
                 {
                     "name": "timestamp_improper",
-                    "default": "",
+                    "default": null,
                     "type": { "typename": "timestamp" }
                 },
                 {
@@ -358,7 +514,7 @@
                 },
                 {
                     "name": "timestamptz_improper",
-                    "default": "",
+                    "default": null,
                     "type": { "typename": "timestamptz" }
                 },
                 {
@@ -368,7 +524,7 @@
                 },
                 {
                     "name": "float4_improper",
-                    "default": "",
+                    "default": null,
                     "type": { "typename": "float4" }
                 },
                 {
@@ -378,7 +534,7 @@
                 },
                 {
                     "name": "float8_improper",
-                    "default": "",
+                    "default": null,
                     "type": { "typename": "float8" }
                 },
                 {
@@ -388,7 +544,7 @@
                 },
                 {
                     "name": "numeric_improper",
-                    "default": "",
+                    "default": null,
                     "type": { "typename": "numeric" }
                 },
                 {
@@ -398,7 +554,7 @@
                 },
                 {
                     "name": "int2_improper",
-                    "default": "",
+                    "default": null,
                     "type": { "typename": "int2" }
                 },
                 {
@@ -408,7 +564,7 @@
                 },
                 {
                     "name": "int4_improper",
-                    "default": "",
+                    "default": null,
                     "type": { "typename": "int4" }
                 },
                 {
@@ -418,47 +574,130 @@
                 },
                 {
                     "name": "int8_improper",
-                    "default": "",
+                    "default": null,
                     "type": { "typename": "int8" }
                 },
                 {
-                    "name": "RID",
-                    "default": "someFunc()",
-                    "type": { "typename": "text" }
+                    "name": "color_rgb_hex_proper",
+                    "default": "#123456",
+                    "type": {"typename": "color_rgb_hex"}
                 },
                 {
-                    "name": "RCB",
-                    "default": "someFunc()",
-                    "type": { "typename": "text" }
+                    "name": "color_rgb_hex_improper_1",
+                    "default": null,
+                    "type": {"typename": "color_rgb_hex"}
                 },
                 {
-                    "name": "RMB",
-                    "default": "someFunc()",
-                    "type": { "typename": "text" }
-                },
-                {
-                    "name": "RCT",
-                    "default": "",
-                    "type": { "typename": "timestamptz" }
-                },
-                {
-                    "name": "RMT",
-                    "default": "",
-                    "type": { "typename": "timestamptz" }
+                    "name": "color_rgb_hex_improper_2",
+                    "default": "#invalidvalue",
+                    "type": {"typename": "color_rgb_hex"}
                 }
             ],
             "foreign_keys": [],
             "annotations": {}
+        },
+        "table_show_fk_links": {
+            "kind": "table",
+            "table_name": "table_show_fk_links",
+            "schema_name": "common_schema_2",
+            "keys": [
+                {"unique_columns": ["id"]}
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "type": {"typename": "text"},
+                    "nullok": false
+                },
+                {
+                    "name": "fk1_col",
+                    "type": {"typename": "int4"}
+                }
+            ],
+            "foreign_keys": [{
+                "names": [["common_schema_2", "table_show_fk_links_fk1"]],
+                "foreign_key_columns": [{
+                    "schema_name": "common_schema_2",
+                    "table_name": "table_show_fk_links",
+                    "column_name": "fk1_col"
+                }],
+                "referenced_columns": [{
+                    "schema_name": "common_schema_2",
+                    "table_name": "table_1_schema_2",
+                    "column_name": "table_1_int_key"
+                }],
+                "annotations": {
+                    "tag:isrd.isi.edu,2016:foreign-key": {
+                        "display": {
+                            "detailed": {
+                                "show_foreign_key_link": false
+                            }
+                        }
+                    }
+                }
+            }],
+            "annotations": {
+                "tag:misd.isi.edu,2015:display": {
+                    "show_foreign_key_link": {
+                        "compact/select": false
+                    }
+                },
+                "tag:isrd.isi.edu,2016:visible-columns": {
+                    "*": [["common_schema_2", "table_show_fk_links_fk1"]]
+                }
+            }
+        },
+        "table_wo_history_capture": {
+            "kind": "table",
+            "table_name": "table_wo_history_capture",
+            "keys": [{"unique_columns": ["id"]}],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {"typename": "int4"}
+                }
+            ]
+        },
+        "table_w_history_capture_true": {
+            "kind": "table",
+            "table_name": "table_w_history_capture_true",
+            "keys": [{"unique_columns": ["id"]}],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {"typename": "int4"}
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu:2020,history-capture": true
+            }
+        },
+        "table_w_history_capture_false": {
+            "kind": "table",
+            "table_name": "table_w_history_capture_false",
+            "keys": [{"unique_columns": ["id"]}],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {"typename": "int4"}
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu:2020,history-capture": false
+            }
         }
     },
     "schema_name": "common_schema_2",
-    "table_names": [
-        "table_1_schema_2"
-    ],
     "annotations": {
         "tag:misd.isi.edu,2015:display": {
-            "show_nulls": {
+            "show_null": {
                 "entry": "schema"
+            },
+            "show_foreign_key_link": {
+                "compact/brief": false
             }
         }
     }

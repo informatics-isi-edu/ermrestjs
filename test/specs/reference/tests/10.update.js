@@ -6,6 +6,44 @@ exports.execute = function (options) {
         var catalogId = process.env.DEFAULT_CATALOG,
             schemaName = "update_schema";
 
+        var chaiseURL = "https://dev.isrd.isi.edu/chaise";
+        var recordURL = chaiseURL + "/record";
+        var record2URL = chaiseURL + "/record-two";
+        var viewerURL = chaiseURL + "/viewer";
+        var searchURL = chaiseURL + "/search";
+        var recordsetURL = chaiseURL + "/recordset";
+        var appLinkFn = function (tag, location) {
+            var url;
+            switch (tag) {
+                case "tag:isrd.isi.edu,2016:chaise:record":
+                    url = recordURL;
+                    break;
+                case "tag:isrd.isi.edu,2016:chaise:record-two":
+                    url = record2URL;
+                    break;
+                case "tag:isrd.isi.edu,2016:chaise:viewer":
+                    url = viewerURL;
+                    break;
+                case "tag:isrd.isi.edu,2016:chaise:search":
+                    url = searchURL;
+                    break;
+                case "tag:isrd.isi.edu,2016:chaise:recordset":
+                    url = recordsetURL;
+                    break;
+                default:
+                    url = recordURL;
+                    break;
+            }
+
+            url = url + "/" + location.path;
+
+            return url;
+        };
+
+        beforeAll(function() {
+            options.ermRest.appLinkFn(appLinkFn);
+        });
+
         describe("should throw errors", function () {
             var tableName = "update_table",
                 uri = options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ':' + tableName + "/ind_key1=2";
@@ -1297,7 +1335,7 @@ exports.execute = function (options) {
 
                     it("between 3 entities, one has it's shortest key modified.", function (done) {
                         var reference, tuples,
-                            uri = baseUri + "/ind_key1=1;ind_key1=3;ind_key1=4";
+                            uri = baseUri + "/ind_key1=1;ind_key1=3;ind_key1=4@sort(ind_key1)";
 
                         var updateData = [{
                             "ind_key1": 100101110,
@@ -1568,7 +1606,7 @@ exports.execute = function (options) {
                 var reference;
 
                 beforeAll(function (done) {
-                    var uri = baseUri + "/key=2;key=3";
+                    var uri = baseUri + "/key=2;key=3@sort(key)";
 
                     options.ermRest.resolve(uri, {cid: "test"}).then(function (response) {
                         reference = response.contextualize.entryEdit;

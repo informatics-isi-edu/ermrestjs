@@ -2,30 +2,41 @@ var ermrestImport = require(process.env.PWD + '/test/utils/ermrest-import.js');
 
 exports.execute = (options) => {
 
-    describe("For determining reference object permissions,", () => {
+    describe("For permission related annotations, ", () => {
 
         var catalogId = process.env.DEFAULT_CATALOG,
             schemaName = "reference_schema",
             schemaName2 = "generated_schema",
-            tableName2 = "table_1",
+            genSchematableName1 = "table_1",                    // table from generated schema
+            genSchematableName2 = "table_2",                    // table from generated schema
+            genSchematableName3 = "table_3",                    // table from generated schema
             schemaName3 = "generated_table_schema",
             tableName3_1 = "generated_table",          // generated table
             tableName3_2 = "generated_columns_table",  // table whose columns are all generated
             tableName3_3 = "generated_columns_table_2",// table with some generated columns
             schemaName4 = "immutable_schema",
-            tableName4 = "table_1",                    // table from immutable schema
+            immutSchemaTableName1 = "table_1",        // table from immutable schema
+            immutSchemaTableName2 = "table_2",        // table from immutable schema
             schemaName5 = "generated_table_schema",
             tableName5_1 = "immutable_table",          // immutable table
             tableName5_2 = "immutable_columns_table",  // table whose columns are all immutable
             tableName5_3 = "immutable_columns_table_2",// table with some immutable columns
             tableName5_4 = "non_deletable_table",      // table with non-deletable annotation
+            tableName5_5 = "mutable_table",      // table with immutable:false annotation
             schemaName6 = "nondeletable_schema",
-            tableName6 = "table_1",                    // table from non-deletable schema
+            nonDelSchemaTableName1 = "table_1",                    // table from non-deletable schema
+            nonDelSchemaTableName2 = "table_2",                    // table from non-deletable schema
             tableName7 = "table_w_composite_key",
             entityId = 9000;
 
         var genSchemaTableUri = options.url + "/catalog/" + catalogId + "/entity/"
-            + schemaName2 + ':' + tableName2 + "/id=" + entityId;
+            + schemaName2 + ':' + genSchematableName1 + "/id=" + entityId;
+
+        var genSchemaTable2Uri = options.url + "/catalog/" + catalogId + "/entity/"
+            + schemaName2 + ':' + genSchematableName2 + "/id=" + entityId;
+
+        var genSchemaTable3Uri = options.url + "/catalog/" + catalogId + "/entity/"
+            + schemaName2 + ':' + genSchematableName3 + "/id=" + entityId;
 
         var genTableUri = options.url + "/catalog/" + catalogId + "/entity/"
             + schemaName3 + ':' + tableName3_1 + "/id=" + entityId;
@@ -37,7 +48,10 @@ exports.execute = (options) => {
             + schemaName3 + ':' + tableName3_3 + "/id=" + entityId;
 
         var immuSchemaTableUri = options.url + "/catalog/" + catalogId + "/entity/"
-            + schemaName4 + ':' + tableName4 + "/id=" + entityId;
+            + schemaName4 + ':' + immutSchemaTableName1 + "/id=" + entityId;
+
+        var immuSchemaTable2Uri = options.url + "/catalog/" + catalogId + "/entity/"
+            + schemaName4 + ':' + immutSchemaTableName2 + "/id=" + entityId;
 
         var immuTableUri = options.url + "/catalog/" + catalogId + "/entity/"
             + schemaName5 + ':' + tableName5_1 + "/id=" + entityId;
@@ -50,9 +64,15 @@ exports.execute = (options) => {
 
         var nonDeletableUri = options.url + "/catalog/" + catalogId + "/entity/"
             + schemaName5 + ':' + tableName5_4 + "/id=" + entityId;
+        
+        var mutableTableInGenSchemaUri = options.url + "/catalog/" + catalogId + "/entity/"
+        + schemaName5 + ':' + tableName5_5 + "/id=" + entityId;
 
         var nonDeletableSchemaTableUri = options.url + "/catalog/" + catalogId + "/entity/"
-            + schemaName6 + ':' + tableName6 + "/id=" + entityId;
+            + schemaName6 + ':' + nonDelSchemaTableName1 + "/id=" + entityId;
+
+        var nonDeletableSchemaTable2Uri = options.url + "/catalog/" + catalogId + "/entity/"
+            + schemaName6 + ':' + nonDelSchemaTableName2 + "/id=" + entityId;
 
         var emptyColumnsSchemaTableUri = options.url + "/catalog/" + catalogId + "/entity/"
             + schemaName + ':' + tableName7 + "/id=" + entityId;
@@ -62,11 +82,17 @@ exports.execute = (options) => {
         });
 
         describe("check permissions when schema is generated,", () => {
-            var reference;
+            var reference, referenceTable2, referenceTable3;
 
             beforeAll((done) => {
                 options.ermRest.resolve(genSchemaTableUri, { cid: "test" }).then((response) => {
                     reference = response;
+                    return options.ermRest.resolve(genSchemaTable2Uri, { cid: "test" });
+                }).then((response) => {
+                    referenceTable2 = response;
+                    return options.ermRest.resolve(genSchemaTable3Uri, { cid: "test" });
+                }).then((response) => {
+                    referenceTable3 = response;
                     done();
                 }, (err) => {
                     console.log(err);
@@ -82,6 +108,7 @@ exports.execute = (options) => {
 
                 it("canCreate.", () => {
                     expect(reference.canCreate).toBe(false);
+                    expect(reference.canCreateReason).toBe("Table is generated.");
                 });
 
                 it("canRead.", () => {
@@ -90,6 +117,7 @@ exports.execute = (options) => {
 
                 it("canUpdate.", () => {
                     expect(reference.canUpdate).toBe(false);
+                    expect(reference.canUpdateReason).toBe("Table is generated.");
                 });
 
                 it("canDelete.", () => {
@@ -98,14 +126,62 @@ exports.execute = (options) => {
 
             });
 
+            describe("when table has generated annotation with `false` value.", function () {
+                it("_isGenerated should be false in table,", () => {
+                    expect(referenceTable2._table._isGenerated).toBe(false);
+                });
+
+                it("canCreate.", () => {
+                    expect(referenceTable2.canCreate).toBe(true);
+                });
+
+                it("canRead.", () => {
+                    expect(referenceTable2.canRead).toBe(true);
+                });
+
+                it("canUpdate.", () => {
+                    expect(referenceTable2.canUpdate).toBe(true);
+                });
+
+                it("canDelete.", () => {
+                    expect(referenceTable2.canDelete).toBe(true);
+                });
+            });
+
+            describe("when table has immutable annotation with `false` value.", function () {
+                it("_isGenerated should be false in table,", () => {
+                    expect(referenceTable3._table._isGenerated).toBe(true);
+                });
+
+                it("canCreate.", () => {
+                    expect(referenceTable3.canCreate).toBe(false);
+                    expect(referenceTable3.canCreateReason).toBe("Table is generated.");
+                });
+
+                it("canRead.", () => {
+                    expect(referenceTable3.canRead).toBe(true);
+                });
+
+                it("canUpdate should honor immutable:false annotation", () => {
+                    expect(referenceTable3.canUpdate).toBe(true);
+                });
+
+                it("canDelete.", () => {
+                    expect(referenceTable3.canDelete).toBe(true);
+                });
+            });
+
         });
 
         describe("check permissions when table is generated,", () => {
-            var reference;
+            var reference, reference2;
 
             beforeAll((done) => {
                 options.ermRest.resolve(genTableUri, { cid: "test" }).then((response) => {
                     reference = response;
+                    return options.ermRest.resolve(mutableTableInGenSchemaUri, { cid: "test" });
+                }).then ((response) => {
+                    reference2 = response;
                     done();
                 }, (err) => {
                     console.log(err);
@@ -121,6 +197,7 @@ exports.execute = (options) => {
 
                 it("canCreate.", () => {
                     expect(reference.canCreate).toBe(false);
+                    expect(reference.canCreateReason).toBe("Table is generated.");
                 });
 
                 it("canRead.", () => {
@@ -129,12 +206,36 @@ exports.execute = (options) => {
 
                 it("canUpdate.", () => {
                     expect(reference.canUpdate).toBe(false);
+                    expect(reference.canUpdateReason).toBe("Table is generated.");
                 });
 
                 it("canDelete.", () => {
                     expect(reference.canDelete).toBe(true);
                 });
 
+            });
+
+            describe("when table has immutable annotation with `false` value.", function () {
+                it("_isGenerated should be true in table,", () => {
+                    expect(reference._table._isGenerated).toBe(true);
+                });
+
+                it("canCreate.", () => {
+                    expect(reference.canCreate).toBe(false);
+                    expect(reference.canCreateReason).toBe("Table is generated.");
+                });
+
+                it("canRead.", () => {
+                    expect(reference.canRead).toBe(true);
+                });
+
+                it("canUpdate should honor the immutable:false and ignore generated", () => {
+                    expect(reference2.canUpdate).toBe(true);
+                });
+
+                it("canDelete.", () => {
+                    expect(reference.canDelete).toBe(true);
+                });
             });
 
         });
@@ -161,6 +262,7 @@ exports.execute = (options) => {
 
                 it("canCreate.", () => {
                     expect(reference.canCreate).toBe(false);
+                    expect(reference.canCreateReason).toBe("All columns are disabled.");
                 });
 
                 it("canRead.", () => {
@@ -169,6 +271,7 @@ exports.execute = (options) => {
 
                 it("canUpdate.", () => {
                     expect(reference.canUpdate).toBe(false);
+                    expect(reference.canUpdateReason).toBe("All columns are disabled.");
                 });
 
                 it("canDelete.", () => {
@@ -219,11 +322,14 @@ exports.execute = (options) => {
         });
 
         describe("check permissions when schema is immutable,", () => {
-            var reference;
+            var reference, referenceTable2;
 
             beforeAll((done) => {
                 options.ermRest.resolve(immuSchemaTableUri, { cid: "test" }).then((response) => {
                     reference = response;
+                    return options.ermRest.resolve(immuSchemaTable2Uri, { cid: "test" });
+                }).then((response) => {
+                    referenceTable2 = response;
                     done();
                 }, (err) => {
                     console.log(err);
@@ -247,6 +353,7 @@ exports.execute = (options) => {
 
                 it("canUpdate.", () => {
                     expect(reference.canUpdate).toBe(false);
+                    expect(reference.canUpdateReason).toBe("Table is immutable.");
                 });
 
                 it("canDelete.", () => {
@@ -254,6 +361,28 @@ exports.execute = (options) => {
                 });
 
             });
+
+            describe("when table has immutable annotation with `false` value.", function () {
+                it("_isImmutable should be false in table,", () => {
+                    expect(referenceTable2._table._isImmutable).toBe(false);
+                });
+
+                it("canCreate.", () => {
+                    expect(referenceTable2.canCreate).toBe(true);
+                });
+
+                it("canRead.", () => {
+                    expect(referenceTable2.canRead).toBe(true);
+                });
+
+                it("canUpdate.", () => {
+                    expect(referenceTable2.canUpdate).toBe(true);
+                });
+
+                it("canDelete.", () => {
+                    expect(referenceTable2.canDelete).toBe(true);
+                });
+            })
 
         });
 
@@ -286,6 +415,7 @@ exports.execute = (options) => {
 
                 it("canUpdate.", () => {
                     expect(reference.canUpdate).toBe(false);
+                    expect(reference.canUpdateReason).toBe("Table is immutable.");
                 });
 
                 it("canDelete.", () => {
@@ -311,8 +441,9 @@ exports.execute = (options) => {
 
             describe("immutable columns should return true for create, read, and delete, false for update,", () => {
 
-                it("_isImmutable should be false in table", () => {
-                    expect(reference._table._isImmutable).toBe(false);
+                it("_isImmutable should be null in table", () => {
+                    // annotation is missing, so it should return null
+                    expect(reference._table._isImmutable).toBe(null);
                 });
 
                 it("canCreate.", () => {
@@ -325,6 +456,7 @@ exports.execute = (options) => {
 
                 it("canUpdate.", () => {
                     expect(reference.canUpdate).toBe(false);
+                    expect(reference.canUpdateReason).toBe("All columns are disabled.");
                 });
 
                 it("canDelete.", () => {
@@ -349,8 +481,8 @@ exports.execute = (options) => {
 
             describe("some immutable columns should return true for all,", () => {
 
-                it("_isImmutable should be false in table", () => {
-                    expect(reference._table._isImmutable).toBe(false);
+                it("_isImmutable should be null in table", () => {
+                    expect(reference._table._isImmutable).toBe(null);
                 });
 
                 it("canCreate.", () => {
@@ -374,11 +506,14 @@ exports.execute = (options) => {
         });
 
         describe("check permissions when schema is non-deletable,", () => {
-            var reference;
+            var reference, referenceTable2;
 
             beforeAll((done) => {
                 options.ermRest.resolve(nonDeletableSchemaTableUri, { cid: "test" }).then((response) => {
                     reference = response;
+                    return options.ermRest.resolve(nonDeletableSchemaTable2Uri, { cid: "test" });
+                }).then((response) => {
+                    referenceTable2 = response;
                     done();
                 }, (err) => {
                     console.log(err);
@@ -468,6 +603,7 @@ exports.execute = (options) => {
 
                 it("canCreate.", () => {
                     expect(reference.canCreate).toBe(false);
+                    expect(reference.canCreateReason).toBe("All columns are disabled.");
                 });
 
                 it("canRead.", () => {
@@ -476,6 +612,7 @@ exports.execute = (options) => {
 
                 it("canUpdate.", () => {
                     expect(reference.canUpdate).toBe(false);
+                    expect(reference.canUpdateReason).toBe("All columns are disabled.");
                 });
 
                 it("canDelete.", () => {

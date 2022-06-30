@@ -23,10 +23,12 @@ module.AttributeGroupColumn = AttributeGroupColumn;
  * @param       {?ERMRest.AttributeGroupColumn[]} aggregateColumns List of columns that will create the aggreagte columns list in the request.
  * @param       {ERMRest.AttributeGroupLocation} location  The location object.
  * @param       {ERMRest.Catalog} catalog  The catalog object.
+ * @param       {ERMRest.Table} sourceTable The table object that represents this AG reference
+ * @param       {String} context The context that this reference is used in
  * @constructor
  * @memberof ERMrest
  */
-function AttributeGroupReference(keyColumns, aggregateColumns, location, catalog) {
+function AttributeGroupReference(keyColumns, aggregateColumns, location, catalog, sourceTable, context) {
 
     this.isAttributeGroup = true;
 
@@ -42,16 +44,34 @@ function AttributeGroupReference(keyColumns, aggregateColumns, location, catalog
      */
     this._aggregateColumns = aggregateColumns;
 
+    this._allColumns = keyColumns.concat(aggregateColumns);
+
     this.location = location;
 
     this._server = catalog.server;
 
     this._catalog = catalog;
 
+    this.table = sourceTable;
+
     /**
      * @type {ERMrest.ReferenceAggregateFn}
      */
     this.aggregate = new AttributeGroupReferenceAggregateFn(this);
+
+    // column objects are created before the refernece.
+    // This makes sure that the columns are used in the context that reference is
+    // NOTE this is mutating the columns that are passed to it. Columns should not
+    // be shared between references with different contexts
+    if (typeof context === "string") {
+        this._context = context;
+        this._allColumns.forEach(function (c) {
+            c._setContext(context);
+        });
+    }
+
+    // this will force calling the uri api and therefore verifies the modifiers and location.
+    var uri = this.uri;
 }
 AttributeGroupReference.prototype = {
 
@@ -77,7 +97,7 @@ AttributeGroupReference.prototype = {
             this._columns = [];
 
             var addCol = function (col) {
-                if (col._visible) {
+                if (col.visible) {
                     self._columns.push(col);
                 }
             };
@@ -89,19 +109,15 @@ AttributeGroupReference.prototype = {
         return this._columns;
     },
 
-    get shortestKey() {
-        return this._keyColumns;
-    },
-
     /**
-     * The session object from the server
-     * @param {Object} session - the session object
+     * Returns the visible key columns
+     * @type {ERMrest.AttributeGroupColumn[]}
      */
-    /* jshint ignore:start */
-    set session(session) {
-        this._session = session;
+    get shortestKey() {
+        return this._keyColumns.filter(function (kc) {
+            return kc.visible;
+        });
     },
-    /* jshint ignore:end */
 
     sort: function (sort) {
         if (sort) {
@@ -111,7 +127,7 @@ AttributeGroupReference.prototype = {
 
         // TODO doesn't support sort based on other columns.
         var newLocation = this.location.changeSort(sort);
-        return new AttributeGroupReference(this._keyColumns, this._aggregateColumns, newLocation, this._catalog);
+        return new AttributeGroupReference(this._keyColumns, this._aggregateColumns, newLocation, this._catalog, this.table, this._context);
     },
 
     search: function (term) {
@@ -123,7 +139,7 @@ AttributeGroupReference.prototype = {
         verify(typeof this.location.searchColumn === "string" && this.location.searchColumn.length > 0, "Location object doesnt have search column.");
 
         var newLocation = this.location.changeSearchTerm(term);
-        return new AttributeGroupReference(this._keyColumns, this._aggregateColumns, newLocation, this._catalog);
+        return new AttributeGroupReference(this._keyColumns, this._aggregateColumns, newLocation, this._catalog, this.table, this._context);
     },
 
     /**
@@ -137,59 +153,188 @@ AttributeGroupReference.prototype = {
      *
      * @type {string}
      */
-    get uri () {
-        if (this._uri === undefined) {
-            var loc = this.location;
+     get uri () {
+         if (this._uri === undefined) {
+             var loc = this.location;
 
-            // generate the url
-            var uri = [
-                loc.service, "catalog", loc.catalogId, "attributegroup", loc.path
-            ];
+             this._uri = [
+                 loc.service, "catalog", loc.catalogId, "attributegroup", this.ermrestPath
+             ].join("/");
+         }
+         return this._uri;
+     },
 
-            if (typeof loc.searchFilter === "string" && loc.searchFilter.length > 0) {
-                uri.push(loc.searchFilter);
-            }
+     /**
+      * This will generate a new unfiltered reference each time.
+      * Returns a reference that points to all entities of current table
+      *
+      * @type {ERMrest.Reference}
+      */
+     get unfilteredReference() {
+         verify(this.table, "table is not defined for current reference");
+         var newLocation = new AttributeGroupLocation(this.location.service, this.location.catalogId, [module._fixedEncodeURIComponent(this.table.schema.name),module._fixedEncodeURIComponent(this.table.name)].join(":"));
+         return new AttributeGroupReference(this._keyColumns, this._aggregateColumns, newLocation, this._catalog, this.table, this._context);
+     },
 
-            uri = uri.join("/") + "/";
+     /**
+      * The second part of Attributegroup uri.
+      * <path>/<search>/<_keyColumns>;<_aggregateColumns><sort><page>
+      *
+      * NOTE:
+      * - Since this is the object that has knowledge of columns, this should be here.
+      *   (we might want to relocate it to the AttributeGroupLocation object.)
+      * - ermrest can processs this uri.
+      *
+      * @type {string}
+      */
+     get ermrestPath () {
+         if (this._ermrestPath === undefined) {
+             var loc = this.location, self = this;
 
-            // given an array of columns, return col1,col2,col3
-            var colString = function (colArray) {
-                return colArray.map(function (col) {
-                    return col.toString();
-                }).join(",");
-            };
+             // given an array of columns, return col1,col2,col3
+             var colString = function (colArray) {
+                 return colArray.map(function (col) {
+                     return col.toString();
+                 }).join(",");
+             };
 
-            // add group columns
-            uri += colString(this._keyColumns);
+             var keyColumns = self._keyColumns.map(function (col) {
+                 return col.toString();
+             });
 
+             // generate the url
+             var uri = loc.path;
 
-            // add aggregate columns
-            if (this._aggregateColumns.length !== 0) {
-                uri += ";" + colString(this._aggregateColumns);
-            }
+             if (typeof loc.searchFilter === "string" && loc.searchFilter.length > 0) {
+                 uri += "/" + loc.searchFilter;
+             }
 
-            // add sort
-            if (loc.sort && loc.sort.length > 0) {
-                uri += loc.sort;
-            }
+             uri += "/";
 
-            // add page
-            if (loc.paging && loc.paging.length > 0) {
-                uri += loc.paging;
-            }
+             // make sure page object and sort are compatible
+             if ((loc.afterObject && loc.afterObject.length !== self.ermrestSortObject.length) ||
+                (loc.beforeObject && loc.beforeObject.length !== self.ermrestSortObject.length)) {
+                 throw new module.MalformedURIError("The given page options are not compatible with sort criteria (Attributegroup Reference).");
+             }
 
-            this._uri = uri;
-        }
-        return this._uri;
-    },
+             // add extra sort columns to the key
+             self.ermrestSortObject.forEach(function (so) {
+                 // if the column doesn't exist, add it
+                 var k = self._allColumns.filter(function (col) {
+                     return col.name == so.column;
+                 })[0];
+
+                 if (k) return;
+
+                 keyColumns.push(
+                     module._fixedEncodeURIComponent(so.column) + ":=" + module._fixedEncodeURIComponent(so.term)
+                 );
+             });
+
+             uri += keyColumns.join(",");
+
+             // add aggregate columns
+             if (self._aggregateColumns.length !== 0) {
+                 uri += ";" + colString(self._aggregateColumns);
+             }
+
+             // add sort
+             if (self.ermrestSortObject.length > 0) {
+                 uri += _getSortModifier(self.ermrestSortObject);
+             }
+
+             // add page
+             if (loc.paging && loc.paging.length > 0) {
+                 uri += loc.paging;
+             }
+
+             self._ermrestPath = uri;
+         }
+         return this._ermrestPath;
+     },
+
+     get ermrestSortObject() {
+         if (this._ermrestSortObject === undefined) {
+             var self = this, loc = this.location;
+
+             self._ermrestSortObject = [];
+             if (Array.isArray(loc.sortObject)) {
+                 // given a column name, tries to find it in the list of column (by term),
+                 // if not found, it will add it by appending a alias to it.
+                 // It will also return the used alias.
+                 var alias = 0;
+                 var allColumnNames = self._allColumns.map(function (col) {
+                     return col.name;
+                 });
+                 var getAlias = function (colName) {
+                     var col = self._allColumns.filter(function (c) {
+                         return decodeURIComponent(c.term) === colName;
+                     })[0];
+
+                     // column is not in the list of defined columns, we should add it
+                     if (col === undefined) {
+                        while (allColumnNames.indexOf(alias.toString()) !== -1) {
+                            ++alias;
+                        }
+                        return (alias++).toString();
+                     }
+                     return col.name;
+                 };
+
+                 var col, sortColNames = {}, addedCols = {}, desc, name;
+                 loc.sortObject.forEach(function (so) {
+
+                     // find the oclumn
+                     try {
+                         col = self.getColumnByName(so.column);
+                     } catch(e) {
+                         throw new module.MalformedURIError("The sort criteria is invalid. Column `" + so.column +"` was not found (Attributegroup Reference).");
+                     }
+
+                     // don't add duplciates
+                     if (col.name in sortColNames) return;
+                     sortColNames[col.name] = true;
+
+                     // make sure column is sortable
+                     if(!col.sortable) {
+                         throw new module.MalformedURIError("column '" + col.name + "' is not sortable (Attributegroup)");
+                     }
+
+                     // go through list of sort columns and add them to the key
+                     col._sortColumns.forEach(function (sc) {
+                         if (sc.column in addedCols) return;
+                         addedCols[sc.column] = true;
+
+                         // add to key columns if needed (won't add duplicates)
+                         name = getAlias(sc.column);
+
+                         desc = (so.descending === true);
+                         if (sc.descending) desc = !desc;
+
+                         // add to sort criteria
+                         self._ermrestSortObject.push({
+                             column: name,
+                             descending: desc,
+                             term: sc.column
+                         });
+                     });
+                 });
+             }
+         }
+         return this._ermrestSortObject;
+     },
 
     /**
      *
      * @param  {int=} limit
-     * @param {Object} contextHeaderParams the object that we want to log.
+     * @param {Object=} contextHeaderParams the object that we want to log.
+     * @param {Boolean=} dontCorrectPage whether we should modify the page.
+     * If there's a @before in url and the number of results is less than the
+     * given limit, we will remove the @before and run the read again. Setting
+     * dontCorrectPage to true, will not do this extra check.
      * @return {ERMRest.AttributeGroupPage}
      */
-    read: function (limit, contextHeaderParams) {
+    read: function (limit, contextHeaderParams, dontCorrectPage) {
         try {
             var defer = module._q.defer();
             var hasPaging = (typeof limit === "number" && limit > 0);
@@ -199,19 +344,16 @@ AttributeGroupReference.prototype = {
                 uri += "?limit=" + (limit+1);
             }
 
-            var currRef = this;
+            var currRef = this, action = "read";
             if (!contextHeaderParams || !isObject(contextHeaderParams)) {
-                contextHeaderParams = {"action": "read"};
+                contextHeaderParams = {"action": action};
+            } else if (typeof contextHeaderParams.action === "string") {
+                action = contextHeaderParams.action;
             }
-
-            contextHeaderParams.page_size = limit;
-
-            var headers = {};
-            headers[module._contextHeaderName] = contextHeaderParams;
             var config = {
-                headers: headers
+                headers: this._generateContextHeader(contextHeaderParams, limit)
             };
-            this._server._http.get(uri, config).then(function (response) {
+            this._server.http.get(uri, config).then(function (response) {
 
                 //determine hasNext and hasPrevious
                 var hasPrevious, hasNext = false;
@@ -245,11 +387,14 @@ AttributeGroupReference.prototype = {
                 // We are paging based on @before (user navigated backwards in the set of data)
                 // AND there is less data than limit implies (beginning of set)
                 // OR we got the right set of data (tuples.length == pageLimit) but there's no previous set (beginning of set)
-                if ( currRef.location.beforeObject && (response.data.length < limit || !hasPrevious) ) {
+                if (dontCorrectPage !== true && currRef.location.beforeObject && (response.data.length < limit || !hasPrevious) ) {
                     // a new location without paging
                     var newLocation = currRef.location.changePage();
-                    var referenceWithoutPaging = new AttributeGroupReference(currRef._keyColumns, currRef._aggregateColumns, newLocation, currRef._catalog);
-                    referenceWithoutPaging.read(limit).then(function rereadReference(rereadPage) {
+                    var referenceWithoutPaging = new AttributeGroupReference(currRef._keyColumns, currRef._aggregateColumns, newLocation, currRef._catalog, currRef.table, currRef._context);
+
+                    // remove the function and replace it with auto-reload
+                    contextHeaderParams.action = action.substring(0,action.lastIndexOf(";")+1) + "auto-reload";
+                    referenceWithoutPaging.read(limit, contextHeaderParams).then(function rereadReference(rereadPage) {
                         defer.resolve(rereadPage);
                     }, function error(err) {
                         throw err;
@@ -259,7 +404,7 @@ AttributeGroupReference.prototype = {
                 }
 
             }).catch(function (response) {
-                var error = module._responseToError(response);
+                var error = module.responseToError(response);
                 defer.reject(error);
             });
 
@@ -271,23 +416,24 @@ AttributeGroupReference.prototype = {
 
     },
 
-    getAggregates: function (aggregateList) {
+    getAggregates: function (aggregateList, contextHeaderParams) {
         var defer = module._q.defer();
         var url;
-
-        var URL_LENGTH_LIMIT = 2048;
-
         var urlSet = [];
         var loc = this.location;
-        var baseUri = [
-            loc.service, "catalog", loc.catalogId, "aggregate", loc.path
-        ];
 
-        if (typeof loc.searchFilter === "string" && loc.searchFilter.length > 0) {
-            baseUri.push(loc.searchFilter);
+        // create the context header params for log
+        if (!contextHeaderParams || !isObject(contextHeaderParams)) {
+            contextHeaderParams = {"action": "aggregate"};
         }
-
-        baseUri = baseUri.join("/") + "/";
+        var config = {
+            headers: this._generateContextHeader(contextHeaderParams)
+        };
+        var baseUri = loc.path;
+        if (typeof loc.searchFilter === "string" && loc.searchFilter.length > 0) {
+            baseUri += "/" + loc.searchFilter;
+        }
+        baseUri += "/";
 
         for (var i = 0; i < aggregateList.length; i++) {
             var agg = aggregateList[i];
@@ -300,7 +446,7 @@ AttributeGroupReference.prototype = {
             }
 
             // if adding the next aggregate to the url will push it past url length limit, push url onto the urlSet and reset the working url
-            if ((url + i + ":=" + agg).length > URL_LENGTH_LIMIT) {
+            if ((url + i + ":=" + agg).length > module.URL_PATH_LENGTH_LIMIT) {
                 // strip off an extra ','
                 if (url.charAt(url.length-1) === ',') {
                     url = url.substring(0, url.length-1);
@@ -320,9 +466,9 @@ AttributeGroupReference.prototype = {
         }
 
         var aggregatePromises = [];
-        var http = this._server._http;
+        var http = this._server.http;
         for (var j = 0; j < urlSet.length; j++) {
-            aggregatePromises.push(http.get(urlSet[j]));
+            aggregatePromises.push(http.get(loc.service + "/catalog/" + loc.catalogId + "/aggregate/" + urlSet[j], config));
         }
 
         module._q.all(aggregatePromises).then(function getAggregates(response) {
@@ -341,14 +487,83 @@ AttributeGroupReference.prototype = {
 
             defer.resolve(responseArray);
         }, function error(response) {
-            var error = module._responseToError(response);
+            var error = module.responseToError(response);
             return defer.reject(error);
         }).catch(function (error) {
             return defer.reject(error);
         });
 
         return defer.promise;
-    }
+    },
+
+    /**
+     * Find a column in list of key and aggregate columns.
+     * @param  {string} name the column name
+     * @return {ERMrest.AttributeGroupColumn}
+     */
+    getColumnByName: function (name) {
+
+        var findCol = function (list) {
+            for (i = 0; i < list.length; i++) {
+                if (list[i].name === name) {
+                    return list[i];
+                }
+            }
+            return false;
+        };
+
+        var c = findCol(this._allColumns);
+        if (c) {
+            return c;
+        }
+        throw new module.NotFoundError("", "Column " + name + " not found.");
+    },
+
+    /**
+     * The default information that we want to be logged including catalog, schema_table, and facet (filter).
+     * @type {Object}
+     */
+    get defaultLogInfo() {
+        var obj = {};
+        obj.catalog = this._catalog.id;
+        if (this.table) {
+            obj.schema_table = this.table.schema.name + ":" + this.table.name;
+        }
+        return obj;
+    },
+
+    /**
+     * The filter information that should be logged
+     * Currently only includes the search term.
+     * @type {Object}
+     */
+    get filterLogInfo() {
+        var obj = {};
+        if (isObjectAndNotNull(this.location.searchObject) && typeof this.location.searchTerm === "string" && this.location.searchTerm) {
+            obj.filters = _compressFacetObject({"and": [{"source": "search-box", "search": [this.location.searchTerm]}]});
+        }
+        return obj;
+    },
+
+    _generateContextHeader: function (contextHeaderParams, page_size) {
+        if (!contextHeaderParams || !isObject(contextHeaderParams)) {
+            contextHeaderParams = {};
+        }
+
+        for (var key in this.defaultLogInfo) {
+            // only add the values that are not defined.
+            if (key in contextHeaderParams) continue;
+            contextHeaderParams[key] = this.defaultLogInfo[key];
+        }
+
+        if (Number.isInteger(page_size)) {
+            contextHeaderParams.page_size = page_size;
+        }
+
+        var headers = {};
+        headers[module.contextHeaderName] = contextHeaderParams;
+        return headers;
+    },
 };
 
 
@@ -425,6 +640,17 @@ AttributeGroupPage.prototype = {
     },
 
     /**
+     * the page length (number of rows in the page)
+     * @type {integer}
+     */
+     get length() {
+        if (this._length === undefined) {
+            this._length = this._data.length;
+        }
+        return this._length;
+    },
+
+    /**
      * A reference to the next set of results.
      *
      * Usage:
@@ -439,21 +665,10 @@ AttributeGroupPage.prototype = {
      * @type {ERMrest.AttributeGroupReference|null}
      */
     get next() {
-        if (!this.hasNext) {
-            return null;
+        if (this.hasNext) {
+            return this._getSiblingReference(true);
         }
-
-        var self = this;
-        var currRef = this.reference;
-        var rows = [];
-
-        currRef.location.sortObject.forEach(function (so) {
-            // assumes that sortObject columns are valid
-            rows.push(self._data[self._data.length-1][so.column]);
-        });
-
-        var newLocation = currRef.location.changePage(rows, null);
-        return new AttributeGroupReference(currRef._keyColumns, currRef._aggregateColumns, newLocation, self.reference._catalog);
+        return null;
     },
 
     /**
@@ -471,21 +686,45 @@ AttributeGroupPage.prototype = {
      * @type {ERMrest.AttributeGroupReference|null}
      */
     get previous() {
-        if (!this.hasPrevious) {
-            return null;
+        if (this.hasPrevious) {
+            return this._getSiblingReference(false);
         }
+        return null;
+    },
 
+    // return a reference to the next or previous page.
+    _getSiblingReference: function (next) {
         var self = this;
         var currRef = this.reference;
         var rows = [];
 
-        currRef.location.sortObject.forEach(function (so) {
-            // assumes that sortObject columns are valid
-            rows.push(self._data[0][so.column]);
-        });
+        if (!Array.isArray(currRef.ermrestSortObject) || currRef.ermrestSortObject === 0) {
+            return null;
+        }
 
-        var newLocation = currRef.location.changePage(null, rows);
-        return new AttributeGroupReference(currRef._keyColumns, currRef._aggregateColumns, newLocation, self.reference._catalog);
+        if (!self._data || self._data.length === 0) {
+            return null;
+        }
+
+        var rowIndex = next ? self._data.length-1 : 0;
+
+        var pageValues = [], data = self._data[rowIndex], name;
+        for (var i = 0; i < currRef.ermrestSortObject.length; i++) {
+            name = currRef.ermrestSortObject[i].column;
+            pageValues.push(data[name]);
+        }
+
+        if (pageValues === null) {
+            return null;
+        }
+
+        var newLocation;
+        if (next) {
+            newLocation = currRef.location.changePage(pageValues, null);
+        } else {
+            newLocation = currRef.location.changePage(null, pageValues);
+        }
+        return new AttributeGroupReference(currRef._keyColumns, currRef._aggregateColumns, newLocation, currRef._catalog, currRef.table, currRef._context);
     }
 };
 
@@ -535,12 +774,21 @@ AttributeGroupTuple.prototype = {
             this._values = [];
             this._isHTML = [];
 
-            var columns = this._page.reference.columns, self = this;
-            var formattedValues = module._getFormattedKeyValues(columns, undefined, this._data);
+            var columns = this._page.reference.columns,
+                context = this._page.reference._context,
+                self = this, templateVariables = {}, k, v;
+            columns.forEach(function (col) {
+                if (!(col.name in self._data)) return;
+                k = col.name;
+                v = col.formatvalue(self._data[k], context);
+                templateVariables[k] = v;
+                templateVariables["_" + k] = self._data[k];
+            });
+
             var presentation;
 
             columns.forEach(function (col) {
-                presentation = col.formatPresentation(formattedValues[col.name], {formattedValues: formattedValues});
+                presentation = col.formatPresentation(self._data, context, templateVariables);
                 self._values.push(presentation.value);
                 self._isHTML.push(presentation.isHTML);
             });
@@ -561,10 +809,10 @@ AttributeGroupTuple.prototype = {
      */
     get uniqueId() {
         if (this._uniqueId === undefined) {
-            var data = this._data, hasNull;
-            this._uniqueId = this._page.reference.shortestKey.reduce(function (res, c, index) {
+            var data = this._data, hasNull, self = this;
+            this._uniqueId = self._page.reference.shortestKey.reduce(function (res, c, index) {
                 hasNull = hasNull || data[c.name] == null;
-                return res + (index > 0 ? "_" : "") + c.formatvalue(data[c.name]);
+                return res + (index > 0 ? "_" : "") + data[c.name];
             }, "");
 
             //TODO should be evaluated for composite keys
@@ -591,6 +839,7 @@ AttributeGroupTuple.prototype = {
         if (this._displayname === undefined) {
             var keyColumns = this._page.reference.shortestKey,
                 data = this._data,
+                self = this,
                 hasNull = false,
                 hasMarkdown = false,
                 values = [],
@@ -600,14 +849,14 @@ AttributeGroupTuple.prototype = {
                 hasNull = hasNull || data[c.name] == null;
                 if (hasNull) return;
 
-                hasMarkdown = hasMarkdown || c.type.name === "markdown";
-                values.push(c.formatvalue(data[c.name]));
+                hasMarkdown = hasMarkdown || (module._HTMLColumnType.indexOf(c.type.name) != -1);
+                values.push(c.formatvalue(data[c.name], self._page.reference._context));
             });
 
             value = hasNull ? null: values.join(":");
 
             this._displayname = {
-                "value": hasMarkdown ? module._formatUtils.printMarkdown(value, { inline: true }) : value,
+                "value": hasMarkdown ? module.renderMarkdown(value, true) : value,
                 "unformatted": value,
                 "isHTML": hasMarkdown
             };
@@ -619,8 +868,15 @@ AttributeGroupTuple.prototype = {
 /**
  * Constructor for creating a column for creating a {@link ERMrest.AttributeGroupReference}
  *
+ * NOTE If you're passing baseColumn, we're assuming that the location path is ending
+ * in the table that this column belongs too. This assumption exists for sort logic.
+ * This because we're looking at the column_order of the baseColumn and we're appending
+ * them to the key columns. Now if that column is not in the table, this will not work.
+ * If that is not the case, you need to disable the sort.
+ *
  * @param       {string} alias the alias that we want to use. If alias exist we will use the alias=term for creating url.
  * @param       {string} term  the term string, e.g., cnt(*) or col1.
+ * @param       {ERMrest.Column} baseColumn the database column that this is based on
  * @param       {Object|string} displayname displayname of column, if it's an object it will have `value`, `unformatted`, and `isHTML`
  * @param       {ERMrset.Type} colType    type of column
  * @param       {string} comment     The string for comment (tooltip)
@@ -628,14 +884,14 @@ AttributeGroupTuple.prototype = {
  * @param       {Boolean} visible    Whether we want this column be returned in the tuples
  * @constructor
  */
-function AttributeGroupColumn(alias, term, displayname, colType, comment, sortable, visible) {
+function AttributeGroupColumn(alias, term, baseColumn, displayname, colType, comment, sortable, visible) {
     /**
      * The alias for the column.
      * The alias might be undefined. If it's aggregate column and it has an aggregate function
      * then this will be required by ermrest, but we're not checking anything here...
      *
-     * @private
      * @type {string}
+     * @private
      */
     this._alias = alias;
 
@@ -653,20 +909,32 @@ function AttributeGroupColumn(alias, term, displayname, colType, comment, sortab
      */
     this.term = term;
 
+    /**
+     * The database column that this is based on. It might not be defined.
+     * @type {ERMrest.Column}
+     */
+    this.baseColumn = baseColumn;
+
+
     if (typeof displayname === 'string') {
         this._displayname = {"value": displayname, "unformatted": displayname, "isHTML": false};
     } else if (isObjectAndNotNull(displayname)){
         this._displayname = displayname;
+    } else if (baseColumn) {
+        this._displayname = baseColumn.displayname;
     }
+
 
     if (typeof colType === 'string') {
         this.type = new Type({typename: colType});
+    } else if (baseColumn){
+        this.type = baseColumn.type;
     } else {
 
         /**
-         * Type object
-         * @type {ERMrest.Type}
-         */
+        * Type object
+        * @type {ERMrest.Type}
+        */
         this.type = colType;
     }
 
@@ -676,17 +944,16 @@ function AttributeGroupColumn(alias, term, displayname, colType, comment, sortab
      */
     this.comment = comment;
 
-    /**
-     * [sortable description]
-     * @type {boolean}
-     */
-    this.sortable = sortable; // sort only based on current column, what about sort basesd on other columns?
+    if (sortable === false) {
+        this._sortable = false;
+        this._sortColumns_cached = [];
+    }
 
     /**
      * We should have a concept of visible columns, this was the easiest way of implementing it to me.
      * @type {boolean}
      */
-    this._visible = visible;
+    this.visible = visible;
 }
 AttributeGroupColumn.prototype = {
     constructor: AttributeGroupColumn,
@@ -706,25 +973,36 @@ AttributeGroupColumn.prototype = {
      * @type {string}
      */
     get name() {
-        if (typeof this._alias === "string" && this._alias.length !== 0) {
-            return this._alias;
+        if (this._name === undefined) {
+            if (typeof this._alias === "string" && this._alias.length !== 0) {
+                this._name = this._alias;
+            } else {
+                this._name = decodeURIComponent(this.term);
+            }
         }
-        return decodeURIComponent(this.term);
+        return this._name;
     },
 
     get displayname() {
         return this._displayname;
     },
 
-    formatvalue: function (data, options) {
-        //TODO should be the same as Column.formatvalue, we should extract the logic of formatvalue and here will just call that
+    formatvalue: function (data, context, options) {
         if (data === null || data === undefined) {
             return null;
+        }
+
+        if (this.baseColumn) {
+            return this.baseColumn.formatvalue(data, context, options);
         }
         return _formatValueByType(this.type, data, options);
     },
 
-    formatPresentation: function (data, options) {
+    formatPresentation: function (data, context, templateVariables, options) {
+        data = data || {};
+
+        var formattedValue = this.formatvalue(data[this.name], context, options);
+
         /*
          * NOTE: currently will only return the given data. This function exist
          * so it will be the same pattern as Reference and Column apis.
@@ -734,10 +1012,67 @@ AttributeGroupColumn.prototype = {
          * are aliases and not the actual column names in the table.
          *
          */
-        if (this.type.name === "markdown") {
-            return {isHTML: true, value: module._formatUtils.printMarkdown(data, { inline: true }), unformatted: data};
+        if (module._HTMLColumnType.indexOf(this.type.name) != -1) {
+            return {isHTML: true, value: module.renderMarkdown(formattedValue, true), unformatted: formattedValue};
         }
-        return {isHTML: false, value: data, unformatted: data};
+        return {isHTML: false, value: formattedValue, unformatted: formattedValue};
+    },
+
+    /**
+     * @desc An array of objects that have `column` which is column name (this is different from other sortColumns),
+     * and `descending` which is true/fals. The `descending` boolean indicates whether we should change the direction of sort or not.
+     * The column name is going to be database column names (equivalent to this.term)
+     *
+     * - if sortable passed as false, it will be empty.
+     * - if baseColumn exists, it will return the column order of baseColumn
+     * - otherwise the current column
+     * @type {Object[]}
+     */
+    get _sortColumns() {
+        if (this._sortColumns_cached === undefined) {
+            this._determineSortable();
+        }
+        return this._sortColumns_cached;
+    },
+
+    /**
+     * whether the column can be sorted or not
+     * - if sortable passed as false, it will be false
+     * - if baseColumn exists, it will return the column order of baseColumn
+     * - otherwise it will be true
+     * @type {boolean}
+     */
+    get sortable() {
+        if (this._sortable === undefined) {
+            this._determineSortable();
+        }
+        return this._sortable;
+    },
+
+    _determineSortable: function () {
+        this._sortColumns_cached = [{column: decodeURIComponent(this.term), descending: false}];
+        this._sortable = true;
+
+        if (!this.baseColumn) return;
+
+        var baseSortCols = this.baseColumn._getSortColumns(this._context);
+        if (typeof baseSortCols === 'undefined') {
+            this._sortColumns_cached = [];
+            this._sortable = false;
+            return;
+        }
+
+        this._sortColumns_cached = baseSortCols.map(function (ro) {
+            return {"column": ro.column.name, "descending": ro.descending};
+        });
+    },
+
+    /**
+     * sets the context of column
+     * @private
+     */
+    _setContext: function (context) {
+        this._context = context;
     }
 };
 
@@ -775,8 +1110,8 @@ function AttributeGroupLocation(service, catalog, path, searchObject, sortObject
 
     /**
      * The search object with "column" and "term".
-     * @private
      * @type {object}
+     * @private
      */
     this.searchObject = searchObject;
 
@@ -805,26 +1140,18 @@ function AttributeGroupLocation(service, catalog, path, searchObject, sortObject
     }
 
     /**
-     * The sort object. It will be an array of object with the following format:
-     * {"column": columnname, "descending": true|false}
-     * @private
-     * @type {?Object[]}
-     */
+    * The sort object. It will be an array of object with the following format:
+    * {"column": columnname, "descending": true|false}
+    * @type {?Object[]}
+    * @private
+    */
     this.sortObject = sortObject;
-
-    if (isObjectAndNotNull(this.sortObject)) {
-        /**
-         * The sort midifer string for creating the uri.
-         * @type {?string}
-         */
-        this.sort = _getSortModifier(this.sortObject);
-    }
 
     /**
      * Represents the paging. It will be an array of values.
      * v1, v2, v3.. are in the same order of columns in the sortObject
-     * @private
      * @type {?Object[]}
+     * @private
      */
     this.beforeObject = beforeObject;
 
@@ -839,8 +1166,8 @@ function AttributeGroupLocation(service, catalog, path, searchObject, sortObject
     /**
      * Represents the paging. It will be an array of values.
      * v1, v2, v3.. are in the same order of columns in the sortObject
-     * @private
      * @type {?Object[]}
+     * @private
      */
     this.afterObject = afterObject;
 
@@ -954,16 +1281,18 @@ function BucketAttributeGroupReference(baseColumn, baseRef, min, max, numberOfBu
     var binTerm = "bin(" + module._fixedEncodeURIComponent(baseColumn.name) + ";" + numberOfBuckets + ";" + module._fixedEncodeURIComponent(min) + ";" + module._fixedEncodeURIComponent(max) + ")";
 
     var keyColumns = [
-        new AttributeGroupColumn("c1", binTerm, baseColumn.displayname, baseColumn.type, baseColumn.comment, true, true)
+        new AttributeGroupColumn("c1", binTerm, baseColumn, baseColumn.displayname, baseColumn.type, baseColumn.comment, true, true)
     ];
 
     var countName = "cnt(*)";
+
+    // if there's a join, we cannot use cnt(*) and we should count the shortestkeys of facet base table (not the projected table)
     if (baseRef.location.hasJoin) {
-        countName = "cnt_d(" + module._fixedEncodeURIComponent(baseRef.table.shortestKey[0].name) + ")";
+        countName = "cnt_d(" + baseRef.location.facetBaseTableAlias + ":" + module._fixedEncodeURIComponent(baseRef.facetBaseTable.shortestKey[0].name) + ")";
     }
 
     var aggregateColumns = [
-        new AttributeGroupColumn("c2", countName, "Number of Occurences", new Type({typename: "int"}), "", true, true)
+        new AttributeGroupColumn("c2", countName, null, "Number of Occurrences", new Type({typename: "int"}), "", true, true)
     ];
 
     // call the parent constructor
@@ -999,9 +1328,10 @@ BucketAttributeGroupReference.prototype.search = function (term) {
  * for the max values of each bucket. Together, labels.min[x] and labels.min[y],
  * represent the range for each bucket (bar in the histogram) at that particular index.
  *
+ * @param {Object} contextHeaderParams the object that we want to log.
  * @return {Object} data object that contains 2 arrays and another object with 2 arrays
  */
-BucketAttributeGroupReference.prototype.read = function () {
+BucketAttributeGroupReference.prototype.read = function (contextHeaderParams) {
     var moment = module._moment;
 
     // uses the current known min value and adds the binWidth to it to generate the max label
@@ -1024,7 +1354,13 @@ BucketAttributeGroupReference.prototype.read = function () {
         var uri = this.uri;
 
         var currRef = this;
-        this._server._http.get(uri).then(function (response) {
+        if (!contextHeaderParams || !isObject(contextHeaderParams)) {
+            contextHeaderParams = {"action": "read"};
+        }
+        var config = {
+            headers: this._generateContextHeader(contextHeaderParams)
+        };
+        this._server.http.get(uri, config).then(function (response) {
             var data = {
                 x: [],
                 y: []
@@ -1119,7 +1455,7 @@ BucketAttributeGroupReference.prototype.read = function () {
             defer.resolve(data);
 
         }).catch(function (response) {
-            var error = module._responseToError(response);
+            var error = module.responseToError(response);
             defer.reject(error);
         });
 
