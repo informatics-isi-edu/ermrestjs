@@ -1,14 +1,9 @@
 /**
- * NOTE Since ermrestjs is currently written just for Chaise, the assumption is
- * the page url is two level deeper than ermrestjs in your server.
- * So if you're testing this on (localhost/ermerstjs/demos) it only works if
- * you have ermerstjs on (localhost/ermrestjs).
- * But if you have ermerstjs in a level different (localhost/test/ermetsjs/demos) it won't work.
- * This is only because of the assumption in node.js file, line 105.
- *
  * Make sure to have ermrest on the same server (cross origin issues)
- *
- *
+ * 
+ * The location of ermrestjs must be consistent with what's used while building ermrestjs
+ * By default it would be in the /ermrest/ermrest.js location. Please refer to installation
+ * guide on how you can customize this location by defining environment variables.
  */
 
 (function () {
@@ -18,7 +13,7 @@
     .module('sample', ['ermrestjs', 'ngSanitize'])
 
     .constant('context', {
-        serviceURL: "https://dev.isrd.isi.edu/ermrest"
+      serviceURL: 'https://dev.isrd.isi.edu/ermrest'
     })
 
     .factory('UriUtils', ['context', '$window', function (context, $window) {
@@ -30,9 +25,9 @@
       * converts a string to an URI encoded string
       */
       function fixedEncodeURIComponent(str) {
-          return encodeURIComponent(str).replace(/[!'()*]/g, function (c) {
-              return '%' + c.charCodeAt(0).toString(16).toUpperCase();
-          });
+        return encodeURIComponent(str).replace(/[!'()*]/g, function (c) {
+          return '%' + c.charCodeAt(0).toString(16).toUpperCase();
+        });
       }
 
       /**
@@ -45,20 +40,20 @@
        * @returns {string} url the chaise url
        */
       function appLinkFn(tag, location, context) {
-          var baseUrl = $window.location.href.replace($window.location.hash, '');
-          return baseUrl + "/#" + fixedEncodeURIComponent(location.catalog) + "/" + location.path;
+        var baseUrl = $window.location.href.replace($window.location.hash, '');
+        return baseUrl + '/#' + fixedEncodeURIComponent(location.catalog) + '/' + location.path;
       }
 
       function hashToERMrestURL() {
         var hash = $window.location.hash;
         if (hash === undefined || hash == '' || hash.length == 1) {
-            return "";
+          return '';
         }
 
         var catalogId = hash.substring(1).split('/')[0];
-        hash = hash.substring(hash.indexOf('/')+1);
+        hash = hash.substring(hash.indexOf('/') + 1);
 
-        return [context.serviceURL, "catalog", catalogId, "entity", hash].join("/");
+        return [context.serviceURL, 'catalog', catalogId, 'entity', hash].join('/');
       }
 
       return {
@@ -76,23 +71,23 @@
       var uri = UriUtils.hashToERMrestURL();
       if (!uri) {
         $rootScope.hasError = true;
-        throw new Error("Hash is required");
+        throw new Error('Hash is required');
       }
 
-      ERMrest.resolve(uri, {cid:"demo"}).then(function (reference) {
-          reference = reference.contextualize.compact;
-          $rootScope.reference = reference;
-          $rootScope.hasLoaded = true;
-          $rootScope.columns = reference.columns;
+      ERMrest.resolve(uri, { cid: 'demo' }).then(function (reference) {
+        reference = reference.contextualize.compact;
+        $rootScope.reference = reference;
+        $rootScope.hasLoaded = true;
+        $rootScope.columns = reference.columns;
 
-          return reference.read(20);
+        return reference.read(20);
       }).then(function (page) {
-          $rootScope.page = page;
-          $rootScope.hasData = true;
-      }).catch(function(err) {
-          $rootScope.hasError = true;
-          throw err;
+        $rootScope.page = page;
+        $rootScope.hasData = true;
+      }).catch(function (err) {
+        $rootScope.hasError = true;
+        throw err;
       });
 
-  }]);
+    }]);
 })();
