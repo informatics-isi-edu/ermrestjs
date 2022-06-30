@@ -1,14 +1,12 @@
-# Demo
+# Examples
 
 In this folder, you can find examples of using ERMrestJS. While ERMrestJS is mainly designed to work with [Chaise](https://github.com/informatics-isi-edu/chaise) and tailored based on Chaise's needs, you can directly call its APIs to get similar results.
-
-The following are the available demos:
 
 ## NodeJS
 
 ### Presequites
 
-Before running the ermrestjs must be properly built. You can do so by calling the following Make command:
+Before running the scripts, ERMrestJS must be properly built. You can do so by calling the following Make command:
 
 ```
 make dist
