@@ -11,7 +11,7 @@ const ERMrest = require(path.join(__dirname, '..', '..' , 'dist', 'ermrest.js'))
  */
 const markdownContent = `
   [Link With Download](https://code.jquery.com/jquery-3.1.0.js){download .btn .btn-primary}
-  ::: iframe [Chaise](https://dev.isrd.isi.edu/chaise/search){width=800 height=300} \n:::
+  ::: iframe [Chaise](https://example.com){width=800 height=300} \n:::
 `;
 
 const outputLocation = path.join(__dirname, 'markdown-output.html');
@@ -29,7 +29,7 @@ const renderedValue = ERMrest.renderMarkdown(markdownContent);
 
 // save as HTML
 const HTMLContent = `
-  <DOCTYPE html>
+  <!DOCTYPE html>
   <html>
     <head>
       <!-- TODO custom css should be added here -->
@@ -41,7 +41,7 @@ const HTMLContent = `
 `;
 fs.writeFile(outputLocation, HTMLContent, function (err) {
   if (err) throw err;
-  console.log(`HTML output saved to ${outputLocation}`);
+  console.log(`HTML output saved to ${outputLocation}.`);
 });
 
 

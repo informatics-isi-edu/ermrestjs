@@ -53,11 +53,21 @@
      * Given an object, returns the string comrpessed version of it
      * @param  {Object} obj
      * @return {String}
+     * @memberof ERMrest
+     * @function encodeFacet
      */
     module.encodeFacet = function (obj) {
         return module._LZString.compressToEncodedURIComponent(JSON.stringify(obj,null,0));
     };
 
+    /**
+     * Turn a given encoded facet blob into a facet object
+     * @param {string} blob the encoded facet blob
+     * @param {string?} path (optional) used for better error message
+     * @returns {Object}
+     * @memberof ERMrest
+     * @function decodeFacet
+     */
     module.decodeFacet = function (blob, path) {
         var err = new module.InvalidFacetOperatorError(
             typeof path === "string" ? path : "",
@@ -1826,11 +1836,12 @@
     };
 
     /**
-     * @function
      * @param {Object} value The Markdown to transform
      * @param {Object} [options] Configuration options.
      * @return {string} A string representation of value
-     * @desc public function to access markdown it renderer
+     * @desc render a given markdown value to HTML
+     * @memberof ERMrest
+     * @function renderMarkdown
      */
     module.renderMarkdown = function(value, inline) {
       return module._formatUtils.printMarkdown(value, {inline: inline});
@@ -2935,15 +2946,15 @@
         return module.renderHandlebarsTemplate(template, keyValues, catalog, options);
     };
 
-    /*
-     * @function
-     * @private
+    /**
      * @param {String} template The template string to transform
      * @param {Object} keyValues The key-value pair of object to be used for template tags replacement.
      * @param {Object} catalog The catalog object created by ermrestJS representing the current catalog from the url
      * @param {Object} [options] Configuration options.
      * @return {string} A string produced after templating
      * @desc Returns a string produced as a result of templating using `Handlebars`.
+     * @memberof ERMrest
+     * @function renderHandlebarsTemplate
      */
     module.renderHandlebarsTemplate = function(template, keyValues, catalog, options) {
 
@@ -3171,6 +3182,8 @@
      * @param  {String} context  context string
      * @param  {Object} options
      * @return {Object}          An object with `isHTML` and `value` attributes.
+     * @memberof ERMrest
+     * @function processMarkdownPattern
      */
     module.processMarkdownPattern = function (template, data, table, context, options) {
         var res = module._renderTemplate(template, data, table ? table.schema.catalog : null, options);
