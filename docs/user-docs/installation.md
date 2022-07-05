@@ -16,7 +16,7 @@ If you want to build the package, you will need to have `Node.js` installed and 
 dependencies into the `/dist/` directory.
 
 ```
-$ make all
+$ make dist
 ```
 
 Even though this command will not deploy the package, during build we will inject some build-related parameters into the code. So you should make sure these environment variables are properly defined. You can find more information about these variables in the next section.

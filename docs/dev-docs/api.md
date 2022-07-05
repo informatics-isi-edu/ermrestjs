@@ -626,6 +626,7 @@ to use for ERMrest JavaScript agents.
         * [.hasPrevious](#ERMrest.AttributeGroupPage+hasPrevious) ⇒ <code>boolean</code>
         * [.hasNext](#ERMrest.AttributeGroupPage+hasNext) ⇒ <code>boolean</code>
         * [.tuples](#ERMrest.AttributeGroupPage+tuples) : [<code>Array.&lt;AttributeGroupTuple&gt;</code>](#ERMrest.AttributeGroupTuple)
+        * [.length](#ERMrest.AttributeGroupPage+length) : <code>integer</code>
         * [.next](#ERMrest.AttributeGroupPage+next) : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference) \| <code>null</code>
         * [.previous](#ERMrest.AttributeGroupPage+previous) : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference) \| <code>null</code>
     * [.AttributeGroupTuple](#ERMrest.AttributeGroupTuple)
@@ -774,6 +775,7 @@ to use for ERMrest JavaScript agents.
         * [.hasPrevious](#ERMrest.AttributeGroupPage+hasPrevious) ⇒ <code>boolean</code>
         * [.hasNext](#ERMrest.AttributeGroupPage+hasNext) ⇒ <code>boolean</code>
         * [.tuples](#ERMrest.AttributeGroupPage+tuples) : [<code>Array.&lt;AttributeGroupTuple&gt;</code>](#ERMrest.AttributeGroupTuple)
+        * [.length](#ERMrest.AttributeGroupPage+length) : <code>integer</code>
         * [.next](#ERMrest.AttributeGroupPage+next) : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference) \| <code>null</code>
         * [.previous](#ERMrest.AttributeGroupPage+previous) : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference) \| <code>null</code>
     * [.AttributeGroupTuple](#ERMrest.AttributeGroupTuple) : <code>object</code>
@@ -784,6 +786,11 @@ to use for ERMrest JavaScript agents.
     * [.BucketAttributeGroupReference](#ERMrest.BucketAttributeGroupReference) : <code>object</code>
     * [.configure(http, q)](#ERMrest.configure)
     * [.getServer(uri, [contextHeaderParams])](#ERMrest.getServer) ⇒ [<code>Server</code>](#ERMrest.Server)
+    * [.encodeFacet(obj)](#ERMrest.encodeFacet) ⇒ <code>String</code>
+    * [.decodeFacet(blob, path)](#ERMrest.decodeFacet) ⇒ <code>Object</code>
+    * [.renderMarkdown(value, [options])](#ERMrest.renderMarkdown) ⇒ <code>string</code>
+    * [.renderHandlebarsTemplate(template, keyValues, catalog, [options])](#ERMrest.renderHandlebarsTemplate) ⇒ <code>string</code>
+    * [.processMarkdownPattern(template, data, table, context, options)](#ERMrest.processMarkdownPattern) ⇒ <code>Object</code>
     * [.parse(uri, catalogObject)](#ERMrest.parse) ⇒ <code>ERMrest.Location</code>
     * [.resolve(uri, [contextHeaderParams])](#ERMrest.resolve) ⇒ <code>Promise</code>
     * [.getElapsedTime()](#ERMrest.getElapsedTime) ⇒ <code>integer</code>
@@ -6064,6 +6071,7 @@ Find a column in list of key and aggregate columns.
     * [.hasPrevious](#ERMrest.AttributeGroupPage+hasPrevious) ⇒ <code>boolean</code>
     * [.hasNext](#ERMrest.AttributeGroupPage+hasNext) ⇒ <code>boolean</code>
     * [.tuples](#ERMrest.AttributeGroupPage+tuples) : [<code>Array.&lt;AttributeGroupTuple&gt;</code>](#ERMrest.AttributeGroupTuple)
+    * [.length](#ERMrest.AttributeGroupPage+length) : <code>integer</code>
     * [.next](#ERMrest.AttributeGroupPage+next) : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference) \| <code>null</code>
     * [.previous](#ERMrest.AttributeGroupPage+previous) : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference) \| <code>null</code>
 
@@ -6121,6 +6129,12 @@ for (var i=0, len=page.tuples.length; i<len; i++) {
   console.log("Tuple:", tuple.displayname.value, "has values:", tuple.values);
 }
 ```
+
+**Kind**: instance property of [<code>AttributeGroupPage</code>](#ERMrest.AttributeGroupPage)  
+<a name="ERMrest.AttributeGroupPage+length"></a>
+
+#### attributeGroupPage.length : <code>integer</code>
+the page length (number of rows in the page)
 
 **Kind**: instance property of [<code>AttributeGroupPage</code>](#ERMrest.AttributeGroupPage)  
 <a name="ERMrest.AttributeGroupPage+next"></a>
@@ -7890,6 +7904,7 @@ Find a column in list of key and aggregate columns.
     * [.hasPrevious](#ERMrest.AttributeGroupPage+hasPrevious) ⇒ <code>boolean</code>
     * [.hasNext](#ERMrest.AttributeGroupPage+hasNext) ⇒ <code>boolean</code>
     * [.tuples](#ERMrest.AttributeGroupPage+tuples) : [<code>Array.&lt;AttributeGroupTuple&gt;</code>](#ERMrest.AttributeGroupTuple)
+    * [.length](#ERMrest.AttributeGroupPage+length) : <code>integer</code>
     * [.next](#ERMrest.AttributeGroupPage+next) : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference) \| <code>null</code>
     * [.previous](#ERMrest.AttributeGroupPage+previous) : [<code>AttributeGroupReference</code>](#ERMrest.AttributeGroupReference) \| <code>null</code>
 
@@ -7947,6 +7962,12 @@ for (var i=0, len=page.tuples.length; i<len; i++) {
   console.log("Tuple:", tuple.displayname.value, "has values:", tuple.values);
 }
 ```
+
+**Kind**: instance property of [<code>AttributeGroupPage</code>](#ERMrest.AttributeGroupPage)  
+<a name="ERMrest.AttributeGroupPage+length"></a>
+
+#### attributeGroupPage.length : <code>integer</code>
+the page length (number of rows in the page)
 
 **Kind**: instance property of [<code>AttributeGroupPage</code>](#ERMrest.AttributeGroupPage)  
 <a name="ERMrest.AttributeGroupPage+next"></a>
@@ -8070,6 +8091,74 @@ URI should be to the ERMrest _service_. For example,
 | --- | --- | --- | --- |
 | uri | <code>string</code> |  | URI of the ERMrest service. |
 | [contextHeaderParams] | <code>Object</code> | <code>{cid:&#x27;null&#x27;}</code> | An optional server header parameters for context logging appended to the end of any request to the server. |
+
+<a name="ERMrest.encodeFacet"></a>
+
+### ERMrest.encodeFacet(obj) ⇒ <code>String</code>
+Given an object, returns the string comrpessed version of it
+
+**Kind**: static method of [<code>ERMrest</code>](#ERMrest)  
+
+| Param | Type |
+| --- | --- |
+| obj | <code>Object</code> | 
+
+<a name="ERMrest.decodeFacet"></a>
+
+### ERMrest.decodeFacet(blob, path) ⇒ <code>Object</code>
+Turn a given encoded facet blob into a facet object
+
+**Kind**: static method of [<code>ERMrest</code>](#ERMrest)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| blob | <code>string</code> | the encoded facet blob |
+| path | <code>string</code> | (optional) used for better error message |
+
+<a name="ERMrest.renderMarkdown"></a>
+
+### ERMrest.renderMarkdown(value, [options]) ⇒ <code>string</code>
+render a given markdown value to HTML
+
+**Kind**: static method of [<code>ERMrest</code>](#ERMrest)  
+**Returns**: <code>string</code> - A string representation of value  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| value | <code>Object</code> | The Markdown to transform |
+| [options] | <code>Object</code> | Configuration options. |
+
+<a name="ERMrest.renderHandlebarsTemplate"></a>
+
+### ERMrest.renderHandlebarsTemplate(template, keyValues, catalog, [options]) ⇒ <code>string</code>
+Returns a string produced as a result of templating using `Handlebars`.
+
+**Kind**: static method of [<code>ERMrest</code>](#ERMrest)  
+**Returns**: <code>string</code> - A string produced after templating  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| template | <code>String</code> | The template string to transform |
+| keyValues | <code>Object</code> | The key-value pair of object to be used for template tags replacement. |
+| catalog | <code>Object</code> | The catalog object created by ermrestJS representing the current catalog from the url |
+| [options] | <code>Object</code> | Configuration options. |
+
+<a name="ERMrest.processMarkdownPattern"></a>
+
+### ERMrest.processMarkdownPattern(template, data, table, context, options) ⇒ <code>Object</code>
+Given a markdown_pattern template and data, will return the appropriate
+presentation value.
+
+**Kind**: static method of [<code>ERMrest</code>](#ERMrest)  
+**Returns**: <code>Object</code> - An object with `isHTML` and `value` attributes.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| template | <code>String</code> | the handlebars/mustache template |
+| data | <code>Object</code> | the key-value pair of data |
+| table | [<code>Table</code>](#ERMrest.Table) | the table object |
+| context | <code>String</code> | context string |
+| options | <code>Object</code> |  |
 
 <a name="ERMrest.parse"></a>
 
