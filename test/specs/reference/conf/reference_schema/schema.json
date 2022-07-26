@@ -852,7 +852,10 @@
             "table_name": "sorted_table_w_fk",
             "schema_name": "reference_schema",
             "kind": "table",
-            "keys": [{"unique_columns": ["id"]}],
+            "keys": [
+                {"unique_columns": ["id"]},
+                {"unique_columns": ["col_nullable_key"]}
+            ],
             "foreign_keys": [
                 {
                     "comment": "has column order",
@@ -1031,6 +1034,13 @@
                     "type": {
                         "typename": "text"
                     }
+                },
+                {
+                    "name": "col_nullable_key",
+                    "type": {
+                        "typename": "text"
+                    },
+                    "nullok": true
                 }
             ],
             "annotations": {

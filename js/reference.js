@@ -4296,7 +4296,8 @@
             if (typeof sortObject !== 'undefined') {
                 // if any of the sortCols is a key, then we don't neede to add the shortest key
                 var hasKey = this._table.keys.all().some(function (key) {
-                    return key.colset.columns.every(function(c) {
+                    // all the columns in the key must be not-null
+                    return key._notNull && key.colset.columns.every(function(c) {
                         return (c.name in sortColNames);
                     });
                 });

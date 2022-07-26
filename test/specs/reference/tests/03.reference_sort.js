@@ -298,6 +298,18 @@ exports.execute = function (options) {
                     checkSort([{"column":"id", "descending": false}], "01", done);
                 });
 
+                it("if column is part of key but nullable, should sort add the shortest key.", function (done) {
+                    checkSort(
+                        [{"column":"col_nullable_key", "descending": false}], 
+                        "04", done, 
+                        [
+                            readPathPrefix,
+                            // we're making sure the RID is also added to the URL
+                            "col_nullable_key,RID;M:=array_d(M:*),F6:=F6:id,F5:=array_d(M_P1:*),F4:=array_d(F4:*),F3:=F3:col.%20w.%20dot.,F2:=array_d(F2:*),F1:=array_d(F1:*)@sort(col_nullable_key,RID)"
+                        ].join("")
+                    );
+                });
+
                 it("it should encode the column names.", function (done) {
                     checkSort([{"column":"col w space", "descending": false}], "07", done);
                 });

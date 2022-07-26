@@ -53,7 +53,8 @@
         "col_w_slash/": "05",
         "col_w_order_multiple": "04",
         "col_w_order_multiple_1": "07",
-        "col_w_order_multiple_2": "07"
+        "col_w_order_multiple_2": "07",
+        "col_nullable_key": "10"
     },
     {
         "id": "05",
