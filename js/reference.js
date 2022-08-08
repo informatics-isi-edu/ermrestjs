@@ -467,7 +467,6 @@
         _generateFacetColumns: function (skipMappingEntityChoices) {
             var self = this;
             var consNames = module._constraintNames;
-            self._facetColumns = [];
 
             var defer = module._q.defer();
 
@@ -593,17 +592,19 @@
 
             // if we have filters in the url, we should just get the structure from annotation
             var finalize = function (res) {
+                var facetColumns = [];
+
                 // turn facetObjectWrappers into facetColumn
                 res.facetObjectWrappers.forEach(function(fo, index) {
                     // if the function returns false, it couldn't handle that case,
                     // and therefore we are ignoring it.
                     // it might change the fo
                     if (!helpers.checkForAlternative(fo, usedAnnotation, self._table, consNames)) return;
-                    self._facetColumns.push(new FacetColumn(self, index, fo));
+                    facetColumns.push(new FacetColumn(self, index, fo));
                 });
 
                 // get the existing facets on the columns (coming from annotation)
-                self._facetColumns.forEach(function(fc) {
+                facetColumns.forEach(function(fc) {
                     if (fc.filters.length !== 0) {
                         res.newFilters.push(fc.toJSON());
                     }
@@ -615,26 +616,29 @@
                 } else {
                     self._location.facets = null;
                 }
+
+                return facetColumns;
             };
 
 
             // if we don't want to map entity choices, then function will work in sync mode
             if (skipMappingEntityChoices) {
                 var res = self.validateFacetsFilters(andFilters ,facetObjectWrappers, searchTerm, skipMappingEntityChoices);
-                finalize(res);
+                self._facetColumns = finalize(res);
                 return {
                     facetColumns: self._facetColumns,
                     issues: res.issues
                 };
             } else {
                 self.validateFacetsFilters(andFilters ,facetObjectWrappers, searchTerm, skipMappingEntityChoices).then(function (res) {
-                    finalize(res);
+                    self._facetColumns = finalize(res);
                     // make sure we're generating the facetColumns from scratch
                     defer.resolve({
                         facetColumns: self._facetColumns,
                         issues: res.issues
                     });
                 }).catch(function (err) {
+                    self._facetColumns = [];
                     defer.reject(err);
                 });
             }
