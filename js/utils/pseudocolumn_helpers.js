@@ -1094,7 +1094,7 @@
             }
 
             var colName, col, colTable = table, source = sourceObject.source, sourceObjectNodes = [];
-            var hasPath = false, hasInbound = false, hasPrefix = false, isFiltered = false, isAllOutboundNotNull = false, isAllOutboundNotNullPerModel = false;
+            var hasPath = false, hasInbound = false, hasPrefix = false, isFiltered = false, filterProps = {}, isAllOutboundNotNull = false, isAllOutboundNotNullPerModel = false;
             var lastForeignKeyNode, firstForeignKeyNode, foreignKeyPathLength = 0;
 
             // just the column name
@@ -1121,6 +1121,7 @@
                 sourceObjectNodes = res.sourceObjectNodes;
                 colName = res.column.name;
                 isFiltered = res.isFiltered;
+                filterProps = res.filterProps;
                 isAllOutboundNotNull =  res.isAllOutboundNotNull;
                 isAllOutboundNotNullPerModel = res.isAllOutboundNotNullPerModel;
 
@@ -1150,6 +1151,7 @@
             self.hasInbound = hasInbound;
             self.hasAggregate = typeof sourceObject.aggregate === "string";
             self.isFiltered = isFiltered;
+            self.filterProps = filterProps;
             self.isEntityMode = isEntity;
             self.isUnique = !self.hasAggregate && !self.isFiltered && (!hasPath || !hasInbound);
 
@@ -1369,8 +1371,11 @@
             };
 
             var i, fkAlias, constraint, isInbound, fkObj, fk, colTable = rootTable, hasInbound = false, firstForeignKeyNode, lastForeignKeyNode,
-                foreignKeyPathLength = 0, sourceObjectNodes = [], isFiltered = false, hasPrefix = false, hasOnlyPrefix = false, prefix,
+                foreignKeyPathLength = 0, sourceObjectNodes = [], hasPrefix = false, hasOnlyPrefix = false, prefix,
                 isAllOutboundNotNull = true, isAllOutboundNotNullPerModel = true;
+            var isFiltered = false, filterProps = {
+                hasRootFilter: false, hasFilterInBetween: false, leafFilterString: ''
+            };
 
             for (i = 0; i < source.length - 1; i++) {
                 if ("sourcekey" in source[i]) {
@@ -1405,6 +1410,9 @@
                     tableName = prefix.column.table.name;
                     hasInbound = hasInbound || prefix.hasInbound;
                     isFiltered = isFiltered || prefix.isFiltered;
+                    filterProps.hasRootFilter = prefix.hasRootFilter;
+                    filterProps.hasFilterInBetween = prefix.hasFilterInBetween;
+                    filterProps.leafFilterString = prefix.leafFilterString;
                     isAllOutboundNotNull = prefix.isAllOutboundNotNull;
                     isAllOutboundNotNullPerModel = prefix.isAllOutboundNotNullPerModel;
                 }
@@ -1413,12 +1421,25 @@
                         return returnError("Couldn't parse the url since Location doesn't have acccess to the catalog object or main table is invalid.");
                     }
 
-                    isFiltered = true;
+                    var snf;
                     try {
-                        sourceObjectNodes.push(new SourceObjectNode(source[i], true, false, false, false, undefined, undefined, colTable));
+                        snf = new SourceObjectNode(source[i], true, false, false, false, undefined, undefined, colTable);
                     } catch (exp) {
                         return returnError(exp.message);
                     }
+
+                    isFiltered = true;
+
+                    // if this is the first element, then we have a root filter
+                    if (i === 0) filterProps.hasRootFilter = true;
+            
+                    // create the string filter string, if this is not the last, then it will be emptied out
+                    // for now we just want the string, later we could improve this implementation
+                    // (for recordedit the whole object would be needed and not just string)
+                    filterProps.leafFilterString = filterProps.leafFilterString ?  [filterProps.leafFilterString, snf.toString()].join('/') : snf.toString();
+
+                    // add the node to the list
+                    sourceObjectNodes.push(snf);
                     continue;
                 }
                 else if (("inbound" in source[i]) || ("outbound" in source[i])) {
@@ -1468,6 +1489,13 @@
                     }
                     lastForeignKeyNode = sn;
                     hasOnlyPrefix = false;
+
+                    // if there are foreignkey paths before this, then this is a filter in between
+                    if (filterProps.leafFilterString.length > 0) {
+                        filterProps.hasFilterInBetween = true;
+                    }
+                    // since we just saw a fk path, the filters that we have are not the leaf ones
+                    filterProps.leafFilterString = '';
                 }  else {
                     // given object was invalid
                     return returnError("Invalid object in source element index=" + i);
@@ -1487,6 +1515,7 @@
                 column: col,
                 foreignKeyPathLength: foreignKeyPathLength,
                 isFiltered: isFiltered,
+                filterProps: filterProps,
                 hasInbound: hasInbound,
                 hasPrefix: hasPrefix,
                 hasOnlyPrefix: hasOnlyPrefix,
