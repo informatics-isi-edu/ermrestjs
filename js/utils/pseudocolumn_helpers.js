@@ -1491,7 +1491,7 @@
                     hasOnlyPrefix = false;
 
                     // if there are foreignkey paths before this, then this is a filter in between
-                    if (filterProps.leafFilterString.length > 0) {
+                    if (filterProps.leafFilterString) {
                         filterProps.hasFilterInBetween = true;
                     }
                     // since we just saw a fk path, the filters that we have are not the leaf ones
