@@ -37,7 +37,7 @@
     "markdown-it": "12.3.2",
     "mime": "1.4.1",
     "moment": "2.29.4",
-    "moment-timezone": "0.5.14",
+    "moment-timezone": "0.5.35",
     "mustache": "x",
     "nock": "13.2.2",
     "q": "1.5.1",
