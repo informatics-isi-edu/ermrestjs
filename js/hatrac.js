@@ -811,14 +811,16 @@ var ERMrest = (function(module) {
         var keyValues = module._getFormattedKeyValues(this.reference.table, this.reference._context, row);
 
         var url = module._renderTemplate(template, keyValues, this.reference.table.schema.catalog, { avoidValidation: true, templateEngine: this.column.templateEngine });
+        
+        // If the template is null then throw an error
+        if (url === null || url.trim() === '')  {
+            throw new module.MalformedURIError("Some column values are null in the template or the template is invalid. The used template: " + template);
+        }
 
         // check for having hatrac
         if ((module._parseUrl(url).pathname.indexOf('/hatrac/') !== 0)) {
             throw new module.MalformedURIError("The path for uploading a url should begin with /hatrac/ .");
         }
-
-        // If the template is null then throw an error
-        if (url === null)  throw new module.MalformedURIError("Some column values are null in the template " + template);
 
         // If new url has changed then there set all other flags to false to recompute them
         if (this.url !== url) {
