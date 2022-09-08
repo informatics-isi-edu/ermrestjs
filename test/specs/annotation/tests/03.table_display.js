@@ -479,7 +479,7 @@ exports.execute = function (options) {
                                     '<figcaption class="embed-caption">' + caption + '</figcaption>' +
                                     '<div class="iframe-btn-container">' +
                                         '<a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="' + iframeURL + '">' +
-                                            '<span class="glyphicon glyphicon-fullscreen"></span> Full screen' +
+                                            '<span class="fullscreen-icon"></span> Full screen' +
                                         '</a>' +
                                     '</div>' +
                                 '</div>' +
