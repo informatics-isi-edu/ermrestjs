@@ -478,7 +478,7 @@ exports.execute = function (options) {
         describe("reference.csvDownloadLink should honor the visible-columns, ", function () {
             var baseURL = options.url + "/catalog/" + process.env.DEFAULT_CATALOG +
                             "/attributegroup/M:=export_table_annot_schema:no_export_annot/id::geq::1&id::leq::10/$M" +
-                            "/(id)=(export_table_annot_schema:f1:id)/RID=1;RID=2/$M/id=1/";
+                            "/(id)=(export_table_annot_schema:f1:id)/RID=any(1,2)/$M/id=1/";
             var qParam = "?limit=none&accept=csv&uinit=1&cid=test&download=%2A%2ANo%20Export%20Annot%2A%2A";
 
             it ("if export/<context> is defined should use it.", function () {
