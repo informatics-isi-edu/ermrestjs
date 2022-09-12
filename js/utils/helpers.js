@@ -2092,7 +2092,7 @@
                             var contentsWidthStyle = 'style="width: ' + captionContainerWidth + '"';
 
                             // fullscreen button html that is attached to the top right corner of the iframe
-                            var buttonHtml = '<div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="' + iframeSrc + '"' + fullscreenTarget + '><span class="glyphicon glyphicon-fullscreen"></span> Full screen</a></div>';
+                            var buttonHtml = '<div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="' + iframeSrc + '"' + fullscreenTarget + '><span class="fullscreen-icon"></span> Full screen</a></div>';
 
                             // Encapsulate the captionHTML inside a figcaption tag with class embed-caption
                             if (posTop) {
