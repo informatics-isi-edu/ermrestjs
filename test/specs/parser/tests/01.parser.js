@@ -908,7 +908,7 @@ exports.execute = function(options) {
                                 [
                                     "M_P2:=(fk1_col1)=(parse_schema:outbound1:id)/M_P1:=(id)=(parse_schema:outbound1_inbound1:id)",
                                     "(id)=(parse_schema:outbound1_inbound1_inbound1:id)/RID=1/$M/$M_P1/RID=2/$M",
-                                    "$M_P2/(id)=(parse_schema:outbound1_outbound1:id)/RID=3;RID=4/$M",
+                                    "$M_P2/(id)=(parse_schema:outbound1_outbound1:id)/RID=any(3,4)/$M",
                                 ].join("/"),
                                 true,
                                 "",
@@ -1089,7 +1089,7 @@ exports.execute = function(options) {
                                     "M_P1:=(id)=(parse_schema:outbound1_inbound1:id)/(id)=(parse_schema:outbound1_inbound1_inbound1:id)/RID=1/$M",
                                     "$M_P1/RID=2/$M",
                                     "$M_P2/id=1/$M",
-                                    "$M_P2/(id)=(parse_schema:outbound1_outbound1:id)/RID=3;RID=4/$M",
+                                    "$M_P2/(id)=(parse_schema:outbound1_outbound1:id)/RID=any(3,4)/$M",
                                     "$M_P2/(id)=(parse_schema:outbound1_outbound1:id)/RID=2/$M",
                                     "$M_P2/col=3/$M"
                                 ].join("/"),
@@ -1302,7 +1302,7 @@ exports.execute = function(options) {
                         expectLocation(
                             "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoCALFAS1yTnhAEZiAmIgZgF0BfLoA",
                             {"and": [ {"source": "c", "choices": ["1", 2, 3]} ]},
-                            "c=1;c=2;c=3/$M",
+                            "c=any(1,2,3)/$M",
                             true
                         );
                     });
