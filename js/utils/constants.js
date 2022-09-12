@@ -1,6 +1,8 @@
     module._ERMrestFeatures = Object.freeze({
         TABLE_RIGHTS_SUMMARY: "trs",
-        TABLE_COL_RIGHTS_SUMMARY: "tcrs"
+        TABLE_COL_RIGHTS_SUMMARY: "tcrs",
+        QUANTIFIED_VALUE_LISTS: "quantified_value_lists",
+        QUANTIFIED_RID_LISTS : "quantified_rid_lists"
     });
 
     module._ERMrestACLs = Object.freeze({
@@ -191,6 +193,13 @@
     module._pseudoColAggregateExplicitName = ["Minimum", "Maximum", "Number of", "Number of distinct", "List of", "List of distinct"];
 
     module._systemColumns = ['RID', 'RCB', 'RMB', 'RCT', 'RMT'];
+    module._systemColumnNames = Object.freeze({
+        RID: 'RID',
+        RCB: 'RCB',
+        RMB: 'RMB',
+        RCT: 'RCT',
+        RMT: 'RMT'
+    });
 
     // NOTE: currently we only ignore the system columns
     module._ignoreDefaultsNames = module._systemColumns;

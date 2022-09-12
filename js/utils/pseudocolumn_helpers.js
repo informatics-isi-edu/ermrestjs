@@ -14,18 +14,76 @@
             return (typeof v === "string") ? v :JSON.stringify(v);
         },
 
-        // parse choices constraint
-        parseChoices: function (choices, column) {
-            var encode = module._fixedEncodeURIComponent;
-            return choices.reduce(function (prev, curr, i) {
-                var res = prev += (i !== 0 ? ";": "");
-                if (isDefinedAndNotNull(curr)) {
-                    res += encode(column) + "=" + encode(_renderFacetHelpers.valueToString(curr));
+        /**
+         * Given a list of values and column name, return the appropriate 
+         * disjunctive quantified values filter.
+         * 
+         * @param {any[]} choices an array of values (value could be null)
+         * @param {string} column  the name of the column
+         * @param {any} catalogObject the catalog object (to check if alternative syntax is available)
+         * @returns 
+         */
+        parseChoices: function (choices, column, catalogObject) {
+            if (!Array.isArray(choices) || choices.length === 0) {
+                return '';
+            }
+
+            var encode = module._fixedEncodeURIComponent, nullFilter = module._ERMrestFilterPredicates.NULL;
+            var canUseQualified = false, hasNull = false, colsString ='', notFirst = false;
+
+            // returns a simple key=value
+            var eqSyntax = function (val) {
+                if (isDefinedAndNotNull(val)) {
+                    return encode(column) + "=" + encode(_renderFacetHelpers.valueToString(val));
                 } else {
-                    res += encode(column) + "::null::";
+                    return encode(column) + nullFilter;
                 }
-                return res;
-            }, "");
+            };
+
+            // return a simple key=value if the length is one
+            if (choices.length === 1) {
+                return eqSyntax(choices[0]);
+            } 
+
+            // see if the qualified syntax can be used
+            if (catalogObject) {
+                if (column === module._systemColumnNames.RID) {
+                    canUseQualified = catalogObject.features[module._ERMrestFeatures.QUANTIFIED_RID_LISTS];
+                } else {
+                    canUseQualified = catalogObject.features[module._ERMrestFeatures.QUANTIFIED_VALUE_LISTS];
+                }
+            }
+
+            if (canUseQualified) {
+                var notNulls = [];
+                choices.forEach(function (ch) {
+                    if (!isDefinedAndNotNull(ch)) {
+                        hasNull = true;
+                        return;
+                    }
+                    notNulls.push(encode(_renderFacetHelpers.valueToString(ch)));
+                });
+
+                if (notNulls.length === 0) {
+                    colsString = '';
+                }
+                else if (notNulls.length === 1) {
+                    colsString = encode(column) + "=" + notNulls[0];
+                }
+                else {
+                    colsString = encode(column) + '=any(' + notNulls.join(',') + ')';
+                }
+
+                if (hasNull) {
+                    colsString += ';' + encode(column) + nullFilter;
+                }
+            } else { 
+                colsString += choices.reduce(function (prev, curr, i) {
+                    return res + (i !== 0 ? ";": "") + eqSyntax(column, curr);    
+                }, "");
+            }
+
+            return colsString;
         },
 
         // parse ranges constraint
@@ -363,7 +421,7 @@
             constraints = []; // the current constraints for this source
 
             if (Array.isArray(term[module._facetFilterTypes.CHOICE])) {
-                parsed = _renderFacetHelpers.parseChoices(term[module._facetFilterTypes.CHOICE], col);
+                parsed = _renderFacetHelpers.parseChoices(term[module._facetFilterTypes.CHOICE], col, catalogObject);
                 if (!parsed) {
                     return _renderFacetHelpers.getErrorOutput(facetErrors.invalidChoice, i);
                 }
