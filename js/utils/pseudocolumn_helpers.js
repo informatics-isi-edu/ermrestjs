@@ -1517,6 +1517,15 @@
                     }
 
                     fk = fkObj.object;
+
+                    // if there are foreignkey paths before this, then this is a filter in between
+                    if (filterProps.leafFilterString && foreignKeyPathLength > 0) {
+                        filterProps.hasFilterInBetween = true;
+                    }
+                    // since we just saw a fk path, the filters that we have are not the leaf ones
+                    filterProps.leafFilterString = '';
+
+                    // add one to the length
                     foreignKeyPathLength++;
 
                     // inbound
@@ -1547,13 +1556,6 @@
                     }
                     lastForeignKeyNode = sn;
                     hasOnlyPrefix = false;
-
-                    // if there are foreignkey paths before this, then this is a filter in between
-                    if (filterProps.leafFilterString) {
-                        filterProps.hasFilterInBetween = true;
-                    }
-                    // since we just saw a fk path, the filters that we have are not the leaf ones
-                    filterProps.leafFilterString = '';
                 }  else {
                     // given object was invalid
                     return returnError("Invalid object in source element index=" + i);
