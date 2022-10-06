@@ -21,7 +21,6 @@
          * @param {any[]} choices an array of values (value could be null)
          * @param {string} column  the name of the column
          * @param {any} catalogObject the catalog object (to check if alternative syntax is available)
-         * @returns 
          */
         parseChoices: function (choices, column, catalogObject) {
             if (!Array.isArray(choices) || choices.length === 0) {
@@ -295,6 +294,7 @@
      * @param       {string} tableName the starting table name
      * @param       {string} catalogId the catalog id
      * @param       {ERMrest.catalog} [catalogObject] the catalog object (could be undefined)
+     * @param       {ERMrest.Reference} [referenceObject] the reference object (could be undefined)
      * @param       {Array} usedSourceObjects (optional) the source objects that are used in other parts (outbound)
      * @param       {Object[]} [consNames] the constraint names (could be undefined)
      * @constructor
@@ -305,7 +305,7 @@
      *
      * @ignore
      */
-    _renderFacet = function(json, alias, schemaName, tableName, catalogId, catalogObject, usedSourceObjects, forcedAliases, consNames) {
+    _renderFacet = function(json, alias, schemaName, tableName, catalogId, catalogObject, referenceObject, usedSourceObjects, forcedAliases, consNames) {
         var facetErrors = module._facetingErrors;
         var rootSchemaName = schemaName, rootTableName = tableName;
 
@@ -327,7 +327,7 @@
             rightJoins = [], // if we have null in the filter, we have to use join
             innerJoins = [], // all the other facets that have been parsed
             encode = module._fixedEncodeURIComponent, sourcekey,
-            i, term, col, path, ds, constraints, parsed, useRightJoin;
+            i, term, col, path, ds, constraints, parsed, hasNullChoice, useRightJoin;
 
         var pathPrefixAliasMapping = new PathPrefixAliasMapping(
             forcedAliases,
@@ -390,13 +390,15 @@
             }
 
             // ---------------- parse the path ---------------- //
+            // TODO check for the facets and use the fast filter
             path = ""; // the source path if there are some joins
             useRightJoin = false;
+            hasNullChoice = _renderFacetHelpers.hasNullChoice(term);
             if (_sourceColumnHelpers._sourceHasNodes(term.source)) {
 
                 // if there's a null filter and source has path, we have to use right join
                 // parse the datasource
-                ds = _renderFacetHelpers.parseDataSource(term.source, sourcekey, alias, rootTable, tableName, catalogId, _renderFacetHelpers.hasNullChoice(term), consNames, pathPrefixAliasMapping);
+                ds = _renderFacetHelpers.parseDataSource(term.source, sourcekey, alias, rootTable, tableName, catalogId, hasNullChoice, consNames, pathPrefixAliasMapping);
 
                 // if the data-path was invalid, ignore this facet
                 if (ds === null) {

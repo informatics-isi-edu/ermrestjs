@@ -3436,6 +3436,22 @@ FacetColumn.prototype = {
         return this._scalarValuesRef;
     },
 
+    get fastFilterSourceObjectWrapper() {
+        if (this._fastFilterSource === undefined) {
+            var res = null;
+            var fastFilter = this._facetObject.fast_filter_source;
+            if (isObjectAndNotNull(fastFilter)) {
+                try {
+                    res = new SourceObjectWrapper(fastFilter, this.reference.table, module._constraintNames);
+                } catch (exp) {
+                    res = null;
+                }
+            }
+            this._fastFilterSource = res;
+        }
+        return this._fastFilterSource;
+    },
+
     /**
      * When presenting the applied choice filters, the displayname might be differnt from the value.
      * This only happens in case of entity-picker. Othercases we can just return the list of fitleres as is.

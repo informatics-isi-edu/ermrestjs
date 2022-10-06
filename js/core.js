@@ -1424,7 +1424,6 @@
             return this._uri;
         },
 
-        //TODO should be removed but chaise is using this
         get reference() {
             if (!this._reference) {
                 this._reference = module._createReference(module.parse(this._uri), this.schema.catalog);
