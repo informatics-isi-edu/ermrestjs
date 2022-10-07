@@ -1331,10 +1331,11 @@ exports.execute = function(options) {
                             true
                         );
 
+                        var useQuantifiedSyntax = options.catalog.features.quantified_value_lists;
                         expectLocation(
                             "N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoQkcxsALOecAAgCMQBdAXzaA",
                             {"and": [ {"source": "c", "search": ["a b"]} ]},
-                            "c::ciregexp::a&c::ciregexp::b/$M",
+                            useQuantifiedSyntax ? 'c::ciregexp::all(a,b)/$M' : 'c::ciregexp::a&c::ciregexp::b/$M',
                             true
                         );
                     });

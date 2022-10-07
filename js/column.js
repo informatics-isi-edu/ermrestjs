@@ -4336,7 +4336,7 @@ ColumnGroupAggregateFn.prototype = {
             path +=")";
         }
 
-        var loc = new AttributeGroupLocation(self._ref.location.service, self._ref.table.schema.catalog.id, path, searchObj, sortObj);
+        var loc = new AttributeGroupLocation(self._ref.location.service, self._ref.table.schema.catalog, path, searchObj, sortObj);
 
         var aggregateColumns = [];
 

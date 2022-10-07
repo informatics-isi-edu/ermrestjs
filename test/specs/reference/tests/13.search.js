@@ -37,8 +37,10 @@ exports.execute = function (options) {
         return url;
     };
 
+    var useQuantifiedSyntax = false;
     beforeAll(function() {
         options.ermRest.appLinkFn(appLinkFn);
+        useQuantifiedSyntax = options.catalog.features.quantified_value_lists;
     });
 
     describe("Reference Search,", function () {
@@ -118,8 +120,9 @@ exports.execute = function (options) {
             it('search() using conjunction of words. ', function(done) {
                 reference2 = reference1.search("\"hanks\" 111111");
                 expect(reference2.location.searchTerm).toBe("\"hanks\" 111111", "searchTerm missmatch.");
+                var encodedNumber = options.ermRest._fixedEncodeURIComponent(intRegexPrefix + "111111" + intRegexSuffix);
                 expect(reference2.location.ermrestCompactPath).toBe(
-                    path + "*::ciregexp::hanks&*::ciregexp::" +  options.ermRest._fixedEncodeURIComponent(intRegexPrefix + "111111" + intRegexSuffix),
+                    useQuantifiedSyntax ? `${path}*::ciregexp::all(hanks,${encodedNumber})` : `${path}*::ciregexp::hanks&*::ciregexp::${encodedNumber}`,
                     "ermrestCompactPath missmatch."
                 );
 
@@ -350,7 +353,7 @@ exports.execute = function (options) {
                 reference2 = reference1.search("\"wallace\" \"VIIII\"");
                 expect(reference2.location.searchTerm).toBe("\"wallace\" \"VIIII\"", "searchTerm missmatch.");
                 expect(reference2.location.ermrestCompactPath).toBe(
-                    path + "*::ciregexp::wallace&*::ciregexp::VIIII",
+                    useQuantifiedSyntax ? `${path}*::ciregexp::all(wallace,VIIII)` : `${path}*::ciregexp::wallace&*::ciregexp::VIIII`,
                     "ermrestCompactPath missmatch."
                 );
 
@@ -376,8 +379,9 @@ exports.execute = function (options) {
                 // searching for integer values converts them into a regular expressio
                 reference2 = reference1.search("\"william\" \"171717\"");
                 expect(reference2.location.searchTerm).toBe("\"william\" \"171717\"", "searchTerm missmatch.");
+                var encodedNumber = options.ermRest._fixedEncodeURIComponent(intRegexPrefix + "171717" + intRegexSuffix);
                 expect(reference2.location.ermrestCompactPath).toBe(
-                    path + "*::ciregexp::william&*::ciregexp::" + options.ermRest._fixedEncodeURIComponent(intRegexPrefix + "171717" + intRegexSuffix),
+                     useQuantifiedSyntax ? `${path}*::ciregexp::all(william,${encodedNumber})` : `${path}*::ciregexp::william&*::ciregexp::${encodedNumber}`,
                     "ermrestCompactPath missmatch."
                 );
 
@@ -469,8 +473,9 @@ exports.execute = function (options) {
 
             it('location should have correct search parameters ', function() {
                 expect(reference3.location.searchTerm).toBe("hanks 111111", "searchTerm missmatch.");
+                var encodedNumber = options.ermRest._fixedEncodeURIComponent(intRegexPrefix + "111111" + intRegexSuffix);
                 expect(reference3.location.ermrestCompactPath).toBe(
-                    path + "*::ciregexp::hanks" + "&" + "*::ciregexp::" + options.ermRest._fixedEncodeURIComponent(intRegexPrefix + "111111" + intRegexSuffix),
+                    useQuantifiedSyntax ? `${path}*::ciregexp::all(hanks,${encodedNumber})` : `${path}*::ciregexp::hanks&*::ciregexp::${encodedNumber}`,
                     "ermrestCompactPath missmatch."
                 );
             });

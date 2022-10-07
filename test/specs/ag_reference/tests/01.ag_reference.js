@@ -35,7 +35,7 @@ exports.execute = function (options) {
         var checkLocation = function (objName, obj, path) {
             expect(obj).toBeDefined(objName + " was not defined.");
             expect(obj.service).toBe(options.url, objName + " service missmatch.");
-            expect(obj.catalogId).toBe(catID, objName + " catalogId missmatch.");
+            expect(obj.catalog.id).toBe(catID, objName + " catalog missmatch.");
             expect(obj.path).toBe(path, objName + " path missmatch.");
         };
 
@@ -59,10 +59,10 @@ exports.execute = function (options) {
 
         describe("AttributeGroupLocation, ", function () {
             beforeAll(function () {
-                loc = new options.ermRest.AttributeGroupLocation(options.url, catID, schemaName + ":" + mainTable);
+                loc = new options.ermRest.AttributeGroupLocation(options.url, options.catalog, schemaName + ":" + mainTable);
                 locWithModifiers = new options.ermRest.AttributeGroupLocation(
                     options.url,
-                    catID,
+                    options.catalog,
                     schemaName + ":" + mainTable,
                     {"column": "col", "term": "test"}, // search
                     [{"column": "alias"}], // sort
@@ -583,7 +583,7 @@ exports.execute = function (options) {
             it ("Location should handle it.", function () {
                 unicodeLoc = new options.ermRest.AttributeGroupLocation(
                     options.url,
-                    catID,
+                    options.catalog,
                     schemaName + ":" + unicodeTableEncoded,
                     {"column": decodedCol, "term": "test"}, // search
                     [{"column": decodedCol}], // sort
