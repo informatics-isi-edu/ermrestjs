@@ -1577,7 +1577,7 @@
             if (terms.length < 2) useQuantified = false; 
 
             if (useQuantified) {
-                filterString = column + module._ERMrestFilterPredicates.CASE_INS_REG_EXP + 'all('
+                filterString = column + module._ERMrestFilterPredicates.CASE_INS_REG_EXP + 'all(';
             }
             terms.forEach(function(t, index, array) {
                 var exp;

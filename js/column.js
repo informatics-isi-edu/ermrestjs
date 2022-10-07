@@ -3442,7 +3442,7 @@ FacetColumn.prototype = {
             var fastFilter = this._facetObject.fast_filter_source;
             if (isObjectAndNotNull(fastFilter)) {
                 try {
-                    res = new SourceObjectWrapper(fastFilter, this.reference.table, module._constraintNames);
+                    res = new SourceObjectWrapper(fastFilter, this.reference.table, module._constraintNames, true);
                 } catch (exp) {
                     res = null;
                 }
@@ -4018,7 +4018,7 @@ FacetColumn.prototype = {
             }
         });
 
-        newReference._location = this.reference._location._clone();
+        newReference._location = this.reference._location._clone(newReference);
         newReference._location.beforeObject = null;
         newReference._location.afterObject = null;
 
