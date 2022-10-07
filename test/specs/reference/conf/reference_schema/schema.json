@@ -234,6 +234,18 @@
                         },
                         {
                             "source": [
+                                {"inbound": ["reference_schema", "id_fk_association_related_to_reference"]},
+                                {"or": [
+                                    {"filter": "RCT", "operator": "::null::"},
+                                    {"filter": "RID", "operator": "::null::"}
+                                ]},
+                                {"outbound": ["reference_schema", "fk_to_inbound_related_reference_table"]},
+                                "id"
+                            ],
+                            "markdown_name": "associative related with filter in between"
+                        },
+                        {
+                            "source": [
                                 {"filter": "RCT", "negate": true, "operand_pattern": "{{{$moment.year}}}-{{{$moment.month}}}-{{{$moment.day}}}", "operator": "::lt::"},
                                 {"inbound": ["reference_schema","fromname_fk_inbound_related_to_reference"]},
                                 {"inbound":["reference_schema","fk_to_inbound_related_reference_table"]},

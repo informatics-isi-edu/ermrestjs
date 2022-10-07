@@ -1042,11 +1042,12 @@
 
         /**
          * if the location has visible facet/filter/customfacet
-         * NOTE: if location only has hidden facets, this will return false.
+         * NOTE: if location only has hidden facets or custom facets without displayname, 
+         *        this will return false.
          * @return {Boolean}]
          */
         get isConstrained() {
-            return (this.facets && this.facets.hasVisibleFilters) || this.searchTerm || this.filter || this.customFacets;
+            return (this.facets && this.facets.hasVisibleFilters) || this.searchTerm || this.filter || (this.customFacets && this.customFacets.displayname);
         },
 
         /**

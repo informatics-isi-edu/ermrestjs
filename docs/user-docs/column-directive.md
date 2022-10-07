@@ -145,13 +145,15 @@ Therefore the following are acceptable ways of defining source path:
 
   - `{ "and": [` _filter_ `,` ... `], "negate": ` _negate_ `}`
     - A logical conjunction of multiple _filter_ clauses is applied to the query to constrain matching rows.
-	- The logical result is negated only if _negate_ is `true`.
-	- Each _filter_ clause may be a terminal filter element, conjunction, or disjunction.
+	  - The logical result is negated only if _negate_ is `true`.
+	  - Each _filter_ clause may be a terminal filter element, conjunction, or disjunction.
+	  - This syntax cannot be used with all-outbound paths or local columns in a non-`filter` context.
 
   - `{ "or": [` _filter_ `,` ... `], "negate": ` _negate_ `}`
     - A logical disjunction of multiple _filter_ clauses is applied to the query to constrain matching rows.
 	  - The logical result is negated only if _negate_ is `true`.
 	  - Each _filter_ clause may be a terminal filter element, conjunction, or disjunction.
+	  - This syntax cannot be used with all-outbound paths or local columns in a non-`filter` context.
 
   - `{ "filter":` _column_ `, "operand_pattern":` _value_ `, "operator":` _operator_ `, "negate":` _negate_ `}`
     - An individual filter _path element_ is applied to the query or individual _filter_ clauses participate in a conjunction or disjunction.
@@ -177,6 +179,7 @@ Therefore the following are acceptable ways of defining source path:
     - The _value_ specifies the constant operand for a binary constraint operator and must be computed to a non-empty value. [Pattern expansion](annotation.md#pattern-expansion) MAY be used to access [the pre-defined values in templating envorinment](mustache-templating.md#using-pre-defined-attributes). Like other pattern expansions the default `template_engine` will be applied and if you want to change it, you can define `template_engine` alongside the `operand_pattern`.
 
     - The logical result of the constraint is negated only if _negate_ is `true`.
+    - This syntax cannot be used with all-outbound paths or local columns in a non-`filter` context.
 
 
   The following are some examples of defining source path:
