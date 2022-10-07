@@ -28,7 +28,7 @@
             }
 
             var encode = module._fixedEncodeURIComponent, nullFilter = module._ERMrestFilterPredicates.NULL;
-            var canUseQualified = false, hasNull = false, colsString ='', notFirst = false;
+            var canUseQuantified = false, hasNull = false, colsString ='', notFirst = false;
 
             // returns a simple key=value
             var eqSyntax = function (val) {
@@ -44,16 +44,16 @@
                 return eqSyntax(choices[0]);
             } 
 
-            // see if the qualified syntax can be used
+            // see if the quantified syntax can be used
             if (catalogObject) {
                 if (column === module._systemColumnNames.RID) {
-                    canUseQualified = catalogObject.features[module._ERMrestFeatures.QUANTIFIED_RID_LISTS];
+                    canUseQuantified = catalogObject.features[module._ERMrestFeatures.QUANTIFIED_RID_LISTS];
                 } else {
-                    canUseQualified = catalogObject.features[module._ERMrestFeatures.QUANTIFIED_VALUE_LISTS];
+                    canUseQuantified = catalogObject.features[module._ERMrestFeatures.QUANTIFIED_VALUE_LISTS];
                 }
             }
 
-            if (canUseQualified) {
+            if (canUseQuantified) {
                 var notNulls = [];
                 choices.forEach(function (ch) {
                     if (!isDefinedAndNotNull(ch)) {
@@ -121,15 +121,21 @@
             return res;
         },
 
-        // parse search constraint
-        parseSearch: function (search, column, alias) {
+        /**
+         * parse search constraint
+         * @param {string} search the search term
+         * @param {string} column the column name
+         * @param {string} [alias] the alias name (could be undefined)
+         * @param {ERMrest.Catalog} catalogObject the catalog object (to check if alternative syntax is available)
+         */
+        parseSearch: function (search, column, alias, catalogObject) {
             var res, invalid = false;
             res = search.reduce(function (prev, curr, i) {
                 if (curr == null) {
                     invalid = true;
                     return "";
                 } else {
-                    return prev + (i !== 0 ? ";": "") + _convertSearchTermToFilter(_renderFacetHelpers.valueToString(curr), column, alias);
+                    return prev + (i !== 0 ? ";": "") + _convertSearchTermToFilter(_renderFacetHelpers.valueToString(curr), column, alias, catalogObject);
                 }
             }, "");
 
@@ -155,9 +161,10 @@
          * @param {ERMrest.Table} rootTable the root table
          * @param {string} alias the alias for the root table
          * @param {Object} pathPrefixAliasMapping the path prefix alias mapping object (used for sharing prefix)
+         * @param {ERMrest.Catalog} catalogObject the catalog object (to check if alternative syntax is available)
          * @returns the path that represents the search and join statments needed for search
          */
-        parseSearchBox: function (search, rootTable, alias, pathPrefixAliasMapping) {
+        parseSearchBox: function (search, rootTable, alias, pathPrefixAliasMapping, catalogObject) {
             // by default we're going to apply search to all the columns
             var searchColumns = [{name: "*"}], path = "", searchDef,
                 usedAlias = "", proposedAlias = "", addAliasPerPath = false, addedAliasIndex = 1;
@@ -211,7 +218,7 @@
             }
 
             return path + searchColumns.map(function (col) {
-                return _renderFacetHelpers.parseSearch(search, col.name, col.alias);
+                return _renderFacetHelpers.parseSearch(search, col.name, col.alias, catalogObject);
             }).join(";") + ((!addAliasPerPath && path.length > 0) ? ("/$" + alias) : "");
         },
 
@@ -364,7 +371,7 @@
                     }
 
                     // add the main search filter
-                    innerJoins.push(_renderFacetHelpers.parseSearchBox(term[module._facetFilterTypes.SEARCH], rootTable, alias, pathPrefixAliasMapping));
+                    innerJoins.push(_renderFacetHelpers.parseSearchBox(term[module._facetFilterTypes.SEARCH], rootTable, alias, pathPrefixAliasMapping, catalogObject));
 
                     // we can go to the next source in the and filter
                     continue;
@@ -437,7 +444,7 @@
                 constraints.push(parsed);
             }
             if (Array.isArray(term[module._facetFilterTypes.SEARCH])) {
-                parsed = _renderFacetHelpers.parseSearch(term[module._facetFilterTypes.SEARCH], col);
+                parsed = _renderFacetHelpers.parseSearch(term[module._facetFilterTypes.SEARCH], col, null, catalogObject);
                 if (!parsed) {
                     return _renderFacetHelpers.getErrorOutput(facetErrors.invalidSearch, i);
                 }

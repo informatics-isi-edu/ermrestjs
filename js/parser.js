@@ -1538,8 +1538,19 @@
      * @return {string} corresponding ermrest filter
      * @private
      */
-    _convertSearchTermToFilter = function (term, column, alias) {
+    _convertSearchTermToFilter = function (term, column, alias, catalogObject) {
         var filterString = "";
+
+        // see if the quantified_value_lists syntax can be used
+        var useQuantified = false;
+        if (catalogObject) {
+            if (column === module._systemColumnNames.RID) {
+                useQuantified = catalogObject.features[module._ERMrestFeatures.QUANTIFIED_RID_LISTS];
+            } else {
+                useQuantified = catalogObject.features[module._ERMrestFeatures.QUANTIFIED_VALUE_LISTS];
+            }
+        }
+
         column = (typeof column !== 'string' || column === "*") ? "*": module._fixedEncodeURIComponent(column);
         if (isStringAndNotEmpty(alias)) {
             column = alias + ":" + column;
@@ -1562,6 +1573,12 @@
 
             if (term.trim().length > 0 ) terms = terms.concat(term.trim().split(/[\s]+/)); // split by white spaces
 
+            // the quantified syntax only makes sense when we have more than one term
+            if (terms.length < 2) useQuantified = false; 
+
+            if (useQuantified) {
+                filterString = column + module._ERMrestFilterPredicates.CASE_INS_REG_EXP + 'all('
+            }
             terms.forEach(function(t, index, array) {
                 var exp;
                 // matches an integer, aka just a number
@@ -1575,8 +1592,15 @@
                     exp = module._encodeRegexp(t);
                 }
 
-                filterString += (index === 0? "" : "&") + column + module._ERMrestFilterPredicates.CASE_INS_REG_EXP + module._fixedEncodeURIComponent(exp);
+                if (useQuantified) {
+                    filterString += (index === 0? "" : ",") + module._fixedEncodeURIComponent(exp);
+                } else {
+                    filterString += (index === 0? "" : "&") + column + module._ERMrestFilterPredicates.CASE_INS_REG_EXP + module._fixedEncodeURIComponent(exp);
+                }
             });
+            if (useQuantified) {
+                filterString += ')';
+            }
         }
 
         return filterString;

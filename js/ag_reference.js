@@ -158,7 +158,7 @@ AttributeGroupReference.prototype = {
              var loc = this.location;
 
              this._uri = [
-                 loc.service, "catalog", loc.catalogId, "attributegroup", this.ermrestPath
+                 loc.service, "catalog", loc.catalog.id, "attributegroup", this.ermrestPath
              ].join("/");
          }
          return this._uri;
@@ -172,7 +172,7 @@ AttributeGroupReference.prototype = {
       */
      get unfilteredReference() {
          verify(this.table, "table is not defined for current reference");
-         var newLocation = new AttributeGroupLocation(this.location.service, this.location.catalogId, [module._fixedEncodeURIComponent(this.table.schema.name),module._fixedEncodeURIComponent(this.table.name)].join(":"));
+         var newLocation = new AttributeGroupLocation(this.location.service, this.location.catalog, [module._fixedEncodeURIComponent(this.table.schema.name),module._fixedEncodeURIComponent(this.table.name)].join(":"));
          return new AttributeGroupReference(this._keyColumns, this._aggregateColumns, newLocation, this._catalog, this.table, this._context);
      },
 
@@ -468,7 +468,7 @@ AttributeGroupReference.prototype = {
         var aggregatePromises = [];
         var http = this._server.http;
         for (var j = 0; j < urlSet.length; j++) {
-            aggregatePromises.push(http.get(loc.service + "/catalog/" + loc.catalogId + "/aggregate/" + urlSet[j], config));
+            aggregatePromises.push(http.get(loc.service + "/catalog/" + loc.catalog.id + "/aggregate/" + urlSet[j], config));
         }
 
         module._q.all(aggregatePromises).then(function getAggregates(response) {
@@ -1080,7 +1080,7 @@ AttributeGroupColumn.prototype = {
  * Constructor for creating location object for creating a {@link ERMrest.AttributeGroupReference}
 
  * @param       {string} service      the service part of url
- * @param       {string} catalog      the catalog name
+ * @param       {ERMrest.catalog} catalog      the catalog object
  * @param       {String} path         the whole path string
  * @param       {Object} searchObject search obect, it should have `term`, and `column`.
  * @param       {Object[]} sortObject sort object, An array of objects with `column`, and `descending` as attribute.
@@ -1096,11 +1096,11 @@ function AttributeGroupLocation(service, catalog, path, searchObject, sortObject
     this.service = service;
 
     /**
-     * id of the catalog
+     * catalog object
      *
-     * @type {stirng}
+     * @type {ERMrest.Catalog}
      */
-    this.catalogId = catalog;
+    this.catalog = catalog;
 
     /**
      * The path that will be used for generating the uri in read.
@@ -1136,7 +1136,7 @@ function AttributeGroupLocation(service, catalog, path, searchObject, sortObject
          * The search filter string which can be used for creating the uri
          * @type {?string}
          */
-        this.searchFilter = _convertSearchTermToFilter(this.searchTerm, this.searchColumn);
+        this.searchFilter = _convertSearchTermToFilter(this.searchTerm, this.searchColumn, this.catalog);
     }
 
     /**
@@ -1194,7 +1194,7 @@ AttributeGroupLocation.prototype = {
      */
     changeSearchTerm: function (term) {
         var searchObject = {"term": term, "column": this.searchColumn};
-        return new AttributeGroupLocation(this.service, this.catalogId, this.path, searchObject, this.sortObject, this.afterObject, this.beforeObject);
+        return new AttributeGroupLocation(this.service, this.catalog, this.path, searchObject, this.sortObject, this.afterObject, this.beforeObject);
     },
 
     /**
@@ -1204,7 +1204,7 @@ AttributeGroupLocation.prototype = {
      * @return {ERMRest.AttributeGroupLocation}
      */
     changeSort: function (sort) {
-        return new AttributeGroupLocation(this.service, this.catalogId, this.path, this.searchObject, sort);
+        return new AttributeGroupLocation(this.service, this.catalog, this.path, this.searchObject, sort);
     },
 
     /**
@@ -1214,7 +1214,7 @@ AttributeGroupLocation.prototype = {
      * @return {ERMRest.AttributeGroupLocation}
      */
     changePage: function (afterObject, beforeObject) {
-        return new AttributeGroupLocation(this.service, this.catalogId, this.path, this.searchObject, this.sortObject, afterObject, beforeObject);
+        return new AttributeGroupLocation(this.service, this.catalog, this.path, this.searchObject, this.sortObject, afterObject, beforeObject);
     }
 };
 
@@ -1277,7 +1277,7 @@ module.BucketAttributeGroupReference = BucketAttributeGroupReference;
  * @constructor
  */
 function BucketAttributeGroupReference(baseColumn, baseRef, min, max, numberOfBuckets, bucketWidth) {
-    var location = new AttributeGroupLocation(baseRef.location.service, baseRef.table.schema.catalog.id, baseRef.location.ermrestCompactPath);
+    var location = new AttributeGroupLocation(baseRef.location.service, baseRef.table.schema.catalog, baseRef.location.ermrestCompactPath);
     var binTerm = "bin(" + module._fixedEncodeURIComponent(baseColumn.name) + ";" + numberOfBuckets + ";" + module._fixedEncodeURIComponent(min) + ";" + module._fixedEncodeURIComponent(max) + ")";
 
     var keyColumns = [
