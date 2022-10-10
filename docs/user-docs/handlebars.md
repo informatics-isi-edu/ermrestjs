@@ -244,7 +244,7 @@ Handlebars allows you to access keys/variables which have spaces ` ` or special 
 To access these variables in another block helper
 
 ```
-{{#encode [str with a space]}}{{/ecnode}}
+{{#encode [str with a space]}}{{/encode}}
 {{#escape [str with a space]}}{{/escape}}
 ```
 
@@ -488,9 +488,9 @@ NOTE: When looking up a key to get its value, `null` (if value is `null`) or `un
 
 You can use the `encode` helper to get strings in URL encoded format. It accepts more than one string that needs to be encoded
 ```
-age={{#encode age}}{{/encode}}
+age={{#encode ageVar}}{{/encode}}
 ```
-for context `age=10` will result in `age%3D10`
+for context `ageVar=10` will result in `age%3D10`
 
 In addition, you can provide multiple inputs too which are concatenated and then encoded. For example,
 ```
