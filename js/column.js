@@ -286,7 +286,7 @@ ReferenceColumn.prototype = {
     },
 
     get commentDisplay() {
-        if (this._comment === undefined) {
+        if (this._commentDisplay === undefined) {
             if (this.sourceObject && _isValidModelComment(this.sourceObject.comment) && _isValidModelCommentDisplay(this.sourceObject.comment_display)) {
                 // only change commentDisplay if comment and comment_display are both defined
                 this._commentDisplay = this.sourceObject.comment_display;
