@@ -190,14 +190,17 @@ You can attach attributes to the link.
 ### 2. Download Button
 
 Download button is a link with some predefined attributes. You can use these attributes to ensure consistent display for the download buttons:
-  - `download` and `target="_blank"` will allow it to open in a new tab and trigger the browser's default download behavior.
-  - `.download-alt` will change the link to look like the following:
-![download-alt btn](https://raw.githubusercontent.com/informatics-isi-edu/ermrestjs/master/docs/resources/download-alt-btn.png)
+  - `download` will trigger the browser's default download behavior and displays the links like the following:
+![download default UI](https://raw.githubusercontent.com/informatics-isi-edu/ermrestjs/master/docs/resources/download-alt-btn.png)
 
   - `.download` will change the link to look like the following:
-![download btn](https://raw.githubusercontent.com/informatics-isi-edu/ermrestjs/master/docs/resources/download-btn.png)
+![alternative download UI](https://raw.githubusercontent.com/informatics-isi-edu/ermrestjs/master/docs/resources/download-btn.png)
+
+  - If you would like to create your own download button, we suggest adding a class attribute here and using this class for definining your own CSS rules. 
+    - Chaise is defining rules based on `a[download]` selector. You need to ensure that the default CSS rules are overriden and the new ones are added.
 
   - `.asset-permission` can be added to validate whether the user can download the asset before a download is attempted.
+
   - `.external-link` can be added to show a notification to the user when they are being navigated away from chaise for external links and assets hosted elsewhere.
 
 Example:

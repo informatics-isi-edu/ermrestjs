@@ -2476,7 +2476,7 @@ AssetPseudoColumn.prototype.formatPresentation = function(data, context, templat
         sameHost = metadata.sameHost;
 
     // otherwise return a download link
-    var template = "[{{{caption}}}]({{{url}}}){download ." + classNames.download + " " + (sameHost ? "." + classNames.assetPermission : "") + "}";
+    var template = "[{{{caption}}}]({{{url}}}){download " + (sameHost ? "." + classNames.assetPermission : "") + "}";
     var url = data[this._baseCol.name];
 
     // only add query parameters if same origin
