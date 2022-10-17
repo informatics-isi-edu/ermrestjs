@@ -274,6 +274,17 @@ ISO datetime is {{{$moment.ISOString}}}
 }
 ```
 
+##### Example
+If the web url is `https://dev.isrd.isi.edu:8080/chaise/recordset/#1/isa:dataset`, the above object would look something like:
+```
+{
+    origin: "https://dev.isrd.isi.edu",
+    host: "dev.isrd.isi.edu:8080",
+    hostname: "dev.isrd.isi.edu",
+    chaise_path: "/chaise/"
+}
+```
+
 #### $session Usage
 `$session` is an object that gives you access to information about the current logged in user's session. The properties are the same properties returned from the webauthn response. The following are some of the properties included (subject to change as properties are added and removed from webauthn):
 ```

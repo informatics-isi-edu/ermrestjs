@@ -365,7 +365,7 @@ exports.execute = function (options) {
                 '1000', '10001', 'filename', '1,242', 'md5', 'sha256',
                 '',
                 '<h2>filename</h2>\n',
-                '<a href="https://dev.isrd.isi.edu?uinit=1&amp;cid=test" download="" class="download-alt asset-permission">filename</a>',
+                '<a href="https://dev.isrd.isi.edu?uinit=1&amp;cid=test" download="" class="asset-permission">filename</a>',
                 'filename4',
                 '4'
             ];

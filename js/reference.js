@@ -973,9 +973,10 @@
          * Given a list of facet and filters, will add them to the existing conjunctive facet filters.
          *
          * @param {Object[]} facetAndFilters - an array of facets that will be added
+         * @param {Object} customFacets - the custom facets object
          * @return {ERMrest.Reference}
          */
-        addFacets: function (facetAndFilters) {
+        addFacets: function (facetAndFilters, customFacets) {
             verify(Array.isArray(facetAndFilters) && facetAndFilters.length > 0, "given input must be an array");
 
             var loc = this.location;
@@ -993,6 +994,10 @@
 
             // merge the existing facets with the input
             newReference._location.facets = {"and": facetAndFilters.concat(existingFilters)};
+
+            if (isObjectAndNotNull(customFacets)) {
+                newReference._location.customFacets = customFacets;
+            }
 
             return newReference;
         },

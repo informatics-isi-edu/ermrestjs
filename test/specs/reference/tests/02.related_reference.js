@@ -87,6 +87,15 @@ exports.execute = function(options) {
             expect(loc.tableName).toBe(expectedTable, "table name was not as expected for tuple index="+ index);
         }
 
+        function checkFilterProps (rel, hasRootFilter, hasFilterInBetween, leafFilterString, message) {
+            expect(rel.pseudoColumn).toBeDefined(true, message + ': isFiltered undefined');
+            expect(rel.pseudoColumn.isFiltered).toBe(true, message + ': isFiltered missmatch');
+            expect(rel.pseudoColumn.filterProps).toBeDefined(message + ': filterProps undefined');
+            expect(rel.pseudoColumn.filterProps.hasRootFilter).toEqual(hasRootFilter, message + ': hasRootFilter missmatch');
+            expect(rel.pseudoColumn.filterProps.hasFilterInBetween).toEqual(hasFilterInBetween, message + ': hasFilterInBetween missmatch');
+            expect(rel.pseudoColumn.filterProps.leafFilterString).toEqual(leafFilterString, message + ': leafFilterString missmatch');
+        };
+
         beforeAll(function(done) {
             options.ermRest.appLinkFn(appLinkFn);
             options.ermRest.resolve(singleEnitityUri, {
@@ -162,7 +171,7 @@ exports.execute = function(options) {
                 describe("regarding column objects defining path.", function () {
 
                     it ('should ignore the invalid (invalid, no path, non-entity, has aggregate, all-outbound) objects.', function () {
-                        expect(pathRelatedWithTuple.length).toBe(9);
+                        expect(pathRelatedWithTuple.length).toBe(10);
                     });
 
                     it ('should create the reference by using facet syntax (starting from related table with facet on shortestkey of main table.).', function () {
@@ -243,8 +252,20 @@ exports.execute = function(options) {
                             pathRelatedWithTuple[7], "reference_schema", "inbound_related_reference_table", null,
                             [
                                 "M:=reference_schema:inbound_related_reference_table",
-                                "(RCT::null::;RID::null::)/(id)=(reference_schema:association%20table%20with%20id:id_from_inbound_related_table)",
+                                "(RCT::null::;RID::null::)/A:=(id)=(reference_schema:association%20table%20with%20id:id_from_inbound_related_table)",
                                 "(id%20from%20ref%20table)=(reference_schema:reference_table:id)/!(RID=-1)",
+                                "RID=" + utils.findEntityRID(options, schemaName, tableName, "id", "9003"),
+                                "$M"
+                            ].join("/")
+                        );
+
+                        checkRelated(
+                            pathRelatedWithTuple[8], "reference_schema", "inbound_related_reference_table", null,
+                            [
+                                "M:=reference_schema:inbound_related_reference_table",
+                                "A:=(id)=(reference_schema:association%20table%20with%20id:id_from_inbound_related_table)",
+                                "(RCT::null::;RID::null::)",
+                                "(id%20from%20ref%20table)=(reference_schema:reference_table:id)",
                                 "RID=" + utils.findEntityRID(options, schemaName, tableName, "id", "9003"),
                                 "$M"
                             ].join("/")
@@ -254,7 +275,7 @@ exports.execute = function(options) {
                     it ("should be able to support free-form related with filter", function () {
                         // we cannot guarantee the order of properties so we cannot check the facet object
                         checkRelated(
-                            pathRelatedWithTuple[8], "reference_schema", "reference_table", null,
+                            pathRelatedWithTuple[9], "reference_schema", "reference_table", null,
                             [
                                 "M:=reference_schema:reference_table",
                                 "(RCT::null::;RID::null::)/(id)=(reference_schema:association%20table%20with%20id:id%20from%20ref%20table)",
@@ -617,6 +638,30 @@ exports.execute = function(options) {
                 it('Tuple.getAssociationRef should return null, if the given data is incomplete.', function() {
                     var ref = pageWithToName.tuples[0].getAssociationRef({"not the id":9003});
                     expect(ref).toBe(null);
+                });
+            });
+
+            describe('filter in source related APIs, ', function () {
+                it ('should return falsy values for related references without filter in source.', function () {
+                    related.forEach((rel, i) => {
+                        expect(rel.pseudoColumn && rel.isFiltered).toBeFalsy('related isFiltered missmatch for index=' + i);
+                    });
+
+                    pathRelatedWithTuple.forEach((rel, i) => {
+                        if (i >= 6) return;
+                        expect(rel.pseudoColumn && rel.isFiltered).toBeFalsy('path-related isFiltered missmatch for index=' + i);
+                    });
+                });
+
+                it ('should return proper values for related references with filter in source.', function () {
+                    // has root and leaf filters
+                    checkFilterProps(pathRelatedWithTuple[6], true, false, '!(id=-1)', 'index = 6');
+                    // has root and leaf filters
+                    checkFilterProps(pathRelatedWithTuple[7], true, false, '(RCT::null::;RID::null::)', 'index = 7');
+                    // only has filter in between
+                    checkFilterProps(pathRelatedWithTuple[8], false, true, '', 'index = 8');
+                    // has root, in between, and leaf filters
+                    checkFilterProps(pathRelatedWithTuple[9], true, true, '(RCT::null::;RID::null::)', 'index = 9');
                 });
             });
 
