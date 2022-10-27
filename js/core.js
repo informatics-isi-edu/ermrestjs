@@ -1111,6 +1111,14 @@
             this._appLinksAnnotation = this.annotations.get(module._annotations.APP_LINKS).content;
         }
 
+        /**
+         * Whether we should lookup the facets in the url in the list of facets.
+         */
+        this.aggressiveFacetLookup = false;
+        if (this.annotations.contains(module._annotations.TABLE_CONFIG)) {
+            this.aggressiveFacetLookup = this.annotations.get(module._annotations.TABLE_CONFIG).content.aggressive_facet_lookup === true;
+        }
+
         this._exportTemplates = {};
 
         this._display = {};

@@ -936,7 +936,7 @@
             newReference._facetColumns = [];
             this.facetColumns.forEach(function (fc) {
                 newReference._facetColumns.push(
-                    new FacetColumn(newReference, fc.index, fc._facetObjectWrapper, sameFacet ? fc.filters.slice() : [])
+                    new FacetColumn(newReference, fc.index, fc.sourceObjectWrapper, sameFacet ? fc.filters.slice() : [])
                 );
             });
 
@@ -1615,7 +1615,7 @@
                 newReference._facetColumns = [];
                 this.facetColumns.forEach(function (fc) {
                     newReference._facetColumns.push(
-                        new FacetColumn(newReference, fc.index, fc._facetObjectWrapper, fc.filters.slice())
+                        new FacetColumn(newReference, fc.index, fc.sourceObjectWrapper, fc.filters.slice())
                     );
                 });
             }
@@ -2915,7 +2915,7 @@
                 newReference._facetColumns = [];
                 this.facetColumns.forEach(function (fc) {
                     newReference._facetColumns.push(
-                        new FacetColumn(newReference, fc.index, fc._facetObjectWrapper, fc.filters.slice())
+                        new FacetColumn(newReference, fc.index, fc.sourceObjectWrapper, fc.filters.slice())
                     );
                 });
             }

@@ -332,6 +332,7 @@ You can use these attributes to define default preselected facets (Combination o
 
 Configuration attributes (optional):
 - `entity`: If the facet can be treated as entity (the column that is being used for facet is key of the table), setting this attribute to `false` will force the facet to show scalar mode.
+- `fast_filter_source`: An alternative source that will be used for filtering values. You MUST make sure the projected column of `fast_filter_source` is compatiple with the main source of this facet. Please refer to [this document](facet.md#fast-filter-source) for more information.
 - `markdown_name`: The markdown to use in place of the default heuristics for facet title.
 - `comment`: The tooltip to be used in place of the default heuristics for the facet. Set this to `false` if you don't want any tooltip.
 - `open`: Setting this attribute to `true`, will force the facet to open by default.
@@ -995,6 +996,7 @@ Supported JSON payload patterns:
     - `table`: Required. String value of the table name
 - `{`... `"stable_key_columns":` `[` _column name_ `,` ... `]` ... `}`: Define a list of not-null columns that should be used as "stable key".
 - `{`... `"stable_key":` `[` _schema name_ `,` _constraint name_ `]` ... `}`: An alternative syntax to `"stable_key_columns"` that allows you to refer to an existing key instead of defining your own list of columns.
+- `{`... `"aggressive_facet_lookup":` _boolean_ ... `}`:  Whether we should lookup the facets in the URL or not. By default this feature is turned off. This flag is currently EXPERIMENTAL and used to enable [the fast filter feature in facets](facet.md#fast-filter-source).
 
 Note:
 - If both `stable_key_columns` and `stable_key` are defined, `stable_key_columns` will be used.

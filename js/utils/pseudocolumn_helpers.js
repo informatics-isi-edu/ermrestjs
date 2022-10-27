@@ -284,7 +284,7 @@
 
             // find the facet based on name
             return referenceObject.facetColumns.find(function (fc) {
-                return fc.name === currObj.name;
+                return fc.sourceObjectWrapper.name === currObj.name;
             });
         }
 
@@ -423,7 +423,7 @@
 
             // find the facetColumn that maps to this facet
             mappedFacet = null;
-            if (!hasNullChoice && isObjectAndNotNull(referenceObject) && referenceObject.facetColumns.length > 0) {
+            if (!hasNullChoice && isObjectAndNotNull(referenceObject) && referenceObject.table.aggressiveFacetLookup && referenceObject.facetColumns.length > 0) {
                 try {
                     mappedFacet = _renderFacetHelpers.findMappingFacet(term, referenceObject, consNames);
                 } catch (exp) {

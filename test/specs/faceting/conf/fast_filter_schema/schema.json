@@ -1,0 +1,338 @@
+{
+  "schema_name": "fast_filter_schema",
+  "tables": {
+    "main": {
+      "kind": "table",
+      "table_name": "main",
+      "schema_name": "fast_filter_schema",
+      "keys": [{
+        "unique_columns": ["id"],
+        "names": [["faceting_schema", "main_key1"]]
+      }],
+      "foreign_keys": [
+        {
+          "names": [["fast_filter_schema", "main_fk1"]],
+          "foreign_key_columns": [{
+            "schema_name": "fast_filter_schema",
+            "table_name": "main",
+            "column_name": "fk_to_main_o1"
+          }],
+          "referenced_columns": [{
+            "schema_name": "fast_filter_schema",
+            "table_name": "main_o1",
+            "column_name": "id"
+          }]
+        }
+      ],
+      "column_definitions": [
+        {
+          "name": "id",
+          "nullok": false,
+          "type": {"typename": "serial4"}
+        },
+        {
+          "name": "fk_to_main_o1",
+          "type": {"typename": "int4"}
+        },
+        {
+          "name": "main_o1_fast_col",
+          "type": {"typename": "int4"}
+        }
+      ],
+      "annotations": {
+        "tag:isrd.isi.edu,2021:table-config": {
+          "aggressive_facet_lookup": true
+        },
+        "tag:isrd.isi.edu,2019:source-definitions": {
+          "sources": {
+            "path_to_main_o1_RID": {
+              "source": [{"outbound": ["fast_filter_schema", "main_fk1"]}, "RID"]
+            },
+            "facet_with_fast_filter_shared_prefix": {
+              "comment": "facet with fast_filter that uses shared prefix",
+              "source": [
+                {"sourcekey": "path_to_main_o1_RID"},
+                {"inbound": ["fast_filter_schema", "main_o1_i1_fk1"]},
+                "RID"
+              ],
+              "fast_filter_source": [
+                {"sourcekey": "path_to_main_o1_RID"},
+                {"inbound": ["fast_filter_schema", "main_o1_i2_fk1"]},
+                "id"
+              ]
+            },
+            "facet_with_fast_filter_and_filter_in_source" : {
+              "comment": "facet with fast_filter that has filter",
+              "source": [
+                {"sourcekey": "path_to_main_o1_RID"},
+                {"inbound": ["fast_filter_schema", "main_o1_i2_fk1"]},
+                "RID"
+              ],
+              "fast_filter_source": [
+                {"sourcekey": "path_to_main_o1_RID"},
+                {"filter": "id", "operand_pattern": "2", "operator": "::gt::"},
+                {"inbound": ["fast_filter_schema", "main_o1_i2_fk1"]},
+                "id"
+              ]
+            }
+          }
+        },
+        "tag:isrd.isi.edu,2016:visible-columns": {
+          "*": [
+            "id", {"sourcekey": "path_to_main_o1_RID"}
+          ],
+          "filter": {
+            "and": [
+              {
+                "source": "id"
+              },
+              {
+                "comment": "facet with invalid fast_filter",
+                "source": [{"outbound": ["fast_filter_schema", "main_fk1"]}, "RID"],
+                "fast_filter_source": [{"outbound": ["fast_filter_schema", "main_fk1"]}, "some_invalid_column"]
+              },
+              {
+                "comment": "facet with fast_filter that uses local column",
+                "source": [{"outbound": ["fast_filter_schema", "main_fk1"]}, "col"],
+                "fast_filter_source": "main_o1_fast_col"
+              },
+              {
+                "comment": "facet with fast_filter that has path",
+                "source": [
+                  {"outbound": ["fast_filter_schema", "main_fk1"]},
+                  {"outbound": ["fast_filter_schema", "main_o1_fk1"]},
+                  {"outbound": ["fast_filter_schema", "main_o1_o1_fk1"]},
+                  "RID"
+                ],
+                "fast_filter_source": [
+                  {"outbound": ["fast_filter_schema", "main_fk1"]},
+                  {"outbound": ["fast_filter_schema", "main_o1_fk1"]},
+                  "other_col"
+                ]
+              },
+              {"sourcekey": "facet_with_fast_filter_shared_prefix"},
+              {"sourcekey": "facet_with_fast_filter_and_filter_in_source"}
+            ]
+          }
+        }
+      }
+    },
+    "table_wo_aggressive_facet_lookup": {
+      "kind": "table",
+      "table_name": "table_wo_aggressive_facet_lookup",
+      "schema_name": "fast_filter_schema",
+      "keys": [{ "unique_columns": ["id"] }],
+      "foreign_keys": [
+        {
+          "names": [["fast_filter_schema", "table_wo_aggressive_facet_lookup_fk1"]],
+          "foreign_key_columns": [{
+            "schema_name": "fast_filter_schema",
+            "table_name": "table_wo_aggressive_facet_lookup",
+            "column_name": "fk_to_main"
+          }],
+          "referenced_columns": [{
+            "schema_name": "fast_filter_schema",
+            "table_name": "main",
+            "column_name": "id"
+          }]
+        }
+      ],
+      "column_definitions": [
+        {
+          "name": "id",
+          "nullok": false,
+          "type": {"typename": "serial4"}
+        },
+        {
+          "name": "fk_to_main",
+          "type": {"typename": "int4"}
+        }
+      ],
+      "annotations": {
+        "tag:isrd.isi.edu,2016:visible-columns": {
+          "compact": ["id"],
+          "filter": {
+            "and": [
+              {
+                "source": [
+                  {"outbound": ["fast_filter_schema", "table_wo_aggressive_facet_lookup_fk1"]},
+                  "RID"
+                ],
+                "fast_filter_source": "fk_to_main"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "table_wo_aggressive_facet_lookup_2": {
+      "kind": "table",
+      "table_name": "table_wo_aggressive_facet_lookup_2",
+      "schema_name": "fast_filter_schema",
+      "keys": [{ "unique_columns": ["id"] }],
+      "foreign_keys": [],
+      "column_definitions": [
+        {
+          "name": "id",
+          "nullok": false,
+          "type": {"typename": "serial4"}
+        }
+      ],
+      "annotations": {
+        "tag:isrd.isi.edu,2021:table-config": {
+          "aggressive_facet_lookup": false
+        }
+      }
+    },
+    "main_o1": {
+      "kind": "table",
+      "table_name": "main_o1",
+      "schema_name": "fast_filter_schema",
+      "keys": [{ "unique_columns": ["id"] }],
+      "foreign_keys": [
+        {
+          "names": [["fast_filter_schema", "main_o1_fk1"]],
+          "foreign_key_columns": [{
+            "schema_name": "fast_filter_schema",
+            "table_name": "main_o1",
+            "column_name": "fk_to_main_o1_o1"
+          }],
+          "referenced_columns": [{
+            "schema_name": "fast_filter_schema",
+            "table_name": "main_o1_o1",
+            "column_name": "id"
+          }]
+        }
+      ],
+      "column_definitions": [
+        {
+          "name": "id",
+          "nullok": false,
+          "type": {"typename": "serial4"}
+        },
+        {
+          "name": "col",
+          "type": {"typename": "int4"}
+        },
+        {
+          "name": "fk_to_main_o1_o1",
+          "type": {"typename": "int4"}
+        }
+      ]
+    },
+    "main_o1_i1": {
+      "kind": "table",
+      "table_name": "main_o1_i1",
+      "schema_name": "fast_filter_schema",
+      "keys": [{ "unique_columns": ["id"] }],
+      "foreign_keys": [
+        {
+          "names": [["fast_filter_schema", "main_o1_i1_fk1"]],
+          "foreign_key_columns": [{
+            "schema_name": "fast_filter_schema",
+            "table_name": "main_o1_i1",
+            "column_name": "fk_to_main_o1"
+          }],
+          "referenced_columns": [{
+            "schema_name": "fast_filter_schema",
+            "table_name": "main_o1",
+            "column_name": "id"
+          }]
+        }
+      ],
+      "column_definitions": [
+        {
+          "name": "id",
+          "nullok": false,
+          "type": {"typename": "serial4"}
+        },
+        {
+          "name": "fk_to_main_o1",
+          "type": {"typename": "int4"}
+        }
+      ]
+    },
+    "main_o1_i2": {
+      "kind": "table",
+      "table_name": "main_o1_i2",
+      "schema_name": "fast_filter_schema",
+      "keys": [{ "unique_columns": ["id"] }],
+      "foreign_keys": [
+        {
+          "names": [["fast_filter_schema", "main_o1_i2_fk1"]],
+          "foreign_key_columns": [{
+            "schema_name": "fast_filter_schema",
+            "table_name": "main_o1_i2",
+            "column_name": "fk_to_main_o1"
+          }],
+          "referenced_columns": [{
+            "schema_name": "fast_filter_schema",
+            "table_name": "main_o1",
+            "column_name": "id"
+          }]
+        }
+      ],
+      "column_definitions": [
+        {
+          "name": "id",
+          "nullok": false,
+          "type": {"typename": "serial4"}
+        },
+        {
+          "name": "fk_to_main_o1",
+          "type": {"typename": "int4"}
+        }
+      ]
+    },
+    "main_o1_o1": {
+      "kind": "table",
+      "table_name": "main_o1_o1",
+      "schema_name": "fast_filter_schema",
+      "keys": [{ "unique_columns": ["id"] }],
+      "foreign_keys": [
+        {
+          "names": [["fast_filter_schema", "main_o1_o1_fk1"]],
+          "foreign_key_columns": [{
+            "schema_name": "fast_filter_schema",
+            "table_name": "main_o1_o1",
+            "column_name": "fk_to_main_o1_o1_o1"
+          }],
+          "referenced_columns": [{
+            "schema_name": "fast_filter_schema",
+            "table_name": "main_o1_o1_o1",
+            "column_name": "id"
+          }]
+        }
+      ],
+      "column_definitions": [
+        {
+          "name": "id",
+          "nullok": false,
+          "type": {"typename": "serial4"}
+        },
+        {
+          "name": "fk_to_main_o1_o1_o1",
+          "type": {"typename": "int4"}
+        },
+        {
+          "name": "other_col",
+          "type": {"typename": "int4"}
+        }
+      ]
+    },
+    "main_o1_o1_o1": {
+      "kind": "table",
+      "table_name": "main_o1_o1_o1",
+      "schema_name": "fast_filter_schema",
+      "keys": [{ "unique_columns": ["id"] }],
+      "foreign_keys": [],
+      "column_definitions": [
+        {
+          "name": "id",
+          "nullok": false,
+          "type": {"typename": "serial4"}
+        }
+      ]
+    }
+  }
+}

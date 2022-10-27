@@ -2833,7 +2833,7 @@ Object.defineProperty(InboundForeignKeyPseudoColumn.prototype, "compressedDataSo
  *
  * @param {ERMrest.Reference} reference the reference that this FacetColumn blongs to.
  * @param {int} index The index of this FacetColumn in the list of facetColumns
- * @param {ERMrest.SourceObjectWrapper} facetObject The filter object that this FacetColumn will be created based on
+ * @param {ERMrest.SourceObjectWrapper} facetObjectWrapper The filter object that this FacetColumn will be created based on
  * @param {?ERMrest.FacetFilter[]} filters Array of filters
  * @memberof ERMrest
  * @constructor
@@ -2887,7 +2887,7 @@ function FacetColumn (reference, index, facetObjectWrapper, filters) {
     // NOTE: This might not include the filters
     this._facetObject = facetObjectWrapper.sourceObject;
 
-    this._facetObjectWrapper = facetObjectWrapper;
+    this.sourceObjectWrapper = facetObjectWrapper;
 
     this.sourceObjectNodes = facetObjectWrapper.sourceObjectNodes;
 
@@ -3142,15 +3142,15 @@ FacetColumn.prototype = {
              */
             if (self.hasPath) {
                 newLoc = newLoc.addJoin(
-                    self._facetObjectWrapper,
+                    self.sourceObjectWrapper,
                     table.schema.name,
                     table.name
                 );
             } 
             // if it only has filter (and no path, then we can just add the filter to path)
-            else if (self._facetObjectWrapper.isFiltered) {
+            else if (self.sourceObjectWrapper.isFiltered) {
                 // TODO can this be improved?
-                var filterPath = self._facetObjectWrapper.toString(false, false);
+                var filterPath = self.sourceObjectWrapper.toString(false, false);
                 if (filterPath.length > 0) {
                     newLoc = module.parse(newLoc.compactUri + "/" + filterPath);
                 }
@@ -3299,7 +3299,7 @@ FacetColumn.prototype = {
                 }
 
                 // G6
-                if (self._facetObjectWrapper.isFiltered) {
+                if (self.sourceObjectWrapper.isFiltered) {
                     return true;
                 }
 
@@ -3309,7 +3309,7 @@ FacetColumn.prototype = {
                 }
 
                 // G5
-                if (self._facetObjectWrapper.isAllOutboundNotNullPerModel) {
+                if (self.sourceObjectWrapper.isAllOutboundNotNullPerModel) {
                     return true;
                 }
 
@@ -3357,12 +3357,12 @@ FacetColumn.prototype = {
 
 
                 //if from the same table, don't show if it's not-null
-                if (self._facetObjectWrapper.foreignKeyPathLength === 0) {
+                if (self.sourceObjectWrapper.foreignKeyPathLength === 0) {
                     return !self._column.nullok;
                 }
 
                 //if all outbound not-null don't show it.
-                return self._facetObjectWrapper.isAllOutboundNotNullPerModel;
+                return self.sourceObjectWrapper.isAllOutboundNotNullPerModel;
             };
 
             this._hideNotNullChoice = getHideNotNull(this);
@@ -3436,12 +3436,14 @@ FacetColumn.prototype = {
 
     get fastFilterSourceObjectWrapper() {
         if (this._fastFilterSource === undefined) {
+            var self = this;
             var res = null;
             var fastFilter = this._facetObject.fast_filter_source;
-            if (isObjectAndNotNull(fastFilter)) {
+            if (fastFilter !== undefined || fastFilter !== null) {
                 try {
-                    res = new SourceObjectWrapper(fastFilter, this.reference.table, module._constraintNames, true);
+                    res = new SourceObjectWrapper({source: fastFilter}, self.reference.table, module._constraintNames, true);
                 } catch (exp) {
+                    module._log.warn("given fast_filter_source for facet index=`" + self.index + "` is not valid.");
                     res = null;
                 }
             }
@@ -3513,8 +3515,8 @@ FacetColumn.prototype = {
         // otherwise generate an ermrest request to get the displaynames.
         else {
             // if we already fetched the page, then just use it
-            if (self._facetObjectWrapper.entityChoiceFilterPage) {
-                self._facetObjectWrapper.entityChoiceFilterPage.tuples.forEach(function (t) {
+            if (self.sourceObjectWrapper.entityChoiceFilterPage) {
+                self.sourceObjectWrapper.entityChoiceFilterPage.tuples.forEach(function (t) {
                     filters.push({uniqueId: t.data[columnName], displayname: t.displayname, tuple: t});
                 });
                 defer.resolve(filters);
@@ -4004,9 +4006,9 @@ FacetColumn.prototype = {
         var newFc;
         this.reference.facetColumns.forEach(function (fc) {
             if (fc.index !== self.index) {
-                newFc = new FacetColumn(newReference, fc.index, fc._facetObjectWrapper, fc.filters.slice());
+                newFc = new FacetColumn(newReference, fc.index, fc.sourceObjectWrapper, fc.filters.slice());
             } else {
-                newFc = new FacetColumn(newReference, self.index, self._facetObjectWrapper, filters);
+                newFc = new FacetColumn(newReference, self.index, self.sourceObjectWrapper, filters);
             }
 
             newReference._facetColumns.push(newFc);
