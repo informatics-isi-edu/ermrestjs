@@ -38,7 +38,8 @@
         var defaultConfig = {
             internalHosts: {"type": "array", "value": []},
             disableExternalLinkModal: {"type": "boolean", "value": false},
-            facetPanelDisplay: {"type": "object", "value": {}}
+            facetPanelDisplay: {"type": "object", "value": {}},
+            templating: {"type": "object", "value": {}}
         };
 
         // make sure the value is correct and has the valid type

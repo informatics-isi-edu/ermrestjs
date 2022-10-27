@@ -208,6 +208,11 @@
 
     module.HANDLEBARS = "handlebars";
 
+    module.TEMPLATE_ENGINES =  Object.freeze({
+        HANDLEBARS: 'handlebars',
+        MUSTACHE: 'mustache'
+    });
+
     module._handlebarsHelpersList = [
         // default helpers - NOTE: 'log' and 'lookup' not included
         "blockHelperMissing", "each", "if", "helperMissing", "unless", "with", "lookup",
