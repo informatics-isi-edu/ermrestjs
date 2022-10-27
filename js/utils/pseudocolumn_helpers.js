@@ -21,7 +21,6 @@
          * @param {any[]} choices an array of values (value could be null)
          * @param {string} column  the name of the column
          * @param {any} catalogObject the catalog object (to check if alternative syntax is available)
-         * @returns 
          */
         parseChoices: function (choices, column, catalogObject) {
             if (!Array.isArray(choices) || choices.length === 0) {
@@ -270,7 +269,24 @@
 
         getErrorOutput: function (message, index) {
            return {successful: false, message: message + "(index=" + index +")"};
-       }
+        },
+
+        /**
+         * Given a facet filter, find the mapping facet object
+         * NOTE will return an error if the given filter is invalid
+         * @param {Object} filter the facet filter
+         * @param {ERMrest.Reference} referenceObject  the reference object
+         * @param {Object} consNames  the constraint names
+         */
+        findMappingFacet: function (filter, referenceObject, consNames) {
+            // turn this facet into a proper object so we can find its "name"
+            var currObj = new SourceObjectWrapper(filter, referenceObject.table, consNames, true);
+
+            // find the facet based on name
+            return referenceObject.facetColumns.find(function (fc) {
+                return fc.sourceObjectWrapper.name === currObj.name;
+            });
+        }
 
     };
 
@@ -302,6 +318,7 @@
      * @param       {string} tableName the starting table name
      * @param       {string} catalogId the catalog id
      * @param       {ERMrest.catalog} [catalogObject] the catalog object (could be undefined)
+     * @param       {ERMrest.Reference} [referenceObject] the reference object (could be undefined)
      * @param       {Array} usedSourceObjects (optional) the source objects that are used in other parts (outbound)
      * @param       {Object[]} [consNames] the constraint names (could be undefined)
      * @constructor
@@ -312,7 +329,7 @@
      *
      * @ignore
      */
-    _renderFacet = function(json, alias, schemaName, tableName, catalogId, catalogObject, usedSourceObjects, forcedAliases, consNames) {
+    _renderFacet = function(json, alias, schemaName, tableName, catalogId, catalogObject, referenceObject, usedSourceObjects, forcedAliases, consNames) {
         var facetErrors = module._facetingErrors;
         var rootSchemaName = schemaName, rootTableName = tableName;
 
@@ -334,7 +351,9 @@
             rightJoins = [], // if we have null in the filter, we have to use join
             innerJoins = [], // all the other facets that have been parsed
             encode = module._fixedEncodeURIComponent, sourcekey,
-            i, term, col, path, ds, constraints, parsed, useRightJoin;
+            i, term, col, path, constraints, parsed, hasNullChoice, 
+            useRightJoin, rightJoinSchemaTable,
+            mappedFacet, currObj, temp;
 
         var pathPrefixAliasMapping = new PathPrefixAliasMapping(
             forcedAliases,
@@ -397,31 +416,60 @@
             }
 
             // ---------------- parse the path ---------------- //
+            // TODO check for the facets and use the fast filter
             path = ""; // the source path if there are some joins
             useRightJoin = false;
-            if (_sourceColumnHelpers._sourceHasNodes(term.source)) {
+            hasNullChoice = _renderFacetHelpers.hasNullChoice(term);
+
+            // find the facetColumn that maps to this facet
+            mappedFacet = null;
+            if (!hasNullChoice && isObjectAndNotNull(referenceObject) && referenceObject.table.aggressiveFacetLookup && referenceObject.facetColumns.length > 0) {
+                try {
+                    mappedFacet = _renderFacetHelpers.findMappingFacet(term, referenceObject, consNames);
+                } catch (exp) {
+                    return _renderFacetHelpers.getErrorOutput(exp.message, i);
+                }
+            }
+
+            // if the mapped facet had a fastFilterSource use that one instead
+            if (isObjectAndNotNull(mappedFacet) && isObjectAndNotNull(mappedFacet.fastFilterSourceObjectWrapper)) {
+                currObj = mappedFacet.fastFilterSourceObjectWrapper;
+                temp = _sourceColumnHelpers.parseSourceNodesWithAliasMapping(
+                    currObj.sourceObjectNodes,
+                    currObj.lastForeignKeyNode,
+                    currObj.foreignKeyPathLength,
+                    currObj.sourceObject && isStringAndNotEmpty(currObj.sourceObject.sourcekey) ? currObj.sourceObject.sourcekey : null,
+                    pathPrefixAliasMapping,
+                    alias,
+                    false
+                );
+                path = temp.path;
+                col = currObj.column.name;
+            } 
+            else if (_sourceColumnHelpers._sourceHasNodes(term.source)) {
 
                 // if there's a null filter and source has path, we have to use right join
                 // parse the datasource
-                ds = _renderFacetHelpers.parseDataSource(term.source, sourcekey, alias, rootTable, tableName, catalogId, _renderFacetHelpers.hasNullChoice(term), consNames, pathPrefixAliasMapping);
+                temp = _renderFacetHelpers.parseDataSource(term.source, sourcekey, alias, rootTable, tableName, catalogId, hasNullChoice, consNames, pathPrefixAliasMapping);
 
                 // if the data-path was invalid, ignore this facet
-                if (ds === null) {
+                if (temp === null) {
                     return _renderFacetHelpers.getErrorOutput(facetErrors.invalidSource, i);
                 }
 
                 // the parsed path
-                path = ds.path;
+                path = temp.path;
 
                 // whether we are using right join or not.
-                useRightJoin = ds.reversed;
+                useRightJoin = temp.reversed;
+                rightJoinSchemaTable = encode(temp.schemaName) + ":" + encode(temp.tableName);
 
                 // if we already have used a right join, we should throw error.
                 if (rightJoins.length > 0 && useRightJoin) {
                     return _renderFacetHelpers.getErrorOutput(facetErrors.onlyOneNullFilter, i);
                 }
 
-                col = ds.columnName;
+                col = temp.columnName;
             }
 
             // ---------------- parse the constraints ---------------- //
@@ -459,9 +507,9 @@
             // ---------------- create the url with path and constraints ---------------- //
             if (useRightJoin) {
                 rightJoins.push([
-                    encode(ds.schemaName) + ":" + encode(ds.tableName),
+                    rightJoinSchemaTable,
                     constraints.join(";"),
-                    ds.path
+                    path
                 ].join("/"));
             } else {
                 innerJoins.push((path.length !== 0 ? path + "/" : "") + constraints.join(";") + "/$" + alias);
@@ -1104,6 +1152,14 @@
         }
     };
 
+    /**
+     * 
+     * @param {Object} sourceObject the column directive object
+     * @param {ERMrest.Table} table the root (starting) table
+     * @param {Object} consNames the constraint names
+     * @param {boolean} isFacet whether this is a facet or not
+     * @param {Object} [sources] already generated source (only useful for source-def generation)
+     */
     function SourceObjectWrapper (sourceObject, table, consNames, isFacet, sources) {
         this.sourceObject = sourceObject;
 
@@ -1600,13 +1656,14 @@
          *   this function is using sourceNodes instead. it could be refactored to use sourceObjectWrapper instead.
          *
          * TODO could be refactored  and merged with parseAllOutBoundNodes
-         * @param {*} sourceNodes - array of source nodes
-         * @param {*} lastForeignKeyNode  - the last foreign key node
-         * @param {*} foreignKeyPathLength - the foreignkey path length
-         * @param {*} sourcekey
-         * @param {*} pathPrefixAliasMapping
-         * @param {*} mainTableAlias
-         * @param {*} useRightJoin
+         * @param {SourceObjectNode[]} sourceNodes - array of source nodes
+         * @param {Object} lastForeignKeyNode  - the last foreign key node
+         * @param {number} foreignKeyPathLength - the foreignkey path length
+         * @param {string} [sourcekey] the sourcekey of current object
+         * @param {Object} pathPrefixAliasMapping the path prefix alias mapping object
+         * @param {string} mainTableAlias the alias of the root table
+         * @param {boolean} useRightJoin whether we need to reverse and use right outer join
+         * @param {string} [outAlias] the alias that will be attached to the output
          */
         parseSourceNodesWithAliasMapping: function (sourceNodes, lastForeignKeyNode, foreignKeyPathLength, sourcekey, pathPrefixAliasMapping, mainTableAlias, useRightJoin, outAlias) {
             var usedOutAlias;

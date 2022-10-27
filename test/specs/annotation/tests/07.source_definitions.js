@@ -29,7 +29,7 @@ exports.execute = function (options) {
 
         if (expectedRawSource) {
             var src = obj.getRawSourcePath(reverse, outAlias);
-        expect(JSON.stringify(src)).toEqual(JSON.stringify(expectedRawSource), "rawSource missmatch" + addedMessage);
+            expect(JSON.stringify(src)).toEqual(JSON.stringify(expectedRawSource), "rawSource missmatch" + addedMessage);
         }
     }
 

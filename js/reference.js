@@ -240,6 +240,9 @@
         // TODO could be improved
         location.catalogObject = catalog;
 
+        // make sure location object has the current reference
+        location.referenceObject = this;
+
         this._location = location;
 
         this._server = catalog.server;
@@ -933,12 +936,12 @@
             newReference._facetColumns = [];
             this.facetColumns.forEach(function (fc) {
                 newReference._facetColumns.push(
-                    new FacetColumn(newReference, fc.index, fc._facetObjectWrapper, sameFacet ? fc.filters.slice() : [])
+                    new FacetColumn(newReference, fc.index, fc.sourceObjectWrapper, sameFacet ? fc.filters.slice() : [])
                 );
             });
 
             // update the location objectcd
-            newReference._location = this._location._clone();
+            newReference._location = this._location._clone(newReference);
             newReference._location.beforeObject = null;
             newReference._location.afterObject = null;
 
@@ -985,7 +988,7 @@
             var newReference = _referenceCopy(this);
 
             // clone the location object
-            newReference._location = loc._clone();
+            newReference._location = loc._clone(newReference);
             newReference._location.beforeObject = null;
             newReference._location.afterObject = null;
 
@@ -1013,7 +1016,7 @@
             delete newReference._facetColumns;
 
             // update the location object
-            newReference._location = this._location._clone();
+            newReference._location = this._location._clone(newReference);
             newReference._location.beforeObject = null;
             newReference._location.afterObject = null;
 
@@ -1600,7 +1603,7 @@
             var newReference = _referenceCopy(this);
 
 
-            newReference._location = this._location._clone();
+            newReference._location = this._location._clone(newReference);
             newReference._location.sortObject = sort;
             newReference._location.beforeObject = null;
             newReference._location.afterObject = null;
@@ -1612,7 +1615,7 @@
                 newReference._facetColumns = [];
                 this.facetColumns.forEach(function (fc) {
                     newReference._facetColumns.push(
-                        new FacetColumn(newReference, fc.index, fc._facetObjectWrapper, fc.filters.slice())
+                        new FacetColumn(newReference, fc.index, fc.sourceObjectWrapper, fc.filters.slice())
                     );
                 });
             }
@@ -2900,7 +2903,7 @@
             // make a Reference copy
             var newReference = _referenceCopy(this);
 
-            newReference._location = this._location._clone();
+            newReference._location = this._location._clone(newReference);
             newReference._location.beforeObject = null;
             newReference._location.afterObject = null;
             newReference._location.search(term);
@@ -2912,7 +2915,7 @@
                 newReference._facetColumns = [];
                 this.facetColumns.forEach(function (fc) {
                     newReference._facetColumns.push(
-                        new FacetColumn(newReference, fc.index, fc._facetObjectWrapper, fc.filters.slice())
+                        new FacetColumn(newReference, fc.index, fc.sourceObjectWrapper, fc.filters.slice())
                     );
                 });
             }
@@ -3033,7 +3036,7 @@
 
 
             var newRef = _referenceCopy(this);
-            newRef._location = this._location._clone();
+            newRef._location = this._location._clone(newRef);
 
             // same facets
             if (pageRef.location.facets) {
@@ -4025,6 +4028,7 @@
                 // uri and location
                 if (!useFaceting) {
                     newRef._location = module.parse(this._location.compactUri + "/" + fkr.toString() + "/" + otherFK.toString(true), catalog);
+                    newRef._location.referenceObject = newRef;
                 }
 
 
@@ -4072,6 +4076,7 @@
                 // uri and location
                 if (!useFaceting) {
                     newRef._location = module.parse(this._location.compactUri + "/" + fkr.toString(), catalog);
+                    newRef._location.referenceObject = newRef;
                 }
 
                 // additional values for sorting related references
@@ -4115,6 +4120,7 @@
                     catalog.id, "entity",
                     module._fixedEncodeURIComponent(table.schema.name) + ":" + module._fixedEncodeURIComponent(table.name)
                 ].join("/"), catalog);
+                newRef._location.referenceObject = newRef;
 
                 // if the sourceObjectWrapper is passed, filter source is reverse of that.
                 // NOTE the related table might have filters, that's why we have to do this and cannot
@@ -5029,6 +5035,7 @@
                 }
 
                 newRef._location = module.parse(newLocationString, catalog);
+                newRef._location.referenceObject = newRef;
 
                 // change the face filters
                 if (newFacetFilters.length > 0) {
@@ -5365,7 +5372,7 @@
             var newReference = _referenceCopy(this._ref);
 
             // update paging by creating a new location
-            newReference._location = this._ref._location._clone();
+            newReference._location = this._ref._location._clone(newReference);
 
 
             /* This will return the values that should be used for after/before
@@ -5613,6 +5620,7 @@
                 }
 
                 this._ref._location = module.parse(uri, this._ref.table.schema.catalog);
+                this._ref._location.referenceObject = this._ref;
 
                 // add the tuple to reference so that when calling read() we don't need to fetch the data again.
                 this._ref._tuple = this._tuple;

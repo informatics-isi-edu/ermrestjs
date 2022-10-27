@@ -48,6 +48,34 @@ Instead of defining a new `source`, you can refer to the sources that are define
 {"sourcekey": "path_to_table_1"}
 ```
 
+## Fast filter source
+
+While defining the `source` of a column directive, you must be mindful of the structure of the path and the projected table. This can cause performance issues as ERMrestJS would introduce joins for filtering matching results. If you would like to improve the performance of your queries, you could define an alternative `fast_filter_source` that will only be used for filtering. With this alternative source, you can denormalize the tables and create data warehouses that are more optimized for filtering. 
+
+- The defined `fast_filter_source` attribute supports the same syntax as [source path](#source-path).
+- As the name suggests, the new source will only be used for filtering requests and won't be used for defining a projection. That's why we'll only use this property while parsing the `facets`.
+- ERMrestJS only ensures that the given path exists and won't do any further checks. It's your responsibility to ensure the projected columns of both `source` and `fast_filter_source` have compatible values.
+- To make sure ERMrestJS is enabling this feature, you need to set `"aggressive_facet_lookup": true` in `table-config` annotation as well.
+
+In the following you can see an example of this feature:
+
+```json
+{
+   "source": [
+     {"sourcekey": "S_core_fact"},
+     {"inbound": ["CFDE", "core_fact_assay_type_core_fact_fkey"]},
+     {"outbound": ["CFDE", "core_fact_assay_type_assay_type_fkey"]},
+     "nid"
+   ],
+   "fast_filter_source": [
+     "assay_types"
+   ]
+}
+```
+Notes:
+- When we want to show the facet panel, we use the `source` for fetching the options. This path is important as it will dictate the entity mode as well as the displayed table, etc.
+- After users select any of the displayed options in this facet, instead of sending a request will multiple join, we're going to filter based on the local `assay_types` column. The `assay_types` column has been specifically populated for each row to work with this given path.
+
 ## Constraints
 
 There are three kinds of constraint right now:

@@ -1,0 +1,15 @@
+{
+  "catalog": {},
+  "schema": {
+    "name": "fast_filter_schema",
+    "createNew": true,
+    "path": "test/specs/faceting/conf/fast_filter_schema/schema.json"
+  },
+  "tables": {
+    "createNew": true
+  },
+  "entities": {
+    "createNew": true,
+    "path": "test/specs/faceting/conf/fast_filter_schema/data"
+  }
+}

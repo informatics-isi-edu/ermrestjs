@@ -608,7 +608,11 @@
                         currUsedSourceObjects = [self.pathParts[index+1].joins[0].sourceObjectWrapper.sourceObject];
                     }
 
-                    facetRes = _renderFacet(part.facets.decoded, part.alias, part.schema, part.table, self.catalog, self.catalogObject, currUsedSourceObjects, forcedAliases, module._constraintNames);
+                    facetRes = _renderFacet(
+                        part.facets.decoded, part.alias, part.schema, part.table, self.catalog, 
+                        self.catalogObject, self.referenceObject,
+                        currUsedSourceObjects, forcedAliases, module._constraintNames
+                    );
                     if (!facetRes.successful) {
                         throw new module.InvalidFacetOperatorError(self.path, facetRes.message);
                     }
@@ -633,7 +637,11 @@
                     //      it requires preprocessing the usedSourcekeys based on both
                     //      facets and customFacets
                     if (part.customFacets.facets) {
-                        facetRes = _renderFacet(part.customFacets.facets.decoded, part.alias, part.schema, part.table, self.catalog, self.catalogObject, null, null, module._constraintNames);
+                        facetRes = _renderFacet(
+                            part.customFacets.facets.decoded, part.alias, part.schema, part.table, self.catalog, 
+                            self.catalogObject, self.referenceObject,
+                            null, null, module._constraintNames
+                        );
                         if (!facetRes.successful) {
                             throw new module.InvalidCustomFacetOperatorError(self.path, facetRes.message);
                         }
@@ -1293,11 +1301,17 @@
 
         /**
          * Create a new location object with the same uri and catalogObject
+         * @param {ERMrest.Reference}
          * @returns {ERMrest.Location} new location object
+         * 
          * @private
          */
-        _clone: function() {
-            return module.parse(this.uri, this.catalogObject);
+        _clone: function(referenceObject) {
+            var res = module.parse(this.uri, this.catalogObject);
+            if (isObjectAndNotNull(referenceObject)) {
+                res.referenceObject = referenceObject;
+            }
+            return res;
         },
 
         _setDirty: function() {
@@ -1333,6 +1347,21 @@
          */
         get catalogObject() {
             return this._catalogObject;
+        },
+
+        /**
+         * set the reference object that this Location object belongs to
+         */
+        set referenceObject(obj) {
+            this._referenceObject = obj;
+        },
+
+        /**
+         * The reference object that this Location object belongs to
+         * @type {ERMrest.Reference}
+         */
+        get referenceObject() {
+            return this._referenceObject;
         },
 
         /**
@@ -1549,7 +1578,7 @@
             if (terms.length < 2) useQuantified = false; 
 
             if (useQuantified) {
-                filterString = column + module._ERMrestFilterPredicates.CASE_INS_REG_EXP + 'all('
+                filterString = column + module._ERMrestFilterPredicates.CASE_INS_REG_EXP + 'all(';
             }
             terms.forEach(function(t, index, array) {
                 var exp;
