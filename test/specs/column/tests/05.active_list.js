@@ -111,6 +111,9 @@ exports.execute = function (options) {
 
     describe("active list related APIs, ", function () {
         beforeAll(function (done) {
+            options.ermRest.setClientConfig({
+                templating: {engine: "handlebars"}
+            });
             options.ermRest.appLinkFn(appLinkFn);
             options.ermRest.resolve(mainEntityUri, {cid: "test"}).then(function (response) {
                 mainRef = response;
@@ -331,6 +334,10 @@ exports.execute = function (options) {
                 }
 
             });
+        });
+
+        afterAll(function () {
+            options.ermRest.setClientConfig({});
         });
     });
 

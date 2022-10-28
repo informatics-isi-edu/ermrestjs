@@ -3088,6 +3088,25 @@
     };
 
     /**
+     * given a string, if it's a valid template_engine use it,
+     * otherwise get it from the client config.
+     * @param {string} engine 
+     */
+    module._getTemplateEngine = function (engine) {
+        var isValid = function (val) {
+            return isStringAndNotEmpty(val) && Object.values(module.TEMPLATE_ENGINES).indexOf(val) !== -1;
+        };
+        if (isValid(engine)) {
+            return engine;
+        }
+        if (isObjectAndNotNull(module._clientConfig) && isObjectAndNotNull(module._clientConfig.templating) && 
+            isValid(module._clientConfig.templating.engine)) {
+            return module._clientConfig.templating.engine;
+        }
+        return module.TEMPLATE_ENGINES.MUSTACHE;
+    };
+
+    /**
      * A wrapper for {ERMrest._renderMustacheTemplate}
      * acceptable options:
      * - templateEngine: "mustache" or "handlbars"
@@ -3108,7 +3127,7 @@
         options = options || {};
 
         var res, objRes;
-        if (options.templateEngine === module.HANDLEBARS) {
+        if (module._getTemplateEngine(options.templateEngine) === module.TEMPLATE_ENGINES.HANDLEBARS) {
             // render the template using Handlebars
             res = module.renderHandlebarsTemplate(template, keyValues, catalog, options);
         } else {
@@ -3163,7 +3182,7 @@
             data = module._getFormattedKeyValues(table, context, data);
         }
 
-        if (options.templateEngine === module.HANDLEBARS) {
+        if (module._getTemplateEngine(options.templateEngine) === module.TEMPLATE_ENGINES.HANDLEBARS) {
             // call the actual Handlebar validator
             return module._validateHandlebarsTemplate(template, data, table.schema.catalog, ignoredColumns);
         }
