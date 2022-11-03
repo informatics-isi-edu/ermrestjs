@@ -5,6 +5,7 @@
                 "navbarBrandText": "override test123",
                 "navbarBrandImage": "../images/logo.png"
             },
+            "comment": "while name_style is not needed here, it's to ensure this doesn't override all display settings",
             "tag:misd.isi.edu,2015:display": {
                 "show_saved_query": true
             }

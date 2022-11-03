@@ -313,6 +313,13 @@
         this._jsonCatalog = null;
 
         this._schemaFetched = false;
+
+        // this property is needed by _determineDisplayName
+        this.name = id;
+
+        this._nameStyle = {}; // Used in the displayname to store the name styles.
+
+        // NOTE we still haven't fetched the catalog, so we don't have the catalog annotation here.
     }
 
     Catalog.prototype = {
@@ -468,6 +475,12 @@
                 for (var uri in response.annotations) {
                     self.annotations._push(new Annotation("catalog", uri, response.annotations[uri]));
                 }
+
+                /**
+                 * this will make sure the nameStyle is populated on the catalog as well,
+                 * so schema can use it.
+                 */
+                module._determineDisplayName(self, true);
 
                 if (dontFetchSchema === true || self._schemaFetched) {
                     defer.resolve();
@@ -752,7 +765,7 @@
          * this.displayname.isHTML will return true/false
          * this.displayname.value has the value
          */
-        this.displayname = module._determineDisplayName(this, true);
+        this.displayname = module._determineDisplayName(this, true, this.catalog);
 
         /**
          *

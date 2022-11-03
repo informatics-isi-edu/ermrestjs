@@ -11,7 +11,8 @@ exports.execute = function (options) {
 
         // Test Cases:
 
-        it('schema should use name styles (`underline_space`, `title_case`) that are defined in its display annotations.', function () {
+        it('schema should use name styles (`underline_space`, `title_case`) that are defined in its display annotations or on catalog.', function () {
+            // underline_space comes from the catalog
             expect(schema.displayname.value).toBe("schema with underlinespace without titlecase");
             expect(schema.displayname.unformatted).toBe("schema with underlinespace without titlecase")
             expect(schema.displayname.isHTML).toBe(false);

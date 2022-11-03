@@ -458,8 +458,7 @@
   "annotations": {
     "tag:misd.isi.edu,2015:display": {
       "name_style": {
-        "underline_space": true,
-        "title_case": false
+        "underline_space": true
       }
     }
   },
