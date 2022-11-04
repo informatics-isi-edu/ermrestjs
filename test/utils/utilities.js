@@ -1,5 +1,4 @@
 var ermrestImport = require(process.env.PWD + '/test/utils/ermrest-import.js');
-var q = require('q');
 
 /**
  * @param {Array} pageData - data returned from update request
@@ -72,3 +71,22 @@ var findEntityRID = function(options, currSchema, currTable, keyName, keyValue) 
 	return row ? row.RID : "";
 }
 exports.findEntityRID = findEntityRID;
+
+/**
+ * set annotations for the catalog.
+ * This will also replace the attached "catalog" on the testOptions.
+ */
+exports.setCatalogAnnotations = function (testOptions, annotations) {
+    return new Promise((resolve, reject) => {
+        ermrestImport.setCatalogAnnotations(testOptions.catalogId, annotations).then(() => {
+            // remove the existing catched catalog
+            exports.removeCachedCatalog(testOptions.ermRest, testOptions.catalogId);
+            // fetch the new one with annotation
+            return testOptions.server.catalogs.get(testOptions.catalogId);
+        }).then((response) => {
+            // replace the catalog with the new one
+            testOptions.catalog = response;
+            resolve();
+        }).catch((err) => reject(err));
+    });
+}

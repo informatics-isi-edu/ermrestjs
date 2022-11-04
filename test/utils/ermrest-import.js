@@ -1,7 +1,7 @@
-var q = require('q');
-var requireReload = require('./require-reload.js').reload;
-var includes = require(__dirname + '/../utils/ermrest-init.js').init();
-var ermrestUtils = require(process.env.PWD + "/../ErmrestDataUtils/import.js");
+const q = require('q');
+const requireReload = require('./require-reload.js').reload;
+const includes = require(__dirname + '/../utils/ermrest-init.js').init();
+const ermrestUtils = require(process.env.PWD + "/../ErmrestDataUtils/import.js");
 
 /**
  * This function will import all the given schemas.
@@ -16,7 +16,7 @@ exports.importSchemas = function (configFilePaths, catalogId) {
   var config, schema, schemaName;
 
   if (!configFilePaths || configFilePaths.length === 0) {
-    return defer.resolve({catalogId: catalogId, entities: {}}), defer.promise;
+    return defer.resolve({ catalogId: catalogId, entities: {} }), defer.promise;
   }
 
   // for the structure of settings, please refer to ErmrestDataUtils
@@ -30,14 +30,14 @@ exports.importSchemas = function (configFilePaths, catalogId) {
 
     // copy annotations and ACLs over to the submitted catalog object
     if (config.catalog && typeof config.catalog === "object") {
-        // if empty object, this loop is skipped
-        for (var prop in config.catalog) {
-            // if property is set already
-            if (catalog[prop]) {
-                console.log(prop + " is already defined on catalog object, overriding previously set value with new one")
-            }
-            catalog[prop] = config.catalog[prop];
+      // if empty object, this loop is skipped
+      for (var prop in config.catalog) {
+        // if property is set already
+        if (catalog[prop]) {
+          console.log(prop + " is already defined on catalog object, overriding previously set value with new one")
         }
+        catalog[prop] = config.catalog[prop];
+      }
     }
 
     schemas[config.schema.name] = {
@@ -55,9 +55,9 @@ exports.importSchemas = function (configFilePaths, catalogId) {
   // honoring the catalog object now, anything defined in it will be passed to ErmrestDataUtils
   // NOTE: the catalog is not created here, so we will continue to ignore the catalog object.
   //     Default ACLs are being set in jasmine-runner-utils.js
-  settings.setup = {catalog: catalog, schemas: schemas};
+  settings.setup = { catalog: catalog, schemas: schemas };
   if (catalogId) {
-    settings.setup.catalog.id =  catalogId;
+    settings.setup.catalog.id = catalogId;
   }
 
   ermrestUtils.createSchemasAndEntities(settings).then(function (data) {
@@ -65,7 +65,7 @@ exports.importSchemas = function (configFilePaths, catalogId) {
 
     // create the entities object
     if (data.schemas) {
-      for(schemaName in data.schemas) {
+      for (schemaName in data.schemas) {
         if (!data.schemas.hasOwnProperty(schemaName)) continue;
 
         schema = data.schemas[schemaName];
@@ -79,7 +79,7 @@ exports.importSchemas = function (configFilePaths, catalogId) {
       }
       console.log("Attached entities for the schemas");
     }
-    defer.resolve({entities: entities, catalogId: data.catalogId});
+    defer.resolve({ entities: entities, catalogId: data.catalogId });
   }).catch(function (err) {
     console.log("error while importing the schemas.");
     defer.reject(err);
@@ -89,63 +89,74 @@ exports.importSchemas = function (configFilePaths, catalogId) {
 };
 
 
-exports.importAcls = function(params) {
-	var defer = q.defer();
-	ermrestUtils.importACLS({
-		url: includes.url,
-        authCookie: includes.authCookie,
-        setup: params
-	}).then(function() {
-		defer.resolve();
-	}, function(err) {
-		defer.reject(err);
-	});
-	return defer.promise;
+exports.importAcls = function (params) {
+  var defer = q.defer();
+  ermrestUtils.importACLS({
+    url: includes.url,
+    authCookie: includes.authCookie,
+    setup: params
+  }).then(function () {
+    defer.resolve();
+  }, function (err) {
+    defer.reject(err);
+  });
+  return defer.promise;
 };
 
-var cleanup = function(configFilePaths, defer, catalogId, deleteCatalog) {
-
-	if (configFilePaths.length == 0) {
-		defer.resolve(catalogId);
-		return;
-	}
-
-	var configFilePath = configFilePaths.shift();
-	var config = requireReload(process.env.PWD + "/test/specs" + configFilePath);
-
-	if (deleteCatalog) {
-		configFilePaths = [];
-		delete config.catalog.id;
-	} else {
-		config.catalog.id = catalogId;
-	}
-
-	ermrestUtils.tear({
-        setup: config,
-        catalogId: catalogId,
-        url:  includes.url ,
-        authCookie : includes.authCookie
-    }).then(function(data) {
-    	cleanup(configFilePaths, defer, catalogId, deleteCatalog);
-    }, function(err) {
-        defer.reject(err);
-    }).catch(function(err) {
-    	console.log(err);
-    	defer.reject(err);
-    });
+exports.setCatalogAnnotations = function (id, annotations) {
+  return new Promise((resolve, reject) => {
+    ermrestUtils.createOrModifyCatalog(
+      { url: includes.url, id },
+      annotations,
+      null,
+      includes.authCookie
+    ).then(() => resolve()).catch((err) => reject(err));
+  });
 };
 
-exports.tear = function(configFilePaths, catalogId, deleteCatalog) {
-	var defer = q.defer();
+var cleanup = function (configFilePaths, defer, catalogId, deleteCatalog) {
 
-	if (!configFilePaths || !configFilePaths.length || !catalogId) {
-		defer.resolve();
-		return defer.promise;
-	}
+  if (configFilePaths.length == 0) {
+    defer.resolve(catalogId);
+    return;
+  }
 
-	configFilePaths = configFilePaths.reverse();
+  var configFilePath = configFilePaths.shift();
+  var config = requireReload(process.env.PWD + "/test/specs" + configFilePath);
 
-	cleanup(configFilePaths, defer, catalogId, deleteCatalog);
+  if (deleteCatalog) {
+    configFilePaths = [];
+    delete config.catalog.id;
+  } else {
+    config.catalog.id = catalogId;
+  }
 
-	return defer.promise;
+  ermrestUtils.tear({
+    setup: config,
+    catalogId: catalogId,
+    url: includes.url,
+    authCookie: includes.authCookie
+  }).then(function (data) {
+    cleanup(configFilePaths, defer, catalogId, deleteCatalog);
+  }, function (err) {
+    defer.reject(err);
+  }).catch(function (err) {
+    console.log(err);
+    defer.reject(err);
+  });
+};
+
+exports.tear = function (configFilePaths, catalogId, deleteCatalog) {
+  var defer = q.defer();
+
+  if (!configFilePaths || !configFilePaths.length || !catalogId) {
+    defer.resolve();
+    return defer.promise;
+  }
+
+  configFilePaths = configFilePaths.reverse();
+
+  cleanup(configFilePaths, defer, catalogId, deleteCatalog);
+
+  return defer.promise;
 };

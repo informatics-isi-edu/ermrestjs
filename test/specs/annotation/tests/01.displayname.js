@@ -1,12 +1,23 @@
+const utils = require("../../../utils/utilities.js");
+
 exports.execute = function (options) {
 
     describe('For determining display name, ', function () {
         var schemaName = "schema_with_underlinespace_without_titlecase",
             schema;
 
-        beforeAll(function (done) {
-            schema = options.catalog.schemas.get(schemaName);
-            done();
+        beforeAll((done) => {
+            utils.setCatalogAnnotations(options, {
+                "tag:misd.isi.edu,2015:display": {
+                    "name_style": {
+                        "underline_space": true, // will be used throughout the catalog
+                        "title_case": true // will be replaced by the schema
+                    }
+                }
+            }).then(() => {
+                schema = options.catalog.schemas.get(schemaName);
+                done();
+            }).catch((err) => done.fail(err));
         });
 
         // Test Cases:
@@ -82,6 +93,13 @@ exports.execute = function (options) {
               checkColumn("table_with_titlecase_without_underlinespace", "RCB", "RCB", "RCB", false);
               checkColumn("table_with_titlecase_without_underlinespace", "RMB", "RMB", "RMB", false);
           });
+        });
+
+        afterAll((done) => {
+            // removed the catalog annotation
+            utils.setCatalogAnnotations(options, {}).then(() => {
+                done();
+            }).catch((err) => done.fail(err));
         });
 
         // Helpers:

@@ -1,4 +1,3 @@
-var ermrestImport = require(process.env.PWD + '/test/utils/ermrest-import.js');
 var utils = require("../../../utils/utilities.js");
 
 exports.execute = (options) => {
