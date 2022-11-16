@@ -1284,6 +1284,129 @@
     };
 
     /**
+     * Generate the filter based on the given key and data.
+     * The return object has the following properties:
+     *  - successful: whether we encounter any issues or not
+     *  - filters: If successful, it will be an array of {path, keyData}
+     *  - hasNull: If failed, it will signal that the issue was related to null value
+     *             for a column. `column` property will return the column name that had null value.
+     * @param {ERMrest.Column[]} keyColumns 
+     * @param {Object} data 
+     * @param {ERMrest.Catalog} catalogObject 
+     * @param {number} pathOffsetLength the length of offset that should be considered for length limitation logic.
+     * @returns 
+     */
+    module._generateKeyValueFilters = function (keyColumns, data, catalogObject, pathOffsetLength) {
+        var encode = module._fixedEncodeURIComponent, pathLimit = module.URL_PATH_LENGTH_LIMIT;
+
+        var eqSyntax = function (col, rowValue) {
+            if (isDefinedAndNotNull(rowValue[col])) {
+                return encode(col) + "=" + encode(rowValue[col]);
+            }
+            return null;
+        };
+
+        // see if the quantified syntax can be used
+        var canUseQuantified;
+        if (keyColumns.length > 1 || data.length === 1) {
+            canUseQuantified = false;
+        }
+        else if (keyColumns.length === 0 && keyColumns[0].name === module._systemColumnNames.RID) {
+            canUseQuantified = catalogObject.features[module._ERMrestFeatures.QUANTIFIED_RID_LISTS];
+        } else {
+            canUseQuantified = catalogObject.features[module._ERMrestFeatures.QUANTIFIED_VALUE_LISTS];
+        }
+
+        var result = []; // computed, keyData
+
+        var keyData = [], filter = '', currentPath = '', keyColName, keyColVal, keyColumnsData;
+        for (var rowIndex = 0; rowIndex < data.length; rowIndex++) {
+            var rowData = data[rowIndex];
+            if (canUseQuantified) {
+                keyColName = keyColumns[0].name;
+                keyColVal = rowData[keyColName];
+                keyColumnsData = {};
+
+                if (keyColVal === undefined || keyColVal === null) {
+                    return {successful: false, message: "One or more records have a null value for " + keyColName + ".", hasNull: true, column: keyColName};
+                }
+
+                filter = encode(keyColVal);
+                keyColumnsData[keyColName] = keyColVal;
+
+                // 6: for `=any()`
+                // <pathOffset/><col>=any(<filter>)
+                if (rowIndex !== 0 && 
+                    (pathOffsetLength + encode(keyColName).length + 6 + currentPath.length + (rowIndex != 0 ? 1 : 0) + filter.length) > pathLimit) {
+                    result.push({
+                        path: encode(keyColName)  + '=any(' + currentPath + ')',
+                        keyData: keyData
+                    });
+                    currentPath = '';
+                    keyData = [];
+                } else if (rowIndex != 0) {
+                    filter = ',' + filter;
+                }
+
+                currentPath += filter;
+                keyData.push(keyColumnsData);
+            } else {
+                keyColumnsData = {};
+                filter = keyColumns.length > 1 ? '(' : '';
+                // add the values for the current row
+                for (var keyIndex = 0; keyIndex < keyColumns.length; keyIndex++) {
+                    keyColName = keyColumns[keyIndex].name;
+                    keyColVal = rowData[keyColName];
+
+                    if (keyColVal === undefined || keyColVal === null) {
+                        return {successful: false, message: "One or more records have a null value for " + keyColName, hasNull: true, column: keyColName};
+                    }
+                    if (keyIndex != 0) filter += '&';
+                    filter += encode(keyColName) + '=' + encode(keyColVal);
+                    keyColumnsData[keyColName] = keyColVal;
+                }
+                filter += keyColumns.length > 1 ? ')' : '';
+
+                // check url length limit if not first one;
+                if (rowIndex != 0 && 
+                    (pathOffsetLength + currentPath.length + (rowIndex != 0 ? ';' : '') + filter).length > pathLimit) {
+                    // any more filters will go over the url length limit so save the current path and count
+                    // then clear both to start creating a new path
+                    result.push({
+                        path: currentPath,
+                        keyData: keyData
+                    });
+                    currentPath = '';
+                    keyData = [];
+                } else if (rowIndex != 0) {
+                    // prepend the conjunction operator when it isn't the first filter to create and we aren't dealing with a url length limit
+                    filter = ";" + filter;
+                }
+
+                // append the filter either on the previous path after adding ";", or on the new path started from compactPath
+                currentPath += filter;
+                keyData.push(keyColumnsData);
+            }
+        }
+
+        if (canUseQuantified) {
+            // After last iteration of loop, push the current path
+            result.push({
+                path: encode(keyColName)  + '=any(' + currentPath + ')',
+                keyData: keyData
+            });
+        } else {
+            // After last iteration of loop, push the current path
+            result.push({
+                path: currentPath,
+                keyData: keyData
+            });
+        }
+
+        return {successful: true, filters: result};
+    };
+
+    /**
      * @function
      * @param  {string} errorStatusText    http error status text
      * @param  {string} generatedErrMessage response data returned by http request
