@@ -1,0 +1,4 @@
+[
+  {"id": "1", "fk_to_delete_table": 7},
+  {"id": "2", "fk_to_delete_table": 18}
+]

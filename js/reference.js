@@ -2140,9 +2140,15 @@
                             nonDeletableTuples.push('- Record number ' + (index + 1) + ": " + t.displayname.value);
                         }
                     });
-
+                    
                     if (nonDeletableTuples.length > 0) {
-                        deleteSubmessage.push('The following records cannot be deleted based on your permissions: \n' + nonDeletableTuples.join('\n'));
+                        deleteSubmessage.push('The following records could not be deleted based on your permissions:\n' + nonDeletableTuples.join('\n'));
+                    }
+
+                    // if none of the rows could be deleted, just return now.
+                    if (deletableData.length === 0) {
+                        defer.resolve(new module.BatchDeleteResponse(successTupleData, failedTupleData, deleteSubmessage.join("\n")));
+                        return defer.promise;
                     }
 
                     // might throw an error
@@ -2165,7 +2171,7 @@
                             successTupleData =  successTupleData.concat(currFilter.keyData);
                         }).catch(function (err) {
                             failedTupleData = failedTupleData.concat(currFilter.keyData);
-                            deleteSubmessage.push(err.data);
+                            deleteSubmessage.push(module.responseToError(err, self, delFlag).message);
                         }).finally(function () {
                             if (index < keyValueRes.filters.length-1) {
                                 recursiveDelete(index+1);
