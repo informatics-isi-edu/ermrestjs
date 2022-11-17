@@ -1300,19 +1300,12 @@
     module._generateKeyValueFilters = function (keyColumns, data, catalogObject, pathOffsetLength, displayname) {
         var encode = module._fixedEncodeURIComponent, pathLimit = module.URL_PATH_LENGTH_LIMIT;
 
-        var eqSyntax = function (col, rowValue) {
-            if (isDefinedAndNotNull(rowValue[col])) {
-                return encode(col) + "=" + encode(rowValue[col]);
-            }
-            return null;
-        };
-
         // see if the quantified syntax can be used
         var canUseQuantified = false;
         if (keyColumns.length > 1 || data.length === 1) {
             canUseQuantified = false;
         }
-        else if (catalogObject && keyColumns.length === 0 && keyColumns[0].name === module._systemColumnNames.RID) {
+        else if (catalogObject && keyColumns.length === 1 && keyColumns[0].name === module._systemColumnNames.RID) {
             canUseQuantified = catalogObject.features[module._ERMrestFeatures.QUANTIFIED_RID_LISTS];
         } else if (catalogObject) {
             canUseQuantified = catalogObject.features[module._ERMrestFeatures.QUANTIFIED_VALUE_LISTS];
