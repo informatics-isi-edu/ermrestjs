@@ -986,15 +986,6 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
         headers: self.reference._generateContextHeader(contextHeaderParams, page.tuples.length)
     };
 
-    // creates http request with the current uri
-    baseUri = [location.service, "catalog", location.catalog, "attributegroup"].join("/") + "/";
-    var addPromise = function (uri) {
-        if (uri.charAt(uri.length-1) === ";") {
-            uri = uri.slice(0, -1);
-        }
-        promises.push(http.get(baseUri + uri + pathToCol + projection, config));
-    };
-
     // will format a single value
     var getFormattedValue = function (val) {
         if (isRow) {
@@ -1141,8 +1132,8 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
     // <baseUri><basePath><filters><path-to-pseudo-col><projection>
     // the following shows where `/` is stored for each part:
     // <baseUri/><basePath/><filters></path-from-main-to-pseudo-col></projection>
+    baseUri = [location.service, "catalog", location.catalog, "attributegroup"].join("/") + "/";
     basePath = baseTable + ":=" + module._fixedEncodeURIComponent(mainTable.schema.name) + ":" + module._fixedEncodeURIComponent(mainTable.name) + "/";
-
     pathToCol = self.sourceObjectWrapper.toString(false, false, currTable);
     if (pathToCol.length > 0) {
         pathToCol = "/" + pathToCol;
@@ -1155,26 +1146,24 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
         return defer.promise;
     }
 
-    // create the request urls
-    tempUri = basePath;
-    for (i = 0; i < page.tuples.length; i++) {
-        filterStr = keyColNameEncoded + "=" + page.tuples[i].data[keyColName] + ";";
+    // get the computed filters
+    var keyValueRes = module._generateKeyValueFilters(
+        mainTable.shortestKey, 
+        page.tuples.map(function (t) { return t.data;  }),
+        mainTable.schema.catalog,
+        (basePath + pathToCol + projection).length
+    );
 
-        // adding this will go over limit, create a request with the previous uri
-        if ((tempUri.length + filterStr.length + pathToCol.length + projection.length) > module.URL_PATH_LENGTH_LIMIT) {
-            if (tempUri.length !== basePath.length) {
-                addPromise(tempUri);
-                tempUri = basePath + filterStr;
-            }
-        } else {
-            tempUri += filterStr;
-
-            // if this was the last one, create a promise with it
-            if (i === page.tuples.length-1) {
-                addPromise(tempUri);
-            }
-        }
+    if (!keyValueRes.successful) {
+        module._log.warn(message);
+        defer.resolve(values);
+        return defer.promise;
     }
+
+    // turn the paths into requests
+    promises = keyValueRes.filters.map(function (f) {
+        return http.get(baseUri + basePath + f.path + pathToCol + projection, config);
+    });
 
     // if adding any of the filters would go over url limit
     if (promises.length === 0) {
