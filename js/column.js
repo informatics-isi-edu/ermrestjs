@@ -1151,11 +1151,12 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
         mainTable.shortestKey, 
         page.tuples.map(function (t) { return t.data;  }),
         mainTable.schema.catalog,
-        (basePath + pathToCol + projection).length
+        (basePath + pathToCol + projection).length,
+        mainTable.displayname.value
     );
 
     if (!keyValueRes.successful) {
-        module._log.warn(message);
+        module._log.warn(keyValueRes.message);
         defer.resolve(values);
         return defer.promise;
     }

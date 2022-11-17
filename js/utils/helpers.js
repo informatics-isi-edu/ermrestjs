@@ -1294,9 +1294,10 @@
      * @param {Object} data 
      * @param {ERMrest.Catalog} catalogObject 
      * @param {number} pathOffsetLength the length of offset that should be considered for length limitation logic.
+     * @param {string} displayname the displayname of reference, used for error message
      * @returns 
      */
-    module._generateKeyValueFilters = function (keyColumns, data, catalogObject, pathOffsetLength) {
+    module._generateKeyValueFilters = function (keyColumns, data, catalogObject, pathOffsetLength, displayname) {
         var encode = module._fixedEncodeURIComponent, pathLimit = module.URL_PATH_LENGTH_LIMIT;
 
         var eqSyntax = function (col, rowValue) {
@@ -1307,13 +1308,13 @@
         };
 
         // see if the quantified syntax can be used
-        var canUseQuantified;
+        var canUseQuantified = false;
         if (keyColumns.length > 1 || data.length === 1) {
             canUseQuantified = false;
         }
-        else if (keyColumns.length === 0 && keyColumns[0].name === module._systemColumnNames.RID) {
+        else if (catalogObject && keyColumns.length === 0 && keyColumns[0].name === module._systemColumnNames.RID) {
             canUseQuantified = catalogObject.features[module._ERMrestFeatures.QUANTIFIED_RID_LISTS];
-        } else {
+        } else if (catalogObject) {
             canUseQuantified = catalogObject.features[module._ERMrestFeatures.QUANTIFIED_VALUE_LISTS];
         }
 
@@ -1328,14 +1329,20 @@
                 keyColumnsData = {};
 
                 if (keyColVal === undefined || keyColVal === null) {
-                    return {successful: false, message: "One or more records have a null value for " + keyColName + ".", hasNull: true, column: keyColName};
+                    return {
+                        successful: false, 
+                        message: "One or more " + displayname + " records have a null value for " + keyColName + ".",
+                        hasNull: true, 
+                        column: keyColName
+                    };
                 }
 
                 filter = encode(keyColVal);
                 keyColumnsData[keyColName] = keyColVal;
 
                 // 6: for `=any()`
-                // <pathOffset/><col>=any(<filter>)
+                // +1 is for the `,` that we're going to add
+                // <pathOffset/><col>=any(<filter>,)
                 if (rowIndex !== 0 && 
                     (pathOffsetLength + encode(keyColName).length + 6 + currentPath.length + (rowIndex != 0 ? 1 : 0) + filter.length) > pathLimit) {
                     result.push({

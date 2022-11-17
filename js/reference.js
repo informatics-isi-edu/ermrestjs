@@ -2156,10 +2156,11 @@
                         self.table.shortestKey, 
                         deletableData,
                         self.table.schema.catalog,
-                        schemaTable.length + 1
+                        schemaTable.length + 1,
+                        self.displayname.value
                     );
                     if (!keyValueRes.successful) {
-                        var err = new module.InvalidInputError(message);
+                        var err = new module.InvalidInputError(keyValueRes.message);
                         return defer.reject(err), defer.promise;
                     }
 

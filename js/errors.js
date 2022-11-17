@@ -383,7 +383,7 @@
      * - multiple records:
      *   - all success: All of the <number> {chosen|displayed} records successfully {unlinked|deleted}.
      *   - all failure: None of the <number> {chosen|displayed} records could be {unlinked|deleted}. <check error>
-     *   - mix: <number> records sucessfully {unlinked|deleted}. <number> records could not be {unlinked|deleted}. <check error>
+     *   - mix: <number> records successfully {unlinked|deleted}. <number> records could not be {unlinked|deleted}. <check error>
      * 
      * <check error>: Check the error details below to see more information.
      */
