@@ -254,6 +254,7 @@
         INVALID_INPUT: "Invalid Input",
         INVALID_URI: "Invalid URI",
         BATCH_UNLINK: "Batch Unlink Summary",
+        BATCH_DELETE: 'Batch Delete Summary',
         NO_DATA_CHANGED: "No Data Changed",
         NO_CONNECTION_ERROR: "No Connection Error",
         INVALID_SORT: "Invalid Sort Criteria",

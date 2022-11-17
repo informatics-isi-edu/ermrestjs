@@ -35,9 +35,53 @@
                     "type": {
                         "typename": "int"
                     }
+                },
+                {
+                    "name": "comment",
+                    "nullok": true,
+                    "type": {
+                        "typename": "text"
+                    }
                 }
             ],
             "annotations": {}
+        },
+        "outbound1_table": {
+            "kind": "table" ,
+            "table_name": "outbound1_table",
+            "schema_name": "delete_schema",
+            "keys": [{"unique_columns": ["id"]}],
+            "foreign_keys": [
+                {
+                    "on_delete": "RESTRICT",
+                    "foreign_key_columns": [{
+                        "schema_name": "delete_schema",
+                        "table_name": "outbound1_table",
+                        "column_name": "fk_to_delete_table"
+                    }],
+                    "referenced_columns": [{
+                        "schema_name": "delete_schema",
+                        "table_name": "delete_table",
+                        "column_name": "key_col"
+                    }]
+                }
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "int"
+                    }
+                },
+                {
+                    "name": "fk_to_delete_table",
+                    "nullok": false,
+                    "type": {
+                        "typename": "int"
+                    }
+                }
+            ]
         },
         "main_table": {
             "comment": "Table to represent the main table when deleting association rows",

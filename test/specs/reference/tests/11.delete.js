@@ -3,6 +3,11 @@ var utils = require("../../../utils/utilities.js");
 exports.execute = function (options) {
 
     describe("deleting reference objects, ", function () {
+        const restrictedUserId = process.env.RESTRICTED_AUTH_COOKIE_ID;
+        const restrictedUserCookie = process.env.RESTRICTED_AUTH_COOKIE;
+
+        const checkDetailsMessage = 'Check the error details below to see more information.';
+
         var catalogId = process.env.DEFAULT_CATALOG,
             schemaName = "delete_schema",
             tableName = "delete_table",
@@ -10,16 +15,27 @@ exports.execute = function (options) {
 
         var baseUri = options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ':' + tableName;
 
-        describe('when deleting regularly', function() {
+        const getReference = (filters) => {
+            return new Promise((resolve, reject) => {
+                options.ermRest.resolve(`${baseUri}/${filters}`, {cid: "test"}).then(function (response) {
+                    resolve(response);
+                }).catch((error) => reject(error));
+            });
+        };
+
+        const findRID = (table, columnName, columnValue) => {
+            return utils.findEntityRID(options, schemaName, table, columnName, columnValue)
+        }
+
+        describe('when deleting a reference', function() {
             beforeAll(function (done) {
                 var uri = baseUri + "/key_col=1";
-                var tuples;
                 options.ermRest.resolve(uri, {cid: "test"}).then(function (response) {
                     reference = response;
                     done();
                 }).catch(function (error) {
                     console.dir();
-                    done.fail();
+                    done.fail(error);
                 });
             });
 
@@ -37,7 +53,7 @@ exports.execute = function (options) {
                     done();
                 }).catch(function (error) {
                     console.dir(error);
-                    done.fail();
+                    done.fail(error);
                 });
             });
 
@@ -51,7 +67,197 @@ exports.execute = function (options) {
                     done();
                 }).catch(function (error) {
                     console.dir(error);
-                    done.fail();
+                    done.fail(error);
+                });
+            });
+        });
+
+        describe('when deleteing a list of tuples', () => {
+            // we're using this to make sure we're actually using tuples and not the reference
+            let usedReference;
+            beforeAll((done) => {
+                getReference('key_col=5').then((response) => {
+                    // the context shouldn't matter
+                    usedReference = response.contextualize.entryEdit;
+                    done();
+                }).catch((err) => done.fail(error));
+            })
+
+            it ('should properly delete the tuple if there are no issues', (done) => {
+                getReference('key_col=6').then((ref) => {
+                    return ref.read(1)
+                }).then((page) => {
+                    return usedReference.delete(page.tuples);
+                }).then((res) => {
+                    expect(res.message).toEqual("The displayed record successfully deleted.")
+                    expect(res.successTupleData.length).toBe(1);
+                    expect(res.successTupleData[0].RID).toEqual(findRID(tableName, 'key_col', 6));
+                    expect(res.failedTupleData.length).toBe(0);
+                    done();
+                }).catch((error) => {
+                    console.dir(error);
+                    done.fail(error);
+                });
+            });
+
+            it ('should fail if the tuple cannot be deleted.', (done) => {
+                getReference('key_col=7').then((ref) => {
+                    return ref.read(1)
+                }).then((page) => {
+                    return usedReference.delete(page.tuples);
+                }).then((res) => {
+                    expect(res.message).toEqual(`The displayed record could not be deleted. ${checkDetailsMessage}`)
+                    expect(res.successTupleData.length).toBe(0);
+                    expect(res.failedTupleData.length).toBe(1);
+                    expect(res.failedTupleData[0].RID).toEqual(findRID(tableName, 'key_col', 7));
+                    const subMessage = [
+                        'This entry cannot be deleted as it is still referenced from the <code>outbound1_table</code> table. ',
+                        ' All dependent entries must be removed before this item can be deleted.'
+                    ].join("\n")
+                    expect(res.subMessage).toBe(subMessage);
+                    done();
+                }).catch((error) => {
+                    console.dir(error);
+                    done.fail(error);
+                });
+            });
+
+            it ('should be able handle multiple.', (done) => {
+                getReference('key_col::geq::8&key_col::leq::10').then((ref) => {
+                    return ref.read(3)
+                }).then((page) => {
+                    return usedReference.delete(page.tuples);
+                }).then((res) => {
+                    expect(res.message).toEqual("All of the 3 displayed records successfully deleted.")
+                    expect(res.successTupleData.length).toBe(3);
+                    expect(res.failedTupleData.length).toBe(0);
+                    done();
+                }).catch((error) => {
+                    console.dir(error);
+                    done.fail(error);
+                });
+            });
+
+            it ('should send two requests because of length lmitation and properly report the failed and successful requests', (done) => {
+                // one row in the first batch should be referenced by something else
+                getReference('key_col::geq::16&key_col::leq::1100').then((ref) => {
+                    return ref.read(1085);
+                }).then((page) => {
+                    return usedReference.delete(page.tuples);
+                }).then((res) => {
+                    expect(res.message).toEqual(`94 records successfully deleted. 991 records could not be deleted. ${checkDetailsMessage}`)
+                    expect(res.successTupleData.length).toBe(94);
+                    expect(res.failedTupleData.length).toBe(991);
+                    done();
+                }).catch((error) => {
+                    console.dir(error);
+                    done.fail(error);
+                });
+            });
+
+            describe('regarding dynamic ACL support', () => {
+                let dynamicRef, dynamicTuples;
+                /**
+                 * deletable rows: 11, 13
+                 * other rows that will be used here are: 12, 14, 15
+                 */
+                beforeAll((done) => {
+                    utils.setCatalogAcls(options.ermRest, done,  `${baseUri}/key_col::geq::11&key_col::leq::15@sort(key_col)`, catalogId, {
+                        "catalog": {
+                            "id": catalogId,
+                            "schemas" : {
+                                "delete_schema": {
+                                    "tables" : {
+                                        "delete_table": {
+                                            "acls": {
+                                                "select": ["*"]
+                                            },
+                                            "acl_bindings": {
+                                                "deletable_rows": {
+                                                    "types": ["delete"],
+                                                    "projection": [{
+                                                        "or": [
+                                                            {"filter": "key_col", "operand": 11},
+                                                            {"filter": "key_col", "operand": 13},
+                                                        ]
+                                                    }, "key_col"]
+                                                }
+                                            }
+                                        }    
+                                    }
+                                }
+                            }
+                        }
+                    }, (response) => dynamicRef = response.contextualize.entryEdit, restrictedUserCookie);
+                });
+
+                // this is here just to make sure we're getting proper ACLs for tuple
+                it ('should read the new reference so we get the proper ACLs', (done) => {
+                    dynamicRef.read(5, null, false, false, true).then((page) => {
+                        expect(page.length).toBe(5);
+                        expect(page.tuples.map(function (t) {
+                            return t.canDelete;
+                        })).toEqual([true, false, true, false, false]);
+                        dynamicTuples = page.tuples;
+                        done();
+                    }).catch((error) => {
+                        console.dir(error);
+                        done.fail(error);
+                    });
+                });
+
+                it ('should handle the cases where none of the tuples can be deleted', (done) => {
+                    // key_col=14 and key_col=15
+                    usedReference.delete([dynamicTuples[3], dynamicTuples[4]]).then((res) => {
+                        expect(res.message).toEqual(`None of the 2 displayed records could be deleted. ${checkDetailsMessage}`);
+                        expect(res.successTupleData.length).toBe(0);
+                        expect(res.failedTupleData.length).toBe(2);
+                        const subMessage = [
+                            'The following records could not be deleted based on your permissions:',
+                            '- Record number 1: 14', '- Record number 2: 15'
+                        ].join("\n")
+                        expect(res.subMessage).toBe(subMessage);
+                        done();
+                    }).catch((error) => {
+                        console.dir(error);
+                        done.fail(error);
+                    });
+                });
+
+                it ('should ignore the tuples that user cannot delete, and delete the rest', (done) => {
+                    usedReference.delete(dynamicTuples).then((res) => {
+                        expect(res.message).toEqual(`2 records successfully deleted. 3 records could not be deleted. ${checkDetailsMessage}`);
+                        expect(res.successTupleData.length).toBe(2);
+                        expect(res.failedTupleData.length).toBe(3);
+                        const subMessage = [
+                            'The following records could not be deleted based on your permissions:',
+                            '- Record number 2: 12', '- Record number 4: 14', '- Record number 5: 15'
+                        ].join("\n")
+                        expect(res.subMessage).toBe(subMessage);
+                        done();
+                    }).catch((error) => {
+                        console.dir(error);
+                        done.fail(error);
+                    });
+                });
+
+                afterAll(function (done) {
+                    options.ermRest.setUserCookie(process.env.AUTH_COOKIE);
+                    utils.removeCachedCatalog(options.ermRest, catalogId);
+                    utils.resetCatalogAcls(done, {
+                        "catalog": {
+                            "id": catalogId,
+                            "schemas" : {
+                                "delete_schema": {
+                                    "tables" : {
+                                        "delete_table": {
+                                            "acl_bindings": {}
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
                 });
             });
         });
@@ -101,7 +307,7 @@ exports.execute = function (options) {
                     done();
                 }).catch(function (error) {
                     console.dir(error);
-                    done.fail();
+                    done.fail(error);
                 });
             });
 
@@ -123,7 +329,7 @@ exports.execute = function (options) {
                 //   - an array of "leaf_table" tuples
                 //   - a filtered reference representing a single row from the leaf table
                 filteredLeafReference.deleteBatchAssociationTuples(mainTuple, relatedLeafTuples).then(function (res) {
-                    expect(res.message).toBe("3 records successfully unlinked.")
+                    expect(res.message).toBe("All of the 3 chosen records successfully unlinked.")
                     expect(res.successTupleData.length).toBe(3, "success count for batch delete is incorrect");
 
                     return relatedLeafReference.read(7);
@@ -138,7 +344,7 @@ exports.execute = function (options) {
                     done();
                 }).catch(function (error) {
                     console.dir(error);
-                    done.fail();
+                    done.fail(error);
                 });
             });
 
@@ -149,7 +355,7 @@ exports.execute = function (options) {
                     done();
                 }).catch(function (error) {
                     console.dir(error);
-                    done.fail();
+                    done.fail(error);
                 });
             });
 
@@ -160,7 +366,7 @@ exports.execute = function (options) {
                     done();
                 }).catch(function (error) {
                     console.dir(error);
-                    done.fail();
+                    done.fail(error);
                 });
             });
 
@@ -194,15 +400,13 @@ exports.execute = function (options) {
                     done();
                 }).catch(function (error) {
                     console.dir(error);
-                    done.fail();
+                    done.fail(error);
                 });
             });
         });
 
         describe("when trying to unlink with dynamic acls", function () {
-            var mainUri = options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ":main_table",
-                restrictedUserId = process.env.RESTRICTED_AUTH_COOKIE_ID,
-                restrictedUserCookie = process.env.RESTRICTED_AUTH_COOKIE,
+            var mainUri = options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ":main_table",                
                 mainReference, relatedLeafReference, filteredLeafReferenceWAcls,
                 mainTuple, relatedLeafTuples;
 
@@ -290,7 +494,7 @@ exports.execute = function (options) {
                 // user can only unlink (6, 66)
                 filteredLeafReferenceWAcls.deleteBatchAssociationTuples(mainTuple, relatedLeafTuples).then(function (res) {
                     expect(res.status).toBe("Batch Unlink Summary", "error status for batch delete is incorrect");
-                    expect(res.message).toBe("3 records could not be unlinked. Check the error details below to see more information.", "error message for batch delete is incorrect");
+                    expect(res.message).toBe(`None of the 3 chosen records could be unlinked. ${checkDetailsMessage}`, "error message for batch delete is incorrect");
                     expect(res.subMessage).toBe("403 Forbidden\nThe requested delete access on one or more matching rows in table :delete_schema:association_table is forbidden.\n", "error sub message for batch delete is incorrect");
                     expect(res.successTupleData.length).toBe(0, "success count for batch delete is incorrect");
                     expect(res.failedTupleData.length).toBe(3, "failed count for batch delete is incorrect");
@@ -324,7 +528,7 @@ exports.execute = function (options) {
                     done();
                 }).catch(function (error) {
                     console.dir(error);
-                    done.fail();
+                    done.fail(error);
                 });
             });
 
@@ -456,7 +660,7 @@ exports.execute = function (options) {
                     done();
                 }).catch(function (error) {
                     console.dir(error);
-                    done.fail();
+                    done.fail(error);
                 });
             });
 
@@ -467,13 +671,13 @@ exports.execute = function (options) {
                 //   - an array of "leaf_table" tuples
                 //   - a filtered reference representing a single row from the leaf table
                 filteredLeafReference.deleteBatchAssociationTuples(mainTuple, relatedLeafTuples).then(function (res) {
-                    expect(res.message).toBe("81 records could not be unlinked. Check the error details below to see more information.")
+                    expect(res.message).toBe(`None of the 81 chosen records could be unlinked. ${checkDetailsMessage}`);
                     expect(res.successTupleData.length).toBe(0, "success count for batch delete is incorrect");
 
                     done();
                 }).catch(function (error) {
                     console.dir(error);
-                    done.fail();
+                    done.fail(error);
                 });
             });
 
@@ -484,7 +688,7 @@ exports.execute = function (options) {
                 //   - an array of "leaf_table" tuples
                 //   - a filtered reference representing a single row from the leaf table
                 filteredLeafReference.deleteBatchAssociationTuples(mainTuple, relatedLeafTuples).then(function (res) {
-                    expect(res.message).toBe("1 record successfully unlinked. 79 records could not be unlinked. Check the error details below to see more information.")
+                    expect(res.message).toBe(`1 record successfully unlinked. 79 records could not be unlinked. ${checkDetailsMessage}`)
                     expect(res.successTupleData.length).toBe(1, "success count for batch delete is incorrect");
 
                     return relatedLeafReference.read(100);
@@ -494,7 +698,7 @@ exports.execute = function (options) {
                     done();
                 }).catch(function (error) {
                     console.dir(error);
-                    done.fail();
+                    done.fail(error);
                 });
             });
 
@@ -505,7 +709,7 @@ exports.execute = function (options) {
                     done();
                 }).catch(function (error) {
                     console.dir(error);
-                    done.fail();
+                    done.fail(error);
                 });
             });
 
@@ -516,7 +720,7 @@ exports.execute = function (options) {
                     done();
                 }).catch(function (error) {
                     console.dir(error);
-                    done.fail();
+                    done.fail(error);
                 });
             });
 
@@ -600,7 +804,7 @@ exports.execute = function (options) {
                     done();
                 }).catch(function (error) {
                     console.dir(error);
-                    done.fail();
+                    done.fail(error);
                 });
             });
 
@@ -620,7 +824,7 @@ exports.execute = function (options) {
                 //   - an array of "leaf_table" tuples
                 //   - a filtered reference representing a single row from the leaf table
                 filteredLeafReference.deleteBatchAssociationTuples(mainTuple, relatedLeafTuples).then(function (res) {
-                    expect(res.message).toBe("82 records successfully unlinked.")
+                    expect(res.message).toBe("All of the 82 chosen records successfully unlinked.")
                     expect(res.successTupleData.length).toBe(82, "success count for batch delete is incorrect");
 
                     return relatedLeafReference.read(100);
@@ -630,7 +834,7 @@ exports.execute = function (options) {
                     done();
                 }).catch(function (error) {
                     console.dir(error);
-                    done.fail();
+                    done.fail(error);
                 });
             });
 
@@ -641,7 +845,7 @@ exports.execute = function (options) {
                     done();
                 }).catch(function (error) {
                     console.dir(error);
-                    done.fail();
+                    done.fail(error);
                 });
             });
 
@@ -652,7 +856,7 @@ exports.execute = function (options) {
                     done();
                 }).catch(function (error) {
                     console.dir(error);
-                    done.fail();
+                    done.fail(error);
                 });
             });
         });
@@ -688,7 +892,7 @@ exports.execute = function (options) {
                     done();
                 }).catch(function (error) {
                     console.dir(error);
-                    done.fail();
+                    done.fail(error);
                 });
             }).pend("412 support has been dropped from ermestjs.");
 
@@ -728,7 +932,7 @@ exports.execute = function (options) {
                     done();
                 }).catch(function(error) {
                     console.dir(error);
-                    done.fail();
+                    done.fail(error);
                 });
             }).pend("412 support has been dropped from ermestjs.");
 
@@ -759,7 +963,7 @@ exports.execute = function (options) {
                     done.fail();
                 }).catch(function(error) {
                     console.dir(error);
-                    done.fail();
+                    done.fail(error);
                 });
             }).pend("412 support has been dropped from ermestjs.");
         });

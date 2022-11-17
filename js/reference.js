@@ -1893,6 +1893,7 @@
                  * We are going to add the following to the last element of stack in the logs:
                  * {
                  *   "num_updated": "number of updated rows"
+                 *   "updated_keys": "the summary of what's updated"
                  * }
                  */
                 if (isObject(contextHeaderParams) && Array.isArray(contextHeaderParams.stack)) {
@@ -2062,51 +2063,133 @@
         },
 
         /**
-         * Deletes the referenced resources.
+         * Deletes the referenced resources or the given tuples.
          * NOTE This will ignore the provided sort and paging on the reference, make
          * sure you are calling this on specific set or rows (filtered).
          *
-         * @param {Object} contextHeaderParams the object that we want to log.
+         * @param {Tuple[]=} tuples (optional) the tuples that should be deleted
+         * @param {Object=} contextHeaderParams (optional) the object that we want to log.
          * @returns {Promise} A promise resolved with empty object or rejected with any of these errors:
          * - ERMrestjs corresponding http errors, if ERMrest returns http error.
          */
-        delete: function(contextHeaderParams) {
+        delete: function(tuples, contextHeaderParams) {
+            var defer = module._q.defer(), self = this, delFlag = module._operationsFlag.DELETE;
+
+            /**
+             * NOTE: previous implemenation of delete with 412 logic is here:
+             * https://github.com/informatics-isi-edu/ermrestjs/commit/5fe854118337e0a63c6f91b4f3e139e7eadc42ac
+             *
+             * We decided to drop the support for 412, because the etag that we get from the read function
+             * is different than the one delete expects. The reason for that is because we are getting etag
+             * in read with joins in the request, which affects the etag. etag is in response to any change
+             * to the returned data and since join introduces extra data it is different than a request
+             * without any joins.
+             *
+             * github issue: #425
+             */
             try {
-
-                var defer = module._q.defer();
-
+                var useTuples = Array.isArray(tuples) && tuples.length > 0;
                 /**
-                 * NOTE: previous implemenation of delete with 412 logic is here:
-                 * https://github.com/informatics-isi-edu/ermrestjs/commit/5fe854118337e0a63c6f91b4f3e139e7eadc42ac
-                 *
-                 * We decided to drop the support for 412, because the etag that we get from the read function
-                 * is different than the one delete expects. The reason for that is because we are getting etag
-                 * in read with joins in the request, which affects the etag. etag is in response to any change
-                 * to the returned data and since join introduces extra data it is different than a request
-                 * without any joins.
-                 *
-                 * github issue: #425
+                 * We are going to add the following to the last element of stack in the logs:
+                 * {
+                 *   "num_deleted": "number of deleted rows"
+                 *   "deleted_keys": "the summary of what's deleted"
+                 * }
                  */
-                var self = this, delFlag = module._operationsFlag.DELETE;
-                if (!contextHeaderParams || !isObject(contextHeaderParams)) {
+                 if (isObject(contextHeaderParams) && Array.isArray(contextHeaderParams.stack) && useTuples) {
+                    var stack = contextHeaderParams.stack;
+                    var shortestKeyNames = self._shortestKey.map(function (column) {
+                        return column.name;
+                    });
+                    stack[stack.length-1].num_deleted = tuples.length;
+                    stack[stack.length-1].deleted_keys = {
+                        cols: shortestKeyNames,
+                        vals: tuples.map(function (t) {
+                            return shortestKeyNames.map(function (kname) {
+                                return t.data[kname];
+                            });
+                        })
+                    };
+                } else if (!contextHeaderParams || !isObject(contextHeaderParams)) {
                     contextHeaderParams = {"action": "delete"};
                 }
                 var config = {
                     headers: this._generateContextHeader(contextHeaderParams)
                 };
-                this._server.http.delete(this.location.ermrestCompactUri, config).then(function (deleteResponse) {
-                    defer.resolve();
-                }, function error(deleteError) {
-                    return defer.reject(module.responseToError(deleteError, self, delFlag));
-                }).catch(function (catchError) {
-                    return defer.reject(module.responseToError(catchError, self, delFlag));
-                });
 
-                return defer.promise;
+                if (!useTuples) {
+                    // delete the reference
+                    this._server.http.delete(self.location.ermrestCompactUri, config).then(function () {
+                        defer.resolve();
+                    }).catch(function (catchError) {
+                        defer.reject(module.responseToError(catchError, self, delFlag));
+                    });
+                } else {
+                    // construct the url based on the given tuples
+                    var successTupleData = [], failedTupleData = [], deleteSubmessage = [];
+
+                    var encode = module._fixedEncodeURIComponent;
+                    var schemaTable = encode(self.table.schema.name) + ':' + encode(self.table.name);
+
+                    var deletableData = [], nonDeletableTuples = [];
+                    tuples.forEach(function (t, index) { 
+                        if (t.canDelete) {
+                            deletableData.push(t.data);
+                        } else {
+                            failedTupleData.push(t.data);
+                            nonDeletableTuples.push('- Record number ' + (index + 1) + ": " + t.displayname.value);
+                        }
+                    });
+                    
+                    if (nonDeletableTuples.length > 0) {
+                        deleteSubmessage.push('The following records could not be deleted based on your permissions:\n' + nonDeletableTuples.join('\n'));
+                    }
+
+                    // if none of the rows could be deleted, just return now.
+                    if (deletableData.length === 0) {
+                        defer.resolve(new module.BatchDeleteResponse(successTupleData, failedTupleData, deleteSubmessage.join("\n")));
+                        return defer.promise;
+                    }
+
+                    // might throw an error
+                    var keyValueRes = module._generateKeyValueFilters(
+                        self.table.shortestKey, 
+                        deletableData,
+                        self.table.schema.catalog,
+                        schemaTable.length + 1,
+                        self.displayname.value
+                    );
+                    if (!keyValueRes.successful) {
+                        var err = new module.InvalidInputError(keyValueRes.message);
+                        return defer.reject(err), defer.promise;
+                    }
+
+                    var recursiveDelete = function (index) {
+                        var currFilter = keyValueRes.filters[index];
+                        var url = [self.location.service, "catalog", self.location.catalog, "entity", schemaTable, currFilter.path].join("/");
+
+                        self._server.http.delete(url, config).then(function () {
+                            successTupleData =  successTupleData.concat(currFilter.keyData);
+                        }).catch(function (err) {
+                            failedTupleData = failedTupleData.concat(currFilter.keyData);
+                            deleteSubmessage.push(module.responseToError(err, self, delFlag).message);
+                        }).finally(function () {
+                            if (index < keyValueRes.filters.length-1) {
+                                recursiveDelete(index+1);
+                            } else {
+                                defer.resolve(new module.BatchDeleteResponse(successTupleData, failedTupleData, deleteSubmessage.join("\n")));
+                            }
+                        });
+                    };
+
+                    recursiveDelete(0);
+                }
             }
             catch (e) {
-                return module._q.reject(e);
+                defer.reject(e);
             }
+
+            return defer.promise;
         },
 
         /**
@@ -2137,7 +2220,7 @@
          * @returns {Object} an ERMrest.BatchUnlinkResponse "error" object
          **/
         deleteBatchAssociationTuples: function (parentTuple, tuples, contextHeaderParams) {
-            var self = this, delFlag = module._operationsFlag.DELETE;
+            var self = this, defer = module._q.defer();
             try {
                 verify(parentTuple, "'parentTuple' must be specified");
                 verify(tuples, "'tuples' must be specified");
@@ -2145,9 +2228,7 @@
                 // Can occur using an unfiltered reference
                 verify(self.derivedAssociationReference, "The current reference ('self') must have a derived association reference defined");
 
-
-                var defer = module._q.defer();
-
+                var encode = module._fixedEncodeURIComponent;
                 var k = 0;
                 var referencePathObjs = [],
                     successResponses = [],
@@ -2159,10 +2240,10 @@
 
                 // create path using parentTuple and self
                 var fkRel = self.origFKR;
-                var compactPath = associationRef.location.schemaName + ':' + associationRef.location.tableName + '/';
+                var compactPath = encode(associationRef.table.schema.name) + ':' + encode(associationRef.table.name) + '/';
                 // append main tuple key information
                 var mainKeyCol = associationRef.origFKR.colset.columns[0];
-                compactPath += mainKeyCol.name + '=' + parentTuple.data[associationRef.origFKR.mapping.get(mainKeyCol).name] + '&(';
+                compactPath += encode(mainKeyCol.name) + '=' + encode(parentTuple.data[associationRef.origFKR.mapping.get(mainKeyCol).name]) + '&(';
 
                 // keyColumns should be a set of columns that are unique and not-null
                 var keyColumns = associationRef.associationToRelatedFKR.colset.columns; // columns tells us what the key column names are in the fkr "_to" relationship
@@ -2189,7 +2270,7 @@
                             return defer.reject(err), defer.promise;
                         }
                         if (j != 0) filter += '&';
-                        filter += module._fixedEncodeURIComponent(keyCol.name) + '=' + module._fixedEncodeURIComponent(data);
+                        filter += encode(keyCol.name) + '=' + encode(data);
                         keyColumnsData[tupleColName] = data;
                     }
 
@@ -2222,10 +2303,8 @@
                 });
 
                 recursiveDelete(referencePathObjs[k], self.table.schema.catalog);
-
-                return defer.promise;
             } catch (e) {
-                return module._q.reject(module.responseToError(e, self));
+                defer.reject(module.responseToError(e, self));
             }
 
             function recursiveDelete(pathObj, catalogObj) {
@@ -2257,18 +2336,15 @@
                         recursiveDelete(referencePathObjs[k], catalogObj);
                     } else {
                         var deleteSubmessage = null;
-                        var totalSuccess = 0;
                         var successTupleData = [];
                         if (successResponses.length > 0) {
                             successResponses.forEach(function (resPair) {
-                                totalSuccess += resPair.keyData.length;
                                 resPair.keyData.forEach(function (data) {
                                     successTupleData.push(data);
                                 });
                             });
                         }
 
-                        var totalFail = 0;
                         var failedTupleData = [];
                         var errorsPresent = deleteErrors.length > 0;
                         if (errorsPresent) {
@@ -2276,22 +2352,19 @@
                             deleteErrors.forEach(function (errPair, idx) {
                                 deleteSubmessage += errPair.error.data;
                                 if (idx < deleteErrors.length-1) deleteSubmessage += " \n";
-                                totalFail += errPair.keyData.length;
                                 errPair.keyData.forEach(function (data) {
                                     failedTupleData.push(data);
                                 });
                             });
                         }
 
-                        var err = new module.BatchUnlinkResponse(totalSuccess, totalFail, deleteSubmessage);
-
-                        err.successTupleData = successTupleData;
-                        err.failedTupleData = failedTupleData;
-
+                        var err = new module.BatchUnlinkResponse(successTupleData, failedTupleData, deleteSubmessage);
                         defer.resolve(err);
                     }
                 });
             }
+
+            return defer.promise;
         },
 
         /**

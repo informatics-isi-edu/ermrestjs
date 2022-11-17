@@ -17,6 +17,7 @@
     module.InvalidInputError = InvalidInputError;
     module.MalformedURIError = MalformedURIError;
     module.BatchUnlinkResponse = BatchUnlinkResponse;
+    module.BatchDeleteResponse = BatchDeleteResponse;
     module.NoDataChangedError = NoDataChangedError;
     module.NoConnectionError = NoConnectionError;
     module.IntegrityConflictError = IntegrityConflictError;
@@ -375,29 +376,75 @@
     MalformedURIError.prototype.constructor = MalformedURIError;
 
     /**
+     * return the proper message that should be displayed to users. format:
+     * - one record:
+     *   - success: The {chosen|displayed} record successfully {unlinked|deleted}.
+     *   - failure: The {chosen|displayed} record could not be {unlinked|deleted}. <check error>
+     * - multiple records:
+     *   - all success: All of the <number> {chosen|displayed} records successfully {unlinked|deleted}.
+     *   - all failure: None of the <number> {chosen|displayed} records could be {unlinked|deleted}. <check error>
+     *   - mix: <number> records successfully {unlinked|deleted}. <number> records could not be {unlinked|deleted}. <check error>
+     * 
+     * <check error>: Check the error details below to see more information.
+     */
+    function generateBatchDeleteMessage(successTupleData, failedTupleData, isUnlink) {
+        var totalSuccess = successTupleData.length,
+            totalFail = failedTupleData.length;
+        var message = "";
+        var checkDetails = " Check the error details below to see more information.";
+        var verb = isUnlink ? 'unlinked' : 'deleted';
+        var adj = isUnlink ? 'chosen' : 'displayed';
+
+        // there was just one row
+        if (totalSuccess + totalFail === 1) {
+            if (totalSuccess > 0) {
+                message = 'The ' + adj + ' record successfully ' + verb + '.';
+            } else {
+                message = 'The ' + adj + ' record could not be ' + verb + '.';
+            }
+        }
+        // multiple rows
+        else {
+            if (totalFail === 0) {
+                message = 'All of the ' + totalSuccess + ' ' + adj + ' records successfully ' + verb + '.'; 
+            } 
+            else if (totalSuccess === 0) {
+                message = 'None of the ' + totalFail + ' ' + adj + ' records could be ' + verb + '.';
+            } else {
+                message = totalSuccess + ' record' + (totalSuccess > 1 ? 's' : '') + ' successfully ' + verb + '.';
+                message += ' ' + totalFail + ' record' + (totalFail > 1 ? 's' : '') + ' could not be ' + verb + '.';
+            }
+        }
+        return message + (totalFail > 0 ? checkDetails : '');
+    }
+
+    /**
      * @memberof ERMrest
      * @param {string} message error message
      * @constructor
      * @desc A malformed URI was passed to the API.
      */
-    function BatchUnlinkResponse(totalSuccess, totalFail, subMessage) {
-        var message = "";
-        if (totalSuccess > 0) {
-            message = totalSuccess + " record" + (totalSuccess > 1 ? "s" : "") + " successfully unlinked.";
-            if (totalFail > 0) message += " ";
-        }
+    function BatchUnlinkResponse(successTupleData, failedTupleData, subMessage) {
+        this.successTupleData = successTupleData;
+        this.failedTupleData = failedTupleData;
 
-        if (totalFail > 0) {
-            message += totalFail + " record" + (totalFail > 1 ? "s" : "") + " could not be unlinked. Check the error details below to see more information.";
-        }
-
-        this.message = message;
-        this.subMessage = subMessage;
+        var message = generateBatchDeleteMessage(successTupleData, failedTupleData, true);
         ERMrestError.call(this, '', module._errorStatus.BATCH_UNLINK, message, subMessage);
     }
 
     BatchUnlinkResponse.prototype = Object.create(ERMrestError.prototype);
     BatchUnlinkResponse.prototype.constructor = BatchUnlinkResponse;
+
+    function BatchDeleteResponse(successTupleData, failedTupleData, subMessage) {
+        this.successTupleData = successTupleData;
+        this.failedTupleData = failedTupleData;
+
+        var message = generateBatchDeleteMessage(successTupleData, failedTupleData, false);
+        ERMrestError.call(this, '', module._errorStatus.BATCH_DELETE, message, subMessage);
+    }
+
+    BatchDeleteResponse.prototype = Object.create(ERMrestError.prototype);
+    BatchDeleteResponse.prototype.constructor = BatchDeleteResponse;
 
     /**
      * @memberof ERMrest
