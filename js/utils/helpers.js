@@ -1290,12 +1290,12 @@
      *  - filters: If successful, it will be an array of {path, keyData}
      *  - hasNull: If failed, it will signal that the issue was related to null value
      *             for a column. `column` property will return the column name that had null value.
-     * @param {ERMrest.Column[]} keyColumns 
-     * @param {Object} data 
-     * @param {ERMrest.Catalog} catalogObject 
+     * @param {ERMrest.Column[]} keyColumns
+     * @param {Object} data
+     * @param {ERMrest.Catalog} catalogObject
      * @param {number} pathOffsetLength the length of offset that should be considered for length limitation logic.
      * @param {string} displayname the displayname of reference, used for error message
-     * @returns 
+     * @returns
      */
     module._generateKeyValueFilters = function (keyColumns, data, catalogObject, pathOffsetLength, displayname) {
         var encode = module._fixedEncodeURIComponent, pathLimit = module.URL_PATH_LENGTH_LIMIT;
@@ -1323,9 +1323,9 @@
 
                 if (keyColVal === undefined || keyColVal === null) {
                     return {
-                        successful: false, 
+                        successful: false,
                         message: "One or more " + displayname + " records have a null value for " + keyColName + ".",
-                        hasNull: true, 
+                        hasNull: true,
                         column: keyColName
                     };
                 }
@@ -1336,7 +1336,7 @@
                 // 6: for `=any()`
                 // +1 is for the `,` that we're going to add
                 // <pathOffset/><col>=any(<filter>,)
-                if (rowIndex !== 0 && 
+                if (rowIndex !== 0 &&
                     (pathOffsetLength + encode(keyColName).length + 6 + currentPath.length + (rowIndex != 0 ? 1 : 0) + filter.length) > pathLimit) {
                     result.push({
                         path: encode(keyColName)  + '=any(' + currentPath + ')',
@@ -1368,7 +1368,7 @@
                 filter += keyColumns.length > 1 ? ')' : '';
 
                 // check url length limit if not first one;
-                if (rowIndex != 0 && 
+                if (rowIndex != 0 &&
                     (pathOffsetLength + currentPath.length + (rowIndex != 0 ? ';' : '') + filter).length > pathLimit) {
                     // any more filters will go over the url length limit so save the current path and count
                     // then clear both to start creating a new path
@@ -1389,14 +1389,13 @@
             }
         }
 
+        // After last iteration of loop, push the current path
         if (canUseQuantified) {
-            // After last iteration of loop, push the current path
             result.push({
                 path: encode(keyColName)  + '=any(' + currentPath + ')',
                 keyData: keyData
             });
         } else {
-            // After last iteration of loop, push the current path
             result.push({
                 path: currentPath,
                 keyData: keyData
@@ -3213,7 +3212,7 @@
     /**
      * given a string, if it's a valid template_engine use it,
      * otherwise get it from the client config.
-     * @param {string} engine 
+     * @param {string} engine
      */
     module._getTemplateEngine = function (engine) {
         var isValid = function (val) {
@@ -3222,7 +3221,7 @@
         if (isValid(engine)) {
             return engine;
         }
-        if (isObjectAndNotNull(module._clientConfig) && isObjectAndNotNull(module._clientConfig.templating) && 
+        if (isObjectAndNotNull(module._clientConfig) && isObjectAndNotNull(module._clientConfig.templating) &&
             isValid(module._clientConfig.templating.engine)) {
             return module._clientConfig.templating.engine;
         }

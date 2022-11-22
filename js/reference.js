@@ -2132,7 +2132,7 @@
                     var schemaTable = encode(self.table.schema.name) + ':' + encode(self.table.name);
 
                     var deletableData = [], nonDeletableTuples = [];
-                    tuples.forEach(function (t, index) { 
+                    tuples.forEach(function (t, index) {
                         if (t.canDelete) {
                             deletableData.push(t.data);
                         } else {
@@ -2140,7 +2140,7 @@
                             nonDeletableTuples.push('- Record number ' + (index + 1) + ": " + t.displayname.value);
                         }
                     });
-                    
+
                     if (nonDeletableTuples.length > 0) {
                         deleteSubmessage.push('The following records could not be deleted based on your permissions:\n' + nonDeletableTuples.join('\n'));
                     }
@@ -2153,7 +2153,7 @@
 
                     // might throw an error
                     var keyValueRes = module._generateKeyValueFilters(
-                        self.table.shortestKey, 
+                        self.table.shortestKey,
                         deletableData,
                         self.table.schema.catalog,
                         schemaTable.length + 1,
@@ -2229,87 +2229,6 @@
                 verify(self.derivedAssociationReference, "The current reference ('self') must have a derived association reference defined");
 
                 var encode = module._fixedEncodeURIComponent;
-                var k = 0;
-                var referencePathObjs = [],
-                    successResponses = [],
-                    deleteErrors = [];
-
-                var associationRef = self.derivedAssociationReference;
-                // NOTE: without a proper derivedAssociationReference, location won't be defined
-                var baseUri = associationRef.location.service + "/catalog/" + associationRef.location.catalog + "/entity/";
-
-                // create path using parentTuple and self
-                var fkRel = self.origFKR;
-                var compactPath = encode(associationRef.table.schema.name) + ':' + encode(associationRef.table.name) + '/';
-                // append main tuple key information
-                var mainKeyCol = associationRef.origFKR.colset.columns[0];
-                compactPath += encode(mainKeyCol.name) + '=' + encode(parentTuple.data[associationRef.origFKR.mapping.get(mainKeyCol).name]) + '&(';
-
-                // keyColumns should be a set of columns that are unique and not-null
-                var keyColumns = associationRef.associationToRelatedFKR.colset.columns; // columns tells us what the key column names are in the fkr "_to" relationship
-                var mapping = associationRef.associationToRelatedFKR.mapping; // mapping tells us what the column name is on the leaf tuple, so we know what data to fetch from each tuple for identifying
-
-                var currentPath = compactPath;
-                var keyData = []; // key information for each tuple. Array of objects where each row in object is a key/value pair for the key colum info
-                for (var i=0; i<tuples.length; i++) {
-                    var tupleData = tuples[i].data;
-
-                    var filter = '(';  // group each unique filter because it can be conjunction
-
-                    var keyColumnsData = {};
-                    for (var j=0; j<keyColumns.length; j++) {
-                        var keyCol = keyColumns[j],
-                            tupleColName = mapping.get(keyCol).name,
-                            data = tupleData[tupleColName];
-
-                        if (data === undefined || data === null) {
-                            // this returns an error, if a value was shown in the UI with a null value for the right side of the
-                            //         uniqueness constraint, something about the model is broken and further UX actions should not continue
-                            // NOTE: include more context in the error message to communicate information about the parent, assocation, and leaf tables
-                            var err = new module.InvalidInputError("One or more " + associationRef.displayname.value + " tuples have a null value for " + tupleColName);
-                            return defer.reject(err), defer.promise;
-                        }
-                        if (j != 0) filter += '&';
-                        filter += encode(keyCol.name) + '=' + encode(data);
-                        keyColumnsData[tupleColName] = data;
-                    }
-
-                    filter += ')';
-
-                    // check url length limit if not first one;
-                    if (i != 0 && (currentPath + (i != 0 ? ';' : '') + filter).length > module.URL_PATH_LENGTH_LIMIT) {
-                        // any more filters will go over the url length limit so save the current path and count
-                        // then clear both to start creating a new path
-                        referencePathObjs.push({
-                            path: baseUri + currentPath + ')',
-                            keyData: keyData
-                        });
-
-                        currentPath = compactPath;
-                        keyData = [];
-                    } else if (i != 0) {
-                        // prepend the conjunction operator when it isn't the first filter to create and we aren't dealing with a url length limit
-                        filter = ";" + filter;
-                    }
-
-                    // append the filter either on the previous path after adding ";", or on the new path started from compactPath
-                    currentPath += filter;
-                    keyData.push(keyColumnsData);
-                }
-                // After last iteration of loop, push the current path
-                referencePathObjs.push({
-                    path: baseUri + currentPath + ')',
-                    keyData: keyData
-                });
-
-                recursiveDelete(referencePathObjs[k], self.table.schema.catalog);
-            } catch (e) {
-                defer.reject(module.responseToError(e, self));
-            }
-
-            function recursiveDelete(pathObj, catalogObj) {
-                var delFlag = module._operationsFlag.DELETE;
-
                 if (!contextHeaderParams || !isObject(contextHeaderParams)) {
                     contextHeaderParams = {"action": "delete"};
                 }
@@ -2317,51 +2236,65 @@
                     headers: self._generateContextHeader(contextHeaderParams)
                 };
 
-                // NOTE: - if we can't trust the url, make a get to loc.ermrestCompactUri to verify the data set is the same (iterate over keys)
-                //       - a further verification is to take etag of read and use as the if-match header as part of delete to make sure the fetched set is the same as the delete set
-                self._server.http.delete(pathObj.path, config).then(function (res) {
-                    // NOTE: do we want to do something with the success information?
-                    successResponses.push({
-                        response: res,
-                        keyData: pathObj.keyData
-                    });
-                }).catch(function (err) {
-                    deleteErrors.push({
-                        error: err,
-                        keyData: pathObj.keyData
-                    });
-                }).finally(function () {
-                    if (k < referencePathObjs.length-1) {
-                        k++;
-                        recursiveDelete(referencePathObjs[k], catalogObj);
-                    } else {
-                        var deleteSubmessage = null;
-                        var successTupleData = [];
-                        if (successResponses.length > 0) {
-                            successResponses.forEach(function (resPair) {
-                                resPair.keyData.forEach(function (data) {
-                                    successTupleData.push(data);
-                                });
-                            });
-                        }
+                var successTupleData = [], failedTupleData = [], deleteSubmessage = [];
+                var associationRef = self.derivedAssociationReference;
+                var mainKeyCol = associationRef.origFKR.colset.columns[0];
 
-                        var failedTupleData = [];
-                        var errorsPresent = deleteErrors.length > 0;
-                        if (errorsPresent) {
-                            deleteSubmessage = "";
-                            deleteErrors.forEach(function (errPair, idx) {
-                                deleteSubmessage += errPair.error.data;
-                                if (idx < deleteErrors.length-1) deleteSubmessage += " \n";
-                                errPair.keyData.forEach(function (data) {
-                                    failedTupleData.push(data);
-                                });
-                            });
-                        }
+                // the path starting from association table, with filters based on the fk to the main table
+                var compactPath = encode(associationRef.table.schema.name) + ':' + encode(associationRef.table.name) + '/';
+                compactPath += encode(mainKeyCol.name) + '=' + encode(parentTuple.data[associationRef.origFKR.mapping.get(mainKeyCol).name]) + '&';
 
-                        var err = new module.BatchUnlinkResponse(successTupleData, failedTupleData, deleteSubmessage);
-                        defer.resolve(err);
-                    }
+                // keyColumns should be a set of columns that are unique and not-null
+                // columns tells us what the key column names are in the fkr "_to" relationship
+                var keyColumns = associationRef.associationToRelatedFKR.colset.columns;
+                // mapping tells us what the column name is on the leaf tuple, so we know what data to fetch from each tuple for identifying
+                var mapping = associationRef.associationToRelatedFKR.mapping;
+
+                // add the filters based on the fk to the related table
+                var keyFromAssocToRelatedData = tuples.map(function (t) {
+                    var res = {};
+                    keyColumns.forEach(function (col) {
+                        res[col.name] = t.data[mapping.get(col).name];
+                    });
+                    return res;
                 });
+                var keyValueRes = module._generateKeyValueFilters(
+                    keyColumns,
+                    keyFromAssocToRelatedData,
+                    associationRef.table.schema.catalog,
+                    compactPath.length + 1, // 1 is for added `/` between filter and compactPath
+                    associationRef.displayname.value
+                );
+                if (!keyValueRes.successful) {
+                    var err = new module.InvalidInputError(keyValueRes.message);
+                    return defer.reject(err), defer.promise;
+                }
+
+                // send the requests one at a time
+                var recursiveDelete = function (index) {
+                    var currFilter = keyValueRes.filters[index];
+                    var url = [
+                        associationRef.location.service, "catalog", associationRef.location.catalog, "entity",
+                        compactPath + currFilter.path
+                    ].join("/");
+
+                    self._server.http.delete(url, config).then(function () {
+                        successTupleData =  successTupleData.concat(currFilter.keyData);
+                    }).catch(function (err) {
+                        failedTupleData = failedTupleData.concat(currFilter.keyData);
+                        deleteSubmessage.push(err.data);
+                    }).finally(function () {
+                        if (index < keyValueRes.filters.length-1) {
+                            recursiveDelete(index+1);
+                        } else {
+                            defer.resolve(new module.BatchUnlinkResponse(successTupleData, failedTupleData, deleteSubmessage.join("\n")));
+                        }
+                    });
+                };
+
+                recursiveDelete(0);
+            } catch (e) {
+                defer.reject(e);
             }
 
             return defer.promise;

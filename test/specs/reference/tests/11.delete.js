@@ -183,7 +183,7 @@ exports.execute = function (options) {
                                                     }, "key_col"]
                                                 }
                                             }
-                                        }    
+                                        }
                                     }
                                 }
                             }
@@ -373,29 +373,29 @@ exports.execute = function (options) {
             it("should check failure cases for deleteBatchAssociationTuples", function (done) {
                 // no mainTuple defined
                 filteredLeafReference.deleteBatchAssociationTuples(null, relatedLeafTuples).then(null, function (err) {
-                    expect(err.message).toBe("Error: 'parentTuple' must be specified");
+                    expect(err.message).toBe("'parentTuple' must be specified");
 
                     // no tuuples set defined
                     return filteredLeafReference.deleteBatchAssociationTuples(mainTuple, null);
                 }).then(null, function (err) {
-                    expect(err.message).toBe("Error: 'tuples' must be specified");
+                    expect(err.message).toBe("'tuples' must be specified");
 
                     // tuples set is empty
                     return filteredLeafReference.deleteBatchAssociationTuples(mainTuple, [])
                 }).then(null, function (err) {
-                    expect(err.message).toBe("Error: 'tuples' must have at least one row to delete");
+                    expect(err.message).toBe("'tuples' must have at least one row to delete");
 
                     // the reference is not filtered (no derived association)
                     return filteredLeafReference.unfilteredReference.deleteBatchAssociationTuples(mainTuple, relatedLeafTuples);
                 }).then(null, function (err) {
-                    expect(err.message).toBe("Error: The current reference ('self') must have a derived association reference defined");
+                    expect(err.message).toBe("The current reference ('self') must have a derived association reference defined");
 
                     // one of the tuples has an empty data object
                     newTuples = relatedLeafTuples;
                     newTuples.push({data: {}});
                     return filteredLeafReference.deleteBatchAssociationTuples(mainTuple, newTuples)
                 }).then(null, function (err) {
-                    expect(err.message).toBe("One or more association_table tuples have a null value for int_col");
+                    expect(err.message).toBe("One or more association_table records have a null value for leaf_key_col.");
 
                     done();
                 }).catch(function (error) {
@@ -406,7 +406,7 @@ exports.execute = function (options) {
         });
 
         describe("when trying to unlink with dynamic acls", function () {
-            var mainUri = options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ":main_table",                
+            var mainUri = options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ":main_table",
                 mainReference, relatedLeafReference, filteredLeafReferenceWAcls,
                 mainTuple, relatedLeafTuples;
 
@@ -608,7 +608,7 @@ exports.execute = function (options) {
                                             "can_delete_row": {
                                                 "types": ["delete"],
                                                 "projection": [
-                                                    {"filter": "l_key_col", "operand": "8500000000000000000000000000000000085"}, "l_key_col"
+                                                    {"filter": "l_key_col", "operand": "8500000000000000000000000000000000000000000000085"}, "l_key_col"
                                                 ],
                                                 "projection_type": "nonnull"
                                             }
