@@ -15,9 +15,9 @@
         },
 
         /**
-         * Given a list of values and column name, return the appropriate 
+         * Given a list of values and column name, return the appropriate
          * disjunctive quantified values filter.
-         * 
+         *
          * @param {any[]} choices an array of values (value could be null)
          * @param {string} column  the name of the column
          * @param {any} catalogObject the catalog object (to check if alternative syntax is available)
@@ -42,7 +42,7 @@
             // return a simple key=value if the length is one
             if (choices.length === 1) {
                 return eqSyntax(choices[0]);
-            } 
+            }
 
             // see if the quantified syntax can be used
             if (catalogObject) {
@@ -76,9 +76,9 @@
                 if (hasNull) {
                     colsString += ';' + encode(column) + nullFilter;
                 }
-            } else { 
+            } else {
                 colsString += choices.reduce(function (prev, curr, i) {
-                    return res + (i !== 0 ? ";": "") + eqSyntax(column, curr);    
+                    return res + (i !== 0 ? ";": "") + eqSyntax(column, curr);
                 }, "");
             }
 
@@ -336,6 +336,14 @@
         var rootTable = null;
         try {
             rootTable = catalogObject.schemas.findTable(rootTableName, rootSchemaName);
+            /**
+             * when this function is called for the facets defined prior to join,
+             * we don't have access to the reference object. that's why we're
+             * attempting to create it using the table
+             */
+            if (!isObjectAndNotNull(referenceObject)) {
+                referenceObject = rootTable.reference;
+            }
         } catch(exp) {
             // fail silently
         }
@@ -351,7 +359,7 @@
             rightJoins = [], // if we have null in the filter, we have to use join
             innerJoins = [], // all the other facets that have been parsed
             encode = module._fixedEncodeURIComponent, sourcekey,
-            i, term, col, path, constraints, parsed, hasNullChoice, 
+            i, term, col, path, constraints, parsed, hasNullChoice,
             useRightJoin, rightJoinSchemaTable,
             mappedFacet, currObj, temp;
 
@@ -445,7 +453,7 @@
                 );
                 path = temp.path;
                 col = currObj.column.name;
-            } 
+            }
             else if (_sourceColumnHelpers._sourceHasNodes(term.source)) {
 
                 // if there's a null filter and source has path, we have to use right join
@@ -1153,7 +1161,7 @@
     };
 
     /**
-     * 
+     *
      * @param {Object} sourceObject the column directive object
      * @param {ERMrest.Table} table the root (starting) table
      * @param {Object} consNames the constraint names
@@ -1553,7 +1561,7 @@
 
                     // if this is the first element, then we have a root filter
                     if (i === 0) filterProps.hasRootFilter = true;
-            
+
                     // create the string filter string, if this is not the last, then it will be emptied out
                     // for now we just want the string, later we could improve this implementation
                     // (for recordedit the whole object would be needed and not just string)

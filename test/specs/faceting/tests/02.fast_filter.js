@@ -237,16 +237,17 @@ exports.execute = (options) => {
             beforeAll(() => sourceRef = ref.facetColumns[4].sourceReference);
 
             it('should return the proper readPath.', () => {
+              // we should use fast_filter_source for parsing the facets on main table
+              // but the path from the main to the current facetColumn should not use the fast_filter.
               expect(sourceRef.readPath).toEqual([
                 'T:=fast_filter_schema:main',
                 'id=any(1,2,3,4,5)/$T',
                 '(fk_to_main_o1)=(fast_filter_schema:main_o1:id)/RID=any(1,2,3,4,5)/$T',
-                '(fk_to_main_o1)=(fast_filter_schema:main_o1:id)/col=any(1,2,3,4)/$T',
+                'main_o1_fast_col=any(1,2,3,4)/$T',
                 '(fk_to_main_o1)=(fast_filter_schema:main_o1:id)',
-                '(fk_to_main_o1_o1)=(fast_filter_schema:main_o1_o1:id)',
-                '(fk_to_main_o1_o1_o1)=(fast_filter_schema:main_o1_o1_o1:id)/RID=any(1,2,3)/$T',
-                'T_P1:=(fk_to_main_o1)=(fast_filter_schema:main_o1:id)',
-                '(id)=(fast_filter_schema:main_o1_i2:fk_to_main_o1)/RID=1/$T',
+                '(fk_to_main_o1_o1)=(fast_filter_schema:main_o1_o1:id)/other_col=any(1,2,3)/$T',
+                'T_P1:=(fk_to_main_o1)=(fast_filter_schema:main_o1:id)/id::gt::2',
+                '(id)=(fast_filter_schema:main_o1_i2:fk_to_main_o1)/id=1/$T',
                 '$T_P1/M:=(id)=(fast_filter_schema:main_o1_i1:fk_to_main_o1)',
                 'F1:=left(fk_to_main_o1)=(fast_filter_schema:main_o1:id)/$M/RID;M:=array_d(M:*),F1:=array_d(F1:*)@sort(RID)'
               ].join('/'));
@@ -256,7 +257,7 @@ exports.execute = (options) => {
               // NOTE this is just making sure we're not throwing any errors
               sourceRef.read(25).then(function (page) {
                 expect(page.length).toBe(0, "page length missmatch");
-  
+
                 done();
               }).catch(function (err) {
                 done.fail(err);

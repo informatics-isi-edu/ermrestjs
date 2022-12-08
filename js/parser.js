@@ -594,7 +594,11 @@
             // NOTE: we have to do this at first to find the facets with null
             var parsedPartsWithoutJoin = self.pathParts.map(function (part, index) {
                 var res = [], facetRes;
-
+                var usedRef;
+                if (index == self.pathParts.length -1) {
+                    // the Location.referenceObject is based on last part of url
+                    usedRef= self.referenceObject;
+                }
                 // facet
                 if (part.facets) {
                     var currUsedSourceObjects = null;
@@ -609,8 +613,8 @@
                     }
 
                     facetRes = _renderFacet(
-                        part.facets.decoded, part.alias, part.schema, part.table, self.catalog, 
-                        self.catalogObject, self.referenceObject,
+                        part.facets.decoded, part.alias, part.schema, part.table, self.catalog,
+                        self.catalogObject, usedRef,
                         currUsedSourceObjects, forcedAliases, module._constraintNames
                     );
                     if (!facetRes.successful) {
@@ -638,8 +642,8 @@
                     //      facets and customFacets
                     if (part.customFacets.facets) {
                         facetRes = _renderFacet(
-                            part.customFacets.facets.decoded, part.alias, part.schema, part.table, self.catalog, 
-                            self.catalogObject, self.referenceObject,
+                            part.customFacets.facets.decoded, part.alias, part.schema, part.table, self.catalog,
+                            self.catalogObject, usedRef,
                             null, null, module._constraintNames
                         );
                         if (!facetRes.successful) {
@@ -1050,7 +1054,7 @@
 
         /**
          * if the location has visible facet/filter/customfacet
-         * NOTE: if location only has hidden facets or custom facets without displayname, 
+         * NOTE: if location only has hidden facets or custom facets without displayname,
          *        this will return false.
          * @return {Boolean}]
          */
@@ -1303,7 +1307,7 @@
          * Create a new location object with the same uri and catalogObject
          * @param {ERMrest.Reference}
          * @returns {ERMrest.Location} new location object
-         * 
+         *
          * @private
          */
         _clone: function(referenceObject) {
@@ -1575,7 +1579,7 @@
             if (term.trim().length > 0 ) terms = terms.concat(term.trim().split(/[\s]+/)); // split by white spaces
 
             // the quantified syntax only makes sense when we have more than one term
-            if (terms.length < 2) useQuantified = false; 
+            if (terms.length < 2) useQuantified = false;
 
             if (useQuantified) {
                 filterString = column + module._ERMrestFilterPredicates.CASE_INS_REG_EXP + 'all(';
