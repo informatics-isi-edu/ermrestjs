@@ -206,6 +206,20 @@
                     },
                     function(error) {
                         /**
+                         * in axios, network error doesn't have proper status code,
+                         * so this will make sure we're treating it the same as response.status=-1
+                         *
+                         * https://github.com/axios/axios/issues/383
+                         */
+                        if (!!error.isAxiosError) {
+                            if (typeof error.response !== 'object') {
+                                error = { response: { status: _http_status_codes.no_connection } };
+                            } else if (typeof error.response.status !== 'number') {
+                                error.response.status = _http_status_codes.no_connection;
+                            }
+                        }
+
+                        /**
                          * angularjs' $http returns the "response" object
                          * while axios returns an "error" object that has "response" in it
                          */

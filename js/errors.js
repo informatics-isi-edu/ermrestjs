@@ -467,6 +467,7 @@
      * @desc A No Connection or No Internet Connection was passed to the API.
      */
     function NoConnectionError(message) {
+        message = message || module._errorMessage.NO_CONNECTION_ERROR;
         ERMrestError.call(this, -1, module._errorStatus.NO_CONNECTION_ERROR, message);
     }
 
