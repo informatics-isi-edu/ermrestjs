@@ -1928,27 +1928,8 @@
                     var etag = module.getResponseHeader(response).etag;
                     var pageData = [];
 
-                    var uri = self._location.service + "/catalog/" + self.table.schema.catalog.id + "/entity/" + urlEncode(self.table.schema.name) + ':' + urlEncode(self.table.name) + '/';
                     // loop through each returned Row and get the key value
                     for (j = 0; j < response.data.length; j++) {
-                        // build the uri
-                        if (j !== 0) uri += ';';
-
-                        // shortest key is made up from one column
-                        if (self._shortestKey.length == 1) {
-                            keyName = self._shortestKey[0].name;
-                            uri += module._fixedEncodeURIComponent(keyName) + '=' + module._fixedEncodeURIComponent( getAliasedKeyVal(response.data[j], keyName) );
-                        } else {
-                            uri += '(';
-                            for (k = 0; k < self._shortestKey.length; k++) {
-                                if (k !== 0)
-                                uri += '&';
-                                keyName = self._shortestKey[k].name;
-                                uri += module._fixedEncodeURIComponent(keyName) + '=' + module._fixedEncodeURIComponent( getAliasedKeyVal(response.data[j], keyName) );
-                            }
-                            uri += ')';
-                        }
-
                         // response.data is sometimes in a different order
                         // so collecting the data could be incorrect if we don't make sure the response data and tuple data are in the same order
                         // the entity is updated properly just the data returned from this request is in a different order sometimes
@@ -2000,6 +1981,23 @@
                             pageData[i][j] =tuples[i]._oldData[j]; // add the missing data
                         }
                     }
+
+                    // build the url using the helper function
+                    var schemaTable = urlEncode(self.table.schema.name) + ':' + urlEncode(self.table.name);
+                    var uri = self._location.service + "/catalog/" + self.table.schema.catalog.id + "/entity/" + schemaTable;
+                    var keyValueRes = module._generateKeyValueFilters(
+                        self.table.shortestKey,
+                        pageData,
+                        self.table.schema.catalog,
+                        -1 // we don't want to check the url length here, chaise will check it
+                    );
+                    // NOTE this will not happen since ermrest only accepts not-null keys,
+                    // but added here for completeness
+                    if (!keyValueRes.successful) {
+                        var err = new module.InvalidInputError(keyValueRes.message);
+                        return defer.reject(err), defer.promise;
+                    }
+                    uri += '/' + keyValueRes.filters.map(function (f) { return f.path; }).join('/');
 
                     var ref = new Reference(module.parse(uri), self._table.schema.catalog).contextualize.compactEntry;
                     ref = (response.data.length > 1 ? ref.contextualize.compactEntry : ref.contextualize.compact);

@@ -1838,12 +1838,33 @@
     function _processSingleFilterString(filterString, path) {
         //check for '=' or '::' to decide what split to use
         var f, filter;
+        var throwError = function () {
+            throw new module.InvalidFilterOperatorError("Couldn't parse '" + filterString + "' filter.", path, filterString);
+        }
         if (filterString.indexOf("=") !== -1) {
             f = filterString.split('=');
             // NOTE: filter value (f[1]) can be empty
             if (f[0] && f.length === 2) {
-                filter = new ParsedFilter(module.filterTypes.BINARYPREDICATE);
-                filter.setBinaryPredicate(decodeURIComponent(f[0]), "=", decodeURIComponent(f[1]));
+                if (f[1] && f[1].startsWith('any(')) {
+                    if (!f[1].endsWith(')')) {
+                        throwError();
+                    }
+                    var vals = f[1].slice(4).slice(0,-1).split(",");
+                    if (vals.length === 0) {
+                        throwError();
+                    }
+                    filter = new ParsedFilter(module.filterTypes.DISJUNCTION);
+                    filter.setFilters(vals.map(function (v) {
+                        var temp = new ParsedFilter(module.filterTypes.BINARYPREDICATE);
+                        temp.setBinaryPredicate(decodeURIComponent(f[0]), "=", decodeURIComponent(v));
+                        return temp;
+                    }));
+
+                } else {
+                    filter = new ParsedFilter(module.filterTypes.BINARYPREDICATE);
+                    filter.setBinaryPredicate(decodeURIComponent(f[0]), "=", decodeURIComponent(f[1]));
+                }
+
                 return filter;
             }
         } else {
@@ -1854,7 +1875,7 @@
                 return filter;
             }
         }
-        throw new module.InvalidFilterOperatorError("Couldn't parse '" + filterString + "' filter.", path, filterString);
+        throwError();
     }
 
     /**

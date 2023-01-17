@@ -1294,6 +1294,7 @@
      * @param {Object} data
      * @param {ERMrest.Catalog} catalogObject
      * @param {number} pathOffsetLength the length of offset that should be considered for length limitation logic.
+     *                                  if the given value is negative, we will not check the url length limitation.
      * @param {string} displayname the displayname of reference, used for error message
      * @returns
      */
@@ -1336,7 +1337,7 @@
                 // 6: for `=any()`
                 // +1 is for the `,` that we're going to add
                 // <pathOffset/><col>=any(<filter>,)
-                if (rowIndex !== 0 &&
+                if (rowIndex !== 0 && pathOffsetLength >= 0 &&
                     (pathOffsetLength + encode(keyColName).length + 6 + currentPath.length + (rowIndex != 0 ? 1 : 0) + filter.length) > pathLimit) {
                     result.push({
                         path: encode(keyColName)  + '=any(' + currentPath + ')',
@@ -1368,7 +1369,7 @@
                 filter += keyColumns.length > 1 ? ')' : '';
 
                 // check url length limit if not first one;
-                if (rowIndex != 0 &&
+                if (rowIndex != 0 && pathOffsetLength >= 0 &&
                     (pathOffsetLength + currentPath.length + (rowIndex != 0 ? ';' : '') + filter).length > pathLimit) {
                     // any more filters will go over the url length limit so save the current path and count
                     // then clear both to start creating a new path
