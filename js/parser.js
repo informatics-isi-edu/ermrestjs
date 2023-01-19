@@ -1840,7 +1840,7 @@
         var f, filter;
         var throwError = function () {
             throw new module.InvalidFilterOperatorError("Couldn't parse '" + filterString + "' filter.", path, filterString);
-        }
+        };
         if (filterString.indexOf("=") !== -1) {
             f = filterString.split('=');
             // NOTE: filter value (f[1]) can be empty

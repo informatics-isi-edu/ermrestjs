@@ -559,7 +559,7 @@ exports.execute = function (options) {
             });
         });
 
-        describe('.filteredRef, ', function() {
+        describe('.filteredRef and .hasDomainFilter, ', function() {
             var mainEntityReference, mainEntityColumns, filteredReference, mainEntityData, foreignKeyData,
                 mainEntityTableName = "main-entity-table",
                 schemaUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":";
@@ -609,6 +609,12 @@ exports.execute = function (options) {
                             console.dir(err);
                             done.fail();
                         });
+                    });
+
+                    it ('hasDomainFilter should return the proper values.', () => {
+                        expect(mainEntityColumns.map(function (col) {
+                            return !!col.hasDomainFilter;
+                        })).toEqual(jasmine.arrayContaining([false, false, true, true, false, true, true, true]), "fkeys elements missmatch.");
                     });
 
                     describe('should return a filtered reference based on provided data.', function () {

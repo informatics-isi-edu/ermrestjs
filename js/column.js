@@ -1148,7 +1148,7 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
 
     // get the computed filters
     var keyValueRes = module._generateKeyValueFilters(
-        mainTable.shortestKey, 
+        mainTable.shortestKey,
         page.tuples.map(function (t) { return t.data;  }),
         mainTable.schema.catalog,
         (basePath + pathToCol + projection).length,
@@ -1888,6 +1888,40 @@ ForeignKeyPseudoColumn.prototype._determineSortable = function () {
         }
     }
 };
+
+/**
+ * Whether this column has domain-filter annotation
+ * @member {Boolean} hasDomainFilter
+ * @memberof ERMrest.ForeignKeyPseudoColumn#
+ */
+Object.defineProperty(ForeignKeyPseudoColumn.prototype, "hasDomainFilter", {
+    get: function () {
+        if (this._hasDomainFilter === undefined) {
+            var checkDomainFilter = function (self) {
+                // the annotaion didn't exist
+                if (!self.foreignKey.annotations.contains(module._annotations.FOREIGN_KEY)) {
+                    return false;
+                }
+
+                var content = self.foreignKey.annotations.get(module._annotations.FOREIGN_KEY).content;
+
+                // the annotation is properly defined
+                if (isObjectAndNotNull(content.domain_filter) && isStringAndNotEmpty(content.domain_filter.ermrest_path_pattern)) {
+                    return true;
+                }
+                // backward compatibility
+                else if (typeof content.domain_filter_pattern === "string") {
+                    return true;
+                }
+
+                return false;
+            };
+
+            this._hasDomainFilter = checkDomainFilter(this);
+        }
+        return this._hasDomainFilter;
+    }
+});
 
 /**
  * returns the raw default values of the constituent columns.
@@ -3037,7 +3071,7 @@ FacetColumn.prototype = {
     /**
      * uncontextualized {@link ERMrest.Reference} that has all the joins specified
      * in the source with all the filters of other FacetColumns in the reference.
-     * 
+     *
      * The returned reference will be in the following format:
      * <main-table>/<facets of main table except current facet>/<path to current facet>
      *
@@ -3048,7 +3082,7 @@ FacetColumn.prototype = {
      * Then the source reference for R3 will be the following:
      * T:=S:T/(fk1)/term=1/$T/(fk2)/term2/$T/M:=(fk3)
      * As you can see it has all the filters of the main table + join to current table.
-     * 
+     *
      * Notes:
      * - This function used to reverse the path from the current facet to each of the
      *   other facets in the main reference. Since this was very inefficient, we decided
@@ -3057,7 +3091,7 @@ FacetColumn.prototype = {
      *   therefore might have filters or reused table instances (shared path). That's why
      *   we're ensuring to pass the whole facetObjectWrapper to parser, so it can properly
      *   parse it.
-     * 
+     *
      *
      * @type {ERMrest.Reference}
      */
@@ -3125,7 +3159,7 @@ FacetColumn.prototype = {
                 }
                 newLoc.customFacets = cfacet;
             }
-            
+
             /**
              * if it has path, we have to pass the whole facetObjectWrapper
              * as a join. this is so we can properly share path
@@ -3136,7 +3170,7 @@ FacetColumn.prototype = {
                     table.schema.name,
                     table.name
                 );
-            } 
+            }
             // if it only has filter (and no path, then we can just add the filter to path)
             else if (self.sourceObjectWrapper.isFiltered) {
                 // TODO can this be improved?
@@ -3163,7 +3197,7 @@ FacetColumn.prototype = {
      *    - If it's in `scalar` mode, append the column name. `table_name (column_name)`.
      *
      * Returned object has `value`, `unformatted`, and `isHTML` properties.
-     * @type {Object} 
+     * @type {Object}
      */
     get displayname() {
         if (this._displayname === undefined) {
