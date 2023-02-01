@@ -21,7 +21,7 @@
     "library"
   ],
   "dependencies": {
-    "jsdoc-to-markdown": "7.0.0",
+    "jsdoc-to-markdown": "8.0.0",
     "jshint": "2.13.4",
     "uglify-js": "3.9.2"
   },

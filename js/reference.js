@@ -2065,8 +2065,8 @@
          * NOTE This will ignore the provided sort and paging on the reference, make
          * sure you are calling this on specific set or rows (filtered).
          *
-         * @param {Tuple[]=} tuples (optional) the tuples that should be deleted
-         * @param {Object=} contextHeaderParams (optional) the object that we want to log.
+         * @param {Tuple[]?} tuples (optional) the tuples that should be deleted
+         * @param {Object?} contextHeaderParams (optional) the object that we want to log.
          * @returns {Promise} A promise resolved with empty object or rejected with any of these errors:
          * - ERMrestjs corresponding http errors, if ERMrest returns http error.
          */

@@ -164,6 +164,7 @@ to use for ERMrest JavaScript agents.
             * [.favoritesPath](#ERMrest.Table+favoritesPath) : <code>string</code>
             * [.kind](#ERMrest.Table+kind) : <code>string</code>
             * [.supportHistory](#ERMrest.Table+supportHistory)
+            * [.aggressiveFacetLookup](#ERMrest.Table+aggressiveFacetLookup)
             * [.shortestKey](#ERMrest.Table+shortestKey)
             * [.displayKey](#ERMrest.Table+displayKey) : [<code>Array.&lt;Column&gt;</code>](#ERMrest.Column)
             * [.stableKey](#ERMrest.Table+stableKey) : [<code>Array.&lt;Column&gt;</code>](#ERMrest.Column)
@@ -405,14 +406,13 @@ to use for ERMrest JavaScript agents.
         * [.generateFacetColumns()](#ERMrest.Reference+generateFacetColumns)
         * [.validateFacetsFilters(facetAndFilters, facetObjectWrappers, searchTerm, skipMappingEntityChoices, changeLocation)](#ERMrest.Reference+validateFacetsFilters)
         * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
-        * [.addFacets(facetAndFilters)](#ERMrest.Reference+addFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
+        * [.addFacets(facetAndFilters, customFacets)](#ERMrest.Reference+addFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
         * [.hideFacets()](#ERMrest.Reference+hideFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
         * [.create(data, contextHeaderParams, skipOnConflict)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
         * [.read(limit, contextHeaderParams, useEntity, dontCorrectPage, getTRS, getTCRS, getUnlinkTRS)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
         * [.sort(sort)](#ERMrest.Reference+sort) ⇒ <code>Reference</code>
         * [.update(tuples, contextHeaderParams)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
-        * [.delete(contextHeaderParams)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
-            * [~self](#ERMrest.Reference+delete..self)
+        * [.delete(tuples, contextHeaderParams)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
         * [.deleteBatchAssociationTuples(mainTuple, tuples, contextHeaderParams)](#ERMrest.Reference+deleteBatchAssociationTuples) ⇒ <code>Object</code>
         * [.generateRelatedList([tuple])](#ERMrest.Reference+generateRelatedList) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
         * [.getExportTemplates(useDefault)](#ERMrest.Reference+getExportTemplates) ⇒ <code>Array</code>
@@ -462,6 +462,8 @@ to use for ERMrest JavaScript agents.
         * [.countAgg](#ERMrest.ReferenceAggregateFn+countAgg) : <code>Object</code>
     * [.ReferenceColumn](#ERMrest.ReferenceColumn)
         * [new ReferenceColumn(reference, baseCols, sourceObjectWrapper, name, mainTuple)](#new_ERMrest.ReferenceColumn_new)
+        * [.isFiltered](#ERMrest.ReferenceColumn+isFiltered) : <code>boolean</code>
+        * [.filterProps](#ERMrest.ReferenceColumn+filterProps) : <code>Object</code>
         * [.isPseudo](#ERMrest.ReferenceColumn+isPseudo) : <code>boolean</code>
         * [.table](#ERMrest.ReferenceColumn+table) : [<code>Table</code>](#ERMrest.Table)
         * [.name](#ERMrest.ReferenceColumn+name) : <code>string</code>
@@ -492,7 +494,6 @@ to use for ERMrest JavaScript agents.
         * [.isEntityMode](#ERMrest.PseudoColumn+isEntityMode) : <code>boolean</code>
         * [.isUnique](#ERMrest.PseudoColumn+isUnique) : <code>boolean</code>
         * [.hasAggregate](#ERMrest.PseudoColumn+hasAggregate) : <code>boolean</code>
-        * [.isFiltered](#ERMrest.PseudoColumn+isFiltered) : <code>boolean</code>
         * [.comment](#ERMrest.PseudoColumn+comment) : <code>Object</code>
         * [.commentDisplay](#ERMrest.PseudoColumn+commentDisplay) : <code>Object</code>
         * [.displayname](#ERMrest.PseudoColumn+displayname) : <code>Object</code>
@@ -507,6 +508,7 @@ to use for ERMrest JavaScript agents.
         * [.isForeignKey](#ERMrest.ForeignKeyPseudoColumn+isForeignKey) : <code>boolean</code>
         * [.reference](#ERMrest.ForeignKeyPseudoColumn+reference) : [<code>Reference</code>](#ERMrest.Reference)
         * [.foreignKey](#ERMrest.ForeignKeyPseudoColumn+foreignKey) : [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)
+        * [.hasDomainFilter](#ERMrest.ForeignKeyPseudoColumn+hasDomainFilter) : <code>Boolean</code>
         * [.defaultValues](#ERMrest.ForeignKeyPseudoColumn+defaultValues) : <code>Object</code>
         * [.defaultReference](#ERMrest.ForeignKeyPseudoColumn+defaultReference) : <code>ERMrest.Refernece</code>
         * [.displayname](#ERMrest.ForeignKeyPseudoColumn+displayname) : <code>Object</code>
@@ -539,9 +541,8 @@ to use for ERMrest JavaScript agents.
         * [.foreignKey](#ERMrest.InboundForeignKeyPseudoColumn+foreignKey) : [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)
         * [.isPseudo](#ERMrest.InboundForeignKeyPseudoColumn+isPseudo) : <code>boolean</code>
         * [.isInboundForeignKey](#ERMrest.InboundForeignKeyPseudoColumn+isInboundForeignKey) : <code>boolean</code>
-        * [.isFiltered](#ERMrest.InboundForeignKeyPseudoColumn+isFiltered) : <code>boolean</code>
     * [.FacetColumn](#ERMrest.FacetColumn)
-        * [new FacetColumn(reference, index, facetObject, filters)](#new_ERMrest.FacetColumn_new)
+        * [new FacetColumn(reference, index, facetObjectWrapper, filters)](#new_ERMrest.FacetColumn_new)
         * [._column](#ERMrest.FacetColumn+_column) : [<code>Column</code>](#ERMrest.Column)
         * [.reference](#ERMrest.FacetColumn+reference) : [<code>Reference</code>](#ERMrest.Reference)
         * [.index](#ERMrest.FacetColumn+index) : <code>int</code>
@@ -735,14 +736,13 @@ to use for ERMrest JavaScript agents.
         * [.generateFacetColumns()](#ERMrest.Reference+generateFacetColumns)
         * [.validateFacetsFilters(facetAndFilters, facetObjectWrappers, searchTerm, skipMappingEntityChoices, changeLocation)](#ERMrest.Reference+validateFacetsFilters)
         * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
-        * [.addFacets(facetAndFilters)](#ERMrest.Reference+addFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
+        * [.addFacets(facetAndFilters, customFacets)](#ERMrest.Reference+addFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
         * [.hideFacets()](#ERMrest.Reference+hideFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
         * [.create(data, contextHeaderParams, skipOnConflict)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
         * [.read(limit, contextHeaderParams, useEntity, dontCorrectPage, getTRS, getTCRS, getUnlinkTRS)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
         * [.sort(sort)](#ERMrest.Reference+sort) ⇒ <code>Reference</code>
         * [.update(tuples, contextHeaderParams)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
-        * [.delete(contextHeaderParams)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
-            * [~self](#ERMrest.Reference+delete..self)
+        * [.delete(tuples, contextHeaderParams)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
         * [.deleteBatchAssociationTuples(mainTuple, tuples, contextHeaderParams)](#ERMrest.Reference+deleteBatchAssociationTuples) ⇒ <code>Object</code>
         * [.generateRelatedList([tuple])](#ERMrest.Reference+generateRelatedList) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
         * [.getExportTemplates(useDefault)](#ERMrest.Reference+getExportTemplates) ⇒ <code>Array</code>
@@ -1234,6 +1234,7 @@ check for table name existence
         * [.favoritesPath](#ERMrest.Table+favoritesPath) : <code>string</code>
         * [.kind](#ERMrest.Table+kind) : <code>string</code>
         * [.supportHistory](#ERMrest.Table+supportHistory)
+        * [.aggressiveFacetLookup](#ERMrest.Table+aggressiveFacetLookup)
         * [.shortestKey](#ERMrest.Table+shortestKey)
         * [.displayKey](#ERMrest.Table+displayKey) : [<code>Array.&lt;Column&gt;</code>](#ERMrest.Column)
         * [.stableKey](#ERMrest.Table+stableKey) : [<code>Array.&lt;Column&gt;</code>](#ERMrest.Column)
@@ -1359,6 +1360,12 @@ The type of this table
 Whether the table supports history features:
  - it's a table (not view)
  - it doesn't have the history-capture annotation, or has it with any value other than false
+
+**Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
+<a name="ERMrest.Table+aggressiveFacetLookup"></a>
+
+#### table.aggressiveFacetLookup
+Whether we should lookup the facets in the url in the list of facets.
 
 **Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
 <a name="ERMrest.Table+shortestKey"></a>
@@ -3061,14 +3068,13 @@ Constructor for a ParsedFilter.
     * [.generateFacetColumns()](#ERMrest.Reference+generateFacetColumns)
     * [.validateFacetsFilters(facetAndFilters, facetObjectWrappers, searchTerm, skipMappingEntityChoices, changeLocation)](#ERMrest.Reference+validateFacetsFilters)
     * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
-    * [.addFacets(facetAndFilters)](#ERMrest.Reference+addFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
+    * [.addFacets(facetAndFilters, customFacets)](#ERMrest.Reference+addFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
     * [.hideFacets()](#ERMrest.Reference+hideFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
     * [.create(data, contextHeaderParams, skipOnConflict)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
     * [.read(limit, contextHeaderParams, useEntity, dontCorrectPage, getTRS, getTCRS, getUnlinkTRS)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
     * [.sort(sort)](#ERMrest.Reference+sort) ⇒ <code>Reference</code>
     * [.update(tuples, contextHeaderParams)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
-    * [.delete(contextHeaderParams)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
-        * [~self](#ERMrest.Reference+delete..self)
+    * [.delete(tuples, contextHeaderParams)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
     * [.deleteBatchAssociationTuples(mainTuple, tuples, contextHeaderParams)](#ERMrest.Reference+deleteBatchAssociationTuples) ⇒ <code>Object</code>
     * [.generateRelatedList([tuple])](#ERMrest.Reference+generateRelatedList) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
     * [.getExportTemplates(useDefault)](#ERMrest.Reference+getExportTemplates) ⇒ <code>Array</code>
@@ -3525,7 +3531,7 @@ Remove all the filters, facets, and custom-facets from the reference
 
 <a name="ERMrest.Reference+addFacets"></a>
 
-#### reference.addFacets(facetAndFilters) ⇒ [<code>Reference</code>](#ERMrest.Reference)
+#### reference.addFacets(facetAndFilters, customFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
 Given a list of facet and filters, will add them to the existing conjunctive facet filters.
 
 **Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
@@ -3533,6 +3539,7 @@ Given a list of facet and filters, will add them to the existing conjunctive fac
 | Param | Type | Description |
 | --- | --- | --- |
 | facetAndFilters | <code>Array.&lt;Object&gt;</code> | an array of facets that will be added |
+| customFacets | <code>Object</code> | the custom facets object |
 
 <a name="ERMrest.Reference+hideFacets"></a>
 
@@ -3641,8 +3648,8 @@ or rejected with any of these errors:
 
 <a name="ERMrest.Reference+delete"></a>
 
-#### reference.delete(contextHeaderParams) ⇒ <code>Promise</code>
-Deletes the referenced resources.
+#### reference.delete(tuples, contextHeaderParams) ⇒ <code>Promise</code>
+Deletes the referenced resources or the given tuples.
 NOTE This will ignore the provided sort and paging on the reference, make
 sure you are calling this on specific set or rows (filtered).
 
@@ -3652,23 +3659,9 @@ sure you are calling this on specific set or rows (filtered).
 
 | Param | Type | Description |
 | --- | --- | --- |
-| contextHeaderParams | <code>Object</code> | the object that we want to log. |
+| tuples | <code>Array.&lt;Tuple&gt;</code> | (optional) the tuples that should be deleted |
+| contextHeaderParams | <code>Object</code> | (optional) the object that we want to log. |
 
-<a name="ERMrest.Reference+delete..self"></a>
-
-##### delete~self
-NOTE: previous implemenation of delete with 412 logic is here:
-https://github.com/informatics-isi-edu/ermrestjs/commit/5fe854118337e0a63c6f91b4f3e139e7eadc42ac
-
-We decided to drop the support for 412, because the etag that we get from the read function
-is different than the one delete expects. The reason for that is because we are getting etag
-in read with joins in the request, which affects the etag. etag is in response to any change
-to the returned data and since join introduces extra data it is different than a request
-without any joins.
-
-github issue: #425
-
-**Kind**: inner property of [<code>delete</code>](#ERMrest.Reference+delete)  
 <a name="ERMrest.Reference+deleteBatchAssociationTuples"></a>
 
 #### reference.deleteBatchAssociationTuples(mainTuple, tuples, contextHeaderParams) ⇒ <code>Object</code>
@@ -4372,6 +4365,8 @@ count aggregate representation
 
 * [.ReferenceColumn](#ERMrest.ReferenceColumn)
     * [new ReferenceColumn(reference, baseCols, sourceObjectWrapper, name, mainTuple)](#new_ERMrest.ReferenceColumn_new)
+    * [.isFiltered](#ERMrest.ReferenceColumn+isFiltered) : <code>boolean</code>
+    * [.filterProps](#ERMrest.ReferenceColumn+filterProps) : <code>Object</code>
     * [.isPseudo](#ERMrest.ReferenceColumn+isPseudo) : <code>boolean</code>
     * [.table](#ERMrest.ReferenceColumn+table) : [<code>Table</code>](#ERMrest.Table)
     * [.name](#ERMrest.ReferenceColumn+name) : <code>string</code>
@@ -4408,6 +4403,18 @@ Constructor for ReferenceColumn. This class is a wrapper for [Column](#ERMrest.C
 | name | <code>string</code> | to avoid processing the name again, this might be undefined. |
 | mainTuple | [<code>Tuple</code>](#ERMrest.Tuple) | if the reference is referring to just one tuple, this is defined. |
 
+<a name="ERMrest.ReferenceColumn+isFiltered"></a>
+
+#### referenceColumn.isFiltered : <code>boolean</code>
+If the pseudoColumn has filter in its path
+
+**Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
+<a name="ERMrest.ReferenceColumn+filterProps"></a>
+
+#### referenceColumn.filterProps : <code>Object</code>
+The properties related to filter in source
+
+**Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
 <a name="ERMrest.ReferenceColumn+isPseudo"></a>
 
 #### referenceColumn.isPseudo : <code>boolean</code>
@@ -4616,7 +4623,6 @@ it will append "-<integer>" to it.
     * [.isEntityMode](#ERMrest.PseudoColumn+isEntityMode) : <code>boolean</code>
     * [.isUnique](#ERMrest.PseudoColumn+isUnique) : <code>boolean</code>
     * [.hasAggregate](#ERMrest.PseudoColumn+hasAggregate) : <code>boolean</code>
-    * [.isFiltered](#ERMrest.PseudoColumn+isFiltered) : <code>boolean</code>
     * [.comment](#ERMrest.PseudoColumn+comment) : <code>Object</code>
     * [.commentDisplay](#ERMrest.PseudoColumn+commentDisplay) : <code>Object</code>
     * [.displayname](#ERMrest.PseudoColumn+displayname) : <code>Object</code>
@@ -4674,12 +4680,6 @@ If the pseudoColumn is referring to a unique row (the path is one to one)
 
 #### pseudoColumn.hasAggregate : <code>boolean</code>
 If aggregate function is defined on the column.
-
-**Kind**: instance property of [<code>PseudoColumn</code>](#ERMrest.PseudoColumn)  
-<a name="ERMrest.PseudoColumn+isFiltered"></a>
-
-#### pseudoColumn.isFiltered : <code>boolean</code>
-If the pseudoColumn has filter in its path
 
 **Kind**: instance property of [<code>PseudoColumn</code>](#ERMrest.PseudoColumn)  
 <a name="ERMrest.PseudoColumn+comment"></a>
@@ -4811,6 +4811,7 @@ In other cases, the returned data will only include the scalar value.
     * [.isForeignKey](#ERMrest.ForeignKeyPseudoColumn+isForeignKey) : <code>boolean</code>
     * [.reference](#ERMrest.ForeignKeyPseudoColumn+reference) : [<code>Reference</code>](#ERMrest.Reference)
     * [.foreignKey](#ERMrest.ForeignKeyPseudoColumn+foreignKey) : [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)
+    * [.hasDomainFilter](#ERMrest.ForeignKeyPseudoColumn+hasDomainFilter) : <code>Boolean</code>
     * [.defaultValues](#ERMrest.ForeignKeyPseudoColumn+defaultValues) : <code>Object</code>
     * [.defaultReference](#ERMrest.ForeignKeyPseudoColumn+defaultReference) : <code>ERMrest.Refernece</code>
     * [.displayname](#ERMrest.ForeignKeyPseudoColumn+displayname) : <code>Object</code>
@@ -4850,6 +4851,12 @@ The reference object that represents the table of this PseudoColumn
 
 #### foreignKeyPseudoColumn.foreignKey : [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)
 The Foreign key object that this PseudoColumn is created based on
+
+**Kind**: instance property of [<code>ForeignKeyPseudoColumn</code>](#ERMrest.ForeignKeyPseudoColumn)  
+<a name="ERMrest.ForeignKeyPseudoColumn+hasDomainFilter"></a>
+
+#### foreignKeyPseudoColumn.hasDomainFilter : <code>Boolean</code>
+Whether this column has domain-filter annotation
 
 **Kind**: instance property of [<code>ForeignKeyPseudoColumn</code>](#ERMrest.ForeignKeyPseudoColumn)  
 <a name="ERMrest.ForeignKeyPseudoColumn+defaultValues"></a>
@@ -5130,7 +5137,6 @@ Format the presentation value corresponding to this asset definition.
     * [.foreignKey](#ERMrest.InboundForeignKeyPseudoColumn+foreignKey) : [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)
     * [.isPseudo](#ERMrest.InboundForeignKeyPseudoColumn+isPseudo) : <code>boolean</code>
     * [.isInboundForeignKey](#ERMrest.InboundForeignKeyPseudoColumn+isInboundForeignKey) : <code>boolean</code>
-    * [.isFiltered](#ERMrest.InboundForeignKeyPseudoColumn+isFiltered) : <code>boolean</code>
 
 <a name="new_ERMrest.InboundForeignKeyPseudoColumn_new"></a>
 
@@ -5180,19 +5186,13 @@ indicates that this object represents a PseudoColumn.
 Indicates that this ReferenceColumn is an inbound foreign key.
 
 **Kind**: instance property of [<code>InboundForeignKeyPseudoColumn</code>](#ERMrest.InboundForeignKeyPseudoColumn)  
-<a name="ERMrest.InboundForeignKeyPseudoColumn+isFiltered"></a>
-
-#### inboundForeignKeyPseudoColumn.isFiltered : <code>boolean</code>
-Indicates that this related table has filters in its path
-
-**Kind**: instance property of [<code>InboundForeignKeyPseudoColumn</code>](#ERMrest.InboundForeignKeyPseudoColumn)  
 <a name="ERMrest.FacetColumn"></a>
 
 ### ERMrest.FacetColumn
 **Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
 
 * [.FacetColumn](#ERMrest.FacetColumn)
-    * [new FacetColumn(reference, index, facetObject, filters)](#new_ERMrest.FacetColumn_new)
+    * [new FacetColumn(reference, index, facetObjectWrapper, filters)](#new_ERMrest.FacetColumn_new)
     * [._column](#ERMrest.FacetColumn+_column) : [<code>Column</code>](#ERMrest.Column)
     * [.reference](#ERMrest.FacetColumn+reference) : [<code>Reference</code>](#ERMrest.Reference)
     * [.index](#ERMrest.FacetColumn+index) : <code>int</code>
@@ -5235,7 +5235,7 @@ Indicates that this related table has filters in its path
 
 <a name="new_ERMrest.FacetColumn_new"></a>
 
-#### new FacetColumn(reference, index, facetObject, filters)
+#### new FacetColumn(reference, index, facetObjectWrapper, filters)
 Represent facet columns that are available.
 NOTE:
 Based on facets JSON structure we can have joins that result in facets
@@ -5249,7 +5249,7 @@ If the ReferenceColumn is not provided, then the FacetColumn is for reference
 | --- | --- | --- |
 | reference | [<code>Reference</code>](#ERMrest.Reference) | the reference that this FacetColumn blongs to. |
 | index | <code>int</code> | The index of this FacetColumn in the list of facetColumns |
-| facetObject | <code>ERMrest.SourceObjectWrapper</code> | The filter object that this FacetColumn will be created based on |
+| facetObjectWrapper | <code>ERMrest.SourceObjectWrapper</code> | The filter object that this FacetColumn will be created based on |
 | filters | [<code>Array.&lt;FacetFilter&gt;</code>](#ERMrest.FacetFilter) | Array of filters |
 
 <a name="ERMrest.FacetColumn+_column"></a>
@@ -6884,14 +6884,13 @@ get PathColumn object by column name
     * [.generateFacetColumns()](#ERMrest.Reference+generateFacetColumns)
     * [.validateFacetsFilters(facetAndFilters, facetObjectWrappers, searchTerm, skipMappingEntityChoices, changeLocation)](#ERMrest.Reference+validateFacetsFilters)
     * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
-    * [.addFacets(facetAndFilters)](#ERMrest.Reference+addFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
+    * [.addFacets(facetAndFilters, customFacets)](#ERMrest.Reference+addFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
     * [.hideFacets()](#ERMrest.Reference+hideFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
     * [.create(data, contextHeaderParams, skipOnConflict)](#ERMrest.Reference+create) ⇒ <code>Promise</code>
     * [.read(limit, contextHeaderParams, useEntity, dontCorrectPage, getTRS, getTCRS, getUnlinkTRS)](#ERMrest.Reference+read) ⇒ <code>Promise</code>
     * [.sort(sort)](#ERMrest.Reference+sort) ⇒ <code>Reference</code>
     * [.update(tuples, contextHeaderParams)](#ERMrest.Reference+update) ⇒ <code>Promise</code>
-    * [.delete(contextHeaderParams)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
-        * [~self](#ERMrest.Reference+delete..self)
+    * [.delete(tuples, contextHeaderParams)](#ERMrest.Reference+delete) ⇒ <code>Promise</code>
     * [.deleteBatchAssociationTuples(mainTuple, tuples, contextHeaderParams)](#ERMrest.Reference+deleteBatchAssociationTuples) ⇒ <code>Object</code>
     * [.generateRelatedList([tuple])](#ERMrest.Reference+generateRelatedList) ⇒ [<code>Array.&lt;Reference&gt;</code>](#ERMrest.Reference)
     * [.getExportTemplates(useDefault)](#ERMrest.Reference+getExportTemplates) ⇒ <code>Array</code>
@@ -7348,7 +7347,7 @@ Remove all the filters, facets, and custom-facets from the reference
 
 <a name="ERMrest.Reference+addFacets"></a>
 
-#### reference.addFacets(facetAndFilters) ⇒ [<code>Reference</code>](#ERMrest.Reference)
+#### reference.addFacets(facetAndFilters, customFacets) ⇒ [<code>Reference</code>](#ERMrest.Reference)
 Given a list of facet and filters, will add them to the existing conjunctive facet filters.
 
 **Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
@@ -7356,6 +7355,7 @@ Given a list of facet and filters, will add them to the existing conjunctive fac
 | Param | Type | Description |
 | --- | --- | --- |
 | facetAndFilters | <code>Array.&lt;Object&gt;</code> | an array of facets that will be added |
+| customFacets | <code>Object</code> | the custom facets object |
 
 <a name="ERMrest.Reference+hideFacets"></a>
 
@@ -7464,8 +7464,8 @@ or rejected with any of these errors:
 
 <a name="ERMrest.Reference+delete"></a>
 
-#### reference.delete(contextHeaderParams) ⇒ <code>Promise</code>
-Deletes the referenced resources.
+#### reference.delete(tuples, contextHeaderParams) ⇒ <code>Promise</code>
+Deletes the referenced resources or the given tuples.
 NOTE This will ignore the provided sort and paging on the reference, make
 sure you are calling this on specific set or rows (filtered).
 
@@ -7475,23 +7475,9 @@ sure you are calling this on specific set or rows (filtered).
 
 | Param | Type | Description |
 | --- | --- | --- |
-| contextHeaderParams | <code>Object</code> | the object that we want to log. |
+| tuples | <code>Array.&lt;Tuple&gt;</code> | (optional) the tuples that should be deleted |
+| contextHeaderParams | <code>Object</code> | (optional) the object that we want to log. |
 
-<a name="ERMrest.Reference+delete..self"></a>
-
-##### delete~self
-NOTE: previous implemenation of delete with 412 logic is here:
-https://github.com/informatics-isi-edu/ermrestjs/commit/5fe854118337e0a63c6f91b4f3e139e7eadc42ac
-
-We decided to drop the support for 412, because the etag that we get from the read function
-is different than the one delete expects. The reason for that is because we are getting etag
-in read with joins in the request, which affects the etag. etag is in response to any change
-to the returned data and since join introduces extra data it is different than a request
-without any joins.
-
-github issue: #425
-
-**Kind**: inner property of [<code>delete</code>](#ERMrest.Reference+delete)  
 <a name="ERMrest.Reference+deleteBatchAssociationTuples"></a>
 
 #### reference.deleteBatchAssociationTuples(mainTuple, tuples, contextHeaderParams) ⇒ <code>Object</code>

@@ -1296,7 +1296,6 @@
      * @param {number} pathOffsetLength the length of offset that should be considered for length limitation logic.
      *                                  if the given value is negative, we will not check the url length limitation.
      * @param {string} displayname the displayname of reference, used for error message
-     * @returns
      */
     module._generateKeyValueFilters = function (keyColumns, data, catalogObject, pathOffsetLength, displayname) {
         var encode = module._fixedEncodeURIComponent, pathLimit = module.URL_PATH_LENGTH_LIMIT;
