@@ -78,7 +78,7 @@
                 }
             } else {
                 colsString += choices.reduce(function (prev, curr, i) {
-                    return res + (i !== 0 ? ";": "") + eqSyntax(column, curr);
+                    return prev + (i !== 0 ? ";": "") + eqSyntax(curr);
                 }, "");
             }
 
