@@ -1,4 +1,4 @@
-var ermrestImport = require(process.env.PWD + '/test/utils/ermrest-import.js');
+var utils = require(process.env.PWD + '/test/utils/utilities.js');
 
 exports.execute = (options) => {
 
@@ -7,6 +7,7 @@ exports.execute = (options) => {
         var catalogId = process.env.DEFAULT_CATALOG,
             schemaName = "reference_schema",
             schemaName2 = "generated_schema",
+            referenceTable = "reference_table",
             genSchematableName1 = "table_1",                    // table from generated schema
             genSchematableName2 = "table_2",                    // table from generated schema
             genSchematableName3 = "table_3",                    // table from generated schema
@@ -28,6 +29,9 @@ exports.execute = (options) => {
             nonDelSchemaTableName2 = "table_2",                    // table from non-deletable schema
             tableName7 = "table_w_composite_key",
             entityId = 9000;
+
+        var mainTableUri = options.url + "/catalog/" + catalogId + "/entity/"
+            + schemaName + ':' + referenceTable;
 
         var genSchemaTableUri = options.url + "/catalog/" + catalogId + "/entity/"
             + schemaName2 + ':' + genSchematableName1 + "/id=" + entityId;
@@ -64,7 +68,7 @@ exports.execute = (options) => {
 
         var nonDeletableUri = options.url + "/catalog/" + catalogId + "/entity/"
             + schemaName5 + ':' + tableName5_4 + "/id=" + entityId;
-        
+
         var mutableTableInGenSchemaUri = options.url + "/catalog/" + catalogId + "/entity/"
         + schemaName5 + ':' + tableName5_5 + "/id=" + entityId;
 
@@ -79,6 +83,51 @@ exports.execute = (options) => {
 
         beforeAll(() => {
             options.ermRest.setUserCookie(options.authCookie);
+        });
+
+        describe('check permissions when catalog is generated,', () => {
+            let reference;
+            beforeAll((done) => {
+                utils.setCatalogAnnotations(options, { "tag:isrd.isi.edu,2016:generated": {} }).then(() => {
+                    return options.ermRest.resolve(mainTableUri, { cid: "test" });
+                }).then((ref) => {
+                    reference = ref;
+                    done();
+                }).catch((err) => done.fail(err));
+            });
+
+            describe("generated catalog should return true for read and delete, false for all else,", () => {
+
+                it("_isGenerated should be true in table,", () => {
+                    expect(reference._table._isGenerated).toBe(true);
+                });
+
+                it("canCreate.", () => {
+                    expect(reference.canCreate).toBe(false);
+                    expect(reference.canCreateReason).toBe("Table is generated.");
+                });
+
+                it("canRead.", () => {
+                    expect(reference.canRead).toBe(true);
+                });
+
+                it("canUpdate.", () => {
+                    expect(reference.canUpdate).toBe(false);
+                    expect(reference.canUpdateReason).toBe("Table is generated.");
+                });
+
+                it("canDelete.", () => {
+                    expect(reference.canDelete).toBe(true);
+                });
+
+            });
+
+            afterAll((done) => {
+                // removed the catalog annotation
+                utils.setCatalogAnnotations(options, {}).then(() => {
+                    done();
+                }).catch((err) => done.fail(err));
+            });
         });
 
         describe("check permissions when schema is generated,", () => {
@@ -321,6 +370,50 @@ exports.execute = (options) => {
 
         });
 
+        describe('check permissions when catalog is immutable,', () => {
+            let reference;
+            beforeAll((done) => {
+                utils.setCatalogAnnotations(options, { "tag:isrd.isi.edu,2016:immutable": {} }).then(() => {
+                    return options.ermRest.resolve(mainTableUri, { cid: "test" });
+                }).then((ref) => {
+                    reference = ref;
+                    done();
+                }).catch((err) => done.fail(err));
+            });
+
+            describe("immutable catalog should return true for create, read, and delete, false for update,", () => {
+
+                it("_isImmutable should be true in table,", () => {
+                    expect(reference._table._isImmutable).toBe(true);
+                });
+
+                it("canCreate.", () => {
+                    expect(reference.canCreate).toBe(true);
+                });
+
+                it("canRead.", () => {
+                    expect(reference.canRead).toBe(true);
+                });
+
+                it("canUpdate.", () => {
+                    expect(reference.canUpdate).toBe(false);
+                    expect(reference.canUpdateReason).toBe("Table is immutable.");
+                });
+
+                it("canDelete.", () => {
+                    expect(reference.canDelete).toBe(true);
+                });
+
+            });
+
+            afterAll((done) => {
+                // removed the catalog annotation
+                utils.setCatalogAnnotations(options, {}).then(() => {
+                    done();
+                }).catch((err) => done.fail(err));
+            });
+        });
+
         describe("check permissions when schema is immutable,", () => {
             var reference, referenceTable2;
 
@@ -503,6 +596,48 @@ exports.execute = (options) => {
 
             });
 
+        });
+
+        describe('check permissions when catalog is non-deletable,', () => {
+            let reference;
+            beforeAll((done) => {
+                utils.setCatalogAnnotations(options, { "tag:isrd.isi.edu,2016:non-deletable": {} }).then(() => {
+                    return options.ermRest.resolve(mainTableUri, { cid: "test" });
+                }).then((ref) => {
+                    reference = ref;
+                    done();
+                }).catch((err) => done.fail(err));
+            });
+
+            describe("Catalog that is non-deletable should return false for delete, true for all,", () => {
+
+                it("_isNonDeletable should be true in table", () => {
+                    expect(reference._table._isNonDeletable).toBe(true);
+                });
+
+                it("canCreate.", () => {
+                    expect(reference.canCreate).toBe(true);
+                });
+
+                it("canRead.", () => {
+                    expect(reference.canRead).toBe(true);
+                });
+
+                it("canUpdate.", () => {
+                    expect(reference.canUpdate).toBe(true);
+                });
+
+                it("canDelete.", () => {
+                    expect(reference.canDelete).toBe(false);
+                });
+            });
+
+            afterAll((done) => {
+                // removed the catalog annotation
+                utils.setCatalogAnnotations(options, {}).then(() => {
+                    done();
+                }).catch((err) => done.fail(err));
+            });
         });
 
         describe("check permissions when schema is non-deletable,", () => {

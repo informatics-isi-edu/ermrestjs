@@ -477,6 +477,31 @@
                 }
 
                 /**
+                 * whether catalog is generated.
+                 * This should be done before initializing tables because tables require this field.
+                 * @type {boolean|null}
+                 * @private
+                 */
+                self._isGenerated = _processACLAnnotation(self.annotations, module._annotations.GENERATED, false);
+
+                /**
+                 * whether catalog is immutable.
+                 * true: catalog is immutable (per annotation)
+                 * false: catalog is mutable (per annotation)
+                 * null: annotation is not defined
+                 * @type {boolean|null}
+                 * @private
+                 */
+                self._isImmutable = _processACLAnnotation(self.annotations, module._annotations.IMMUTABLE, null);
+
+                /**
+                 * whether catalog is non-deletable
+                 * @type {boolean}
+                 * @private
+                 */
+                self._isNonDeletable = _processACLAnnotation(self.annotations, module._annotations.NON_DELETABLE, false);
+
+                /**
                  * this will make sure the nameStyle is populated on the catalog as well,
                  * so schema can use it.
                  */
@@ -737,7 +762,7 @@
          * @type {boolean|null}
          * @private
          */
-        this._isGenerated = _processACLAnnotation(this.annotations, module._annotations.GENERATED, false);
+        this._isGenerated = _processACLAnnotation(this.annotations, module._annotations.GENERATED, this.catalog._isGenerated);
 
         /**
          * whether schema is immutable.
@@ -747,14 +772,14 @@
          * @type {boolean|null}
          * @private
          */
-        this._isImmutable = _processACLAnnotation(this.annotations, module._annotations.IMMUTABLE, null);
+        this._isImmutable = _processACLAnnotation(this.annotations, module._annotations.IMMUTABLE, this.catalog._isImmutable);
 
         /**
          * whether schema is non-deletable
          * @type {boolean}
          * @private
          */
-        this._isNonDeletable = _processACLAnnotation(this.annotations, module._annotations.NON_DELETABLE, false);
+        this._isNonDeletable = _processACLAnnotation(this.annotations, module._annotations.NON_DELETABLE, this.catalog._isNonDeletable);
 
         this._nameStyle = {}; // Used in the displayname to store the name styles.
 
