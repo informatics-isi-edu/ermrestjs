@@ -71,6 +71,7 @@ here is a quick matrix to locate them.
 | [2019 Source Definitions](#tag-2019-source-definitions)                  | -       | -      | X     | -      | -   | -   | Describe source definitions                                    |
 | [2021 Google Dataset](#tag-2021-google-dataset)                          | -       | -      | X     | -      | -   | -   | Describe metadata for rich results in Google Dataset           |
 | [2021 Table Config](#tag-2021-table-config)                              | -       | -      | X     | -      | -   | -   | Describe Table Config                                          |
+| [2023 Column Defaults](#tag-2023-column-defaults)                        | X       | X      | X     | -      | -   | -   | Define column-level annotations based on type or name          |
 
 For brevity, the annotation keys are listed above by their section
 name within this documentation. The actual key URI follows one of these formats:
@@ -1008,7 +1009,7 @@ Note:
 
 `tag:isrd.isi.edu,2021:export-fragment-definitions`
 
-By using this key you can define an object that can be referred to while writing [export annotation](#tag-2019-export). The value of this key MUST be an object, otherwise it will be ignored. Please refer to `[Export annotation document](export.md)` for more details.
+By using this key you can define an object that can be referred to while writing [export annotation](#tag-2019-export). The value of this key MUST be an object, otherwise it will be ignored. Please refer to [Export annotation document](export.md) for more details.
 
 Note:
 - In the first level object, you cannot define any keys that start with `$`. This is done to preserve the namespace for default values that ERMrestJS is adding. For example if you define
@@ -1023,6 +1024,69 @@ Note:
   }
   ```
   We are going to ignore the `$some_key`, while you can use `another_key` as a `fragment_key` in export annotation.
+
+### Tag: 2023 Column Defaults
+
+`tag:isrd.isi.edu,2023:column-defaults`
+
+This key allows defining column-level annotations on catalog, schema, or tables.
+
+Supported JSON payload patterns:
+- `{`... `"by_name":` `{` _by_name_definition_ `,` ... `}`: Define annotations for columns with specific names.
+- `{`... `"by_type":` `{` _by_type_definition_ `,` ... `}`: Define annotations for columns with specific names.
+
+Where _by_name_definition_  is a JSON payload with the following pattern:
+
+- `{` ... _column_name_ `:` _annot_payload_ `,` ... `}`: Define annotations (_annot_payload_) for columns with _column_name_ name.
+
+And _by_type_definition_ is a JSON payload with the following pattern:
+
+- `{` ... _typename_ `:` _annot_payload_ `,` ... `}`: Define annotations (_annot_payload_) for columns with _typename_ types.
+
+For example,
+
+```json
+"tag:isrd.isi.edu,2016:column-defaults": {
+ "by_name": {
+      "RCT": {
+        "tag:misd.isi.edu,2015:display": {
+          "name": "Creation time",
+        },
+        "tag:isrd.isi.edu,2016:column-display": {
+          "*": {
+            "pre_format": {
+              "format": "YYYY-MM-DD"
+            }
+          }
+        }
+      }
+  },
+  "by_type": {
+    "boolean": {
+        "tag:isrd.isi.edu,2016:column-display": {
+          "*": {
+            "pre_format": {
+              "format": "%t",
+              "bool_true_value": "YES",
+              "bool_false_value": "NOPE",
+            }
+          }
+        }
+     }
+  }
+}
+```
+
+Notes:
+- `by_type` should match exactly with the `typename` of the column. So, for example, for array columns, we would have to use `"timestamp[]"`.
+- While determining annotations for a column, the more specific one will be used. Annotations defined on the column have the highest priority, then the `by_name` annotations on table, schema, and catalog will be used. And after that, we will look at `by_type` annotations on the table, schema, and catalog.
+- To implement this feature, we start by creating an empty JSON payload. On each step, we will add the annotations to the object (and if the annotation key is already defined on the object, it will be overwritten by the new value). To be more precise, the following is how the `annotations` JSON payload for a column is created and used:
+
+  1. We start by looking at the applicable `by_type` property of the `column-defaults ` annotation defined on the catalog.
+  2. Then, the applicable `by_type` property on the schema will be added. And if any annotation key is already defined on both catalog and schema, the one in the schema will override it.
+  3. The same step as above continues with the table.
+  4. We continue by looking at the matching `by_name` property of catalog, schema, and table in order. Just like in the previous steps, if the same annotation key is already defined in the created object, it will be overwritten by the new step.
+  5. Any annotation defined directly on the column will override the annotations of the previous steps.
 
 ## Context Names
 

@@ -52,6 +52,7 @@
         ASSET: "tag:isrd.isi.edu,2017:asset",
         CHAISE_CONFIG: "tag:isrd.isi.edu,2019:chaise-config",
         CITATION: "tag:isrd.isi.edu,2018:citation",
+        COLUMN_DEFAULTS: "tag:isrd.isi.edu,2023:column-defaults",
         COLUMN_DISPLAY: "tag:isrd.isi.edu,2016:column-display",
         DISPLAY: "tag:misd.isi.edu,2015:display",
         EXPORT: "tag:isrd.isi.edu,2016:export",

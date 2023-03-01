@@ -1,0 +1,11 @@
+{
+    "catalog": {},
+    "schema": {
+        "name": "column_defaults_schema",
+        "createNew": true,
+        "path": "test/specs/annotation/conf/column_defaults/schema.json"
+    },
+    "tables": {
+        "createNew": true
+    }
+}

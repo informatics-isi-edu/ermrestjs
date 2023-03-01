@@ -207,33 +207,36 @@ to use for ERMrest JavaScript agents.
         * [.getByPosition(pos)](#ERMrest.Columns+getByPosition) ⇒ [<code>Column</code>](#ERMrest.Column)
     * [.Column](#ERMrest.Column)
         * [new Column(table, jsonColumn)](#new_ERMrest.Column_new)
-        * [.position](#ERMrest.Column+position) : <code>number</code>
-        * [.table](#ERMrest.Column+table) : [<code>Table</code>](#ERMrest.Table)
-        * [.rights](#ERMrest.Column+rights) : <code>Object</code>
-        * [.isHiddenPerACLs](#ERMrest.Column+isHiddenPerACLs) : <code>Boolean</code>
-        * [.isGeneratedPerACLs](#ERMrest.Column+isGeneratedPerACLs) : <code>Boolean</code>
-        * [.isSystemColumn](#ERMrest.Column+isSystemColumn) : <code>Boolean</code>
-        * [.isImmutablePerACLs](#ERMrest.Column+isImmutablePerACLs) : <code>Boolean</code>
-        * [.name](#ERMrest.Column+name) : <code>string</code>
-        * [.RID](#ERMrest.Column+RID) : <code>string</code>
-        * [.type](#ERMrest.Column+type) : [<code>Type</code>](#ERMrest.Type)
-        * [.ignore](#ERMrest.Column+ignore) : <code>boolean</code>
-        * [.annotations](#ERMrest.Column+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
-        * [.comment](#ERMrest.Column+comment) : <code>string</code>
-        * [.nullok](#ERMrest.Column+nullok) : <code>Boolean</code>
-        * [.displayname](#ERMrest.Column+displayname) : <code>object</code>
-        * [.memberOfKeys](#ERMrest.Column+memberOfKeys) : [<code>Array.&lt;Key&gt;</code>](#ERMrest.Key)
-        * [.memberOfForeignKeys](#ERMrest.Column+memberOfForeignKeys) : [<code>Array.&lt;ForeignKeyRef&gt;</code>](#ERMrest.ForeignKeyRef)
-        * [.ermrestDefault](#ERMrest.Column+ermrestDefault) : <code>object</code>
-        * [.default](#ERMrest.Column+default) ⇒ <code>string</code>
-        * [.isUniqueNotNull](#ERMrest.Column+isUniqueNotNull) : <code>Boolean</code>
-        * [.uniqueNotNullKey](#ERMrest.Column+uniqueNotNullKey) : [<code>Key</code>](#ERMrest.Key)
-        * [.formatvalue(data, context)](#ERMrest.Column+formatvalue) ⇒ <code>string</code> \| <code>Array.&lt;string&gt;</code>
-        * [.formatPresentation(data, context, templateVariables, options)](#ERMrest.Column+formatPresentation) ⇒ <code>Object</code>
-        * [.toString()](#ERMrest.Column+toString) ⇒ <code>string</code>
-        * [._getNullValue()](#ERMrest.Column+_getNullValue) : <code>object</code>
-        * [.getDisplay(context)](#ERMrest.Column+getDisplay)
-        * [.compare(a, b)](#ERMrest.Column+compare) ⇒ <code>integer</code>
+        * _instance_
+            * [.position](#ERMrest.Column+position) : <code>number</code>
+            * [.table](#ERMrest.Column+table) : [<code>Table</code>](#ERMrest.Table)
+            * [.rights](#ERMrest.Column+rights) : <code>Object</code>
+            * [.isHiddenPerACLs](#ERMrest.Column+isHiddenPerACLs) : <code>Boolean</code>
+            * [.isGeneratedPerACLs](#ERMrest.Column+isGeneratedPerACLs) : <code>Boolean</code>
+            * [.isSystemColumn](#ERMrest.Column+isSystemColumn) : <code>Boolean</code>
+            * [.isImmutablePerACLs](#ERMrest.Column+isImmutablePerACLs) : <code>Boolean</code>
+            * [.name](#ERMrest.Column+name) : <code>string</code>
+            * [.RID](#ERMrest.Column+RID) : <code>string</code>
+            * [.type](#ERMrest.Column+type) : [<code>Type</code>](#ERMrest.Type)
+            * [.ignore](#ERMrest.Column+ignore) : <code>boolean</code>
+            * [.annotations](#ERMrest.Column+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
+            * [.comment](#ERMrest.Column+comment) : <code>string</code>
+            * [.nullok](#ERMrest.Column+nullok) : <code>Boolean</code>
+            * [.displayname](#ERMrest.Column+displayname) : <code>object</code>
+            * [.memberOfKeys](#ERMrest.Column+memberOfKeys) : [<code>Array.&lt;Key&gt;</code>](#ERMrest.Key)
+            * [.memberOfForeignKeys](#ERMrest.Column+memberOfForeignKeys) : [<code>Array.&lt;ForeignKeyRef&gt;</code>](#ERMrest.ForeignKeyRef)
+            * [.ermrestDefault](#ERMrest.Column+ermrestDefault) : <code>object</code>
+            * [.default](#ERMrest.Column+default) ⇒ <code>string</code>
+            * [.isUniqueNotNull](#ERMrest.Column+isUniqueNotNull) : <code>Boolean</code>
+            * [.uniqueNotNullKey](#ERMrest.Column+uniqueNotNullKey) : [<code>Key</code>](#ERMrest.Key)
+            * [.formatvalue(data, context)](#ERMrest.Column+formatvalue) ⇒ <code>string</code> \| <code>Array.&lt;string&gt;</code>
+            * [.formatPresentation(data, context, templateVariables, options)](#ERMrest.Column+formatPresentation) ⇒ <code>Object</code>
+            * [.toString()](#ERMrest.Column+toString) ⇒ <code>string</code>
+            * [._getNullValue()](#ERMrest.Column+_getNullValue) : <code>object</code>
+            * [.getDisplay(context)](#ERMrest.Column+getDisplay)
+            * [.compare(a, b)](#ERMrest.Column+compare) ⇒ <code>integer</code>
+        * _inner_
+            * [~defaultAnnotKey](#ERMrest.Column..defaultAnnotKey)
     * [.Annotations](#ERMrest.Annotations)
         * [new Annotations()](#new_ERMrest.Annotations_new)
         * [.all()](#ERMrest.Annotations+all) ⇒ [<code>Array.&lt;Annotation&gt;</code>](#ERMrest.Annotation)
@@ -1762,33 +1765,36 @@ Constructor for Columns.
 
 * [.Column](#ERMrest.Column)
     * [new Column(table, jsonColumn)](#new_ERMrest.Column_new)
-    * [.position](#ERMrest.Column+position) : <code>number</code>
-    * [.table](#ERMrest.Column+table) : [<code>Table</code>](#ERMrest.Table)
-    * [.rights](#ERMrest.Column+rights) : <code>Object</code>
-    * [.isHiddenPerACLs](#ERMrest.Column+isHiddenPerACLs) : <code>Boolean</code>
-    * [.isGeneratedPerACLs](#ERMrest.Column+isGeneratedPerACLs) : <code>Boolean</code>
-    * [.isSystemColumn](#ERMrest.Column+isSystemColumn) : <code>Boolean</code>
-    * [.isImmutablePerACLs](#ERMrest.Column+isImmutablePerACLs) : <code>Boolean</code>
-    * [.name](#ERMrest.Column+name) : <code>string</code>
-    * [.RID](#ERMrest.Column+RID) : <code>string</code>
-    * [.type](#ERMrest.Column+type) : [<code>Type</code>](#ERMrest.Type)
-    * [.ignore](#ERMrest.Column+ignore) : <code>boolean</code>
-    * [.annotations](#ERMrest.Column+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
-    * [.comment](#ERMrest.Column+comment) : <code>string</code>
-    * [.nullok](#ERMrest.Column+nullok) : <code>Boolean</code>
-    * [.displayname](#ERMrest.Column+displayname) : <code>object</code>
-    * [.memberOfKeys](#ERMrest.Column+memberOfKeys) : [<code>Array.&lt;Key&gt;</code>](#ERMrest.Key)
-    * [.memberOfForeignKeys](#ERMrest.Column+memberOfForeignKeys) : [<code>Array.&lt;ForeignKeyRef&gt;</code>](#ERMrest.ForeignKeyRef)
-    * [.ermrestDefault](#ERMrest.Column+ermrestDefault) : <code>object</code>
-    * [.default](#ERMrest.Column+default) ⇒ <code>string</code>
-    * [.isUniqueNotNull](#ERMrest.Column+isUniqueNotNull) : <code>Boolean</code>
-    * [.uniqueNotNullKey](#ERMrest.Column+uniqueNotNullKey) : [<code>Key</code>](#ERMrest.Key)
-    * [.formatvalue(data, context)](#ERMrest.Column+formatvalue) ⇒ <code>string</code> \| <code>Array.&lt;string&gt;</code>
-    * [.formatPresentation(data, context, templateVariables, options)](#ERMrest.Column+formatPresentation) ⇒ <code>Object</code>
-    * [.toString()](#ERMrest.Column+toString) ⇒ <code>string</code>
-    * [._getNullValue()](#ERMrest.Column+_getNullValue) : <code>object</code>
-    * [.getDisplay(context)](#ERMrest.Column+getDisplay)
-    * [.compare(a, b)](#ERMrest.Column+compare) ⇒ <code>integer</code>
+    * _instance_
+        * [.position](#ERMrest.Column+position) : <code>number</code>
+        * [.table](#ERMrest.Column+table) : [<code>Table</code>](#ERMrest.Table)
+        * [.rights](#ERMrest.Column+rights) : <code>Object</code>
+        * [.isHiddenPerACLs](#ERMrest.Column+isHiddenPerACLs) : <code>Boolean</code>
+        * [.isGeneratedPerACLs](#ERMrest.Column+isGeneratedPerACLs) : <code>Boolean</code>
+        * [.isSystemColumn](#ERMrest.Column+isSystemColumn) : <code>Boolean</code>
+        * [.isImmutablePerACLs](#ERMrest.Column+isImmutablePerACLs) : <code>Boolean</code>
+        * [.name](#ERMrest.Column+name) : <code>string</code>
+        * [.RID](#ERMrest.Column+RID) : <code>string</code>
+        * [.type](#ERMrest.Column+type) : [<code>Type</code>](#ERMrest.Type)
+        * [.ignore](#ERMrest.Column+ignore) : <code>boolean</code>
+        * [.annotations](#ERMrest.Column+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
+        * [.comment](#ERMrest.Column+comment) : <code>string</code>
+        * [.nullok](#ERMrest.Column+nullok) : <code>Boolean</code>
+        * [.displayname](#ERMrest.Column+displayname) : <code>object</code>
+        * [.memberOfKeys](#ERMrest.Column+memberOfKeys) : [<code>Array.&lt;Key&gt;</code>](#ERMrest.Key)
+        * [.memberOfForeignKeys](#ERMrest.Column+memberOfForeignKeys) : [<code>Array.&lt;ForeignKeyRef&gt;</code>](#ERMrest.ForeignKeyRef)
+        * [.ermrestDefault](#ERMrest.Column+ermrestDefault) : <code>object</code>
+        * [.default](#ERMrest.Column+default) ⇒ <code>string</code>
+        * [.isUniqueNotNull](#ERMrest.Column+isUniqueNotNull) : <code>Boolean</code>
+        * [.uniqueNotNullKey](#ERMrest.Column+uniqueNotNullKey) : [<code>Key</code>](#ERMrest.Key)
+        * [.formatvalue(data, context)](#ERMrest.Column+formatvalue) ⇒ <code>string</code> \| <code>Array.&lt;string&gt;</code>
+        * [.formatPresentation(data, context, templateVariables, options)](#ERMrest.Column+formatPresentation) ⇒ <code>Object</code>
+        * [.toString()](#ERMrest.Column+toString) ⇒ <code>string</code>
+        * [._getNullValue()](#ERMrest.Column+_getNullValue) : <code>object</code>
+        * [.getDisplay(context)](#ERMrest.Column+getDisplay)
+        * [.compare(a, b)](#ERMrest.Column+compare) ⇒ <code>integer</code>
+    * _inner_
+        * [~defaultAnnotKey](#ERMrest.Column..defaultAnnotKey)
 
 <a name="new_ERMrest.Column_new"></a>
 
@@ -1998,6 +2004,12 @@ NOTE: null is greater than any not-null values.
 | a | <code>\*</code> | raw value |
 | b | <code>\*</code> | raw value |
 
+<a name="ERMrest.Column..defaultAnnotKey"></a>
+
+#### Column~defaultAnnotKey
+go over the catalog, schema, and table and copy the relative column defaults annotations.
+
+**Kind**: inner property of [<code>Column</code>](#ERMrest.Column)  
 <a name="ERMrest.Annotations"></a>
 
 ### ERMrest.Annotations

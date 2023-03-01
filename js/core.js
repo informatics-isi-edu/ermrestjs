@@ -255,7 +255,7 @@
             catalog._introspect(dontFetchSchema).then(function () {
                 self._catalogs[id] = catalog;
                 defer.resolve(catalog);
-            }, function (error) {
+            }).catch(function (error) {
                 defer.reject(error);
             });
 
@@ -444,7 +444,7 @@
                 }
 
                 defer.resolve();
-            }, function (response) {
+            }).catch(function (response) {
                 defer.reject(response);
             });
 
@@ -2901,8 +2901,37 @@
          * @type {ERMrest.Annotations}
          */
         this.annotations = new Annotations();
-        for (var uri in jsonColumn.annotations) {
-            var jsonAnnotation = jsonColumn.annotations[uri];
+
+        var annots = {};
+
+        /**
+         * go over the catalog, schema, and table and copy the relative column defaults annotations.
+         */
+        var defaultAnnotKey = module._annotations.COLUMN_DEFAULTS;
+        var ancestors = [this.table.schema.catalog, this.table.schema, this.table];
+        // frist copy the by_type annots
+        ancestors.forEach(function (el) {
+            if (el.annotations.contains(defaultAnnotKey)) {
+                var tempAnnot = el.annotations.get(defaultAnnotKey).content;
+                if (isObjectAndNotNull(tempAnnot) && isObjectAndNotNull(tempAnnot.by_type) && isObjectAndNotNull(tempAnnot.by_type[jsonColumn.type.typename])) {
+                    Object.assign(annots, tempAnnot.by_type[jsonColumn.type.typename]);
+                }
+            }
+        });
+        // then copy the by_name annotas
+        ancestors.forEach(function (el) {
+            if (el.annotations.contains(defaultAnnotKey)) {
+                var tempAnnot = el.annotations.get(defaultAnnotKey).content;
+                if (isObjectAndNotNull(tempAnnot) && isObjectAndNotNull(tempAnnot.by_name) && isObjectAndNotNull(tempAnnot.by_name[jsonColumn.name])) {
+                    Object.assign(annots, tempAnnot.by_name[jsonColumn.name]);
+                }
+            }
+        });
+
+        // then copy the existing annots on the column
+        Object.assign(annots, jsonColumn.annotations);
+        for (var uri in annots) {
+            var jsonAnnotation = annots[uri];
             this.annotations._push(new Annotation("column", uri, jsonAnnotation));
 
             if (uri === module._annotations.HIDDEN) {
