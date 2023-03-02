@@ -1,0 +1,131 @@
+{
+  "schema_name": "column_defaults_schema",
+  "annotations": {
+    "tag:isrd.isi.edu,2023:column-defaults" : {
+      "by_type": {
+        "timestamptz": {
+          "tag:isrd.isi.edu,2016:column-display": {
+            "defined_on": "schema_by_type"
+          }
+        }
+      },
+      "by_name": {
+        "RID": {
+          "tag:misd.isi.edu,2015:display": {
+            "defined_on": "schema_by_name"
+          }
+        }
+      }
+    }
+  },
+  "tables": {
+    "table_1": {
+      "kind": "table",
+      "table_name": "table_1",
+      "schema_name": "column_defaults_schema",
+      "keys": [{"unique_columns": ["id"]}],
+      "annotations": {
+        "tag:isrd.isi.edu,2023:column-defaults" : {
+          "by_type": {
+            "boolean[]": {
+              "tag:isrd.isi.edu,2015:display": {
+                "defined_on": "table_by_type"
+              }
+            }
+          }
+        }
+      },
+      "column_definitions": [
+        {
+          "name": "id",
+          "nullok": false,
+          "type" :{
+            "typename": "text"
+          }
+        },
+        {
+          "name": "boolean_array_col_1",
+          "type": {
+            "is_array": true,
+            "typename": "boolean[]",
+            "base_type": {
+              "typename": "boolean"
+            }
+          }
+        },
+        {
+          "name": "boolean_array_col_2",
+          "type": {
+            "is_array": true,
+            "typename": "boolean[]",
+            "base_type": {
+              "typename": "boolean"
+            }
+          }
+        },
+        {
+          "name": "timestamptz_col_1",
+          "type": {
+            "typename": "timestamptz"
+          },
+          "annotations": {
+            "tag:isrd.isi.edu,2016:column-display": {
+              "defined_on": "timestamptz_col_1"
+            }
+          }
+        },
+        {
+          "name": "timestamptz_col_2",
+          "type": {
+            "typename": "timestamptz"
+          }
+        }
+      ]
+    },
+    "table_2": {
+      "kind": "table",
+      "table_name": "table_2",
+      "schema_name": "column_defaults_schema",
+      "keys": [{"unique_columns": ["id"]}],
+      "column_definitions": [
+        {
+          "name": "id",
+          "nullok": false,
+          "type" :{
+            "typename": "text"
+          }
+        },
+        {
+          "name": "boolean_array_col_1",
+          "type": {
+            "is_array": true,
+            "typename": "boolean[]",
+            "base_type": {
+              "typename": "boolean"
+            }
+          },
+          "annotations": {
+            "tag:isrd.isi.edu,2015:display": {
+              "defined_on": "boolean_array_col_1"
+            }
+          }
+        },
+        {
+          "name": "boolean_array_col_2",
+          "type": {
+            "is_array": true,
+            "typename": "boolean[]",
+            "base_type": {
+              "typename": "boolean"
+            }
+          },
+          "annotations": {
+            "tag:isrd.isi.edu,2016:column-display": {
+              "defined_on": "boolean_array_col_2"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
