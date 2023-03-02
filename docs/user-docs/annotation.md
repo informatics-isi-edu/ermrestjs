@@ -1046,7 +1046,7 @@ And _by_type_definition_ is a JSON payload with the following pattern:
 For example,
 
 ```json
-"tag:isrd.isi.edu,2016:column-defaults": {
+"tag:isrd.isi.edu,2023:column-defaults": {
  "by_name": {
       "RCT": {
         "tag:misd.isi.edu,2015:display": {
@@ -1067,8 +1067,8 @@ For example,
           "*": {
             "pre_format": {
               "format": "%t",
-              "bool_true_value": "YES",
-              "bool_false_value": "NOPE",
+              "bool_true_value": "Yes",
+              "bool_false_value": "No"
             }
           }
         }
