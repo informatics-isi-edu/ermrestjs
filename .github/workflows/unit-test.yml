@@ -22,7 +22,7 @@ jobs:
           node --version
           sudo timedatectl set-timezone America/Los_Angeles
           export PATH="$(systemd-path user-binaries):$PATH"
-          sudo apt-get -y update
+          sudo apt-get update
           sudo apt-get -y install libcurl4-openssl-dev libjson-c-dev
           sudo service postgresql stop || true
           sudo service postgresql start 12
