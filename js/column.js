@@ -2521,8 +2521,13 @@ AssetPseudoColumn.prototype.formatPresentation = function(data, context, templat
     if (hostInfo) {
         template += ":span:(source: {{{hostInfo}}}):/span:{.asset-source-description}";
     }
+
+    if (this.displayImagePreview) {
+        template += ' \n :::image []({{{url}}}){figure-class=asset-image-preview} \n:::';
+    }
+
     var unformatted = module._renderTemplate(template, keyValues, this.table.schema.catalog);
-    return {isHTML: true, value: module.renderMarkdown(unformatted, true), unformatted: unformatted};
+    return {isHTML: true, value: module.renderMarkdown(unformatted), unformatted: unformatted};
 };
 
 /**
@@ -2702,6 +2707,21 @@ Object.defineProperty(AssetPseudoColumn.prototype, "filenameExtFilter", {
         return this._filenameExtRegexp;
     }
 });
+
+/**
+ * whether we should show the image preview or not
+ * @member {string[]} displayImagePreview
+ * @memberof ERMrest.AssetPseudoColumn#
+ */
+Object.defineProperty(AssetPseudoColumn.prototype, "displayImagePreview", {
+    get: function () {
+        if (this._displayImagePreview === undefined) {
+            this._displayImagePreview = this._annotation.image_preview === true;
+        }
+        return this._displayImagePreview;
+    }
+});
+
 
 /**
  * @memberof ERMrest
