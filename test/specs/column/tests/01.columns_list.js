@@ -86,12 +86,6 @@ exports.execute = function (options) {
             return url;
         };
 
-        var data = {
-            "id": "1",
-            "id_1": "2",
-            "id_2": "3"
-        };
-
         var referenceRawData = [
             {
                 "id": "1",
@@ -176,7 +170,7 @@ exports.execute = function (options) {
             '1', '1', '1000', '10001', null, 'https://dev.isrd.isi.edu', 'https://dev.isrd.isi.edu', 'https://dev.isrd.isi.edu', 4
         ];
 
-        var compactRefExpectedLinkedValue, assetCompactExpectedValue, tableWSlashData;
+        var compactRefExpectedLinkedValue, assetCompactExpectedValue, assetDetailedExpectedValue, tableWSlashData;
 
         /**
          * This is the structure of the used tables:
@@ -274,6 +268,8 @@ exports.execute = function (options) {
          *  11: col_asset_4 *AssetPseudoColumn* (asset with url_pattern and filename) has column-display (markdown)
          *  12: col_asset_4_filename
          *  13: col_asset_5 (asset with type not text)
+         *  14: col_asset_6 *AssetPseudoColumn* (asset with url_pattern, filename, and image_preview)
+         *  15: col_asset_5_filename
          *
          *  ref.columns for entry (no context present):
          *  0: id
@@ -285,10 +281,12 @@ exports.execute = function (options) {
          *  6: col_asset_3 *AssetPseudoColumn*
          *  7: col_asset_4
          *  8: col_asset_5
+         *  9: col_asset_6
          *
          *
          *  contexts that are used:
          *  - compact: no visible-columns
+         *  - detailed: valid assets: col_asset_3, col_asset_4, col_asset_6
          *  - edit: no visible-columns
          *  - entry/create: does not include col_asset_3 -> so no ignore
          *  - entry/edit: includes col_asset_3 and all its contituent columns
@@ -358,7 +356,18 @@ exports.execute = function (options) {
                 '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/RID=' + utils.findEntityRID(options, schemaName, "table_w_composite_key", "id", "4") + '">4001 , 4002</a>',
                 ''
             ];
-            var html = "";
+
+            assetDetailedExpectedValue = [
+                '<a href="https://dev.isrd.isi.edu?uinit=1&amp;cid=test" download="" class="asset-permission">filename</a>',
+                '<p>filename4</p>\n',
+                [
+                    '<p><a href="https://dev.isrd.isi.edu/file.png?uinit=1&amp;cid=test" download="" class="asset-permission">filename6</a></p>\n',
+                    '<figure class="embed-block -chaise-post-load chaise-image-preview" style="display:inline-block;">',
+                    '<figcaption class="embed-caption"></figcaption><img src="https://dev.isrd.isi.edu/file.png?uinit=1&cid=test" />',
+                    '</figure>'
+                ].join('')
+            ];
+
             assetCompactExpectedValue = [
                 '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_asset/id=1">1</a>',
                 '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:columns_table/RID=' + utils.findEntityRID(options, schemaName, "columns_table", "id", "1") + '">1</a>',
@@ -367,7 +376,9 @@ exports.execute = function (options) {
                 '<h2>filename</h2>\n',
                 '<a href="https://dev.isrd.isi.edu?uinit=1&amp;cid=test" download="" class="asset-permission">filename</a>',
                 'filename4',
-                '4'
+                '4',
+                'filename6',
+                '<a href="https://dev.isrd.isi.edu/file.png?uinit=1&amp;cid=test" download="" class="asset-permission">filename6</a>'
             ];
 
             tableWSlashData = [
@@ -711,7 +722,7 @@ exports.execute = function (options) {
                         });
 
                         it('should not be ignored in other contexts.', function() {
-                            expect(assetRefCompactCols.length).toBe(19);
+                            expect(assetRefCompactCols.length).toBe(21);
                             expect(assetRefCompactCols[4].name).toBe("col_filename");
                             expect(assetRefCompactCols[4].isPseudo).toBe(false);
                             expect(assetRefCompactCols[5].name).toBe("col_byte");
@@ -952,6 +963,17 @@ exports.execute = function (options) {
                     assetRefCompact.read(limit).then(function (page) {
                         var tuples = page.tuples;
                         expect(tuples[0].values).toEqual(jasmine.arrayContaining(assetCompactExpectedValue));
+                        done();
+                    }, function (err) {
+                        console.dir(err);
+                        done.fail();
+                    });
+                });
+
+                it('in detailed, should return the download button and image preview if applicaple.', function(done) {
+                    assetRefCompact.contextualize.detailed.read(limit).then(function (page) {
+                        var tuples = page.tuples;
+                        expect(tuples[0].values).toEqual(jasmine.arrayContaining(assetDetailedExpectedValue));
                         done();
                     }, function (err) {
                         console.dir(err);

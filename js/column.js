@@ -2522,12 +2522,18 @@ AssetPseudoColumn.prototype.formatPresentation = function(data, context, templat
         template += ":span:(source: {{{hostInfo}}}):/span:{.asset-source-description}";
     }
 
-    if (this.displayImagePreview) {
-        template += ' \n :::image []({{{url}}}){figure-class=asset-image-preview} \n:::';
+    /**
+     * if we're just showing the link, we can just render it as inline
+     * but if we're adding the preview, then we cannot.
+     */
+    var isInline = true;
+    if (this.displayImagePreview && context === module._contexts.DETAILED) {
+        template += ' \n :::image []({{{url}}}){figure-class=' + module._classNames.imagePreview + '} \n:::';
+        isInline = false;
     }
 
     var unformatted = module._renderTemplate(template, keyValues, this.table.schema.catalog);
-    return {isHTML: true, value: module.renderMarkdown(unformatted), unformatted: unformatted};
+    return {isHTML: true, value: module.renderMarkdown(unformatted, isInline), unformatted: unformatted};
 };
 
 /**

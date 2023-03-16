@@ -534,6 +534,7 @@ to use for ERMrest JavaScript agents.
         * [.sha256](#ERMrest.AssetPseudoColumn+sha256) : [<code>Column</code>](#ERMrest.Column)
         * [.filenameExtFilter](#ERMrest.AssetPseudoColumn+filenameExtFilter) : <code>Array.&lt;string&gt;</code>
         * [.filenameExtRegexp](#ERMrest.AssetPseudoColumn+filenameExtRegexp) : <code>Array.&lt;string&gt;</code>
+        * [.displayImagePreview](#ERMrest.AssetPseudoColumn+displayImagePreview) : <code>Array.&lt;string&gt;</code>
         * [._determineInputDisabled(context)](#ERMrest.AssetPseudoColumn+_determineInputDisabled) ⇒ <code>boolean</code> \| <code>object</code>
         * [.getMetadata(data, context, options)](#ERMrest.AssetPseudoColumn+getMetadata) ⇒ <code>Object</code>
         * [.formatPresentation(data, [context], [templateVariables], [options])](#ERMrest.AssetPseudoColumn+formatPresentation) ⇒ <code>Object</code>
@@ -5004,6 +5005,7 @@ The following is the logic:
     * [.sha256](#ERMrest.AssetPseudoColumn+sha256) : [<code>Column</code>](#ERMrest.Column)
     * [.filenameExtFilter](#ERMrest.AssetPseudoColumn+filenameExtFilter) : <code>Array.&lt;string&gt;</code>
     * [.filenameExtRegexp](#ERMrest.AssetPseudoColumn+filenameExtRegexp) : <code>Array.&lt;string&gt;</code>
+    * [.displayImagePreview](#ERMrest.AssetPseudoColumn+displayImagePreview) : <code>Array.&lt;string&gt;</code>
     * [._determineInputDisabled(context)](#ERMrest.AssetPseudoColumn+_determineInputDisabled) ⇒ <code>boolean</code> \| <code>object</code>
     * [.getMetadata(data, context, options)](#ERMrest.AssetPseudoColumn+getMetadata) ⇒ <code>Object</code>
     * [.formatPresentation(data, [context], [templateVariables], [options])](#ERMrest.AssetPseudoColumn+formatPresentation) ⇒ <code>Object</code>
@@ -5079,6 +5081,12 @@ The column object that file extension is stored in.
 
 #### assetPseudoColumn.filenameExtRegexp : <code>Array.&lt;string&gt;</code>
 The regular expressions that will be used for extracting the extension
+
+**Kind**: instance property of [<code>AssetPseudoColumn</code>](#ERMrest.AssetPseudoColumn)  
+<a name="ERMrest.AssetPseudoColumn+displayImagePreview"></a>
+
+#### assetPseudoColumn.displayImagePreview : <code>Array.&lt;string&gt;</code>
+whether we should show the image preview or not
 
 **Kind**: instance property of [<code>AssetPseudoColumn</code>](#ERMrest.AssetPseudoColumn)  
 <a name="ERMrest.AssetPseudoColumn+_determineInputDisabled"></a>

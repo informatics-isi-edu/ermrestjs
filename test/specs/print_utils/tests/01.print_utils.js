@@ -244,10 +244,19 @@ exports.execute = function (options) {
                 expect(printMarkdown(iframeMarkdown + "\n" + dropdownMarkdown)).toBe(iframeHTML + dropdownHTML, "case 11");
             });
 
-            it ("should support :::image.", function () {
-                // Check for thumbnail with link to original image and a caption
-                expect(printMarkdown(":::image [Skyscrapers](http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg){height=200 link=https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg} \n:::"))
-                .toBe('<figure class="embed-block -chaise-post-load" style="display:inline-block;"><a href="https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg" target="_blank"><figcaption class="embed-caption">Skyscrapers</figcaption><img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" height="200"  /></a></figure>');
+            describe ("should support :::image.", function () {
+
+                it ('image with link and height', () => {
+                    // Check for thumbnail with link to original image and a caption
+                    expect(printMarkdown(":::image [Skyscrapers](http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg){height=200 link=https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg} \n:::"))
+                    .toBe('<figure class="embed-block -chaise-post-load" style="display:inline-block;"><a href="https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg" target="_blank"><figcaption class="embed-caption">Skyscrapers</figcaption><img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" height="200" /></a></figure>');
+                });
+
+                it ('image using chaise-image-preview', () => {
+                    expect(printMarkdown(':::image [](https://example.com/a.png){figure-class=chaise-image-preview image-preview-max-height="40vh"} \n:::'))
+                    .toBe('<figure class="embed-block -chaise-post-load chaise-image-preview" style="display:inline-block;"><figcaption class="embed-caption"></figcaption><img src="https://example.com/a.png" image-preview-max-height="40vh" /></figure>');
+                });
+
             });
 
             it ("should support :::video", function () {
