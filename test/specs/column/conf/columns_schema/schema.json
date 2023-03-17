@@ -1056,7 +1056,11 @@
                         "tag:isrd.isi.edu,2017:asset": {
                             "url_pattern": "/hatrac/{{col_asset_6}}",
                             "filename_column": "col_asset_6_filename",
-                            "image_preview": true
+                            "display": {
+                                "entry": {
+                                    "image_preview": true
+                                }
+                            }
                         }
                     }
                 },

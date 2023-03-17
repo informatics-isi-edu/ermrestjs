@@ -157,7 +157,14 @@ The following is the list of special class names that you can use:
 - `.vocab`: Used to represent a vocabulary.
 - `.chaise-autofill`: Used to set the height and width to fill the parent container based on the user's browser.
 - `.fullscreen-off`: When applied in iframe template, this class hides the full screen button that appears at the top right corner.
-- `.chaise-image-preview`: When applied to an image, Chaise will properly display a scaled down version of the image to the users. Clicking on the image would allow users to see the fully scaled version of the image. For more information refer to [here]().
+- `.chaise-image-preview`: When applied to an image, Chaise will properly display a scaled down version of the image to the users. Clicking on the image would allow users to see the fully scaled version of the image. You can find an example [here](#6-image-with-zoom-capabilties). While the behavior looks like a zoom, by clicking on images with this class, we're switching between these two modes:
+  - The scaled-down version,
+    - The height of the image is limited to 50vh. Therefore small images will be displayed fully, while the bigger images will be scaled down to fit the limited size.
+    - The width is limited to the available width space on the page.
+    - The browser will fit the image in the limited height/width while keeping the image's aspect ratio. Hence, in an image with a larger height than width, you will see extra white space to the left and right of the image.
+  - The zoomed-in version,
+    - The height and width of the image are not limited; instead, the limits mentioned above are moved to the image's container. That's why we will see scrollbars in larger images, and in smaller images, nothing will change.
+    > The max height mentioned above can be changed by defining the `image-preview-max-height` property. Please refer to the example for more information.
 
 
 ## Examples
@@ -330,6 +337,12 @@ To add zoom capabilities, you just need to add the `figure-class=chaise-image-pr
 :::image [](Image-URL){figure-class=chaise-image-preview} \n:::'
 
 :::image [](https://example.com/path/to/image.png){figure-class=chaise-image-preview} \n:::'
+```
+
+You could customize the maximum height that we should use by defining the `image-preview-max-height` property like the following:
+
+```html
+:::image [](https://example.com/path/to/image.png){figure-class=chaise-image-preview image-preview-max-height="300px"} \n:::'
 ```
 
 

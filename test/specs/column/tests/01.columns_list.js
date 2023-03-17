@@ -281,7 +281,7 @@ exports.execute = function (options) {
          *  6: col_asset_3 *AssetPseudoColumn*
          *  7: col_asset_4
          *  8: col_asset_5
-         *  9: col_asset_6
+         *  9: col_asset_6 *AssetPseudoColumn* (with image_preview)
          *
          *
          *  contexts that are used:
@@ -360,12 +360,7 @@ exports.execute = function (options) {
             assetDetailedExpectedValue = [
                 '<a href="https://dev.isrd.isi.edu?uinit=1&amp;cid=test" download="" class="asset-permission">filename</a>',
                 '<p>filename4</p>\n',
-                [
-                    '<p><a href="https://dev.isrd.isi.edu/file.png?uinit=1&amp;cid=test" download="" class="asset-permission">filename6</a></p>\n',
-                    '<figure class="embed-block -chaise-post-load chaise-image-preview" style="display:inline-block;">',
-                    '<figcaption class="embed-caption"></figcaption><img src="https://dev.isrd.isi.edu/file.png?uinit=1&cid=test" />',
-                    '</figure>'
-                ].join('')
+                '<a href="https://dev.isrd.isi.edu/file.png?uinit=1&amp;cid=test" download="" class="asset-permission">filename6</a>'
             ];
 
             assetCompactExpectedValue = [

@@ -204,6 +204,8 @@ exports.execute = function (options) {
                 for (var i = 8; i < 12; i++) {
                     expect(assetRefCompactCols[i].isAsset).toBe(true, "invalid isAsset for index="+ i);
                 }
+
+                expect(assetRefCompactCols[14].isAsset).toBe(true, "invalid isAsset for index=14");
             });
 
             it ('for other columns should return undefined.', function () {
@@ -881,18 +883,6 @@ exports.execute = function (options) {
                             expect(val).toEqual('<a href="' + url +'" download="" class="external-link-icon external-link">image.png</a><span class="asset-source-description">(source: example.com)</span>', "value missmatch for detailed");
                         });
 
-                        it ('if context is detailed and image_preview is defined, add the preview after the download link.', () => {
-                            var url = "/hatrac/test/example/file.png:2JFD";
-                            val = assetRefCompactCols[14].formatPresentation({"col_asset_6": url, "col_asset_6_filename": "file"}, "detailed").value;
-                            let expectedVal = [
-                                '<p><a href="/hatrac/test/example/file.png:2JFD?uinit=1&amp;cid=test" download="" class="asset-permission">file</a></p>\n',
-                                '<figure class="embed-block -chaise-post-load chaise-image-preview" style="display:inline-block;">',
-                                '<figcaption class="embed-caption"></figcaption><img src="/hatrac/test/example/file.png:2JFD?uinit=1&cid=test" />',
-                                '</figure>'
-                            ].join('');
-                            expect(val).toEqual(expectedVal, "value missmatch for detailed");
-                        })
-
                         it ("otherwise, use the last part of url for caption without any origin information.", function () {
                             // has filenameColumn but its value is null
                             val = assetRefCompactCols[10].formatPresentation({"col_asset_3": "https://example.com/asset.png", "col_filename": null}).value;
@@ -1223,6 +1213,21 @@ exports.execute = function (options) {
                         testMetadata(assetRefEntryCols[4], {col_asset_1: "http://example.com/hatrac/next/folder/image.png"}, "detailed", "absolute, different host, hatrac name included in entry file", "image.png", "example.com", false);
                     });
                 });
+            });
+
+            describe ('.displayImagePreview', function () {
+                it ('should return true if its defined for the context', function () {
+                    expect(assetRefEntryCols[9].displayImagePreview).toBe(true);
+                });
+
+                it ('otherwise should return false.', function () {
+                    for (var i = 8; i < 12; i++) {
+                        expect(assetRefCompactCols[i].displayImagePreview).toBe(false, "invalid isAsset for index="+ i);
+                    }
+
+                    expect(assetRefCompactCols[14].displayImagePreview).toBe(false, "invalid isAsset for index=14");
+                });
+
             });
         })
 

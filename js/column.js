@@ -2522,18 +2522,8 @@ AssetPseudoColumn.prototype.formatPresentation = function(data, context, templat
         template += ":span:(source: {{{hostInfo}}}):/span:{.asset-source-description}";
     }
 
-    /**
-     * if we're just showing the link, we can just render it as inline
-     * but if we're adding the preview, then we cannot.
-     */
-    var isInline = true;
-    if (this.displayImagePreview && context === module._contexts.DETAILED) {
-        template += ' \n :::image []({{{url}}}){figure-class=' + module._classNames.imagePreview + '} \n:::';
-        isInline = false;
-    }
-
     var unformatted = module._renderTemplate(template, keyValues, this.table.schema.catalog);
-    return {isHTML: true, value: module.renderMarkdown(unformatted, isInline), unformatted: unformatted};
+    return {isHTML: true, value: module.renderMarkdown(unformatted, true), unformatted: unformatted};
 };
 
 /**
@@ -2722,7 +2712,9 @@ Object.defineProperty(AssetPseudoColumn.prototype, "filenameExtFilter", {
 Object.defineProperty(AssetPseudoColumn.prototype, "displayImagePreview", {
     get: function () {
         if (this._displayImagePreview === undefined) {
-            this._displayImagePreview = this._annotation.image_preview === true;
+            var disp = this._annotation.display;
+            var currDisplay = isObjectAndNotNull(disp) ? module._getAnnotationValueByContext(this._context, disp) : null;
+            this._displayImagePreview = isObjectAndNotNull(currDisplay) &&  currDisplay.image_preview === true;
         }
         return this._displayImagePreview;
     }
