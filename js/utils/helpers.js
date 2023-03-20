@@ -2361,7 +2361,7 @@
                 if (tokens[idx].nesting === 1 && m.length > 0) {
 
                     // Extract remaining string before closing tag and get its parsed markdown attributes
-                    var attrs = md.parseInline(m[1]), html = "";
+                    var attrs = md.parseInline(m[1]), html = "", figureClass = '';
                     if (attrs && attrs.length == 1 && attrs[0].children) {
 
                         // Check If the markdown is a link
@@ -2371,16 +2371,22 @@
 
                             // Add all attributes to the image
                             openingLink.attrs.forEach(function(attr) {
-                                if (attr[0] == "href") {
-                                    imageHTML += 'src="' + attr[1] + '"';
-                                } else if (attr[0] == "link") {
-                                    enlargeLink = attr[1];
-                                } else if (attr[0] == "pos") {
-                                    posTop = attr[1].toLowerCase() == 'bottom' ? false : true;
-                                } else {
-                                    imageHTML +=  attr[0] + '="' + attr[1] + '"';
+                                switch(attr[0]) {
+                                    case "figure-class":
+                                        figureClass = attr[1];
+                                        break;
+                                    case "href":
+                                        imageHTML += 'src="' + attr[1] + '" ';
+                                        break;
+                                    case "link":
+                                        enlargeLink = attr[1];
+                                        break;
+                                    case "pos":
+                                        posTop = attr[1].toLowerCase() == 'bottom' ? false : true;
+                                        break;
+                                    default:
+                                        imageHTML +=  attr[0] + '="' + attr[1] + '" ';
                                 }
-                               imageHTML += " ";
                             });
 
                             html += imageHTML + "/>";
@@ -2415,7 +2421,7 @@
                             }
 
                             // Encapsulate the iframe inside a paragraph tag
-                            html = '<figure class="embed-block ' + module._classNames.postLoad + '" style="display:inline-block;">' + html + "</figure>";
+                            html = '<figure class="embed-block ' + module._classNames.postLoad + (figureClass.length ? (" "  + figureClass) : "") + '" style="display:inline-block;">' + html + "</figure>";
                         }
                     }
 

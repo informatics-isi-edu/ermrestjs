@@ -390,7 +390,8 @@
         postLoad: "-chaise-post-load",
         hideInPrintMode: "hide-in-print",
         showInPrintMode: "video-info-in-print",
-        colorPreview: "chaise-color-preview"
+        colorPreview: "chaise-color-preview",
+        imagePreview: "chaise-image-preview"
     });
 
     module._specialSourceDefinitions = Object.freeze({

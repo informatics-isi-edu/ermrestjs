@@ -157,6 +157,14 @@ The following is the list of special class names that you can use:
 - `.vocab`: Used to represent a vocabulary.
 - `.chaise-autofill`: Used to set the height and width to fill the parent container based on the user's browser.
 - `.fullscreen-off`: When applied in iframe template, this class hides the full screen button that appears at the top right corner.
+- `.chaise-image-preview`: When applied to an image, Chaise will properly display a scaled down version of the image to the users. Clicking on the image would allow users to see the fully scaled version of the image. You can find an example [here](#6-image-with-zoom-capabilties). While the behavior looks like a zoom, by clicking on images with this class, we're switching between these two modes:
+  - The scaled-down version,
+    - The height of the image is limited to 50vh. Therefore small images will be displayed fully, while the bigger images will be scaled down to fit the limited size.
+    - The width is limited to the available width space on the page.
+    - The browser will fit the image in the limited height/width while keeping the image's aspect ratio. Hence, in an image with a larger height than width, you will see extra white space to the left and right of the image.
+  - The zoomed-in version,
+    - The height and width of the image are not limited; instead, the limits mentioned above are moved to the image's container. That's why we will see scrollbars in larger images, and in smaller images, nothing will change.
+    > The max height mentioned above can be changed by defining the `image-preview-max-height` property. Please refer to the example for more information.
 
 
 ## Examples
@@ -196,7 +204,7 @@ Download button is a link with some predefined attributes. You can use these att
   - `.download` will change the link to look like the following:
 ![alternative download UI](https://raw.githubusercontent.com/informatics-isi-edu/ermrestjs/master/docs/resources/download-btn.png)
 
-  - If you would like to create your own download button, we suggest adding a class attribute here and using this class for definining your own CSS rules. 
+  - If you would like to create your own download button, we suggest adding a class attribute here and using this class for definining your own CSS rules.
     - Chaise is defining rules based on `a[download]` selector. You need to ensure that the default CSS rules are overriden and the new ones are added.
 
   - `.asset-permission` can be added to validate whether the user can download the asset before a download is attempted.
@@ -262,7 +270,7 @@ You can also add extra styles to the image to ensure it is displayed correctly.
 
 With attributes height=400 and target=\_blank is to open it in new tab
 ```html
-# [![alt text](thumbnail-URL){height=400}](destination-URL){target=_blank}
+[![alt text](thumbnail-URL){height=400}](destination-URL){target=_blank}
 
 [![Image](http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg){height=400}](https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg){target=_blank}
 
@@ -280,7 +288,7 @@ With attributes height=400 and target=\_blank is to open it in new tab
 
 With attributes height=200 and target=\_blank is to open it in new tab
 ```html
-# [![alt text](thumbnail-URL){height=200}](destination-URL){target=_blank}
+[![alt text](thumbnail-URL){height=200}](destination-URL){target=_blank}
 
 [![Image](http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg){height=200}](https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg){target=_blank} [![Image](https://c.fastcompany.net/multisite_files/fastcompany/imagecache/1280/poster/2015/06/3046722-poster-p-1-the-psychology-of-living-in-skyscrapers.jpg){height=200}](https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg){target=_blank}
 
@@ -303,7 +311,7 @@ This is not part of commonMark specification and it will result in a [block](#in
 
 With attributes width=500, height=400 and a linkable caption to open it in new tab(All of them are optional)
 ```html
-# :::image [caption](thumbnail-URL){width=500 height=400 link="destination-URL"} \n:::
+:::image [caption](thumbnail-URL){width=500 height=400 link="destination-URL"} \n:::
 
 :::image [Skyscrapers](http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg){width=500 height=400 link="https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg"} \n:::
 
@@ -318,6 +326,24 @@ With attributes width=500, height=400 and a linkable caption to open it in new t
 ```
 
 > <figure class="embed-block" style="display:inline-block;"><a href="https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg" target="\_blank"><figcaption class="embed-caption">Skyscrapers</figcaption><img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" height="200"  /></a></figure>
+
+### 6. Image with zoom capabilties
+
+This is not part of commonMark specification and it will result in a [block](#inline-vs-block). You have to follow the syntax completely (notice the newline in the closing tag).
+
+To add zoom capabilities, you just need to add the `figure-class=chaise-image-preview` attribute:
+
+```html
+:::image [](Image-URL){figure-class=chaise-image-preview} \n:::'
+
+:::image [](https://example.com/path/to/image.png){figure-class=chaise-image-preview} \n:::'
+```
+
+You could customize the maximum height that we should use by defining the `image-preview-max-height` property like the following:
+
+```html
+:::image [](https://example.com/path/to/image.png){figure-class=chaise-image-preview image-preview-max-height="300px"} \n:::'
+```
 
 
 ### 6. Iframe
