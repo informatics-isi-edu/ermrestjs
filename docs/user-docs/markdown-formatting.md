@@ -14,9 +14,8 @@ For common markdown syntax please refer to [this reference sheet](http://commonm
     + [1. Link (Anchor)](#1-link-anchor)
     + [2. Download Button](#2-download-button)
     + [3. Image](#3-image)
-    + [4. Thumbnail Image With Aspect Ratio and Height](#4-thumbnail-image-with-aspect-ratio-and-height)
-      - [Multiple Adjacent Images](#multiple-adjacent-images)
-    + [5. Thumbnail With Link To Original Image And A caption](#5-thumbnail-with-link-to-original-image-and-a-caption)
+    + [4. Thumbnail With Link To Original Image And A caption](#4-thumbnail-with-link-to-original-image-and-a-caption)
+    + [5. Image with zoom capabilties](#5-image-with-zoom-capabilties)
     + [6. Iframe](#6-iframe)
       - [a. Styling the Iframe](#a-styling-the-iframe)
         - [a.1. Without any attributes](#a1-without-any-attributes)
@@ -266,46 +265,8 @@ You can also add extra styles to the image to ensure it is displayed correctly.
 
 **NOTE**: You can add any style content to your markdown. For more info on styling you can refer this [tutorial](http://www.w3schools.com/html/html_css.asp)
 
-### 4. Thumbnail Image With Aspect Ratio and Height
 
-With attributes height=400 and target=\_blank is to open it in new tab
-```html
-[![alt text](thumbnail-URL){height=400}](destination-URL){target=_blank}
-
-[![Image](http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg){height=400}](https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg){target=_blank}
-
-# OUTPUT:
-<p>
-	<a href="https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg" target="_blank">
-		<img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" alt="Image" height="400">
-	</a>
-</p>
-```
-
-> <p><a href="https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg" target="\_blank"><img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" alt="Image" height="400"></a></p>
-
-#### Multiple Adjacent Images
-
-With attributes height=200 and target=\_blank is to open it in new tab
-```html
-[![alt text](thumbnail-URL){height=200}](destination-URL){target=_blank}
-
-[![Image](http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg){height=200}](https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg){target=_blank} [![Image](https://c.fastcompany.net/multisite_files/fastcompany/imagecache/1280/poster/2015/06/3046722-poster-p-1-the-psychology-of-living-in-skyscrapers.jpg){height=200}](https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg){target=_blank}
-
-# OUTPUT:
-<p>
-	<a href="https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg" target="_blank">
-		<img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" alt="Image" height="200">
-	</a>
-	<a href="https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg" target="_blank">
-		<img src="https://c.fastcompany.net/multisite_files/fastcompany/imagecache/1280/poster/2015/06/3046722-poster-p-1-the-psychology-of-living-in-skyscrapers.jpg" alt="Image" height="200">
-	</a>
-</p>
-```
-
-> <p><a href="https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg" target="\_blank"><img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" alt="Image" height="200"></a> <a href="https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg" target="\_blank"><img src="https://c.fastcompany.net/multisite_files/fastcompany/imagecache/1280/poster/2015/06/3046722-poster-p-1-the-psychology-of-living-in-skyscrapers.jpg" alt="Image" height="200"></a></p>
-
-### 5. Thumbnail With Link To Original Image And A caption
+### 4. Thumbnail With Link To Original Image And A caption
 
 This is not part of commonMark specification and it will result in a [block](#inline-vs-block). You have to follow the syntax completely (notice the newline in the closing tag).
 
@@ -327,22 +288,22 @@ With attributes width=500, height=400 and a linkable caption to open it in new t
 
 > <figure class="embed-block" style="display:inline-block;"><a href="https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg" target="\_blank"><figcaption class="embed-caption">Skyscrapers</figcaption><img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" height="200"  /></a></figure>
 
-### 6. Image with zoom capabilties
+### 5. Image with zoom capabilties
 
 This is not part of commonMark specification and it will result in a [block](#inline-vs-block). You have to follow the syntax completely (notice the newline in the closing tag).
 
 To add zoom capabilities, you just need to add the `figure-class=chaise-image-preview` attribute:
 
 ```html
-:::image [](Image-URL){figure-class=chaise-image-preview} \n:::'
+:::image [](Image-URL){figure-class=chaise-image-preview} \n:::
 
-:::image [](https://example.com/path/to/image.png){figure-class=chaise-image-preview} \n:::'
+:::image [](https://example.com/path/to/image.png){figure-class=chaise-image-preview} \n:::
 ```
 
 You could customize the maximum height that we should use by defining the `image-preview-max-height` property like the following:
 
 ```html
-:::image [](https://example.com/path/to/image.png){figure-class=chaise-image-preview image-preview-max-height="300px"} \n:::'
+:::image [](https://example.com/path/to/image.png){figure-class=chaise-image-preview image-preview-max-height="300px"} \n:::
 ```
 
 
