@@ -2361,7 +2361,7 @@
                 if (tokens[idx].nesting === 1 && m.length > 0) {
 
                     // Extract remaining string before closing tag and get its parsed markdown attributes
-                    var attrs = md.parseInline(m[1]), html = "", figureClass = '';
+                    var attrs = md.parseInline(m[1]), html = "", figureClass = '', figureStyle = '';
                     if (attrs && attrs.length == 1 && attrs[0].children) {
 
                         // Check If the markdown is a link
@@ -2372,6 +2372,9 @@
                             // Add all attributes to the image
                             openingLink.attrs.forEach(function(attr) {
                                 switch(attr[0]) {
+                                    case "figure-style":
+                                        figureStyle = attr[1];
+                                        break;
                                     case "figure-class":
                                         figureClass = attr[1];
                                         break;
@@ -2421,7 +2424,7 @@
                             }
 
                             // Encapsulate the iframe inside a paragraph tag
-                            html = '<figure class="embed-block ' + module._classNames.postLoad + (figureClass.length ? (" "  + figureClass) : "") + '" style="display:inline-block;">' + html + "</figure>";
+                            html = '<figure class="embed-block ' + module._classNames.postLoad + (figureClass.length ? (" "  + figureClass) : "") + '" style="' + (figureStyle.length ? figureStyle : 'display:inline-block;') + '">' + html + "</figure>";
                         }
                     }
 

@@ -257,6 +257,11 @@ exports.execute = function (options) {
                     .toBe('<figure class="embed-block -chaise-post-load chaise-image-preview" style="display:inline-block;"><figcaption class="embed-caption"></figcaption><img src="https://example.com/a.png" image-preview-max-height="40vh" /></figure>');
                 });
 
+                it ('image with figure-style', () => {
+                    expect(printMarkdown(':::image [](https://example.com/a.png){figure-style=max-width:400px} \n:::'))
+                    .toBe('<figure class="embed-block -chaise-post-load" style="max-width:400px"><figcaption class="embed-caption"></figcaption><img src="https://example.com/a.png" /></figure>');
+                });
+
             });
 
             it ("should support :::video", function () {
