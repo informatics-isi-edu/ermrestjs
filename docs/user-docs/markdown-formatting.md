@@ -14,6 +14,9 @@ For common markdown syntax please refer to [this reference sheet](http://commonm
     + [1. Link (Anchor)](#1-link-anchor)
     + [2. Download Button](#2-download-button)
     + [3. Image](#3-image)
+      - [3.1. Image with static width and height](#31-image-with-static-width-and-height)
+      - [3.2. Image with maximum width and maximum height](#32-image-with-maximum-width-and-maximum-height)
+      - [3.3. Preserving the aspect ratio of image](#33-preserving-the-aspect-ratio-of-image)
     + [4. Thumbnail With Link To Original Image And A caption](#4-thumbnail-with-link-to-original-image-and-a-caption)
     + [5. Image with zoom capabilties](#5-image-with-zoom-capabilties)
     + [6. Iframe](#6-iframe)
@@ -235,6 +238,20 @@ By adding `!` at the begining of a link definition, it will display the image. I
 ```
 > <p><img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" alt="Image"></p>
 
+Just like any other elements, you can define attributes for the Images by defining them in a block after the tag:
+
+```
+![alt text](IMAGE_URL){ <attribute>=<value> }
+```
+
+The following are the most common attributes that you could use:
+
+- `width` and `height`: Useful when you know the width and height of the image, or want to limit the image to certain size.
+- `style`: Can be used for specifying any styles on the image.
+
+The following are some common examples of styling Images:
+
+#### 3.1. Image with static width and height
 
 You can define the `width` and `height` attributes for an image.
 
@@ -250,7 +267,9 @@ You can define the `width` and `height` attributes for an image.
 > <p><img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" alt="ImageWithSize" width="800" height="300"></p>
 
 
-You can also add extra styles to the image to ensure it is displayed correctly.
+#### 3.2. Image with maximum width and maximum height
+
+Instead of defining static with and height, you can also define maximum allowed values:
 
 ```html
 ![ImageWithSize](http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg){width=500 style="max-height:300px;max-width:800px;"}
@@ -263,8 +282,24 @@ You can also add extra styles to the image to ensure it is displayed correctly.
 
 > <p><img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" alt="ImageWithSize" width="500" style="max-height:300px;max-width:800px;"></p>
 
-**NOTE**: You can add any style content to your markdown. For more info on styling you can refer this [tutorial](http://www.w3schools.com/html/html_css.asp)
 
+#### 3.3. Preserving the aspect ratio of image
+
+To preserve the image's aspect ratio, you need to add the `object-fit:contain` style. This is style is helpful in combination with static `width` or `height`. For example,
+
+```
+![](https://example.com/path/to/image.png){style=height:500px;object-fit:contain}
+```
+
+With this, the image's height would be 500px, and `object-fit:contain` will signal the browser to choose a proper width based on the available space and the image's aspect ratio.
+
+You can also use this style with both width and height:
+
+```
+![](https://example.com/path/to/image.png){style=height:500px;width:500px;object-fit:contain}
+```
+
+This example specifies the width and height of the image's container. And depending on the aspect ratio of the image, you will see white space around the scaled-down image (instead of stretching the image to the container's width/height).
 
 ### 4. Thumbnail With Link To Original Image And A caption
 
@@ -306,6 +341,11 @@ You could customize the maximum height that we should use by defining the `image
 :::image [](https://example.com/path/to/image.png){figure-class=chaise-image-preview image-preview-max-height="300px"} \n:::
 ```
 
+If you're using this feature in a tabular view, you need to specify the width of the container. Otherwise clicking on the image will expand the image beyond the table's allowed width. For example:
+
+```html
+:::image [](https://example.com/path/to/image.png){figure-class=chaise-image-preview image-preview-max-height="300px" figure-style=width:300px } \n:::
+```
 
 ### 6. Iframe
 
