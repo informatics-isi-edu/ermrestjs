@@ -2880,11 +2880,23 @@
 
         // if there is a window object, we are in the browser
         if (window && window.location) {
+            var chaiseBasePath = '/chaise/';
+            if (isObjectAndNotNull(window.chaiseBuildVariables)) {
+                // new version
+                if (isStringAndNotEmpty(window.chaiseBuildVariables.CHAISE_BASE_PATH)) {
+                    chaiseBasePath = window.chaiseBuildVariables.CHAISE_BASE_PATH;
+                }
+                // angularj version
+                else if (isStringAndNotEmpty(window.chaiseBuildVariables.chaiseBasePath)) {
+                    chaiseBasePath = window.chaiseBuildVariables.chaiseBasePath;
+                }
+            }
+
             obj.$location = {
                 origin: window.location.origin,
                 host: window.location.host,
                 hostname: window.location.hostname,
-                chaise_path: (window.chaiseBuildVariables && window.chaiseBuildVariables.chaiseBasePath) ? window.chaiseBuildVariables.chaiseBasePath : "/chaise/"
+                chaise_path: chaiseBasePath
             };
         }
 
