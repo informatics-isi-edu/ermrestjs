@@ -150,7 +150,7 @@ $(BIN): $(MODULES)
 
 # Rule to install Node modules locally
 $(MODULES): package.json
-	npm install
+	@npm clean-install
 	@touch $(MODULES)
 
 # generate makefile_variables file
@@ -180,9 +180,10 @@ FORCE:
 .PHONY: deps
 deps: $(BIN)
 
-.PHONY: updeps
-updeps:
-	npm update
+# for test cases we have to make sure we're installing dev dependencies
+.PHONY: deps-test
+deps-test:
+	@npm clean-install --production=false
 
 # Rule to clean project directory
 .PHONY: clean
@@ -198,12 +199,12 @@ distclean: clean
 
 # Rule to run the unit tests
 .PHONY: test
-test: ../ErmrestDataUtils
+test:
 	node test/jasmine-runner.js
 
 # Rule to run the unit tests
 .PHONY: testsingle
-test-single: ../ErmrestDataUtils
+test-single:
 	node test/single-test-runner.js
 
 # Rule to run the linter
@@ -229,7 +230,7 @@ usage:
 	@echo "    dist   	     - local install of node dependencies, and build the pacakge"
 	@echo "    deploy   	   - deploy the package to $(ERMRESTJSDIR)"
 	@echo "    deps          - local install of node dependencies"
-	@echo "    updeps        - update local dependencies"
+	@echo "    deps-test     - local install of dev node dependencies"
 	@echo "    lint          - lint the source"
 	@echo "    test          - run tests"
 	@echo "    clean         - remove the files and folders created during build"

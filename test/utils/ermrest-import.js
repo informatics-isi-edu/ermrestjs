@@ -1,7 +1,7 @@
 const q = require('q');
 const requireReload = require('./require-reload.js').reload;
 const includes = require(__dirname + '/../utils/ermrest-init.js').init();
-const ermrestUtils = require(process.env.PWD + "/../ErmrestDataUtils/import.js");
+const ermrestUtils = require('@isrd-isi-edu/ermrest-data-utils');
 
 /**
  * This function will import all the given schemas.
