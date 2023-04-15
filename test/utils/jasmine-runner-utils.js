@@ -3,7 +3,7 @@ var Jasmine = require('jasmine');
 var SpecReporter = require('jasmine-spec-reporter');
 var jrunner = new Jasmine();
 jrunner.exitCodeReporter = new (require('./exit-code-reporter.js'))(jrunner);
-var ermrestUtils = require(process.env.PWD + "/../ErmrestDataUtils/import.js");
+var ermrestUtils = require('@isrd-isi-edu/ermrest-data-utils');
 
 // Util function to create a catalog before running all specs
 // Returns a promise

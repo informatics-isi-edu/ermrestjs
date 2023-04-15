@@ -4,14 +4,10 @@
 
 - The test framework uses [Jasmine](http://jasmine.github.io/2.4/introduction.html) to write and run the test-cases.
 - It also depends on [ermrest-data-utils](https://www.npmjs.com/package/ermrest-data-utils) package to import and delete data for test-cases.
-- To start, first you need to install all npm dependencies. Run following command
-```sh
-# Install npm dependencies
-$ npm install
-
-# Update npm dependencies
-$ npm update
-```
+- To start, first you need to install all test dependencies. Run following command
+  ```sh
+  make deps-test
+  ```
 
 ## Terminology
 - Test Spec: Another name for [Test Suite](https://en.wikipedia.org/wiki/Test_suite). In jasmine terminology, test spec is a `describe` that can contains hierarchy of `describe` and multiple `it`.

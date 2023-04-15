@@ -12,7 +12,7 @@ exports.init = function (options) {
 	ermRest.setUserCookie(authCookie);
 
 	return {
-		ermrestUtils: require(process.env.PWD + "/../ErmrestDataUtils/import.js"),
+		ermrestUtils: require('@isrd-isi-edu/ermrest-data-utils'),
 		ermRest: ermRest,
 		url: url,
 		authCookie: authCookie,
