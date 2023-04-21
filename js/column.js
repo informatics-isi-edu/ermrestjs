@@ -1147,7 +1147,7 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
     }
 
     // get the computed filters
-    var keyValueRes = module._generateKeyValueFilters(
+    var keyValueRes = module.generateKeyValueFilters(
         mainTable.shortestKey,
         page.tuples.map(function (t) { return t.data;  }),
         mainTable.schema.catalog,
@@ -3557,8 +3557,8 @@ FacetColumn.prototype = {
         // otherwise generate an ermrest request to get the displaynames.
         else {
             // if we already fetched the page, then just use it
-            if (self.sourceObjectWrapper.entityChoiceFilterPage) {
-                self.sourceObjectWrapper.entityChoiceFilterPage.tuples.forEach(function (t) {
+            if (self.sourceObjectWrapper.entityChoiceFilterTuples) {
+                self.sourceObjectWrapper.entityChoiceFilterTuples.forEach(function (t) {
                     filters.push({uniqueId: t.data[columnName], displayname: t.displayname, tuple: t});
                 });
                 defer.resolve(filters);

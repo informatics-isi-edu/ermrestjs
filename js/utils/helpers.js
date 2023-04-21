@@ -1297,7 +1297,7 @@
      *                                  if the given value is negative, we will not check the url length limitation.
      * @param {string} displayname the displayname of reference, used for error message
      */
-    module._generateKeyValueFilters = function (keyColumns, data, catalogObject, pathOffsetLength, displayname) {
+    module.generateKeyValueFilters = function (keyColumns, data, catalogObject, pathOffsetLength, displayname) {
         var encode = module._fixedEncodeURIComponent, pathLimit = module.URL_PATH_LENGTH_LIMIT;
 
         // see if the quantified syntax can be used

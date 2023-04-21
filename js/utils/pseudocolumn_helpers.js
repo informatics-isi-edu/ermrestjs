@@ -970,7 +970,7 @@
          * - invalidChoices: The choices that were ignored.
          * - originalChoices: The original list of choices
          * - andFilterObject: the given input but with the following modifications:
-         *    - a new entityChoiceFilterPage is added that stores the page result
+         *    - a new entityChoiceFilterTuples is added that stores the result tuples
          *    - choices are modified based on the result.
          * @param {ERMrest.SourceObjectWrapper} andFilterObject - the facet object
          * @param {Object} contextHeaderParams  - the object that should be logged with read request
@@ -991,7 +991,7 @@
                 filterColumnName = sourceObject.source_domain.column;
             }
 
-            var filterStrs = [], filterTerms = {}, hasNullChoice = false;
+            var filterValues = [], filterTerms = {}, hasNullChoice = false;
 
             res.originalChoices = sourceObject.choices;
             sourceObject.choices.forEach(function (ch, index) {
@@ -1002,14 +1002,14 @@
                     hasNullChoice = true;
                     return;
                 }
+                var val = {};
+                val[filterColumnName] = ch;
+                filterValues.push(val);
 
-                filterStrs.push(
-                    module._fixedEncodeURIComponent(filterColumnName) + "=" + module._fixedEncodeURIComponent(ch)
-                );
                 filterTerms[ch] = index;
             });
 
-            if (filterStrs.length === 0) {
+            if (filterValues.length === 0) {
                 return defer.resolve(res), defer.promise;
             }
 
@@ -1021,29 +1021,43 @@
                 };
             }
             var table = andFilterObject.column.table;
-            var uri = [
-                table.schema.catalog.server.uri ,"catalog" ,
-                table.schema.catalog.id, "entity",
-                module._fixedEncodeURIComponent(table.schema.name) + ":" + module._fixedEncodeURIComponent(table.name),
-                filterStrs.join(";")
-            ].join("/");
+            var basePath = module._fixedEncodeURIComponent(table.schema.name) + ":" + module._fixedEncodeURIComponent(table.name);
 
-            var ref = new Reference(module.parse(uri), table.schema.catalog).contextualize.compactSelect;
+            var keyValueRes = module.generateKeyValueFilters(
+                [{name: filterColumnName}],
+                filterValues,
+                table.schema.catalog,
+                basePath.length,
+                table.displayname.value
+            );
 
-            // sorting to ensure a deterministic order of results
-            ref = ref.sort([{"column": filterColumnName, "descending": false}]);
-            (function (filterColumnName, projectedColumnName) {
-                // TODO depending on the number of columns this should potentially be multiple requests
-                //      because of the url limitation
-                ref.read(sourceObject.choices.length, contextHeaderParams, true).then(function (page) {
+            if (!keyValueRes.successful) {
+                res.invalidChoices = Object.keys(filterTerms);
+                res.andFilterObject.sourceObject.choices = [];
 
+                module._log.error("Error while trying to fetch entity facet rows: ", keyValueRes.message);
+                defer.resolve(res);
+                return defer.promise;
+            }
+
+            var requests = keyValueRes.filters; // function below iterates over this
+            var validatedTuples = []; // will be populated by function below
+
+            /**
+             * go one by one based on the url length and send the choices requests
+             */
+            var sendRequest = function () {
+                var req = requests.shift();
+                // there aren't any requests, so resolve the promise
+                if (!req) {
                     // feels hacky
-                    res.andFilterObject.entityChoiceFilterPage = page;
+                    res.andFilterObject.entityChoiceFilterTuples = validatedTuples;
 
+                    // see if we need to make any correction:
                     // find the missing choices and also fix the choices if they are based on some other columns
-                    if (page.length != filterStrs.length || filterColumnName != projectedColumnName) {
+                    if (validatedTuples.length != filterValues.length || filterColumnName != projectedColumnName) {
                         var newChoices = [];
-                        page.tuples.forEach(function (t) {
+                        validatedTuples.forEach(function (t) {
                             newChoices.push(t.data[projectedColumnName]);
                             delete filterTerms[t.data[filterColumnName]];
                         });
@@ -1062,18 +1076,40 @@
                         res.andFilterObject.sourceObject.choices = newChoices;
                     }
 
-                    defer.resolve(res);
-                }).catch(function (err) {
-                    // if any of the values had issue, the whole request is failing
-                    // TODO should we try to recover based on other values??
-                    res.invalidChoices = Object.keys(filterTerms);
-                    res.andFilterObject.sourceObject.choices = [];
+                    return defer.resolve(res), defer.promise;
+                }
 
-                    module._log.error("Error while trying to fetch entity facet rows: ", err);
+                var uri = [
+                    table.schema.catalog.server.uri ,"catalog" , table.schema.catalog.id,
+                    "entity", basePath, req.path
+                ].join("/");
 
-                    defer.resolve(res);
-                });
-            })(filterColumnName, projectedColumnName);
+                var ref = new Reference(module.parse(uri), table.schema.catalog).contextualize.compactSelect;
+
+                // sorting to ensure a deterministic order of results
+                ref = ref.sort([{"column": filterColumnName, "descending": false}]);
+                (function (filterColumnName, projectedColumnName) {
+                    ref.read(req.keyData.length, contextHeaderParams, true).then(function (page) {
+
+                        // keep track of tuples that have been validated
+                        validatedTuples = validatedTuples.concat(page.tuples);
+
+                        // see if there are any other requests
+                        sendRequest();
+                    }).catch(function (err) {
+                        // if any of the values had issue, the whole request is failing
+                        // TODO should we try to recover based on other values??
+                        res.invalidChoices = Object.keys(filterTerms);
+                        res.andFilterObject.sourceObject.choices = [];
+
+                        module._log.error("Error while trying to fetch entity facet rows: ", err);
+
+                        defer.resolve(res);
+                    });
+                })(filterColumnName, projectedColumnName);
+            };
+
+            sendRequest();
 
             return defer.promise;
         },
