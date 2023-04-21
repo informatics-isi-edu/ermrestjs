@@ -819,7 +819,7 @@
                     // if in entity mode some choices were invalid
                     if (Array.isArray(resp.invalidChoices) && resp.invalidChoices.length > 0) {
                         // if no choices was left, then we don't need to merge it with anything and we should ignore it
-                        if (resp.andFilterObject.sourceObject.choices.length === 0 || resp.andFilterObject.entityChoiceFilterPage.length === 0) {
+                        if (resp.andFilterObject.sourceObject.choices.length === 0 || resp.andFilterObject.entityChoiceFilterTuples.length === 0) {
                             // adding the choices back so we can produce proper error message
                             resp.andFilterObject.sourceObject.choices = resp.originalChoices;
                             addToIssues(resp.andFilterObject.sourceObject, "None of the encoded choices were available");
@@ -848,8 +848,8 @@
                                 helpers.mergeFacetObjects(res.facetObjectWrappers[j].sourceObject, resp.andFilterObject.sourceObject);
 
                                 // make sure the page object is stored
-                                if (resp.andFilterObject.entityChoiceFilterPage) {
-                                    res.facetObjectWrappers[j].entityChoiceFilterPage = resp.andFilterObject.entityChoiceFilterPage;
+                                if (resp.andFilterObject.entityChoiceFilterTuples) {
+                                    res.facetObjectWrappers[j].entityChoiceFilterTuples = resp.andFilterObject.entityChoiceFilterTuples;
                                 }
                             }
                         }
@@ -1985,7 +1985,7 @@
                     // build the url using the helper function
                     var schemaTable = urlEncode(self.table.schema.name) + ':' + urlEncode(self.table.name);
                     var uri = self._location.service + "/catalog/" + self.table.schema.catalog.id + "/entity/" + schemaTable;
-                    var keyValueRes = module._generateKeyValueFilters(
+                    var keyValueRes = module.generateKeyValueFilters(
                         self.table.shortestKey,
                         pageData,
                         self.table.schema.catalog,
@@ -2150,7 +2150,7 @@
                     }
 
                     // might throw an error
-                    var keyValueRes = module._generateKeyValueFilters(
+                    var keyValueRes = module.generateKeyValueFilters(
                         self.table.shortestKey,
                         deletableData,
                         self.table.schema.catalog,
@@ -2256,7 +2256,7 @@
                     });
                     return res;
                 });
-                var keyValueRes = module._generateKeyValueFilters(
+                var keyValueRes = module.generateKeyValueFilters(
                     keyColumns,
                     keyFromAssocToRelatedData,
                     associationRef.table.schema.catalog,
