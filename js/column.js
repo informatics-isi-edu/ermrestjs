@@ -147,6 +147,10 @@ function ReferenceColumn(reference, cols, sourceObjectWrapper, name, mainTuple) 
     this._mainTuple = mainTuple;
 
     this.isUnique = true;
+
+    if (this._baseCols.length === 1 && this._baseCols[0].annotations.contains(module._annotations.IFRAME_INPUT)) {
+        this.isIframeInput = true;
+    }
 }
 
 ReferenceColumn.prototype = {
