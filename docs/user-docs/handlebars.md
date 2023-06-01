@@ -280,6 +280,23 @@ Example:
 {{formatDate '30-08-2018' 'YYYY'}} ==> '2018'
 ```
 
+### HumanizeBytes
+
+You can use `humanizeBytes` helper to convert byte count to human readable format. The first parameter is the value (or the column name that has the value). The second parameter can either be `"binary"` or `"si"` depending on the format that you would like.
+
+Syntax
+```
+{{humanizeBytes value format}}
+```
+
+Example:
+```
+{{formatDate 41235532 'binary'}} ==> '39.33 MiB'
+
+{{formatDate 41235532 'si'}} ==> '41.24 MB'
+```
+
+
 ### Math Helpers
 
 We have basic math functionality support available in handlebars templating. The following are the currently available math helpers.

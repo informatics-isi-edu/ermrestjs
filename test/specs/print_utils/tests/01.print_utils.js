@@ -586,6 +586,20 @@ exports.execute = function (options) {
                 expect(module.renderHandlebarsTemplate("{{formatDate date 'YYYY'}}", {date: null})).toBe("");
             });
 
+            it('humanizeByte helper', function () {
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 41235532 \'binary\'}}')).toBe('39.33 MiB');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 41235532 \'si\'}}')).toBe('41.24 MB');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 41235532 \'raw\'}}')).toBe('41235532');
+
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 0 \'binary\'}}')).toBe('0');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 0 \'si\'}}')).toBe('0');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 0 \'raw\'}}')).toBe('0');
+
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 41235532 \'invalid\'}}')).toBe('');
+
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 41235532 }}')).toBe('');
+            });
+
             it('encodeFacet helper', function () {
                 var facet = '{"and": [{"source": "id", "choices": ["1"]}]}';
                 expect(module.renderHandlebarsTemplate("{{#encodeFacet}}" + facet + "{{/encodeFacet}}")).toBe('N4IghgdgJiBcAEBtUBnA9gVwE4GMCmc8IAljADRE4AWax+KhiIAjCALoC+nQA');

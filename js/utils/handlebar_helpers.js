@@ -138,6 +138,17 @@
                 return str.replace(/\w\S*/g, function(txt) {
                     return txt.charAt(0).toUpperCase() + txt.substr(1);
                 });
+            },
+
+            /**
+             * {{humanizeBytes value mode}}
+             * 
+             * mode can be `si`, `binary`, or `raw`.
+             *
+             * @returns formatted string of `value` with corresponding `mode`
+             */
+            humanizeBytes: function (value, mode) {
+                return module._formatUtils.humanizeBytes(value, mode);
             }
 
         });

@@ -1903,6 +1903,29 @@
 
             value = value.toUpperCase();
             return ':span: :/span:{.' + module._classNames.colorPreview + ' style=background-color:' + value +'} ' + value;
+        },
+
+        /**
+         * Return the humanize value of byte count
+         * @param {*} value 
+         * @param {string} mode must be either `raw`, `si`, or `binary`
+         * @returns 
+         */
+        humanizeBytes: function (value, mode) {
+            var v = parseInt(value);
+            if (isNaN(v) || ['raw', 'si', 'binary'].indexOf(mode) === -1) return '';
+            if (v === 0 || mode === 'raw') {
+                // TODO which one?
+                return v.toString(); 
+                // return module._formatUtils.printInteger(v); 
+            }
+
+            var divisor = mode === 'si' ? 1000 : 1024;
+            var units = mode === 'si' ? ['B', 'kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'] 
+                : ['B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB'];
+
+            var i = Math.floor(Math.log(v) / Math.log(divisor));
+            return (v / Math.pow(divisor, i)).toFixed(2) * 1 + ' ' + units[i];
         }
     };
 
