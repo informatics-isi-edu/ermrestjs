@@ -1909,15 +1909,18 @@
          * Return the humanize value of byte count
          * @param {*} value 
          * @param {string} mode must be either `raw`, `si`, or `binary`
+         * @param {number} precision An integer specifying the number of significant digits 
+         *                           (if invalid or missing, `3` will be used by default.)
          * @returns 
          */
-        humanizeBytes: function (value, mode) {
+        humanizeBytes: function (value, mode, precision) {
+            precision = parseInt(precision);
+            precision = (isNaN(precision) || precision <= 0) ? 3 : precision;
+
             var v = parseInt(value);
             if (isNaN(v) || ['raw', 'si', 'binary'].indexOf(mode) === -1) return '';
             if (v === 0 || mode === 'raw') {
-                // TODO which one?
-                return v.toString(); 
-                // return module._formatUtils.printInteger(v); 
+                return module._formatUtils.printInteger(v); 
             }
 
             var divisor = mode === 'si' ? 1000 : 1024;
@@ -1925,7 +1928,7 @@
                 : ['B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB'];
 
             var i = Math.floor(Math.log(v) / Math.log(divisor));
-            return (v / Math.pow(divisor, i)).toFixed(2) * 1 + ' ' + units[i];
+            return (v / Math.pow(divisor, i)).toPrecision(precision) * 1 + ' ' + units[i];
         }
     };
 

@@ -2739,12 +2739,6 @@
                     return v.toString();
                 }
 
-                // if the byte count of an asset, humanize it based on the given setting
-                var byteCountFormat = self.getByteCountFormat(context);
-                if (isStringAndNotEmpty(byteCountFormat)) {
-                    return module._formatUtils(v, self.byteCountFormat);
-                }
-
                 return _formatValueByType(self.type, v, options);
             };
 
@@ -3296,54 +3290,6 @@
             }
             return this._uniqueNotNullKey;
         },
-
-        /**
-         * @param {string} context 
-         * 
-         * if this is a byte_count_column of one of the asset columns,
-         * it will return the format that we should use.
-         * the returned value will either be empty string, or the format that 
-         * should be used 'si', 'binary', 'raw'.
-         */
-        getByteCountFormat: function (context) {
-            if (typeof this._byteCountFormat === 'undefined') {
-                this._byteCountFormat = {};
-            }
-
-            if (!(context in this._byteCountFormat)) {
-                var populate = function (self) {
-                    var columns = self.table.columns.all();
-                    for (var i = 0; i < columns.length; i++) {
-                        var col = columns[i];
-
-                        // find asset columns
-                        if (col.type.name !== "text" || !col.annotations.contains(module._annotations.ASSET)) {
-                            continue;
-                        }
-
-                        // see if the current column is listed as a byte_count_column of one of the assets
-                        var annot = col.annotations.get(module._annotations.ASSET).content;
-                        if (annot.byte_count_column === self.name) {
-                            // check if the byte_counte display is defined. if not, return binary
-                            var disp = annot.display;
-                            var currDisplay = isObjectAndNotNull(disp) ? module._getAnnotationValueByContext(context, disp) : null;
-                            var isValid = isObjectAndNotNull(currDisplay) && ['si', 'binary', 'raw'].indexOf(currDisplay.byte_count) !== -1;
-                            if (isValid) {
-                                return currDisplay.byte_count;
-                            } else {
-                                return 'binary';
-                            }
-                        }
-                    }
-
-                    // empty string means that we should not format it as a byte
-                    return '';
-                };
-                
-                this._byteCountFormat[context] = populate(this);
-            }
-            return this._byteCountFormat;
-        }
     };
 
     /**

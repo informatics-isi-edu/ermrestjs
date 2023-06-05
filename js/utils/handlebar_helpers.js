@@ -141,14 +141,17 @@
             },
 
             /**
-             * {{humanizeBytes value mode}}
+             * {{humanizeBytes value mode }}
+             * {{humanizeBytes value mode precision}}
              * 
-             * mode can be `si`, `binary`, or `raw`.
-             *
+             * @param {*} value - the value
+             * @param {string} mode - mode can be `si`, `binary`, or `raw`.
+             * @param {number} precision - An integer specifying the number of significant digits.
+             * 
              * @returns formatted string of `value` with corresponding `mode`
              */
-            humanizeBytes: function (value, mode) {
-                return module._formatUtils.humanizeBytes(value, mode);
+            humanizeBytes: function (value, mode, precision, options) {
+                return module._formatUtils.humanizeBytes(value, mode, precision);
             }
 
         });

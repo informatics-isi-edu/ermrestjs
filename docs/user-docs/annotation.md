@@ -701,10 +701,6 @@ Supported JSON payload patterns:
 Supported display _displayoption_ JSON payload patterns:
 
 - `{`... `"image_preview": true` ... `}`: Display a preview of the selected image below the default presentation of the asset. Be mindful that the client will not do any extra checks whether the selected file is an image, and you should guard against it by using `filename_ext_filter`. Current implementation of Chaise only supports this property in `entry` contexts and defining this for other contexts will not have any effect on Chaise.
-- `{`... `"byte_count":` _byte count format_ ... `}`: This property can be used to specify how the _byte_count_column_ value should be presented. The _byte count format_ can be any of the following (f this property is not defined for a specific context or is invalid, we wil use the `"binary"` format):
-  - `"binary"`: Convert to human readable format in binary (using 1024 as the divisor). For example `41235532` would be `39.33 MiB`.
-  - `"si"`: Convert to human readable format in SI (using 1000 as the divisor). For example `41235532` would be `41.24 MB`.
-  - `"raw"`: Don't apply additional formats.
 
 Default heuristics:
 - The `2017 Asset` annotation explicitly indicates that the associated column is the asset location.

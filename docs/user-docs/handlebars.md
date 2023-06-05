@@ -282,18 +282,22 @@ Example:
 
 ### HumanizeBytes
 
-You can use `humanizeBytes` helper to convert byte count to human readable format. The first parameter is the value (or the column name that has the value). The second parameter can either be `"binary"` or `"si"` depending on the format that you would like.
-
+You can use `humanizeBytes` helper to convert byte count to human readable format.
 Syntax
 ```
-{{humanizeBytes value format}}
+{{humanizeBytes value format precision}}
 ```
+
+The parameters are:
+- `value`: The value (or the column name that has the value).
+- `format`: Can either be `"binary"` or `"si"` depending on the output format that you would like.
+- `precision`: An integer specifying the number of significant digits. If missing, the value `3` will be used.
 
 Example:
 ```
-{{formatDate 41235532 'binary'}} ==> '39.33 MiB'
+{{humanizeBytes 41235532 'binary' 3}} ==> '39.3 MiB'
 
-{{formatDate 41235532 'si'}} ==> '41.24 MB'
+{{humanizeBytes 41235532 'si' 3}} ==> '41.24 MB'
 ```
 
 
