@@ -1419,8 +1419,11 @@
      */
     module._conflictErrorMapping = function(errorStatusText, generatedErrMessage, reference, actionFlag) {
       var mappedErrMessage, refTable, tableDisplayName = '';
-      var conflictErrorPrefix = "409 Conflict\nThe request conflicts with the state of the server. ",
-          siteAdminMsg = "\nIf you have trouble removing dependencies please contact the site administrator.";
+      var conflictErrorPrefix = [
+        "409 Conflict\nThe request conflicts with the state of the server. ",
+        'Request conflicts with state of server.'
+      ];
+      var siteAdminMsg = "\nIf you have trouble removing dependencies please contact the site administrator.";
 
       if (generatedErrMessage.indexOf("violates foreign key constraint") > -1 && actionFlag == module._operationsFlag.DELETE) {
 
@@ -1523,9 +1526,14 @@
           mappedErrMessage = generatedErrMessage;
 
           // remove the previx if exists
-          if (mappedErrMessage.startsWith(conflictErrorPrefix)){
-            mappedErrMessage = mappedErrMessage.slice(conflictErrorPrefix.length);
-          }
+          var hasPrefix = false;
+          conflictErrorPrefix.forEach(function (p) {
+            if (!hasPrefix && mappedErrMessage.startsWith(p)){
+                mappedErrMessage = mappedErrMessage.slice(p.length);
+                hasPrefix = true;
+            }
+          })
+
 
           // remove the suffix is exists
           errEnd = mappedErrMessage.search(/CONTEXT:/g);
@@ -1656,13 +1664,14 @@
             try {
                 value = value.toString();
             } catch (exception) {
-                // Is this the right error?
-                throw new module.InvalidInputError("Couldn't extract timestamp from input" + exception);
+                module._log.error("Couldn't extract timestamp from input: " + value);
+                module._log.error(exception);
+                return '';
             }
 
             if (!moment(value).isValid()) {
-                // Invalid timestamp
-                throw new module.InvalidInputError("Couldn't transform input to a valid timestamp");
+                module._log.error("Couldn't transform input to a valid timestamp: " + value);
+                return '';
             }
 
             return moment(value).format(module._dataFormats.DATETIME.display);
@@ -1686,13 +1695,14 @@
             try {
                 value = value.toString();
             } catch (exception) {
-                // Is this the right error?
-                throw new module.InvalidInputError("Couldn't extract date info from input" + exception);
+                module._log.error("Couldn't extract date info from input: " + value);
+                module._log.error(exception);
+                return '';
             }
 
             if (!moment(value).isValid()) {
-                // Invalid date
-                throw new module.InvalidInputError("Couldn't transform input to a valid date");
+                module._log.error("Couldn't transform input to a valid date: " + value);
+                return '';
             }
 
             return moment(value).format(module._dataFormats.DATE);

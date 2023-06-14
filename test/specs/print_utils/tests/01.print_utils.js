@@ -41,9 +41,7 @@ exports.execute = function (options) {
             var printDate = formatUtils.printDate;
             expect(printDate(null)).toBe('');
             expect(printDate('2012-04-25 13:00:00.00 PST')).toBe('2012-04-25');
-            expect(function() {
-                printDate(123.45)
-            }).toThrowError(module.InvalidInputError);
+            expect(printDate(123.45)).toBe('');
         });
 
         it('printTimestamp() should format timestamps correctly.', function () {
@@ -51,9 +49,7 @@ exports.execute = function (options) {
             var testTime = '2011-05-06T13:25:25-07:00';
             expect(printTimestamp(null)).toBe('');
             expect(printTimestamp(testTime)).toBe('2011-05-06 13:25:25');
-            expect(function() {
-                printTimestamp()
-            }).toThrowError(module.InvalidInputError);
+            expect(printTimestamp()).toBe('');
         });
 
         it('printText() should format text correctly.', function() {

@@ -495,7 +495,7 @@ exports.execute = function (options) {
                 filteredLeafReferenceWAcls.deleteBatchAssociationTuples(mainTuple, relatedLeafTuples).then(function (res) {
                     expect(res.status).toBe("Batch Unlink Summary", "error status for batch delete is incorrect");
                     expect(res.message).toBe(`None of the 3 chosen records could be unlinked. ${checkDetailsMessage}`, "error message for batch delete is incorrect");
-                    expect(res.subMessage).toBe("403 Forbidden\nThe requested delete access on one or more matching rows in table :delete_schema:association_table is forbidden.\n", "error sub message for batch delete is incorrect");
+                    expect(res.subMessage).toContain('delete access on one or more matching rows in table :delete_schema:association_table', "error sub message for batch delete is incorrect");
                     expect(res.successTupleData.length).toBe(0, "success count for batch delete is incorrect");
                     expect(res.failedTupleData.length).toBe(3, "failed count for batch delete is incorrect");
 

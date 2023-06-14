@@ -145,7 +145,7 @@
      * @constructor
      */
     function ConflictError(status, message, subMessage) {
-        status = isStringAndNotEmpty(status) ? status : module._errorStatus.CONFLICT;
+        status = module._errorStatus.CONFLICT;
         ERMrestError.call(this, module._HTTPErrorCodes.CONFLICT, status, message, subMessage);
     }
 
@@ -162,7 +162,7 @@
      * @constructor
      */
     function IntegrityConflictError(status, message, subMessage) {
-        status = isStringAndNotEmpty(status) ? status : module._errorStatus.CONFLICT;
+        status = module._errorStatus.CONFLICT;
         ConflictError.call(this, status, message, subMessage);
     }
 
@@ -179,7 +179,7 @@
      * @constructor
      */
     function DuplicateConflictError(status, message, subMessage, duplicateReference) {
-        status = isStringAndNotEmpty(status) ? status : module._errorStatus.CONFLICT;
+        status = module._errorStatus.CONFLICT;
         ConflictError.call(this, status, message, subMessage);
         this.duplicateReference = duplicateReference;
     }
@@ -384,7 +384,7 @@
      *   - all success: All of the <number> {chosen|displayed} records successfully {unlinked|deleted}.
      *   - all failure: None of the <number> {chosen|displayed} records could be {unlinked|deleted}. <check error>
      *   - mix: <number> records successfully {unlinked|deleted}. <number> records could not be {unlinked|deleted}. <check error>
-     * 
+     *
      * <check error>: Check the error details below to see more information.
      */
     function generateBatchDeleteMessage(successTupleData, failedTupleData, isUnlink) {
@@ -406,8 +406,8 @@
         // multiple rows
         else {
             if (totalFail === 0) {
-                message = 'All of the ' + totalSuccess + ' ' + adj + ' records successfully ' + verb + '.'; 
-            } 
+                message = 'All of the ' + totalSuccess + ' ' + adj + ' records successfully ' + verb + '.';
+            }
             else if (totalSuccess === 0) {
                 message = 'None of the ' + totalFail + ' ' + adj + ' records could be ' + verb + '.';
             } else {
