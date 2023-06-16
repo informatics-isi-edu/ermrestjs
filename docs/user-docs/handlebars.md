@@ -290,14 +290,21 @@ Syntax
 
 The parameters are:
 - `value`: The value (or the column name that has the value).
-- `format`: Can either be `"binary"` or `"si"` depending on the output format that you would like.
-- `precision`: An integer specifying the number of significant digits. If missing, the value `3` will be used.
+- `format`: Can either be `"binary"` or `"si"` depending on the output format that you would like. If missing or invalid, `"si"` will be used.
+- `precision`: An optional integer specifying the number of digits.
+  - If we cannot show all the fractional digits of a number due to the defined precision, we will truncate the number (we will not round up or down). So for example `999999` with precision=3 will result in `999 kB`, and with precision=4 will be `999.9 kB`.
+  - In 'si' mode, you cannot define precision of less than 3 since it would mean that we have to potentially truncate the integer part of the `value`. Similarly, precision of less than 4 are not allowed in `binary`.
+  - Any invalid precision will be ignored and the minimum number allowed will be used (3 in `si` and 4 in `binary`).
 
 Example:
 ```
-{{humanizeBytes 41235532 'binary' 3}} ==> '39.3 MiB'
+{{humanizeBytes 41235532}} ==> '41.2 MB'
 
-{{humanizeBytes 41235532 'si' 3}} ==> '41.24 MB'
+{{humanizeBytes 41235532 'si' 4 }} ==> '41.23 MB'
+
+{{humanizeBytes 41235532 'binary'}} ==> '39.32 MiB'
+
+{{humanizeBytes 41235532 'binary' 5}} ==> '39.325 MiB'
 ```
 
 

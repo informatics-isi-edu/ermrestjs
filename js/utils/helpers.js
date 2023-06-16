@@ -1599,6 +1599,43 @@
     };
 
     /**
+     * Given a number and precision, it will truncate it to show the given number
+     * of digits.
+     *
+     *
+     * @param {number} num
+     * @param {number} precision
+     * @param {number} minAllowedPrecision
+     * @returns
+     */
+    module._toPrecision = function (num, precision, minAllowedPrecision) {
+        precision = parseInt(precision);
+        precision = isNaN(precision) || precision < minAllowedPrecision ? minAllowedPrecision : precision;
+
+        var isNegative = num < 0;
+        if (isNegative) num = num * -1;
+
+        // this truncation logic only works because of the minimum precision that
+        // we're allowing. if we want to allow less than that, then we should change this.
+        var displayedNum = num.toString();
+        var f = displayedNum.indexOf('.');
+        if (f !== -1) {
+          // find the number of digits after decimal point
+          var decimalPlaces = Math.pow(10, precision - f);
+
+          // truncate the value
+          displayedNum = Math.floor(num * decimalPlaces) / decimalPlaces;
+        }
+
+        // if precision is too large, the calculation might return NaN.
+        if (isNaN(displayedNum)) {
+          return (isNegative ? '-' : '') + num;
+        }
+
+        return (isNegative ? '-' : '') + displayedNum;
+    };
+
+    /**
      * @desc An object of pretty print utility functions
      * @private
      */
@@ -1907,28 +1944,51 @@
 
         /**
          * Return the humanize value of byte count
-         * @param {*} value 
-         * @param {string} mode must be either `raw`, `si`, or `binary`
-         * @param {number} precision An integer specifying the number of significant digits 
+         *
+         * This function will not round up or down and will only truncate the number
+         * to honor the given precision. In 'si', precision below 3 is not allowed.
+         * Similarly, precision below 4 is not allowed in 'binary'.
+         * 'raw' will return the "formatted" value.
+         *
+         * @param {*} value
+         * @param {string} mode either `raw`, `si`, or `binary` (if invalid or missing, 'si' will be used)
+         * @param {number} precision An integer specifying the number of digits to be displayed
          *                           (if invalid or missing, `3` will be used by default.)
-         * @returns 
+         *
+         * @returns
          */
         humanizeBytes: function (value, mode, precision) {
-            precision = parseInt(precision);
-            precision = (isNaN(precision) || precision <= 0) ? 3 : precision;
+            // we cannot use parseInt here since it won't allow larger numbers.
+            var v = parseFloat(value);
+             mode = ['raw', 'si', 'binary'].indexOf(mode) === -1 ? 'si' : mode;
 
-            var v = parseInt(value);
-            if (isNaN(v) || ['raw', 'si', 'binary'].indexOf(mode) === -1) return '';
+            if (isNaN(v)) return '';
             if (v === 0 || mode === 'raw') {
-                return module._formatUtils.printInteger(v); 
+                return module._formatUtils.printInteger(v);
             }
 
-            var divisor = mode === 'si' ? 1000 : 1024;
-            var units = mode === 'si' ? ['B', 'kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'] 
-                : ['B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB'];
+            var divisor = 1000, units = ['B', 'kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+            if (mode === 'binary') {
+                divisor = 1024;
+                units = ['B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB'];
+            }
 
-            var i = Math.floor(Math.log(v) / Math.log(divisor));
-            return (v / Math.pow(divisor, i)).toPrecision(precision) * 1 + ' ' + units[i];
+            // find the closest power of the divisor to the given number ('u').
+            // in the end, 'v' will be the number that we should display.
+            var u = 0;
+            while (v >= divisor || -v >= divisor) {
+                v /= divisor;
+                u++;
+            }
+
+            if (u >= units.length) {
+                return module._formatUtils.printInteger(v);
+            }
+
+            // we don't want to truncate the value, so we should set a minimum
+            var minP = mode === "si" ? 3 : 4;
+
+            return (u ? module._toPrecision(v, precision, minP) : v) + ' ' + units[u];
         }
     };
 
