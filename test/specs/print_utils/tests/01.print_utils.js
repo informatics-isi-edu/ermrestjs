@@ -626,7 +626,11 @@ exports.execute = function (options) {
                 expect(module.renderHandlebarsTemplate('{{humanizeBytes 0 "si"}}')).toBe('0');
                 expect(module.renderHandlebarsTemplate('{{humanizeBytes 0 "raw"}}')).toBe('0');
 
-
+                // test very large numbers
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 123456712345671234656742232 }}')).toBe('123 YB');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 1234567123456712346567422321 }}')).toBe('1.2,345,671,234,567,124e+27');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 1197940039285380274899124224 "binary" }}')).toBe('990.9 YiB');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 1237940039285380274899124223 "binary" }}')).toBe('1.2,379,400,392,853,803e+27');
 
             });
 

@@ -40,7 +40,8 @@ Handlebars supports more complicated expression syntax and allow the comparison 
 * [Accessing keys with spaces and special characters](#accessing-keys-with-spaces-and-special-characters)
 * [Subexpressions](#subexpressions)
 * [Helpers](#helpers)
-   * [FormatDate](#formatdate-helper)
+   * [formatDate](#formatdate-helper)
+   * [humanizeBytes](#humanizebytes-helper)
    * [Math Helpers](#math-helpers)
 * [Block Helpers](#block-helpers)
    * [If](#if-helper)
@@ -266,7 +267,7 @@ A Handlebars helper call is a simple identifier, followed by zero or more parame
 {{HELPER_NAME PARAM1 PARAM2 }}
 ```
 
-### FormatDate helper
+### formatDate helper
 
 You can use the `formatDate` helper to take any `date` or `timestamp[tz]` value and format it according to the [Pre Format Guide](pre-format.md#syntax-for-dates-and-timestamps).
 
@@ -280,12 +281,17 @@ Example:
 {{formatDate '30-08-2018' 'YYYY'}} ==> '2018'
 ```
 
-### HumanizeBytes
+### humanizeBytes helper
 
 You can use `humanizeBytes` helper to convert byte count to human readable format.
-Syntax
+
+Syntax:
 ```
 {{humanizeBytes value format precision}}
+
+{{humanizeBytes value}}
+
+{{humanizeBytes value format}}
 ```
 
 The parameters are:

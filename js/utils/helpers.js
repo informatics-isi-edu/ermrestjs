@@ -1964,7 +1964,7 @@
 
             if (isNaN(v)) return '';
             if (v === 0 || mode === 'raw') {
-                return module._formatUtils.printInteger(v);
+                return module._formatUtils.printInteger(value);
             }
 
             var divisor = 1000, units = ['B', 'kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
@@ -1981,8 +1981,9 @@
                 u++;
             }
 
+            // our units don't support this, so just return the "raw" mode value.
             if (u >= units.length) {
-                return module._formatUtils.printInteger(v);
+                return module._formatUtils.printInteger(value);
             }
 
             // we don't want to truncate the value, so we should set a minimum
