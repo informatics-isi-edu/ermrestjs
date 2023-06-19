@@ -582,6 +582,54 @@ exports.execute = function (options) {
                 expect(module.renderHandlebarsTemplate("{{formatDate date 'YYYY'}}", {date: null})).toBe("");
             });
 
+            it('humanizeByte helper', function () {
+                // test overloading
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes data }}', {data: 12345678})).toBe('12.3 MB');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 12345678 }}')).toBe('12.3 MB');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes "12345678" }}')).toBe('12.3 MB');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 12345678 "invalid"}}')).toBe('12.3 MB');
+
+                // test si
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 999 "si"}}')).toBe('999 B');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 999 "si" 1}}')).toBe('999 B');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 41235552 "si"}}')).toBe('41.2 MB');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 41235552 "si" 1}}')).toBe('41.2 MB');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 41235552 "si" 6}}')).toBe('41.2355 MB');
+
+                // test binary
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 1023 "binary"}}')).toBe('1023 B');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 1023 "binary" 1}}')).toBe('1023 B');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 41235532 "binary"}}')).toBe('39.32 MiB');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 41235532 "binary" 1}}')).toBe('39.32 MiB');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 41235532 "binary" 6}}')).toBe('39.3252 MiB');
+
+                // test raw
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 41235532 "raw"}}')).toBe('41,235,532');
+
+                // test truncation (si)
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 9999999999999 }}')).toBe('9.99 TB');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 9999999999999 "si"}}')).toBe('9.99 TB');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 9999999999999 "si" 4}}')).toBe('9.999 TB');
+
+                // test truncation (binary)
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 1125899906842623 "binary"}}')).toBe('1023 TiB');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 1125899906842623 "binary" 6}}')).toBe('1023.99 TiB');
+
+
+                // test 0
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 0 }}')).toBe('0');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 0 "binary"}}')).toBe('0');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 0 "si"}}')).toBe('0');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 0 "raw"}}')).toBe('0');
+
+                // test very large numbers
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 123456712345671234656742232 }}')).toBe('123 YB');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 1234567123456712346567422321 }}')).toBe('1.2,345,671,234,567,124e+27');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 1197940039285380274899124224 "binary" }}')).toBe('990.9 YiB');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 1237940039285380274899124223 "binary" }}')).toBe('1.2,379,400,392,853,803e+27');
+
+            });
+
             it('encodeFacet helper', function () {
                 var facet = '{"and": [{"source": "id", "choices": ["1"]}]}';
                 expect(module.renderHandlebarsTemplate("{{#encodeFacet}}" + facet + "{{/encodeFacet}}")).toBe('N4IghgdgJiBcAEBtUBnA9gVwE4GMCmc8IAljADRE4AWax+KhiIAjCALoC+nQA');

@@ -3289,7 +3289,7 @@
                 var dummy = this.isUniqueNotNull;
             }
             return this._uniqueNotNullKey;
-         }
+        },
     };
 
     /**
