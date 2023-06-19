@@ -594,11 +594,15 @@ exports.execute = function (options) {
                 expect(module.renderHandlebarsTemplate('{{humanizeBytes 12345678 "invalid"}}')).toBe('12.3 MB');
 
                 // test si
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 999 "si"}}')).toBe('999 B');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 999 "si" 1}}')).toBe('999 B');
                 expect(module.renderHandlebarsTemplate('{{humanizeBytes 41235552 "si"}}')).toBe('41.2 MB');
                 expect(module.renderHandlebarsTemplate('{{humanizeBytes 41235552 "si" 1}}')).toBe('41.2 MB');
                 expect(module.renderHandlebarsTemplate('{{humanizeBytes 41235552 "si" 6}}')).toBe('41.2355 MB');
 
                 // test binary
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 1023 "binary"}}')).toBe('1023 B');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 1023 "binary" 1}}')).toBe('1023 B');
                 expect(module.renderHandlebarsTemplate('{{humanizeBytes 41235532 "binary"}}')).toBe('39.32 MiB');
                 expect(module.renderHandlebarsTemplate('{{humanizeBytes 41235532 "binary" 1}}')).toBe('39.32 MiB');
                 expect(module.renderHandlebarsTemplate('{{humanizeBytes 41235532 "binary" 6}}')).toBe('39.3252 MiB');

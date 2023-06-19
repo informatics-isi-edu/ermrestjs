@@ -1945,7 +1945,7 @@
         /**
          * Return the humanize value of byte count
          *
-         * This function will not round up or down and will only truncate the number
+         * This function will not round up and will only truncate the number
          * to honor the given precision. In 'si', precision below 3 is not allowed.
          * Similarly, precision below 4 is not allowed in 'binary'.
          * 'raw' will return the "formatted" value.
