@@ -222,7 +222,7 @@
         "eq", "ne", "lt", "gt", "lte", "gte", "and", "or", "not", "ifCond",
         "escape", "encode", "formatDate", "encodeFacet",
         "regexMatch", "regexFindFirst", "regexFindAll",
-        "jsonStringify", "toTitleCase", "replace",
+        "jsonStringify", "toTitleCase", "replace", "humanizeBytes",
         // math helpers
         "add", "subtract"
     ];

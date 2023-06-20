@@ -351,7 +351,7 @@ exports.execute = function (options) {
         };
 
         beforeAll(function (done) {
-            
+
             ermRest = options.ermRest;
 
             ermRest.resolve(baseUri + schemaName1 + ":" + tableName, { cid: "test" }).then(function (response) {

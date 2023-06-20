@@ -40,7 +40,8 @@ Handlebars supports more complicated expression syntax and allow the comparison 
 * [Accessing keys with spaces and special characters](#accessing-keys-with-spaces-and-special-characters)
 * [Subexpressions](#subexpressions)
 * [Helpers](#helpers)
-   * [FormatDate](#formatdate-helper)
+   * [formatDate](#formatdate-helper)
+   * [humanizeBytes](#humanizebytes-helper)
    * [Math Helpers](#math-helpers)
 * [Block Helpers](#block-helpers)
    * [If](#if-helper)
@@ -266,7 +267,7 @@ A Handlebars helper call is a simple identifier, followed by zero or more parame
 {{HELPER_NAME PARAM1 PARAM2 }}
 ```
 
-### FormatDate helper
+### formatDate helper
 
 You can use the `formatDate` helper to take any `date` or `timestamp[tz]` value and format it according to the [Pre Format Guide](pre-format.md#syntax-for-dates-and-timestamps).
 
@@ -279,6 +280,39 @@ Example:
 ```
 {{formatDate '30-08-2018' 'YYYY'}} ==> '2018'
 ```
+
+### humanizeBytes helper
+
+You can use `humanizeBytes` helper to convert byte count to human readable format.
+
+Syntax:
+```
+{{humanizeBytes value format precision}}
+
+{{humanizeBytes value}}
+
+{{humanizeBytes value format}}
+```
+
+The parameters are:
+- `value`: The value (or the column name that has the value).
+- `format`: Can either be `"binary"` or `"si"` depending on the output format that you would like. If missing or invalid, `"si"` will be used.
+- `precision`: An optional integer specifying the number of digits.
+  - If we cannot show all the fractional digits of a number due to the defined precision, we will truncate the number (we will not round up or down). So for example `999999` with precision=3 will result in `999 kB`, and with precision=4 will be `999.9 kB`.
+  - In 'si' mode, you cannot define precision of less than 3 since it would mean that we have to potentially truncate the integer part of the `value`. Similarly, precision of less than 4 are not allowed in `binary`.
+  - Any invalid precision will be ignored and the minimum number allowed will be used (3 in `si` and 4 in `binary`).
+
+Example:
+```
+{{humanizeBytes 41235532}} ==> '41.2 MB'
+
+{{humanizeBytes 41235532 'si' 4 }} ==> '41.23 MB'
+
+{{humanizeBytes 41235532 'binary'}} ==> '39.32 MiB'
+
+{{humanizeBytes 41235532 'binary' 5}} ==> '39.325 MiB'
+```
+
 
 ### Math Helpers
 

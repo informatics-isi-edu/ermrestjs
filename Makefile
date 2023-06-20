@@ -183,7 +183,7 @@ deps: $(BIN)
 # for test cases we have to make sure we're installing dev dependencies
 .PHONY: deps-test
 deps-test:
-	@npm clean-install --production=false
+	@npm clean-install --include=dev
 
 # Rule to clean project directory
 .PHONY: clean
