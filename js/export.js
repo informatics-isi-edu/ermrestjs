@@ -346,10 +346,13 @@
                         var query = {}, queryParams = {};
 
                         // <api>/<current reference path>/<path>
-                        var queryFrags = [
-                            source.api,
-                            predicate
-                        ];
+                        var queryFrags = [];
+                        if (isStringAndNotEmpty(source.api)) {
+                            queryFrags.push(source.api);
+                        }
+                        if (!source.skip_root_path) {
+                            queryFrags.push(predicate);
+                        }
                         if (typeof source.path === "string") {
                             // remove the first and last slash if it has one
                             queryFrags.push(module.trimSlashes(source.path));

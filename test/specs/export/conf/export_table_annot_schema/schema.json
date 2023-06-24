@@ -1813,6 +1813,86 @@
                     }
                 }
             }
+        },
+        "table_w_skip_root_path_export": {
+            "kind": "table",
+            "table_name": "table_w_skip_root_path_export",
+            "schema_name": "export_table_annot_schema",
+            "keys": [{"unique_columns": ["id"]}],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {"typename": "text"}
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2019:export": {
+                    "detailed": {
+                        "templates": [
+                            {
+                                "displayname": "BAG with skip_root_path",
+                                "outputs": [
+                                    {
+                                        "source": {
+                                            "api": "entity",
+                                            "path": "export_table_annot_schema:main",
+                                            "skip_root_path": true
+                                        },
+                                        "destination": {
+                                            "type": "json",
+                                            "name": "all_main_rows"
+                                        }
+                                    },
+                                    {
+                                        "source": {
+                                            "api": false,
+                                            "skip_root_path": true
+                                        },
+                                        "destination": {
+                                            "type": "json",
+                                            "name": "catalog_doc"
+                                        }
+                                    },
+                                    {
+                                        "source": {
+                                            "api": "schema",
+                                            "skip_root_path": true
+                                        },
+                                        "destination": {
+                                            "type": "json",
+                                            "name": "schema_doc"
+                                        }
+                                    },
+                                    {
+                                        "source": {
+                                            "api": "schema",
+                                            "path": "/export_table_annot_schema/table/main/annotation",
+                                            "skip_root_path": true
+                                        },
+                                        "destination": {
+                                            "type": "json",
+                                            "name": "annotation_doc"
+                                        }
+                                    },
+                                    {
+                                        "source": {
+                                            "api": false,
+                                            "path": "/schema/export_table_annot_schema/table/table_w_skip_root_path_export/column/id/annotation",
+                                            "skip_root_path": true
+                                        },
+                                        "destination": {
+                                            "type": "json",
+                                            "name": "annotation_doc_2"
+                                        }
+                                    }
+                                ],
+                                "type": "BAG"
+                            }
+                        ]
+                    }
+                }
+            }
         }
     },
     "schema_name": "export_table_annot_schema"
