@@ -326,7 +326,16 @@ exports.execute = function (options) {
 
         var createURL = function (schema, table) {
             return baseUri + schema + ":" + table;
-        }
+        };
+
+        const checkExporterQueryProcessors = (queryProcessors, expected) => {
+            expect(queryProcessors.length).toBe(expected.length);
+            queryProcessors.forEach((qp, i) => {
+                expect(qp.processor).toBe(expected[i].processor, `processor missmatch for index=${i}`);
+                expect(qp.processor_params.query_path).toBe(expected[i].query_path, `query_path missmatch for index=${i}`);
+                expect(qp.processor_params.output_path).toBe(expected[i].output_path, `output_path missmatch for index=${i}`);
+            });
+        };
 
         var checkFirstTemplateDisplayname = function (schema_name, table_name, context, expected, done) {
             ermRest.resolve(createURL(schema_name, table_name), {cid: "test"}).then(function (ref) {
@@ -773,6 +782,82 @@ exports.execute = function (options) {
                 exportObj.run().then(function (response) {
                     expect(response.data.length).toBe(1);
                     expect(response.data[0].startsWith("https://dev.isrd.isi.edu/deriva/export/file/")).toBeTruthy();
+
+                    done();
+                }).catch(function (err) {
+                    done.fail(err);
+                });
+            });
+        });
+
+        describe("templates with skip_root_path", function () {
+            let exportObj;
+            it("should create an exporter object", function(done) {
+                options.ermRest.resolve(createURL('export_table_annot_schema', 'table_w_skip_root_path_export'), {'cid': 'test'}).then((res) => {
+                    const ref = res.contextualize.detailed;
+                    const template = ref.getExportTemplates()[0];
+                    exportObj = new ermRest.Exporter(ref, "bag-name", template, "/deriva/export/");
+
+                    expect(exportObj instanceof ermRest.Exporter).toBe(true);
+                    expect(exportObj.template).toEqual(template);
+                    done();
+                }).catch(err => done.fail(err));
+            });
+
+            it("exporter.exportParameters should return the expected object", function () {
+                var exportParams = exportObj.exportParameters;
+
+                expect(exportParams.bag).toBeDefined();
+                expect(exportParams.bag.bag_name).toBe("bag-name");
+                expect(exportParams.bag.bag_algorithms).toBe(exportObj.formatOptions.BAG.algs);
+                expect(exportParams.bag.bag_archiver).toBe(exportObj.formatOptions.BAG.archiver);
+                expect(exportParams.bag.bag_metadata).toBe(exportObj.formatOptions.BAG.metadata);
+
+                expect(exportParams.catalog).toBeDefined();
+                expect(exportParams.catalog.host).toBe(options.url.replace('/ermrest', ''));
+                expect(exportParams.catalog.catalog_id).toBe(process.env.DEFAULT_CATALOG);
+
+                checkExporterQueryProcessors(
+                    exportParams.catalog.query_processors,
+                    [
+                        {
+                            processor: 'json',
+                            query_path: '/entity/export_table_annot_schema:main?limit=10',
+                            output_path: 'all_main_rows'
+                        },
+                        {
+                            processor: 'json',
+                            query_path: '/attribute/export_table_annot_schema:f1/id?cid=test&limit=20',
+                            output_path: 'all_main_rows_two_q_params'
+                        },
+                        {
+                            processor: 'json',
+                            query_path: '/',
+                            output_path: 'catalog_doc'
+                        },
+                        {
+                            processor: 'json',
+                            query_path: '/schema',
+                            output_path: 'schema_doc'
+                        },
+                        {
+                            processor: 'json',
+                            query_path: '/schema/export_table_annot_schema/table/main/annotation',
+                            output_path: 'annotation_doc'
+                        },
+                        {
+                            processor: 'json',
+                            query_path: '/schema/export_table_annot_schema/table/table_w_skip_root_path_export/column/id/annotation',
+                            output_path: 'annotation_doc_2'
+                        }
+                    ]
+                )
+            })
+
+            it("exporter.run should return the proper response from export service", function (done) {
+                exportObj.run().then(function (response) {
+                    expect(response.data.length).toBe(1);
+                    expect(response.data[0].startsWith("https://dev.isrd.isi.edu/deriva/export/bdbag/")).toBeTruthy();
 
                     done();
                 }).catch(function (err) {

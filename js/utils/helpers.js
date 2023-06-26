@@ -1532,7 +1532,7 @@
                 mappedErrMessage = mappedErrMessage.slice(p.length);
                 hasPrefix = true;
             }
-          })
+          });
 
 
           // remove the suffix is exists

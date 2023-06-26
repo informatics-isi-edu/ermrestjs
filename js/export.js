@@ -346,17 +346,17 @@
                         var query = {}, queryParams = {};
 
                         // <api>/<current reference path>/<path>
-                        var queryFrags = [
-                            source.api,
-                            predicate
-                        ];
+                        var queryFrags = [];
+                        if (isStringAndNotEmpty(source.api)) {
+                            queryFrags.push(source.api);
+                        }
+                        if (!source.skip_root_path) {
+                            queryFrags.push(predicate);
+                        }
                         if (typeof source.path === "string") {
                             // remove the first and last slash if it has one
                             queryFrags.push(module.trimSlashes(source.path));
                         }
-
-                        query.processor = dest.type || bagOptions.table_format;
-                        queryParams.output_path = dest.name || output_path;
 
                         var queryStr = queryFrags.join("/");
                         if (queryStr.length > module.URL_PATH_LENGTH_LIMIT) {
@@ -364,13 +364,35 @@
                             return;
                         }
 
-                        queryParams.query_path = "/" + queryStr + "?limit=none";
+                        // find the character that should be used for added q params
+                        var qParamCharacter = queryStr.indexOf('?') !== -1 ? '&' : '?';
+
+                        /**
+                         * add limit q param if all the following are set
+                         *   - skip_limit is not set to true
+                         *   - API is known.
+                         *   - it's not part of the url
+                         */
+                        var addLimit = !source.skip_limit && isStringAndNotEmpty(queryStr) && module._exportKnownAPIs.some(function (api) {
+                            return queryStr.startsWith(api + '/');
+                        });
+                        // if limit is already part of the query, don't add it.
+                        if (addLimit) {
+                            addLimit = !(/[?]([^&=]*=[^&]*[&])*limit=/.test(queryStr));
+                        }
+                        if (addLimit) {
+                            queryStr += qParamCharacter + 'limit=none';
+                        }
+
+                        queryParams.query_path = "/" + queryStr;
+                        queryParams.output_path = dest.name || output_path;
                         if (dest.impl != null) {
                             query.processor_type = dest.impl;
                         }
                         if (dest.params != null) {
                             Object.assign(queryParams, dest.params);
                         }
+                        query.processor = dest.type || bagOptions.table_format;
                         query.processor_params = queryParams;
                         queries.push(query);
                     });
