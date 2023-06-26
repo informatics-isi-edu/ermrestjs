@@ -822,27 +822,32 @@ exports.execute = function (options) {
                     [
                         {
                             processor: 'json',
-                            query_path: '/entity/export_table_annot_schema:main?limit=none',
+                            query_path: '/entity/export_table_annot_schema:main?limit=10',
                             output_path: 'all_main_rows'
                         },
                         {
                             processor: 'json',
-                            query_path: '/?limit=none',
+                            query_path: '/attribute/export_table_annot_schema:f1/id?cid=test&limit=20',
+                            output_path: 'all_main_rows_two_q_params'
+                        },
+                        {
+                            processor: 'json',
+                            query_path: '/',
                             output_path: 'catalog_doc'
                         },
                         {
                             processor: 'json',
-                            query_path: '/schema?limit=none',
+                            query_path: '/schema',
                             output_path: 'schema_doc'
                         },
                         {
                             processor: 'json',
-                            query_path: '/schema/export_table_annot_schema/table/main/annotation?limit=none',
+                            query_path: '/schema/export_table_annot_schema/table/main/annotation',
                             output_path: 'annotation_doc'
                         },
                         {
                             processor: 'json',
-                            query_path: '/schema/export_table_annot_schema/table/table_w_skip_root_path_export/column/id/annotation?limit=none',
+                            query_path: '/schema/export_table_annot_schema/table/table_w_skip_root_path_export/column/id/annotation',
                             output_path: 'annotation_doc_2'
                         }
                     ]

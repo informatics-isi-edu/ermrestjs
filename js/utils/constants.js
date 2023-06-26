@@ -426,3 +426,5 @@
         OPERAND_PATTERN: "operand_pattern",
         NEGATE: "negate"
     });
+
+    module._exportKnownAPIs = ['entity','attribute', 'attributegroup', 'aggregate'];

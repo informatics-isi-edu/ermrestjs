@@ -86,9 +86,10 @@ The object structure of an export template annotation is defined as follows:
 #### `source` (object)
 | Variable | Type | Inclusion| Description |
 | --- | --- | --- | --- |
-| `api` | string, enum [`entity`,`attribute`, `attributegroup`] | required | The type of ERMrest query projection to perform.  Valid values are `entity`,`attribute`, and `attributegroup`.
+| `api` | string, enum [`entity`,`attribute`, `attributegroup`, `aggregate`] | required | The type of ERMrest query projection to perform.  Valid values are `entity`,`attribute`, and `attributegroup`.
 | `path` | string | optional | An optional ERMrest path predicate. The string MUST be escaped according to [RFC 3986](https://tools.ietf.org/html/rfc3986) if it contains user-generated identifiers that use the reserved character set. See the [ERMRest URL conventions](https://github.com/informatics-isi-edu/ermrest/blob/master/docs/api-doc/index.md#url-conventions) for additional information.
 | `skip_root_path` | boolean | optional | An optional flag that if it's set to true, we will not prepend the defined `path` with `current root path`. In this case, `api` can also be any other APIs that ERMrest supports.
+| `skip_limit` | boolean | optional | If the ERMrest API that is used is any of [`entity`,`attribute`, `attributegroup`, `aggregate`], we're adding a `limit=none` query parameter. Set this to `true` to skip this.
 
 
 - The table entity that the template is bound to is considered the *root* of the query for join purposes. Therefore this is how a query is going to be constructed based on the given attributes:

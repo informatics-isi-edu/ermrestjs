@@ -1836,12 +1836,23 @@
                                     {
                                         "source": {
                                             "api": "entity",
-                                            "path": "export_table_annot_schema:main",
+                                            "path": "export_table_annot_schema:main?limit=10",
                                             "skip_root_path": true
                                         },
                                         "destination": {
                                             "type": "json",
                                             "name": "all_main_rows"
+                                        }
+                                    },
+                                    {
+                                        "source": {
+                                            "api": "attribute",
+                                            "path": "export_table_annot_schema:f1/id?cid=test&limit=20",
+                                            "skip_root_path": true
+                                        },
+                                        "destination": {
+                                            "type": "json",
+                                            "name": "all_main_rows_two_q_params"
                                         }
                                     },
                                     {

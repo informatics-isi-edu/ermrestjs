@@ -367,7 +367,27 @@
                             return;
                         }
 
-                        queryParams.query_path = "/" + queryStr + "?limit=none";
+                        // find the character that should be used for added q params
+                        var qParamCharacter = queryStr.indexOf('?') !== -1 ? '&' : '?';
+
+                        /**
+                         * add limit if all the following are set
+                         *   - skip_limit is not set to true
+                         *   - API is known.
+                         *   - it's not part of the url
+                         */
+                        var addLimit = !source.skip_limit && isStringAndNotEmpty(queryStr) && module._exportKnownAPIs.some(function (api) {
+                            return queryStr.startsWith(api + '/');
+                        });
+                        // if limit is already part of the query, don't add it.
+                        if (addLimit) {
+                            addLimit = !(/[?]([^&=]*=[^&]*[&])*limit=/.test(queryStr));
+                        }
+                        if (addLimit) {
+                            queryStr += qParamCharacter + 'limit=none';
+                        }
+
+                        queryParams.query_path = "/" + queryStr;
                         if (dest.impl != null) {
                             query.processor_type = dest.impl;
                         }
