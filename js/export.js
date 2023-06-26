@@ -358,9 +358,6 @@
                             queryFrags.push(module.trimSlashes(source.path));
                         }
 
-                        query.processor = dest.type || bagOptions.table_format;
-                        queryParams.output_path = dest.name || output_path;
-
                         var queryStr = queryFrags.join("/");
                         if (queryStr.length > module.URL_PATH_LENGTH_LIMIT) {
                             module._log.warn("Cannot send the output index `" + index + "` for table `" + table + "` to ermrest (URL LENGTH ERROR). Generated query:", queryStr);
@@ -371,7 +368,7 @@
                         var qParamCharacter = queryStr.indexOf('?') !== -1 ? '&' : '?';
 
                         /**
-                         * add limit if all the following are set
+                         * add limit q param if all the following are set
                          *   - skip_limit is not set to true
                          *   - API is known.
                          *   - it's not part of the url
@@ -388,12 +385,14 @@
                         }
 
                         queryParams.query_path = "/" + queryStr;
+                        queryParams.output_path = dest.name || output_path;
                         if (dest.impl != null) {
                             query.processor_type = dest.impl;
                         }
                         if (dest.params != null) {
                             Object.assign(queryParams, dest.params);
                         }
+                        query.processor = dest.type || bagOptions.table_format;
                         query.processor_params = queryParams;
                         queries.push(query);
                     });
