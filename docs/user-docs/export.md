@@ -100,13 +100,13 @@ we removed this from documentation because we didn't want to confuse users.
 
 - The table entity that the template is bound to is considered the *root* of the query for join purposes. Therefore this is how a query is going to be constructed based on the given attributes:
   ```
-  <output.api>/<current root path>/<output.path>
+  <source.api>/<current root path>/<source.path>
   ```
 
    And if `current_root_path` is set to `true`, the query would look like the following:
 
   ```
-  <output.api>/<output.path>
+  <source.api>/<source.path>
   ```
 - We are reserving the `M` alias for referring to the table entity that the template is bound to. So if you need to refer to that table in your path, you can use the reserved alias name.
 
