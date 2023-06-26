@@ -42,7 +42,7 @@ To have a overall picture of how the export templates look like, you can refer t
           {
             "source": {
               "api": <ermrest-query-type>, // entity, attribute, attribute-group
-              "path": <optional-ermrest-predicate>, // used to represent more complex queries
+              "path": <optional-ermrest-path>, // used to represent more complex queries
               "skip_root_path": <boolean> // used to skip adding the root path and starting the path from scratch
             },
             destination: {
@@ -97,6 +97,7 @@ we removed this from documentation because we didn't want to confuse users.
 | `skip_limit` | boolean | optional | If the ERMrest API that is used is any of [`entity`,`attribute`, `attributegroup`, `aggregate`], we're adding a `limit=none` query parameter. Set this to `true` to skip this.
 -->
 
+- The leading and trailing slash that you might have defined in your `path` will be stripped off and ignored.
 
 - The table entity that the template is bound to is considered the *root* of the query for join purposes. Therefore this is how a query is going to be constructed based on the given attributes:
   ```
@@ -108,9 +109,11 @@ we removed this from documentation because we didn't want to confuse users.
   ```
   <source.api>/<source.path>
   ```
+
+- Chaise will also apply `limit=none` query parameter if it is not detected in the defined `<source.path>`.
+
 - We are reserving the `M` alias for referring to the table entity that the template is bound to. So if you need to refer to that table in your path, you can use the reserved alias name.
 
-- The leading and trailing slash that you might have defined in your `path` will be stripped off and ignored.
 
 The following are some examples to better understand the output syntax. These are written for the table `pnc:metrics_v`,
 
