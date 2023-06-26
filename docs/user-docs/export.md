@@ -110,7 +110,7 @@ we removed this from documentation because we didn't want to confuse users.
   <source.api>/<source.path>
   ```
 
-- Chaise will also apply `limit=none` query parameter if it is not detected in the defined `<source.path>`.
+- We will also apply the `limit=none` query parameter if the computed query path uses `entity`, `attribute`, `attributegroup`, or `aggregate` and doesn't already include the `limit` query parameter.
 
 - We are reserving the `M` alias for referring to the table entity that the template is bound to. So if you need to refer to that table in your path, you can use the reserved alias name.
 
