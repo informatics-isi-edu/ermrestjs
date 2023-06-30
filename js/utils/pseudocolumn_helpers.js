@@ -1514,6 +1514,73 @@
 
             return {"and": filters};
         },
+
+
+        processInputIframe: function (reference, tuple, usedColumnMappings) {
+            var self = this;
+            var context = reference._context;
+            var annot = this.sourceObject.input_iframe;
+            if (!isObjectAndNotNull(annot) || !isStringAndNotEmpty(annot.url)) {
+                return { error: true, message: 'url not defined.' };
+            }
+
+            if (!isObjectAndNotNull(annot.field_mapping)) {
+                return { erorr: true, message: 'field_mapping not defined.' };
+            }
+
+            var optionalFieldNames = [];
+            if (Array.isArray(annot.optional_fields)) {
+                annot.optional_fields.forEach(function (f) {
+                    if (isStringAndNotEmpty(f)) optionalFieldNames.push(f);
+                });
+            }
+
+            var columns = [], fieldMapping = {};
+            for (var f in annot.field_mapping) {
+                var colName = annot.field_mapping[f];
+
+                // column already used in another mapping
+                if (colName in usedColumnMappings) {
+                    if (colName in optionalFieldNames) continue;
+                    return { error: true, message: 'column `' + colName + '` already used in another field_mapping.' };
+                }
+
+                try {
+                    var c = self.column.table.columns.get(colName);
+                    var isSerial = (c.type.name.indexOf('serial') === 0);
+
+                    // we cannot use getInputDisabled since we just want to do this based on ACLs
+                    if (context === module._contexts.CREATE && (c.isSystemColumn || c.isGeneratedPerACLs || isSerial)) {
+                        if (colName in optionalFieldNames) continue;
+                        return { error: true, message: 'column `' + colName + '` cannot be modified by this user.'};
+                    }
+                    if ((context == module._contexts.EDIT || context == module._contexts.ENTRY) && (c.isSystemColumn || c.isImmutablePerACLs || isSerial)) {
+                        if (colName in optionalFieldNames) continue;
+                        return { error: true, message: 'column `' + colName + '` cannot be modified by this user.'};
+                    }
+
+                    // create a pseudo-column will make sure we're also handling assets
+                    var wrapper = new SourceObjectWrapper({'source': colName}, reference.table, module._constraintNames);
+                    var refCol = module._createPseudoColumn(reference, wrapper, tuple);
+
+                    fieldMapping[f] = refCol;
+                    columns.push(refCol);
+                } catch (exp) {
+                    if (colName in optionalFieldNames) continue;
+                    return { error: true, message: 'column `' + colName + '` not found.'};
+                }
+            }
+
+            self.isInputIframe = true;
+            self.inputIframeProps = {
+                url: annot.url,
+                columns: columns,
+                fieldMapping: fieldMapping,
+                optionalFieldNames: optionalFieldNames
+            };
+
+            return {success: true, columns: columns};
+        }
     };
 
     /**

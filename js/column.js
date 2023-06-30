@@ -124,6 +124,21 @@ function ReferenceColumn(reference, cols, sourceObjectWrapper, name, mainTuple) 
          * @type {Object}
          */
         this.filterProps = this.sourceObjectWrapper.filterProps;
+
+
+        if (sourceObjectWrapper.isInputIframe) {
+            /**
+             * whether we should show an iframe input in recordedit
+             * @type {boolean}
+             */
+            this.isInputIframe = true;
+            /**
+             * the props for inputIframe
+             *
+             * @type {Object}
+             */
+            this.inputIframeProps = sourceObjectWrapper.inputIframeProps;
+        }
     } else {
         this.isFiltered = false;
         this.filterProps = {};
@@ -148,9 +163,6 @@ function ReferenceColumn(reference, cols, sourceObjectWrapper, name, mainTuple) 
 
     this.isUnique = true;
 
-    if (this._baseCols.length === 1 && this._baseCols[0].annotations.contains(module._annotations.IFRAME_INPUT)) {
-        this.isIframeInput = true;
-    }
 }
 
 ReferenceColumn.prototype = {
@@ -313,16 +325,25 @@ ReferenceColumn.prototype = {
     },
 
     /**
+     * in some cases we want to forcefully disable the column even if annotation
+     * or acls allow it. The following are the cases:
+     * - in entry, when the column is used in an existing iframe mapping
+     */
+    forceInputDisabled: function () {
+        this._forceInputDisabled = true;
+    },
+
+    /**
      * @desc Indicates if the input should be disabled
      * true: input must be disabled
      * false:  input can be enabled
-     * object: input msut be disabled (show .message to user)
+     * object: input must be disabled (show .message to user)
      *
      * @type {boolean|object}
      */
     get inputDisabled() {
         if (this._inputDisabled === undefined) {
-            this._inputDisabled = this._determineInputDisabled(this._context);
+            this._inputDisabled = this._forceInputDisabled ? true : this._determineInputDisabled(this._context);
         }
         return this._inputDisabled;
     },
