@@ -296,7 +296,7 @@ Supported JSON payload pattern:
 
 - `{` ... _context_ `:` _columnlist_ `,` ... `}`: A separate _columnlist_ can be specified for any number of _context_ names.
 - `{` ... _context1_ `:` _context2_ `,` ... `}`: Configure _context1_ to use the same _columnlist_ configured for _context2_.
-- `{` ... `"filter": { "and": [` _facetlist_ `,` ... `]} }` : Configure list of facets to be displayed.
+- `{` ... `"filter": { "and":` _facetlist_ `} }` : Configure list of facets to be displayed.
 - `{` ... `"filter": { "and": []} }` : By defining an empty facet list, we will collapse the facet panel by default.
 
 For presentation contexts which are not listed in the annotation, or when the annotation is entirely absent, all available columns SHOULD be presented in their defined order unless the application has guidance from other sources.
@@ -305,12 +305,18 @@ See [Context Names](#context-names) section for the list of supported _context_ 
 
 Supported _columnlist_ patterns:
 
-- `[` ... _columndirective_ `,` ... `]`: Present content corresponding to each _columndirective_, in the order specified in the list. Ignore listed _columndirective_ values that do not correspond to content from the table. Do not present table columns that are not specified in the list. Please refer to [column directive](#column-directive) section for more information.
+- `[` ... _columndirective_ `,` ... `]`: Present content corresponding to each _columndirective_, in the order specified in the list.
+  - Ignore listed _columndirective_ values that do not correspond to content from the table.
+  - Do not present table columns that are not specified in the list. Please refer to [column directive](#column-directive) section for more information.
+  - A list without any valid _columndirective_ will be treated the same as empty array `[]`. Client will not show any columns in this case.
 
 
 Supported _facetlist_ pattern:
 
-- `[` ... _facetentry_ `,` ... `]`: Present content corresponding to each _facetentry_, in the order specified in the list. Ignore invalid listed _facetentry_. Do not present other facets that are not specified in the list.
+- `[` ... _facetentry_ `,` ... `]`: Present content corresponding to each _facetentry_, in the order specified in the list.
+  - Ignore invalid listed _facetentry_.
+  - Do not present other facets that are not specified in the list.
+  - A list without any valid _facetentry_ will be treated the same as `[]`. Client will not show any facets in this case and will collapse the facet panel by default.
 
 _facetentry_ must be a JSON payload with the following attributes:
 
@@ -614,7 +620,11 @@ For presentation contexts which are not listed in the annotation, or when the an
 
 Supported _fkeylist_ patterns:
 
-- `[` ... _columndirective_ `,` ... `]`: Present content correspondign to each _columndirective_, in the order specified in the list. Ignore _columndirective_ that do not correspond to a valid path from the table. Do not present foreign keys that are not mentioned in the list. Please refer to [column directive](#column-directive) section for more information. The defined column directive MUST be in entity mode and have at least an `inbound` node in its relationship to the current table.
+- `[` ... _columndirective_ `,` ... `]`: Present content correspondign to each _columndirective_, in the order specified in the list.
+  -  Ignore _columndirective_ that do not correspond to a valid path from the table.
+  -  Do not present foreign keys that are not mentioned in the list. Please refer to [column directive](#column-directive) section for more information. The defined column directive MUST be in entity mode and have at least an `inbound` node in its relationship to the current table.
+  - A list without any valid _columndirective_ will be treated the same as empty array `[]`. Client will not display any related entities.
+- `[]`: Client will not display any related entities.
 
 ### Tag: 2016 Table Alternatives
 
