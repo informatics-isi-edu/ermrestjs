@@ -377,8 +377,9 @@ exports.execute = function (options) {
 
             it("with multiple quoted terms split by a space across multiple columns.", function(done) {
                 // searching for integer values converts them into a regular expressio
-                reference2 = reference1.search("\"william\" \"171717\"");
-                expect(reference2.location.searchTerm).toBe("\"william\" \"171717\"", "searchTerm missmatch.");
+                // also testing that we're ignoring empty search terms
+                reference2 = reference1.search("\"william\" \"\" \"171717\"");
+                expect(reference2.location.searchTerm).toBe("\"william\" \"\" \"171717\"", "searchTerm missmatch.");
                 var encodedNumber = options.ermRest._fixedEncodeURIComponent(intRegexPrefix + "171717" + intRegexSuffix);
                 expect(reference2.location.ermrestCompactPath).toBe(
                      useQuantifiedSyntax ? `${path}*::ciregexp::all(william,${encodedNumber})` : `${path}*::ciregexp::william&*::ciregexp::${encodedNumber}`,
@@ -450,6 +451,38 @@ exports.execute = function (options) {
                     console.dir(err);
                     done.fail();
                 });
+            });
+
+            it ("without a starting quote", function (done) {
+                reference2 = reference1.search("harold\"");
+                expect(reference2.location.searchTerm).toBe("harold\"", "searchTerm missmatch.");
+                expect(reference2.location.ermrestCompactPath).toBe(
+                    path + "*::ciregexp::harold",
+                    "ermrestCompactPath missmatch."
+                );
+
+                reference2.read(limit).then(function (response) {
+                    page = response;
+
+                    expect(page).toEqual(jasmine.any(Object));
+
+                    tuples = page.tuples;
+                    expect(tuples.length).toBe(2);
+                    for(var j=0; j<tuples.length; j++) {
+                        expect(tuples[j]._data["name x"]).toMatch("Harold");
+                    }
+
+                    done();
+                }, function (err) {
+                    console.dir(err);
+                    done.fail();
+                });
+            });
+
+            it ("with empty quote", function () {
+                reference2 = reference1.search("\"\"");
+                expect(reference2.location.searchTerm).toBe("\"\"", "searchTerm missmatch.");
+                expect(reference2.location.ermrestCompactPath).toBe('M:=search_schema:search%20parser',"ermrestCompactPath missmatch.");
             });
         });
 
@@ -863,16 +896,16 @@ exports.execute = function (options) {
             });
         });
 
-        
+
         describe("regarding dynamic acl support", function () {
             var tempRef;
 
             beforeAll(function (done) {
                 utils.setCatalogAcls(
-                    options.ermRest, 
-                    done, 
-                    createURL(tableNameCustomSearchDynamicSelect), 
-                    catalog_id, 
+                    options.ermRest,
+                    done,
+                    createURL(tableNameCustomSearchDynamicSelect),
+                    catalog_id,
                     {
                         "catalog": {
                             "id": catalog_id,
@@ -905,8 +938,8 @@ exports.execute = function (options) {
                                 }
                             }
                         }
-                    }, 
-                    (response) => tempRef = response, 
+                    },
+                    (response) => tempRef = response,
                     process.env.RESTRICTED_AUTH_COOKIE
                 );
             });
@@ -921,7 +954,7 @@ exports.execute = function (options) {
                 options.ermRest.setUserCookie(process.env.AUTH_COOKIE);
                 utils.removeCachedCatalog(options.ermRest, catalog_id)
             });
-            
+
         });
 
     });
