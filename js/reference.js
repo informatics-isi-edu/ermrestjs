@@ -87,6 +87,9 @@
      * call to the ERMrest server in order to get the `schema` which it uses to
      * validate the URI path.
      *
+     * For a consistent behavior, always contextualize the resolved `Reference` object.
+     * See {@link ERMrest.Reference#contextualize} for more information.
+     *
      * Usage:
      * ```
      * // This example assume that the client has access to the `ERMrest` module
@@ -236,6 +239,9 @@
          * different compared to `reference.columns`.
          */
         this.contextualize = new Contextualize(this);
+
+        // make sure context is string to avoid breaking some code paths
+        this._context = '';
 
         // make sure location object has the catalog
         // TODO could be improved
@@ -1493,6 +1499,10 @@
                 verify(limit, "'limit' must be specified");
                 verify(typeof(limit) == 'number', "'limit' must be a number");
                 verify(limit > 0, "'limit' must be greater than 0");
+
+                if (!isStringAndNotEmpty(self._context)) {
+                    module._log.warn('Uncontextualized Reference usage detected. For more consistent behavior always contextualize Reference objects.');
+                }
 
                 var uri = [this._location.service, "catalog", this._location.catalog].join("/");
                 var readPath = this._getReadPath(useEntity, getTRS, getTCRS, getUnlinkTRS);
@@ -4717,7 +4727,7 @@
             delete newRef._facetColumns;
             delete newRef._display;
 
-            newRef._context = context;
+            newRef._context = isStringAndNotEmpty(context) ? context : '';
 
             // use the base table to get the alternative table of that context.
             // a base table's .baseTable is itself

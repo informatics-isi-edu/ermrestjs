@@ -63,12 +63,10 @@ function AttributeGroupReference(keyColumns, aggregateColumns, location, catalog
     // This makes sure that the columns are used in the context that reference is
     // NOTE this is mutating the columns that are passed to it. Columns should not
     // be shared between references with different contexts
-    if (typeof context === "string") {
-        this._context = context;
-        this._allColumns.forEach(function (c) {
-            c._setContext(context);
-        });
-    }
+    this._context = isStringAndNotEmpty(context) ? context : '';
+    this._allColumns.forEach(function (c) {
+        c._setContext(context);
+    });
 
     // this will force calling the uri api and therefore verifies the modifiers and location.
     var uri = this.uri;
@@ -1072,7 +1070,7 @@ AttributeGroupColumn.prototype = {
      * @private
      */
     _setContext: function (context) {
-        this._context = context;
+        this._context = isStringAndNotEmpty(context) ? context : '';
     }
 };
 
