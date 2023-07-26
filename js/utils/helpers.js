@@ -1614,7 +1614,6 @@
      * @param {number} num
      * @param {number} precision
      * @param {number} minAllowedPrecision
-     * @returns
      */
     module._toPrecision = function (num, precision, minAllowedPrecision) {
         precision = parseInt(precision);
@@ -1964,8 +1963,6 @@
          * @param {string} mode either `raw`, `si`, or `binary` (if invalid or missing, 'si' will be used)
          * @param {number} precision An integer specifying the number of digits to be displayed
          *                           (if invalid or missing, `3` will be used by default.)
-         *
-         * @returns
          */
         humanizeBytes: function (value, mode, precision) {
             // we cannot use parseInt here since it won't allow larger numbers.

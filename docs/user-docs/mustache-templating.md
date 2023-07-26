@@ -1,6 +1,31 @@
 # Mustache Templating
 
-The **Mustache** template format can be understood [here](https://github.com/janl/mustache.js#templates). Once templating is done, the returned string is passed to the Markdown renderer. To learn about the Markdown syntax please refer to the [markdown Formatting](markdown-formatting.md) page.
+The Mustache template format can be understood [here](https://github.com/janl/mustache.js#templates). Once templating is done, the returned string is passed to the Markdown renderer. Templates are usually used in combiniation with markdown, to learn about the Markdown syntax please refer to the [markdown Formatting](markdown-formatting.md) page.
+
+
+**While we still support mustache, we highly recommend using [handlebars](handlebars.md) instead. In the near future we are planning to deprecate mustache support**.
+
+## Table of contents
+
+  - [Variables](#variables)
+    - [Usage](#usage)
+    - [Raw Values](#raw-values)
+    - [Foreign Key Values](#foreign-key-values)
+      - [JSON](#json)
+      - [Array](#array)
+    - [Encoding variables for URL manipulation](#encoding-variables-for-url-manipulation)
+    - [Escaping Content](#escaping-content)
+  - [Examples](#examples)
+    - [1. Normal replacement - "{{{name}}}"](#1-normal-replacement---name)
+    - [2. Replacement with URL encoding - "{{#encode}}{{{name}}}{{/encode}}"](#2-replacement-with-url-encoding---encodenameencode)
+    - [3. Replacement with HTML escaping - "{{name}}"](#3-replacement-with-html-escaping---name)
+    - [4. Replacement with null check, disabled escaping and url encoding - "{{#name}}...{{/name}}"](#4-replacement-with-null-check-disabled-escaping-and-url-encoding---namename)
+    - [5. Replacement with negated-null check - "{{^name}}...{{/name}}"](#5-replacement-with-negated-null-check---namename)
+    - [6. Null Handling](#6-null-handling)
+      - [Limitations](#limitations)
+    - [Using Pre-defined Attributes](#using-pre-defined-attributes)
+
+
 
 ## Variables
 
@@ -199,116 +224,4 @@ To make sure that you handle above case, wrap properties which can be null insid
 
 ### Using Pre-defined Attributes
 
-Ermrestjs now allows users to access some pre-defined variables in the template environment for ease. You need to make sure that you don't use these variables as column-names in your tables to avoid them being overridden in the environment.
-
-One of those variable is `$moment`.
-
-#### $moment Usage
-
-`$moment` is a datetime object which will give you access to date and time when the app was loaded. For instance if the app was loaded at Thu Oct 19 2017 16:04:46 GMT-0700 (PDT), it will contain following properties
-
-* date: 19
-* day: 4
-* month: 10
-* year: 2017
-* dateString: Thu Oct 19 2017
-* hours: 16
-* minutes: 4
-* seconds: 14
-* milliseconds: 873
-* timeString: 16:04:46 GMT-0700 (PDT)
-* ISOString: 2017-10-19T23:04:46.873Z
-* GTMString: Thu, 19 Oct 2017 23:04:46 GMT
-* UTCString: Thu, 19 Oct 2017 23:04:46 GMT
-* LocaleDateString: 10/19/2017
-* LocaleTimeString: 4:04:46 PM
-* LocalString: 10/19/2017, 4:04:46 PM
-
-The `$moment` object can be referred directly in the Mustache environment
-
-**Examples**
-```js
-Todays date is {{{$moment.month}}}/{{{$moment.date}}}/{{{$moment.year}}}
-```
-```js
-Current time is {{{$moment.hours}}}:{{{$moment.minutes}}}:{{{$moment.seconds}}}:{{{$moment.milliseconds}}}
-```
-```js
-UTC datetime is {{{$moment.UTCString}}}
-```
-```js
-Locale datetime is {{{$moment.LocaleString}}}
-```
-```js
-ISO datetime is {{{$moment.ISOString}}}
-```
-
-#### $catalog Usage
-`$catalog` is an object that gives you access to the catalog information including version if it is present. The following properties are currently included:
-```
-{
-  snapshot: <id>@<version>,
-  id: id,
-  version: version
-}
-```
-
-
-#### $dcctx Usage
-`$dcctx` is an object that gives you access to the current `pid` and `cid` of the app. You may use this attribute to generate links with `ppid` and `pcid` as query parameters.
-```
-{
-    pid: "the page id",
-    cid: "the context id(name of the app)"
-}
-```
-
-#### $location Usage
-`$location` is an object that gives you access to information about the current location of the document based on the URL. The following properties are included:
-```
-{
-    origin: "the origin of the URL",
-    host: "the host of the URL, which is the hostname, and then, if the port of the URL is nonempty, a ':', and the port",
-    hostname: "the hostname of the URL",
-    chaise_path: "the path after the origin pointing to the install location of chaise. By default, this will be '/chaise/'"
-}
-```
-
-##### Example
-If the web url is `https://dev.isrd.isi.edu:8080/chaise/recordset/#1/isa:dataset`, the above object would look something like:
-```
-{
-    origin: "https://dev.isrd.isi.edu",
-    host: "dev.isrd.isi.edu:8080",
-    hostname: "dev.isrd.isi.edu",
-    chaise_path: "/chaise/"
-}
-```
-
-#### $session Usage
-`$session` is an object that gives you access to information about the current logged in user's session. The properties are the same properties returned from the webauthn response. The following are some of the properties included (subject to change as properties are added and removed from webauthn):
-```
-attributes: "the `attributes` array from the webauthn response. More info below about the objects in the `attributes` array"
-client: {
-    display_name: "the `display_name` of the user from webauthn client object",
-    email: "the `email` of the user from webauthn client object",
-    extensions: "an object containing more permissions the user might have. Used in the CFDE project for communicating ras permissions.",
-    full_name: "the `full_name` of the user from webauthn client object",
-    id: "the `id` of the user from webauthn client object",
-    identities: "the `identities` array of the user from webauthn client object",
-}
-```
-
-Each object in the `attributes` array has the same values as the objects returned from the webauthn attributes array, with 2 added values, `webpage` and `type`. The returned array is composed of globus groups and different globus identities associated with the user. It has any objects with duplicate `id` values merged together. The following values can be found in each object of `attributes`:
- - `display_name`: the display name of the group or identity
- - `email`: the email of the identity (if present)
- - `full_name`: the full_name of the identity (if present)
- - `id`: the id of the group or identity
- - `identities`: the identities array of the current identity (if present)
- - `type`: the type of the entry (`identity` or `globus_group`). The type is set as a `globus_group` if the display_name is defined and the id is NOT in the list of identities associated with the logged in user. The type is set as an `identity` if the id is in the list of identities associated with the logged in user (`client.identities`). Otherwise, no type will be set.
- - `webpage`: If the `type` is set to `globus_group`, the webpage is then set to the globus group page. If the globus group id is "https://auth.globus.org/ff766864-a03f-11e5-b097-22000aef184d", then the webpage will be created by extracting the id value and setting it like "https://app.globus.org/groups/ff766864-a03f-11e5-b097-22000aef184d/about".
-
- The `extensions` object currently contains 3 properties with permissions for dbgap studies. These properties are:
-  - `has_ras_permissions`: boolean value if ras dbgap permissions are present
-  - `ras_dbgap_permissions`: array of objects with information about which dbgap studies the user has permissions for
-  - `ras_dbgap_phs_ids`: map of `phs_id` values as the keys with `true` as the value
+Ermrestjs now allows users to access some pre-defined variables in the template environment for ease. You need to make sure that you don't use these variables as column-names in your tables to avoid them being overridden in the environment. These pre-defined attributes are available in both Mustache and Handlebars templating environments. Please refer to [here](handlebars.md#using-pre-defined-attributes) for more information.

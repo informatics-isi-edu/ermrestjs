@@ -1,101 +1,140 @@
 # Handlebars Templating
 
-[Handlebars](http://handlebarsjs.com/) is almost similar to Mustache with some additional benefits. There are some things that you can't do in Mustache (e.g if-else statement) that Handlebars allows us to do easily using `helpers`.
-
-Handlebars supports most of the Mustache syntax. However, there are a few features that are not supported by Handlebars. For example:
-- Block syntax `{{#name}}...{{/name}}`: This is primarily used in Deriva annotations to perform boolean (or null) checks. With handlebars you need to pass the variables to an `if` helper to do the check e.g. `{{#if name}}...{{/if}}`.
-
-```js
-// Mustache
-
-{{#name}}Hello {{{name}}}{{/name}}{{^name}}No name available{{/name}}
-
-// name="John" (or any object that evaluates to true in javascript)                 => Hello John
-// name=null (or any object that evaluate to false such as '', 0, false, [], etc)   => No name available
-
-// handlebards
-
-{{#if name}}Hello {{{name}}}{{else}}No name available{{/if}}
-```
-
-- encode/decode `{{#encode}}...{{/encode}}`/`{{#decode}}...{{/decode}}`: With handlebars the value to be encoded is passed to the `encode`/`decode` helper e.g. `{{#encode ...}}{{/encode}}` or `{{#decode ...}}{{/decode}}`.
-
-```
-// Mustache
-{{#encode}}My URL{{/encode}}
-
-// handlebards
-{{#encode 'My URL'}}{{/encode}}
-```
-
-Handlebars supports more complicated expression syntax and allow the comparison to be done at the finer level e.g. null v.s. false comparison. This document summarizes the key concepts of Handlebars that are relevant to Deriva.
+This document summarizes the key concepts of Handlebars that are relevant to Deriva.
 
 ## Table of contents
 
-* [Handlebar Paths](#handlebars-paths)
-* [HTML-escaping](#html-escaping)
-* [Accessing current context](#accessing-current-context)
-* [Using Arrays](#using-arrays)
-* [Escaping Handlebars expressions](#escaping-handlebars-expressions)
-* [Accessing keys with spaces and special characters](#accessing-keys-with-spaces-and-special-characters)
-* [Subexpressions](#subexpressions)
-* [Helpers](#helpers)
-   * [formatDate](#formatdate-helper)
-   * [humanizeBytes](#humanizebytes-helper)
-   * [Math Helpers](#math-helpers)
-* [Block Helpers](#block-helpers)
-   * [If](#if-helper)
-   * [Unless](#unless-helper)
-   * [Each](#each-helper)
-   * [With](#with-helper)
-   * [Lookup](#lookup-helper)
-   * [Encode](#encode-helper)
-   * [Escape](#escape-helper)
-   * [EncodeFacet](#encodefacet-helper)
-   * [JsonStringify](#jsonstringify-helper)
-   * [FindFirst](#findfirst-helper)
-   * [FindAll](#findall-helper)
-   * [Replace](#replace-helper)
-   * [ToTitleCase](#totitlecase-helper)
-* [Boolean Helpers](#boolean-helpers)
-  * [Comparison Helpers](#comparison-helpers)
-  * [Logical Helpers](#Logical-helpers)
-  * [Regular Expression Match](#regular-expression-match)
+- [Handlebars vs. Mustache](#handlebars-vs-mustache)
+  - [Null checking](#null-checking)
+  - [Encode syntax](#encode-syntax)
+  - [Restriction in the adjacency of opening and closing tags](#restriction-in-the-adjacency-of-opening-and-closing-tags)
+- [Usage](#usage)
+  - [Handlebars Paths](#handlebars-paths)
+  - [Automatic null detection](#automatic-null-detection)
+  - [Accessing current context](#accessing-current-context)
+  - [HTML-escaping](#html-escaping)
+  - [Using Arrays](#using-arrays)
+  - [Escaping Handlebars expressions](#escaping-handlebars-expressions)
+  - [Accessing keys with spaces and special characters](#accessing-keys-with-spaces-and-special-characters)
+  - [Subexpressions](#subexpressions)
+- [Using Pre-defined Attributes](#using-pre-defined-attributes)
+  - [$moment](#moment)
+  - [$catalog](#catalog)
+  - [$dcctx](#dcctx)
+  - [$location](#location)
+  - [$session](#session)
+- [Helpers](#helpers)
+  - [formatDate helper](#formatdate-helper)
+  - [humanizeBytes helper](#humanizebytes-helper)
+  - [Math Helpers](#math-helpers)
+    - [add](#add)
+    - [subtract](#subtract)
+- [Block Helpers](#block-helpers)
+  - [If helper](#if-helper)
+  - [Unless helper](#unless-helper)
+  - [Each helper](#each-helper)
+  - [With helper](#with-helper)
+  - [Lookup helper](#lookup-helper)
+  - [Encode helper](#encode-helper)
+  - [Escape helper](#escape-helper)
+  - [Encodefacet helper](#encodefacet-helper)
+  - [JsonStringify helper](#jsonstringify-helper)
+  - [Findfirst helper](#findfirst-helper)
+  - [Findall helper](#findall-helper)
+  - [Replace helper](#replace-helper)
+  - [ToTitleCase helper](#totitlecase-helper)
+- [Boolean Helpers](#boolean-helpers)
+  - [Comparison Helpers](#comparison-helpers)
+  - [Regular Expression Match](#regular-expression-match)
+  - [Logical Helpers](#logical-helpers)
 
-## HTML-escaping
 
-In Handlebars, the values returned by the `{{expression}}` are HTML-escaped. Say, if the expression contains `&`, then the returned HTML-escaped output is generated as `&amp;`. If you don't want Handlebars to escape a value, use the "triple-stash", `{{{`:
+## Handlebars vs. Mustache
 
-In the below template, you can learn how to produce the HTML escaped and raw output.
+[Handlebars](http://handlebarsjs.com/) is almost similar to Mustache with additional benefits. There are some things you can't do in Mustache (e.g., if-else statement) that Handlebars allows us to do easily using `helpers`.
+
+The following are the most notable things to consider while migrating from Mustache to handlebars:
+
+### Null checking
+
+Mustache doesn't have a dedicated boolean operator or null-checking mechanism. Instead, you have to use the block syntax (`{{#name}}...{{/name}}`), which does a "falsy" check and doesn't distinguish between `0`, `false`, `null`, or `""`.
+
+
+Handlebars offer a proper [`if` helper](#if-helper), which can be used for null or boolean checking. With this operator, you can use more complicated expressions and more accurate comparisons (e.g., null v.s. false).
+
+Mustache:
+```
+{{#name}}Hello {{{name}}}{{/name}}{{^name}}No name available{{/name}}
+```
+
+Handlebars:
+```
+{{#if name}}Hello {{{name}}}{{else}}No name available{{/if}}
+```
+
+Depending on the value of the key, the mustache block syntax will also change the context. That's why it can be used to [iterate over array values](mustache-templating.md#array) or [access JSON properties](mustache-templating.md#json). That's why you could do something like the following:
+
+Mustache:
+```
+{{#name}}Hello {{{.}}}{{/name}}
+
+{{#$fkey_schema_constraint}}{{{values.RID}}}{{/fkey_schema_constraint}}
+```
+
+But the handlebars `if` block doesn't change the context. So if you're looking for an equivalent syntax for mustache block that also changes context, you should use the [with helper](#with-helper).
+
+The equivalent handlebars template would be:
+```
+{{#with name}}Hello {{{.}}}{{/with}}
+
+{{#with $fkey_schema_constraint}}{{{values.RID}}}{{/with}}
+```
+
+### Encode syntax
+
+Mustache blocks don't allow additional parameters. That's why you must wrap the value you want to encode while using' encode' in the block itself. With handlebars, you can just pass the value as a second parameter.
+
+Mustache:
+```
+{{#encode}}My URL{{/encode}}
+
+{{#encode}}{{{col}}}{{/encode}}
+```
+
+Handlebars:
+```
+{{#encode 'My URL'}}{{/encode}}
+
+{{#encode col}}{{/encode}}
+```
+
+### Restriction in the adjacency of opening and closing tags
+
+As we described [in the markdown document](markdown-formatting.md#attributes), you can add attributes to markdown elements using the `{}` syntax. Now imagine you want to create a link, and the attribute value comes from one of the columns. In Mustache, you could do the following (assume `btn_class` is the name of the column):
+
+Mustache:
+```
+[click here](https://example.com){{{{btn_class}}}}
+```
+
+But this syntax in handlebars returns an error as it doesn't recognize `{{{{}}}}`, and you have to add an extra space to distinguish between the attribute block and template variables.
+
+Handlebars:
+```
+[click here](https://example.com){ {{{btn-class}}} }
+```
+
+## Usage
+
+### Handlebars Paths
+
+The most basic tag type is a simple variable. A `{{{name}}}`` tag renders the value of the name key in the current context. The triple curly braces will replace the column value as is.
 
 ```
-raw: {{{specialChars}}}
-html-escaped: {{specialChars}}
+{{{COLUMN_NAME}}}
 ```
 
-Pass the special characters to the template
-
-```
-{ specialChars: "& < > \" ' ` =" }
-```
-
-Expressions enclosed by "triple-stash" (`{{{`) produce the raw output. Otherwise, HTML-escaped output is generated as below.
-
-```
-raw: & < > " ' ` =
-html-escaped: &amp; &lt; &gt; &quot; &#x27; &#x60; &#x3D;
-```
-
-## Handlebars Paths
-
-Handlebars supports simple paths, just like Mustache.
-
-```
-<p>{{{name}}}</p>
-```
-
-Handlebars also supports nested paths, making it possible to lookup properties nested below the current context.
-
+Handlebars also supports nested paths, making it possible to look up properties nested below the current context.
 
 ```
 The body for book with {{title}} authored by {{author.name}} is {{body}}
@@ -146,9 +185,25 @@ In this example all of the above reference the same `permalink` value even thoug
 ```
 Any of the above would cause the name field in the current context to be used rather than a helper of the same name.
 
-## Accessing current context
+### Automatic null detection
 
-The `this` keyword can be used for accessing the current context. It's mainly useful when dealing with arrays or JSON objects where it will allow you to access the values of an array of objects. For example, if you have the following JSON column:
+To avoid the need for adding individual checks for each `{{{column_name}}}` usage, we apply an automatic null detection. If the value of any of the columns which are being used in the `markdown_pattern` are either null or empty, then the pattern will fall back on the `show_null` display annotation to return the respective value. For example, if the title property in the JSON object is not defined or null, then the following template `[{{{title}}}]({{{url}}})` will resolve as null and use the `show_null` annotation to determine what should be done.
+
+That being said, our current implementation has the following limitations/flaws:
+
+1. If you use the block syntax (`{{# `) in any part of the template, we will not apply this null detection logic.
+
+2. As we described in [here](#accessing-keys-with-spaces-and-special-characters), you can use the `[]` syntax to access columns with special characeters. The null detection will not work properly if your column name has `#` in it. For instance, assume you have a column named `# Released` and want to show its value. Doing `{{{[# Released]}}}` will not work as it's breaking our null detection. To get around this, you could use the [with helper](#with-helper), which will turn off the null detection:
+
+
+```
+{{#with [# Released]}}{{{.}}}{{/with}}
+```
+
+
+### Accessing current context
+
+The `this` keyword can be used for accessing the current context. It's mainly useful when dealing with arrays or JSON objects, allowing you to access the values of an array of objects. For example, if you have the following JSON column:
 
 ```js
 {
@@ -196,9 +251,33 @@ Where you can do
 In this case, `this` refers to each element of the array that is an object and can use the `.` notation to access their attributes.
 
 
-## Using Arrays
+### HTML-escaping
 
-You can use the [Each Helper](#each-helper) to iterate over its data. You can also use the `{{array.INDEX}}` pattern if you want to access array data by index; where the index starts from zero and it is the position of the element that you want to access.
+In Handlebars, the values returned by the `{{expression}}` are HTML-escaped. Say, if the expression contains `&`, then the returned HTML-escaped output is generated as `&amp;`. If you don't want Handlebars to escape a value, use the "triple-stash", `{{{`:
+
+You can learn how to produce the HTML escaped and raw output in the template below.
+
+```
+raw: {{{specialChars}}}
+html-escaped: {{specialChars}}
+```
+
+Pass the special characters to the template
+
+```
+{ specialChars: "& < > \" ' ` =" }
+```
+
+Expressions enclosed by "triple-stash" (`{{{`) produce the raw output. Otherwise, HTML-escaped output is generated as below.
+
+```
+raw: & < > " ' ` =
+html-escaped: &amp; &lt; &gt; &quot; &#x27; &#x60; &#x3D;
+```
+
+### Using Arrays
+
+You can use the [Each Helper](#each-helper) to iterate over its data. You can also use the `{{array.INDEX}}` pattern if you want to access array data by index, where the index starts from zero and it is the position of the element that you want to access.
 
 Template:
 ```
@@ -220,7 +299,8 @@ Result:
 ```
 first element
 ```
-## Escaping Handlebars expressions
+
+### Escaping Handlebars expressions
 
 Handlebars content may be escaped using inline escapes. Inline escapes are created by prefixing a mustache block with `\\`
 
@@ -233,7 +313,7 @@ Would return
 {{{escaped}}}
 ```
 
-## Accessing keys with spaces and special characters
+### Accessing keys with spaces and special characters
 
 Handlebars allows you to access keys/variables which have spaces ` ` or special characters like `{}` in their names. You need to enclose those variables in square brackets.
 
@@ -249,7 +329,7 @@ To access these variables in another block helper
 {{#escape [str with a space]}}{{/escape}}
 ```
 
-## Subexpressions
+### Subexpressions
 
 Handlebars offers support for `subexpressions`, which allows you to invoke multiple helpers within a single mustache `{{}}`, and pass in the results of inner helper invocations as arguments to outer helpers. Subexpressions are delimited by parentheses.
 
@@ -258,6 +338,120 @@ Handlebars offers support for `subexpressions`, which allows you to invoke multi
 ```
 
 In this case, `encode` will get invoked with the string argument `arg1`, and whatever the encode function returns will get passed in as the first argument to escape (and `arg2` will get passed in as the second argument to escape).
+
+## Using Pre-defined Attributes
+
+Ermrestjs allows users to access some pre-defined variables in the template environment. You must ensure you don't use these variables as column names in your tables to avoid overriding them in the environment. These pre-defined attributes are available in both Mustache and Handlebars templating environments. The following are the attributes:
+
+### $moment
+
+`$moment` is a datetime object which will give you access to date and time when the app was loaded. For instance if the app was loaded at Thu Oct 19 2017 16:04:46 GMT-0700 (PDT), it will contain following properties
+
+* date: 19
+* day: 4
+* month: 10
+* year: 2017
+* dateString: Thu Oct 19 2017
+* hours: 16
+* minutes: 4
+* seconds: 14
+* milliseconds: 873
+* timeString: 16:04:46 GMT-0700 (PDT)
+* ISOString: 2017-10-19T23:04:46.873Z
+* GTMString: Thu, 19 Oct 2017 23:04:46 GMT
+* UTCString: Thu, 19 Oct 2017 23:04:46 GMT
+* LocaleDateString: 10/19/2017
+* LocaleTimeString: 4:04:46 PM
+* LocalString: 10/19/2017, 4:04:46 PM
+
+The `$moment` object can be referred directly in the Mustache environment
+
+**Examples**
+```js
+Todays date is {{{$moment.month}}}/{{{$moment.date}}}/{{{$moment.year}}}
+```
+```js
+Current time is {{{$moment.hours}}}:{{{$moment.minutes}}}:{{{$moment.seconds}}}:{{{$moment.milliseconds}}}
+```
+```js
+UTC datetime is {{{$moment.UTCString}}}
+```
+```js
+Locale datetime is {{{$moment.LocaleString}}}
+```
+```js
+ISO datetime is {{{$moment.ISOString}}}
+```
+
+### $catalog
+`$catalog` is an object that gives you access to the catalog information including version if it is present. The following properties are currently included:
+```
+{
+  snapshot: <id>@<version>,
+  id: id,
+  version: version
+}
+```
+
+
+### $dcctx
+`$dcctx` is an object that gives you access to the current `pid` and `cid` of the app. You may use this attribute to generate links with `ppid` and `pcid` as query parameters.
+```
+{
+    pid: "the page id",
+    cid: "the context id(name of the app)"
+}
+```
+
+### $location
+`$location` is an object that gives you access to information about the current location of the document based on the URL. The following properties are included:
+```
+{
+    origin: "the origin of the URL",
+    host: "the host of the URL, which is the hostname, and then, if the port of the URL is nonempty, a ':', and the port",
+    hostname: "the hostname of the URL",
+    chaise_path: "the path after the origin pointing to the install location of chaise. By default, this will be '/chaise/'"
+}
+```
+
+For example, if the web url is `https://dev.isrd.isi.edu:8080/chaise/recordset/#1/isa:dataset`, the above object would look something like:
+```
+{
+    origin: "https://dev.isrd.isi.edu",
+    host: "dev.isrd.isi.edu:8080",
+    hostname: "dev.isrd.isi.edu",
+    chaise_path: "/chaise/"
+}
+```
+
+### $session
+`$session` is an object that gives you access to information about the current logged in user's session. The properties are the same properties returned from the webauthn response. The following are some of the properties included (subject to change as properties are added and removed from webauthn):
+```
+attributes: "the `attributes` array from the webauthn response. More info below about the objects in the `attributes` array"
+client: {
+    display_name: "the `display_name` of the user from webauthn client object",
+    email: "the `email` of the user from webauthn client object",
+    extensions: "an object containing more permissions the user might have. Used in the CFDE project for communicating ras permissions.",
+    full_name: "the `full_name` of the user from webauthn client object",
+    id: "the `id` of the user from webauthn client object",
+    identities: "the `identities` array of the user from webauthn client object",
+}
+```
+
+Each object in the `attributes` array has the same values as the objects returned from the webauthn attributes array, with 2 added values, `webpage` and `type`. The returned array is composed of globus groups and different globus identities associated with the user. It has any objects with duplicate `id` values merged together. The following values can be found in each object of `attributes`:
+ - `display_name`: the display name of the group or identity
+ - `email`: the email of the identity (if present)
+ - `full_name`: the full_name of the identity (if present)
+ - `id`: the id of the group or identity
+ - `identities`: the identities array of the current identity (if present)
+ - `type`: the type of the entry (`identity` or `globus_group`). The type is set as a `globus_group` if the display_name is defined and the id is NOT in the list of identities associated with the logged in user. The type is set as an `identity` if the id is in the list of identities associated with the logged in user (`client.identities`). Otherwise, no type will be set.
+ - `webpage`: If the `type` is set to `globus_group`, the webpage is then set to the globus group page. If the globus group id is "https://auth.globus.org/ff766864-a03f-11e5-b097-22000aef184d", then the webpage will be created by extracting the id value and setting it like "https://app.globus.org/groups/ff766864-a03f-11e5-b097-22000aef184d/about".
+
+ The `extensions` object currently contains 3 properties with permissions for dbgap studies. These properties are:
+  - `has_ras_permissions`: boolean value if ras dbgap permissions are present
+  - `ras_dbgap_permissions`: array of objects with information about which dbgap studies the user has permissions for
+  - `ras_dbgap_phs_ids`: map of `phs_id` values as the keys with `true` as the value
+
 
 ## Helpers
 
@@ -331,7 +525,7 @@ The `subtract` helper can be used to subtract 2 numbers. It will always subtract
 
 ## Block Helpers
 
-Block helpers make it possible to define custom iterators and other functionality that can invoke the passed block with a new context. These helpers are very similar to functions that we have in mustache.
+Block helpers make it possible to define custom iterators and other functionality that can invoke the passed block with a new context. These helpers are very similar to functions that we have in Mustache.
 
 ```
 {{#HELPER_NAME}}
