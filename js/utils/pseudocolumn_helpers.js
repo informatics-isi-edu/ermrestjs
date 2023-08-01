@@ -536,15 +536,8 @@
     /**
      * @param {Object} source the source array or string
      * @desc
-     * Will compress the source that can be used for logging purposes. It will,
-     *  - `inbound` to `i`
-     *  - `outbound` to `o`
-     *  - `sourcekey` to `key`
-     *  - `alias` to `a`
-     *  - `filter` to `f`
-     *  - `operand_pattern` to `opd`
-     *  - `operator` to `opr`
-     *  - `negate` to `n`
+     * Will compress the source that can be used for logging purposes. Take a look at ERMrest._shorterVersion
+     * for full list of values that are compressed
      * @private
      */
     _compressSource = function (source) {
@@ -1347,7 +1340,7 @@
             // generate name:
             // TODO maybe we shouldn't even allow aggregate in faceting (for now we're ignoring it)
             if ((sourceObject.self_link === true) || self.isFiltered || self.hasPath || self.isEntityMode || (isFacet !== false && self.hasAggregate)) {
-                self.name = _sourceColumnHelpers.generateSourceObjectHashName(sourceObject, isFacet);
+                self.name = _sourceColumnHelpers.generateSourceObjectHashName(sourceObject, isFacet, sourceObjectNodes);
                 self.isHash = true;
 
                 if (table.columns.has(self.name)) {
@@ -1522,7 +1515,7 @@
      */
     _sourceColumnHelpers = {
         processDataSourcePath: function (source, rootTable, tableName, catalogId, consNames, sources) {
-            var wm = module._warningMessages;
+            var wm = module._warningMessages, srcProps = module._sourceProperties;
             var returnError = function (message) {
                 return {error: true, message: message};
             };
@@ -1531,12 +1524,21 @@
                 var result;
                 if ((catalogId in consNames) && (schemaName in consNames[catalogId])){
                     result = consNames[catalogId][schemaName][constraintName];
-                }
+            }
                 return (result === undefined) ? null : result;
             };
 
+            // if it has any of the fk related properties
+            var hasAnyOfFKProps = function (obj) {
+                return [
+                    srcProps.INBOUND, srcProps.OUTBOUND,
+                    srcProps.REMOTE_SCHEMA, srcProps.REMOTE_TABLE,
+                    srcProps.REMOTE_COLUMNS, srcProps.LOCAL_TO_REMOTE_COLUMNS, srcProps.LOCAL_COLUMNS,
+                ].some(function (p) {return p in obj; });
+            };
+
             var i, fkAlias, constraint, isInbound, fkObj, fk, colTable = rootTable, hasInbound = false, firstForeignKeyNode, lastForeignKeyNode,
-                foreignKeyPathLength = 0, sourceObjectNodes = [], hasPrefix = false, hasOnlyPrefix = false, prefix,
+                foreignKeyPathLength = 0, sourceObjectNodes = [], hasPrefix = false, hasOnlyPrefix = false, prefix, isAlternativeJoin = false,
                 isAllOutboundNotNull = true, isAllOutboundNotNullPerModel = true;
             var isFiltered = false, filterProps = {
                 hasRootFilter: false, hasFilterInBetween: false, leafFilterString: ''
@@ -1607,23 +1609,41 @@
                     sourceObjectNodes.push(snf);
                     continue;
                 }
-                else if (("inbound" in source[i]) || ("outbound" in source[i])) {
-                    isInbound = ("inbound" in source[i]);
-                    constraint = isInbound ? source[i].inbound : source[i].outbound;
-
+                else if (hasAnyOfFKProps(source[i])) {
                     fkAlias = null;
                     if ("alias" in source[i] && typeof source[i].alias === "string") {
                         fkAlias = source[i].alias;
                     }
 
-                    fkObj = findConsName(constraint[0], constraint[1]);
+                    if (srcProps.INBOUND in source[i] || srcProps.OUTBOUND in source[i]) {
+                        isAlternativeJoin = false;
+                        isInbound = ("inbound" in source[i]);
+                        constraint = isInbound ? source[i].inbound : source[i].outbound;
 
-                    // constraint name was not valid
-                    if (fkObj === null || fkObj.subject !== module._constraintTypes.FOREIGN_KEY) {
-                        return returnError("Invalid data source. fk with the following constraint is not available on catalog: " + constraint.toString());
+                        fkObj = findConsName(constraint[0], constraint[1]);
+
+                        // constraint name was not valid
+                        if (fkObj === null || fkObj.subject !== module._constraintTypes.FOREIGN_KEY) {
+                            return returnError("Invalid data source. fk with the following constraint is not available on catalog: " + constraint.toString());
+                        }
+
+                        fk = fkObj.object;
+                    } else {
+                        isAlternativeJoin = true;
+                        if (!isObjectAndNotNull(colTable)) {
+                            return returnError("Couldn't parse the url since Location doesn't have acccess to the catalog object or main table is invalid.");
+                        }
+
+                        fkObj = colTable.findForeignKey(source[i]);
+
+                        if (fkObj.successful) {
+                            isInbound = fkObj.isInbound;
+                            fk = fkObj.foreignKey;
+                        } else {
+                            return returnError('Invalid fk object in source element index=' + i + ': ' + fkObj.message);
+                        }
                     }
 
-                    fk = fkObj.object;
 
                     // if there are foreignkey paths before this, then this is a filter in between
                     if (filterProps.leafFilterString && foreignKeyPathLength > 0) {
@@ -1639,10 +1659,10 @@
                     if (isInbound && fk.key.table.name === tableName) {
                         isAllOutboundNotNull = isAllOutboundNotNullPerModel = false;
                         hasInbound = true;
-                        colTable = fk._table;
+                        colTable = fk.table;
                     }
                     // outbound
-                    else if (!isInbound && fk._table.name === tableName) {
+                    else if (!isInbound && fk.table.name === tableName) {
                         colTable = fk.key.table;
 
                         isAllOutboundNotNull = isAllOutboundNotNull && fk.isNotNull;
@@ -1655,7 +1675,7 @@
 
                     tableName = colTable.name;
 
-                    var sn = new SourceObjectNode(fk, false, true, isInbound, false, null, fkAlias);
+                    var sn = new SourceObjectNode(fk, false, true, isInbound, false, null, fkAlias, null, isAlternativeJoin);
                     sourceObjectNodes.push(sn);
 
                     if (firstForeignKeyNode == null) {
@@ -2233,10 +2253,11 @@
          * use JSON.stringify since it will not preserve the order.
          * NOTE this function will not check the structure and assume it's already valid
          * @param {*} source
+         * @param {SourceObjectNode[]?} sourceObjectNodes
          * @returns stringify the given source while ensuring proper order of properties
          * @private
          */
-        _stringifySource: function (source) {
+        _stringifySource: function (source, sourceObjectNodes) {
             var srcProps = module._sourceProperties,
                 helpers = _sourceColumnHelpers;
 
@@ -2244,9 +2265,15 @@
                 // do the same thing as JSON.stringify but
                 // make sure the attributes are added in the same order
                 var attrs = [];
-                source.forEach(function (node) {
+                source.forEach(function (node, i) {
                     if (typeof node === "string") {
                         attrs.push('"' + node + '"');
+                        return;
+                    }
+
+                    if (sourceObjectNodes && sourceObjectNodes[i].isAlternativeJoin) {
+                        var dr = sourceObjectNodes[i].isInbound ? 'inbound': 'outbound';
+                        attrs.push('{"' + dr + '":' + JSON.stringify(sourceObjectNodes[i].nodeObject.constraint_names[0]) + '}');
                         return;
                     }
 
@@ -2275,6 +2302,7 @@
         /**
          * @param {string|object} colObject if the foreignkey/key is compund, this should be the constraint name. otherwise the source syntax for pseudo-column.
          * @param {boolean} useOnlySource whether we should ignore other attributes other than source or not
+         * @param {SourceObjectNode[]?} sourceObjectNodes the array of node objects that represent the given object
          * @desc return the name that should be used for pseudoColumn. This function makes sure that the returned name is unique.
          * This function can be used to get the name that we're using for :
          *
@@ -2289,7 +2317,7 @@
          *     preserve the order of proprties. So instead we're going over the known attributes and create
          *     the string manually ourselves (this will also ensure additional properties are ignored).
          */
-        generateSourceObjectHashName: function (colObject, useOnlySource) {
+        generateSourceObjectHashName: function (colObject, useOnlySource, sourceObjectNodes) {
 
             //we cannot create an object and stringify it, since its order can be different
             //instead will create a string of `source + aggregate + entity`
@@ -2299,7 +2327,7 @@
             if (typeof colObject === "object") {
                 if (!colObject.source) return null;
 
-                str += _sourceColumnHelpers._stringifySource(colObject.source);
+                str += _sourceColumnHelpers._stringifySource(colObject.source, sourceObjectNodes);
 
                 if (useOnlySource !== true && typeof colObject.aggregate === "string") {
                     str += colObject.aggregate;
@@ -2360,7 +2388,7 @@
         }
     };
 
-    function SourceObjectNode (nodeObject, isFilter, isForeignKey, isInbound, isPathPrefix, pathPrefixSourcekey, alias, table) {
+    function SourceObjectNode (nodeObject, isFilter, isForeignKey, isInbound, isPathPrefix, pathPrefixSourcekey, alias, table, isAlternativeJoin) {
         this.nodeObject = nodeObject;
 
         this.isFilter = isFilter;
@@ -2374,6 +2402,8 @@
 
         this.isPathPrefix = isPathPrefix;
         this.pathPrefixSourcekey = pathPrefixSourcekey;
+
+        this.isAlternativeJoin = isAlternativeJoin;
 
         this.alias = alias;
     }

@@ -81,6 +81,24 @@
                           "source": [{"outbound": ["source_definitions_schema", "main_fk1"]}, "RID"],
                           "entity": true
                       },
+                      "fk1_col_entity_column_mapping": {
+                        "source": [
+                            {"remote_schema": "source_definitions_schema", "remote_table": "outbound1", "local_to_remote_columns": {"id": "id"}},
+                            "RID"
+                        ],
+                        "entity": true
+                      },
+                      "fk1_col_entity_remote_columns": {
+                        "source": [
+                            {"remote_schema": "source_definitions_schema", "remote_table": "outbound1", "remote_columns": ["id"]},
+                            "RID"
+                        ],
+                        "entity": true
+                      },
+                      "fk1_col_entity_local_columns_matching_multiple": {
+                        "source": [{"local_columns": ["id"]}, "RID"],
+                        "entity": true
+                      },
                       "fk1_col_scalar": {
                           "source": [{"outbound": ["source_definitions_schema", "main_fk1"]}, "RID"],
                           "entity": false

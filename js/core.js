@@ -2160,6 +2160,147 @@
          */
         _getNullValue: function (context) {
             return module._getNullValue(this, context, true);
+        },
+
+        _findForeignKeyByLocalColumns: function (localColumnNames) {
+            if (!Array.isArray(localColumnNames) || localColumnNames.length === 0) {
+                return {successful: false, message: 'local_columns must be a non-empty array.'};
+            }
+            var matchFk = function (isInbound) {
+                return function (fk) {
+                    // same length
+                    if (fk.colset.length() !== localColumnNames.length) return false;
+
+                    /**
+                     * find the fks with the given local columns
+                     *
+                     * inbound: local=to, remote=from
+                     * outbound: local=from, remote=to
+                     */
+                    var fkCols = isInbound ? fk.key.colset.columns : fk.colset.columns;
+                    return fkCols.every(function (col) {
+                        return localColumnNames.indexOf(col.name) !== -1;
+                    });
+                };
+            };
+
+            var fks = this.foreignKeys.all().filter(matchFk(false));
+            if (fks.length > 1) {
+                return {successful: false, message: 'more than one foreign key matches.'};
+            }
+            var ifks = this.referredBy.all().filter(matchFk(true));
+            if (ifks.length > 1 || (fks.length > 0 && ifks.length > 0)) {
+                return {successful: false, message: 'more than one foreign key matches.'};
+            }
+            if (fks.length === 0 && ifks.length === 0) {
+                return {successful: false, message: 'couldn\'t find any matching foreign key.'};
+            }
+            return {
+                successful: true,
+                foreignKey: fks.length > 0 ? fks[0] : ifks[0],
+                isInbound: ifks.length > 0
+            };
+        },
+
+        _findForeignKeyByRemoteColumns: function (remoteTable, remoteColumnNames, nameMapping) {
+            if (!Array.isArray(remoteColumnNames) || remoteColumnNames.length === 0) {
+                return {successful: false, message: 'remote_columns or local_to_remote_columns must be defined properly.'};
+            }
+
+            /**
+             * inbound: from = remote, to = local
+             * outbound: from = local, to = remote
+             */
+            var matchFk = function (isInbound) {
+                return function (fk) {
+                    // same length
+                    if (fk.colset.length() !== remoteColumnNames.length) return false;
+
+                    // end up in the same table
+                    if ((!isInbound && fk.key.table !== remoteTable) || (isInbound && fk.table !== remoteTable)) {
+                        return false;
+                    }
+
+                    var fkCols;
+                    if (isObjectAndNotNull(nameMapping)) {
+                        // making sure the column mapping is correct
+                        // we want the loop to always be based on "local". so in inbound, we get the "to" and in outbound "from".
+                        fkCols = isInbound ? fk.key.colset.columns : fk.colset.columns;
+                        return fkCols.every(function (localCol) {
+                            if (!(localCol.name in nameMapping)) return false;
+
+                            var remoteCol = isInbound ? fk.mapping.getFrom(localCol) : fk.mapping.get(localCol);
+                            return nameMapping[localCol.name] === remoteCol.name;
+                        });
+                    } else {
+                        // making sure remote column names are valid
+                        fkCols = isInbound ? fk.colset.columns : fk.key.colset.columns;
+                        return fkCols.every(function (col) {
+                            return remoteColumnNames.indexOf(col.name) !== -1;
+                        });
+                    }
+                };
+            };
+
+            var fks = this.foreignKeys.all().filter(matchFk(false));
+            if (fks.length > 1) {
+                return {successful: false, message: 'more than one foreign key matches.'};
+            }
+            var ifks = this.referredBy.all().filter(matchFk(true));
+            if (ifks.length > 1 || (fks.length > 0 && ifks.length > 0)) {
+                return {successful: false, message: 'more than one foreign key matches.'};
+            }
+            if (fks.length === 0 && ifks.length === 0) {
+                return {successful: false, message: 'couldn\'t find any matching foreign key.'};
+            }
+            return {
+                successful: true,
+                foreignKey: fks.length > 0 ? fks[0] : ifks[0],
+                isInbound: ifks.length > 0
+            };
+        },
+
+        /**
+         * find the foreignkey that is part of this table, or has a path to it.
+         *
+         * { "remote_schema": "s2", "remote_table": "t2", "local_to_remote_columns": { "x": "a", "y": "b", ... }
+         * { "remote_schema": "s2", "remote_table": "t2", "remote_columns": [ "a", "b" ]}
+         *
+         * {"local_columns": ["x", "y", ...]}
+         *
+         */
+        findForeignKey: function (obj) {
+            if (!isObjectAndNotNull(obj)) {
+                return {successful: false, message: 'invalid object.'};
+            }
+            var self = this;
+
+            if (self.foreignKeys.length() === 0 && self.referredBy.length() === 0) {
+                return {successful: false, message: 'the local table doesn\'t have any inbound or outbound fks.'};
+            }
+
+            if (isStringAndNotEmpty(obj.remote_schema) && isStringAndNotEmpty(obj.remote_table)) {
+                var remoteTable;
+                try {
+                    remoteTable = self.schema.catalog.schemas.findTable(obj.remote_table, obj.remote_schema);
+                } catch (exp) {
+                    return {successful: false, message: 'remote table not found.'};
+                }
+
+                if (Array.isArray(obj.remote_columns)) {
+                    return self._findForeignKeyByRemoteColumns(remoteTable, obj.remote_columns);
+                }
+                else if (isObjectAndNotNull(obj.local_to_remote_columns)) {
+                    return self._findForeignKeyByRemoteColumns(remoteTable, Object.values(obj.local_to_remote_columns), obj.local_to_remote_columns);
+                } else {
+                    return {successful: false, message: 'remote_columns or local_to_remote_columns must be defined properly.'};
+                }
+            }
+            else if (Array.isArray(obj.local_columns)) {
+                return self._findForeignKeyByLocalColumns(obj.local_columns);
+            }
+
+            return {successful: false, message: 'none of the acceptable combination was used.'};
         }
     };
 
