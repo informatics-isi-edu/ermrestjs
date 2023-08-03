@@ -4345,8 +4345,11 @@
             } else { // no sort provieded: use shortest key for sort
                 sortObject = [];
                 for (var sk = 0; sk < this._shortestKey.length; sk++) {
-                    col = this._shortestKey[sk].name;
-                    sortObject.push({"column":col, "descending":false});
+                    col = this._shortestKey[sk];
+                    // make sure the column is sortable based on model
+                    if (module._nonSortableTypes.indexOf(col.type.name) === -1) {
+                        sortObject.push({"column":col.name, "descending":false});
+                    }
                 }
             }
 
