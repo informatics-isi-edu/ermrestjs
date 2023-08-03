@@ -193,13 +193,13 @@ That being said, our current implementation has the following limitations/flaws:
 
 1. If you use the block syntax (`{{# `) in any part of the template, we will not apply this null detection logic.
 
-2. As we described in [here](#accessing-keys-with-spaces-and-special-characters), you can use the `[]` syntax to access columns with special characeters. The null detection will not work properly if your column name has `#` in it. For instance, assume you have a column named `# Released` and want to show its value. Doing `{{{[# Released]}}}` will not work as it's breaking our null detection. To get around this, you could use the [with helper](#with-helper), which will turn off the null detection:
+2. As we described in [here](#accessing-keys-with-spaces-and-special-characters), you can use the `[]` syntax to access columns with special characters. The null detection will not work properly if your column name has `#` in it. For instance, assume you have a column named `# Released` and want to show its value. Doing `{{{[# Released]}}}` will not work as it's breaking our null detection. As we mentioned in the previous limitation, usage of block syntax will turn off the null detection. So, to get around this, we suggest using any block helpers. For instance, you could use the [with helper](#with-helper):
 
+    ```
+    {{#with [# Released]}}{{{.}}}{{/with}}
+    ```
 
-```
-{{#with [# Released]}}{{{.}}}{{/with}}
-```
-
+    Since `with` is changing the context, it might not be ideal in complicated templates. If you want to turn off the null detection without any side effect, you could wrap it in a `{{#if true}}` block.
 
 ### Accessing current context
 
