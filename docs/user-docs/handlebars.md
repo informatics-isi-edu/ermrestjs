@@ -141,20 +141,20 @@ The body for book with {{title}} authored by {{author.name}} is {{body}}
 ```
 
 That template works with this context
-```js
-var context = {
-  title: "My First Blog Post!",
-  author: {
-    id: 47,
-    name: "Yehuda Katz"
+```json
+{
+  "title": "My First Blog Post!",
+  "author": {
+    "id": 47,
+    "name": "Yehuda Katz"
   },
-  body: "My first post. Wheeeee!"
-};
+  "body": "My first post. Wheeeee!"
+}
 ```
 
 This makes it possible to use Handlebars templates with more raw JSON objects.
 
-Nested handlebars paths can also include ../ segments, which evaluate their paths against a parent context.
+Nested handlebars paths can also include `../` segments, which evaluate their paths against a parent context.
 
 ```
 {{#each comments}}
@@ -205,11 +205,11 @@ That being said, our current implementation has the following limitations/flaws:
 
 The `this` keyword can be used for accessing the current context. It's mainly useful when dealing with arrays or JSON objects, allowing you to access the values of an array of objects. For example, if you have the following JSON column:
 
-```js
+```jsson
 {
-  person: {
-    firstname: "John",
-    lastname: "smith"
+  "person": {
+    "firstname": "John",
+    "lastname": "smith"
   }
 }
 ```
@@ -224,16 +224,16 @@ While you can use `{{{person.firstname}}}` to access the values inside the objec
 
 As we mentioned `this` is also useful for arrays, for more information please refer to the [Each Helper](#each-helper) section. To expand on this, you can also use `this` in the case that you have an array of objects. For example:
 
-```js
+```json
 {
-  authors: [
+  "authors": [
     {
-      firstname: "John",
-      lastname: "smith"
+      "firstname": "John",
+      "lastname": "smith"
     },
     {
-      firstname: "Joe",
-      lastname: "Doe"
+      "firstname": "Joe",
+      "lastname": "Doe"
     }
   ]
 }
@@ -285,12 +285,12 @@ Template:
 ```
 
 When used in this context:
-```js
+```json
 {
-  arr: [
-      {value: "first element"},
-      {value: "second element"},
-      {value: "third element"}
+  "arr": [
+      {"value": "first element"},
+      {"value": "second element"},
+      {"value": "third element"}
   ]
 }
 ```
@@ -387,9 +387,9 @@ ISO datetime is {{{$moment.ISOString}}}
 `$catalog` is an object that gives you access to the catalog information including version if it is present. The following properties are currently included:
 ```
 {
-  snapshot: <id>@<version>,
-  id: id,
-  version: version
+  "snapshot": <id>@<version>,
+  "id": id,
+  "version": version
 }
 ```
 
@@ -398,8 +398,8 @@ ISO datetime is {{{$moment.ISOString}}}
 `$dcctx` is an object that gives you access to the current `pid` and `cid` of the app. You may use this attribute to generate links with `ppid` and `pcid` as query parameters.
 ```
 {
-    pid: "the page id",
-    cid: "the context id(name of the app)"
+    "pid": "the page id",
+    "cid": "the context id(name of the app)"
 }
 ```
 
@@ -407,34 +407,36 @@ ISO datetime is {{{$moment.ISOString}}}
 `$location` is an object that gives you access to information about the current location of the document based on the URL. The following properties are included:
 ```
 {
-    origin: "the origin of the URL",
-    host: "the host of the URL, which is the hostname, and then, if the port of the URL is nonempty, a ':', and the port",
-    hostname: "the hostname of the URL",
-    chaise_path: "the path after the origin pointing to the install location of chaise. By default, this will be '/chaise/'"
+    "origin": "the origin of the URL",
+    "host": "the host of the URL, which is the hostname, and then, if the port of the URL is nonempty, a ':', and the port",
+    "hostname": "the hostname of the URL",
+    "chaise_path": "the path after the origin pointing to the install location of chaise. By default, this will be '/chaise/'"
 }
 ```
 
 For example, if the web url is `https://dev.isrd.isi.edu:8080/chaise/recordset/#1/isa:dataset`, the above object would look something like:
-```
+```json
 {
-    origin: "https://dev.isrd.isi.edu",
-    host: "dev.isrd.isi.edu:8080",
-    hostname: "dev.isrd.isi.edu",
-    chaise_path: "/chaise/"
+    "origin": "https://dev.isrd.isi.edu",
+    "host": "dev.isrd.isi.edu:8080",
+    "hostname": "dev.isrd.isi.edu",
+    "chaise_path": "/chaise/"
 }
 ```
 
 ### $session
 `$session` is an object that gives you access to information about the current logged in user's session. The properties are the same properties returned from the webauthn response. The following are some of the properties included (subject to change as properties are added and removed from webauthn):
 ```
-attributes: "the `attributes` array from the webauthn response. More info below about the objects in the `attributes` array"
-client: {
-    display_name: "the `display_name` of the user from webauthn client object",
-    email: "the `email` of the user from webauthn client object",
-    extensions: "an object containing more permissions the user might have. Used in the CFDE project for communicating ras permissions.",
-    full_name: "the `full_name` of the user from webauthn client object",
-    id: "the `id` of the user from webauthn client object",
-    identities: "the `identities` array of the user from webauthn client object",
+{
+  "attributes": "the `attributes` array from the webauthn response. More info below about the objects in the `attributes` array"
+  "client": {
+    "display_name": "the `display_name` of the user from webauthn client object",
+    "email": "the `email` of the user from webauthn client object",
+    "extensions": "an object containing more permissions the user might have. Used in the CFDE project for communicating ras permissions.",
+    "full_name": "the `full_name` of the user from webauthn client object",
+    "id": "the `id` of the user from webauthn client object",
+    "identities": "the `identities` array of the user from webauthn client object",
+  }
 }
 ```
 
@@ -572,7 +574,7 @@ You can iterate over a list using the built-in `each` helper. Inside the block, 
 when used with context
 ```js
 {
-  people: [
+  "people": [
     "Yehuda Katz",
     "Alan Johnson",
     "Charles Jolley"
@@ -643,10 +645,10 @@ Will create a `key` and `value` variable that children may access without the ne
 
 ```json
 {
-  title: "My first post!",
-  author: {
-    firstName: "Charles",
-    lastName: "Jolley"
+  "title": "My first post!",
+  "author": {
+    "firstName": "Charles",
+    "lastName": "Jolley"
   }
 }
 ```
@@ -987,12 +989,12 @@ You can use the following helper to check for specific equality checks using the
 Using the `regexMatch` function you can check whether a given value matches the given regular expression. The regular expression syntax that Javascript supports is a bit different from other languages, please refer to [MDN regular expressions document](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions) for more information.
 
 ```
-{{#if (regexMatch value "jpg|png" )}}
 .. content
 {{/if}}
 ```
 
 ### Logical Helpers
+{{#if (regexMatch value "jpg|png" )}}
 
 - And (`and`)
 
