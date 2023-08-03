@@ -666,7 +666,7 @@ Which results in
 My first post! By Charles Jolley
 ```
 
-### Accessing outer context
+#### Accessing outer context
 
 If inside the `with` block you want to access the outer context, you need to prepend the column names with `../`. For example:
 
@@ -676,7 +676,7 @@ If inside the `with` block you want to access the outer context, you need to pre
 {{/with}}
 ```
 
-### Accessing current value
+#### Accessing current value
 
 As we described in [here](#null-checking), `with` can also be used for doing a "truthy" check. You can use `.` to access
 the value of the `with` block. For example:
