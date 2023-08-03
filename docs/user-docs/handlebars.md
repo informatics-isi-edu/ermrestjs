@@ -639,28 +639,9 @@ Will create a `key` and `value` variable that children may access without the ne
 
 ### With helper
 
-Normally, Handlebars templates are evaluated against the context of the template.
+`With` helper can be used to shift the context. For example with the following context:
 
-```
-template => {{lastName}}, {{firstName}}
-contenxt => {firstName: "Alan", lastName: "Johnson"}
-```
-results in
-```
-Johnson, Alan
-```
-
-You can shift the context for a section of a template by using the built-in `with` block helper.
-
-```
-{{title}}
-{{#with author}}
-  By {{firstName}} {{lastName}}
-{{/with}}
-```
-
-when used in this context:
-```js
+```json
 {
   title: "My first post!",
   author: {
@@ -669,20 +650,57 @@ when used in this context:
   }
 }
 ```
-results in
+
+You can do:
+```
+{{title}}
+{{#with author}}
+  By {{{firstName}}} {{{lastName}}}
+{{/with}}
+```
+
+Which results in
 ```
 My first post! By Charles Jolley
 ```
 
+### Accessing outer context
+
+If inside the `with` block you want to access the outer context, you need to prepend the column names with `../`. For example:
+
+```
+{{#with author}}
+  {{{firstName}}} {{{lastName}}} wrote {{{../title}}}.
+{{/with}}
+```
+
+### Accessing current value
+
+As we described in [here](#null-checking), `with` can also be used for doing a "truthy" check. You can use `.` to access
+the value of the `with` block. For example:
+
+```
+{{#with column}}{{{.}}}{{{/with}}}
+```
+
+- With `{"column": null}` doesn't return anything.
+- WIth `{"column": "some value"}` returns `"some value"`.
+
+
+You can also use `else` as we decribed [here](#using-else-with-with-block). That being said, we recommend using [`if` helper](#if-helper) instead of `with` for boolean operations as its more flexible and doesn't change the context.
+
+#### Define known reference
+
 `with` can also be used with block parameters to define known references in the current block. The example above can be converted to
 
 ```
-{{title}}
 {{#with author as |myAuthor|}}
-  By {{myAuthor.firstName}} {{myAuthor.lastName}}</h2>
+  {{{myAuthor.firstName}}} {{{myAuthor.lastName}}} wrote {{{title}}}.
 {{/with}}
 ```
 This allows for complex templates to potentially provide clearer code than `../` depthed references allow for.
+
+#### Using `else` with `with` block
 
 You can optionally provide an `{{else}}` section which will display only when the passed value is empty.
 
@@ -742,8 +760,11 @@ for context `key="**somevalue ] which is ! special" and value="John"` will resul
 
 ### Encodefacet helper
 
-You can use the `encodeFacet` helper to compress a JSON object. The compressed string can be used for creating a URL path with facets. The string that you are passing as content MUST be JSON parsable. It will be ignored otherwise.
+You can use the `encodeFacet` helper to compress a JSON object. The compressed string can be used for creating a URL path with facets. This helper can be used for encoding both JSON objects and string representation of a JSON object.
 
+#### 1. Passing the string representation of a facet blob
+
+The string that you are passing as content MUST be JSON parsable. It will be ignored otherwise.
 
 Template (newline and indentation added for readability and should be removed):
 ```
@@ -763,19 +784,62 @@ Result:
 <a href="example.com/chaise/recordset/#1/S:T/*::facets::<facet-blob-representation>">caption</a>
 ```
 
-As you can see in this example I am escaping all the `"`s. This is because you are usually passing this value in a string in a JSON document. So all the `"`s must be escaped.
+As you can see in this example we are escaping all the `"`s. This is because you are usually passing this value in a string in a JSON document. So all the `"`s must be escaped.
+
+You can also pass the string representation of the JSON object like the following:
+
+```
+{{encodeFacet json_str}}
+```
+
+or
+```
+{{#encodeFacet json_str}}{{/encodeFacet}}
+```
+
+With the following context:
+
+```json
+{
+  "json_str": "{\"and\": [{\"source\": [{\"inbound\": [\"schema\", \"fk_1\"]}]}, \"RID\"], \"choices\": [\"{{{RID}}}\"]}]}"
+}
+```
+
+#### 2. Passing the JSON object representing a facet
+
+
+For instance, assuming `obj` is the name of the `jsonb` column that stores the facet object:
+```
+[caption](example.com/chaise/recordset/#1/S:T/*::facets::{{encodeFacet obj}})
+```
+
+or
+
+```
+[caption](example.com/chaise/recordset/#1/S:T/*::facets::{{#encodeFacet obj}}{{/encodeFacet}})
+```
+
+Result:
+```
+<a href="example.com/chaise/recordset/#1/S:T/*::facets::<facet-blob-representation>">caption</a>
+```
+
 
 ### JsonStringify helper
 
-The `jsonStringify` helper will convert the supplied JSON object into a string representation of the JSON object. This helper behaves the same way as the `JSON.stringify` function in javascript. This can be used in conjunction with the `encodeFacet` helper for creating facet URL strings.
+The `jsonStringify` helper will convert the supplied JSON object into a string representation of the JSON object. This helper behaves the same way as the `JSON.stringify` function in javascript.
 
-Template (newline and indentation added for readability and should be removed):
+The following are different ways of using this helper (assume `column` stores a JSON object):
 ```
-[caption](example.com/chaise/recordset/#1/S:T/*::facets::{{#encodeFacet}}
-    {{#jsonStringify}}
-      {{{col}}}
-    {{/jsonStringify}}
-{{/encodeFacet}}
+{{#jsonStringify}}{{{column}}}{{/jsonStringify}}
+
+{{#jsonStringify column}}{{/jsonStringify}}
+```
+
+This can be used in conjunction with the `encodeFacet` helper for creating facet URL strings. For example:
+
+```
+[caption](example.com/chaise/recordset/#1/S:T/*::facets::{{encodeFacet (jsonStringify col)}})
 ```
 
 Wher `col` is:

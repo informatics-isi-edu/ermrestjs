@@ -631,8 +631,15 @@ exports.execute = function (options) {
             });
 
             it('encodeFacet helper', function () {
-                var facet = '{"and": [{"source": "id", "choices": ["1"]}]}';
-                expect(module.renderHandlebarsTemplate("{{#encodeFacet}}" + facet + "{{/encodeFacet}}")).toBe('N4IghgdgJiBcAEBtUBnA9gVwE4GMCmc8IAljADRE4AWax+KhiIAjCALoC+nQA');
+                const facet = {"and": [{"source": "id", "choices": ["1"]}]};
+                const facetStr = JSON.stringify(facet);
+                const blob = 'N4IghgdgJiBcDaoDOB7ArgJwMYFM4gEsYAaELACxQNyTnhAEYQBdAXzaA';
+
+                expect(module.renderHandlebarsTemplate(`{{#encodeFacet}}${facetStr}{{/encodeFacet}}`)).toBe(blob);
+                expect(module.renderHandlebarsTemplate("{{#encodeFacet facet}}{{/encodeFacet}}", { facet })).toBe(blob);
+                expect(module.renderHandlebarsTemplate("{{encodeFacet facet}}", { facet })).toBe(blob);
+                expect(module.renderHandlebarsTemplate("{{#encodeFacet facetStr}}{{/encodeFacet}}", { facetStr })).toBe(blob);
+                expect(module.renderHandlebarsTemplate("{{encodeFacet facetStr}}", { facetStr })).toBe(blob);
             });
 
             it('add helper', function () {
@@ -758,12 +765,20 @@ exports.execute = function (options) {
                     "testInt": 4
                 };
 
-                var template = '{{#jsonStringify}}{{{json}}}{{/jsonStringify}}';
-
+                let template = '{{#jsonStringify}}{{{json}}}{{/jsonStringify}}';
                 expect(module.renderHandlebarsTemplate(template, {json: json})).toBe(JSON.stringify(json), "missmatch for 1st test");
 
-                var template2 = '{{#encodeFacet}}{{#jsonStringify}}{{{json}}}{{/jsonStringify}}{{/encodeFacet}}';
-                expect(module.renderHandlebarsTemplate(template2, {json: json})).toBe(options.ermRest.encodeFacetString(JSON.stringify(json)), "missmatch for 2nd test");
+                template = '{{#jsonStringify json}}{{/jsonStringify}}';
+                expect(module.renderHandlebarsTemplate(template, {json: json})).toBe(JSON.stringify(json), "missmatch for 2nd test");
+
+                template = '{{#encodeFacet}}{{#jsonStringify}}{{{json}}}{{/jsonStringify}}{{/encodeFacet}}';
+                expect(module.renderHandlebarsTemplate(template, {json: json})).toBe(options.ermRest.encodeFacetString(JSON.stringify(json)), "missmatch for 3rd test");
+
+                template = '{{#encodeFacet (jsonStringify json)}}{{/encodeFacet}}';
+                expect(module.renderHandlebarsTemplate(template, {json: json})).toBe(options.ermRest.encodeFacetString(JSON.stringify(json)), "missmatch for 4th test");
+
+                template = '{{encodeFacet (jsonStringify json)}}';
+                expect(module.renderHandlebarsTemplate(template, {json: json})).toBe(options.ermRest.encodeFacetString(JSON.stringify(json)), "missmatch for 5th test");
             });
 
             it ('toTitleCase helper', function () {
