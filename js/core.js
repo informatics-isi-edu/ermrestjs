@@ -1039,9 +1039,11 @@
          * @type {ERMrest.Columns}
          */
         this.columns = new Columns(this);
+
+        var assetCagetories = this._assignAssetCategories();
         for (var i = 0; i < jsonTable.column_definitions.length; i++) {
             var jsonColumn = jsonTable.column_definitions[i];
-            this.columns._push(new Column(this, jsonColumn));
+            this.columns._push(new Column(this, jsonColumn, assetCagetories[jsonColumn.name]));
         }
 
         /**
@@ -2160,6 +2162,59 @@
          */
         _getNullValue: function (context) {
             return module._getNullValue(this, context, true);
+        },
+
+        /**
+         * returns an object that captures the asset category of columns.
+         * - the key of the returned object is the column name and value is the assigned category.
+         * - if a column is used in multiple asset annotations, only the first usage is used and other asset annotations
+         *   are discarded.
+         */
+        _assignAssetCategories: function () {
+            var mapAssetAnnotPropToCategory = {
+                'filename_column': 'filename',
+                'byte_count_column': 'byte_count',
+                'md5': 'md5',
+                'sha256': 'sha256'
+            };
+
+            var jsonTable = this._jsonTable;
+            var assignedColumns = {};
+            for (var i = 0; i < jsonTable.column_definitions.length; i++) {
+                var col = jsonTable.column_definitions[i];
+                var message = 'asset annotation on column ' + col.name + ' will be ignored';
+
+                if (module._annotations.ASSET in col.annotations) {
+                    // if the column already used, discard the asset annot
+                    if (col.name in assignedColumns) {
+                        module._log.warn(message + ' since it\'s already used in an asset column mapping.');
+                    } else {
+
+                        // go over the props and see if they are already mapped or not
+                        var annot = col.annotations[module._annotations.ASSET], valid = true, temp = {};
+                        var keys = Object.keys(mapAssetAnnotPropToCategory);
+                        for (var j = 0; valid && j < keys.length; j++) {
+                            var prop = keys[j];
+                            if (isStringAndNotEmpty(annot[prop])) {
+                                if (annot[prop] in assignedColumns) {
+                                    valid = false;
+                                    module._log.warn(message + ' since `' + prop + '` already used in another asset column mapping.');
+                                } else {
+                                    temp[annot[prop]] = mapAssetAnnotPropToCategory[prop];
+                                }
+                            }
+
+                        }
+
+                        if (valid) {
+                            assignedColumns[col.name] = 'url';
+                            Object.assign(assignedColumns, temp);
+                        }
+                    }
+
+                }
+            }
+            return assignedColumns;
         }
     };
 
@@ -2678,7 +2733,7 @@
      * @param {ERMrest.Table} table the table object.
      * @param {string} jsonColumn the json column.
      */
-    function Column(table, jsonColumn) {
+    function Column(table, jsonColumn, assetCategory) {
 
         this._jsonColumn = jsonColumn;
 
@@ -2896,6 +2951,48 @@
          */
         this.ignore = false;
 
+
+        if (isStringAndNotEmpty(assetCategory)) {
+            this.assetCategory = assetCategory;
+            switch (assetCategory) {
+                case 'url':
+                    /**
+                     * if this column is has a valid asset annotation
+                     * @type {boolean}
+                     */
+                    this.isAssetURL = true;
+                    break;
+                case 'filename':
+                    /**
+                     * if this column is a filename for an asset column
+                     * @type {boolean}
+                     */
+                    this.isAssetFilename = true;
+                    break;
+                case 'byte_count':
+                    /**
+                     * if this column is a byte count for an asset column
+                     * @type {boolean}
+                     */
+                    this.isAssetByteCount = true;
+                    break;
+                case 'md5':
+                    /**
+                     * if this column is a md5 for an asset column
+                     * @type {boolean}
+                     */
+                    this.isAssetMd5 = true;
+                    break;
+                case 'sha256':
+                    /**
+                     * if this column is a sha256 for an asset column
+                     * @type {boolean}
+                     */
+                    this.isAssetSha256 = true;
+                    break;
+            }
+        }
+
         /**
          *
          * @type {ERMrest.Annotations}
@@ -2927,6 +3024,18 @@
                 }
             }
         });
+
+        // then copy if it's an asset type
+        if (isStringAndNotEmpty(assetCategory)) {
+            ancestors.forEach(function (el) {
+                if (el.annotations.contains(defaultAnnotKey)) {
+                    var tempAnnot = el.annotations.get(defaultAnnotKey).content;
+                    if (isObjectAndNotNull(tempAnnot) && isObjectAndNotNull(tempAnnot.asset) && isObjectAndNotNull(tempAnnot.asset[assetCategory])) {
+                        Object.assign(annots, tempAnnot.asset[assetCategory]);
+                    }
+                }
+            });
+        }
 
         // then copy the existing annots on the column
         Object.assign(annots, jsonColumn.annotations);

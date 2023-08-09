@@ -51,7 +51,7 @@ module._createPseudoColumn = function (reference, sourceObjectWrapper, mainTuple
          }
 
         // no path, scalar, asset
-        if (column.type.name === "text" && column.annotations.contains(module._annotations.ASSET)) {
+        if (column.type.name === "text" && column.isAssetURL) {
             return new AssetPseudoColumn(reference, column, sourceObjectWrapper);
         }
 
