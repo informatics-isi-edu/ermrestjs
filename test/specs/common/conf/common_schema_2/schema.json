@@ -688,6 +688,97 @@
             "annotations": {
                 "tag:isrd.isi.edu:2020,history-capture": false
             }
+        },
+        "table_w_asset_1": {
+            "kind": "table",
+            "table_name": "table_w_asset_1",
+            "schema_name": "common_schema_2",
+            "keys": [
+                {"unique_columns": ["id"]}
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "type": {"typename": "text"},
+                    "nullok": false
+                },
+                {
+                    "name": "bytes_col",
+                    "type": {"typename": "int8"},
+                    "nullok": true
+                },
+                {
+                    "name": "filename_col",
+                    "type": {"typename": "text"},
+                    "nullok": true
+                },
+                {
+                    "name": "filename_col_2",
+                    "type": {"typename": "text"},
+                    "nullok": true
+                },
+                {
+                    "name": "md5_col",
+                    "type": {"typename": "text"},
+                    "nullok": true
+                },
+                {
+                    "name": "md5_col_2",
+                    "type": {"typename": "text"},
+                    "nullok": true
+                },
+                {
+                    "name": "sha256_col",
+                    "type": {"typename": "text"},
+                    "nullok": true
+                },
+                {
+                    "name": "asset_1_valid",
+                    "type": {"typename": "text"},
+                    "annotations": {
+                        "tag:isrd.isi.edu,2017:asset": {
+                            "url_pattern": "/ermrestjs/{{{_asset_1.md5}}",
+                            "byte_count_column": "bytes_col",
+                            "filename_column": "filename_col",
+                            "md5": "md5_col",
+                            "sha256": "sha256_col"
+                        }
+                    }
+                },
+                {
+                    "name": "asset_2_invalid_w_overlapping",
+                    "type": {"typename": "text"},
+                    "annotations": {
+                        "tag:isrd.isi.edu,2017:asset": {
+                            "url_pattern": "/ermrestjs/{{{_asset_2_w_overlapping.md5}}",
+                            "byte_count_column": "bytes_col",
+                            "filename_column": "filename_col_2"
+                        }
+                    }
+                },
+                {
+                    "name": "asset_3_valid_w_overlapping",
+                    "type": {"typename": "text"},
+                    "annotations": {
+                        "tag:isrd.isi.edu,2017:asset": {
+                            "url_pattern": "/ermrestjs/{{{_asset_2_w_overlapping.md5}}",
+                            "filename_column": "asset_2_invalid_w_overlapping",
+                            "md5": "asset_1"
+                        }
+                    }
+                },
+                {
+                    "name": "asset_4_invalid_w_overlapping",
+                    "type": {"typename": "text"},
+                    "annotations": {
+                        "tag:isrd.isi.edu,2017:asset": {
+                            "url_pattern": "/ermrestjs/{{{_asset_2_w_overlapping.md5}}",
+                            "md5": "md5_col_2",
+                            "sha256": "asset_1_valid"
+                        }
+                    }
+                }
+            ]
         }
     },
     "schema_name": "common_schema_2",

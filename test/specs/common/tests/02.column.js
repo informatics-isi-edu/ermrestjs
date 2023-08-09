@@ -5,6 +5,10 @@ exports.execute = function(options) {
             columnName = 'table_1_text',
             table1_schema2;
 
+        const getColumn = (sch, table, col) => {
+            return options.catalog.schemas.get(sch).tables.get(table).columns.get(col);
+        }
+
         beforeAll(function(done) {
             table1_schema2 = options.catalog.schemas.get(schemaName2).tables.get('table_1_schema_2');
             done();
@@ -470,6 +474,103 @@ exports.execute = function(options) {
                         expect(table1_schema2.columns.get(systemColumns[i]).comment).toBe(comments[systemColumns[i]], "Column "+ systemColumns[i]+ " doesn't have the correct default comment.");
                     }
                 });
+            });
+
+            describe('regarding asset column mapping and assetCategory', () => {
+                const expected = {
+                    'bytes_col': {
+                        assetCategory: 'byte_count',
+                        isAssetURL: undefined,
+                        isAssetFilename: undefined,
+                        isAssetByteCount: true,
+                        isAssetMd5: undefined,
+                        isAssetSha256: undefined
+                    },
+                    'filename_col': {
+                        assetCategory: 'filename',
+                        isAssetURL: undefined,
+                        isAssetFilename: true,
+                        isAssetByteCount: undefined,
+                        isAssetMd5: undefined,
+                        isAssetSha256: undefined
+                    },
+                    // it's only used in invalid mappings, so it doesn't have any asset category
+                    'filename_col_2': {
+                        assetCategory: undefined,
+                        isAssetURL: undefined,
+                        isAssetFilename: undefined,
+                        isAssetByteCount: undefined,
+                        isAssetMd5: undefined,
+                        isAssetSha256: undefined
+                    },
+                    'md5_col': {
+                        assetCategory: 'md5',
+                        isAssetURL: undefined,
+                        isAssetFilename: undefined,
+                        isAssetByteCount: undefined,
+                        isAssetMd5: true,
+                        isAssetSha256: undefined
+                    },
+                    // it's only used in invalid mappings, so it doesn't have any asset category
+                    'md5_col_2': {
+                        assetCategory: undefined,
+                        isAssetURL: undefined,
+                        isAssetFilename: undefined,
+                        isAssetByteCount: undefined,
+                        isAssetMd5: undefined,
+                        isAssetSha256: undefined
+                    },
+                    'sha256_col': {
+                        assetCategory: 'sha256',
+                        isAssetURL: undefined,
+                        isAssetFilename: undefined,
+                        isAssetByteCount: undefined,
+                        isAssetMd5: undefined,
+                        isAssetSha256: true
+                    },
+                    'asset_1_valid': {
+                        assetCategory: 'url',
+                        isAssetURL: true,
+                        isAssetFilename: undefined,
+                        isAssetByteCount: undefined,
+                        isAssetMd5: undefined,
+                        isAssetSha256: undefined
+                    },
+                    // the asset on the column is invalid, but it's used as filename somewhere else
+                    'asset_2_invalid_w_overlapping': {
+                        assetCategory: 'filename',
+                        isAssetURL: undefined,
+                        isAssetFilename: true,
+                        isAssetByteCount: undefined,
+                        isAssetMd5: undefined,
+                        isAssetSha256: undefined
+                    },
+                    'asset_3_valid_w_overlapping': {
+                        assetCategory: 'url',
+                        isAssetURL: true,
+                        isAssetFilename: undefined,
+                        isAssetByteCount: undefined,
+                        isAssetMd5: undefined,
+                        isAssetSha256: undefined
+                    },
+                    'asset_4_invalid_w_overlapping': {
+                        assetCategory: undefined,
+                        isAssetURL: undefined,
+                        isAssetFilename: undefined,
+                        isAssetByteCount: undefined,
+                        isAssetMd5: undefined,
+                        isAssetSha256: undefined
+                    }
+                };
+
+                it ('should property assign category to columns based on asset annotation.', () => {
+                    Object.keys(expected).forEach((name) => {
+                        const col = getColumn('common_schema_2', 'table_w_asset_1', name);
+                        Object.keys(expected[name]).forEach((prop) => {
+                            expect(col[prop]).toBe(expected[name][prop], `missmatch for ${name}`);
+                        });
+                    })
+                })
             });
         });
     });

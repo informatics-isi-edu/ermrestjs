@@ -203,7 +203,7 @@ Download button is a link with some predefined attributes. You can use these att
   - `download` will trigger the browser's default download behavior and displays the links like the following:
 ![download default UI](https://raw.githubusercontent.com/informatics-isi-edu/ermrestjs/master/docs/resources/download-alt-btn.png)
 
-  - `.download` will change the link to look like the following:
+  - `.download-alt` will change the link to look like the following:
 ![alternative download UI](https://raw.githubusercontent.com/informatics-isi-edu/ermrestjs/master/docs/resources/download-btn.png)
 
   - If you would like to create your own download button, we suggest adding a class attribute here and using this class for definining your own CSS rules.

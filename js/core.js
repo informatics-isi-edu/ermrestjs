@@ -2182,12 +2182,12 @@
             var assignedColumns = {};
             for (var i = 0; i < jsonTable.column_definitions.length; i++) {
                 var col = jsonTable.column_definitions[i];
-                var message = 'asset annotation on column ' + col.name + ' will be ignored';
+                var message = 'asset annotation on column ' + col.name + ' will be ignored. reason: ';
 
                 if (module._annotations.ASSET in col.annotations) {
                     // if the column already used, discard the asset annot
                     if (col.name in assignedColumns) {
-                        module._log.warn(message + ' since it\'s already used in an asset column mapping.');
+                        module._log.warn(message + 'it\'s already used in an asset column mapping.');
                     } else {
 
                         // go over the props and see if they are already mapped or not
@@ -2198,7 +2198,7 @@
                             if (isStringAndNotEmpty(annot[prop])) {
                                 if (annot[prop] in assignedColumns) {
                                     valid = false;
-                                    module._log.warn(message + ' since `' + prop + '` already used in another asset column mapping.');
+                                    module._log.warn(message + '`' + annot[prop] + '` already used in another asset column mapping.');
                                 } else {
                                     temp[annot[prop]] = mapAssetAnnotPropToCategory[prop];
                                 }
@@ -2953,7 +2953,14 @@
 
 
         if (isStringAndNotEmpty(assetCategory)) {
+            /**
+             * if it's used in an asset annotation, will return its category. available values:
+             * 'filename', 'byte_count', 'md5', 'sha256'
+             *
+             * @type {?string}
+             */
             this.assetCategory = assetCategory;
+
             switch (assetCategory) {
                 case 'url':
                     /**

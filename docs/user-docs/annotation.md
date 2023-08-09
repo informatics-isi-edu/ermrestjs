@@ -1097,6 +1097,15 @@ For example,
           }
         }
      }
+  },
+  "asset": {
+    "url": {
+      "tag:isrd.isi.edu,2016:column-display": {
+        "*": {
+          "markdown_pattern": "[Download]({{{url}}}){download .download-alt}"
+        }
+      }
+    }
   }
 }
 ```
