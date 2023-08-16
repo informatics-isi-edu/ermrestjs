@@ -366,7 +366,9 @@ exports.execute = function (options) {
             assetCompactExpectedValue = [
                 '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_asset/id=1">1</a>',
                 '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:columns_table/RID=' + utils.findEntityRID(options, schemaName, "columns_table", "id", "1") + '">1</a>',
-                '1000', '10001', 'filename', '1,242', 'md5', 'sha256',
+                '1000', '10001', 'filename',
+                '<span data-chaise-tooltip="1,242 bytes (1 kB = 1,000 bytes)">1.24 kB</span>',
+                'md5', 'sha256',
                 '',
                 '<h2>filename</h2>\n',
                 '<a href="https://dev.isrd.isi.edu?uinit=1&amp;cid=test" download="" class="asset-permission">filename</a>',

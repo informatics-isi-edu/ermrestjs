@@ -2821,10 +2821,11 @@
                 options = {};
             }
 
+            var rawValue = data[this.name];
             var display = this.getDisplay(context);
 
             var formattedValue, unformatted;
-            formattedValue = this.formatvalue(data[this.name], context, options);
+            formattedValue = this.formatvalue(rawValue, context, options);
 
             /*
              * If column doesn't has column-display annotation and is not of type markdown
@@ -2850,6 +2851,17 @@
                 };
             }
 
+            // bytesize default display
+            if (!display.isMarkdownPattern && this.isAssetByteCount) {
+                return module.processMarkdownPattern(
+                    '{{humanizeBytes _value tooltip=true}}',
+                    {'_value': rawValue},
+                    this.table,
+                    context,
+                    { templateEngine: module.HANDLEBARS, isInline: true }
+                );
+            }
+
             /*
              * If column doesn't has column-display annotation and is not of type markdown
              * then return formattedValue as it is
@@ -2871,6 +2883,12 @@
                 if (!isObjectAndNotNull(templateVariables)) {
                     templateVariables = module._getFormattedKeyValues(this.table, context, data);
                 }
+
+                var keyValues = {};
+                Object.assign(keyValues, templateVariables, {
+                    "$self": formattedValue,
+                    "$_self": rawValue
+                });
 
                 unformatted = module._renderTemplate(template, templateVariables, this.table.schema.catalog, {templateEngine: display.templateEngine});
             }

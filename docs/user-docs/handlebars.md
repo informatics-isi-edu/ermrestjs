@@ -483,32 +483,60 @@ You can use `humanizeBytes` helper to convert byte count to human readable forma
 
 Syntax:
 ```
-{{humanizeBytes value format precision}}
-
 {{humanizeBytes value}}
+```
+This will format the given value to a human readable string using "si" mode. If you would like to modify the behavior, you can also pass named optional arguments. You can choose to pass any combiniation of these named arguments.
 
-{{humanizeBytes value format}}
+Examples:
+
+```
+{{humanizeBytes 41235532}} ==> '41.2 MB'
+
+{{humanizeBytes 41235532 precision=4 }} ==> '41.23 MB'
+
+{{humanizeBytes 41235532 mode='binary'}} ==> '39.32 MiB'
+
+{{humanizeBytes 41235532 mode='binary' precision=5}} ==> '39.325 MiB'
+
+{{humanizeBytes 41235532 mode='binary' tootlip=true}} ==> ':span:39.32 MiB:/span:{data-chaise-tooltip="41235532 bytes (1 MiB = 1,048,576 bytes)"}'
+
+{{humanizeBytes 41235532 mode='binary' precision=5 tootlip=true}} ==> ':span:39.325 MiB:/span:{data-chaise-tooltip="41235532 bytes (1 MiB = 1,048,576 bytes)"}'
 ```
 
-The parameters are:
-- `value`: The value (or the column name that has the value).
-- `format`: Can either be `"binary"` or `"si"` depending on the output format that you would like. If missing or invalid, `"si"` will be used.
-- `precision`: An optional integer specifying the number of digits.
+The arguments are:
+
+#### `mode`
+
+This argument will allow you to change the output format. It can either be a string `"si"` or `"binary"`. Any other value will be ignored.
+
+```
+{{humanizeBytes value mode="si"}}
+
+{{humanizeBytes value mode='si'}}
+
+{{humanizeBytes value mode="binary"}}
+
+{{humanizeBytes value mode='binary'}}
+```
+
+#### `precision`
+
+An integer specifying the number of digits.
   - If we cannot show all the fractional digits of a number due to the defined precision, we will truncate the number (we will not round up or down). So for example `999999` with precision=3 will result in `999 kB`, and with precision=4 will be `999.9 kB`.
   - In 'si' mode, you cannot define precision of less than 3 since it would mean that we have to potentially truncate the integer part of the `value`. Similarly, precision of less than 4 are not allowed in `binary`.
   - Any invalid precision will be ignored and the minimum number allowed will be used (3 in `si` and 4 in `binary`).
 
-Example:
 ```
-{{humanizeBytes 41235532}} ==> '41.2 MB'
-
-{{humanizeBytes 41235532 'si' 4 }} ==> '41.23 MB'
-
-{{humanizeBytes 41235532 'binary'}} ==> '39.32 MiB'
-
-{{humanizeBytes 41235532 'binary' 5}} ==> '39.325 MiB'
+{{humanizeBytes value precision=6}}
 ```
 
+#### `tooltip`
+
+A boolean value specifying whether you want the output to include a tooltip or not. If this argument is missing, we will not return any tooltips.
+
+```
+{{humanizeBytes value tooltip=true}}
+```
 
 ### Math Helpers
 

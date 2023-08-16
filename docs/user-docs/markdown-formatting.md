@@ -119,16 +119,18 @@ Depending on the markdown element type, different attrbiutes will be acceptable 
 
 ### Tooltip
 
-Using `title` attribute you can add a tooltip to any HTML element.
+Using `data-chaise-tooltip` attribute you can add a tooltip to any HTML element.
 
-```html
-[tooltip example](http://example.com){title="tooltip for this link"}
-#OUTPUT
-<p>
-  <a href="http://example.com" title="tooltip for this link">tooltip example</a>
-</p>
 ```
-> <p> <a href="http://example.com" title="tooltip for this link">tooltip example</a></p>
+[tooltip example](http://example.com){data-chaise-tooltip="tooltip for this link"}
+```
+
+By default the tooltip will be displayed at the bottom of the element. You can use the `data-chaise-tooltip-placement` to change this placement. Accepted values are `"top"`, `"right"`, `"bottom"`, `"left"`. For example,
+
+```
+:span:Caption:/span:{data-chaise-tooltip="tooltip for this link" data-chaise-tooltip-placement="right"}
+```
+
 
 ### Classes
 
