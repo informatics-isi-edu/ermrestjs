@@ -125,12 +125,19 @@ Using `data-chaise-tooltip` attribute you can add a tooltip to any HTML element.
 [tooltip example](http://example.com){data-chaise-tooltip="tooltip for this link"}
 ```
 
-By default the tooltip will be displayed at the bottom of the element. You can use the `data-chaise-tooltip-placement` to change this placement. Accepted values are `"top"`, `"right"`, `"bottom"`, `"left"`. For example,
+By default the tooltip will be displayed at the bottom of the element. We're also showing the tooltip icon beside the element. If you don't want this behavior the following is ways to customize this:
+
+1. You can use the `data-chaise-tooltip-placement` to change this placement. Accepted values are `"top"`, `"right"`, `"bottom"`, `"left"`. For example,
 
 ```
 :span:Caption:/span:{data-chaise-tooltip="tooltip for this link" data-chaise-tooltip-placement="right"}
 ```
 
+2. By adding `data-chaise-tooltip-no-icon` to your definition we're not going to add the tooltip icon.
+
+```
+:span:Caption:/span:{data-chaise-tooltip="tooltip for this link" data-chaise-tooltip-no-icon}
+```
 
 ### Classes
 
