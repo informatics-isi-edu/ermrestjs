@@ -4362,12 +4362,14 @@
                  * inputDisplayMode is set based on the following rules:
                  *   1. defined on display property in visible-columns
                  *   2. foreign key annotation
+                 *   3. table-display annotation when defined on the leaf table of the fkey relationship
+                 *   4. default value of 'popup'
                  * 
-                 * _foreignKeyInputModes is ['dropdown', 'popup']
+                 * supported _foreignKeyInputModes are ['dropdown', 'popup']
                  */
 
                 // NOTE: this property is only used when the table is used as the leaf for a foreign key
-                // using index 0 ensures we only support this on one hop foreign key relationships when table-display is on the leaf table
+                // using index 0 ensures we only support this on single outbound foreign key relationships when table-display is on the leaf table
                 var fromCol = this.colset.columns[0];
                 var toCol = this.mapping.get(fromCol);
                 if (toCol.table.annotations.contains(module._annotations.TABLE_DISPLAY)) {
