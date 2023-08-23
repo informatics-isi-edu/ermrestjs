@@ -45,10 +45,30 @@
              *  str
              * {{/encodeFacet}}
              *
+             * or
+             *
+             * {{encodeFacet obj}}
+             *
+             * or
+             *
+             * {{encodeFacet str}}
+             *
+             * This is order of checking syntax (first applicaple rule):
+             * - first see if the block syntax with str inside it is used or not
+             * - if the input is an object we will encode it
+             * - try encoding as string (will return empty string if it wasn't a string)
+             *
              * @returns encoded facet string that can be used in url
              */
             encodeFacet: function (options) {
-                return module.encodeFacetString(options.fn(this));
+                try {
+                    return module.encodeFacetString(options.fn(this));
+                } catch (exp) {
+                    if (isObjectAndNotNull(options)) {
+                        return module.encodeFacet(options);
+                    }
+                }
+                return module.encodeFacetString(options);
             },
 
             /**
@@ -70,10 +90,18 @@
              *  JSON Object
              * {{/jsonStringify}}
              *
+             * or
+             *
+             * {{#jsonStringify obj}}{{/jsonStringify}}
+             *
              * @returns string representation of the given JSON object
              */
             jsonStringify: function (options) {
-                return JSON.stringify(options.fn(this));
+                try {
+                    return JSON.stringify(options.fn(this));
+                } catch (exp) {
+                    return JSON.stringify(options);
+                }
             },
 
             /**

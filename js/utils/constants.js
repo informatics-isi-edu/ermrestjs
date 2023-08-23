@@ -144,6 +144,10 @@
     });
 
     module._nonSortableTypes = [
+        /**
+         * sorting json and jsonb columns is expensive and doesn't produce a meaningful sort. that's why we're marking
+         * these columns as non-sortable
+         */
         "json", "jsonb"
     ];
 
@@ -426,3 +430,5 @@
         OPERAND_PATTERN: "operand_pattern",
         NEGATE: "negate"
     });
+
+    module._exportKnownAPIs = ['entity','attribute', 'attributegroup', 'aggregate'];

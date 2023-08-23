@@ -42,7 +42,8 @@ To have a overall picture of how the export templates look like, you can refer t
           {
             "source": {
               "api": <ermrest-query-type>, // entity, attribute, attribute-group
-              "path": <optional-ermrest-predicate> // used to represent more complex queries
+              "path": <optional-ermrest-path>, // used to represent more complex queries
+              "skip_root_path": <boolean> // used to skip adding the root path and starting the path from scratch
             },
             destination: {
               "name": <output-file-base-name>,
@@ -82,14 +83,37 @@ The object structure of an export template annotation is defined as follows:
 | `source` | `source` | required | An object that contains parameters used to generate source data by querying ERMrest.
 | `destination` | `destination` | required | An object that contains parameters used to render the results of the source query into a specified destination format.
 
+#### `source` (object)
+| Variable | Type | Inclusion| Description |
+| --- | --- | --- | --- |
+| `api` | string, enum [`entity`,`attribute`, `attributegroup`, `aggregate`] | required | The type of ERMrest query projection to perform.  Valid values are `entity`,`attribute`, and `attributegroup`.
+| `path` | string | optional | An optional ERMrest path predicate. The string MUST be escaped according to [RFC 3986](https://tools.ietf.org/html/rfc3986) if it contains user-generated identifiers that use the reserved character set. See the [ERMRest URL conventions](https://github.com/informatics-isi-edu/ermrest/blob/master/docs/api-doc/index.md#url-conventions) for additional information.
+| `skip_root_path` | boolean | optional | An optional flag that if it's set to true, we will not prepend the defined `path` with `current root path`. In this case, `api` can also be any other APIs that ERMrest supports.
+
+<!---
+we removed this from documentation because we didn't want to confuse users.
+-->
+<!---
+| `skip_limit` | boolean | optional | If the ERMrest API that is used is any of [`entity`,`attribute`, `attributegroup`, `aggregate`], we're adding a `limit=none` query parameter. Set this to `true` to skip this.
+-->
+
+- The leading and trailing slash that you might have defined in your `path` will be stripped off and ignored.
 
 - The table entity that the template is bound to is considered the *root* of the query for join purposes. Therefore this is how a query is going to be constructed based on the given attributes:
+  ```
+  <source.api>/<current root path>/<source.path>
+  ```
 
-        <output.api>/<current root path>/<output.path>
+   And if `current_root_path` is set to `true`, the query would look like the following:
+
+  ```
+  <source.api>/<source.path>
+  ```
+
+- We will also apply the `limit=none` query parameter if the computed query path uses `entity`, `attribute`, `attributegroup`, or `aggregate` and doesn't already include the `limit` query parameter.
 
 - We are reserving the `M` alias for referring to the table entity that the template is bound to. So if you need to refer to that table in your path, you can use the reserved alias name.
 
-- The leading and trailing slash that you might have defined in your `path` will be stripped off and ignored.
 
 The following are some examples to better understand the output syntax. These are written for the table `pnc:metrics_v`,
 
@@ -119,23 +143,61 @@ The following are some examples to better understand the output syntax. These ar
     ```
     In this example we are using the reserved alias `M` to refer to the table `pnc:metrics_v`.
 
+- To export all the terms of your vocabulary table, your output would be
+
+    ```
+    {
+        "api": "entity",
+        "path": "vocab:protocol_type",
+        "skip_root_path": true
+    }
+    ```
+
+- With `"skip_root_path": true`, you could also create outputs to other APIs of ermrest that are not necessarily for fetching data. The following are few examples:
+
+  1. Getting the catalog document:
+    ```
+    {
+        "api": false,
+        "skip_root_path": true
+    }
+    ```
+
+  2. Getting the schema document:
+
+    ```
+    {
+        "api": "schema",
+        "skip_root_path": true
+    }
+    ```
+
+    Or you could even define an output that will save the catalog document:
+
+  3. Getting the annotation for a table:
+
+    ```
+    {
+        "api": "schema",
+        "path": "/myschema/table/mytable/annotation",
+        "skip_root_path": true
+    }
+    ```
 
 
-#### `source` (object)
-| Variable | Type | Inclusion| Description |
-| --- | --- | --- | --- |
-| `api` | string, enum [`entity`,`attribute`, `attributegroup`] | required | The type of ERMrest query projection to perform.  Valid values are `entity`,`attribute`, and `attributegroup`.
-| `path` | string | optional | An optional ERMrest path predicate. The string MUST be escaped according to [RFC 3986](https://tools.ietf.org/html/rfc3986) if it contains user-generated identifiers that use the reserved character set. See the [ERMRest URL conventions](https://github.com/informatics-isi-edu/ermrest/blob/master/docs/api-doc/index.md#url-conventions) for additional information.
+
+
+
 
 #### `destination` (object)
 | Variable | Type | Inclusion| Description |
 | --- | --- | --- | --- |
 | `name` | string | required | The base name to use for the output file.
-| `type` | string | required | A type keyword that determines the output format. Supported values are dependent on the `template`.`type` selected. For the `FILE` type, the values `csv`, `json`, are currently supported. For the `BAG` type, the values `csv`, `json`, `fetch` and `download` are currently supported. See additional notes on destination format types.
+| `type` | string | required | A type keyword that determines the _output format_. Supported values are dependent on the `template`.`type` selected. For the `FILE` type, the values `csv`, `json`, are currently supported. For the `BAG` type, the values `csv`, `json`, `fetch` and `download` are currently supported. See additional notes on destination format types.
 | `params` | object | conditionally required | An object containing destination format-specific parameters.  Some destination formats (particularly those that require some kind of post-processing or data transformation), may require additional parameters  to be specified.
 
 #### `type`
-The following output format types are supported by default:
+The following _output format_ types are supported by default:
 
 | Tag | Format | Description|
 | --- | --- | --- |
@@ -144,9 +206,9 @@ The following output format types are supported by default:
 |[`download`](#download)|Asset download|File assets referenced by URL are downloaded to local storage relative to `destination.name`.
 |[`fetch`](#fetch)|Asset reference|`Bag`-based. File assets referenced by URL are assigned as remote file references via `fetch.txt`.
 
-Each _output format processor_ is designed for a specific task, and the task types may vary for a given data export task.
-Some _output formats_ are designed to handle the export of tabular data from the catalog, while others are meant to handle the export of file assets that are referenced by tables in the catalog.
-Other _output formats_ may be implemented that could perform a combination of these tasks, implement a new format, or perform some kind of data transformation.
+- Each _output format processor_ is designed for a specific task, and the task types may vary for a given data export task.
+- Some _output formats_ are designed to handle the export of tabular data from the catalog, while others are meant to handle the export of file assets that are referenced by tables in the catalog.
+- Other _output formats_ may be implemented that could perform a combination of these tasks, implement a new format, or perform some kind of data transformation.
 <a name="csv"></a>
 ##### `csv`
 This format processor generates a standard Comma Separated Values formatted text file. The first row is a comma-delimited list of column names, and all subsequent rows are comma-delimted values.  Fields are not enclosed in quotation marks.

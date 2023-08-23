@@ -1578,6 +1578,13 @@
 
             if (term.trim().length > 0 ) terms = terms.concat(term.trim().split(/[\s]+/)); // split by white spaces
 
+            /**
+             * This can happen if users search for `""` (for example `search "" term`)
+             * it can also happen as a side effect of adding extra quote if there are
+             * odd number of quote (for example `search "` will turn into `search ""`)
+             */
+            terms = terms.filter(function (term) { return isStringAndNotEmpty(term); });
+
             // the quantified syntax only makes sense when we have more than one term
             if (terms.length < 2) useQuantified = false;
 

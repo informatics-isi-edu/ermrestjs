@@ -56,6 +56,11 @@ to use for ERMrest JavaScript agents.</p>
  string
 {{/toTitleCase}}</p>
 </dd>
+<dt><a href="#humanizeBytes">humanizeBytes(value, mode, precision)</a> ⇒</dt>
+<dd><p>{{humanizeBytes value }}
+{{humanizeBytes value mode }}
+{{humanizeBytes value mode precision}}</p>
+</dd>
 </dl>
 
 ## Typedefs
@@ -8193,6 +8198,9 @@ references to model elements in it are correct. This function makes a
 call to the ERMrest server in order to get the `schema` which it uses to
 validate the URI path.
 
+For a consistent behavior, always contextualize the resolved `Reference` object.
+See [contextualize](#ERMrest.Reference+contextualize) for more information.
+
 Usage:
 ```
 // This example assume that the client has access to the `ERMrest` module
@@ -8315,6 +8323,22 @@ escape markdown characters
 
 **Kind**: global function  
 **Returns**: string representation of the given JSON object  
+<a name="humanizeBytes"></a>
+
+## humanizeBytes(value, mode, precision) ⇒
+{{humanizeBytes value }}
+{{humanizeBytes value mode }}
+{{humanizeBytes value mode precision}}
+
+**Kind**: global function  
+**Returns**: formatted string of `value` with corresponding `mode`  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| value | <code>\*</code> | the value |
+| mode | <code>string</code> | mode can be `si`, `binary`, or `raw`. |
+| precision | <code>number</code> | An integer specifying the number of significant digits. |
+
 <a name="appLinkFn"></a>
 
 ## appLinkFn : <code>function</code>

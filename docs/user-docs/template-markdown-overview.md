@@ -15,5 +15,5 @@ The annotation is represented as follows:
 }
 ```
 
-The `markdown_pattern` parameter of the annotation accepts a Markdown string which can contain templated columns for replacing them with their formatted values. It uses [Mustache](https://github.com/janl/mustache.js) for templating and returns a Markdown string.
+The `markdown_pattern` parameter of the annotation accepts a Markdown string which can contain templated columns for replacing them with their formatted values. It uses [Mustache](mustache-templating.md) or [Handlebars](handlebars.md) for templating and returns a Markdown string.
 
