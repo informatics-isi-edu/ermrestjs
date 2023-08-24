@@ -1515,13 +1515,28 @@
             return {"and": filters};
         },
 
-
-        processInputIframe: function (reference, tuple, usedColumnMappings) {
+        /**
+         * if sourceObject has the required input_iframe properties, will attach `inputIframeProps` and `isInputIframe`
+         * to the sourceObject.
+         * The returned value of this function summarizes whether processing was successful or not.
+         *
+         * var res = processInputIframe(reference, tuple, usedColumnMapping);
+         * if (res.error) {
+         *   console.log(res.message);
+         * } else {
+         *  // success
+         * }
+         *
+         * @param {*} reference the reference object of the parent
+         * @param {*} tuple the tuple object
+         * @param {*} usedIframeInputMappings an object capturing columns used in other mappings. used to avoid overlapping
+         */
+        processInputIframe: function (reference, tuple, usedIframeInputMappings) {
             var self = this;
             var context = reference._context;
             var annot = this.sourceObject.input_iframe;
-            if (!isObjectAndNotNull(annot) || !isStringAndNotEmpty(annot.url)) {
-                return { error: true, message: 'url not defined.' };
+            if (!isObjectAndNotNull(annot) || !isStringAndNotEmpty(annot.url_pattern)) {
+                return { error: true, message: 'url_pattern not defined.' };
             }
 
             if (!isObjectAndNotNull(annot.field_mapping)) {
@@ -1540,7 +1555,8 @@
                 var colName = annot.field_mapping[f];
 
                 // column already used in another mapping
-                if (colName in usedColumnMappings) {
+                if (colName in usedIframeInputMappings) {
+                    // if it's in optional field names we should just ignore it.
                     if (colName in optionalFieldNames) continue;
                     return { error: true, message: 'column `' + colName + '` already used in another field_mapping.' };
                 }
@@ -1573,9 +1589,22 @@
 
             self.isInputIframe = true;
             self.inputIframeProps = {
-                url: annot.url,
+                /**
+                 * can be used for finding the location of iframe
+                 */
+                urlPattern: annot.url_pattern,
+                urlTemplateEngine: annot.template_engine,
+                /**
+                 * the columns used in the mapping
+                 */
                 columns: columns,
+                /**
+                 * an object from field name to column.
+                 */
                 fieldMapping: fieldMapping,
+                /**
+                 * name of optional fields
+                 */
                 optionalFieldNames: optionalFieldNames
             };
 

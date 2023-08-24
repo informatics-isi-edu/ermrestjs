@@ -3426,6 +3426,7 @@
                         // 3. invalid self_link (must be not-null and part of a simple key)
                         // 4. invalid aggregate function
                         ignore = logCol((wrapper.name in consideredColumns), wm.DUPLICATE_PC, i) ||
+                                 logCol((wrapper.name in usedIframeInputMappings), wm.USED_IN_IFRAME_INPUT, i) ||
                                  (wrapper.hasPath && !wrapper.hasInbound && wrapper.foreignKeyPathLength == 1 && hideFKR(wrapper.firstForeignKeyNode.nodeObject)) ||
                                  (!wrapper.hasPath && hideColumn(wrapper.column)) ||
                                  logCol(wrapper.sourceObject.self_link === true && !wrapper.column.isUniqueNotNull, wm.INVALID_SELF_LINK, i) ||

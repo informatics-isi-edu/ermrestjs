@@ -754,6 +754,35 @@ ReferenceColumn.prototype = {
         }
         return pres;
 
+    },
+
+    /**
+     * render the location of iframe. will return empty string if invalid or missing.
+     * @param {Object} data raw data of the columns
+     * @param {Object} linkedData raw data of the foreign key columns
+     */
+    renderInputIframeUrl: function (data, linkedData) {
+        var self = this;
+        var baseTable = self._baseReference.table;
+
+        var keyValues = module._getFormattedKeyValues(baseTable, self._context, data, linkedData);
+
+        if (!self.isInputIframe) {
+            return '';
+        }
+
+        var url = module._renderTemplate(
+            self.inputIframeProps.urlPattern,
+            keyValues,
+            baseTable.schema.catalog,
+            {templateEngine: self.inputIframeProps.urlTemplateEngine}
+        );
+
+        if (typeof url !== "string") {
+            return '';
+        }
+
+        return url;
     }
 };
 
