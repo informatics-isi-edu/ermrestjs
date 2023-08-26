@@ -1556,8 +1556,6 @@
 
                 // column already used in another mapping
                 if (colName in usedIframeInputMappings) {
-                    // if it's in optional field names we should just ignore it.
-                    if (colName in optionalFieldNames) continue;
                     return { error: true, message: 'column `' + colName + '` already used in another field_mapping.' };
                 }
 

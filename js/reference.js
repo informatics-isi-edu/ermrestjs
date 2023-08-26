@@ -3441,7 +3441,7 @@
                             if (inputIframeRes.error) {
                                 ignore = true;
                                 logCol(true, 'processing iframe_input: ' + inputIframeRes.message, i);
-                            } else {
+                            } else if (inputIframeRes.success) {
                                 // keep track of the columns used in the mapping
                                 var usedColumns = {}, iframeColIndex = 0;
                                 for (iframeColIndex = 0; iframeColIndex < inputIframeRes.columns.length; iframeColIndex++) {
@@ -3719,19 +3719,6 @@
                     }
                 }
             }
-
-            // disable the columns that are in the iframe input mappings
-            // TODO if it's used in "another" mapping but this check is any mapping..
-            //      maybe i could store the column name for each mapping and in here
-            //      skip if its from itself?
-            // if (isEntry) {
-            //     for (i = 0; i < this._referenceColumns.length; i++) {
-            //         refCol = this._referenceColumns[i];
-            //         if (refCol.name in usedIframeInputMappings) {
-
-            //         }
-            //     }
-            // }
 
             return this._referenceColumns;
         },
