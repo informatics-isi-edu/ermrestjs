@@ -24,11 +24,10 @@ exports.execute = function (options) {
         name: 'col_w_valid_input_iframe_2',
         isInputIframe: true,
         inputIframeProps: {
-          urlPattern: '/apps/test/index.html?id={{{id}}}}',
-          columnNames: ['col_5', 'col_6'],
+          urlPattern: '/apps/test/index.html?catalog={{{$catalog.id}}}',
+          columnNames: ['col_4'],
           fieldMapping: {
-            "iframe_3_field_1": "col_5",
-            "iframe_3_field_2": "col_6"
+            "iframe_2_field_1": "col_4"
           },
           optionalFieldNames: []
         }
@@ -51,7 +50,7 @@ exports.execute = function (options) {
         isInputIframe: true,
         inputIframeProps: {
           urlPattern: '/apps/test/index.html{{#if true}}?q=test{{/if}}',
-          columnNames: ['col_5', 'col_6'],
+          columnNames: ['col_wo_url'],
           fieldMapping: {
             "field_1": "col_wo_url"
           },
@@ -91,45 +90,46 @@ exports.execute = function (options) {
     it('inputIframeProps should return the proper values.', () => {
       columns.forEach((col, i) => {
         if (i >= expectedColumns.length) return;
+        const expectedCol = expectedColumns[i];
 
-        if (!expectedColumns[i].inputIframeProps) {
-          expect(col.inputIframeProps).toBeFalsy(`missmatch for name=${col.name}`);
+        if (!expectedCol.inputIframeProps) {
+          expect(col.inputIframeProps).toBeFalsy(`missmatch inputIframeProps for name=${col.name}`);
 
           return;
         }
 
-        expect(col.inputIframeProps).toBeTruthy(`missmatch for i=${i}, name=${col.name}`);
+        expect(col.inputIframeProps).toBeTruthy(`missmatch inputIframeProps name=${col.name}`);
 
         // .urlPattern
-        expect(col.inputIframeProps.urlPattern).toEqual(expectedColumns[i].inputIframeProps.urlPattern, `urlPattern missmatch for name=${col.name}`);
+        expect(col.inputIframeProps.urlPattern).toEqual(expectedCol.inputIframeProps.urlPattern, `urlPattern missmatch for name=${col.name}`);
 
 
         // .columns
         const mappedCols = col.inputIframeProps.columns;
-        const expectedMappedColNames = expectedColumns[i].inputIframeProps.columnNames;
-        expect(mappedCols.length).toBe(expectedMappedColNames.length);
+        const expectedMappedColNames = expectedCol.inputIframeProps.columnNames;
+        expect(mappedCols.length).toBe(expectedMappedColNames.length, `missmatch columns length for name=${col.name}`);
         mappedCols.forEach((mappedCol, j) => {
           if (j >= expectedMappedColNames.length) return;
-          expect(mappedCol.name).toBe(expectedMappedColNames[j], `missmatch columnname name=${col.name}, mapped col=${mappedCol.name}`);
+          expect(mappedCol.name).toBe(expectedMappedColNames[j], `missmatch columnnames name=${col.name}, mapped col=${mappedCol.name}`);
         });
 
         // .fieldMapping
         const fieldMapping = col.inputIframeProps.fieldMapping;
         const fieldNames = Object.keys(fieldMapping);
 
-        const expectedFieldMapping = expectedColumns[i].inputIframeProps.fieldMapping;
+        const expectedFieldMapping = expectedCol.inputIframeProps.fieldMapping;
         const expectedFieldNames = Object.keys(expectedFieldMapping);
 
-        expect(fieldNames.length).toBe(expectedFieldNames.length);
+        expect(fieldNames.length).toBe(expectedFieldNames.length, `missmatch fieldMapping length for name=${col.name}`);
         fieldNames.forEach((fieldName, j) => {
           if (j >= expectedFieldNames.length) return;
-          expect(fieldName).toBe(expectedFieldNames[j], `missmatch fieldname for name=${col.name}, mapped col=${fieldName.name}`);
+          expect(fieldName).toBe(expectedFieldNames[j], `missmatch fieldMapping for name=${col.name}, fieldname=${fieldName.name}`);
 
-          expect(fieldMapping[fieldName].name).toBe(expectedFieldMapping[expectedFieldNames[i]], `missmatch mapped fieldname for name=${col.name}, mapped fieldname=${fieldName.name}`);
+          expect(fieldMapping[fieldName].name).toBe(expectedFieldMapping[expectedFieldNames[j]], `missmatch fieldMapping for name=${col.name}, mapped fieldname=${fieldName.name}`);
         });
 
         // .optionalFieldNames
-        expect(col.inputIframeProps.optionalFieldNames).toEqual(expectedColumns[i].inputIframeProps.optionalFieldNames, `optionalFieldNames missmatch for i=${i}, name=${col.name}`);
+        expect(col.inputIframeProps.optionalFieldNames).toEqual(expectedCol.inputIframeProps.optionalFieldNames, `optionalFieldNames missmatch for i=${i}, name=${col.name}`);
 
       });
     });

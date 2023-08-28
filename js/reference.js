@@ -3438,10 +3438,11 @@
 
                         if (!ignore && isEntry && isObjectAndNotNull(wrapper.sourceObject.input_iframe)) {
                             var inputIframeRes = wrapper.processInputIframe(this, tuple, usedIframeInputMappings);
+                            ignore = true;
                             if (inputIframeRes.error) {
-                                ignore = true;
                                 logCol(true, 'processing iframe_input: ' + inputIframeRes.message, i);
                             } else if (inputIframeRes.success) {
+                                ignore = false;
                                 // keep track of the columns used in the mapping
                                 var usedColumns = {}, iframeColIndex = 0;
                                 for (iframeColIndex = 0; iframeColIndex < inputIframeRes.columns.length; iframeColIndex++) {
