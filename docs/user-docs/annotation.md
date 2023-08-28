@@ -1292,7 +1292,7 @@ The following attributes can be used to manipulate the presentation settings of 
       - `ulist` for unordered bullet list.
       - `csv` for comma-seperated values.
       - `raw` for space-seperated values.
-  - `"selector_ux_mode"`: The display mode for the recordedit input field when this column directive is a foreign key relationship, either from the foreign key name or a source path with a single outb ound table. Supported values are `"popup"` and `"dropdown"`, with `"popup"` being the default. Currently only supported in `entry` contexts.
+  - `"selector_ux_mode"`: The display mode for the recordedit input field when this column directive is a foreign key relationship. Supported values are `"popup"` and `"dropdown"`, with `"popup"` being the default. Currently only supported in `entry` contexts.
 - `array_display`: This property is _deprecated_. It is the same as `array_ux_mode` that is defined above under `display` property.
 - `array_options`: Applicaple only to read-only non-filter context of `visible-columns` annotation. This property is meant to be an object of properties that control the display of `array` or `array_d` aggregate column. These options will only affect the display (and templating environment) and have no effect on the generated ERMrest query. The available options are:
     - `order`: An alternative sort method to apply when a client wants to semantically sort by key values. It follows the same syntax as `column_order`. In scalar array aggregate, you cannot sort based on other columns values, you can only sort based on the scalar value of the column.

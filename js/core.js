@@ -4332,7 +4332,7 @@
 
         getDisplay: function(context) {
             if (!(context in this._display)) {
-                var self = this, annotation = -1, columnOrder = [], showFKLink = true, inputDisplayMode = 'popup', toTableAnnotation = -1;
+                var self = this, annotation = -1, columnOrder = [], showFKLink = true, inputDisplayMode = module._foreignKeyInputModes[0], toTableAnnotation = -1;
                 // NOTE: commenting out contextualized functionality since it isn't being supported just yet
                 // var fromComment = null, fromCommentDisplay = "tooltip", toComment = null, toCommentDisplay = "tooltip";
                 if (this.annotations.contains(module._annotations.FOREIGN_KEY)) {
@@ -4365,7 +4365,7 @@
                  *   3. table-display annotation when defined on the leaf table of the fkey relationship
                  *   4. default value of 'popup'
                  * 
-                 * supported _foreignKeyInputModes are ['dropdown', 'popup']
+                 * supported _foreignKeyInputModes are ['popup', 'dropdown']
                  */
 
                 // NOTE: this property is only used when the table is used as the leaf for a foreign key

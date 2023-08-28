@@ -31,7 +31,8 @@ In this category, you use the [`source`](#source) property to define the data so
       "wait_for": <wait_for list>,
       "show_foreign_key_link": <boolean>,
       "show_key_link": <boolean>,
-      "array_ux_mode": <csv|ulist|olist|raw>
+      "array_ux_mode": <csv|ulist|olist|raw>,
+      "selector_ux_mode": <popup|dropdown>
   },
   "array_options": {
     "order": <change the default order>,
@@ -57,7 +58,8 @@ In this category, the [`sourcekey`](#sourcekey) proprety is used to refer to one
       "wait_for": <wait_for list>,
       "show_foreign_key_link": <boolean>,
       "show_key_link": <boolean>,
-      "array_ux_mode": <csv|ulist|olist|raw>
+      "array_ux_mode": <csv|ulist|olist|raw>,
+      "selector_ux_mode": <popup|dropdown>
   },
   "array_options":{
     "order": <change the default order>,
@@ -341,7 +343,8 @@ By using this attribute you can customize the presented value to the users. The 
         "wait_for": <wait_for list>,
         "show_foreign_key_link": <boolean>,
         "show_key_link": <boolean>
-        "array_ux_mode": <csv|ulist|olist|raw>
+        "array_ux_mode": <csv|ulist|olist|raw>,
+        "selector_ux_mode": <popup|dropdown>
     }
 }
 ```
@@ -357,6 +360,10 @@ Used to signal Chaise that this column directive's `markdown_pattern` relies on 
 ##### show_foreign_key_link
 
 While generating a default presentation for all outbound foreign key paths, ERMrestJS will display a link to the referred row. Using this attribute you can modify this behavior. If this attribute is missing, we are going to use the inherited behavior from the [foreign key](annotation.md#tag-2016-foreign-key) annotation defined on the last foreign key in the path. If that one is missing too, [display annotation](annotation.md#tag-2015-display) will be applied.
+
+##### selector_ux_mode
+
+While generating a default presentation in `entry` mode for single outbound foreign key paths, Chaise will show a modal popup dialog for selecting rows. Using this attribute, you can modify this behavior. If this attribute is missing, we are going to use the inherited behavior from the [foreign key](annotation.md#tag-2016-foreign-key) annotation defined on the foreign key relationship. If that one is missing too, [table display](annotation.md#tag-2016-table-display) annotation will be applied. Supported values are `"popup"` and `"dropdown"`, with `"popup"` being the default. 
 
 ##### show_key_link
 
