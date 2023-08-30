@@ -1682,7 +1682,7 @@
                     tuple, oldData, allOldData = [], newData, allNewData = [], keyName;
 
                 // for loop variables, NOTE: maybe we should name these better
-                var i, j, k, m, n, t, colIndex;
+                var i, j, k, m, n, t;
 
                 var column, keyColumns, referenceColumn;
 
@@ -1707,7 +1707,7 @@
 
                             /* Populate all values in row depending on column from current asset */
                             assetColumns = [column.filenameColumn, column.byteCountColumn, column.md5, column.sha256];
-                            for (colIndex = 0; colIndex < assetColumns.length; colIndex++) {
+                            for (var colIndex = 0; colIndex < assetColumns.length; colIndex++) {
                                 // some metadata columns might not be defined.
                                 if (assetColumns[colIndex]) {
                                     // If asset url is null then set the metadata also null
@@ -1754,7 +1754,7 @@
                         if (column.isAsset) {
                             /* Populate all values in row depending on column from current asset */
                             assetColumns = [column.filenameColumn, column.byteCountColumn, column.md5, column.sha256];
-                            for (colIndex = 0; colIndex < assetColumns.length; colIndex++) {
+                            for (var colIndex = 0; colIndex < assetColumns.length; colIndex++) {
                                 // some metadata columns might not be defined.
                                 if (assetColumns[colIndex]) addSubmissionData(i, assetColumns[colIndex].name);
                             }
@@ -1822,7 +1822,7 @@
                         if (column.isInputIframe) {
                             addProjectionForColumnObject(column);
                             // make sure the columns in the input_iframe column mapping are also added to the projection list
-                            for (colIndex = 0; colIndex < column.inputIframeProps.columns.length; colIndex++) {
+                            for (var colIndex = 0; colIndex < column.inputIframeProps.columns.length; colIndex++) {
                                 addProjectionForColumnObject(column.inputIframeProps.columns[colIndex]);
                             }
                         } else {
@@ -1868,7 +1868,7 @@
                         if (column.isInputIframe) {
                             addSubmissionDataForColumnObject(i, column);
                             // make sure the values for columns in the input_iframe column mapping are also added
-                            for (colIndex = 0; colIndex < column.inputIframeProps.columns.length; colIndex++) {
+                            for (var colIndex = 0; colIndex < column.inputIframeProps.columns.length; colIndex++) {
                                 addSubmissionDataForColumnObject(i, column.inputIframeProps.columns[colIndex]);
                             }
                         } else {
