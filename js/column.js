@@ -325,15 +325,6 @@ ReferenceColumn.prototype = {
     },
 
     /**
-     * in some cases we want to forcefully disable the column even if annotation
-     * or acls allow it. The following are the cases:
-     * - in entry, when the column is used in an existing iframe mapping
-     */
-    forceInputDisabled: function () {
-        this._forceInputDisabled = true;
-    },
-
-    /**
      * @desc Indicates if the input should be disabled
      * true: input must be disabled
      * false:  input can be enabled
@@ -343,7 +334,7 @@ ReferenceColumn.prototype = {
      */
     get inputDisabled() {
         if (this._inputDisabled === undefined) {
-            this._inputDisabled = this._forceInputDisabled ? true : this._determineInputDisabled(this._context);
+            this._inputDisabled = this._determineInputDisabled(this._context);
         }
         return this._inputDisabled;
     },

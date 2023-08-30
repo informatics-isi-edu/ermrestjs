@@ -36,7 +36,7 @@ exports.execute = function (options) {
         name: 'col_w_valid_input_iframe_3',
         isInputIframe: true,
         inputIframeProps: {
-          urlPattern: '/apps/test/index.html?id={{{id}}}}',
+          urlPattern: '/apps/test/index.html?id={{id}}',
           columnNames: ['col_5', 'col_6'],
           fieldMapping: {
             "iframe_3_field_1": "col_5",
@@ -134,20 +134,24 @@ exports.execute = function (options) {
       });
     });
 
-
-    // TODO
     describe('renderInputIframeUrl', () => {
       it('should handle urls without any pattern.', () => {
-        // const val = columns[1].renderInputIframeUrl()
+        expect(columns[1].renderInputIframeUrl({}, {})).toBe('/apps/test/index.html');
       });
 
       it('should be able to use predefined variables in the pattern.', () => {
-
+        expect(columns[2].renderInputIframeUrl({}, {})).toBe(`/apps/test/index.html?catalog=${process.env.DEFAULT_CATALOG}`);
       });
 
-      it('should return empty string for invalid templates or when data is missing.', () => {
+      it('should handle patterns using column and fkey values.', () => {
+        expect(columns[3].renderInputIframeUrl({}, {})).toBe('');
 
+        expect(columns[3].renderInputIframeUrl({'id': 1}, {})).toBe('/apps/test/index.html?id=1');
       });
+
+      it ('should honor template_engine.', () => {
+        expect(columns[4].renderInputIframeUrl({}, {})).toBe('/apps/test/index.html?q=test');
+      })
     })
 
   });

@@ -1678,6 +1678,7 @@
                     columnProjections = [],     // the list of column names to use in the uri projection list
                     shortestKeyNames = [],      // list of shortest key names to use in the uri key list
                     keyWasModified = false,
+                    assetColumns,
                     tuple, oldData, allOldData = [], newData, allNewData = [], keyName;
 
                 // for loop variables, NOTE: maybe we should name these better
@@ -1769,25 +1770,10 @@
                         // dependent properties like filename, bytes_count_column, md5 and sha
                         if (column.isAsset) {
                             /* Populate all values in row depending on column from current asset */
-
-                            // If column has a filename column then populate its value
-                            if (column.filenameColumn) {
-                                addSubmissionData(i, column.filenameColumn.name);
-                            }
-
-                            // If column has a bytecount column then populate its value
-                            if (column.byteCountColumn) {
-                                addSubmissionData(i, column.byteCountColumn.name);
-                            }
-
-                            // If column has a md5 column then populate its value
-                            if (column.md5 && typeof column.md5 === 'object') {
-                                addSubmissionData(i, column.md5.name);
-                            }
-
-                            // If column has a sha256 column then populate its value
-                            if (column.sha256 && typeof column.sha256 === 'object') {
-                                addSubmissionData(i, column.sha256.name);
+                            assetColumns = [column.filenameColumn, column.byteCountColumn, column.md5, column.sha256];
+                            for (colIndex = 0; colIndex < assetColumns.length; colIndex++) {
+                                // some metadata columns might not be defined.
+                                if (assetColumns[colIndex]) addSubmissionData(i, assetColumns[colIndex].name);
                             }
 
                             addSubmissionData(i, column.name);
@@ -1852,6 +1838,7 @@
 
                         if (column.isInputIframe) {
                             addProjectionForColumnObject(column);
+                            // make sure the columns in the input_iframe column mapping are also added to the projection list
                             for (colIndex = 0; colIndex < column.inputIframeProps.columns.length; colIndex++) {
                                 addProjectionForColumnObject(column.inputIframeProps.columns[colIndex]);
                             }
@@ -1897,6 +1884,7 @@
 
                         if (column.isInputIframe) {
                             addSubmissionDataForColumnObject(i, column);
+                            // make sure the values for columns in the input_iframe column mapping are also added
                             for (colIndex = 0; colIndex < column.inputIframeProps.columns.length; colIndex++) {
                                 addSubmissionDataForColumnObject(i, column.inputIframeProps.columns[colIndex]);
                             }

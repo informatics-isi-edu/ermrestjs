@@ -2011,7 +2011,7 @@
                             "comment": "valid, pattern url_pattern using data",
                             "source": "col_w_valid_input_iframe_3",
                             "input_iframe": {
-                                "url_pattern": "/apps/test/index.html?id={{{id}}}}",
+                                "url_pattern": "/apps/test/index.html?id={{id}}",
                                 "field_mapping": {
                                     "iframe_3_field_1": "col_5",
                                     "iframe_3_field_2": "col_6"
@@ -2029,6 +2029,22 @@
                                 },
                                 "optional_fields": ["unused_field"]
                             }
+                        },
+                        {
+                            "comment": "should be ignored since the column is used in a mapping.",
+                            "source": "col_1"
+                        },
+                        {
+                            "comment": "should be ignored since the column is used in a mapping.",
+                            "source": "col_2"
+                        },
+                        {
+                            "comment": "should be ignored since the column is used in a mapping.",
+                            "source": "col_3"
+                        },
+                        {
+                            "comment": "should be ignored since the column is used in a mapping.",
+                            "source": "col_4"
                         },
                         {
                             "comment": "should be ignored because col_wo_url is used above",

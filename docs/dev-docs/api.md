@@ -503,7 +503,6 @@ to use for ERMrest JavaScript agents.
         * [.hasWaitFor](#ERMrest.ReferenceColumn+hasWaitFor) ⇒ <code>Boolean</code>
         * [.hasWaitForAggregate](#ERMrest.ReferenceColumn+hasWaitForAggregate) ⇒ <code>Boolean</code>
         * [.waitFor](#ERMrest.ReferenceColumn+waitFor) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
-        * [.forceInputDisabled()](#ERMrest.ReferenceColumn+forceInputDisabled)
         * [.formatvalue(data, [context], [options])](#ERMrest.ReferenceColumn+formatvalue) ⇒ <code>string</code>
         * [.formatPresentation(data, [context], [templateVariables], [options])](#ERMrest.ReferenceColumn+formatPresentation) ⇒ <code>Object</code>
         * [._getShowForeignKeyLink(context)](#ERMrest.ReferenceColumn+_getShowForeignKeyLink) ⇒ <code>boolean</code>
@@ -4420,7 +4419,6 @@ count aggregate representation
     * [.hasWaitFor](#ERMrest.ReferenceColumn+hasWaitFor) ⇒ <code>Boolean</code>
     * [.hasWaitForAggregate](#ERMrest.ReferenceColumn+hasWaitForAggregate) ⇒ <code>Boolean</code>
     * [.waitFor](#ERMrest.ReferenceColumn+waitFor) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
-    * [.forceInputDisabled()](#ERMrest.ReferenceColumn+forceInputDisabled)
     * [.formatvalue(data, [context], [options])](#ERMrest.ReferenceColumn+formatvalue) ⇒ <code>string</code>
     * [.formatPresentation(data, [context], [templateVariables], [options])](#ERMrest.ReferenceColumn+formatPresentation) ⇒ <code>Object</code>
     * [._getShowForeignKeyLink(context)](#ERMrest.ReferenceColumn+_getShowForeignKeyLink) ⇒ <code>boolean</code>
@@ -4573,14 +4571,6 @@ Array of columns that the current column value depends on. It will get the list 
 - column-display.wait_for or key-display.wait_for (depending on the type of column)
 
 **Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
-<a name="ERMrest.ReferenceColumn+forceInputDisabled"></a>
-
-#### referenceColumn.forceInputDisabled()
-in some cases we want to forcefully disable the column even if annotation
-or acls allow it. The following are the cases:
-- in entry, when the column is used in an existing iframe mapping
-
-**Kind**: instance method of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
 <a name="ERMrest.ReferenceColumn+formatvalue"></a>
 
 #### referenceColumn.formatvalue(data, [context], [options]) ⇒ <code>string</code>

@@ -2,7 +2,7 @@
 
 This document will cover how to include any third-party tools inside the Chaise's recordedit app. In summary, you must add the `input_iframe` property to one of the visible columns. Chaise will then display a special input for this visible column. Clicking on this input will open a modal to show the third-party tool in an iframe.
 
-In the following, we will first go over what we expect from the iframe and mention how Chaise and iframe should communicate. We then will review the `input_iframe` property that should be added to annotations.
+In the following, we will first go over what we expect from the iframe and mention how Chaise and iframe should communicate. We then will review the `input_iframe` property that should be added to annotations.  In the [limitations](#limitations) section, we will go over the limitations and assumptions in the current implementation of this feature.
 
 ## Iframe communication
 
@@ -10,9 +10,15 @@ As mentioned, the third-party tool will be displayed in an iframe in Chaise. To 
 
 Given that the third-party tool is in an iframe, we can use [`postMessage()` function](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage) to exchange messages between the app and Chaise. In the template, we've created a `dispatchMessage` function allowing you to send messages to Chaise.
 
-When Chaise loads the iframe app, it will wait for the iframe to send a message with `type="iframe-ready"` to signal that it's ready to receive data. Chaise will then send the data with a `type="initialize-iframe" message. You can see how, in the template, we're calling the `configureIframe` after receiving this message from Chaise. In this function, you should use the Chaise data to initialize your app. When the app is ready, you can call the `dataReady()` function. This function sends Chaise a message with `type="iframe-data-ready"`. To send data back to Chaise, you should send a message with `type="submit-data"` alongside the data that Chaise needs.
+When Chaise loads the iframe app, it will wait for the iframe to send a message with `type="iframe-ready"` to signal that it's ready to receive data. Chaise will then send the data with a `type="initialize-iframe"` message. You can see how, in the template, we're calling the `configureIframe` after receiving this message from Chaise. In this function, you should use the Chaise data to initialize your app. When the app is ready, you can call the `dataReady()` function. This function sends Chaise a message with `type="iframe-data-ready"`. To send data back to Chaise, you should send a message with `type="submit-data"` alongside the data that Chaise needs.
 
-As we will mention in the [annotation](#annotation) section, Chaise allows you to define the mapping between database columns and the data that iframe receives/sends. Therefore, in the iframe code, you just need to work with one set of names for the fields and don't need to worry about column mapping. Chaise will handle that for you.
+Notes:
+- As we will mention in the [annotation](#annotation) section, Chaise allows you to define the mapping between database columns and the data that iframe receives/sends. Therefore, in the iframe code, you just need to work with one set of names for the fields and don't need to worry about column mapping. Chaise will handle that for you.
+- For asset columns, Chaise will send the hatrac URL of the existing file to the iframe. So, to use its content, you first need to download it. Chaise also expects iframe to provide a JavaScript `File` object for such fields. The following is an example of turning a string content into a `File` object:
+  ```js
+  const blob = new Blob([fileContent], { type: 'application/json' });
+  const file = new File([blob], 'input_iframe.json', { type: 'application/json' });
+  ```
 
 ## Annotation
 
@@ -107,3 +113,11 @@ We expect the iframe to return values for all the fields noted under `field_mapp
   }
 }
 ```
+
+## Limitations
+
+Given that this is an experimental feature for now, there are some limitations/assumptions in the implementation of it we've listed below:
+
+- When users select a value for this input, we will show the raw value of the column that this property is defined on. So, it's important to use a `source` that will be populated by the iframe. That's why in the examples in this document, we're using `"source": "ID"` which is populated by the iframe and identifies the chosen value.
+
+- In recordedit, the required inputs are marked with a `*`. These inputs must have a value, and if users attempt to submit the form without a value for them, we will complain. This check for column directives with `input_iframe` is done only based on the column itself. We will not do additional checks to see whether the columns used in the `field_mapping` are required. If the column is not required, but additional columns are, you should consider adding the [required annotation](https://github.com/informatics-isi-edu/ermrestjs/blob/master/docs/user-docs/annotation.md#tag-2018-required) to the column.
