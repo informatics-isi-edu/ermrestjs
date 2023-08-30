@@ -1514,6 +1514,100 @@
 
             return {"and": filters};
         },
+
+        /**
+         * if sourceObject has the required input_iframe properties, will attach `inputIframeProps` and `isInputIframe`
+         * to the sourceObject.
+         * The returned value of this function summarizes whether processing was successful or not.
+         *
+         * var res = processInputIframe(reference, tuple, usedColumnMapping);
+         * if (res.error) {
+         *   console.log(res.message);
+         * } else {
+         *  // success
+         * }
+         *
+         * @param {*} reference the reference object of the parent
+         * @param {*} tuple the tuple object
+         * @param {*} usedIframeInputMappings an object capturing columns used in other mappings. used to avoid overlapping
+         */
+        processInputIframe: function (reference, tuple, usedIframeInputMappings) {
+            var self = this;
+            var context = reference._context;
+            var annot = this.sourceObject.input_iframe;
+            if (!isObjectAndNotNull(annot) || !isStringAndNotEmpty(annot.url_pattern)) {
+                return { error: true, message: 'url_pattern not defined.' };
+            }
+
+            if (!isObjectAndNotNull(annot.field_mapping)) {
+                return { erorr: true, message: 'field_mapping not defined.' };
+            }
+
+            var optionalFieldNames = [];
+            if (Array.isArray(annot.optional_fields)) {
+                annot.optional_fields.forEach(function (f) {
+                    if (isStringAndNotEmpty(f)) optionalFieldNames.push(f);
+                });
+            }
+
+            var columns = [], fieldMapping = {};
+            for (var f in annot.field_mapping) {
+                var colName = annot.field_mapping[f];
+
+                // column already used in another mapping
+                if (colName in usedIframeInputMappings) {
+                    return { error: true, message: 'column `' + colName + '` already used in another field_mapping.' };
+                }
+
+                try {
+                    var c = self.column.table.columns.get(colName);
+                    var isSerial = (c.type.name.indexOf('serial') === 0);
+
+                    // we cannot use getInputDisabled since we just want to do this based on ACLs
+                    if (context === module._contexts.CREATE && (c.isSystemColumn || c.isGeneratedPerACLs || isSerial)) {
+                        if (colName in optionalFieldNames) continue;
+                        return { error: true, message: 'column `' + colName + '` cannot be modified by this user.'};
+                    }
+                    if ((context == module._contexts.EDIT || context == module._contexts.ENTRY) && (c.isSystemColumn || c.isImmutablePerACLs || isSerial)) {
+                        if (colName in optionalFieldNames) continue;
+                        return { error: true, message: 'column `' + colName + '` cannot be modified by this user.'};
+                    }
+
+                    // create a pseudo-column will make sure we're also handling assets
+                    var wrapper = new SourceObjectWrapper({'source': colName}, reference.table, module._constraintNames);
+                    var refCol = module._createPseudoColumn(reference, wrapper, tuple);
+
+                    fieldMapping[f] = refCol;
+                    columns.push(refCol);
+                } catch (exp) {
+                    if (colName in optionalFieldNames) continue;
+                    return { error: true, message: 'column `' + colName + '` not found.'};
+                }
+            }
+
+            self.isInputIframe = true;
+            self.inputIframeProps = {
+                /**
+                 * can be used for finding the location of iframe
+                 */
+                urlPattern: annot.url_pattern,
+                urlTemplateEngine: annot.template_engine,
+                /**
+                 * the columns used in the mapping
+                 */
+                columns: columns,
+                /**
+                 * an object from field name to column.
+                 */
+                fieldMapping: fieldMapping,
+                /**
+                 * name of optional fields
+                 */
+                optionalFieldNames: optionalFieldNames
+            };
+
+            return {success: true, columns: columns};
+        }
     };
 
     /**

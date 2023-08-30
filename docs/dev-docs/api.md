@@ -22,6 +22,16 @@ to use for ERMrest JavaScript agents.</p>
 <dd><p>{{#encodeFacet}}
  str
 {{/encodeFacet}}</p>
+<p>or</p>
+<p>{{encodeFacet obj}}</p>
+<p>or</p>
+<p>{{encodeFacet str}}</p>
+<p>This is order of checking syntax (first applicaple rule):</p>
+<ul>
+<li>first see if the block syntax with str inside it is used or not</li>
+<li>if the input is an object we will encode it</li>
+<li>try encoding as string (will return empty string if it wasn&#39;t a string)</li>
+</ul>
 </dd>
 <dt><a href="#formatDate">formatDate()</a> ⇒</dt>
 <dd><p>{{formatDate value format}}</p>
@@ -30,6 +40,8 @@ to use for ERMrest JavaScript agents.</p>
 <dd><p>{{#jsonStringify}}
  JSON Object
 {{/jsonStringify}}</p>
+<p>or</p>
+<p>{{#jsonStringify obj}}{{/jsonStringify}}</p>
 </dd>
 <dt><a href="#replace">replace()</a> ⇒</dt>
 <dd><p>{{#replace substr newSubstr}}
@@ -472,6 +484,8 @@ to use for ERMrest JavaScript agents.
         * [new ReferenceColumn(reference, baseCols, sourceObjectWrapper, name, mainTuple)](#new_ERMrest.ReferenceColumn_new)
         * [.isFiltered](#ERMrest.ReferenceColumn+isFiltered) : <code>boolean</code>
         * [.filterProps](#ERMrest.ReferenceColumn+filterProps) : <code>Object</code>
+        * [.isInputIframe](#ERMrest.ReferenceColumn+isInputIframe) : <code>boolean</code>
+        * [.inputIframeProps](#ERMrest.ReferenceColumn+inputIframeProps) : <code>Object</code>
         * [.isPseudo](#ERMrest.ReferenceColumn+isPseudo) : <code>boolean</code>
         * [.table](#ERMrest.ReferenceColumn+table) : [<code>Table</code>](#ERMrest.Table)
         * [.name](#ERMrest.ReferenceColumn+name) : <code>string</code>
@@ -493,6 +507,7 @@ to use for ERMrest JavaScript agents.
         * [.formatPresentation(data, [context], [templateVariables], [options])](#ERMrest.ReferenceColumn+formatPresentation) ⇒ <code>Object</code>
         * [._getShowForeignKeyLink(context)](#ERMrest.ReferenceColumn+_getShowForeignKeyLink) ⇒ <code>boolean</code>
         * [.sourceFormatPresentation(templateVariables, columnValue, mainTuple)](#ERMrest.ReferenceColumn+sourceFormatPresentation) ⇒ <code>Object</code>
+        * [.renderInputIframeUrl(data, linkedData)](#ERMrest.ReferenceColumn+renderInputIframeUrl)
     * [.VirtualColumn](#ERMrest.VirtualColumn)
         * [new VirtualColumn(reference, column, sourceObjectWrapper, name, mainTuple)](#new_ERMrest.VirtualColumn_new)
     * [.PseudoColumn](#ERMrest.PseudoColumn)
@@ -4385,6 +4400,8 @@ count aggregate representation
     * [new ReferenceColumn(reference, baseCols, sourceObjectWrapper, name, mainTuple)](#new_ERMrest.ReferenceColumn_new)
     * [.isFiltered](#ERMrest.ReferenceColumn+isFiltered) : <code>boolean</code>
     * [.filterProps](#ERMrest.ReferenceColumn+filterProps) : <code>Object</code>
+    * [.isInputIframe](#ERMrest.ReferenceColumn+isInputIframe) : <code>boolean</code>
+    * [.inputIframeProps](#ERMrest.ReferenceColumn+inputIframeProps) : <code>Object</code>
     * [.isPseudo](#ERMrest.ReferenceColumn+isPseudo) : <code>boolean</code>
     * [.table](#ERMrest.ReferenceColumn+table) : [<code>Table</code>](#ERMrest.Table)
     * [.name](#ERMrest.ReferenceColumn+name) : <code>string</code>
@@ -4406,6 +4423,7 @@ count aggregate representation
     * [.formatPresentation(data, [context], [templateVariables], [options])](#ERMrest.ReferenceColumn+formatPresentation) ⇒ <code>Object</code>
     * [._getShowForeignKeyLink(context)](#ERMrest.ReferenceColumn+_getShowForeignKeyLink) ⇒ <code>boolean</code>
     * [.sourceFormatPresentation(templateVariables, columnValue, mainTuple)](#ERMrest.ReferenceColumn+sourceFormatPresentation) ⇒ <code>Object</code>
+    * [.renderInputIframeUrl(data, linkedData)](#ERMrest.ReferenceColumn+renderInputIframeUrl)
 
 <a name="new_ERMrest.ReferenceColumn_new"></a>
 
@@ -4431,6 +4449,18 @@ If the pseudoColumn has filter in its path
 
 #### referenceColumn.filterProps : <code>Object</code>
 The properties related to filter in source
+
+**Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
+<a name="ERMrest.ReferenceColumn+isInputIframe"></a>
+
+#### referenceColumn.isInputIframe : <code>boolean</code>
+whether we should show an iframe input in recordedit
+
+**Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
+<a name="ERMrest.ReferenceColumn+inputIframeProps"></a>
+
+#### referenceColumn.inputIframeProps : <code>Object</code>
+the props for inputIframe
 
 **Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
 <a name="ERMrest.ReferenceColumn+isPseudo"></a>
@@ -4506,7 +4536,7 @@ Whether the UI should hide the column header or not.
 Indicates if the input should be disabled
 true: input must be disabled
 false:  input can be enabled
-object: input msut be disabled (show .message to user)
+object: input must be disabled (show .message to user)
 
 **Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
 <a name="ERMrest.ReferenceColumn+sortable"></a>
@@ -4605,6 +4635,18 @@ Should be called once every value is retrieved
 | templateVariables | <code>Object</code> | [description] |
 | columnValue | <code>Object</code> | the value of aggregate column (if it's aggregate) |
 | mainTuple | [<code>Tuple</code>](#ERMrest.Tuple) | [description] |
+
+<a name="ERMrest.ReferenceColumn+renderInputIframeUrl"></a>
+
+#### referenceColumn.renderInputIframeUrl(data, linkedData)
+render the location of iframe. will return empty string if invalid or missing.
+
+**Kind**: instance method of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| data | <code>Object</code> | raw data of the columns |
+| linkedData | <code>Object</code> | raw data of the foreign key columns |
 
 <a name="ERMrest.VirtualColumn"></a>
 
@@ -8260,6 +8302,19 @@ escape markdown characters
  str
 {{/encodeFacet}}
 
+or
+
+{{encodeFacet obj}}
+
+or
+
+{{encodeFacet str}}
+
+This is order of checking syntax (first applicaple rule):
+- first see if the block syntax with str inside it is used or not
+- if the input is an object we will encode it
+- try encoding as string (will return empty string if it wasn't a string)
+
 **Kind**: global function  
 **Returns**: encoded facet string that can be used in url  
 <a name="formatDate"></a>
@@ -8275,6 +8330,10 @@ escape markdown characters
 {{#jsonStringify}}
  JSON Object
 {{/jsonStringify}}
+
+or
+
+{{#jsonStringify obj}}{{/jsonStringify}}
 
 **Kind**: global function  
 **Returns**: string representation of the given JSON object  
