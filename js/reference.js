@@ -3408,11 +3408,15 @@
                             }
                         }
 
-                        // invalid/hidden pseudo-column:
-                        // 1. duplicate
-                        // 2. column/foreignkey that needs to be hidden.
-                        // 3. invalid self_link (must be not-null and part of a simple key)
-                        // 4. invalid aggregate function
+                        // definitions that will be ignored:
+                        // - duplicate
+                        // - used in another iframe_input mapping.
+                        // - column/foreignkey that needs to be hidden.
+                        // - invalid self_link (must be not-null and part of a simple key)
+                        // - invalid aggregate function
+                        // - invalid filter path usage
+                        // - used path in entry
+                        // - (the if statement after this) input_iframe with invalid or missing properties
                         ignore = logCol((wrapper.name in consideredColumns), wm.DUPLICATE_PC, i) ||
                                  logCol((wrapper.name in usedIframeInputMappings), wm.USED_IN_IFRAME_INPUT, i) ||
                                  (wrapper.hasPath && !wrapper.hasInbound && wrapper.foreignKeyPathLength == 1 && hideFKR(wrapper.firstForeignKeyNode.nodeObject)) ||
