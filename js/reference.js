@@ -1705,32 +1705,15 @@
                         if (column.isAsset) {
                             var isNull = newData[column.name] === null ? true : false;
 
-                            // If column has a filename column then add it to the projections
-                            if (column.filenameColumn) {
-                                // If asset url is null then set filename also null
-                                if (isNull) newData[column.filenameColumn.name] = null;
-                                addProjection(column.filenameColumn.name);
-                            }
-
-                            // If column has a bytecount column thenadd it to the projections
-                            if (column.byteCountColumn) {
-                                // If asset url is null then set filename also null
-                                if (isNull) newData[column.byteCountColumn.name] = null;
-                                addProjection(column.byteCountColumn.name);
-                            }
-
-                            // If column has a md5 column then add it to the projections
-                            if (column.md5 && typeof column.md5 === 'object') {
-                                // If asset url is null then set filename also null
-                                if (isNull) newData[column.md5.name] = null;
-                                addProjection(column.md5.name);
-                            }
-
-                            // If column has a sha256 column then add it to the projections
-                            if (column.sha256 && typeof column.sha256 === 'object') {
-                                // If asset url is null then set filename also null
-                                if (isNull) newData[column.sha256.name] = null;
-                                addProjection(column.sha256.name);
+                            /* Populate all values in row depending on column from current asset */
+                            assetColumns = [column.filenameColumn, column.byteCountColumn, column.md5, column.sha256];
+                            for (colIndex = 0; colIndex < assetColumns.length; colIndex++) {
+                                // some metadata columns might not be defined.
+                                if (assetColumns[colIndex]) {
+                                    // If asset url is null then set the metadata also null
+                                    if (isNull) newData[assetColumns[colIndex].name] = null;
+                                    addProjection(assetColumns[colIndex].name);
+                                }
                             }
 
                             addProjection(column.name);
