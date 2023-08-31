@@ -32,7 +32,16 @@
                         "schema_name": "pseudo_column_schema",
                         "table_name": "outbound_1",
                         "column_name": "id"
-                    }]
+                    }],
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:foreign-key": {
+                            "display": {
+                                "entry/edit": {
+                                    "selector_ux_mode": "facet-search-popup"
+                                }
+                            }
+                        }
+                    }
                 }, {
                     "names": [["pseudo_column_schema", "main_fk2"]],
                     "foreign_key_columns": [{
@@ -43,6 +52,39 @@
                     "referenced_columns": [{
                         "schema_name": "pseudo_column_schema",
                         "table_name": "outbound_2",
+                        "column_name": "id"
+                    }]
+                }, {
+                    "names": [["pseudo_column_schema", "main_fk3"]],
+                    "foreign_key_columns": [{
+                        "schema_name": "pseudo_column_schema",
+                        "table_name": "main",
+                        "column_name": "fk3"
+                    }],
+                    "referenced_columns": [{
+                        "schema_name": "pseudo_column_schema",
+                        "table_name": "outbound_3",
+                        "column_name": "id"
+                    }],
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:foreign-key": {
+                            "display": {
+                                "entry/edit": {
+                                    "selector_ux_mode": "simple-search-dropdown"
+                                }
+                            }
+                        }
+                    }
+                }, {
+                    "names": [["pseudo_column_schema", "main_fk4"]],
+                    "foreign_key_columns": [{
+                        "schema_name": "pseudo_column_schema",
+                        "table_name": "main",
+                        "column_name": "fk4"
+                    }],
+                    "referenced_columns": [{
+                        "schema_name": "pseudo_column_schema",
+                        "table_name": "outbound_4",
                         "column_name": "id"
                     }]
                 }
@@ -86,6 +128,18 @@
                 },
                 {
                     "name": "fk2",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "fk3",
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "fk4",
                     "type": {
                         "typename": "text"
                     }
@@ -272,7 +326,33 @@
                             "aggregate": "array"
                         }
                     ],
-                    "entry": "detailed",
+                    "entry/create": "detailed",
+                    "entry/edit": [
+                        "main_table_id_col",
+                        {
+                            "source": [{"outbound": ["pseudo_column_schema", "main_fk2"]}, "id"], 
+                            "markdown_name": "main fk2 dropdown", 
+                            "comment": "main fk2 cm dropdown display"
+                        },
+                        {
+                            "source": [{"outbound": ["pseudo_column_schema", "main_fk1"]}, "id"], 
+                            "markdown_name": "main fk dropdown", 
+                            "comment": "main fk cm dropdown display"
+                        },
+                        {
+                            "source": [{"outbound": ["pseudo_column_schema", "main_fk3"]}, "id"], 
+                            "markdown_name": "main fk3 popup", 
+                            "comment": "main fk3 cm override popup display",
+                            "display": {
+                                "selector_ux_mode": "facet-search-popup"
+                            }
+                        },
+                        {
+                            "source": [{"outbound": ["pseudo_column_schema", "main_fk4"]}, "id"], 
+                            "markdown_name": "main fk4 popup", 
+                            "comment": "main fk4 cm default popup display"
+                        }
+                    ],
                     "compact/select": [
                         "col",
                         "main_table_id_col",
@@ -548,7 +628,10 @@
                 "tag:isrd.isi.edu,2016:table-display": {
                     "*" : {
                         "row_order": [{"column":"col", "descending":false}]
-                    }
+                    },
+                    "entry/edit": {
+                        "selector_ux_mode": "simple-search-dropdown"
+                    }       
                 }
             }
         },
@@ -1004,7 +1087,52 @@
                     "name": "fk",
                     "type": {"typename": "text"}
                 }
-            ]
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2016:table-display": {
+                    "entry/edit": {
+                        "selector_ux_mode": "simple-search-dropdown"
+                    }
+                }
+            }
+        },
+        "outbound_3": {
+            "kind": "table",
+            "table_name": "outbound_3",
+            "schema_name": "pseudo_column_schema",
+            "keys": [{"unique_columns": ["id"]}],
+            "foreign_keys": [],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {"typename": "text"}
+                },
+                {
+                    "name": "col",
+                    "type": {"typename": "text"}
+                }
+            ],
+            "annotations": {}
+        },
+        "outbound_4": {
+            "kind": "table",
+            "table_name": "outbound_4",
+            "schema_name": "pseudo_column_schema",
+            "keys": [{"unique_columns": ["id"]}],
+            "foreign_keys": [],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {"typename": "text"}
+                },
+                {
+                    "name": "col",
+                    "type": {"typename": "text"}
+                }
+            ],
+            "annotations": {}
         },
         "outbound_2_outbound_2": {
             "comment": "outbound_2_outbound_2 comment",

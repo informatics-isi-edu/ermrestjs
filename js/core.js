@@ -4332,7 +4332,7 @@
 
         getDisplay: function(context) {
             if (!(context in this._display)) {
-                var self = this, annotation = -1, columnOrder = [], showFKLink = true;
+                var self = this, annotation = -1, columnOrder = [], showFKLink = true, inputDisplayMode = module._foreignKeyInputModes[0], toTableAnnotation = -1;
                 // NOTE: commenting out contextualized functionality since it isn't being supported just yet
                 // var fromComment = null, fromCommentDisplay = "tooltip", toComment = null, toCommentDisplay = "tooltip";
                 if (this.annotations.contains(module._annotations.FOREIGN_KEY)) {
@@ -4358,6 +4358,32 @@
                     }
                 }
 
+                /**
+                 * inputDisplayMode is set based on the following rules:
+                 *   1. defined on display property in visible-columns
+                 *   2. foreign key annotation
+                 *   3. table-display annotation when defined on the leaf table of the fkey relationship
+                 *   4. default value of 'popup'
+                 * 
+                 * supported _foreignKeyInputModes are ['facet-search-popup', 'simple-search-dropdown']
+                 */
+
+                // NOTE: this property is only used when the table is used as the leaf for a foreign key
+                // using index 0 ensures we only support this on single outbound foreign key relationships when table-display is on the leaf table
+                var fromCol = this.colset.columns[0];
+                var toCol = this.mapping.get(fromCol);
+                if (toCol.table.annotations.contains(module._annotations.TABLE_DISPLAY)) {
+                    toTableAnnotation = module._getRecursiveAnnotationValue(context, toCol.table.annotations.get(module._annotations.TABLE_DISPLAY).content);
+
+                    if (toTableAnnotation.selector_ux_mode && module._foreignKeyInputModes.indexOf(toTableAnnotation.selector_ux_mode) !== -1) {
+                        inputDisplayMode = toTableAnnotation.selector_ux_mode;
+                    }
+                }
+
+                if (annotation.selector_ux_mode && module._foreignKeyInputModes.indexOf(annotation.selector_ux_mode) !== -1) {
+                    inputDisplayMode = annotation.selector_ux_mode;
+                }
+
                 // fromComment = _processModelComment(annotation.from_comment);
                 // toComment = _processModelComment(annotation.to_comment);
                 // fromCommentDisplay = (annotation.from_comment && typeof annotation.from_comment_display === "string") ? annotation.from_comment_display : "tooltip";
@@ -4367,6 +4393,7 @@
                     "columnOrder": columnOrder,
                     // "fromComment": fromComment,
                     // "fromCommentDisplay": fromCommentDisplay,
+                    "inputDisplayMode": inputDisplayMode,
                     "showForeignKeyLink": showFKLink,
                     // "toComment": toComment,
                     // "toCommentDisplay": toCommentDisplay

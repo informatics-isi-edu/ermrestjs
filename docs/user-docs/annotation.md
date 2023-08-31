@@ -445,6 +445,7 @@ Supported display _option_ syntax:
 - `"column_order": false`: Sorting by this foreign key psuedo-column should not be offered.
 - `"show_foreign_key_link": true`: Override the inherited behavior of foreign key display and add a link to the referred row.
 - `"show_foreign_key_link": false`: Override the inherited behavior of foreign key display by not adding any the extra.
+- `"selector_ux_mode"`: The display mode for the recordedit input field when this foreign key relationship is part of the visible columns. Supported values are `"facet-search-popup"` and `"simple-search-dropdown"`, with `"facet-search-popup"` being the default. Currently only supported in `entry` contexts.
 
 Supported _columnorder_key_ syntax:
 
@@ -587,6 +588,7 @@ Supported JSON _option_ payload patterns:
     - The provided _pathsuffix_ MUST provide the appropriate projection-list to form a valid `/attribute/` API URI.
 	- The _pathsuffix_ MAY join additional tables to the path and MAY project from these tables as well as the table bound to the `S` table alias.
 	- The _pathsuffix_ SHOULD reset the path context to `$S` if it has joined other tables.
+- `"selector_ux_mode"`: The display mode for the recordedit input field when this table is part of a foreignkey relationship as the `outbound` table. Supported values are `"facet-search-popup"` and `"simple-search-dropdown"`, with `"facet-search-popup"` being the default. Currently only supported in `entry` contexts.
 
 It is not meaningful to use `page_markdown_pattern`, `row_markdown_pattern`, and `module` in for the same _context_. If they co-exist, the application will prefer `module` over `page_markdown_pattern` and `page_markdown_pattern` over `row_markdown_pattern`.
 
@@ -1290,6 +1292,7 @@ The following attributes can be used to manipulate the presentation settings of 
       - `ulist` for unordered bullet list.
       - `csv` for comma-seperated values.
       - `raw` for space-seperated values.
+  - `"selector_ux_mode"`: The display mode for the recordedit input field when this column directive is a foreign key relationship. Supported values are `"facet-search-popup"` and `"simple-search-dropdown"`, with `"facet-search-popup"` being the default. Currently only supported in `entry` contexts.
 - `array_display`: This property is _deprecated_. It is the same as `array_ux_mode` that is defined above under `display` property.
 - `array_options`: Applicaple only to read-only non-filter context of `visible-columns` annotation. This property is meant to be an object of properties that control the display of `array` or `array_d` aggregate column. These options will only affect the display (and templating environment) and have no effect on the generated ERMrest query. The available options are:
     - `order`: An alternative sort method to apply when a client wants to semantically sort by key values. It follows the same syntax as `column_order`. In scalar array aggregate, you cannot sort based on other columns values, you can only sort based on the scalar value of the column.

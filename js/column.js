@@ -2108,6 +2108,10 @@ Object.defineProperty(ForeignKeyPseudoColumn.prototype, "display", {
                     sourceDisplay.sourceMarkdownPattern = displ.markdown_pattern;
                     sourceDisplay.sourceTemplateEngine = displ.template_engine;
                 }
+
+                if (module._foreignKeyInputModes.indexOf(displ.selector_ux_mode) !== -1) {
+                    sourceDisplay.inputDisplayMode = displ.selector_ux_mode;
+                }
             }
 
             if (this.sourceObject && typeof this.sourceObject.hide_column_header === "boolean") {
