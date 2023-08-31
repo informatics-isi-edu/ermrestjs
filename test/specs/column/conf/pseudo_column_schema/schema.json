@@ -37,7 +37,7 @@
                         "tag:isrd.isi.edu,2016:foreign-key": {
                             "display": {
                                 "entry/edit": {
-                                    "selector_ux_mode": "popup"
+                                    "selector_ux_mode": "facet-search-popup"
                                 }
                             }
                         }
@@ -70,7 +70,7 @@
                         "tag:isrd.isi.edu,2016:foreign-key": {
                             "display": {
                                 "entry/edit": {
-                                    "selector_ux_mode": "dropdown"
+                                    "selector_ux_mode": "simple-search-dropdown"
                                 }
                             }
                         }
@@ -344,7 +344,7 @@
                             "markdown_name": "main fk3 popup", 
                             "comment": "main fk3 cm override popup display",
                             "display": {
-                                "selector_ux_mode": "popup"
+                                "selector_ux_mode": "facet-search-popup"
                             }
                         },
                         {
@@ -630,7 +630,7 @@
                         "row_order": [{"column":"col", "descending":false}]
                     },
                     "entry/edit": {
-                        "selector_ux_mode": "dropdown"
+                        "selector_ux_mode": "simple-search-dropdown"
                     }       
                 }
             }
@@ -1091,7 +1091,7 @@
             "annotations": {
                 "tag:isrd.isi.edu,2016:table-display": {
                     "entry/edit": {
-                        "selector_ux_mode": "dropdown"
+                        "selector_ux_mode": "simple-search-dropdown"
                     }
                 }
             }

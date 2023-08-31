@@ -172,7 +172,7 @@
         "json"
     ];
 
-    module._foreignKeyInputModes = ['popup', 'dropdown'];
+    module._foreignKeyInputModes = ['facet-search-popup', 'simple-search-dropdown'];
 
     module._facetUXModes = Object.freeze({
         CHOICE: "choices",

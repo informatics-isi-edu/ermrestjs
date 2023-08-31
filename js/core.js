@@ -4365,7 +4365,7 @@
                  *   3. table-display annotation when defined on the leaf table of the fkey relationship
                  *   4. default value of 'popup'
                  * 
-                 * supported _foreignKeyInputModes are ['popup', 'dropdown']
+                 * supported _foreignKeyInputModes are ['facet-search-popup', 'simple-search-dropdown']
                  */
 
                 // NOTE: this property is only used when the table is used as the leaf for a foreign key
