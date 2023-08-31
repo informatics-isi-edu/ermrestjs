@@ -1678,6 +1678,7 @@
                     columnProjections = [],     // the list of column names to use in the uri projection list
                     shortestKeyNames = [],      // list of shortest key names to use in the uri key list
                     keyWasModified = false,
+                    assetColumns,
                     tuple, oldData, allOldData = [], newData, allNewData = [], keyName;
 
                 // for loop variables, NOTE: maybe we should name these better
@@ -1696,11 +1697,87 @@
                     }
                 };
 
+                var addProjectionForColumnObject = function (column) {
+                    // If columns is a pusedo column
+                    if (column.isPseudo) {
+                        // If a column is an asset column then set values for
+                        // dependent properties like filename, bytes_count_column, md5 and sha
+                        if (column.isAsset) {
+                            var isNull = newData[column.name] === null ? true : false;
+
+                            /* Populate all values in row depending on column from current asset */
+                            assetColumns = [column.filenameColumn, column.byteCountColumn, column.md5, column.sha256];
+                            for (var colIndex = 0; colIndex < assetColumns.length; colIndex++) {
+                                // some metadata columns might not be defined.
+                                if (assetColumns[colIndex]) {
+                                    // If asset url is null then set the metadata also null
+                                    if (isNull) newData[assetColumns[colIndex].name] = null;
+                                    addProjection(assetColumns[colIndex].name);
+                                }
+                            }
+
+                            addProjection(column.name);
+
+                        } else {
+                            keyColumns = [];
+
+                            if (column.isKey) {
+                                keyColumns = column.key.colset.columns;
+                            } else if (column.isForeignKey) {
+                                keyColumns =  column.foreignKey.colset.columns;
+                            }
+
+                            for (n = 0; n < keyColumns.length; n++) {
+                                keyColumnName = keyColumns[n].name;
+
+                                addProjection(keyColumnName);
+                            }
+                        }
+                    } else {
+                        addProjection(column.name);
+                    }
+                };
+
                 // add data into submission data if in column projection set
                 var addSubmissionData = function(index, colName) {
                     // if the column is in the column projections list, add the data to submission data
                     if (columnProjections.indexOf(colName) > -1) {
                         submissionData[index][colName + newAlias] = newData[colName];
+                    }
+                };
+
+                var addSubmissionDataForColumnObject = function (index, column) {
+                    // If columns is a pusedo column
+                    if (column.isPseudo) {
+                        // If a column is an asset column then set values for
+                        // dependent properties like filename, bytes_count_column, md5 and sha
+                        if (column.isAsset) {
+                            /* Populate all values in row depending on column from current asset */
+                            assetColumns = [column.filenameColumn, column.byteCountColumn, column.md5, column.sha256];
+                            for (var colIndex = 0; colIndex < assetColumns.length; colIndex++) {
+                                // some metadata columns might not be defined.
+                                if (assetColumns[colIndex]) addSubmissionData(i, assetColumns[colIndex].name);
+                            }
+
+                            addSubmissionData(i, column.name);
+
+                        } else {
+                            keyColumns = [];
+
+                            if (column.isKey) {
+                                keyColumns = column.key.colset.columns;
+                            } else if (column.isForeignKey) {
+                                keyColumns =  column.foreignKey.colset.columns;
+                            }
+
+                            for (n = 0; n < keyColumns.length; n++) {
+                                keyColumnName = keyColumns[n].name;
+
+                                addSubmissionData(i, keyColumnName);
+                            }
+                        }
+                    } else {
+                        addSubmissionData(i, column.name);
                     }
                 };
 
@@ -1742,60 +1819,14 @@
                             continue;
                         }
 
-                        // If columns is a pusedo column
-                        if (column.isPseudo) {
-                            // If a column is an asset column then set values for
-                            // dependent properties like filename, bytes_count_column, md5 and sha
-                            if (column.isAsset) {
-                                var isNull = newData[column.name] === null ? true : false;
-
-                                // If column has a filename column then add it to the projections
-                                if (column.filenameColumn) {
-                                    // If asset url is null then set filename also null
-                                    if (isNull) newData[column.filenameColumn.name] = null;
-                                    addProjection(column.filenameColumn.name);
-                                }
-
-                                // If column has a bytecount column thenadd it to the projections
-                                if (column.byteCountColumn) {
-                                    // If asset url is null then set filename also null
-                                    if (isNull) newData[column.byteCountColumn.name] = null;
-                                    addProjection(column.byteCountColumn.name);
-                                }
-
-                                // If column has a md5 column then add it to the projections
-                                if (column.md5 && typeof column.md5 === 'object') {
-                                    // If asset url is null then set filename also null
-                                    if (isNull) newData[column.md5.name] = null;
-                                    addProjection(column.md5.name);
-                                }
-
-                                // If column has a sha256 column then add it to the projections
-                                if (column.sha256 && typeof column.sha256 === 'object') {
-                                    // If asset url is null then set filename also null
-                                    if (isNull) newData[column.sha256.name] = null;
-                                    addProjection(column.sha256.name);
-                                }
-
-                                addProjection(column.name);
-
-                            } else {
-                                keyColumns = [];
-
-                                if (column.isKey) {
-                                    keyColumns = column.key.colset.columns;
-                                } else if (column.isForeignKey) {
-                                    keyColumns =  column.foreignKey.colset.columns;
-                                }
-
-                                for (n = 0; n < keyColumns.length; n++) {
-                                    keyColumnName = keyColumns[n].name;
-
-                                    addProjection(keyColumnName);
-                                }
+                        if (column.isInputIframe) {
+                            addProjectionForColumnObject(column);
+                            // make sure the columns in the input_iframe column mapping are also added to the projection list
+                            for (var colIndex = 0; colIndex < column.inputIframeProps.columns.length; colIndex++) {
+                                addProjectionForColumnObject(column.inputIframeProps.columns[colIndex]);
                             }
                         } else {
-                            addProjection(column.name);
+                            addProjectionForColumnObject(column);
                         }
                     }
                 }
@@ -1834,53 +1865,16 @@
                             continue;
                         }
 
-                        // If columns is a pusedo column
-                        if (column.isPseudo) {
-                            // If a column is an asset column then set values for
-                            // dependent properties like filename, bytes_count_column, md5 and sha
-                            if (column.isAsset) {
-                                /* Populate all values in row depending on column from current asset */
-
-                                // If column has a filename column then populate its value
-                                if (column.filenameColumn) {
-                                    addSubmissionData(i, column.filenameColumn.name);
-                                }
-
-                                // If column has a bytecount column then populate its value
-                                if (column.byteCountColumn) {
-                                    addSubmissionData(i, column.byteCountColumn.name);
-                                }
-
-                                // If column has a md5 column then populate its value
-                                if (column.md5 && typeof column.md5 === 'object') {
-                                    addSubmissionData(i, column.md5.name);
-                                }
-
-                                // If column has a sha256 column then populate its value
-                                if (column.sha256 && typeof column.sha256 === 'object') {
-                                    addSubmissionData(i, column.sha256.name);
-                                }
-
-                                addSubmissionData(i, column.name);
-
-                            } else {
-                                keyColumns = [];
-
-                                if (column.isKey) {
-                                    keyColumns = column.key.colset.columns;
-                                } else if (column.isForeignKey) {
-                                    keyColumns =  column.foreignKey.colset.columns;
-                                }
-
-                                for (n = 0; n < keyColumns.length; n++) {
-                                    keyColumnName = keyColumns[n].name;
-
-                                    addSubmissionData(i, keyColumnName);
-                                }
+                        if (column.isInputIframe) {
+                            addSubmissionDataForColumnObject(i, column);
+                            // make sure the values for columns in the input_iframe column mapping are also added
+                            for (var colIndex = 0; colIndex < column.inputIframeProps.columns.length; colIndex++) {
+                                addSubmissionDataForColumnObject(i, column.inputIframeProps.columns[colIndex]);
                             }
                         } else {
-                            addSubmissionData(i, column.name);
+                            addSubmissionDataForColumnObject(i, column);
                         }
+
                     }
                 }
 
@@ -3220,6 +3214,7 @@
                 virtualColumnNames = {}, // to make sure the names generated for virtual names are not the same
                 compositeFKs = [], // to add composite keys at the end of the list
                 assetColumns = [], // columns that have asset annotation
+                usedIframeInputMappings = {}, // column names that are used in iframe column mappings.
                 hiddenFKR = this.origFKR,
                 hasOrigFKR,
                 refTable = this._table,
@@ -3396,12 +3391,17 @@
                             }
                         }
 
-                        // invalid/hidden pseudo-column:
-                        // 1. duplicate
-                        // 2. column/foreignkey that needs to be hidden.
-                        // 3. invalid self_link (must be not-null and part of a simple key)
-                        // 4. invalid aggregate function
+                        // definitions that will be ignored:
+                        // - duplicate
+                        // - used in another iframe_input mapping.
+                        // - column/foreignkey that needs to be hidden.
+                        // - invalid self_link (must be not-null and part of a simple key)
+                        // - invalid aggregate function
+                        // - invalid filter path usage
+                        // - used path in entry
+                        // - (the if statement after this) input_iframe with invalid or missing properties
                         ignore = logCol((wrapper.name in consideredColumns), wm.DUPLICATE_PC, i) ||
+                                 logCol((wrapper.name in usedIframeInputMappings), wm.USED_IN_IFRAME_INPUT, i) ||
                                  (wrapper.hasPath && !wrapper.hasInbound && wrapper.foreignKeyPathLength == 1 && hideFKR(wrapper.firstForeignKeyNode.nodeObject)) ||
                                  (!wrapper.hasPath && hideColumn(wrapper.column)) ||
                                  logCol(wrapper.sourceObject.self_link === true && !wrapper.column.isUniqueNotNull, wm.INVALID_SELF_LINK, i) ||
@@ -3410,6 +3410,22 @@
                                  logCol(wrapper.hasAggregate && wrapper.isEntryMode, wm.NO_AGG_IN_ENTRY, i) ||
                                  logCol(wrapper.isUniqueFiltered, wm.FILTER_NO_PATH_NOT_ALLOWED) ||
                                  logCol(isEntry && wrapper.hasPath && (wrapper.hasInbound || wrapper.isFiltered || wrapper.foreignKeyPathLength > 1), wm.NO_PATH_IN_ENTRY, i);
+
+                        if (!ignore && isEntry && isObjectAndNotNull(wrapper.sourceObject.input_iframe)) {
+                            var inputIframeRes = wrapper.processInputIframe(this, tuple, usedIframeInputMappings);
+                            ignore = true;
+                            if (inputIframeRes.error) {
+                                logCol(true, 'processing iframe_input: ' + inputIframeRes.message, i);
+                            } else if (inputIframeRes.success) {
+                                ignore = false;
+                                // keep track of the columns used in the mapping
+                                var usedColumns = {}, iframeColIndex = 0;
+                                for (iframeColIndex = 0; iframeColIndex < inputIframeRes.columns.length; iframeColIndex++) {
+                                    usedColumns[inputIframeRes.columns[iframeColIndex].name] = true;
+                                }
+                                Object.assign(usedIframeInputMappings, usedColumns);
+                            }
+                        }
 
                         // avoid duplciates and hide the column
                         if (!ignore) {

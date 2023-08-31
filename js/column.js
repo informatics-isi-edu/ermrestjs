@@ -124,6 +124,21 @@ function ReferenceColumn(reference, cols, sourceObjectWrapper, name, mainTuple) 
          * @type {Object}
          */
         this.filterProps = this.sourceObjectWrapper.filterProps;
+
+
+        if (sourceObjectWrapper.isInputIframe) {
+            /**
+             * whether we should show an iframe input in recordedit
+             * @type {boolean}
+             */
+            this.isInputIframe = true;
+            /**
+             * the props for inputIframe
+             *
+             * @type {Object}
+             */
+            this.inputIframeProps = sourceObjectWrapper.inputIframeProps;
+        }
     } else {
         this.isFiltered = false;
         this.filterProps = {};
@@ -147,6 +162,7 @@ function ReferenceColumn(reference, cols, sourceObjectWrapper, name, mainTuple) 
     this._mainTuple = mainTuple;
 
     this.isUnique = true;
+
 }
 
 ReferenceColumn.prototype = {
@@ -312,7 +328,7 @@ ReferenceColumn.prototype = {
      * @desc Indicates if the input should be disabled
      * true: input must be disabled
      * false:  input can be enabled
-     * object: input msut be disabled (show .message to user)
+     * object: input must be disabled (show .message to user)
      *
      * @type {boolean|object}
      */
@@ -729,6 +745,35 @@ ReferenceColumn.prototype = {
         }
         return pres;
 
+    },
+
+    /**
+     * render the location of iframe. will return empty string if invalid or missing.
+     * @param {Object} data raw data of the columns
+     * @param {Object} linkedData raw data of the foreign key columns
+     */
+    renderInputIframeUrl: function (data, linkedData) {
+        var self = this;
+        var baseTable = self._baseReference.table;
+
+        var keyValues = module._getFormattedKeyValues(baseTable, self._context, data, linkedData);
+
+        if (!self.isInputIframe) {
+            return '';
+        }
+
+        var url = module._renderTemplate(
+            self.inputIframeProps.urlPattern,
+            keyValues,
+            baseTable.schema.catalog,
+            {templateEngine: self.inputIframeProps.urlTemplateEngine}
+        );
+
+        if (typeof url !== "string") {
+            return '';
+        }
+
+        return url;
     }
 };
 
@@ -2062,6 +2107,10 @@ Object.defineProperty(ForeignKeyPseudoColumn.prototype, "display", {
                 if (typeof displ.markdown_pattern === "string") {
                     sourceDisplay.sourceMarkdownPattern = displ.markdown_pattern;
                     sourceDisplay.sourceTemplateEngine = displ.template_engine;
+                }
+
+                if (module._foreignKeyInputModes.indexOf(displ.selector_ux_mode) !== -1) {
+                    sourceDisplay.inputDisplayMode = displ.selector_ux_mode;
                 }
             }
 

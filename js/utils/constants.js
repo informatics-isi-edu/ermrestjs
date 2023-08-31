@@ -172,6 +172,8 @@
         "json"
     ];
 
+    module._foreignKeyInputModes = ['facet-search-popup', 'simple-search-dropdown'];
+
     module._facetUXModes = Object.freeze({
         CHOICE: "choices",
         RANGE: "ranges",
@@ -331,7 +333,8 @@
         INVALID_COLUMN_IN_SOURCE_PATH: "end column in the path is not valid (not available in the end table)",
         NO_INBOUND_IN_NON_DETAILED: "inline table is not valid in this context.",
         FILTER_NOT_ALLOWED: "filter in source is only supported in `filter` context of visible-columns",
-        FILTER_NO_PATH_NOT_ALLOWED: "filter in source is not supported with local columns or all-outbound paths."
+        FILTER_NO_PATH_NOT_ALLOWED: "filter in source is not supported with local columns or all-outbound paths.",
+        USED_IN_IFRAME_INPUT: 'the column already used in another column mapping.'
     });
 
     module._permissionMessages = Object.freeze({

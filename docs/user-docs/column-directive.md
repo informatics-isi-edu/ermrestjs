@@ -7,6 +7,39 @@ Column directive allows instruction of a data source and modification of its pre
 - Using [Properties](#properties) section you can find all the available properties in column directive.
 - Please Find the examples in [this section](#examples).
 
+## Table of contents
+
+- [Overall structure](#overall-structure)
+  - [1. Column directive with `source`](#1-column-directive-with-source)
+  - [2. Column directive with `sourcekey`](#2-column-directive-with-sourcekey)
+  - [3. Column directive without any source](#3-column-directive-without-any-source)
+- [Properties](#properties)
+  - [1. Data source properties](#1-data-source-properties)
+    - [source](#source)
+      - [Source path with reusable prefix](#source-path-with-reusable-prefix)
+    - [sourcekey](#sourcekey)
+    - [entity](#entity)
+    - [aggregate](#aggregate)
+  - [2. Presentation properties](#2-presentation-properties)
+    - [markdown\_name](#markdown_name)
+    - [comment](#comment)
+    - [comment\_display](#comment_display)
+    - [hide\_column\_header](#hide_column_header)
+    - [self-link](#self-link)
+    - [display](#display)
+      - [markdown\_pattern](#markdown_pattern)
+      - [wait\_for](#wait_for)
+      - [show\_foreign\_key\_link](#show_foreign_key_link)
+      - [show\_key\_link](#show_key_link)
+      - [array\_ux\_mode](#array_ux_mode)
+    - [array\_options](#array_options)
+    - [input\_iframe](#input_iframe)
+- [Shorthand syntax](#shorthand-syntax)
+- [Examples](#examples)
+  - [Visible Column List](#visible-column-list)
+  - [Visible ForeignKey List](#visible-foreignkey-list)
+  - [Alternative syntax](#alternative-syntax)
+
 ## Overall structure
 
 As it was described, column directives are meant to intruct the data source and its presentation. Based on how the data source is defined, we can categorize them into the following:
@@ -31,11 +64,17 @@ In this category, you use the [`source`](#source) property to define the data so
       "wait_for": <wait_for list>,
       "show_foreign_key_link": <boolean>,
       "show_key_link": <boolean>,
-      "array_ux_mode": <csv|ulist|olist|raw>
+      "array_ux_mode": <csv|ulist|olist|raw>,
+      "selector_ux_mode": <facet-search-popup|simple-search-dropdown>
   },
   "array_options": {
     "order": <change the default order>,
     "max_lengh": <max length>
+  },
+  "input_iframe": {
+    "url_pattern": <pattern>,
+    "field_mapping": <object>,
+    "optional_fields": <array of field names>
   }
 }
 ```
@@ -57,7 +96,8 @@ In this category, the [`sourcekey`](#sourcekey) proprety is used to refer to one
       "wait_for": <wait_for list>,
       "show_foreign_key_link": <boolean>,
       "show_key_link": <boolean>,
-      "array_ux_mode": <csv|ulist|olist|raw>
+      "array_ux_mode": <csv|ulist|olist|raw>,
+      "selector_ux_mode": <facet-search-popup|simple-search-dropdown>
   },
   "array_options":{
     "order": <change the default order>,
@@ -341,7 +381,8 @@ By using this attribute you can customize the presented value to the users. The 
         "wait_for": <wait_for list>,
         "show_foreign_key_link": <boolean>,
         "show_key_link": <boolean>
-        "array_ux_mode": <csv|ulist|olist|raw>
+        "array_ux_mode": <csv|ulist|olist|raw>,
+        "selector_ux_mode": <facet-search-popup|simple-search-dropdown>
     }
 }
 ```
@@ -357,6 +398,10 @@ Used to signal Chaise that this column directive's `markdown_pattern` relies on 
 ##### show_foreign_key_link
 
 While generating a default presentation for all outbound foreign key paths, ERMrestJS will display a link to the referred row. Using this attribute you can modify this behavior. If this attribute is missing, we are going to use the inherited behavior from the [foreign key](annotation.md#tag-2016-foreign-key) annotation defined on the last foreign key in the path. If that one is missing too, [display annotation](annotation.md#tag-2015-display) will be applied.
+
+##### selector_ux_mode
+
+While generating a default presentation in `entry` mode for single outbound foreign key paths, Chaise will show a modal popup dialog for selecting rows. Using this attribute, you can modify this behavior. If this attribute is missing, we are going to use the inherited behavior from the [foreign key](annotation.md#tag-2016-foreign-key) annotation defined on the foreign key relationship. If that one is missing too, [table display](annotation.md#tag-2016-table-display) annotation will be applied. Supported values are `"facet-search-popup"` and `"simple-search-dropdown"`, with `"facet-search-popup"` being the default. 
 
 ##### show_key_link
 
@@ -456,6 +501,13 @@ cnt_d -> #
 4. In scalar mode, use the constituent column's logic for sorting.
 
 -->
+
+
+#### input_iframe
+
+This property can be used for integrating Chaise's recordedit app with any third-party tools. When this property is added to a visible column in entry contexts, Chaise will display a special input for them. Clicking on this input will open a modal to show the third-party tool in an iframe.
+
+For more information about this property, please refer to [this document](input-iframe.md).
 
 
 

@@ -1912,6 +1912,176 @@
                     "nullok": false
                 }
             ]
+        },
+        "iframe_input_test": {
+            "kind": "table",
+            "table_name": "iframe_input_test",
+            "schema_name": "columns_schema",
+            "keys": [{"unique_columns": ["id"]}],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "type": {"typename": "text"}
+                },
+                {
+                    "name": "col_w_valid_input_iframe_1",
+                    "type": { "typename":"text" }
+                },
+                {
+                    "name": "col_w_valid_input_iframe_2",
+                    "type": { "typename":"text" }
+                },
+                {
+                    "name": "col_w_valid_input_iframe_3",
+                    "type": { "typename":"text" }
+                },
+                {
+                    "name": "col_1",
+                    "type": { "typename":"text" }
+                },
+                {
+                    "name": "col_2",
+                    "type": { "typename":"text" }
+                },
+                {
+                    "name": "col_3",
+                    "type": { "typename":"text" }
+                },
+                {
+                    "name": "col_4",
+                    "type": { "typename":"text" }
+                },
+                {
+                    "name": "col_5",
+                    "type": { "typename":"text" }
+                },
+                {
+                    "name": "col_6",
+                    "type": { "typename":"text" }
+                },
+                {
+                    "name": "col_wo_url",
+                    "type": { "typename":"text" }
+                },
+                {
+                    "name": "col_wo_mapping",
+                    "type": { "typename":"text" }
+                },
+                {
+                    "name": "col_w_invalid_mapping",
+                    "type": { "typename":"text" }
+                },
+                {
+                    "name": "col_w_invalid_optional_fields",
+                    "type": { "typename":"text" }
+                },
+                {
+                    "name": "col_w_overlapping_mapping",
+                    "type": { "typename":"text" }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2016:visible-columns": {
+                    "entry/edit": [
+                        "id",
+                        {
+                            "comment": "valid, static url_pattern",
+                            "source": "col_w_valid_input_iframe_1",
+                            "input_iframe": {
+                                "url_pattern": "/apps/test/index.html",
+                                "field_mapping": {
+                                    "iframe_1_field_1": "col_1",
+                                    "iframe_1_field_2": "col_2",
+                                    "iframe_1_field_3": "col_3"
+                                },
+                                "optional_fields": ["col_2", "col_3"]
+                            }
+                        },
+                        {
+                            "comment": "valid, pattern url_pattern using $catalog.id",
+                            "source": "col_w_valid_input_iframe_2",
+                            "input_iframe": {
+                                "url_pattern": "/apps/test/index.html?catalog={{{$catalog.id}}}",
+                                "field_mapping": {
+                                    "iframe_2_field_1": "col_4"
+                                }
+                            }
+                        },
+                        {
+                            "comment": "valid, pattern url_pattern using data",
+                            "source": "col_w_valid_input_iframe_3",
+                            "input_iframe": {
+                                "url_pattern": "/apps/test/index.html?id={{id}}",
+                                "field_mapping": {
+                                    "iframe_3_field_1": "col_5",
+                                    "iframe_3_field_2": "col_6"
+                                }
+                            }
+                        },
+                        {
+                            "comment": "should be allowed",
+                            "source": "col_w_invalid_optional_fields",
+                            "input_iframe": {
+                                "url_pattern": "/apps/test/index.html{{#if true}}?q=test{{/if}}",
+                                "template_engine": "handlebars",
+                                "field_mapping": {
+                                    "field_1": "col_wo_url"
+                                },
+                                "optional_fields": ["unused_field"]
+                            }
+                        },
+                        {
+                            "comment": "should be ignored since the column is used in a mapping.",
+                            "source": "col_1"
+                        },
+                        {
+                            "comment": "should be ignored since the column is used in a mapping.",
+                            "source": "col_2"
+                        },
+                        {
+                            "comment": "should be ignored since the column is used in a mapping.",
+                            "source": "col_3"
+                        },
+                        {
+                            "comment": "should be ignored since the column is used in a mapping.",
+                            "source": "col_4"
+                        },
+                        {
+                            "comment": "should be ignored because col_wo_url is used above",
+                            "source": "col_w_overlapping_mapping",
+                            "input_iframe": {
+                                "this_field_1": "col_wo_url"
+                            }
+                        },
+                        {
+                            "comment": "should be ignored because one of the mapped columns doesn't exist",
+                            "source": "col_w_invalid_mapping",
+                            "input_iframe": {
+                                "url_pattern": "/apps/test/index.html",
+                                "field_mapping": {
+                                    "field_2": "some_col_that_does_not_exist"
+                                }
+                            }
+                        },
+                        {
+                            "comment": "should be ignored because field_mapping is missing",
+                            "source": "col_wo_mapping",
+                            "input_iframe": {
+                                "url_pattern": "/apps/test/index.html"
+                            }
+                        },
+                        {
+                            "comment": "should be ignored because url_pattern is missing",
+                            "source": "col_wo_url",
+                            "input_iframe": {
+                                "field_mapping": {
+                                    "field_1": "col_1"
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
         }
     }
 }

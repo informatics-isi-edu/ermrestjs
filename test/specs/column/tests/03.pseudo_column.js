@@ -161,7 +161,8 @@ exports.execute = function (options) {
                 mainRef = response;
                 mainRefDetailed = response.contextualize.detailed;
                 detailedCols = mainRefDetailed.columns;
-                mainRefEntry = response.contextualize.entry;
+                mainRefEntry = response.contextualize.entryCreate;
+                mainRefEntryEdit = response.contextualize.entryEdit;
                 mainRefCompactEntry = response.contextualize.compactEntry;
                 return options.ermRest.resolve(invalidEntityUri, {cid: "test"});
             }).then(function (response) {
@@ -746,6 +747,33 @@ exports.execute = function (options) {
                 });
 
                 // the rest of tests are in 02.referenced_column.js
+            });
+
+            describe(".inputDisplayMode", function () {
+                var entryCols;
+                beforeAll(function () {
+                    entryCols = mainRefEntryEdit.columns;
+                });
+
+                it('should return the `selector_ux_mode` defined on the table-display annotation', function () {
+                    // table-display on outbound_2 says 'simple-search-dropdown' that overrides default ('facet-search-popup')
+                    expect(entryCols[1].display.inputDisplayMode).toBe('simple-search-dropdown', "missmatch for index=2");
+                });
+
+                it('should return the `selector_ux_mode` defined on the foreign-key annotation', function () {
+                    // foreign-key on ["pseudo_column_schema", "main_fk1"] says 'facet-search-popup' that overrides table-display 'simple-search-dropdown'
+                    expect(entryCols[2].display.inputDisplayMode).toBe('facet-search-popup', "missmatch for index=2");
+                });
+
+                it ("should return the `selector_ux_mode` defined on the source and ignore the foreign-key", function () {
+                    // source says 'facet-search-popup'that overrides foreign-key on ["pseudo_column_schema", "main_fk3"] 'simple-search-dropdown'
+                    expect(entryCols[3].display.inputDisplayMode).toBe('facet-search-popup', "missmatch for index=1");
+                });
+
+                it ("should return the default value when no `selector_ux_mode` is defined", function () {
+                    // foreign-key ["pseudo_column_schema", "main_fk4"] uses default value
+                    expect(entryCols[4].display.inputDisplayMode).toBe('facet-search-popup', "missmatch for index=1");
+                });
             })
 
             describe(".table, ", function () {
