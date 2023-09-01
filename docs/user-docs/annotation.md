@@ -308,6 +308,7 @@ Supported _columnlist_ patterns:
   - Ignore listed _columndirective_ values that do not correspond to content from the table.
   - Do not present table columns that are not specified in the list. Please refer to [column directive](#column-directive) section for more information.
   - A list without any valid _columndirective_ will be treated the same as empty array `[]`. Client will not show any columns in this case.
+- Any non-string, non-array value (e.g., `null`): The client will use the default heuristics for generating list of visbile columns. 
 
 
 Supported _facetlist_ pattern:
