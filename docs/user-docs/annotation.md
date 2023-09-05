@@ -390,7 +390,7 @@ Supported JSON payload patterns:
 
 Supported display _option_ syntax:
 
-- `"markdown_pattern":` _pattern_: The visual presentation of the key SHOULD be computed by performing [Pattern Expansion](#pattern-expansion) on _pattern_ to obtain a markdown-formatted text value which MAY be rendered using a markdown-aware renderer.
+- `"markdown_pattern":` _pattern_: The visual presentation of the key SHOULD be computed by performing [Pattern Expansion](#pattern-expansion) on _pattern_ to obtain a markdown-formatted text value which MAY be rendered using a markdown-aware renderer. In the pattern you can use `$self` to access the formatted value of the current column, or `$_self` to access the raw value.
 - `"column_order"`: `[` _columnorder_key_ ... `]`: An alternative sort method to apply when a client wants to semantically sort by key values.
 - `"column_order": false`: Sorting by this key psuedo-column should not be offered.
 - `"show_key_link": true`: Override the inherited behavior of key display and add a link to the referred row.
@@ -1101,10 +1101,11 @@ For example,
      }
   },
   "asset": {
-    "url": {
+    "byte_count": {
       "tag:isrd.isi.edu,2016:column-display": {
         "*": {
-          "markdown_pattern": "[Download]({{{url}}}){download .download-alt}"
+          "markdown_pattern": "{{humanizeBytes $_self mode='binary'}}",
+          "template_engine": "handlebars"
         }
       }
     }
@@ -1114,7 +1115,7 @@ For example,
 
 Notes:
 - `by_type` should match exactly with the `typename` of the column. So, for example, for array columns, we would have to use `"timestamp[]"`.
-- While determining annotations for a column, the more specific one will be used. Annotations defined on the column have the highest priority. Then `asset` is used if the column is has asset annotation or is used in an asset annotation. Then by the `by_name` annotations on table, schema, and catalog will be used. And after that, we will look at `by_type` annotations on the table, schema, and catalog.
+- While determining annotations for a column, the more specific one will be used. Annotations defined on the column have the highest priority. Then `asset` is used if the column has asset annotation or is used as a metadata for another asset column. Then by the `by_name` annotations on table, schema, and catalog will be used. And after that, we will look at `by_type` annotations on the table, schema, and catalog.
 - To implement this feature, we start by creating an empty JSON payload. On each step, we will add the annotations to the object (and if the annotation key is already defined on the object, it will be overwritten by the new value). To be more precise, the following is how the `annotations` JSON payload for a column is created and used:
 
   1. We start by looking at the applicable `by_type` property of the `column-defaults ` annotation defined on the catalog.

@@ -269,7 +269,9 @@ exports.execute = function (options) {
          *  12: col_asset_4_filename
          *  13: col_asset_5 (asset with type not text)
          *  14: col_asset_6 *AssetPseudoColumn* (asset with url_pattern, filename, and image_preview)
-         *  15: col_asset_5_filename
+         *  15: col_asset_6_filename
+         *  16: col_asset_6_byte_count
+         *  + system columns
          *
          *  ref.columns for entry (no context present):
          *  0: id
@@ -367,15 +369,16 @@ exports.execute = function (options) {
                 '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_asset/id=1">1</a>',
                 '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:columns_table/RID=' + utils.findEntityRID(options, schemaName, "columns_table", "id", "1") + '">1</a>',
                 '1000', '10001', 'filename',
-                '<span data-chaise-tooltip="1,242 bytes (1 kB = 1,000 bytes)">1.24 kB</span>',
+                '<p><span data-chaise-tooltip="1,242 bytes (1 kB = 1,000 bytes)">1.24 kB</span></p>\n',
                 'md5', 'sha256',
                 '',
                 '<h2>filename</h2>\n',
                 '<a href="https://dev.isrd.isi.edu?uinit=1&amp;cid=test" download="" class="asset-permission">filename</a>',
                 'filename4',
                 '4',
+                '<a href="https://dev.isrd.isi.edu/file.png?uinit=1&amp;cid=test" download="" class="asset-permission">filename6</a>',
                 'filename6',
-                '<a href="https://dev.isrd.isi.edu/file.png?uinit=1&amp;cid=test" download="" class="asset-permission">filename6</a>'
+                '<p>9,234</p>\n'
             ];
 
             tableWSlashData = [
@@ -719,7 +722,7 @@ exports.execute = function (options) {
                         });
 
                         it('should not be ignored in other contexts.', function() {
-                            expect(assetRefCompactCols.length).toBe(21);
+                            expect(assetRefCompactCols.length).toBe(22);
                             expect(assetRefCompactCols[4].name).toBe("col_filename");
                             expect(assetRefCompactCols[4].isPseudo).toBe(false);
                             expect(assetRefCompactCols[5].name).toBe("col_byte");

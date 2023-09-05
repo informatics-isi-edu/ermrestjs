@@ -843,65 +843,78 @@ exports.execute = function (options) {
                 });
 
                 describe('for assets, ', function() {
-                    it('if in entry context, return the original underlying data, even if colummn-display annotation is present.', function() {
-                        val = assetRefEntryCols[6].formatPresentation({"col_asset_3": "https://example.com"}, "entry", {"col_asset_3": "https://example.com"}).value;
-                        expect(val).toEqual("https://example.com");
+                    describe ('for asset urls', () => {
+                        it('if in entry context, return the original underlying data, even if colummn-display annotation is present.', function() {
+                            val = assetRefEntryCols[6].formatPresentation({"col_asset_3": "https://example.com"}, "entry", {"col_asset_3": "https://example.com"}).value;
+                            expect(val).toEqual("https://example.com");
 
-                        val = assetRefCompactCols[9].formatPresentation({"col_filename": "filename", "col_asset_2": "value"}, "entry", {"col_filename": "filename"}).value;
-                        expect(val).toEqual("value");
-                    });
-
-                    it('otherwise, if coulmn has column-display annotation, use it.', function () {
-                        val = assetRefCompactCols[9].formatPresentation({"col_filename": "filename", "col_asset_2": "value"}, "compact", {"col_filename": "filename"}).value;
-                        expect(val).toEqual("<h2>filename</h2>\n");
-                    });
-
-                    describe('otherwise should create a download link,', () => {
-                        it ('filename should be used as caption if it\'s defined and has non-empty value', () => {
-                            val = assetRefCompactCols[10].formatPresentation({"col_asset_3": "https://example.com", "col_filename": "filename"}).value;
-                            expect(val).toEqual('<a href="https://example.com" download="" class="external-link-icon external-link">filename</a>', "value missmatch.");
-
-                            val = assetRefCompactCols[10].formatPresentation({"col_asset_3": "https://example.com?query=1&v=1", "col_filename": "filename"}).value;
-                            //NOTE this is the output but it will be displayed correctly.
-                            expect(val).toEqual('<a href="https://example.com?query=1&amp;v=1" download="" class="external-link-icon external-link">filename</a>', "couldn't handle having query params in the url.");
+                            val = assetRefCompactCols[9].formatPresentation({"col_filename": "filename", "col_asset_2": "value"}, "entry", {"col_filename": "filename"}).value;
+                            expect(val).toEqual("value");
                         });
 
-                        it ("if url matches the expected hatrac format, extract the filename and use it as caption.", function () {
-                            var hatracSampleURL = "/hatrac/Zf/ZfDsy20170915D/file-test.csv:2J7IIX63WQRUDIALUGYDKDO36A";
-                            var expectedValue = '<a href="' + hatracSampleURL +'?uinit=1&amp;cid=test" download="" class="asset-permission">file-test.csv</a>';
-                            val = assetRefCompactCols[8].formatPresentation({"col_asset_1": hatracSampleURL}).value;
-                            expect(val).toEqual(expectedValue, "value missmatch.");
-
-                            // has filenameColumn but its value is null
-                            val = assetRefCompactCols[10].formatPresentation({"col_asset_3": hatracSampleURL, "col_filename": null}).value;
-                            expect(val).toEqual(expectedValue, "value missmatch.");
+                        it('otherwise, if coulmn has column-display annotation, use it.', function () {
+                            val = assetRefCompactCols[9].formatPresentation({"col_filename": "filename", "col_asset_2": "value"}, "compact", {"col_filename": "filename"}).value;
+                            expect(val).toEqual("<h2>filename</h2>\n");
                         });
 
-                        it ("if context is detailed and url is absolute, use last part of url as caption and add origin beside the button.", function () {
-                            var url = "http://example.com/folder/next/folder/image.png";
-                            val = assetRefCompactCols[8].formatPresentation({"col_asset_1": url}, "detailed").value;
-                            expect(val).toEqual('<a href="' + url +'" download="" class="external-link-icon external-link">image.png</a><span class="asset-source-description">(source: example.com)</span>', "value missmatch for detailed");
+                        describe('otherwise should create a download link,', () => {
+                            it ('filename should be used as caption if it\'s defined and has non-empty value', () => {
+                                val = assetRefCompactCols[10].formatPresentation({"col_asset_3": "https://example.com", "col_filename": "filename"}).value;
+                                expect(val).toEqual('<a href="https://example.com" download="" class="external-link-icon external-link">filename</a>', "value missmatch.");
+
+                                val = assetRefCompactCols[10].formatPresentation({"col_asset_3": "https://example.com?query=1&v=1", "col_filename": "filename"}).value;
+                                //NOTE this is the output but it will be displayed correctly.
+                                expect(val).toEqual('<a href="https://example.com?query=1&amp;v=1" download="" class="external-link-icon external-link">filename</a>', "couldn't handle having query params in the url.");
+                            });
+
+                            it ("if url matches the expected hatrac format, extract the filename and use it as caption.", function () {
+                                var hatracSampleURL = "/hatrac/Zf/ZfDsy20170915D/file-test.csv:2J7IIX63WQRUDIALUGYDKDO36A";
+                                var expectedValue = '<a href="' + hatracSampleURL +'?uinit=1&amp;cid=test" download="" class="asset-permission">file-test.csv</a>';
+                                val = assetRefCompactCols[8].formatPresentation({"col_asset_1": hatracSampleURL}).value;
+                                expect(val).toEqual(expectedValue, "value missmatch.");
+
+                                // has filenameColumn but its value is null
+                                val = assetRefCompactCols[10].formatPresentation({"col_asset_3": hatracSampleURL, "col_filename": null}).value;
+                                expect(val).toEqual(expectedValue, "value missmatch.");
+                            });
+
+                            it ("if context is detailed and url is absolute, use last part of url as caption and add origin beside the button.", function () {
+                                var url = "http://example.com/folder/next/folder/image.png";
+                                val = assetRefCompactCols[8].formatPresentation({"col_asset_1": url}, "detailed").value;
+                                expect(val).toEqual('<a href="' + url +'" download="" class="external-link-icon external-link">image.png</a><span class="asset-source-description">(source: example.com)</span>', "value missmatch for detailed");
+                            });
+
+                            it ("otherwise, use the last part of url for caption without any origin information.", function () {
+                                // has filenameColumn but its value is null
+                                val = assetRefCompactCols[10].formatPresentation({"col_asset_3": "https://example.com/asset.png", "col_filename": null}).value;
+                                expect(val).toEqual('<a href="https://example.com/asset.png" download="" class="external-link-icon external-link">asset.png</a>', "value missmatch.");
+
+                                var url = "http://example.com/folder/next/folder/image.png";
+                                val = assetRefCompactCols[8].formatPresentation({"col_asset_1": url}, "compact").value;
+                                expect(val).toEqual('<a href="' + url +'" download="" class="external-link-icon external-link">image.png</a>', "value missmatch for compact");
+
+                                val = assetRefCompactCols[8].formatPresentation({"col_asset_1": url}, "compact/brief").value;
+                                expect(val).toEqual('<a href="' + url +'" download="" class="external-link-icon external-link">image.png</a>', "value missmatch for compact/brief");
+
+                                // detailed but relative url
+                                val = assetRefCompactCols[8].formatPresentation({"col_asset_1": "go/to/file.png"}, "detailed").value;
+                                expect(val).toEqual('<a href="go/to/file.png?uinit=1&amp;cid=test" download="" class="asset-permission">file.png</a>', "value missmatch for detailed context");
+                            })
                         });
-
-                        it ("otherwise, use the last part of url for caption without any origin information.", function () {
-                            // has filenameColumn but its value is null
-                            val = assetRefCompactCols[10].formatPresentation({"col_asset_3": "https://example.com/asset.png", "col_filename": null}).value;
-                            expect(val).toEqual('<a href="https://example.com/asset.png" download="" class="external-link-icon external-link">asset.png</a>', "value missmatch.");
-
-                            var url = "http://example.com/folder/next/folder/image.png";
-                            val = assetRefCompactCols[8].formatPresentation({"col_asset_1": url}, "compact").value;
-                            expect(val).toEqual('<a href="' + url +'" download="" class="external-link-icon external-link">image.png</a>', "value missmatch for compact");
-
-                            val = assetRefCompactCols[8].formatPresentation({"col_asset_1": url}, "compact/brief").value;
-                            expect(val).toEqual('<a href="' + url +'" download="" class="external-link-icon external-link">image.png</a>', "value missmatch for compact/brief");
-
-                            // detailed but relative url
-                            val = assetRefCompactCols[8].formatPresentation({"col_asset_1": "go/to/file.png"}, "detailed").value;
-                            expect(val).toEqual('<a href="go/to/file.png?uinit=1&amp;cid=test" download="" class="asset-permission">file.png</a>', "value missmatch for detailed context");
-                        })
                     });
 
-                 });
+                    describe('for asset byte count', () => {
+                        it ('if it has column-display annotation, use it.', () => {
+                            const v = assetRefCompactCols[5].formatPresentation({"col_byte": 123456789, }, "compact").value;
+                            expect(v).toEqual('<p><span data-chaise-tooltip="123,456,789 bytes (1 MB = 1,000,000 bytes)">123 MB</span></p>\n');
+                        });
+
+                        it ('otherwise return the default presentation.', () => {
+                            const v = assetRefCompactCols[16].formatPresentation({"col_asset_6_byte_count": 123456789, }, "compact").value;
+                            expect(v).toEqual("<p>123,456,789</p>\n");
+                        });
+                    });
+                });
 
                 it('should use the show-nulls annotation, when the data is null.', function () {
                     val = compactColumns[20].formatPresentation({}, "detailed").value;

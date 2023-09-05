@@ -14,5 +14,6 @@
     "col_asset_4_filename": "filename4",
     "col_asset_5": 4,
     "col_asset_6": "https://dev.isrd.isi.edu/file.png",
-    "col_asset_6_filename": "filename6"
+    "col_asset_6_filename": "filename6",
+    "col_asset_6_byte_count": 9234
 }]

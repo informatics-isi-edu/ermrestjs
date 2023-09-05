@@ -2858,7 +2858,7 @@
                     {'_value': rawValue},
                     this.table,
                     context,
-                    { templateEngine: module.HANDLEBARS, isInline: true }
+                    { templateEngine: module.HANDLEBARS }
                 );
             }
 
@@ -2890,7 +2890,7 @@
                     "$_self": rawValue
                 });
 
-                unformatted = module._renderTemplate(template, templateVariables, this.table.schema.catalog, {templateEngine: display.templateEngine});
+                unformatted = module._renderTemplate(template, keyValues, this.table.schema.catalog, {templateEngine: display.templateEngine});
             }
 
 
@@ -3049,8 +3049,7 @@
                 }
             }
         });
-
-        // then copy if it's an asset type
+        // then copy if it's an asset type (asset is the most specific one)
         if (isStringAndNotEmpty(assetCategory)) {
             ancestors.forEach(function (el) {
                 if (el.annotations.contains(defaultAnnotKey)) {
@@ -4498,7 +4497,7 @@
                  *   2. foreign key annotation
                  *   3. table-display annotation when defined on the leaf table of the fkey relationship
                  *   4. default value of 'popup'
-                 * 
+                 *
                  * supported _foreignKeyInputModes are ['facet-search-popup', 'simple-search-dropdown']
                  */
 
