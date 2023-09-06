@@ -30,7 +30,8 @@ Now that you know how the iframe should be implemented, let's discuss the annota
   "input_iframe": {
     "url_pattern": <pattern>,
     "field_mapping": <object>,
-    "optional_fields": <array of field names>
+    "optional_fields": <array of field names>,
+    "empty_field_confirm_message_markdown": <markdown>
   }
 }
 ```
@@ -113,6 +114,26 @@ We expect the iframe to return values for all the fields noted under `field_mapp
   }
 }
 ```
+
+### empty_field_confirm_message_markdown
+
+This optional field can be used to customize the message that we show to users when they attempt to close the iframe without submitting. This message is only displayed when users start with an empty field, that's why the property is named this way.
+
+```json
+{
+  "source": "ID",
+  "input_iframe": {
+    "url_pattern": "/apps/myapp/index.html",
+    "field_mapping": {
+       "hra_id": "ID",
+       "hra_file": "URI",
+        "hra_creator": "Principal_Investigator",
+        "hra_notes": "Notes"
+    },
+    "empty_field_confirm_message_markdown": "You are closing the registration UI without submitting your changes. Are you sure you want to proceed? \n\n If you would like to submit your registry, please close this popup and click on `REVIEW AND REGISTER` button on bottom right of the Registration UI."
+  }
+}
+
 
 ## Limitations
 

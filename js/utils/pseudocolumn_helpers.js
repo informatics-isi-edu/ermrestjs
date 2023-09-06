@@ -1550,6 +1550,11 @@
                 });
             }
 
+            var emptyFieldConfirmMessage = '';
+            if (isStringAndNotEmpty(annot.empty_field_confirm_message_markdown)) {
+                emptyFieldConfirmMessage = module.renderMarkdown(annot.empty_field_confirm_message_markdown);
+            }
+
             var columns = [], fieldMapping = {};
             for (var f in annot.field_mapping) {
                 var colName = annot.field_mapping[f];
@@ -1603,7 +1608,11 @@
                 /**
                  * name of optional fields
                  */
-                optionalFieldNames: optionalFieldNames
+                optionalFieldNames: optionalFieldNames,
+                /**
+                 * the message that we should show when user wants to submit empty.
+                 */
+                emptyFieldConfirmMessage: emptyFieldConfirmMessage
             };
 
             return {success: true, columns: columns};
