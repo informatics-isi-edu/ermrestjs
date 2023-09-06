@@ -2195,7 +2195,7 @@
                         var keys = Object.keys(mapAssetAnnotPropToCategory);
                         for (var j = 0; valid && j < keys.length; j++) {
                             var prop = keys[j];
-                            if (isStringAndNotEmpty(annot[prop])) {
+                            if (isObjectAndNotNull(annot) && isStringAndNotEmpty(annot[prop])) {
                                 if (annot[prop] in assignedColumns) {
                                     valid = false;
                                     module._log.warn(message + '`' + annot[prop] + '` already used in another asset column mapping.');
