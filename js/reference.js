@@ -1754,9 +1754,9 @@
                         if (column.isAsset) {
                             /* Populate all values in row depending on column from current asset */
                             assetColumns = [column.filenameColumn, column.byteCountColumn, column.md5, column.sha256];
-                            for (var colIndex = 0; colIndex < assetColumns.length; colIndex++) {
+                            for (var colIndex2 = 0; colIndex2 < assetColumns.length; colIndex2++) {
                                 // some metadata columns might not be defined.
-                                if (assetColumns[colIndex]) addSubmissionData(i, assetColumns[colIndex].name);
+                                if (assetColumns[colIndex2]) addSubmissionData(i, assetColumns[colIndex2].name);
                             }
 
                             addSubmissionData(i, column.name);
@@ -1822,8 +1822,8 @@
                         if (column.isInputIframe) {
                             addProjectionForColumnObject(column);
                             // make sure the columns in the input_iframe column mapping are also added to the projection list
-                            for (var colIndex = 0; colIndex < column.inputIframeProps.columns.length; colIndex++) {
-                                addProjectionForColumnObject(column.inputIframeProps.columns[colIndex]);
+                            for (var colIndex3 = 0; colIndex3 < column.inputIframeProps.columns.length; colIndex3++) {
+                                addProjectionForColumnObject(column.inputIframeProps.columns[colIndex3]);
                             }
                         } else {
                             addProjectionForColumnObject(column);

@@ -17,7 +17,8 @@ exports.execute = function (options) {
             "iframe_1_field_2": "col_2",
             "iframe_1_field_3": "col_3"
           },
-          optionalFieldNames: ["col_2", "col_3"]
+          optionalFieldNames: ["col_2", "col_3"],
+          emptyFieldConfirmMessage: ''
         }
       },
       {
@@ -29,7 +30,8 @@ exports.execute = function (options) {
           fieldMapping: {
             "iframe_2_field_1": "col_4"
           },
-          optionalFieldNames: []
+          optionalFieldNames: [],
+          emptyFieldConfirmMessage: ''
         }
       },
       {
@@ -42,7 +44,8 @@ exports.execute = function (options) {
             "iframe_3_field_1": "col_5",
             "iframe_3_field_2": "col_6"
           },
-          optionalFieldNames: []
+          optionalFieldNames: [],
+          emptyFieldConfirmMessage: '<p><strong>ARE YOU SURE??</strong></p>\n'
         }
       },
       {
@@ -54,7 +57,8 @@ exports.execute = function (options) {
           fieldMapping: {
             "field_1": "col_wo_url"
           },
-          optionalFieldNames: ["unused_field"]
+          optionalFieldNames: ["unused_field"],
+          emptyFieldConfirmMessage: ''
         }
       }
     ]
@@ -102,6 +106,9 @@ exports.execute = function (options) {
 
         // .urlPattern
         expect(col.inputIframeProps.urlPattern).toEqual(expectedCol.inputIframeProps.urlPattern, `urlPattern missmatch for name=${col.name}`);
+
+        // .emptyFieldConfirmMessage
+        expect(col.inputIframeProps.emptyFieldConfirmMessage).toEqual(expectedCol.inputIframeProps.emptyFieldConfirmMessage, `emptyFieldConfirmMessage missmatch for name=${col.name}`);
 
 
         // .columns
