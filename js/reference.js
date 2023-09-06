@@ -3249,7 +3249,7 @@
 
             // this function will take care of adding column and asset column
             var addColumn = function (col) {
-                if (col.type.name === "text" && col.annotations.contains(module._annotations.ASSET)) {
+                if (col.type.name === "text" && col.isAssetURL) {
                     var assetCol = new AssetPseudoColumn(self, col);
                     assetColumns.push(assetCol);
                     self._referenceColumns.push(assetCol);

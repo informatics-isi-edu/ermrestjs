@@ -1960,11 +1960,12 @@
          * 'raw' will return the "formatted" value.
          *
          * @param {*} value
-         * @param {string} mode either `raw`, `si`, or `binary` (if invalid or missing, 'si' will be used)
-         * @param {number} precision An integer specifying the number of digits to be displayed
+         * @param {?string} mode either `raw`, `si`, or `binary` (if invalid or missing, 'si' will be used)
+         * @param {?number} precision An integer specifying the number of digits to be displayed
          *                           (if invalid or missing, `3` will be used by default.)
+         * @param {?boolean} withTooltip whether we should return it with tooltip or just the value.
          */
-        humanizeBytes: function (value, mode, precision) {
+        humanizeBytes: function (value, mode, precision, withTooltip) {
             // we cannot use parseInt here since it won't allow larger numbers.
             var v = parseFloat(value);
              mode = ['raw', 'si', 'binary'].indexOf(mode) === -1 ? 'si' : mode;
@@ -1996,7 +1997,14 @@
             // we don't want to truncate the value, so we should set a minimum
             var minP = mode === "si" ? 3 : 4;
 
-            return (u ? module._toPrecision(v, precision, minP) : v) + ' ' + units[u];
+            var res = (u ? module._toPrecision(v, precision, minP) : v) + ' ' + units[u];
+            if (typeof withTooltip === 'boolean' && withTooltip && u > 0) {
+                var numBytes = module._formatUtils.printInteger(Math.pow(divisor, u));
+                var tooltip = module._formatUtils.printInteger(value);
+                tooltip += ' bytes (1 ' + units[u] + ' = ' + numBytes + ' bytes)';
+                res = ':span:' + res + ':/span:{data-chaise-tooltip="' + tooltip + '"}';
+            }
+            return res;
         }
     };
 
@@ -3448,8 +3456,8 @@
             res = table ? table._getNullValue(context) : "";
             return {isHTML: false, value: res, unformatted: res};
         }
-
-        return {isHTML: true, value: module.renderMarkdown(res, false), unformatted: res};
+        var isInline = options && options.isInline ? true : false;
+        return {isHTML: true, value: module.renderMarkdown(res, isInline), unformatted: res};
     };
 
     // module._constraintNames[catalogId][schemaName][constraintName] will return an object.

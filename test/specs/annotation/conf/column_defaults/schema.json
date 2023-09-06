@@ -14,6 +14,18 @@
           "tag:misd.isi.edu,2015:display": {
             "defined_on": "schema_by_name"
           }
+        },
+        "asset_col_1_md5": {
+          "tag:isrd.isi.edu,2016:column-display": {
+            "defined_on": "schema_by_name"
+          }
+        }
+      },
+      "asset": {
+        "md5": {
+          "tag:isrd.isi.edu,2016:column-display": {
+            "defined_on": "schema_asset_md5"
+          }
         }
       }
     }
@@ -30,6 +42,13 @@
             "boolean[]": {
               "tag:isrd.isi.edu,2015:display": {
                 "defined_on": "table_by_type"
+              }
+            }
+          },
+          "asset": {
+            "byte_count": {
+              "tag:isrd.isi.edu,2016:column-display": {
+                "defined_on": "table_asset_byte_count"
               }
             }
           }
@@ -79,6 +98,45 @@
           "type": {
             "typename": "timestamptz"
           }
+        },
+        {
+          "name": "asset_col_1",
+          "type": {
+            "typename": "text"
+          },
+          "annotations": {
+            "tag:isrd.isi.edu,2017:asset": {
+              "url_pattern": "/hatrac/{{asset_col_1}}",
+              "filename_column": "asset_col_1_filename",
+              "byte_count_column": "asset_col_1_byte_count",
+              "md5": "asset_col_1_md5",
+              "sha256": "asset_col_1_sha256"
+            }
+          }
+        },
+        {
+          "name": "asset_col_1_filename",
+          "type": {
+            "typename": "text"
+          }
+        },
+        {
+          "name": "asset_col_1_byte_count",
+          "type": {
+            "typename": "int8"
+          }
+        },
+        {
+          "name": "asset_col_1_md5",
+          "type": {
+            "typename": "int8"
+          }
+        },
+        {
+          "name": "asset_col_1_sha256",
+          "type": {
+            "typename": "int8"
+          }
         }
       ]
     },
@@ -123,6 +181,58 @@
             "tag:isrd.isi.edu,2016:column-display": {
               "defined_on": "boolean_array_col_2"
             }
+          }
+        },
+        {
+          "name": "asset_col_1",
+          "type": {
+            "typename": "text"
+          },
+          "annotations": {
+            "tag:isrd.isi.edu,2017:asset": {
+              "url_pattern": "/hatrac/{{asset_col_1}}",
+              "filename_column": "asset_col_1_filename",
+              "byte_count_column": "asset_col_1_byte_count",
+              "md5": "asset_col_1_md5",
+              "sha256": "asset_col_1_sha256"
+            },
+            "tag:isrd.isi.edu,2016:column-display": {
+              "defined_on": "asset_col_1"
+            }
+          }
+        },
+        {
+          "name": "asset_col_1_filename",
+          "type": {
+            "typename": "text"
+          }
+        },
+        {
+          "name": "asset_col_1_byte_count",
+          "type": {
+            "typename": "int8"
+          },
+          "annotations": {
+            "tag:isrd.isi.edu,2016:column-display": {
+              "defined_on": "asset_col_1_byte_count"
+            }
+          }
+        },
+        {
+          "name": "asset_col_1_md5",
+          "type": {
+            "typename": "int8"
+          },
+          "annotations": {
+            "tag:isrd.isi.edu,2015:display": {
+              "defined_on": "asset_col_1_md5"
+            }
+          }
+        },
+        {
+          "name": "asset_col_1_sha256",
+          "type": {
+            "typename": "int8"
           }
         }
       ]

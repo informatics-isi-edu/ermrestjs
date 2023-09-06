@@ -17,12 +17,15 @@ const utils = require("../../../utils/utilities.js");
  *
  * catalog:
  *  by_name: RCT (display), RID (display), boolean_array_col_1 (both column-dsplay and display)
- *  by_type: boolean[] (column-display), timestamptz (column-display, display)
+ *  by_type: boolean[] (column-display), timestamptz (column-display, display), int8 (column-display,display)
+ *  asset: byte_count (column-display, display), url (column-display), md5 (column-display)
  *    - column_defaults_schema:
  *      by_type: timestamptz(column-display)
- *      by_name: RID  (display)
+ *      by_name: RID  (display), asset_col_1_md5 (column-display)
+ *      asset: md5 (column-display)
  *        - table_1
  *          by_type: boolean[] (display)
+ *          asset: byte_count (column-display)
  *            - RID
  *              result: display from schema
  *            - RCT
@@ -36,6 +39,12 @@ const utils = require("../../../utils/utilities.js");
  *                result: column-display on itself, display on catalog
  *            - timestamptz_col_2 (timestamptz)
  *                result: column-display on schema, display on catalog
+ *            - asset_col_1
+ *                result: column-display on catalog (asset.url)
+ *            - asset_col_1_byte_count (int8)
+ *                result: column-display on table (asset.byte_count), display on catalog (asset.byte_count).
+ *            - asset_col_1_md5 (int8)
+ *                result: column-display on schema (asset.md5), display on catalog (int8)
  *        - table_2
  *            - RID
  *              result: display from schema
@@ -47,6 +56,15 @@ const utils = require("../../../utils/utilities.js");
  *            - boolean_array_col_2 (boolean[])
  *              with column-display
  *                result: column-display on itself
+ *            - asset_col_1
+ *              with column-display
+ *                result: column-display on itself
+ *            - asset_col_1_byte_count (int8)
+ *              with column-display
+ *                 result: column-display on itself, display on catalog (int8).
+ *            - asset_col_1_md5 (int8)
+ *              with display
+ *                result: column-display on schema, display on itself
  */
 exports.execute = function (options) {
   describe('column-defaults annotations,', function () {
@@ -87,6 +105,34 @@ exports.execute = function (options) {
             },
             "tag:isrd.isi.edu,2016:column-display": {
               "defined_on": "catalog_by_type"
+            }
+          },
+          "int8": {
+            "tag:isrd.isi.edu,2015:display": {
+              "defined_on": "catalog_by_type"
+            },
+            "tag:isrd.isi.edu,2016:column-display": {
+              "defined_on": "catalog_by_type"
+            }
+          }
+        },
+        "asset": {
+          "url": {
+            "tag:isrd.isi.edu,2016:column-display": {
+              "defined_on": "catalog_asset_url"
+            }
+          },
+          "byte_count": {
+            "tag:isrd.isi.edu,2015:display": {
+              "defined_on": "catalog_asset_byte_count"
+            },
+            "tag:isrd.isi.edu,2016:column-display": {
+              "defined_on": "catalog_asset_byte_count"
+            }
+          },
+          "md5": {
+            "tag:isrd.isi.edu,2016:column-display": {
+              "defined_on": "catalog_asset_md5"
             }
           }
         }
@@ -136,6 +182,34 @@ exports.execute = function (options) {
           "tag:isrd.isi.edu,2015:display": {
             "defined_on": "catalog_by_type"
           }
+        },
+        'asset_col_1': {
+          "tag:isrd.isi.edu,2016:column-display": {
+            "defined_on": "catalog_asset_url"
+          },
+          "tag:isrd.isi.edu,2017:asset": {
+            "url_pattern": "/hatrac/{{asset_col_1}}",
+            "filename_column": "asset_col_1_filename",
+            "byte_count_column": "asset_col_1_byte_count",
+            "md5": "asset_col_1_md5",
+            "sha256": "asset_col_1_sha256"
+          }
+        },
+        'asset_col_1_byte_count': {
+          "tag:isrd.isi.edu,2016:column-display": {
+            "defined_on": "table_asset_byte_count"
+          },
+          "tag:isrd.isi.edu,2015:display": {
+            "defined_on": "catalog_asset_byte_count"
+          }
+        },
+        'asset_col_1_md5': {
+          "tag:isrd.isi.edu,2016:column-display": {
+            "defined_on": "schema_asset_md5"
+          },
+          "tag:isrd.isi.edu,2015:display": {
+            "defined_on": "catalog_by_type"
+          }
         }
       },
       'table_2': {
@@ -150,6 +224,34 @@ exports.execute = function (options) {
         'boolean_array_col_2': {
           "tag:isrd.isi.edu,2016:column-display": {
             "defined_on": "boolean_array_col_2"
+          }
+        },
+        'asset_col_1': {
+          "tag:isrd.isi.edu,2016:column-display": {
+            "defined_on": "asset_col_1"
+          },
+          "tag:isrd.isi.edu,2017:asset": {
+            "url_pattern": "/hatrac/{{asset_col_1}}",
+            "filename_column": "asset_col_1_filename",
+            "byte_count_column": "asset_col_1_byte_count",
+            "md5": "asset_col_1_md5",
+            "sha256": "asset_col_1_sha256"
+          }
+        },
+        'asset_col_1_byte_count': {
+          "tag:isrd.isi.edu,2016:column-display": {
+            "defined_on": "asset_col_1_byte_count"
+          },
+          "tag:isrd.isi.edu,2015:display": {
+            "defined_on": "catalog_asset_byte_count"
+          }
+        },
+        'asset_col_1_md5': {
+          "tag:isrd.isi.edu,2016:column-display": {
+            "defined_on": "schema_asset_md5"
+          },
+          "tag:isrd.isi.edu,2015:display": {
+            "defined_on": "asset_col_1_md5"
           }
         }
       }

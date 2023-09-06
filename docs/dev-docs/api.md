@@ -68,10 +68,11 @@ to use for ERMrest JavaScript agents.</p>
  string
 {{/toTitleCase}}</p>
 </dd>
-<dt><a href="#humanizeBytes">humanizeBytes(value, mode, precision)</a> ⇒</dt>
+<dt><a href="#humanizeBytes">humanizeBytes()</a> ⇒</dt>
 <dd><p>{{humanizeBytes value }}
-{{humanizeBytes value mode }}
-{{humanizeBytes value mode precision}}</p>
+{{humanizeBytes value mode=&#39;si&#39; }}
+{{humanizeBytes value precision=4}}
+{{humanizeBytes value tooltip=true }}</p>
 </dd>
 </dl>
 
@@ -192,6 +193,7 @@ to use for ERMrest JavaScript agents.
             * [.pureBinaryForeignKeys](#ERMrest.Table+pureBinaryForeignKeys) : [<code>Array.&lt;ForeignKeyRef&gt;</code>](#ERMrest.ForeignKeyRef)
             * [._getRowDisplayKey(context)](#ERMrest.Table+_getRowDisplayKey)
             * [._getNullValue()](#ERMrest.Table+_getNullValue) : <code>object</code>
+            * [._assignAssetCategories()](#ERMrest.Table+_assignAssetCategories)
         * _static_
             * [.Entity](#ERMrest.Table.Entity)
                 * [new Entity(server, table)](#new_ERMrest.Table.Entity_new)
@@ -236,6 +238,12 @@ to use for ERMrest JavaScript agents.
             * [.RID](#ERMrest.Column+RID) : <code>string</code>
             * [.type](#ERMrest.Column+type) : [<code>Type</code>](#ERMrest.Type)
             * [.ignore](#ERMrest.Column+ignore) : <code>boolean</code>
+            * [.assetCategory](#ERMrest.Column+assetCategory) : <code>string</code>
+            * [.isAssetURL](#ERMrest.Column+isAssetURL) : <code>boolean</code>
+            * [.isAssetFilename](#ERMrest.Column+isAssetFilename) : <code>boolean</code>
+            * [.isAssetByteCount](#ERMrest.Column+isAssetByteCount) : <code>boolean</code>
+            * [.isAssetMd5](#ERMrest.Column+isAssetMd5) : <code>boolean</code>
+            * [.isAssetSha256](#ERMrest.Column+isAssetSha256) : <code>boolean</code>
             * [.annotations](#ERMrest.Column+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
             * [.comment](#ERMrest.Column+comment) : <code>string</code>
             * [.nullok](#ERMrest.Column+nullok) : <code>Boolean</code>
@@ -1269,6 +1277,7 @@ check for table name existence
         * [.pureBinaryForeignKeys](#ERMrest.Table+pureBinaryForeignKeys) : [<code>Array.&lt;ForeignKeyRef&gt;</code>](#ERMrest.ForeignKeyRef)
         * [._getRowDisplayKey(context)](#ERMrest.Table+_getRowDisplayKey)
         * [._getNullValue()](#ERMrest.Table+_getNullValue) : <code>object</code>
+        * [._assignAssetCategories()](#ERMrest.Table+_assignAssetCategories)
     * _static_
         * [.Entity](#ERMrest.Table.Entity)
             * [new Entity(server, table)](#new_ERMrest.Table.Entity_new)
@@ -1470,6 +1479,15 @@ It's the same as displaykey but with extra restrictions. It might return undefin
 #### table.\_getNullValue() : <code>object</code>
 return the null value that should be shown for the columns under
 this table for the given context.
+
+**Kind**: instance method of [<code>Table</code>](#ERMrest.Table)  
+<a name="ERMrest.Table+_assignAssetCategories"></a>
+
+#### table.\_assignAssetCategories()
+returns an object that captures the asset category of columns.
+- the key of the returned object is the column name and value is the assigned category.
+- if a column is used in multiple asset annotations, only the first usage is used and other asset annotations
+  are discarded.
 
 **Kind**: instance method of [<code>Table</code>](#ERMrest.Table)  
 <a name="ERMrest.Table.Entity"></a>
@@ -1798,6 +1816,12 @@ Constructor for Columns.
         * [.RID](#ERMrest.Column+RID) : <code>string</code>
         * [.type](#ERMrest.Column+type) : [<code>Type</code>](#ERMrest.Type)
         * [.ignore](#ERMrest.Column+ignore) : <code>boolean</code>
+        * [.assetCategory](#ERMrest.Column+assetCategory) : <code>string</code>
+        * [.isAssetURL](#ERMrest.Column+isAssetURL) : <code>boolean</code>
+        * [.isAssetFilename](#ERMrest.Column+isAssetFilename) : <code>boolean</code>
+        * [.isAssetByteCount](#ERMrest.Column+isAssetByteCount) : <code>boolean</code>
+        * [.isAssetMd5](#ERMrest.Column+isAssetMd5) : <code>boolean</code>
+        * [.isAssetSha256](#ERMrest.Column+isAssetSha256) : <code>boolean</code>
         * [.annotations](#ERMrest.Column+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
         * [.comment](#ERMrest.Column+comment) : <code>string</code>
         * [.nullok](#ERMrest.Column+nullok) : <code>Boolean</code>
@@ -1888,6 +1912,43 @@ The RID of this column (might not be defined)
 <a name="ERMrest.Column+ignore"></a>
 
 #### column.ignore : <code>boolean</code>
+**Kind**: instance property of [<code>Column</code>](#ERMrest.Column)  
+<a name="ERMrest.Column+assetCategory"></a>
+
+#### column.assetCategory : <code>string</code>
+if it's used in an asset annotation, will return its category. available values:
+'filename', 'byte_count', 'md5', 'sha256'
+
+**Kind**: instance property of [<code>Column</code>](#ERMrest.Column)  
+<a name="ERMrest.Column+isAssetURL"></a>
+
+#### column.isAssetURL : <code>boolean</code>
+if this column is has a valid asset annotation
+
+**Kind**: instance property of [<code>Column</code>](#ERMrest.Column)  
+<a name="ERMrest.Column+isAssetFilename"></a>
+
+#### column.isAssetFilename : <code>boolean</code>
+if this column is a filename for an asset column
+
+**Kind**: instance property of [<code>Column</code>](#ERMrest.Column)  
+<a name="ERMrest.Column+isAssetByteCount"></a>
+
+#### column.isAssetByteCount : <code>boolean</code>
+if this column is a byte count for an asset column
+
+**Kind**: instance property of [<code>Column</code>](#ERMrest.Column)  
+<a name="ERMrest.Column+isAssetMd5"></a>
+
+#### column.isAssetMd5 : <code>boolean</code>
+if this column is a md5 for an asset column
+
+**Kind**: instance property of [<code>Column</code>](#ERMrest.Column)  
+<a name="ERMrest.Column+isAssetSha256"></a>
+
+#### column.isAssetSha256 : <code>boolean</code>
+if this column is a sha256 for an asset column
+
 **Kind**: instance property of [<code>Column</code>](#ERMrest.Column)  
 <a name="ERMrest.Column+annotations"></a>
 
@@ -8384,20 +8445,14 @@ or
 **Returns**: string representation of the given JSON object  
 <a name="humanizeBytes"></a>
 
-## humanizeBytes(value, mode, precision) ⇒
+## humanizeBytes() ⇒
 {{humanizeBytes value }}
-{{humanizeBytes value mode }}
-{{humanizeBytes value mode precision}}
+{{humanizeBytes value mode='si' }}
+{{humanizeBytes value precision=4}}
+{{humanizeBytes value tooltip=true }}
 
 **Kind**: global function  
 **Returns**: formatted string of `value` with corresponding `mode`  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| value | <code>\*</code> | the value |
-| mode | <code>string</code> | mode can be `si`, `binary`, or `raw`. |
-| precision | <code>number</code> | An integer specifying the number of significant digits. |
-
 <a name="appLinkFn"></a>
 
 ## appLinkFn : <code>function</code>

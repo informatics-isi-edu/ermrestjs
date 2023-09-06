@@ -170,17 +170,20 @@
 
             /**
              * {{humanizeBytes value }}
-             * {{humanizeBytes value mode }}
-             * {{humanizeBytes value mode precision}}
-             *
-             * @param {*} value - the value
-             * @param {string} mode - mode can be `si`, `binary`, or `raw`.
-             * @param {number} precision - An integer specifying the number of significant digits.
+             * {{humanizeBytes value mode='si' }}
+             * {{humanizeBytes value precision=4}}
+             * {{humanizeBytes value tooltip=true }}
              *
              * @returns formatted string of `value` with corresponding `mode`
              */
-            humanizeBytes: function (value, mode, precision) {
-                return module._formatUtils.humanizeBytes(value, mode, precision);
+            humanizeBytes: function (value, options) {
+                var mode, precision, tooltip;
+                if (options && isObjectAndNotNull(options.hash)) {
+                    mode = options.hash.mode;
+                    precision = options.hash.precision;
+                    tooltip = options.hash.tooltip;
+                }
+                return module._formatUtils.humanizeBytes(value, mode, precision, tooltip);
             }
 
         });

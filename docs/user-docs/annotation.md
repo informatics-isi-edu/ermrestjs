@@ -391,7 +391,7 @@ Supported JSON payload patterns:
 
 Supported display _option_ syntax:
 
-- `"markdown_pattern":` _pattern_: The visual presentation of the key SHOULD be computed by performing [Pattern Expansion](#pattern-expansion) on _pattern_ to obtain a markdown-formatted text value which MAY be rendered using a markdown-aware renderer.
+- `"markdown_pattern":` _pattern_: The visual presentation of the key SHOULD be computed by performing [Pattern Expansion](#pattern-expansion) on _pattern_ to obtain a markdown-formatted text value which MAY be rendered using a markdown-aware renderer. In the pattern you can use `$self` to access the formatted value of the current column, or `$_self` to access the raw value.
 - `"column_order"`: `[` _columnorder_key_ ... `]`: An alternative sort method to apply when a client wants to semantically sort by key values.
 - `"column_order": false`: Sorting by this key psuedo-column should not be offered.
 - `"show_key_link": true`: Override the inherited behavior of key display and add a link to the referred row.
@@ -1052,6 +1052,7 @@ This key allows defining column-level annotations on catalog, schema, or tables.
 Supported JSON payload patterns:
 - `{`... `"by_name":` `{` _by_name_definition_ `,` ... `}`: Define annotations for columns with specific names.
 - `{`... `"by_type":` `{` _by_type_definition_ `,` ... `}`: Define annotations for columns with specific names.
+- `{`... `"asset":` `{` _asset_definition_ `,` ... `}`: Define annotations for specific asset columns.
 
 Where _by_name_definition_  is a JSON payload with the following pattern:
 
@@ -1060,6 +1061,14 @@ Where _by_name_definition_  is a JSON payload with the following pattern:
 And _by_type_definition_ is a JSON payload with the following pattern:
 
 - `{` ... _typename_ `:` _annot_payload_ `,` ... `}`: Define annotations (_annot_payload_) for columns with _typename_ types.
+
+And _asset_definition_ is a JSON payload with the following properties:
+
+- `{`... `"url":` `{` _annot_payload_ `,` ... `}`: Define annotations (_annot_payload_) for columns with [asset annotation](#tag-2017-asset).
+- `{`... `"byte_count":` `{` _annot_payload_ `,` ... `}`: Define annotations (_annot_payload_) for columns used as `byte_count_column` of an asset column.
+- `{`... `"filename":` `{` _annot_payload_ `,` ... `}`: Define annotations (_annot_payload_) for used as `filename_column` of an asset column.
+- `{`... `"md5":` `{` _annot_payload_ `,` ... `}`: Define annotations (_annot_payload_) for used as `md5` of an asset column.
+- `{`... `"sha256":` `{` _annot_payload_ `,` ... `}`: Define annotations (_annot_payload_) for used as `sha256` of an asset column.
 
 For example,
 
@@ -1091,20 +1100,31 @@ For example,
           }
         }
      }
+  },
+  "asset": {
+    "byte_count": {
+      "tag:isrd.isi.edu,2016:column-display": {
+        "*": {
+          "markdown_pattern": "{{humanizeBytes $_self mode='binary'}}",
+          "template_engine": "handlebars"
+        }
+      }
+    }
   }
 }
 ```
 
 Notes:
 - `by_type` should match exactly with the `typename` of the column. So, for example, for array columns, we would have to use `"timestamp[]"`.
-- While determining annotations for a column, the more specific one will be used. Annotations defined on the column have the highest priority, then the `by_name` annotations on table, schema, and catalog will be used. And after that, we will look at `by_type` annotations on the table, schema, and catalog.
+- While determining annotations for a column, the more specific one will be used. Annotations defined on the column have the highest priority. Then `asset` is used if the column has asset annotation or is used as a metadata for another asset column. Then by the `by_name` annotations on table, schema, and catalog will be used. And after that, we will look at `by_type` annotations on the table, schema, and catalog.
 - To implement this feature, we start by creating an empty JSON payload. On each step, we will add the annotations to the object (and if the annotation key is already defined on the object, it will be overwritten by the new value). To be more precise, the following is how the `annotations` JSON payload for a column is created and used:
 
   1. We start by looking at the applicable `by_type` property of the `column-defaults ` annotation defined on the catalog.
   2. Then, the applicable `by_type` property on the schema will be added. And if any annotation key is already defined on both catalog and schema, the one in the schema will override it.
   3. The same step as above continues with the table.
   4. We continue by looking at the matching `by_name` property of catalog, schema, and table in order. Just like in the previous steps, if the same annotation key is already defined in the created object, it will be overwritten by the new step.
-  5. Any annotation defined directly on the column will override the annotations of the previous steps.
+  5. If the column is an asset or is used in another asset column, the annotations under the appropriate `asset` of catalog, schema, and table will be used. Same as above, if the same annotation key is already defined in the created object, it will be overwritten by the new step.
+  6. Any annotation defined directly on the column will override the annotations of the previous steps.
 
 ## Context Names
 

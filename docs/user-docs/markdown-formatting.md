@@ -119,16 +119,25 @@ Depending on the markdown element type, different attrbiutes will be acceptable 
 
 ### Tooltip
 
-Using `title` attribute you can add a tooltip to any HTML element.
+Using `data-chaise-tooltip` attribute you can add a tooltip to any HTML element.
 
-```html
-[tooltip example](http://example.com){title="tooltip for this link"}
-#OUTPUT
-<p>
-  <a href="http://example.com" title="tooltip for this link">tooltip example</a>
-</p>
 ```
-> <p> <a href="http://example.com" title="tooltip for this link">tooltip example</a></p>
+[tooltip example](http://example.com){data-chaise-tooltip="tooltip for this link"}
+```
+
+By default the tooltip will be displayed at the bottom of the element. We're also showing the tooltip icon beside the element. If you don't want this behavior the following is ways to customize this:
+
+1. You can use the `data-chaise-tooltip-placement` to change this placement. Accepted values are `"top"`, `"right"`, `"bottom"`, `"left"`. For example,
+
+```
+:span:Caption:/span:{data-chaise-tooltip="tooltip for this link" data-chaise-tooltip-placement="right"}
+```
+
+2. By adding `data-chaise-tooltip-no-icon` to your definition we're not going to add the tooltip icon.
+
+```
+:span:Caption:/span:{data-chaise-tooltip="tooltip for this link" data-chaise-tooltip-no-icon}
+```
 
 ### Classes
 
@@ -203,7 +212,7 @@ Download button is a link with some predefined attributes. You can use these att
   - `download` will trigger the browser's default download behavior and displays the links like the following:
 ![download default UI](https://raw.githubusercontent.com/informatics-isi-edu/ermrestjs/master/docs/resources/download-alt-btn.png)
 
-  - `.download` will change the link to look like the following:
+  - `.download-alt` will change the link to look like the following:
 ![alternative download UI](https://raw.githubusercontent.com/informatics-isi-edu/ermrestjs/master/docs/resources/download-btn.png)
 
   - If you would like to create your own download button, we suggest adding a class attribute here and using this class for definining your own CSS rules.
