@@ -117,7 +117,6 @@ exports.execute = function (options) {
             '',
             '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key/id=4000">4000</a>',
             '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key_2/id=4000">4000</a>',
-            '4000',
             '4001',
             '4002',
             '4003',
@@ -204,17 +203,18 @@ exports.execute = function (options) {
          * 2:   outbound_fk_2  -> is null
          * 3:   outbound_fk_3 (check disambiguation) (check nullok)
          * 4:   outbound_fk_4 (check disambiguation)
-         * 5:   col_3
-         * 6:   col_4
-         * 7:   col 5
-         * 8:   col_6
-         * 9:   col_7
-         * 10:  columns_schema_outbound_fk_7
-         * 11:  outbound_fk_5 (check to_name) (check nullok)
-         * 12:  outbound_fk_6 (check nullok)
-         * 13:  outbound_fk_8 (check disambiguation)
-         * 14:  outbound_fk_7 (check disambiguation) (check nullok)
-         * 15:  outbound_fk_9
+         * 5:   col_4
+         * 6:   col 5
+         * 7:   col_6
+         * 8:   col_7
+         * 9:   columns_schema_outbound_fk_7
+         * 10:  columns_schema_handlebars_col
+         * ...: system columns
+         * 16:  outbound_fk_5 (check to_name) (check nullok)
+         * 17:  outbound_fk_6 (check nullok)
+         * 18:  outbound_fk_8 (check disambiguation)
+         * 19:  outbound_fk_7 (check disambiguation) (check nullok)
+         * 20:  outbound_fk_9
          *
          * expected output for ref.columns in entry context:
          * 0:   id
@@ -346,7 +346,6 @@ exports.execute = function (options) {
                 '',
                 '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key/RID=' + utils.findEntityRID(options, schemaName, "table_w_simple_key", "id", "4000") + '">John</a>',
                 '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key_2/RID=' + utils.findEntityRID(options, schemaName, "table_w_simple_key_2", "id", "4000") + '">Hank</a>',
-                '4000',
                 '4001',
                 '4002',
                 '4003',
@@ -633,13 +632,13 @@ exports.execute = function (options) {
                 })
 
                 it('should not include duplicate Columns or PseudoColumns.', function() {
-                    expect(compactColumns.length).toBe(22);
+                    expect(compactColumns.length).toBe(21);
                     expect(entryRef.columns.length).toBe(17);
                 });
 
                 it('should include columns that are not part of any FKRs.', function () {
-                    expect(compactColumns[10].isPseudo).toBe(false);
-                    expect(compactColumns[10].name).toBe("columns_schema_outbound_fk_7");
+                    expect(compactColumns[9].isPseudo).toBe(false);
+                    expect(compactColumns[9].name).toBe("columns_schema_outbound_fk_7");
                 });
 
                 describe('for columns that are part of a simple FKR, ', function () {
@@ -661,20 +660,18 @@ exports.execute = function (options) {
                 describe('for columns that are part of composite FKR, ', function () {
 
                     it('should include the columns and avoid duplicate.', function () {
+                        // col_3 is not added because it's part of a simple fk
                         expect(compactColumns[5].isPseudo).toBe(false);
-                        expect(compactColumns[5].name).toBe("col_3");
+                        expect(compactColumns[5].name).toBe("col_4");
 
                         expect(compactColumns[6].isPseudo).toBe(false);
-                        expect(compactColumns[6].name).toBe("col_4");
+                        expect(compactColumns[6].name).toBe("col 5");
 
                         expect(compactColumns[7].isPseudo).toBe(false);
-                        expect(compactColumns[7].name).toBe("col 5");
+                        expect(compactColumns[7].name).toBe("col_6");
 
                         expect(compactColumns[8].isPseudo).toBe(false);
-                        expect(compactColumns[8].name).toBe("col_6");
-
-                        expect(compactColumns[9].isPseudo).toBe(false);
-                        expect(compactColumns[9].name).toBe("col_7");
+                        expect(compactColumns[8].name).toBe("col_7");
                     });
 
                     it('in edit or create context should not include the columns, and just create PseudoColumn for them.', function () {
@@ -690,20 +687,20 @@ exports.execute = function (options) {
                     });
 
                     it('should create just one PseudoColumn for the FKR.', function () {
+                        expect(compactColumns[16].isPseudo).toBe(true);
+                        expect(compactColumns[16]._constraintName).toBe(["columns_schema", "outbound_fk_5"].join("_"));
+
                         expect(compactColumns[17].isPseudo).toBe(true);
-                        expect(compactColumns[17]._constraintName).toBe(["columns_schema", "outbound_fk_5"].join("_"));
+                        expect(compactColumns[17]._constraintName).toBe(["columns_schema", "outbound_fk_6"].join("_"));
 
                         expect(compactColumns[18].isPseudo).toBe(true);
-                        expect(compactColumns[18]._constraintName).toBe(["columns_schema", "outbound_fk_6"].join("_"));
+                        expect(compactColumns[18]._constraintName).toBe(["columns_schema", "outbound_fk_8"].join("_"));
 
                         expect(compactColumns[19].isPseudo).toBe(true);
-                        expect(compactColumns[19]._constraintName).toBe(["columns_schema", "outbound_fk_8"].join("_"));
+                        expect(compactColumns[19]._constraintName).toBe(["columns_schema", "outbound_fk_7"].join("_"));
 
                         expect(compactColumns[20].isPseudo).toBe(true);
-                        expect(compactColumns[20]._constraintName).toBe(["columns_schema", "outbound_fk_7"].join("_"));
-
-                        expect(compactColumns[21].isPseudo).toBe(true);
-                        expect(compactColumns[21]._constraintName).toBe(["columns_schema", "outbound_fk_9"].join("_"));
+                        expect(compactColumns[20]._constraintName).toBe(["columns_schema", "outbound_fk_9"].join("_"));
                     });
                 });
 

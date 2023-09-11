@@ -360,11 +360,6 @@
                     "annotations": {
                         "tag:misd.isi.edu,2015:display": {
                             "name": "Column 3 Name"
-                        },
-                        "tag:isrd.isi.edu,2016:column-display": {
-                            "*": {
-                                "column_order": false
-                            }
                         }
                     }
                 },
@@ -377,9 +372,12 @@
                     "comment": "is in multiple composite FKRs",
                     "annotations": {
                         "tag:isrd.isi.edu,2016:generated": {},
+                        "tag:misd.isi.edu,2015:display": {
+                            "name": "Column 4 Name"
+                        },
                         "tag:isrd.isi.edu,2016:column-display": {
                             "*": {
-                                "column_order": ["columns_schema_outbound_fk_7"]
+                                "column_order": false
                             }
                         }
                     }
@@ -392,7 +390,12 @@
                     },
                     "comment": "is in multiple composite FKRs",
                     "annotations": {
-                        "tag:isrd.isi.edu,2016:generated": {}
+                        "tag:isrd.isi.edu,2016:generated": {},
+                        "tag:isrd.isi.edu,2016:column-display": {
+                            "*": {
+                                "column_order": ["columns_schema_outbound_fk_7"]
+                            }
+                        }
                     }
                 },
                 {

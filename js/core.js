@@ -1412,18 +1412,9 @@
                     var candidateKeys = [], key, fkeys, isPartOfSimpleFk, i, j;
                     for (i = 0; i < this.keys.length(); i++) {
                         key = this.keys.all()[i];
-                        isPartOfSimpleFk = false;
 
-                        // shouldn't select simple keys that their constituent column is part of any simple foreign key.
-                        if (key.simple && key.colset.columns[0].memberOfForeignKeys.length > 0) {
-                            fkeys = key.colset.columns[0].memberOfForeignKeys;
-                            for (j = 0; j < fkeys.length; j++) {
-                                if (fkeys[j].simple) {
-                                    isPartOfSimpleFk = true;
-                                    break;
-                                }
-                            }
-                        }
+                        // shouldn't select simple keys that their constituent column is part of a simple foreign key.
+                        isPartOfSimpleFk = key.simple && key.colset.columns[0].isPartOfSimpleForeignKey;
 
                         // select keys that none of their columns isHTMl and nullok.
                         if (!isPartOfSimpleFk && key._isWellFormed(context)) {
@@ -2769,9 +2760,6 @@
             }
 
             var display = this.getDisplay(context);
-            var isPartOfSimpleFk = self.memberOfForeignKeys.filter(function (fk) {
-                return fk.simple;
-            }).length > 0;
 
             var getFormattedValue = function (v) {
                 // in case of array, null and empty strings are valid values and we
@@ -2790,7 +2778,7 @@
 
                 // if int/serial and part of simple key or simple fk we don't want to format the value
                 if ((self.type.name.indexOf("int") === 0 || self.type.name.indexOf("serial") === 0) &&
-                    (self.isUniqueNotNull || isPartOfSimpleFk)) {
+                    (self.isUniqueNotNull || self.isPartOfSimpleForeignKey)) {
                     return v.toString();
                 }
 
@@ -3423,6 +3411,18 @@
             }
             return this._uniqueNotNullKey;
         },
+
+        /**
+         * whether there's a simple fk based on this column
+         */
+        get isPartOfSimpleForeignKey() {
+            if (this._isPartOfSimpleForeignKey === undefined) {
+                this._isPartOfSimpleForeignKey = this.memberOfForeignKeys.some(function (fk) {
+                    return fk.simple;
+                });
+            }
+            return this._isPartOfSimpleForeignKey;
+        }
     };
 
     /**

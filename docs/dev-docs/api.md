@@ -254,6 +254,7 @@ to use for ERMrest JavaScript agents.
             * [.default](#ERMrest.Column+default) ⇒ <code>string</code>
             * [.isUniqueNotNull](#ERMrest.Column+isUniqueNotNull) : <code>Boolean</code>
             * [.uniqueNotNullKey](#ERMrest.Column+uniqueNotNullKey) : [<code>Key</code>](#ERMrest.Key)
+            * [.isPartOfSimpleForeignKey](#ERMrest.Column+isPartOfSimpleForeignKey)
             * [.formatvalue(data, context)](#ERMrest.Column+formatvalue) ⇒ <code>string</code> \| <code>Array.&lt;string&gt;</code>
             * [.formatPresentation(data, context, templateVariables, options)](#ERMrest.Column+formatPresentation) ⇒ <code>Object</code>
             * [.toString()](#ERMrest.Column+toString) ⇒ <code>string</code>
@@ -1832,6 +1833,7 @@ Constructor for Columns.
         * [.default](#ERMrest.Column+default) ⇒ <code>string</code>
         * [.isUniqueNotNull](#ERMrest.Column+isUniqueNotNull) : <code>Boolean</code>
         * [.uniqueNotNullKey](#ERMrest.Column+uniqueNotNullKey) : [<code>Key</code>](#ERMrest.Key)
+        * [.isPartOfSimpleForeignKey](#ERMrest.Column+isPartOfSimpleForeignKey)
         * [.formatvalue(data, context)](#ERMrest.Column+formatvalue) ⇒ <code>string</code> \| <code>Array.&lt;string&gt;</code>
         * [.formatPresentation(data, context, templateVariables, options)](#ERMrest.Column+formatPresentation) ⇒ <code>Object</code>
         * [.toString()](#ERMrest.Column+toString) ⇒ <code>string</code>
@@ -2008,6 +2010,12 @@ Whether this column is unique (part of a simple key) and not-null
 #### column.uniqueNotNullKey : [<code>Key</code>](#ERMrest.Key)
 If the column is unique and not-null, will return the simple key
 that is made of this column. Otherwise it will return `null`
+
+**Kind**: instance property of [<code>Column</code>](#ERMrest.Column)  
+<a name="ERMrest.Column+isPartOfSimpleForeignKey"></a>
+
+#### column.isPartOfSimpleForeignKey
+whether there's a simple fk based on this column
 
 **Kind**: instance property of [<code>Column</code>](#ERMrest.Column)  
 <a name="ERMrest.Column+formatvalue"></a>

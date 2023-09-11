@@ -3218,15 +3218,8 @@
                 hiddenFKR = this.origFKR,
                 hasOrigFKR,
                 refTable = this._table,
-                invalid,
-                colAdded,
-                fkName,
-                sourceCol, refCol,
-                pseudoNameObj, pseudoName, isHash,
-                hasInbound, isEntity, hasPath, isEntityMode,
-                isEntry,
-                isCompactEntry,
-                colFks,
+                fkName, refCol, pseudoName,
+                isEntry, isCompactEntry,
                 ignore, cols, col, fk, i, j;
 
             var context = this._context;
@@ -3592,6 +3585,7 @@
                         // sort foreign keys of a column
                         if (col.memberOfForeignKeys.length > 1) {
                             colFKs = col.memberOfForeignKeys.sort(function (a, b) {
+                                // sort by constraint name to ensure we're getting a deterministic result
                                 return a._constraintName.localeCompare(b._constraintName);
                             });
                         } else {
@@ -3613,7 +3607,8 @@
                             } else { // composite FKR
 
                                 // add the column if context is not entry and avoid duplicate
-                                if (!isEntry && !(col.name in consideredColumns)) {
+                                // don't add the column if it's also part of a simple fk
+                                if (!isEntry && !col.isPartOfSimpleForeignKey && !(col.name in consideredColumns)) {
                                     consideredColumns[col.name] = true;
                                     this._referenceColumns.push(new ReferenceColumn(this, [col]));
                                 }
