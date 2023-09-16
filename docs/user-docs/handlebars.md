@@ -81,7 +81,7 @@ Mustache:
 {{#$fkey_schema_constraint}}{{{values.RID}}}{{/fkey_schema_constraint}}
 ```
 
-But the handlebars `if` block doesn't change the context. So if you're looking for an equivalent syntax for mustache block that also changes context, you should use the [with helper](#with-helper).
+But the handlebars `if` block doesn't change the context. So if you're looking for an equivalent syntax for mustache block that also changes context, you should use the [`with` helper](#with-helper).
 
 The equivalent handlebars template would be:
 ```
@@ -110,7 +110,7 @@ Handlebars:
 
 ### Restriction in the adjacency of opening and closing tags
 
-As we described [in the markdown document](markdown-formatting.md#attributes), you can add attributes to markdown elements using the `{}` syntax. Now imagine you want to create a link, and the attribute value comes from one of the columns. In Mustache, you could do the following (assume `btn_class` is the name of the column):
+As we described [in the markdown document](markdown-formatting.md#attributes), you can add attributes to markdown elements using the `{}` syntax. Now imagine you want to create a link and the attribute value comes from one of the columns. In Mustache, you could do the following (assume `btn_class` is the name of the column):
 
 Mustache:
 ```
@@ -177,7 +177,7 @@ The exact value that `../` will resolve to varies based on the helper that is ca
 {{/each}}
 ```
 
-In this example all of the above reference the same `permalink` value even though they are located within different blocks.
+In this example, all of the above reference the same `permalink` value even though they are located within different blocks.
 
 **NOTE**: Handlebars also allows for name conflict resolution between helpers and data fields via a `this` reference:
 ```
@@ -187,7 +187,7 @@ Any of the above would cause the name field in the current context to be used ra
 
 ### Automatic null detection
 
-To avoid the need for adding individual checks for each `{{{column_name}}}` usage, we apply an automatic null detection. If the value of any of the columns which are being used in the `markdown_pattern` are either null or empty, then the pattern will fall back on the `show_null` display annotation to return the respective value. For example, if the title property in the JSON object is not defined or null, then the following template `[{{{title}}}]({{{url}}})` will resolve as null and use the `show_null` annotation to determine what should be done.
+To avoid the need for adding individual checks for each `{{{column_name}}}` usage, we apply an automatic null detection. If the value of any of the columns that are being used in the `markdown_pattern` are either null or empty, then the pattern will fall back on the `show_null` display annotation to return the respective value. For example, if the title property in the JSON object is not defined or null, then the following template `[{{{title}}}]({{{url}}})` will resolve as null and use the `show_null` annotation to determine what should be done.
 
 That being said, our current implementation has the following limitations/flaws:
 
@@ -565,19 +565,31 @@ Block helpers make it possible to define custom iterators and other functionalit
 
 ### If helper
 
-You can use the `if` helper to conditionally render a block. If its argument returns `false`, `undefined`, `null`, `""`, `0`, or `[]`, Handlebars will not render the block. You can use this helper in combination with any of the [Boolean Helpers](#boolean-helpers) to do more complicated logical operations.
+You can use the `if` helper to conditionally render a block. If its argument returns `false`, `undefined`, `null`, `""`, `0`, or `[]`, Handlebars will not render the block. You can use this helper with any of the [Boolean Helpers](#boolean-helpers) to do more complicated logical operations.
 
 ```
-{{#if author}} {{firstName}} {{lastName}}</h1>{{/if}}
+{{#if isVisible}} {{{firstName}}} {{{lastName}}}{{/if}}
 ```
-when used with an empty (`{}`) context, `author` will be `undefined`, resulting in an empty string:
+
+> If you're using `if` block only to check for a JSON object and then using it, consider using [`with` helper](#with-helper) which will do the truthy check and changes context at the same time similar to [how Mustache null checking works](#null-checking).
+
 
 When using a block expression, you can specify a template section to run if the expression returns a falsy value. The section, marked by `{{else}}` is called an "else section".
 
 ```
-{{#if author}} {{firstName}} {{lastName}}{{else}} Unknown Author {{/if}}
+{{#if isVisible}} {{{firstName}}} {{{lastName}}}{{else}}Hidden Author{{/if}}
 ```
-The above method will return `Unknown Author`.
+
+You can also use `else if`:
+
+```
+{{#if isVisible}} {{firstName}} {{lastName}}{{else if isKnown}} Unknown Author {{/if}}
+
+{{#if isVisible}} {{firstName}} {{lastName}}{{else if isKnown}} Unknown Author {{else}} Hidden and Unknown Author{{/if}}
+```
+
+Plesae refer to [Boolean Helpers](#boolean-helpers) section to learn how you can achieve more complicated comparisons inside the `if` block.
+
 
 ### Unless helper
 
@@ -960,7 +972,7 @@ This Is The Title Of My Page
 
 ## Boolean Helpers
 
-You can use the following helper to check for specific equality checks using the default `if` helper
+In this section we go over the helpers that can be used to do boolean operations. These helpers are commonly used with `if` or `unless`.
 
 ### Comparison Helpers
 
