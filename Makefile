@@ -221,17 +221,31 @@ deploy: dont_deploy_in_root
 	$(info - deploying the package)
 	@rsync -avz --exclude=$(MAKEFILE_VAR) $(DIST)/ $(ERMRESTJSDIR)
 
+# run dist and deploy with proper uesrs (GNU). only works with root user
+.PHONY: root-install
+root-install:
+	su $(shell stat -c "%U" Makefile) -c "make dist"
+	make deploy
+
+# run dist and deploy with proper uesrs (FreeBSD and MAC OS X). only works with root user
+.PHONY: root-install-alt
+root-install-alt:
+	su $(shell stat -f '%Su' Makefile) -c "make dist"
+	make deploy
+
 # Rules for help/usage
 .PHONY: help usage
 help: usage
 usage:
 	@echo "Available 'make' targets:"
-	@echo "    all           - run linter, build the pacakge andand docs"
-	@echo "    dist   	     - local install of node dependencies, and build the pacakge"
-	@echo "    deploy   	   - deploy the package to $(ERMRESTJSDIR)"
-	@echo "    deps          - local install of node dependencies"
-	@echo "    deps-test     - local install of dev node dependencies"
-	@echo "    lint          - lint the source"
-	@echo "    test          - run tests"
-	@echo "    clean         - remove the files and folders created during build"
-	@echo "    distclean     - the same as clean, and also removes npm dependencies"
+	@echo "    all               - run linter, build the pacakge andand docs"
+	@echo "    dist   	         - local install of node dependencies, and build the package"
+	@echo "    deploy   	       - deploy the package to $(ERMRESTJSDIR)"
+	@echo "    deps              - local install of node dependencies"
+	@echo "    deps-test         - local install of dev node dependencies"
+	@echo "    lint              - lint the source"
+	@echo "    test              - run tests"
+	@echo "    clean             - remove the files and folders created during build"
+	@echo "    distclean         - the same as clean, and also removes npm dependencies"
+	@echo "    root-install      - should only be used as root. will use dist with proper user and then deploy, for GNU systems"
+	@echo "    root-install-alt  - should only be used as root. will use dist with proper user and then deploy, for FreeBSD and MAC OS X"
