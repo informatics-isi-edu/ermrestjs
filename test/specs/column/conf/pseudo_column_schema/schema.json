@@ -208,12 +208,7 @@
                             {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
                             "id"
                         ], "markdown_name": "**association table**", "comment": false},
-                        {"source": [
-                            {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
-                            {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
-                            {"outbound": ["pseudo_column_schema", "inbound_2_fk1"]},
-                            "id"
-                        ]},
+                        {"sourcekey": "path_to_inbound_2_outbound_1", "source": "RID", "comment": "make sure sourcekey is used and source is ignored"},
                         {"source": [{"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]}, "id"]},
                         {"source": [
                             {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
@@ -233,10 +228,10 @@
                             {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
                             "id"
                         ], "aggregate": "array", "entity": false},
-                        {"sourcekey": "main_inbound_2_association_fk1_fk2_path_id_array", "aggregate": "cnt", "array_display": "csv"},
+                        {"sourcekey": "path_to_inbound_2", "aggregate": "array", "array_display": "csv"},
                         {
-                            "sourcekey": "main_inbound_2_association_fk1_fk2_path_id_array_d",
-                            "aggregate": "cnt_d",
+                            "sourcekey": "main_inbound_2_association_fk1_fk2_path_id_cnt_d",
+                            "aggregate": "array_d",
                             "display": {"array_ux_mode": "ulist"},
                             "array_options": {"invalid values": true}
                         },
@@ -400,21 +395,20 @@
                     "columns": true,
                     "fkeys": true,
                     "sources": {
-                        "main_inbound_2_association_fk1_fk2_path_id_array": {
+                        "path_to_inbound_2": {
                             "source": [
                                 {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
                                 {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
                                 "id"
-                            ],
-                            "aggregate": "array"
+                            ]
                         },
-                        "main_inbound_2_association_fk1_fk2_path_id_array_d": {
+                        "main_inbound_2_association_fk1_fk2_path_id_cnt_d": {
                             "source": [
                                 {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
                                 {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
                                 "id"
                             ],
-                            "aggregate": "array_d"
+                            "aggregate": "cnt_d"
                         },
                         "path_to_inbound_1": {
                             "source": [
@@ -427,6 +421,14 @@
                                 {"sourcekey": "path_to_inbound_1"},
                                 {"outbound": ["pseudo_column_schema", "inbound_1_fk2"]},
                                 "RID"
+                            ]
+                        },
+                        "path_to_inbound_2_outbound_1": {
+                            "source": [
+                                {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
+                                {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
+                                {"outbound": ["pseudo_column_schema", "inbound_2_fk1"]},
+                                "id"
                             ]
                         }
                     }

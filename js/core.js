@@ -1748,6 +1748,7 @@
                         var src = sbDef[orOperator][index];
                         var pSource, sd;
 
+                        // sourcekey has priority over source. if both used, ignore source and only honor source.
                         if (src.sourcekey) {
                             sd = self.sourceDefinitions.sources[src.sourcekey];
                             if (!sd) {
@@ -4077,18 +4078,19 @@
                 else if (typeof orders[i] === "object") {
                     var wrapper;
                     if (orders[i].source || orders[i].sourcekey) {
-                        if (orders[i].source) {
+                        // if both source and sourcekey are defined, ignore the source and use sourcekey
+                        if (orders[i].sourcekey) {
+                            var def = definitions.sources[orders[i].sourcekey];
+                            if (def) {
+                                wrapper = def.clone(orders[i], this._table, module._constraintNames);
+                            }
+                        } else {
                             try {
                                 wrapper = new SourceObjectWrapper(orders[i], this._table, module._constraintNames);
                             } catch (exp) {
                                 // we might want to show a better error message later.
                                 logErr(true, exp.message, i);
                                 invalid = true;
-                            }
-                        } else {
-                            var def = definitions.sources[orders[i].sourcekey];
-                            if (def) {
-                                wrapper = def.clone(orders[i], this._table, module._constraintNames);
                             }
                         }
 

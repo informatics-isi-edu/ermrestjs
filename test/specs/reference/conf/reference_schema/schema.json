@@ -166,8 +166,8 @@
                     "compact/select": [
                         {"invalid": true},
                         {"source": "id"},
-                        {"sourcekey": "path_w_length_three_scalar", "entity": true},
-                        {"sourcekey": "path_w_length_three_cnt_array"},
+                        {"sourcekey": "path_w_length_three", "entity": false, "comment": "should be ignored since it's scalar"},
+                        {"sourcekey": "path_w_length_three", "aggregate": "cnt", "comment": "should be ignored since it has aggregate"},
                         {
                             "source": [{"inbound": ["reference_schema", "id_fk_association_related_to_reference"]}, "ID"],
                             "display": {
@@ -277,24 +277,6 @@
                                 {"outbound": ["reference_schema", "fromname_fk_inbound_related_to_reference"]},
                                 "id"
                             ]
-                        },
-                        "path_w_length_three_scalar": {
-                            "source": [
-                                {"inbound": ["reference_schema", "id_fk_association_related_to_reference"]},
-                                {"outbound": ["reference_schema", "fk_to_inbound_related_reference_table"]},
-                                {"outbound": ["reference_schema", "fromname_fk_inbound_related_to_reference"]},
-                                "id"
-                            ],
-                            "entity": false
-                        },
-                        "path_w_length_three_cnt_array": {
-                            "source": [
-                                {"inbound": ["reference_schema", "id_fk_association_related_to_reference"]},
-                                {"outbound": ["reference_schema", "fk_to_inbound_related_reference_table"]},
-                                {"outbound": ["reference_schema", "fromname_fk_inbound_related_to_reference"]},
-                                "id"
-                            ],
-                            "aggregate": "cnt"
                         },
                         "path_to_outbound1": {
                             "source": [

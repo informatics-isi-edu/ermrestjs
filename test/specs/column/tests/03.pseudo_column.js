@@ -18,8 +18,8 @@
  * 13: same as 10 in non-entity mode with `min` aggregate (PseudoColumn)
  * 14: col - max (PseudoColumn)
  * 15: same as 8 with `array` in non entity mode
- * 16: same as 8 with `array` in entity mode
- * 17: same as 8 with `array_d` in entity with array_display ulist
+ * 16: same as 8 with `array` in entity mode (use sourcekey, array in vis-col)
+ * 17: same as 8 with `array_d` in entity with array_display ulist (use sourcekey, diff agg in vis-col)
  * 18: same as 8 with `array_d` in entity with array_display olist
  * 19: same path as 8 ending in RID with array_d and array_options
  * 20: same path as 8 ending in timestamp_col with array_d and array_options
@@ -1284,9 +1284,6 @@ exports.execute = function (options) {
                     return col.sourceObject.source;
                 }
                 if (col.isPseudo && (col.isKey || col.isForeignKey || col.isInboundForeignKey)) {
-                    if (col.isKey) {
-                        console.log("HERE: "+ col.key.colset.columns[0].name);
-                    }
 
                     return col._constraintName;
                 }

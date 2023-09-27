@@ -994,7 +994,7 @@ exports.execute = function (options) {
                                 },
                                 //8
                                 {
-                                    "sourcekey": "second_path_source_defnition",
+                                    "sourcekey": "second_path_source_definition",
                                     "source_domain": {
                                         "schema": "faceting_schema",
                                         "table": "secondpath_2",
@@ -1004,7 +1004,7 @@ exports.execute = function (options) {
                                 },
                                 //9
                                 {
-                                    "sourcekey": "second_path_source_defnition",
+                                    "sourcekey": "second_path_source_definition",
                                     "markdown_name": "Name 9",
                                     "source_domain": {
                                         "schema": "faceting_schema",
@@ -1049,7 +1049,7 @@ exports.execute = function (options) {
                             expectedSubMessage += "  - test2\n";
                             expectedSubMessage += "- path_to_path_prefix_o1_o1 (1 choice):\n";
                             expectedSubMessage += "  - test3\n";
-                            expectedSubMessage += "- second_path_source_defnition (2 choices):\n";
+                            expectedSubMessage += "- second_path_source_definition (2 choices):\n";
                             expectedSubMessage += "  - 213145\n";
                             expectedSubMessage += "  - 213147\n";
                             expectedSubMessage += "- Name 9 (2 choices):\n";
@@ -2542,13 +2542,14 @@ exports.execute = function (options) {
                         );
                     });
 
-                    // sourcekey used before the prefix
+                    // sourcekey used before the prefix (also using scalar mode instead of entity)
                     describe("case 2", function () {
                         testReadAndReadPath(
                             {
                                 "and": [
                                     {
                                         "sourcekey": "path_to_path_prefix_o1_o1",
+                                        "entity": false, // just to make sure it's ignored when matching facets
                                         "choices": ["two_o1_o1"]
                                     },
                                     {
