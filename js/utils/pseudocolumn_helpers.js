@@ -1237,7 +1237,6 @@
          * @param {ERMrest.Table} table the table that these sources belong to.
          * @param {Object} consNames the constraint names
          * @param {boolean} isFacet whether this is for a facet or not
-         * @returns 
          */
         clone: function (sourceObject, table, consNames, isFacet) {
             var key, res, self = this;

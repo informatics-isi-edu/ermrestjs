@@ -857,6 +857,112 @@
                 }
             }
         },
+        "table_w_name_column": {
+            "kind": "table",
+            "table_name": "table_w_name_column",
+            "schema_name": "columns_schema",
+            "keys": [
+                {"unique_columns": ["id"], "names": [["columns_schema", "table_w_name_column_id_key"]]},
+                {"unique_columns": ["Name"], "names": [["columns_schema", "table_w_name_column_Name_key"]]}
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "Name",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                }
+            ]
+        },
+        "table_w_accession_id_column": {
+            "kind": "table",
+            "table_name": "table_w_accession_id_column",
+            "schema_name": "columns_schema",
+            "keys": [
+                {"unique_columns": ["id"], "names": [["columns_schema", "table_w_accession_id_column_id_key"]]},
+                {"unique_columns": ["Accession_ID"], "names": [["columns_schema", "table_w_accession_id_column_accession_key"]]}
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "Accession_ID",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                }
+            ]
+        },
+        "table_w_asset_key": {
+            "kind": "table",
+            "table_name": "table_w_asset_key",
+            "schema_name": "columns_schema",
+            "keys": [
+                {"unique_columns": ["url"], "names": [["columns_schema", "table_w_asset_key_url_key"]]},
+                {"unique_columns": ["url_md5"], "names": [["columns_schema", "table_w_asset_key_url_md5_key"]]},
+                {"unique_columns": ["url_sha256"], "names": [["columns_schema", "table_w_asset_key_url_sha256_key"]]},
+                {"unique_columns": ["url_filename"], "names": [["columns_schema", "table_w_asset_key_url_filename_key"]]},
+                {"unique_columns": ["other_column"], "names": [["columns_schema", "table_w_asset_key_other_key"]]}
+            ],
+            "column_definitions": [
+                {
+                    "name": "url",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2017:asset": {
+                            "url_pattern": "/hatrac/{{url_md5}}",
+                            "md5": "url_md5",
+                            "sha256": "url_sha256"
+                        }
+                    }
+                },
+                {
+                    "name": "url_md5",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "url_sha256",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "url_filename",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "other_column",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                }
+            ]
+        },
         "table_w_asset": {
             "comment": "table that has some columns with asset annotation",
             "kind": "table",
@@ -891,15 +997,9 @@
             "column_definitions": [
                 {
                     "name": "id",
-                    "comment": "id, asset should be ignored",
                     "nullok": false,
                     "type": {
                         "typename": "text"
-                    },
-                    "annotations": {
-                        "tag:isrd.isi.edu,2017:asset": {
-                            "url_pattern": "/hatrac/{{id}}"
-                        }
                     }
                 },
                 {

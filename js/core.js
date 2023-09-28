@@ -1407,52 +1407,79 @@
          */
         _getRowDisplayKey: function (context) {
             if (!(context in this._rowDisplayKeys)) {
-                var displayKey;
-                if (this.keys.length() !== 0) {
-                    var candidateKeys = [], key, fkeys, isPartOfSimpleFk, i, j;
-                    for (i = 0; i < this.keys.length(); i++) {
-                        key = this.keys.all()[i];
 
-                        // shouldn't select simple keys that their constituent column is part of a simple foreign key.
-                        isPartOfSimpleFk = key.simple && key.colset.columns[0].isPartOfSimpleForeignKey;
-
-                        // select keys that none of their columns isHTMl and nullok.
-                        if (!isPartOfSimpleFk && key._isWellFormed(context)) {
-                            candidateKeys.push(key);
-                        }
-                    }
-
-                    // sort the keys and pick the first one.
-                    if (candidateKeys.length !== 0) {
-                        var countTextColumns = function(key) {
-                            for (var i = 0, res = 0; i < key.colset.columns.length; i++) {
-                                if (key.colset.columns[i].type.name == "text") res++;
-                            }
-                            return res;
-                        };
-
-                        displayKey = candidateKeys.sort(function (keyA, keyB) {
-
-                            // shorter
-                            if (keyA.colset.columns.length != keyB.colset.columns.length) {
-                                return keyA.colset.columns.length - keyB.colset.columns.length;
-                            }
-
-                            // has more text
-                            var aTextCount = countTextColumns(keyA);
-                            var bTextCount = countTextColumns(keyB);
-                            if (aTextCount != bTextCount) {
-                                return bTextCount - aTextCount;
-                            }
-
-                            // the one that has lower column position
-                            return (keyA.colset._getColumnPositions() > keyB.colset._getColumnPositions()) ? 1 : -1;
-                        })[0];
-                    }
-                }
-                this._rowDisplayKeys[context] = displayKey; // might be undefined
+                this._rowDisplayKeys[context] = this._populateRowDisplayKey(); // might be undefined
             }
             return this._rowDisplayKeys[context];
+        },
+
+        /**
+         * use the _getRowDisplayKey instead. this function is used internally by that function.
+         * @private
+         */
+        _populateRowDisplayKey: function (context) {
+            var self = this;
+            if (self.keys.length() === 0) {
+                return undefined;
+            }
+
+            var candidateKeys = [], key, isPartOfSimpleFk, i, j;
+
+            var countTextColumns = function(key) {
+                for (var i = 0, res = 0; i < key.colset.columns.length; i++) {
+                    if (key.colset.columns[i].type.name == "text") res++;
+                }
+                return res;
+            };
+
+            var isSimpleAndMadeOfAsset = function (key) {
+                var col = key.colset.columns[0];
+                return key.simple && (col.isAssetURL || col.isAssetByteCount || col.isAssetMd5 || col.isAssetSha256);
+            };
+
+            for (i = 0; i < self.keys.length(); i++) {
+                key = self.keys.all()[i];
+
+                // find a simple key that is made of specific columns (the same that are picked for rowname)
+                if (key.simple && module._getCandidateRowNameColumn([key.colset.columns[0].name]) !== false) {
+                    return key;
+                }
+
+                // shouldn't select simple keys that their constituent column is part of a simple foreign key.
+                isPartOfSimpleFk = key.simple && key.colset.columns[0].isPartOfSimpleForeignKey;
+
+                // select keys that none of their columns isHTMl and nullok.
+                if (!isPartOfSimpleFk && key._isWellFormed(context)) {
+                    candidateKeys.push(key);
+                }
+            }
+
+            // sort the keys and pick the first one.
+            if (candidateKeys.length !== 0) {
+                return candidateKeys.sort(function (keyA, keyB) {
+                    // the one that is not made of asset columns has priority
+                    var aIsSimpleAndMadeOfAsset = isSimpleAndMadeOfAsset(keyA) ? 1 : 0;
+                    var bIsSimpleAndMadeOfAsset = isSimpleAndMadeOfAsset(keyB) ? 1 : 0;
+                    if (aIsSimpleAndMadeOfAsset !== bIsSimpleAndMadeOfAsset) {
+                        return aIsSimpleAndMadeOfAsset - bIsSimpleAndMadeOfAsset;
+                    }
+
+                    // shorter
+                    if (keyA.colset.columns.length != keyB.colset.columns.length) {
+                        return keyA.colset.columns.length - keyB.colset.columns.length;
+                    }
+
+                    // has more text
+                    var aTextCount = countTextColumns(keyA);
+                    var bTextCount = countTextColumns(keyB);
+                    if (aTextCount != bTextCount) {
+                        return bTextCount - aTextCount;
+                    }
+
+                    // the one that has lower column position
+                    return (keyA.colset._getColumnPositions() > keyB.colset._getColumnPositions()) ? 1 : -1;
+                })[0];
+            }
         },
 
         /**
