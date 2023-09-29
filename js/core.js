@@ -1407,79 +1407,52 @@
          */
         _getRowDisplayKey: function (context) {
             if (!(context in this._rowDisplayKeys)) {
+                var displayKey;
+                if (this.keys.length() !== 0) {
+                    var candidateKeys = [], key, fkeys, isPartOfSimpleFk, i, j;
+                    for (i = 0; i < this.keys.length(); i++) {
+                        key = this.keys.all()[i];
 
-                this._rowDisplayKeys[context] = this._populateRowDisplayKey(); // might be undefined
+                        // shouldn't select simple keys that their constituent column is part of a simple foreign key.
+                        isPartOfSimpleFk = key.simple && key.colset.columns[0].isPartOfSimpleForeignKey;
+
+                        // select keys that none of their columns isHTMl and nullok.
+                        if (!isPartOfSimpleFk && key._isWellFormed(context)) {
+                            candidateKeys.push(key);
+                        }
+                    }
+
+                    // sort the keys and pick the first one.
+                    if (candidateKeys.length !== 0) {
+                        var countTextColumns = function(key) {
+                            for (var i = 0, res = 0; i < key.colset.columns.length; i++) {
+                                if (key.colset.columns[i].type.name == "text") res++;
+                            }
+                            return res;
+                        };
+
+                        displayKey = candidateKeys.sort(function (keyA, keyB) {
+
+                            // shorter
+                            if (keyA.colset.columns.length != keyB.colset.columns.length) {
+                                return keyA.colset.columns.length - keyB.colset.columns.length;
+                            }
+
+                            // has more text
+                            var aTextCount = countTextColumns(keyA);
+                            var bTextCount = countTextColumns(keyB);
+                            if (aTextCount != bTextCount) {
+                                return bTextCount - aTextCount;
+                            }
+
+                            // the one that has lower column position
+                            return (keyA.colset._getColumnPositions() > keyB.colset._getColumnPositions()) ? 1 : -1;
+                        })[0];
+                    }
+                }
+                this._rowDisplayKeys[context] = displayKey; // might be undefined
             }
             return this._rowDisplayKeys[context];
-        },
-
-        /**
-         * use the _getRowDisplayKey instead. this function is used internally by that function.
-         * @private
-         */
-        _populateRowDisplayKey: function (context) {
-            var self = this;
-            if (self.keys.length() === 0) {
-                return undefined;
-            }
-
-            var candidateKeys = [], key, isPartOfSimpleFk, i, j;
-
-            var countTextColumns = function(key) {
-                for (var i = 0, res = 0; i < key.colset.columns.length; i++) {
-                    if (key.colset.columns[i].type.name == "text") res++;
-                }
-                return res;
-            };
-
-            var isSimpleAndMadeOfAsset = function (key) {
-                var col = key.colset.columns[0];
-                return key.simple && (col.isAssetURL || col.isAssetByteCount || col.isAssetMd5 || col.isAssetSha256);
-            };
-
-            for (i = 0; i < self.keys.length(); i++) {
-                key = self.keys.all()[i];
-
-                // find a simple key that is made of specific columns (the same that are picked for rowname)
-                if (key.simple && module._getCandidateRowNameColumn([key.colset.columns[0].name]) !== false) {
-                    return key;
-                }
-
-                // shouldn't select simple keys that their constituent column is part of a simple foreign key.
-                isPartOfSimpleFk = key.simple && key.colset.columns[0].isPartOfSimpleForeignKey;
-
-                // select keys that none of their columns isHTMl and nullok.
-                if (!isPartOfSimpleFk && key._isWellFormed(context)) {
-                    candidateKeys.push(key);
-                }
-            }
-
-            // sort the keys and pick the first one.
-            if (candidateKeys.length !== 0) {
-                return candidateKeys.sort(function (keyA, keyB) {
-                    // the one that is not made of asset columns has priority
-                    var aIsSimpleAndMadeOfAsset = isSimpleAndMadeOfAsset(keyA) ? 1 : 0;
-                    var bIsSimpleAndMadeOfAsset = isSimpleAndMadeOfAsset(keyB) ? 1 : 0;
-                    if (aIsSimpleAndMadeOfAsset !== bIsSimpleAndMadeOfAsset) {
-                        return aIsSimpleAndMadeOfAsset - bIsSimpleAndMadeOfAsset;
-                    }
-
-                    // shorter
-                    if (keyA.colset.columns.length != keyB.colset.columns.length) {
-                        return keyA.colset.columns.length - keyB.colset.columns.length;
-                    }
-
-                    // has more text
-                    var aTextCount = countTextColumns(keyA);
-                    var bTextCount = countTextColumns(keyB);
-                    if (aTextCount != bTextCount) {
-                        return bTextCount - aTextCount;
-                    }
-
-                    // the one that has lower column position
-                    return (keyA.colset._getColumnPositions() > keyB.colset._getColumnPositions()) ? 1 : -1;
-                })[0];
-            }
         },
 
         /**
@@ -1619,19 +1592,46 @@
                     return false;
                 }
 
-                var sourceDef = annot.sources[key], pSource, hasPrefix;
+                var sourceDef = annot.sources[key], pSource, hasPrefix, hasSourcekey, usedSourcekey, valid;
                 try {
                     // if it has prefix, we have to make sure the prefix is processed beforehand
                     hasPrefix = typeof sourceDef === "object" && Array.isArray(sourceDef.source) &&
                                 sourceDef.source.length > 1 && ("sourcekey" in sourceDef.source[0]);
 
-                    if (hasPrefix) {
+                    // a sugar syntax that allows referring to an existing sourcekey
+                    hasSourcekey = typeof sourceDef === "object" && isStringAndNotEmpty(sourceDef.sourcekey);
+
+                    if (hasSourcekey) {
+                        // keep track of dependencies for cycle detection
+                        keysThatDependOnThis.push(key);
+
+                        usedSourcekey = sourceDef.sourcekey;
+
+                        // make sure we've processed the referred sourcekey
+                        valid = addSourceDef(usedSourcekey, keysThatDependOnThis);
+                        processedSources[key] = valid;
+                        if (!valid) {
+                            module._log.info(message + ": " + "given sourcekey is invalid.");
+                            return false;
+                        }
+
+                        /**
+                         * remove the sourcekey as it was only used for copying (refer to the comment of previous line) and
+                         * just copy the definition from the sourcekey to here
+                         * TODO this way the inner sourcekey is getting lost so it cannot be used for sharing path.
+                         * is there any way to fix this?
+                         */
+                        delete sourceDef.sourcekey;
+                        module._shallowCopyExtras(sourceDef, res.sources[usedSourcekey].sourceObject, module._sourceDefinitionAttributes);
+
+                    }
+                    else if (hasPrefix) {
 
                         // keep track of dependencies for cycle detection
                         keysThatDependOnThis.push(key);
 
                         // make sure we've processed the prefix
-                        var valid = addSourceDef(sourceDef.source[0].sourcekey, keysThatDependOnThis);
+                        valid = addSourceDef(sourceDef.source[0].sourcekey, keysThatDependOnThis);
                         processedSources[key] = valid;
                         if (!valid) {
                             module._log.info(message + ": " + "given sourcekey (path prefix) is invalid.");

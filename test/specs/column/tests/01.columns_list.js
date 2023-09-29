@@ -23,10 +23,6 @@ exports.execute = function (options) {
             editContext = "entry/edit",
             detailedContext = "detailed";
 
-        var getURL = (table) => {
-            return `${options.url}/catalog/${catalog_id}/entity/${schemaName}:${table}/id=${entityId}`;
-        }
-
         var singleEnitityUri = options.url + "/catalog/" + catalog_id + "/entity/" +
             schemaName + ":" + tableName + "/id=" + entityId;
 
@@ -621,34 +617,6 @@ exports.execute = function (options) {
                             });
                         });
 
-                        it ('if there\'s a simple key made of "candidate" column (same logic as rowname), it should use that.', (done) => {
-                            options.ermRest.resolve(getURL('table_w_name_column'), {cid:"test"}).then(function(ref) {
-                                expect(ref.columns[0].isPseudo).toBe(true);
-                                expect(ref.columns[0]._constraintName).toEqual(["columns_schema", "table_w_name_column_Name_key"].join("_"));
-
-                                return options.ermRest.resolve(getURL('table_w_accession_id_column'), {cid:"test"});
-                            }).then(function(ref) {
-                                expect(ref.columns[0].isPseudo).toBe(true);
-                                expect(ref.columns[0]._constraintName).toEqual(["columns_schema", "table_w_accession_id_column_accession_key"].join("_"));
-                                done();
-                            }, function (err) {
-                                console.dir(err);
-                                done.fail();
-                            });
-                        });
-
-                        it ('it should depriotize picking a key that is made of asset metadata (other than filename).', (done) => {
-                            options.ermRest.resolve(getURL('table_w_asset_key'), {cid:"test"}).then(function(ref) {
-                                expect(ref.columns[0].isPseudo).toBe(true);
-                                expect(ref.columns[0]._constraintName).toEqual(["columns_schema", "table_w_asset_key_url_filename_key"].join("_"));
-
-                                done();
-                            }, function (err) {
-                                console.dir(err);
-                                done.fail();
-                            });
-                        })
-
                     });
                 });
 
@@ -777,6 +745,11 @@ exports.execute = function (options) {
                       expect(assetRefCompactCols[13].isPseudo).toBe(false, "invalid isPseudo for compact");
                       expect(assetRefEntry.columns[8].name).toBe("col_asset_5", "invalid name for entry");
                       expect(assetRefEntry.columns[8].isPseudo).toBe(false, "invalid isPseudo for entry");
+                    });
+
+                    it('if columns has been used as the keyReferenceColumn, should ignore the asset annotation.', function () {
+                        expect(assetRefCompactCols[0]._constraintName).toBe(["columns_schema", "table_w_asset_key_1"].join("_"));
+                        expect(assetRefCompactCols[0].isKey).toBe(true);
                     });
 
                     it('if column is part of any foreignkeys, should ignore the asset annotation.', function() {
