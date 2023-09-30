@@ -1598,34 +1598,7 @@
                     hasPrefix = typeof sourceDef === "object" && Array.isArray(sourceDef.source) &&
                                 sourceDef.source.length > 1 && ("sourcekey" in sourceDef.source[0]);
 
-                    // a sugar syntax that allows referring to an existing sourcekey
-                    hasSourcekey = typeof sourceDef === "object" && isStringAndNotEmpty(sourceDef.sourcekey);
-
-                    if (hasSourcekey) {
-                        // keep track of dependencies for cycle detection
-                        keysThatDependOnThis.push(key);
-
-                        usedSourcekey = sourceDef.sourcekey;
-
-                        // make sure we've processed the referred sourcekey
-                        valid = addSourceDef(usedSourcekey, keysThatDependOnThis);
-                        processedSources[key] = valid;
-                        if (!valid) {
-                            module._log.info(message + ": " + "given sourcekey is invalid.");
-                            return false;
-                        }
-
-                        /**
-                         * remove the sourcekey as it was only used for copying (refer to the comment of previous line) and
-                         * just copy the definition from the sourcekey to here
-                         * TODO this way the inner sourcekey is getting lost so it cannot be used for sharing path.
-                         * is there any way to fix this?
-                         */
-                        delete sourceDef.sourcekey;
-                        module._shallowCopyExtras(sourceDef, res.sources[usedSourcekey].sourceObject, module._sourceDefinitionAttributes);
-
-                    }
-                    else if (hasPrefix) {
+                    if (hasPrefix) {
 
                         // keep track of dependencies for cycle detection
                         keysThatDependOnThis.push(key);
