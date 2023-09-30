@@ -267,7 +267,7 @@
      */
     module._shallowCopyExtras = function (copyTo, copyFrom, enforcedList) {
         for (var key in copyFrom) {
-            if (copyFrom.hasOwnProperty(key) && (!copyTo.hasOwnProperty(key) || enforcedList.indexOf(key) !== -1)) {
+            if (copyFrom.hasOwnProperty(key) && (!copyTo.hasOwnProperty(key) || (Array.isArray(enforcedList) && enforcedList.indexOf(key) !== -1))) {
                 copyTo[key] = copyFrom[key];
             }
         }

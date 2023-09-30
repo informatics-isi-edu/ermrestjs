@@ -23,7 +23,6 @@ exports.execute = function (options) {
             editContext = "entry/edit",
             detailedContext = "detailed";
 
-
         var singleEnitityUri = options.url + "/catalog/" + catalog_id + "/entity/" +
             schemaName + ":" + tableName + "/id=" + entityId;
 

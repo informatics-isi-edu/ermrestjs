@@ -313,6 +313,7 @@
         INVALID_SOURCEKEY: "given object is invalid. The defined `sourcekey` is invalid.",
         INVALID_VIRTUAL_NO_NAME: "`markdown_name` is required when `source` and `sourcekey` are undefiend.",
         INVALID_VIRTUAL_NO_VALUE: "`display.markdown_pattern` is required when `source` and `sourcekey` are undefiend.",
+        INVALID_BOTH_SOURCE: 'given object is invalid. only one of `source` or `sourcekey` are allowed not both.',
         DUPLICATE_COLUMN: "ignoring duplicate column definition.",
         DUPLICATE_KEY: "ignoring duplicate key definition.",
         DUPLICATE_FK: "ignoring duplicate foreign key definition.",
@@ -387,7 +388,8 @@
         TEXT_SEARCH: "::ts::"
     });
 
-    module._sourceDefinitionAttributes = ["source", "aggregate", "entity", "self_link"];
+    // the attributes that cannot be changed when using sourcekey
+    module._sourceDefinitionAttributes = ["source"];
 
     module._classNames = Object.freeze({
         externalLink: "external-link",

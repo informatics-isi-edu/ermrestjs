@@ -86,6 +86,9 @@ In this category, the [`sourcekey`](#sourcekey) proprety is used to refer to one
 ```
 {
   "sourcekey" : <source key>,
+  "entity": <true or false>,
+  "aggregate": <aggregate function>,
+  "self_link": <boolean>,
   "markdown_name": <display name>,
   "comment": <tooltip message>,
   "comment_display": <inline|tooltip>,
@@ -324,7 +327,7 @@ RID;M:=array_d(M:*),F3:=array_d(F3:*),F2:=array_d(M_P1:*),F1:=array_d(M_P2:*)@so
 ```
 
 #### sourcekey
-Instead of defining a column directive in place, you can define them in the [`source-definitions` annotations](annotation.md#tag-2019-source-definitions), and refer to those definitions using `sourcekey`. If `sourcekey` is defined on a column directive, the rest of _data source attributes_ defined on the column directive will be ignored (but you still can modify the display and other types of attributes).
+Instead of defining a column directive in place, you can define them in the [`source-definitions` annotations](annotation.md#tag-2019-source-definitions), and refer to those definitions using `sourcekey`. You can also use this property to refer to an existing source definition and modify the display or data source attributes (apart from `source`) for this instance.
 
 #### entity
  If the column directive can be treated as entity (the column that is defined in source path is key of the table), setting `entity` attribute to `false` will force the scalar mode. This will affect different logic and heuristics. In a nutshell, entity-mode means we try to provide a UX around a set of entities (table rows).  Scalar mode means we try to provide a UX around a set of values like strings, integers, etc.

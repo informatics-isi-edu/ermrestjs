@@ -523,6 +523,7 @@
                     obj = module._simpleDeepCopy(obj);
 
                     var sd, wrapper;
+                    // if both source and sourcekey are defined, ignore the source and use sourcekey
                     if (obj.sourcekey) {
                         sd = self.table.sourceDefinitions.sources[obj.sourcekey];
                         if (!sd) return;
@@ -3368,6 +3369,7 @@
 
                         // pseudo-column
                         var sd, wrapper;
+                        // if both source and sourcekey are defined, ignore the source and use sourcekey
                         if (col.sourcekey) {
                             sd = self.table.sourceDefinitions.sources[col.sourcekey];
                             if (logCol(!sd, wm.INVALID_SOURCEKEY, i)) {
