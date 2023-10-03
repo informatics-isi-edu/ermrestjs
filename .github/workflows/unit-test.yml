@@ -16,6 +16,7 @@ jobs:
           path: ermrestjs
       - name: Setup the system
         run: |
+          whoami
           echo "npm version:"
           npm --version
           echo "node version:"
