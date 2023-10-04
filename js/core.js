@@ -1267,7 +1267,7 @@
                             }
 
                             // the one that has lower column position
-                            return (a.colset._getColumnPositions() > b.colset._getColumnPositions()) ? 1 : -1;
+                            return compareColumnPositions(a.colset._getColumnPositions(), b.colset._getColumnPositions(), true);
                         })[0].colset.columns;
                     }
 
@@ -1320,7 +1320,7 @@
                         }
 
                         // the one that has lower column position
-                        return (keyA.colset._getColumnPositions() > keyB.colset._getColumnPositions()) ? 1 : -1;
+                        return compareColumnPositions(keyA.colset._getColumnPositions(), keyB.colset._getColumnPositions(), true);
                     })[0].colset.columns;
                 } else {
                     this._displayKey = this.columns.all();
@@ -1446,7 +1446,7 @@
                             }
 
                             // the one that has lower column position
-                            return (keyA.colset._getColumnPositions() > keyB.colset._getColumnPositions()) ? 1 : -1;
+                            return compareColumnPositions(keyA.colset._getColumnPositions(), keyB.colset._getColumnPositions(), true);
                         })[0];
                     }
                 }
