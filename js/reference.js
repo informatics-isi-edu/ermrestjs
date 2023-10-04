@@ -2608,12 +2608,14 @@
                     }
 
                     // columns
-                    if (a._related_key_column_positions.join(",") != b._related_key_column_positions.join(",")) {
-                        return a._related_key_column_positions > b._related_key_column_positions ? 1 : -1;
+                    var keyColPositions = compareColumnPositions(a._related_key_column_positions, b._related_key_column_positions);
+                    if (keyColPositions !== 0) {
+                        return keyColPositions;
                     }
 
                     // foreignkey columns
-                    return a._related_fk_column_positions >= b._related_fk_column_positions ? 1 : -1;
+                    var fkeyColPositions = compareColumnPositions(a._related_fk_column_positions, b._related_fk_column_positions);
+                    return fkeyColPositions === -1 ? -1 : 1;
                 });
             }
 

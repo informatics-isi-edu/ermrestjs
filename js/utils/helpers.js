@@ -144,6 +144,36 @@
         return (typeof x === 'number') && (x % 1 === 0);
     };
 
+    /**
+     * can be used to compare the "position columns" of colsets.
+     *
+     * @private
+     * @param {Array} a an array of sorted integer values
+     * @param {Array} b an array of sorted integer values
+     * @param {boolean?} greater - whether we should do greater check instead of greater equal
+     *
+     * return,
+     *  -  1 if the position in the first argument are before the second one.
+     *  - -1 if the other way around.
+     *  - 0 if identical
+     * Notes:
+     * - both arguments are array and sorted ascendingly
+     * - if greater argument is true, we're doing a greater check so
+     *   in the identical case this function will return -1.
+     */
+    var compareColumnPositions = function (a, b, greater) {
+        for (var i = 0; i < a.length && i < b.length ; i++) {
+            if (a[i] !== b[i]) {
+                return a[i] > b[i] ? 1 : -1;
+            }
+        }
+        // all the columns were identical and only one has extra
+        if (a.length !== b.length) {
+            return a.length > b.length ? 1 : -1;
+        }
+        return greater ? -1 : 0;
+    };
+
     var verifyClientConfig = function () {
         if (module._clientConfig === null) {
             throw new module.InvalidInputError("this function requires cliet-config which is not set properly.");
