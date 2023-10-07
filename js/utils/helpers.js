@@ -104,6 +104,15 @@
         return typeof obj === "object" && obj !== null;
     };
 
+    /**
+     * Returns true if given parameter is object and doesn't have any items.
+     * @param  {*} obj
+     * @return {boolean}
+     */
+    var isEmptyArray = function (obj) {
+        return Array.isArray(obj) && obj.length === 0;
+    };
+
     var isStringAndNotEmpty = function (obj) {
         return typeof obj === "string" && obj.length > 0;
     };
