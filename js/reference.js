@@ -3222,12 +3222,12 @@
                 hasOrigFKR,
                 refTable = this._table,
                 fkName, refCol, pseudoName,
-                isEntry, isCompactEntry,
                 ignore, cols, col, fk, i, j;
 
             var context = this._context;
-            isEntry = module._isEntryContext(context);
-            isCompactEntry = (typeof context === "string" && context.startsWith(module._contexts.COMPACT_ENTRY));
+            var isEntry = module._isEntryContext(context),
+                isCompact = (typeof context === "string" && context.startsWith(module._contexts.COMPACT)),
+                isCompactEntry = (typeof context === "string" && context.startsWith(module._contexts.COMPACT_ENTRY));
 
             // check if we should hide some columns or not.
             // NOTE: if the reference is actually an inbound related reference, we should hide the foreign key that created this link.
@@ -3243,13 +3243,43 @@
                 return hasOrigFKR && hiddenFKR.colset.columns.indexOf(col) != -1;
             };
 
+            var _addAssetColumn = function (col, heuristics) {
+                var assetCol = new AssetPseudoColumn(self, col);
+                assetColumns.push(assetCol);
+                self._referenceColumns.push(assetCol);
+
+                // as part of heuristics we only want the asset be added and not the column,
+                // so adding it to considered ones to avoid adding it again.
+                if (heuristics && assetCol.filenameColumn) {
+                    consideredColumns[assetCol.filenameColumn.name] = true;
+                }
+            };
+
             // this function will take care of adding column and asset column
-            var addColumn = function (col) {
+            var addColumn = function (col, heuristics) {
                 if (col.type.name === "text" && col.isAssetURL) {
-                    var assetCol = new AssetPseudoColumn(self, col);
-                    assetColumns.push(assetCol);
-                    self._referenceColumns.push(assetCol);
+                    _addAssetColumn(col, heuristics);
                     return;
+                }
+
+                // for heuristics we should take care of  the asset metadata columns differently
+                if (heuristics) {
+                    // in entry context we don't want to show any of the asset metadata columns as chaise cannot handle it.
+                    if (isEntry && (col.isAssetFilename || col.isAssetByteCount || col.isAssetMd5 || col.isAssetSha256)) {
+                        return;
+                    }
+
+                    // as part of heuristics, treat the asset filename the same as the asset itself.
+                    // and only add one of them.
+                    if (col.isAssetFilename) {
+                        _addAssetColumn(col.assetURLColumn, heuristics);
+                        return;
+                    }
+
+                    // in compact context we should hide md5 and sha256
+                    if (isCompact && (col.isAssetMd5 || col.isAssetSha256)) {
+                        return;
+                    }
                 }
 
                 // if annotation is not present,
@@ -3584,7 +3614,7 @@
                     // add the column if it's not part of any foreign keys
                     // or if the column type is array (currently ermrest doesn't suppor this either)
                     if (col.memberOfForeignKeys.length === 0) {
-                        addColumn(col);
+                        addColumn(col, true);
                     } else {
                         // sort foreign keys of a column
                         if (col.memberOfForeignKeys.length > 1) {
@@ -3614,7 +3644,7 @@
                                 // don't add the column if it's also part of a simple fk
                                 if (!isEntry && !col.isPartOfSimpleForeignKey && !(col.name in consideredColumns)) {
                                     consideredColumns[col.name] = true;
-                                    this._referenceColumns.push(new ReferenceColumn(this, [col]));
+                                    addColumn(col, true);
                                 }
 
                                 if (!(fkName in consideredColumns) && !nameExistsInTable(fkName, fk._constraintName)) {
@@ -3634,41 +3664,6 @@
                     this._referenceColumns.push(compositeFKs[i]);
                 }
 
-            }
-
-            // if edit context remove filename, bytecount, md5, and sha256 from visible columns
-            if (isEntry && assetColumns.length !== 0) {
-
-                // given a column will remove it from visible columns
-                // this function is used for removing filename, bytecount, md5, and sha256 from visible columns
-                var removeCol = function(col) {
-                    // if columns are not defined in the annotation, they will be null.
-                    // so we have to check it first.
-                    if (col === null) {
-                        return;
-                    }
-
-                    // column is not in list of visible columns
-                    if (!(col.name in consideredColumns)) {
-                        return;
-                    }
-
-                    // find the column and remove it
-                    for (var x = 0; x < self._referenceColumns.length; x++){
-                        if (!self._referenceColumns[x].isPseudo && self._referenceColumns[x].name === col.name) {
-                            self._referenceColumns.splice(x, 1);
-                            return;
-                        }
-                    }
-                };
-
-                for(i = 0; i < assetColumns.length; i++) {
-                    // hide the columns
-                    removeCol(assetColumns[i].filenameColumn);
-                    removeCol(assetColumns[i].byteCountColumn);
-                    removeCol(assetColumns[i].md5);
-                    removeCol(assetColumns[i].sha256);
-                }
             }
 
             // If not in edit context i.e in read context remove the hidden columns which cannot be selected.

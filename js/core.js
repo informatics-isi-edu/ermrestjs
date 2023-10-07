@@ -745,7 +745,7 @@
             if (uri === module._annotations.HIDDEN) {
                 this.ignore = true;
             } else if (uri === module._annotations.IGNORE &&
-                (jsonAnnotation === null || jsonAnnotation === [])) {
+                (jsonAnnotation === null || isEmptyArray(jsonAnnotation))) {
                 this.ignore = true;
             }
         }
@@ -991,7 +991,7 @@
             if (uri === module._annotations.HIDDEN) {
                 this.ignore = true;
             } else if (uri === module._annotations.IGNORE &&
-                (jsonAnnotation === null || jsonAnnotation === [])) {
+                (jsonAnnotation === null || isEmptyArray(jsonAnnotation))) {
                 this.ignore = true;
             }
         }
@@ -2158,7 +2158,9 @@
 
         /**
          * returns an object that captures the asset category of columns.
-         * - the key of the returned object is the column name and value is the assigned category.
+         * - the key of the returned object is the column name and value and the value is an object. The object has the following:
+         *  - category: the assigned category name
+         *  - URLColumn: the url column.
          * - if a column is used in multiple asset annotations, only the first usage is used and other asset annotations
          *   are discarded.
          */
@@ -2192,14 +2194,14 @@
                                     valid = false;
                                     module._log.warn(message + '`' + annot[prop] + '` already used in another asset column mapping.');
                                 } else {
-                                    temp[annot[prop]] = mapAssetAnnotPropToCategory[prop];
+                                    temp[annot[prop]] = { category: mapAssetAnnotPropToCategory[prop], URLColumn: col };
                                 }
                             }
 
                         }
 
                         if (valid) {
-                            assignedColumns[col.name] = 'url';
+                            assignedColumns[col.name] = { category: 'url' };
                             Object.assign(assignedColumns, temp);
                         }
                     }
@@ -2724,8 +2726,9 @@
      * @constructor
      * @param {ERMrest.Table} table the table object.
      * @param {string} jsonColumn the json column.
+     * @param {Object?} assetCategoryInfo if the column is an asset, this must be an object with categroy and URLColumn properties
      */
-    function Column(table, jsonColumn, assetCategory) {
+    function Column(table, jsonColumn, assetCategoryInfo) {
 
         this._jsonColumn = jsonColumn;
 
@@ -2958,17 +2961,23 @@
          */
         this.ignore = false;
 
-
-        if (isStringAndNotEmpty(assetCategory)) {
+        if (isObjectAndNotNull(assetCategoryInfo) && isStringAndNotEmpty(assetCategoryInfo.category)) {
             /**
              * if it's used in an asset annotation, will return its category. available values:
-             * 'filename', 'byte_count', 'md5', 'sha256'
+             * 'url', 'filename', 'byte_count', 'md5', 'sha256'
              *
              * @type {?string}
              */
-            this.assetCategory = assetCategory;
+            this.assetCategory = assetCategoryInfo.category;
 
-            switch (assetCategory) {
+            if (isObjectAndNotNull(assetCategoryInfo.URLColumn)) {
+                /**
+                 * if the column is storing of the extra asset metadata, this will return the actual url column
+                 */
+                this.assetURLColumn = assetCategoryInfo.URLColumn;
+            }
+
+            switch (assetCategoryInfo.category) {
                 case 'url':
                     /**
                      * if this column is has a valid asset annotation
@@ -3039,6 +3048,7 @@
             }
         });
         // then copy if it's an asset type (asset is the most specific one)
+        var assetCategory = this.assetCategory;
         if (isStringAndNotEmpty(assetCategory)) {
             ancestors.forEach(function (el) {
                 if (el.annotations.contains(defaultAnnotKey)) {
@@ -3059,7 +3069,7 @@
             if (uri === module._annotations.HIDDEN) {
                 this.ignore = true;
             } else if (uri === module._annotations.IGNORE &&
-                (jsonAnnotation === null || jsonAnnotation === [])) {
+                (jsonAnnotation === null || isEmptyArray(jsonAnnotation)) ){
                 this.ignore = true;
             }
         }
@@ -4344,7 +4354,7 @@
             if (uri === module._annotations.HIDDEN) {
                 this.ignore = true;
             } else if (uri === module._annotations.IGNORE &&
-                (jsonAnnotation === null || jsonAnnotation === [])) {
+                (jsonAnnotation === null || isEmptyArray(jsonAnnotation))) {
                 this.ignore = true;
             }
 
