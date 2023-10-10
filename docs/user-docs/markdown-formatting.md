@@ -387,7 +387,7 @@ The following list of terms are used to describe how to style iframes:
     <div class="figcaption-wrapper" style="width: 100%;">
         <figcaption class="embed-caption">CAPTION</figcaption>
         <div class="iframe-btn-container">
-            <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="fullscreen-icon"></span> Full screen</a>
+            <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a>
         </div>
     </div>
     <iframe src="https://example.com"></iframe>
@@ -404,7 +404,7 @@ The following list of terms are used to describe how to style iframes:
     <div class="figcaption-wrapper" style="width: 800px;">
         <figcaption class="embed-caption">CAPTION</figcaption>
         <div class="iframe-btn-container">
-            <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="fullscreen-icon"></span> Full screen</a>
+            <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a>
         </div>
     </div>
     <iframe src="https://example.com" width="800" height="300" ></iframe>
@@ -435,7 +435,7 @@ If you provide an invalid link then instead of an iframe you will just get the i
     <div class="figcaption-wrapper" style="width: 800px;">
         <figcaption class="embed-caption">CAPTION</figcaption>
         <div class="iframe-btn-container">
-            <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="fullscreen-icon"></span> Full screen</a>
+            <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a>
         </div>
     </div>
     <iframe src="https://example.com" width="800" height="300" scrolling="no"></iframe>
@@ -450,7 +450,7 @@ If you provide an invalid link then instead of an iframe you will just get the i
 # OUTPUT:
 <figure class="embed-block">
     <div class="iframe-btn-container">
-        <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="fullscreen-icon"></span> Full screen</a>
+        <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a>
     </div>
     <iframe src="https://example.com" style="border: 5px solid;" class="iframe-element-class"></iframe>
     <figcaption class="embed-caption">CAPTION</figcaption>
@@ -468,7 +468,7 @@ To style the whole iframe enclosing block (`<figure>`) you can either specify cl
 # OUTPUT:
 <figure class="embed-block iclass" style="border: 1px solid;">
     <div class="iframe-btn-container">
-        <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="fullscreen-icon"></span> Full screen</a>
+        <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a>
     </div>
     <iframe src="https://example.com"></iframe>
     <figcaption class="embed-caption"><a href="https://example.com">CAPTION</a></figcaption>
@@ -484,7 +484,7 @@ To style the whole iframe enclosing block (`<figure>`) you can either specify cl
 # OUTPUT:
 <figure class="embed-block iclass" style="border: 1px solid;">
     <div class="iframe-btn-container">
-        <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="fullscreen-icon"></span> Full screen</a>
+        <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a>
     </div>
     <iframe src="https://example.com"></iframe>
     <figcaption class="embed-caption cclass" style="font-weight: 500;"><a href="https://example.com">CAPTION</a></figcaption>
@@ -503,7 +503,7 @@ To style the whole iframe enclosing block (`<figure>`) you can either specify cl
     <div class="figcaption-wrapper" style="width: 800px;">
         <figcaption class="embed-caption"><a href="https://example.com">CAPTION</a></figcaption>
         <div class="iframe-btn-container">
-            <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="fullscreen-icon"></span> Full screen</a>
+            <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a>
         </div>
     </div>
     <iframe src="https://example.com" width="800" height="300"></iframe>
@@ -518,7 +518,7 @@ To style the whole iframe enclosing block (`<figure>`) you can either specify cl
 # OUTPUT:
 <figure class="embed-block">
     <div class="iframe-btn-container">
-        <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="fullscreen-icon"></span> Full screen</a>
+        <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a>
     </div>
     <iframe src="https://example.com" width="800" height="300"></iframe>
     <figcaption class="embed-caption"><a href="https://example.com">CAPTION</a></figcaption>
@@ -535,7 +535,7 @@ To style the caption of an iframe you can either specify classes using `caption-
 # OUTPUT:
 <figure class="embed-block">
     <div class="iframe-btn-container">
-        <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="fullscreen-icon"></span> Full screen</a>
+        <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a>
     </div>
     <iframe src="https://example.com"></iframe>
     <figcaption class="embed-caption cclass" style="font-weight: 500;"><a href="https://example.com">CAPTION</a></figcaption>
@@ -552,7 +552,7 @@ To have the caption open in a new tab, use `caption-target=_blank`.
     <div class="figcaption-wrapper" style="width: 800px;">
         <figcaption class="embed-caption"><a href="https://example.com" target="_blank">CAPTION</a></figcaption>
         <div class="iframe-btn-container">
-            <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="fullscreen-icon"></span> Full screen</a>
+            <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a>
         </div>
     </div>
     <iframe src="https://example.com" width="800" height="300"></iframe>
@@ -584,7 +584,7 @@ If parent container (cell in record app) has no styles, the iframe will only fil
     <div class="figcaption-wrapper" style="width: 100%;">
         <figcaption class="embed-caption">CAPTION</figcaption>
         <div class="iframe-btn-container">
-            <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="fullscreen-icon"></span> Full screen</a>
+            <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a>
         </div>
     </div>
     <iframe src="https://example.com" class="chaise-autofill"></iframe>
@@ -603,7 +603,7 @@ When a min-width value is defined, the parent container will stop resizing once 
     <div class="figcaption-wrapper" style="width: 100%;">
         <figcaption class="embed-caption">CAPTION</figcaption>
         <div class="iframe-btn-container">
-            <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="fullscreen-icon"></span> Full screen</a>
+            <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a>
         </div>
     </div>
     <iframe src="https://example.com" class="chaise-autofill" style="min-width: 500px;"></iframe>
@@ -622,7 +622,7 @@ When a min-height value is defined, the parent container will resize to allow fo
     <div class="figcaption-wrapper" style="width: 100%;">
         <figcaption class="embed-caption">CAPTION</figcaption>
         <div class="iframe-btn-container">
-            <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="fullscreen-icon"></span> Full screen</a>
+            <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a>
         </div>
     </div>
     <iframe src="https://example.com" class="chaise-autofill" style="min-width: 500px; min-height: 400px; max-height: 800px;"></iframe>
@@ -641,7 +641,7 @@ To have a responsive width and a set height, do not use `chaise-autofill` and se
     <div class="figcaption-wrapper" style="width: 100%;">
         <figcaption class="embed-caption">CAPTION</figcaption>
         <div class="iframe-btn-container">
-            <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="fullscreen-icon"></span> Full screen</a>
+            <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a>
         </div>
     </div>
     <iframe src="https://example.com" width=100% style="min-width: 300px; min-height: 400px;"></iframe>
@@ -660,7 +660,7 @@ To create an iframe that responds to the current viewport size, set the height u
     <div class="figcaption-wrapper" style="width: 100%;">
         <figcaption class="embed-caption">CAPTION</figcaption>
         <div class="iframe-btn-container">
-            <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="fullscreen-icon"></span> Full screen</a>
+            <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a>
         </div>
     </div>
     <iframe src="https://example.com" style="min-height: 400px; height: 75vh; max-height: 900px;"></iframe>
@@ -679,7 +679,7 @@ To hide the fullscreen button, use the `fullscreen-off` class attached to the fi
     <div class="figcaption-wrapper" style="width: 100%;">
         <figcaption class="embed-caption">CAPTION</figcaption>
         <div class="iframe-btn-container">
-            <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="fullscreen-icon"></span> Full screen</a>
+            <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a>
         </div>
     </div>
     <iframe src="https://example.com" width=100% class="chaise-autofill"></iframe>
@@ -698,7 +698,7 @@ To have the fullscreen button open in a new tab, use `fullscreen-target=_blank`.
     <div class="figcaption-wrapper" style="width: 100%;">
         <figcaption class="embed-caption">CAPTION</figcaption>
         <div class="iframe-btn-container">
-            <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com" target="_blank"><span class="fullscreen-icon"></span> Full screen</a>
+            <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com" target="_blank"><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a>
         </div>
     </div>
     <iframe src="https://example.com" width=100% class="chaise-autofill"></iframe>
