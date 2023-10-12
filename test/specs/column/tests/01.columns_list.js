@@ -50,7 +50,7 @@ exports.execute = function (options) {
         var singleEnitityUriSystemColumnsHeuristics = options.url + "/catalog/" + catalog_id + "/entity/" +
             schemaName + ":" + tableWithNoVisibleColumns + "/id=" + entityId;
 
-        var chaiseURL = "https://dev.isrd.isi.edu/chaise";
+        var chaiseURL = "https://example.org/chaise";
         var recordURL = chaiseURL + "/record";
         var record2URL = chaiseURL + "/record-two";
         var viewerURL = chaiseURL + "/viewer";
@@ -111,20 +111,20 @@ exports.execute = function (options) {
         ];
 
         var compactRefExpectedPartialValue = [
-            '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:columns_table/id=1">1</a>',
-            '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key/id=9000">9000</a>',
+            '<a href="https://example.org/chaise/record/columns_schema:columns_table/id=1">1</a>',
+            '<a href="https://example.org/chaise/record/columns_schema:table_w_simple_key/id=9000">9000</a>',
             '',
-            '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key/id=4000">4000</a>',
-            '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key_2/id=4000">4000</a>',
+            '<a href="https://example.org/chaise/record/columns_schema:table_w_simple_key/id=4000">4000</a>',
+            '<a href="https://example.org/chaise/record/columns_schema:table_w_simple_key_2/id=4000">4000</a>',
             '4001',
             '4002',
             '4003',
              '',
              '<p><a href="http://example.com" class="external-link-icon external-link">12</a></p>\n',
-             '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/id_1=4000&id_2=4001">4000 , 4001</a>',
-             '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key_2/id_1=4000&id_2=4003">4000:4003</a>',
-             '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/id_1=4000&id_2=4002">4000 , 4002</a>',
-             '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/id_1=4001&id_2=4002">4001 , 4002</a>',
+             '<a href="https://example.org/chaise/record/columns_schema:table_w_composite_key/id_1=4000&id_2=4001">4000 , 4001</a>',
+             '<a href="https://example.org/chaise/record/columns_schema:table_w_composite_key_2/id_1=4000&id_2=4003">4000:4003</a>',
+             '<a href="https://example.org/chaise/record/columns_schema:table_w_composite_key/id_1=4000&id_2=4002">4000 , 4002</a>',
+             '<a href="https://example.org/chaise/record/columns_schema:table_w_composite_key/id_1=4001&id_2=4002">4001 , 4002</a>',
              ''
         ];
 
@@ -150,7 +150,7 @@ exports.execute = function (options) {
             'Hank',
             '12',
             '4000 : 4001',
-            '<a href="https://dev.isrd.isi.edu/chaise/search">1</a>',
+            '<a href="https://example.org/chaise/search">1</a>',
             '4000 : 4002',
             '4001 : 4002',
             ''
@@ -165,7 +165,7 @@ exports.execute = function (options) {
         ];
 
         var assetEntryExpectedValue = [
-            '1', '1', '1000', '10001', null, 'https://dev.isrd.isi.edu', 'https://dev.isrd.isi.edu', 'https://dev.isrd.isi.edu', 4
+            '1', '1', '1000', '10001', null, 'https://example.org', 'https://example.org', 'https://example.org', 4
         ];
 
         var compactRefExpectedLinkedValue, assetCompactExpectedValue, assetDetailedExpectedValue, tableWSlashData;
@@ -305,7 +305,7 @@ exports.execute = function (options) {
         beforeAll(function (done) {
             options.ermRest.appLinkFn(appLinkFn);
             options.ermRest.setClientConfig({
-                internalHosts: [options.catalog.server.host, "dev.isrd.isi.edu"]
+                internalHosts: [options.catalog.server.host, "example.org"]
             });
             options.ermRest.resolve(singleEnitityUri, {
                 cid: "test"
@@ -340,41 +340,41 @@ exports.execute = function (options) {
             });
 
             compactRefExpectedLinkedValue = [
-                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:columns_table/id=1">1</a>',
-                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key/RID=' + utils.findEntityRID(options, schemaName, "table_w_simple_key", "id", "9000") + '">Hank</a>',
+                '<a href="https://example.org/chaise/record/columns_schema:columns_table/id=1">1</a>',
+                '<a href="https://example.org/chaise/record/columns_schema:table_w_simple_key/RID=' + utils.findEntityRID(options, schemaName, "table_w_simple_key", "id", "9000") + '">Hank</a>',
                 '',
-                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key/RID=' + utils.findEntityRID(options, schemaName, "table_w_simple_key", "id", "4000") + '">John</a>',
-                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key_2/RID=' + utils.findEntityRID(options, schemaName, "table_w_simple_key_2", "id", "4000") + '">Hank</a>',
+                '<a href="https://example.org/chaise/record/columns_schema:table_w_simple_key/RID=' + utils.findEntityRID(options, schemaName, "table_w_simple_key", "id", "4000") + '">John</a>',
+                '<a href="https://example.org/chaise/record/columns_schema:table_w_simple_key_2/RID=' + utils.findEntityRID(options, schemaName, "table_w_simple_key_2", "id", "4000") + '">Hank</a>',
                 '4001',
                 '4002',
                 '4003',
                 '',
                 '<p><a href="http://example.com" class="external-link-icon external-link">12</a></p>\n',
-                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/RID=' + utils.findEntityRID(options, schemaName, "table_w_composite_key", "id", "1") + '">4000 , 4001</a>',
-                '<a href="https://dev.isrd.isi.edu/chaise/search">1</a>',
-                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/RID=' + utils.findEntityRID(options, schemaName, "table_w_composite_key", "id", "2") + '">4000 , 4002</a>',
-                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/RID=' + utils.findEntityRID(options, schemaName, "table_w_composite_key", "id", "4") + '">4001 , 4002</a>',
+                '<a href="https://example.org/chaise/record/columns_schema:table_w_composite_key/RID=' + utils.findEntityRID(options, schemaName, "table_w_composite_key", "id", "1") + '">4000 , 4001</a>',
+                '<a href="https://example.org/chaise/search">1</a>',
+                '<a href="https://example.org/chaise/record/columns_schema:table_w_composite_key/RID=' + utils.findEntityRID(options, schemaName, "table_w_composite_key", "id", "2") + '">4000 , 4002</a>',
+                '<a href="https://example.org/chaise/record/columns_schema:table_w_composite_key/RID=' + utils.findEntityRID(options, schemaName, "table_w_composite_key", "id", "4") + '">4001 , 4002</a>',
                 ''
             ];
 
             assetDetailedExpectedValue = [
-                '<a href="https://dev.isrd.isi.edu?uinit=1&amp;cid=test" download="" class="asset-permission">filename</a>',
+                '<a href="https://example.org?uinit=1&amp;cid=test" download="" class="asset-permission">filename</a>',
                 '<p>filename4</p>\n',
-                '<a href="https://dev.isrd.isi.edu/file.png?uinit=1&amp;cid=test" download="" class="asset-permission">filename6</a>'
+                '<a href="https://example.org/file.png?uinit=1&amp;cid=test" download="" class="asset-permission">filename6</a>'
             ];
 
             assetCompactExpectedValue = [
-                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_asset/id=1">1</a>',
-                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:columns_table/RID=' + utils.findEntityRID(options, schemaName, "columns_table", "id", "1") + '">1</a>',
+                '<a href="https://example.org/chaise/record/columns_schema:table_w_asset/id=1">1</a>',
+                '<a href="https://example.org/chaise/record/columns_schema:columns_table/RID=' + utils.findEntityRID(options, schemaName, "columns_table", "id", "1") + '">1</a>',
                 '1000', '10001', 'filename',
                 '<p><span data-chaise-tooltip="1,242 bytes (1 kB = 1,000 bytes)">1.24 kB</span></p>\n',
                 'md5', 'sha256',
                 '',
                 '<h2>filename</h2>\n',
-                '<a href="https://dev.isrd.isi.edu?uinit=1&amp;cid=test" download="" class="asset-permission">filename</a>',
+                '<a href="https://example.org?uinit=1&amp;cid=test" download="" class="asset-permission">filename</a>',
                 'filename4',
                 '4',
-                '<a href="https://dev.isrd.isi.edu/file.png?uinit=1&amp;cid=test" download="" class="asset-permission">filename6</a>',
+                '<a href="https://example.org/file.png?uinit=1&amp;cid=test" download="" class="asset-permission">filename6</a>',
                 'filename6',
                 '<p>9,234</p>\n'
             ];
@@ -383,8 +383,8 @@ exports.execute = function (options) {
                 '1',
                 '1',
                 '2',
-                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key/RID=' + utils.findEntityRID(options, schemaName, "table_w_simple_key", "id", "9001") + '">Harold</a>',
-                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key/RID=' + utils.findEntityRID(options, schemaName, "table_w_simple_key", "id", "9000") + '">Hank</a>'
+                '<a href="https://example.org/chaise/record/columns_schema:table_w_simple_key/RID=' + utils.findEntityRID(options, schemaName, "table_w_simple_key", "id", "9001") + '">Harold</a>',
+                '<a href="https://example.org/chaise/record/columns_schema:table_w_simple_key/RID=' + utils.findEntityRID(options, schemaName, "table_w_simple_key", "id", "9000") + '">Hank</a>'
             ];
         });
 

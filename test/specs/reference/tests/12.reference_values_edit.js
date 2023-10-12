@@ -14,7 +14,7 @@ exports.execute = function (options) {
         var reference, page, tuples;
 
 
-        var chaiseURL = "https://dev.isrd.isi.edu/chaise";
+        var chaiseURL = "https://example.org/chaise";
         var recordURL = chaiseURL + "/record";
         var record2URL = chaiseURL + "/record-two";
         var viewerURL = chaiseURL + "/viewer";

@@ -1,7 +1,7 @@
 exports.execute = (options) => {
   describe('the fast filter source feature,', () => {
 
-    var chaiseURL = "https://dev.isrd.isi.edu/chaise",
+    var chaiseURL = "https://example.org/chaise",
       recordURL = chaiseURL + "/record",
       record2URL = chaiseURL + "/record-two",
       viewerURL = chaiseURL + "/viewer",

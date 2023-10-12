@@ -88,7 +88,7 @@ exports.execute = function (options) {
         var mainEntityUriNoAggVal = options.url + "/catalog/" + catalog_id + "/entity/" +
             schemaName + ":" + tableName + "/main_table_id_col=1111;main_table_id_col=1112;main_table_id_col=1113";
 
-        var chaiseURL = "https://dev.isrd.isi.edu/chaise";
+        var chaiseURL = "https://example.org/chaise";
         var recordURL = chaiseURL + "/record";
         var record2URL = chaiseURL + "/record-two";
         var viewerURL = chaiseURL + "/viewer";
@@ -175,8 +175,8 @@ exports.execute = function (options) {
 
             detailedExpectedValue = [
                 '01', '<p>01: col val 01</p>\n', '01',
-                '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:outbound_1/RID=' + utils.findEntityRID(options, schemaName, 'outbound_1', 'id','01') + '">01</a>',
-                '<p>01: 10</p>\n', '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:outbound_1_outbound_1/RID=' + utils.findEntityRID(options, schemaName, 'outbound_1_outbound_1', 'id', '01') + '">01</a>',
+                '<a href="https://example.org/chaise/record/pseudo_column_schema:outbound_1/RID=' + utils.findEntityRID(options, schemaName, 'outbound_1', 'id','01') + '">01</a>',
+                '<p>01: 10</p>\n', '<a href="https://example.org/chaise/record/pseudo_column_schema:outbound_1_outbound_1/RID=' + utils.findEntityRID(options, schemaName, 'outbound_1_outbound_1', 'id', '01') + '">01</a>',
                 '01', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '<p>01 virtual value 01</p>\n', '<p>01 virtual value 1</p>\n', ''
             ];
         });
@@ -969,7 +969,7 @@ exports.execute = function (options) {
                             expect(detailedColsWTuple[5].formatPresentation(
                                 {"col": "A value", "id": "101"},
                                 "detailed"
-                            ).value).toEqual('<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:outbound_1_outbound_1/id=101">101</a>', "index=5 missmatch.");
+                            ).value).toEqual('<a href="https://example.org/chaise/record/pseudo_column_schema:outbound_1_outbound_1/id=101">101</a>', "index=5 missmatch.");
                         });
 
                         it ("should not apply the foreignkey logic if the show_foreign_key_link:false is defined.", function () {
@@ -1020,7 +1020,7 @@ exports.execute = function (options) {
                     ];
 
                     inboundTwoValues = facets.map(function (facet, index) {
-                        return '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:inbound_2/RID=' + utils.findEntityRID(options, schemaName, "inbound_2","id","0" + (index+1)) + '">0' + (index+1) + ', facet: ' + facet + '</a>'
+                        return '<a href="https://example.org/chaise/record/pseudo_column_schema:inbound_2/RID=' + utils.findEntityRID(options, schemaName, "inbound_2","id","0" + (index+1)) + '">0' + (index+1) + ', facet: ' + facet + '</a>'
                     });
                 })
 
@@ -1067,7 +1067,7 @@ exports.execute = function (options) {
 
                 it ("should handle aggregates with path prefix.", function (done) {
                     var RIDval = utils.findEntityRID(options, schemaName, "inbound_1_outbound_1_outbound_1", "id", "01");
-                    var url = "https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:inbound_1_outbound_1_outbound_1/RID=" + RIDval;
+                    var url = "https://example.org/chaise/record/pseudo_column_schema:inbound_1_outbound_1_outbound_1/RID=" + RIDval;
                     var value = '<p><a href="' + url + '">01</a></p>\n';
 
                     testGetAggregatedValue(28, value, true, done);

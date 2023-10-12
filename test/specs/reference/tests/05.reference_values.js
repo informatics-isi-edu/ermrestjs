@@ -18,7 +18,7 @@ exports.execute = function (options) {
 
         var reference, page, tuples;
 
-        var chaiseURL = "https://dev.isrd.isi.edu/chaise";
+        var chaiseURL = "https://example.org/chaise";
         var recordURL = chaiseURL + "/record";
         var record2URL = chaiseURL + "/record-two";
         var viewerURL = chaiseURL + "/viewer";
@@ -264,22 +264,22 @@ exports.execute = function (options) {
                 var rowValues = testObjects[key].expectedValue;
                 switch (key) {
                     case "test2":
-                        rowValues[12] = '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/RID=' + getRID(1) + '" class="class-10">4000 , 4001</a></p>\n';
+                        rowValues[12] = '<p><a href="https://example.org/chaise/record/reference_schema:table_w_composite_key/RID=' + getRID(1) + '" class="class-10">4000 , 4001</a></p>\n';
                         break;
                     case "test3":
-                        rowValues[12] = '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/RID=' + getRID(2) + '" class="class-20">4000 , 4002</a></p>\n';
+                        rowValues[12] = '<p><a href="https://example.org/chaise/record/reference_schema:table_w_composite_key/RID=' + getRID(2) + '" class="class-20">4000 , 4002</a></p>\n';
                         break;
                     case "test4":
-                        rowValues[12] = '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/RID=' + getRID(3) + '" class="class-30">4000 , 4003</a></p>\n';
+                        rowValues[12] = '<p><a href="https://example.org/chaise/record/reference_schema:table_w_composite_key/RID=' + getRID(3) + '" class="class-30">4000 , 4003</a></p>\n';
                         break;
                     case "test5":
-                        rowValues[12] = '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/RID=' + getRID(4) + '" class="class-40">4001 , 4002</a></p>\n';
+                        rowValues[12] = '<p><a href="https://example.org/chaise/record/reference_schema:table_w_composite_key/RID=' + getRID(4) + '" class="class-40">4001 , 4002</a></p>\n';
                         break;
                     case "test6":
-                        rowValues[12] = '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/RID=' + getRID(5) + '" class="class-50">4002 , 4000</a></p>\n';
+                        rowValues[12] = '<p><a href="https://example.org/chaise/record/reference_schema:table_w_composite_key/RID=' + getRID(5) + '" class="class-50">4002 , 4000</a></p>\n';
                         break;
                     case "test7":
-                        rowValues[12] = '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/RID=' + getRID(6) + '" class="class-60">4000 , 4000</a></p>\n';
+                        rowValues[12] = '<p><a href="https://example.org/chaise/record/reference_schema:table_w_composite_key/RID=' + getRID(6) + '" class="class-60">4000 , 4000</a></p>\n';
                         break;
                 }
             }

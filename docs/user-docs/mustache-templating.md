@@ -70,7 +70,7 @@ The current implementation of `$fkeys` has the following limitations:
 
 - Using $fkeys you can only access data from tables that are one level away from the current table. This can cause problem when you are using $fkeys in your `row_markdown_pattern` annotation. Let's say the following is the ERD of your database.
 
-  ![$fkey example](https://dev.isrd.isi.edu/~ashafaei/wiki-images/fkeys_1.png)
+  ![$fkey example]((https://github.com/informatics-isi-edu/ermrestjs/raw/master/docs/resources/fkeys-example-erd.png)
 
   And you have defined the `row_markdown_pattern` of table A as `{{{$fkey_schema_fk1.values.term}}}`. If you navigate to record app for any records of A, the rowname will be displayed as you expect it. But if you go to the table C, the rowname of A won't be as you expected since we don't have access to the table B's data.
    Therefore it's advised to use `$fkey` only for the `column-display` annotation (or any other annotation that is controlling data for the same table).
@@ -127,7 +127,7 @@ These special characters are as follows:
 ```javascript
 {
   date: "08/25/2016",
-  url: "https://dev.isrd.isi.edu/chaise/recordset/#1/legacy:dataset/title=",
+  url: "https://example.com/chaise/recordset/#1/legacy:dataset/title=",
   name: "BiomassProdBatch for Virus=7782 Target=5HT1B site=USC"
 }
 ```
@@ -147,12 +147,12 @@ This is some value in COLUMN **{{{name}}}**
 
 ```
 
-[{{name}}](https://dev.isrd.isi.edu/chaise/search?name={{#encode}}{{{name}}}{{/encode}})
+[{{name}}](https://example.com/chaise/search?name={{#encode}}{{{name}}}{{/encode}})
 
-# MUSTACHE OUTPUT: "[BiomassProdBatch for Virus&#x3D;7782 Target&#x3D;5HT1B site&#x3D;USC](https://dev.isrd.isi.edu/chaise/search?name=BiomassProdBatch%20for%20Virus%3D7782%20Target%3D5HT1B%20site%3DUSC)"
-# MARKDOWN OUTPUT: "<p><a href="https://dev.isrd.isi.edu/chaise/search?name=BiomassProdBatch%20for%20Virus%3D7782%20Target%3D5HT1B%20site%3DUSC">BiomassProdBatch for Virus=7782 Target=5HT1B site=USC</a></p>"
+# MUSTACHE OUTPUT: "[BiomassProdBatch for Virus&#x3D;7782 Target&#x3D;5HT1B site&#x3D;USC](https://example.com/chaise/search?name=BiomassProdBatch%20for%20Virus%3D7782%20Target%3D5HT1B%20site%3DUSC)"
+# MARKDOWN OUTPUT: "<p><a href="https://example.com/chaise/search?name=BiomassProdBatch%20for%20Virus%3D7782%20Target%3D5HT1B%20site%3DUSC">BiomassProdBatch for Virus=7782 Target=5HT1B site=USC</a></p>"
 ```
-> [BiomassProdBatch for Virus&#x3D;7782 Target&#x3D;5HT1B site&#x3D;USC](https://dev.isrd.isi.edu/chaise/search?name=BiomassProdBatch%20for%20Virus%3D7782%20Target%3D5HT1B%20site%3DUSC)
+> [BiomassProdBatch for Virus&#x3D;7782 Target&#x3D;5HT1B site&#x3D;USC](https://example.com/chaise/search?name=BiomassProdBatch%20for%20Virus%3D7782%20Target%3D5HT1B%20site%3DUSC)
 
 ### 3. Replacement with HTML escaping - "{{name}}"
 
@@ -172,7 +172,7 @@ With null value for title
 ```
 # title = null
 
-Research on date {{{date}}} : {{#title}}[{{{title}}}](https://dev.isrd.isi.edu/chaise/search?name={{#encode}}{{{name}}}{{/encode}}){{/title}}
+Research on date {{{date}}} : {{#title}}[{{{title}}}](https://example.com/chaise/search?name={{#encode}}{{{name}}}{{/encode}}){{/title}}
 
 # MUSTACHE OUTPUT: "Research on date 08/25/2016 : "
 # MARKDOWN OUTPUT: "<p>Research on date 08/25/2016 :</p>\n"
@@ -184,12 +184,12 @@ With non-null value for title and null value for name
 ```
 # title = "BiomassProdBatch for Virus=7782 Target=5HT1B site=USC"
 
-Research on date {{{date}}} : {{#title}}[{{{title}}}](https://dev.isrd.isi.edu/chaise/search?name={{#encode}}{{{name}}}{{/encode}}){{/title}}
+Research on date {{{date}}} : {{#title}}[{{{title}}}](https://example.com/chaise/search?name={{#encode}}{{{name}}}{{/encode}}){{/title}}
 
-# MUSTACHE OUTPUT: "Research on date 08/25/2016 : [BiomassProdBatch for Virus=7782 Target=5HT1B site=USC](https://dev.isrd.isi.edu/chaise/search?name=BiomassProdBatch%20for%20Virus%3D7782%20Target%3D5HT1B%20site%3DUSC)"
-# MARKDOWN OUTPUT: "<p>Research on date 08/25/2016 : <a href="https://dev.isrd.isi.edu/chaise/search?name=BiomassProdBatch%20for%20Virus%3D7782%20Target%3D5HT1B%20site%3DUSCBiomassProdBatch for Virus=7782 Target=5HT1B site=USC</a></p>"
+# MUSTACHE OUTPUT: "Research on date 08/25/2016 : [BiomassProdBatch for Virus=7782 Target=5HT1B site=USC](https://example.com/chaise/search?name=BiomassProdBatch%20for%20Virus%3D7782%20Target%3D5HT1B%20site%3DUSC)"
+# MARKDOWN OUTPUT: "<p>Research on date 08/25/2016 : <a href="https://example.com/chaise/search?name=BiomassProdBatch%20for%20Virus%3D7782%20Target%3D5HT1B%20site%3DUSCBiomassProdBatch for Virus=7782 Target=5HT1B site=USC</a></p>"
 ```
-> Research on date 08/25/2016 : [BiomassProdBatch for Virus=7782 Target=5HT1B site=USC](https://dev.isrd.isi.edu/chaise/search?name=BiomassProdBatch%20for%20Virus%3D7782%20Target%3D5HT1B%20site%3DUSC)
+> Research on date 08/25/2016 : [BiomassProdBatch for Virus=7782 Target=5HT1B site=USC](https://example.com/chaise/search?name=BiomassProdBatch%20for%20Virus%3D7782%20Target%3D5HT1B%20site%3DUSC)
 
 ### 5. Replacement with negated-null check - "{{^name}}...{{/name}}"
 
@@ -198,12 +198,12 @@ In cases where you need to check whether a value is null, then use this string, 
 ```
 #title = null;
 
-Research on date {{{date}}} : {{^title}}[This is some title](https://dev.isrd.isi.edu/chaise/search?name={{#encode}}{{{name}}}{{/encode}}){{/title}}
+Research on date {{{date}}} : {{^title}}[This is some title](https://example.com/chaise/search?name={{#encode}}{{{name}}}{{/encode}}){{/title}}
 
-# MUSTACHE OUTPUT: "Research on date 08/25/2016 : [This is some title](https://dev.isrd.isi.edu/chaise/search?name=BiomassProdBatch%20for%20Virus%3D7782%20Target%3D5HT1B%20site%3DUSC)"
-# MARKDOWN OUTPUT: "<p>Research on date 08/25/2016 : <a href="https://dev.isrd.isi.edu/chaise/search?name=BiomassProdBatch%20for%20Virus%3D7782%20Target%3D5HT1B%20site%3DUSC">This is some title</a></p>"
+# MUSTACHE OUTPUT: "Research on date 08/25/2016 : [This is some title](https://example.com/chaise/search?name=BiomassProdBatch%20for%20Virus%3D7782%20Target%3D5HT1B%20site%3DUSC)"
+# MARKDOWN OUTPUT: "<p>Research on date 08/25/2016 : <a href="https://example.com/chaise/search?name=BiomassProdBatch%20for%20Virus%3D7782%20Target%3D5HT1B%20site%3DUSC">This is some title</a></p>"
 ```
-> Research on date 08/25/2016 : [This is some title](https://dev.isrd.isi.edu/chaise/search?name=BiomassProdBatch%20for%20Virus%3D7782%20Target%3D5HT1B%20site%3DUSC)
+> Research on date 08/25/2016 : [This is some title](https://example.com/chaise/search?name=BiomassProdBatch%20for%20Virus%3D7782%20Target%3D5HT1B%20site%3DUSC)
 
 
 

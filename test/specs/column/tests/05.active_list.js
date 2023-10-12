@@ -10,7 +10,7 @@ exports.execute = function (options) {
     var mainEmptyFkEntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + tableNameEmptyFK + "/@sort(main_empty_fkeys_id)";
     var pageLen = 2;
 
-    var chaiseURL = "https://dev.isrd.isi.edu/chaise";
+    var chaiseURL = "https://example.org/chaise";
     var recordURL = chaiseURL + "/record";
     var record2URL = chaiseURL + "/record-two";
     var viewerURL = chaiseURL + "/viewer";

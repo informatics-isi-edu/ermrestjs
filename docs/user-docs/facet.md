@@ -237,7 +237,7 @@ which translates to:
 
 All the following examples are based on the given ERD and we are creating facet list for the `main` table.
 
-![ERD](https://dev.isrd.isi.edu/~ashafaei/wiki-images/faceting_example_erd.png)
+![ERD]((https://github.com/informatics-isi-edu/ermrestjs/raw/master/docs/resources/faceting/faceting-example-erd.png)
 
 In chaise we have two facet types:
 
@@ -255,7 +255,7 @@ In chaise we have two facet types:
     {"source": [{"inbound": ["s", "fk3_cons"]}, {"outbound": ["s", "fk4_cons"]}, "f3_id"]}
     ```
 
-2. Scalar: If the given description for entity picker does not apply.Scalar picker will show list of possible values for the column sorted by their frequency. Currently it is not supporting any column display annotations.
+1. Scalar: If the given description for entity picker does not apply.Scalar picker will show list of possible values for the column sorted by their frequency. Currently it is not supporting any column display annotations.
 
 
     ```JavaScript

@@ -114,7 +114,7 @@ exports.execute = function (options) {
             expect(col.name).toBe(colName, fcName + ": colname missmatch.");
         };
 
-        var chaiseURL = "https://dev.isrd.isi.edu/chaise",
+        var chaiseURL = "https://example.org/chaise",
             recordURL = chaiseURL + "/record",
             record2URL = chaiseURL + "/record-two",
             viewerURL = chaiseURL + "/viewer",

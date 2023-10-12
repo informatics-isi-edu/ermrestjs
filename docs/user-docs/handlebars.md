@@ -414,12 +414,12 @@ ISO datetime is {{{$moment.ISOString}}}
 }
 ```
 
-For example, if the web url is `https://dev.isrd.isi.edu:8080/chaise/recordset/#1/isa:dataset`, the above object would look something like:
+For example, if the web url is `https://dev.example.com:8080/chaise/recordset/#1/isa:dataset`, the above object would look something like:
 ```json
 {
-    "origin": "https://dev.isrd.isi.edu",
-    "host": "dev.isrd.isi.edu:8080",
-    "hostname": "dev.isrd.isi.edu",
+    "origin": "https://dev.example.com",
+    "host": "dev.example.com:8080",
+    "hostname": "dev.example.com",
     "chaise_path": "/chaise/"
 }
 ```

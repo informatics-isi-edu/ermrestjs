@@ -7,7 +7,7 @@ const ERMrest = require(path.join(__dirname, '..', '..' , 'dist', 'ermrest.js'))
  */
 
 // TODO modify the following:
-const server = 'https://dev.isrd.isi.edu';
+const server = 'https://dev.derivacloud.org';
 const catalog = '1';
 const table = 'isa:dataset';
 

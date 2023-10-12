@@ -22,7 +22,7 @@ exports.execute = function(options) {
         var currDate = new Date();
         var currentDateString = options.ermRest._fixedEncodeURIComponent(currDate.getFullYear() + "-" + (currDate.getMonth()+1) + "-" + currDate.getDay());
 
-        var chaiseURL = "https://dev.isrd.isi.edu/chaise";
+        var chaiseURL = "https://example.org/chaise";
         var recordURL = chaiseURL + "/record";
         var record2URL = chaiseURL + "/record-two";
         var viewerURL = chaiseURL + "/viewer";
@@ -697,9 +697,9 @@ exports.execute = function(options) {
 
                 it ("should use the markdown_pattern defined on the visible-foreign-key annotation.", function (done) {
                     var content = '<p>';
-                    content += '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:association%20table%20with%20id/RID=' + utils.findEntityRID(options, schemaName, associationTableWithID, "ID", "2") + '">2</a>';
+                    content += '<a href="https://example.org/chaise/record/reference_schema:association%20table%20with%20id/RID=' + utils.findEntityRID(options, schemaName, associationTableWithID, "ID", "2") + '">2</a>';
                     content += ', ';
-                    content += '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:association%20table%20with%20id/RID=' + utils.findEntityRID(options, schemaName, associationTableWithID, "ID", "3") + '">3</a>';
+                    content += '<a href="https://example.org/chaise/record/reference_schema:association%20table%20with%20id/RID=' + utils.findEntityRID(options, schemaName, associationTableWithID, "ID", "3") + '">3</a>';
                     content += '</p>\n';
                     testPageContent(pathRelatedWithTuple[0], 5, content, done);
                 })
@@ -714,8 +714,8 @@ exports.execute = function(options) {
 
                 it ("if none of the markdown_patterns are not defined, should return a list of rownames.", function (done) {
                     content = '<ul>\n';
-                    content += '<li><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table/RID=' + utils.findEntityRID(options, schemaName, tableName, "id", "9002") + '">Heather</a></li>\n';
-                    content += '<li><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table/RID=' + utils.findEntityRID(options, schemaName, tableName, "id", "9003") + '">Henry</a></li>\n';
+                    content += '<li><a href="https://example.org/chaise/record/reference_schema:reference_table/RID=' + utils.findEntityRID(options, schemaName, tableName, "id", "9002") + '">Heather</a></li>\n';
+                    content += '<li><a href="https://example.org/chaise/record/reference_schema:reference_table/RID=' + utils.findEntityRID(options, schemaName, tableName, "id", "9003") + '">Henry</a></li>\n';
                     content += '</ul>\n';
 
                     testPageContent(pathRelatedWithTuple[1], 5, content, done);

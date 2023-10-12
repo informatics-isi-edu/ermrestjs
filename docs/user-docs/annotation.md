@@ -1184,7 +1184,7 @@ As an example, a _column_ may have a [`tag:isrd.isi.edu,2016:column-display`](#t
 ```
 {
    "*" : {
-       "markdown_pattern": "[{{{title}}}](https://dev.isrd.isi.edu/chaise/search?name={{{_name}}})",
+       "markdown_pattern": "[{{{title}}}](https://example.com/chaise/search?name={{{_name}}})",
        "template_engine": "handlebars"
    }
 }
@@ -1194,7 +1194,7 @@ A web user agent that consumes this annotation and the related table data would 
 
 ```
 <p>
-    <img src="https://dev.isrd.isi.edu/chaise/search?name=col%20name" alt="Title of Image">
+    <img src="https://example.com/chaise/search?name=col%20name" alt="Title of Image">
 </p>
 ```
 

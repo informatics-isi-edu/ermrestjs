@@ -13,7 +13,7 @@
     .module('sample', ['ermrestjs', 'ngSanitize'])
 
     .constant('context', {
-      serviceURL: 'https://dev.isrd.isi.edu/ermrest'
+      serviceURL: 'https://dev.derivacloud.org/ermrest'
     })
 
     .factory('UriUtils', ['context', '$window', function (context, $window) {

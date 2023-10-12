@@ -8,12 +8,12 @@
     "col_md5": "md5",
     "col_sha256": "sha256",
     "col_asset_1": null,
-    "col_asset_2": "https://dev.isrd.isi.edu",
-    "col_asset_3": "https://dev.isrd.isi.edu",
-    "col_asset_4": "https://dev.isrd.isi.edu",
+    "col_asset_2": "https://example.org",
+    "col_asset_3": "https://example.org",
+    "col_asset_4": "https://example.org",
     "col_asset_4_filename": "filename4",
     "col_asset_5": 4,
-    "col_asset_6": "https://dev.isrd.isi.edu/file.png",
+    "col_asset_6": "https://example.org/file.png",
     "col_asset_6_filename": "filename6",
     "col_asset_6_byte_count": 9234
 }]

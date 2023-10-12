@@ -24,7 +24,7 @@ exports.execute = function (options) {
         var tableWSimpleKeyUri = options.url + "/catalog/" + catalog_id + "/entity/" +
             schemaName + ":" + tableWSimpleKey;
 
-        var chaiseURL = "https://dev.isrd.isi.edu/chaise";
+        var chaiseURL = "https://example.org/chaise";
         var recordURL = chaiseURL + "/record";
         var record2URL = chaiseURL + "/record-two";
         var viewerURL = chaiseURL + "/viewer";
@@ -99,7 +99,7 @@ exports.execute = function (options) {
         beforeAll(function (done) {
             options.ermRest.appLinkFn(appLinkFn);
             options.ermRest.setClientConfig({
-                internalHosts: [options.catalog.server.host, "dev.isrd.isi.edu"]
+                internalHosts: [options.catalog.server.host, "example.org"]
             });
             options.ermRest.resolve(singleEnitityUri, {
                 cid: "test"
@@ -786,19 +786,19 @@ exports.execute = function (options) {
                     it('should return the correct link.', function () {
                         val = compactColumns[19].formatPresentation(data, 'compact').value;
 
-                        expect(val).toEqual('<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/RID=RND">' + data.id_1 + ' , ' + data.id_2 + '</a>');
+                        expect(val).toEqual('<a href="https://example.org/chaise/record/columns_schema:table_w_composite_key/RID=RND">' + data.id_1 + ' , ' + data.id_2 + '</a>');
                     });
 
                     it('should not add a link when the caption has a link.', function () {
                         val = compactColumns[17].formatPresentation(data).value;
-                        expect(val).toEqual('<a href="https://dev.isrd.isi.edu/chaise/search">' + data.id + '</a>');
+                        expect(val).toEqual('<a href="https://example.org/chaise/search">' + data.id + '</a>');
                     });
 
                     it('should use the key when only the main table entries are available in data.', function () {
                         var partialData = {
                             "id_1": "col_3_data", "id_2": "col_6_data"
                         };
-                        var expectetValue = '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key_2/' +
+                        var expectetValue = '<a href="https://example.org/chaise/record/columns_schema:table_w_composite_key_2/' +
                                             'id_1=' + partialData["id_1"]+ '&id_2='  +partialData["id_2"] + '">' + partialData["id_1"] + ":" + partialData["id_2"] + '</a>';
                         val = compactColumns[17].formatPresentation(partialData).value;
                         expect(val).toEqual(expectetValue);
@@ -817,16 +817,16 @@ exports.execute = function (options) {
 
                     it('should use `markdown_pattern` from key display annotation with a link.', function () {
                         val = compactBriefRef.columns[1].formatPresentation({"col_1":1, "col_3":2, "col_4":"value"}, "compact/brief", {"col_4":"value"}).value;
-                        expect(val).toEqual('<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:columns_table/col_1=1&col_3=2"><strong>value</strong></a>');
+                        expect(val).toEqual('<a href="https://example.org/chaise/record/columns_schema:columns_table/col_1=1&col_3=2"><strong>value</strong></a>');
                     });
 
                     describe('otherwise, ', function () {
                         it ("should use key columns values separated with colon for caption. The URL should refer to the current reference.", function(){
                             val = compactColumns[0].formatPresentation({"id":2}, "detailed", {"id":2}).value;
-                            expect(val).toEqual('<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:columns_table/id=2">2</a>');
+                            expect(val).toEqual('<a href="https://example.org/chaise/record/columns_schema:columns_table/id=2">2</a>');
 
                             val = compactBriefRef.columns[0].formatPresentation({"col_3":"3", "col_6":"6"}, "compact/brief", {"col_3":"3", "col_6":"6"}).value;
-                            expect(val).toEqual('<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:columns_table/col_3=3&col_6=6">3:6</a>');
+                            expect(val).toEqual('<a href="https://example.org/chaise/record/columns_schema:columns_table/col_3=3&col_6=6">3:6</a>');
                         });
 
                         it('should not add link if the key columns produce a link.', function () {

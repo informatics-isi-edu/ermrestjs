@@ -184,27 +184,27 @@ The following is the list of special class names that you can use:
 
 This is part of commonMark specification. Links are [inline](#inline-vs.-block) elements.
 ```html
-[ChaiseLink](https://dev.isrd.isi.edu/chaise/search)
+[ChaiseLink](https://example.com/chaise/search)
 
 #OUTPUT:
 <p>
-   <a href="https://dev.isrd.isi.edu/chaise/search">ChaiseLink</a>
+   <a href="https://example.com/chaise/search">ChaiseLink</a>
 </p>
 ```
 
 
-> <p><a href="https://dev.isrd.isi.edu/chaise/search">ChaiseLink</a></p>
+> <p><a href="https://example.com/chaise/search">ChaiseLink</a></p>
 
 You can attach attributes to the link.
 ```html
-[ChaiseLink](https://dev.isrd.isi.edu/chaise/search){target=_blank}
+[ChaiseLink](https://example.com/chaise/search){target=_blank}
 
 # OUTPUT:
 <p>
-	<a href="https://dev.isrd.isi.edu/chaise/search" target="_blank">ChaiseLink</a>
+	<a href="https://example.com/chaise/search" target="_blank">ChaiseLink</a>
 </p>
 ```
-> <p><a href="https://dev.isrd.isi.edu/chaise/search" target="\_blank">ChaiseLink</a></p>
+> <p><a href="https://example.com/chaise/search" target="\_blank">ChaiseLink</a></p>
 
 ### 2. Download Button
 
@@ -423,7 +423,7 @@ If you provide an invalid link then instead of an iframe you will just get the i
 	<a href="https://example.com">CAPTION</a>
 </p>
 ```
-> <p><em>Invalid</em> <a href="https://dev.isrd.isi.edu/chaise/search">CAPTION</a></p>
+> <p><em>Invalid</em> <a href="https://example.com/chaise/search">CAPTION</a></p>
 
 
 #### a.4. Iframe without scrolling
@@ -712,8 +712,8 @@ This is not part of commonMark specification and it will result in a [block](#in
 
 ```sh
 # :::dropdown CPATION [LINKCAPTION1](URL1){download} [LINKCAPTION2](URL2){download}
-::: dropdown DROPDOWNCAPTION [CAPTION1](https://dev.isrd.isi.edu/chaise/search){download}                     [CAPTION2](https://dev.isrd.isi.edu/chaise/search){download}  \n:::
-# OUTPUT: <div class="btn-group markdown-dropdown"><button type="button"  class="btn btn-primary ">DROPDOWNCAPTION</button><button type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"  class="btn btn-primary dropdown-toggle "><span class="caret"></span><span class="sr-only">Toggle Dropdown</span></button><ul class="dropdown-menu"><li><a href="https://dev.isrd.isi.edu/chaise/search" download="" >CAPTION1</a></li><li><a href="https://dev.isrd.isi.edu/chaise/search" download="" >CAPTION2</a></li></ul></div>
+::: dropdown DROPDOWNCAPTION [CAPTION1](https://example.com/chaise/search){download}                     [CAPTION2](https://example.com/chaise/search){download}  \n:::
+# OUTPUT: <div class="btn-group markdown-dropdown"><button type="button"  class="btn btn-primary ">DROPDOWNCAPTION</button><button type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"  class="btn btn-primary dropdown-toggle "><span class="caret"></span><span class="sr-only">Toggle Dropdown</span></button><ul class="dropdown-menu"><li><a href="https://example.com/chaise/search" download="" >CAPTION1</a></li><li><a href="https://example.com/chaise/search" download="" >CAPTION2</a></li></ul></div>
 ```
 
 The button has an appearance similar to the [Bootstrap dropdown button](http://getbootstrap.com/components/#btn-dropdowns-split)

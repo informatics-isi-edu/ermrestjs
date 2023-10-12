@@ -399,7 +399,7 @@
                     "author_pattern":  "author",
                     "title_pattern":   "title",
                     "year_pattern":    "2018",
-                    "url_pattern":     "https://dev.isrd.isi.edu/chaise/record/#{{{$catalog.snapshot}}}/schema:table/id=1",
+                    "url_pattern":     "https://example.org/chaise/record/#{{{$catalog.snapshot}}}/schema:table/id=1",
                     "id_pattern":      "1"
                 },
                 "tag:isrd.isi.edu,2019:source-definitions": {
