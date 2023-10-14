@@ -3243,8 +3243,8 @@
                 return hasOrigFKR && hiddenFKR.colset.columns.indexOf(col) != -1;
             };
 
-            var _addAssetColumn = function (col, heuristics) {
-                var assetCol = new AssetPseudoColumn(self, col);
+            var _addAssetColumn = function (col, sourceObjectWrapper, name, heuristics) {
+                var assetCol = new AssetPseudoColumn(self, col, sourceObjectWrapper, name, tuple);
                 assetColumns.push(assetCol);
                 self._referenceColumns.push(assetCol);
 
@@ -3256,23 +3256,23 @@
             };
 
             // this function will take care of adding column and asset column
-            var addColumn = function (col, heuristics) {
-                if (col.type.name === "text" && col.isAssetURL) {
-                    _addAssetColumn(col, heuristics);
+            var addColumn = function (col, sourceObjectWrapper, name, heuristics) {
+                if (col.isAssetURL) {
+                    _addAssetColumn(col, sourceObjectWrapper, name, heuristics);
+                    return;
+                }
+
+                // in entry context we don't want to show any of the asset metadata columns as chaise cannot handle it.
+                if (isEntry && (col.isAssetFilename || col.isAssetByteCount || col.isAssetMd5 || col.isAssetSha256)) {
                     return;
                 }
 
                 // for heuristics we should take care of  the asset metadata columns differently
                 if (heuristics) {
-                    // in entry context we don't want to show any of the asset metadata columns as chaise cannot handle it.
-                    if (isEntry && (col.isAssetFilename || col.isAssetByteCount || col.isAssetMd5 || col.isAssetSha256)) {
-                        return;
-                    }
-
                     // as part of heuristics, treat the asset filename the same as the asset itself.
                     // and only add one of them.
                     if (col.isAssetFilename) {
-                        _addAssetColumn(col.assetURLColumn, heuristics);
+                        _addAssetColumn(self.table.columns.get(col.assetURLColumnName), sourceObjectWrapper, name, heuristics);
                         return;
                     }
 
@@ -3282,8 +3282,8 @@
                     }
                 }
 
-                // if annotation is not present,
-                self._referenceColumns.push(new ReferenceColumn(self, [col]));
+                // add it as a reference column
+                self._referenceColumns.push(new ReferenceColumn(self, [col], sourceObjectWrapper, name, tuple));
             };
 
             // make sure generated hash is not the name of any columns in the table
@@ -3363,7 +3363,7 @@
                                                 col = cols[j];
                                                 if (!(col.name in consideredColumns) && !hideColumn(col)) {
                                                     consideredColumns[col.name] = true;
-                                                    this._referenceColumns.push(new ReferenceColumn(this, [cols[j]]));
+                                                    addColumn(col);
                                                 }
                                             }
                                         } else {
@@ -3459,33 +3459,35 @@
                             consideredColumns[wrapper.name] = true;
                             refCol = module._createPseudoColumn(this, wrapper, tuple);
 
-                            // to make sure we're removing asset related (filename, size, etc.) column in entry
-                            if (refCol.isAsset) {
-                                assetColumns.push(refCol);
+                            // we want yo call the addColumn for asset and local columns since it will take care of other things as well.
+                            if (refCol.isAsset || !refCol.isPseudo) {
+                                addColumn(wrapper.column, wrapper, wrapper.name, false);
                             }
+                            else {
 
-                            // if entity and KeyPseudoColumn, we should instead add the underlying columns
-                            if (isEntry && refCol.isKey) {
-                                cols = refCol.key.colset.columns;
-                                for (j = 0; j < cols.length; j++) {
-                                    col = cols[j];
-                                    if (!(col.name in consideredColumns) && !hideColumn(col)) {
-                                        consideredColumns[col.name] = true;
-                                        this._referenceColumns.push(new ReferenceColumn(this, [cols[j]]));
+                                // if entity and KeyPseudoColumn, we should instead add the underlying columns
+                                if (isEntry && refCol.isKey) {
+                                    cols = refCol.key.colset.columns;
+                                    for (j = 0; j < cols.length; j++) {
+                                        col = cols[j];
+                                        if (!(col.name in consideredColumns) && !hideColumn(col)) {
+                                            consideredColumns[col.name] = true;
+                                            addColumn(col);
+                                        }
                                     }
                                 }
-                            }
 
-                            // 2 conditions:
-                            // isEntry && (refCol.isPathColumn || refCol.isInboundForeignKey || refCol.isKey)
-                            // OR
-                            // isCompactEntry && (refCol.hasWaitFor || refCol.hasAggregate || (refCol.isPathColumn && refCol.foreignKeyPathLength > 1)
-                            var removePseudo = (isEntry && (refCol.isPathColumn || refCol.isInboundForeignKey || refCol.isKey) ) ||
-                                    (isCompactEntry && (refCol.hasWaitFor || refCol.hasAggregate || (refCol.isPathColumn && refCol.foreignKeyPathLength > 1)) );
+                                // 2 conditions:
+                                // isEntry && (refCol.isPathColumn || refCol.isInboundForeignKey || refCol.isKey)
+                                // OR
+                                // isCompactEntry && (refCol.hasWaitFor || refCol.hasAggregate || (refCol.isPathColumn && refCol.foreignKeyPathLength > 1)
+                                var removePseudo = (isEntry && (refCol.isPathColumn || refCol.isInboundForeignKey || refCol.isKey) ) ||
+                                        (isCompactEntry && (refCol.hasWaitFor || refCol.hasAggregate || (refCol.isPathColumn && refCol.foreignKeyPathLength > 1)) );
 
-                            // in entry mode, pseudo-column, inbound fk, and key are not allowed
-                            if (!removePseudo) {
-                                this._referenceColumns.push(refCol);
+                                // in entry mode, pseudo-column, inbound fk, and key are not allowed
+                                if (!removePseudo) {
+                                    this._referenceColumns.push(refCol);
+                                }
                             }
                         }
 
@@ -3557,7 +3559,14 @@
                                 consideredColumns[columns[i].name] = true;
                             }
 
-                            this._referenceColumns.push(new KeyPseudoColumn(this, key));
+                            // if the key is asset or asset filename, add the asset
+                            if (key.simple && (columns[0].isAssetURL || columns[0].isAssetFilename)) {
+                                addColumn(columns[0], undefined, undefined, true);
+                            }
+                            // otherwise just add the key pseudo-column
+                            else {
+                                this._referenceColumns.push(new KeyPseudoColumn(this, key));
+                            }
                         }
                     }
                 }
@@ -3614,7 +3623,7 @@
                     // add the column if it's not part of any foreign keys
                     // or if the column type is array (currently ermrest doesn't suppor this either)
                     if (col.memberOfForeignKeys.length === 0) {
-                        addColumn(col, true);
+                        addColumn(col, undefined, undefined, true);
                     } else {
                         // sort foreign keys of a column
                         if (col.memberOfForeignKeys.length > 1) {
@@ -3644,7 +3653,7 @@
                                 // don't add the column if it's also part of a simple fk
                                 if (!isEntry && !col.isPartOfSimpleForeignKey && !(col.name in consideredColumns)) {
                                     consideredColumns[col.name] = true;
-                                    addColumn(col, true);
+                                    addColumn(col, undefined, undefined, true);
                                 }
 
                                 if (!(fkName in consideredColumns) && !nameExistsInTable(fkName, fk._constraintName)) {

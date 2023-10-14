@@ -31,8 +31,15 @@ exports.execute = function(options) {
             it ("should ignore the nullable keys.", function () {
                 checkDisplayKey("table_w_nullable_key", ["RID"]);
             });
-        });
 
+            it ("should prefer other keys over simple fk.", function () {
+                checkDisplayKey("table_w_fkey_key", ["RID"]);
+            });
+
+            it ("should prefer other keys to asset metadata keys.", function () {
+                checkDisplayKey("table_w_asset_key", ["RID"]);
+            });
+        });
 
         describe("supportHistory", function () {
             it ("if annotation is missing, should return true", function () {

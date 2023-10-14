@@ -453,16 +453,14 @@ exports.execute = function (options) {
 
                 describe('for asset columns,', function () {
                     describe('filname, byte, md5, and sha256 columns', function() {
-                        it('should be ignored in edit context if the asset column is present.', function() {
+                        it('should be ignored in edit and create context.', function() {
                             checkReferenceColumns([{
                                 ref: assetRef.contextualize.entryEdit,
                                 expected: [
                                     "col_asset_3"
                                 ]
                             }]);
-                        });
 
-                        it('should not be ignored in any contexts if the asset column is not present.', function() {
                             checkReferenceColumns([{
                                 ref: assetRef.contextualize.entryCreate,
                                 expected: [
@@ -705,7 +703,7 @@ exports.execute = function (options) {
 
                 describe('for asset columns,', function () {
                     describe('filename, byte, md5, and sha256 columns', function() {
-                        it('should be ignored in edit context.', function() {
+                        it('all should be ignored in edit context.', function() {
                             checkReferenceColumns([{
                                 ref: assetRefEntry,
                                 expected: [
@@ -715,6 +713,14 @@ exports.execute = function (options) {
                                     "col_asset_1", "col_asset_2", "col_asset_3", "col_asset_4", "col_asset_5"
                                 ]
                             }]);
+                        });
+
+                        it ('filename, md5, and sha256 should be ignored in compact context.', () => {
+
+                        });
+
+                        it ('filename should be ingored in detailed context.', () => {
+
                         });
 
                         it('should not be ignored in other contexts.', function() {
@@ -747,9 +753,9 @@ exports.execute = function (options) {
                       expect(assetRefEntry.columns[8].isPseudo).toBe(false, "invalid isPseudo for entry");
                     });
 
-                    it('if columns has been used as the keyReferenceColumn, should ignore the asset annotation.', function () {
-                        expect(assetRefCompactCols[0]._constraintName).toBe(["columns_schema", "table_w_asset_key_1"].join("_"));
-                        expect(assetRefCompactCols[0].isKey).toBe(true);
+                    it('if the chosen row display key for heuristics is also an asset, should add it as an asset.', function () {
+                        expect(assetRefCompactCols[0].name).toBe("id");
+                        expect(assetRefCompactCols[0].isAsset).toBe(true);
                     });
 
                     it('if column is part of any foreignkeys, should ignore the asset annotation.', function() {

@@ -330,6 +330,85 @@
             ]
 
         },
+        "table_w_fkey_key": {
+            "kind": "table",
+            "keys": [
+                {"unique_columns": ["fk_col"]}
+            ],
+            "foreign_keys": [
+                {
+                    "foreign_key_columns": [{
+                        "schema_name": "common_schema_2",
+                        "table_name": "table_w_fkey_key",
+                        "column_name": "fk_col"
+                    }],
+                    "referenced_columns": [{
+                        "schema_name": "common_schema_2",
+                        "table_name": "table_w_dif_len_keys",
+                        "column_name": "col_3"
+                    }]
+                }
+            ],
+            "table_name": "table_w_fkey_key",
+            "schema_name": "common_schema_2",
+            "column_definitions": [
+                {
+                    "name": "fk_col",
+                    "nullok": true,
+                    "type": {
+                        "typename": "text"
+                    }
+                }
+            ]
+        },
+        "table_w_asset_key": {
+            "kind": "table",
+            "keys": [
+                {"unique_columns": ["asset_col"]},
+                {"unique_columns": ["asset_col_filename"]},
+                {"unique_columns": ["asset_col_md5"]},
+                {"unique_columns": ["asset_col_sha256"]}
+            ],
+            "table_name": "table_w_asset_key",
+            "schema_name": "common_schema_2",
+            "column_definitions": [
+                {
+                    "name": "asset_col",
+                    "type": {
+                        "typename": "text"
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2017:asset": {
+                        "url_pattern": "/hatrac/{{asset_col_1}}",
+                        "filename_column": "asset_col_filename",
+                        "md5": "asset_col_md5",
+                        "sha256": "asset_col_sha256"
+                        }
+                    }
+                },
+                {
+                    "name": "asset_col_filename",
+                    "nullok": true,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "asset_col_md5",
+                    "nullok": true,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "asset_col_sha256",
+                    "nullok": true,
+                    "type": {
+                        "typename": "text"
+                    }
+                }
+            ]
+        },
         "multi_w_same_len_keys_w_all_serial": {
             "comment": "",
             "kind": "table",

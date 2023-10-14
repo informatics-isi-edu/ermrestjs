@@ -1241,15 +1241,6 @@
                     if (ridKey) {
                         this._shortestKey = ridKey.colset.columns;
                     } else {
-                        // returns 1 if all the columns are serial/int, 0 otherwise
-                        var allSerialInt = function (key) {
-                            return (key.colset.columns.map(function (column) {
-                                return column.type.name;
-                            }).every(function (current, index, array) {
-                                return (current.toUpperCase().startsWith("INT") || current.toUpperCase().startsWith("SERIAL"));
-                            }) ? 1 : 0);
-                        };
-
                         // pick the first key that is shorter or is all serial/integer.
                         this._shortestKey = keys.sort(function (a, b) {
                             var compare;
@@ -1261,7 +1252,7 @@
                             }
 
                             // if key length equal, choose the one that all of its keys are serial or int
-                            compare = allSerialInt(b) - allSerialInt(a);
+                            compare = (b.colset.allSerialOrInt ? 1 : 0 ) - (a.colset.allSerialOrInt ? 1 : 0);
                             if (compare !== 0) {
                                 return compare;
                             }
@@ -1279,20 +1270,20 @@
         },
 
         /**
-         * The columns that create the shortest key that can be used for display purposes.
+         * The columns that create the shortest key that can be used for display purposes (rowname).
+         *
+         * sort the not-null keys based on the following and return the first one:
+         * 1. not simple fk to somewhere
+         * 2. not simple and made of any asset metadata (url, filename, bytecount, md5, sha256)
+         * 3. is shorter
+         * 4. has more text
+         * 5. made of columns defined earlier (column position)
          *
          * @type {ERMrest.Column[]}
          */
         get displayKey () {
             if (this._displayKey === undefined) {
                 if (this.keys.length() !== 0) {
-                    var countTextColumns = function(key) {
-                        for (var i = 0, res = 0; i < key.colset.columns.length; i++) {
-                            if (key.colset.columns[i].type.name == "text") res++;
-                        }
-                        return res;
-                    };
-
                     // find the keys with not-null columns
                     var keys = this.keys.all().filter(function (key) {
                         return key._notNull;
@@ -1306,6 +1297,28 @@
                     }
 
                     this._displayKey = keys.sort(function (keyA, keyB) {
+                        var keyACol = keyA.colset.columns[0], keyBCol = keyB.colset.columns[0];
+
+                        // not fk to somewhere
+                        var isPartOfSimpleFkA = keyA.simple && keyACol.isPartOfSimpleForeignKey;
+                        var isPartOfSimpleFkB = keyB.simple && keyBCol.isPartOfSimpleForeignKey;
+                        if (isPartOfSimpleFkA !== isPartOfSimpleFkB) {
+                            return isPartOfSimpleFkA ? 1 : -1;
+                        }
+
+                        // not simple and made of any asset metadata columns
+                        // !! is used to turn it into boolean
+                        var isAssetA = !!(keyA.simple && (
+                            keyACol.isAssetMd5 || keyACol.isAssetSha256 ||
+                            keyACol.isAssetURL || keyACol.isAssetFilename || keyACol.isAssetByteCount
+                        ));
+                        var isAssetB = !!(keyB.simple && (
+                            keyBCol.isAssetMd5 || keyBCol.isAssetSha256 ||
+                            keyBCol.isAssetURL || keyBCol.isAssetFilename || keyBCol.isAssetByteCount
+                        ));
+                        if (isAssetA !== isAssetB) {
+                            return isAssetA ? 1 : -1;
+                        }
 
                         // shorter
                         if (keyA.colset.columns.length != keyB.colset.columns.length) {
@@ -1313,9 +1326,9 @@
                         }
 
                         // has more text
-                        var aTextCount = countTextColumns(keyA);
-                        var bTextCount = countTextColumns(keyB);
-                        if (aTextCount != bTextCount) {
+                        var aTextCount = keyA.colset.textColumnsCount;
+                        var bTextCount = keyB.colset.textColumnsCount;
+                        if (aTextCount !== bTextCount) {
                             return bTextCount - aTextCount;
                         }
 
@@ -1404,6 +1417,12 @@
          * @desc
          * This key will be used for referring to a row of data. Therefore it shouldn't be foreignkey and markdown type.
          * It's the same as displaykey but with extra restrictions. It might return undefined.
+         *
+         * sort the "well formed" keys that are not simple fk based on the following and return the first one:
+         * 2. not simple and made of hash asset metadata (md5, sha256)
+         * 3. is shorter
+         * 4. has more text
+         * 5. made of columns defined earlier (column position)
          */
         _getRowDisplayKey: function (context) {
             if (!(context in this._rowDisplayKeys)) {
@@ -1424,14 +1443,15 @@
 
                     // sort the keys and pick the first one.
                     if (candidateKeys.length !== 0) {
-                        var countTextColumns = function(key) {
-                            for (var i = 0, res = 0; i < key.colset.columns.length; i++) {
-                                if (key.colset.columns[i].type.name == "text") res++;
-                            }
-                            return res;
-                        };
-
                         displayKey = candidateKeys.sort(function (keyA, keyB) {
+
+                            // is not simple and made of md5, sha256
+                            // !! is used to turn it into boolean
+                            var isAssetA = !!(keyA.simple && (keyA.colset.columns[0].isAssetMd5 || keyA.colset.columns[0].isAssetSha256));
+                            var isAssetB = !!(keyB.simple && (keyB.colset.columns[0].isAssetMd5 || keyB.colset.columns[0].isAssetSha256));
+                            if (isAssetA !== isAssetB) {
+                                return isAssetA ? 1 : -1;
+                            }
 
                             // shorter
                             if (keyA.colset.columns.length != keyB.colset.columns.length) {
@@ -1439,9 +1459,9 @@
                             }
 
                             // has more text
-                            var aTextCount = countTextColumns(keyA);
-                            var bTextCount = countTextColumns(keyB);
-                            if (aTextCount != bTextCount) {
+                            var aTextCount = keyA.colset.textColumnsCount;
+                            var bTextCount = keyB.colset.textColumnsCount;
+                            if (aTextCount !== bTextCount) {
                                 return bTextCount - aTextCount;
                             }
 
@@ -2178,7 +2198,8 @@
                 var col = jsonTable.column_definitions[i];
                 var message = 'asset annotation on column ' + col.name + ' will be ignored. reason: ';
 
-                if (module._annotations.ASSET in col.annotations) {
+                // column must be text type and have asset annotation to be treated as asset.
+                if (col.type.typename === "text" && module._annotations.ASSET in col.annotations) {
                     // if the column already used, discard the asset annot
                     if (col.name in assignedColumns) {
                         module._log.warn(message + 'it\'s already used in an asset column mapping.');
@@ -2194,7 +2215,7 @@
                                     valid = false;
                                     module._log.warn(message + '`' + annot[prop] + '` already used in another asset column mapping.');
                                 } else {
-                                    temp[annot[prop]] = { category: mapAssetAnnotPropToCategory[prop], URLColumn: col };
+                                    temp[annot[prop]] = { category: mapAssetAnnotPropToCategory[prop], URLColumnName: col.name };
                                 }
                             }
 
@@ -2970,11 +2991,11 @@
              */
             this.assetCategory = assetCategoryInfo.category;
 
-            if (isObjectAndNotNull(assetCategoryInfo.URLColumn)) {
+            if (isStringAndNotEmpty(assetCategoryInfo.URLColumnName)) {
                 /**
                  * if the column is storing of the extra asset metadata, this will return the actual url column
                  */
-                this.assetURLColumn = assetCategoryInfo.URLColumn;
+                this.assetURLColumnName = assetCategoryInfo.URLColumnName;
             }
 
             switch (assetCategoryInfo.category) {
@@ -3911,7 +3932,36 @@
                 }).sort();
             }
             return this._columnPositions;
-        }
+        },
+
+        /**
+         * how many text columns are in this colset
+         * @type {number}
+         */
+        get textColumnsCount() {
+            if (this._textColumnsCount === undefined) {
+                var res = 0 ;
+                for (var i = 0; i < this.columns.length; i++) {
+                    if (this.columns[i].type.name == "text") res++;
+                }
+                this._textColumnsCount = res;
+            }
+            return this._textColumnsCount;
+        },
+
+        /**
+         * whether all the columns are integer or serial
+         * @type {boolean}
+         */
+        get allSerialOrInt() {
+            if (this._allSerialOrInt === undefined) {
+                this._allSerialOrInt = this.columns.every(function (column) {
+                    var current = column.type.name;
+                    return current.toUpperCase().startsWith("INT") || current.toUpperCase().startsWith("SERIAL");
+                });
+            }
+            return this._allSerialOrInt;
+        },
     };
 
 
