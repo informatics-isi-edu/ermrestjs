@@ -404,7 +404,7 @@
                 },
                 "tag:isrd.isi.edu,2016:table-display": {
                     "*": {
-                        "page_markdown_pattern": "{{#$page.parent}}{{{schema}}}:{{{table}}}{{/$page.parent}}, parent name={{{$page.parent.values._name}}}, where id is one of {{#each $page.values}}{{{this._id}}}{{/each}}",
+                        "page_markdown_pattern": "{{#$page.parent}}{{{schema}}}:{{{table}}}{{/$page.parent}}, parent name={{{$page.parent.values._name}}}, where (id,link) is one of {{#each $page.rows}}{{{this.values._id}}}: [{{{this.rowName}}}]({{{this.uri.detailed}}})){{/each}}",
                         "template_engine": "handlebars"
                     }
                 }

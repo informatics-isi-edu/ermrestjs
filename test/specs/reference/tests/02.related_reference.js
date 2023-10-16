@@ -705,7 +705,9 @@ exports.execute = function(options) {
                 })
 
                 it ("should be able to use page_markdown_pattern and have access to the parent attributes.", function (done) {
-                    testPageContent(relatedWithTuple[1], 1, '<p>reference_schema:reference_table, parent name=Henry, where id is one of 1</p>\n', done);
+                    const linkVal = `https://example.org/chaise/record/reference_schema:inbound_related_reference_table/RID=${utils.findEntityRID(options, schemaName, inboundTableName, 'id', '1')}`;
+                    const expectedValue = `<p>reference_schema:reference_table, parent name=Henry, where (id,link) is one of 1: <a href="${linkVal}">1</a>)</p>\n`
+                    testPageContent(relatedWithTuple[1], 1, expectedValue, done);
                 });
 
                 it ("otherwise should use the row_markdown_pattern.", function (done) {

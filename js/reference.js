@@ -5463,19 +5463,27 @@
             /*
              the object structure that is available on the annotation:
                $page = {
-                    values: [],
+                    rows: [
+                        {values, rowName, uri}
+                    ],
                     parent: {
                         values: [],
                         table: "",
                         schema: ""
                     }
+                    // deprecated
+                    values: [],
                 }
              */
             if (typeof display._pageMarkdownPattern === 'string') {
                 var $page = {
+                    rows: self.tuples.map(function (t, i) {
+                        return t.templateVariables;
+                    }),
+                    // (deprecated) should eventually be removed
                     values: self.tuples.map(function (t, i) {
                         return t.templateVariables.values;
-                    })
+                    }),
                 };
 
                 if (ref.mainTable) {
