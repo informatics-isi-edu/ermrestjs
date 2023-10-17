@@ -3272,6 +3272,10 @@
                     // as part of heuristics, treat the asset filename the same as the asset itself.
                     // and only add one of them.
                     if (col.isAssetFilename) {
+                        if (col.assetURLColumnName in consideredColumns) {
+                            return;
+                        }
+                        consideredColumns[col.assetURLColumnName] = true;
                         _addAssetColumn(self.table.columns.get(col.assetURLColumnName), sourceObjectWrapper, name, heuristics);
                         return;
                     }
