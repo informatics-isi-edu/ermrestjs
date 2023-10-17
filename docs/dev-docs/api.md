@@ -225,7 +225,7 @@ to use for ERMrest JavaScript agents.
         * [.get(name)](#ERMrest.Columns+get) ⇒ [<code>Column</code>](#ERMrest.Column)
         * [.getByPosition(pos)](#ERMrest.Columns+getByPosition) ⇒ [<code>Column</code>](#ERMrest.Column)
     * [.Column](#ERMrest.Column)
-        * [new Column(table, jsonColumn)](#new_ERMrest.Column_new)
+        * [new Column(table, jsonColumn, assetCategoryInfo)](#new_ERMrest.Column_new)
         * _instance_
             * [.position](#ERMrest.Column+position) : <code>number</code>
             * [.table](#ERMrest.Column+table) : [<code>Table</code>](#ERMrest.Table)
@@ -239,6 +239,7 @@ to use for ERMrest JavaScript agents.
             * [.type](#ERMrest.Column+type) : [<code>Type</code>](#ERMrest.Type)
             * [.ignore](#ERMrest.Column+ignore) : <code>boolean</code>
             * [.assetCategory](#ERMrest.Column+assetCategory) : <code>string</code>
+            * [.assetURLColumnName](#ERMrest.Column+assetURLColumnName)
             * [.isAssetURL](#ERMrest.Column+isAssetURL) : <code>boolean</code>
             * [.isAssetFilename](#ERMrest.Column+isAssetFilename) : <code>boolean</code>
             * [.isAssetByteCount](#ERMrest.Column+isAssetByteCount) : <code>boolean</code>
@@ -294,6 +295,8 @@ to use for ERMrest JavaScript agents.
     * [.ColSet](#ERMrest.ColSet)
         * [new ColSet(columns)](#new_ERMrest.ColSet_new)
         * [.columns](#ERMrest.ColSet+columns) : <code>Array</code>
+        * [.textColumnsCount](#ERMrest.ColSet+textColumnsCount) : <code>number</code>
+        * [.allSerialOrInt](#ERMrest.ColSet+allSerialOrInt) : <code>boolean</code>
         * [.toString()](#ERMrest.ColSet+toString) ⇒ <code>string</code>
         * [.length()](#ERMrest.ColSet+length) ⇒ <code>Number</code>
     * [.Mapping](#ERMrest.Mapping)
@@ -1412,7 +1415,14 @@ The columns that create the shortest key
 <a name="ERMrest.Table+displayKey"></a>
 
 #### table.displayKey : [<code>Array.&lt;Column&gt;</code>](#ERMrest.Column)
-The columns that create the shortest key that can be used for display purposes.
+The columns that create the shortest key that can be used for display purposes (rowname).
+
+sort the not-null keys based on the following and return the first one:
+1. not simple fk to somewhere
+2. not simple and made of any asset metadata (url, filename, bytecount, md5, sha256)
+3. is shorter
+4. has more text
+5. made of columns defined earlier (column position)
 
 **Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
 <a name="ERMrest.Table+stableKey"></a>
@@ -1468,6 +1478,12 @@ if the table is pure and binary, will return the two foreignkeys that create it
 This key will be used for referring to a row of data. Therefore it shouldn't be foreignkey and markdown type.
 It's the same as displaykey but with extra restrictions. It might return undefined.
 
+sort the "well formed" keys that are not simple fk based on the following and return the first one:
+2. not simple and made of hash asset metadata (md5, sha256)
+3. is shorter
+4. has more text
+5. made of columns defined earlier (column position)
+
 **Kind**: instance method of [<code>Table</code>](#ERMrest.Table)  
 **Returns{column[]|undefined}**: list of columns. If couldn't find a suitable columns will return undefined.  
 
@@ -1486,7 +1502,9 @@ this table for the given context.
 
 #### table.\_assignAssetCategories()
 returns an object that captures the asset category of columns.
-- the key of the returned object is the column name and value is the assigned category.
+- the key of the returned object is the column name and value and the value is an object. The object has the following:
+ - category: the assigned category name
+ - URLColumn: the url column.
 - if a column is used in multiple asset annotations, only the first usage is used and other asset annotations
   are discarded.
 
@@ -1804,7 +1822,7 @@ Constructor for Columns.
 **Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
 
 * [.Column](#ERMrest.Column)
-    * [new Column(table, jsonColumn)](#new_ERMrest.Column_new)
+    * [new Column(table, jsonColumn, assetCategoryInfo)](#new_ERMrest.Column_new)
     * _instance_
         * [.position](#ERMrest.Column+position) : <code>number</code>
         * [.table](#ERMrest.Column+table) : [<code>Table</code>](#ERMrest.Table)
@@ -1818,6 +1836,7 @@ Constructor for Columns.
         * [.type](#ERMrest.Column+type) : [<code>Type</code>](#ERMrest.Type)
         * [.ignore](#ERMrest.Column+ignore) : <code>boolean</code>
         * [.assetCategory](#ERMrest.Column+assetCategory) : <code>string</code>
+        * [.assetURLColumnName](#ERMrest.Column+assetURLColumnName)
         * [.isAssetURL](#ERMrest.Column+isAssetURL) : <code>boolean</code>
         * [.isAssetFilename](#ERMrest.Column+isAssetFilename) : <code>boolean</code>
         * [.isAssetByteCount](#ERMrest.Column+isAssetByteCount) : <code>boolean</code>
@@ -1845,7 +1864,7 @@ Constructor for Columns.
 
 <a name="new_ERMrest.Column_new"></a>
 
-#### new Column(table, jsonColumn)
+#### new Column(table, jsonColumn, assetCategoryInfo)
 Constructs a Column.
 
 
@@ -1853,6 +1872,7 @@ Constructs a Column.
 | --- | --- | --- |
 | table | [<code>Table</code>](#ERMrest.Table) | the table object. |
 | jsonColumn | <code>string</code> | the json column. |
+| assetCategoryInfo | <code>Object</code> | if the column is an asset, this must be an object with categroy and URLColumn properties |
 
 <a name="ERMrest.Column+position"></a>
 
@@ -1919,7 +1939,13 @@ The RID of this column (might not be defined)
 
 #### column.assetCategory : <code>string</code>
 if it's used in an asset annotation, will return its category. available values:
-'filename', 'byte_count', 'md5', 'sha256'
+'url', 'filename', 'byte_count', 'md5', 'sha256'
+
+**Kind**: instance property of [<code>Column</code>](#ERMrest.Column)  
+<a name="ERMrest.Column+assetURLColumnName"></a>
+
+#### column.assetURLColumnName
+if the column is storing of the extra asset metadata, this will return the actual url column
 
 **Kind**: instance property of [<code>Column</code>](#ERMrest.Column)  
 <a name="ERMrest.Column+isAssetURL"></a>
@@ -2332,6 +2358,8 @@ whether key has a column
 * [.ColSet](#ERMrest.ColSet)
     * [new ColSet(columns)](#new_ERMrest.ColSet_new)
     * [.columns](#ERMrest.ColSet+columns) : <code>Array</code>
+    * [.textColumnsCount](#ERMrest.ColSet+textColumnsCount) : <code>number</code>
+    * [.allSerialOrInt](#ERMrest.ColSet+allSerialOrInt) : <code>boolean</code>
     * [.toString()](#ERMrest.ColSet+toString) ⇒ <code>string</code>
     * [.length()](#ERMrest.ColSet+length) ⇒ <code>Number</code>
 
@@ -2350,6 +2378,18 @@ Constructor for ColSet, a set of Column objects.
 #### colSet.columns : <code>Array</code>
 It won't preserve the order of given columns.
 Returns set of columns sorted by their names.
+
+**Kind**: instance property of [<code>ColSet</code>](#ERMrest.ColSet)  
+<a name="ERMrest.ColSet+textColumnsCount"></a>
+
+#### colSet.textColumnsCount : <code>number</code>
+how many text columns are in this colset
+
+**Kind**: instance property of [<code>ColSet</code>](#ERMrest.ColSet)  
+<a name="ERMrest.ColSet+allSerialOrInt"></a>
+
+#### colSet.allSerialOrInt : <code>boolean</code>
+whether all the columns are integer or serial
 
 **Kind**: instance property of [<code>ColSet</code>](#ERMrest.ColSet)  
 <a name="ERMrest.ColSet+toString"></a>

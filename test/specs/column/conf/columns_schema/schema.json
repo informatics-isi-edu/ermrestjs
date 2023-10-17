@@ -891,7 +891,7 @@
             "column_definitions": [
                 {
                     "name": "id",
-                    "comment": "id, asset should be ignored",
+                    "comment": "id, asset should be used and key ignored",
                     "nullok": false,
                     "type": {
                         "typename": "text"
@@ -1090,10 +1090,8 @@
             ],
             "annotations": {
                 "tag:isrd.isi.edu,2016:visible-columns": {
-                    "detailed": ["col_asset_3", "col_asset_4", "col_asset_6"],
-                    "entry/create": ["col_filename","col_byte","col_md5","col_sha256"],
                     "entry/edit": ["col_asset_3", "col_filename","col_byte","col_md5","col_sha256"],
-                    "compact/brief": ["col_asset_3", "col_filename","col_byte","col_md5","col_sha256"]
+                    "compact/brief": ["col_asset_3", "col_filename","col_byte","col_md5","col_sha256", "col_asset_6_byte_count"]
                 }
             }
         },

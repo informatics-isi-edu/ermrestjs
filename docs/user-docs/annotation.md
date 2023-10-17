@@ -308,7 +308,7 @@ Supported _columnlist_ patterns:
   - Ignore listed _columndirective_ values that do not correspond to content from the table.
   - Do not present table columns that are not specified in the list. Please refer to [column directive](#column-directive) section for more information.
   - A list without any valid _columndirective_ will be treated the same as empty array `[]`. Client will not show any columns in this case.
-- Any non-string, non-array value (e.g., `null`): The client will use the default heuristics for generating list of visbile columns. 
+- Any non-string, non-array value (e.g., `null`): The client will use the default heuristics for generating list of visbile columns.
 
 
 Supported _facetlist_ pattern:
@@ -564,12 +564,15 @@ Supported JSON _option_ payload patterns:
 - `"collapse_toc_panel":` `_boolean_`: Controls whether the table of contents panel is collapsed on page load (only supported in `detailed` context).
 - `"hide_column_header":` `_boolean_`: Controls whether the column names headers and separators between column values are shown (only supported in `detailed` context).
 - `"page_markdown_pattern"`: _pagepattern_: Render the page by composing a markdown representation only when `page_markdown_pattern` is non-null.
-  - Expand _pagepattern_ to obtain a markdown representation of whole page of dat via [Pattern Expansion](#pattern-expansion. In the pattern, you have access to a `$page` object that has the following attributes:
-      - `values`: An array of values. You can access each column value using the `{{{$page.values.<index>.<column>}}}` where `<index>` is the index of array element that you want (starting with zero), and `<column>` is the column name (`{{{$page.values.0.RID}}}`).
-      - `parent`: This variable is available when used for getting table content of related entities. Currently the `row_markdown_pattern` in `compact` context is used to provide a brief summary of table data. When used in this context, you can access the parent attributes under `$page.parent`. The attributes are:
-        - `values`: the parent data `{{{$page.parent.values.RID}}}`.
-        - `table`: the parent table name `{{{$page.parent.table}}}`.
-        - `schema`: the parent schema name `{{{$page.parent.schema}}}`.
+  - Expand _pagepattern_ to obtain a markdown representation of whole page of dat via [Pattern Expansion](#pattern-expansion). In the pattern, you have access to a `$page` object that has the following properties:
+      - `rows`: An array of objects. Each object represents the row data and has the following properties:
+        - `values`: The raw and formatted values of each column (e.g., `{{{$page.rows.0.values.RID}}}` returns the value of `RID` column for the first row).
+        - `rowName`: Row-name of the represented row (e.g., `{{{$page.rows.1.rowName}}}` returns the row-name of the second row).
+        - `uri.detailed`: a uri to the row in `detailed` context (e.g., `{{{$page.rows.0.uri.detailed}}}` returns the link to the detailed page for the first row).
+      - `parent`: This variable is available when used for getting table content of related entities. Currently the `page_markdown_pattern` in `compact` context is used to provide a brief summary of table data. When used in this context, you can access the parent properties under `$page.parent`. The properties are:
+        - `values`: the parent data (e.g., `{{{$page.parent.values.RID}}}` returns the value of `RID` column of the main record).
+        - `table`: the parent table name (e.g., `{{{$page.parent.table}}}` returns the name of the main table).
+        - `schema`: the parent schema name (e.g., `{{{$page.parent.schema}}}` return the schema of the main table).
 - `"row_markdown_pattern":` _rowpattern_: Render the row by composing a markdown representation only when `row_markdown_pattern` is non-null.
   - Expand _rowpattern_ to obtain a markdown representation of each row via [Pattern Expansion](#pattern-expansion).
   - The pattern has access to column values **after** any processing implied by [2016 Column Display](#column-display).
