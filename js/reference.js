@@ -2578,15 +2578,12 @@
 
             for(var i = 0; i < visibleFKs.length; i++) {
                 fkr = visibleFKs[i];
-                // if in the visible columns list
-                if (currentColumns[fkr.name]) {
-                    continue;
-                }
-
+                var relatedRef, fkName;
                 if (fkr.isPath) {
                     // since we're sure that the pseudoColumn either going to be
                     // general pseudoColumn or InboundForeignKeyPseudoColumn then it will have reference
-                    this._related.push(module._createPseudoColumn(this, fkr.sourceObjectWrapper, tuple).reference);
+                    relatedRef = module._createPseudoColumn(this, fkr.sourceObjectWrapper, tuple).reference;
+                    fkName = relatedRef.pseudoColumn.name;
                 } else {
                     fkr = fkr.foreignKey;
 
@@ -2595,9 +2592,15 @@
                     fkr._table._baseTable === this._table && fkr._table._altForeignKey === fkr) {
                         continue;
                     }
-
-                    this._related.push(this._generateRelatedReference(fkr, tuple, true));
+                    relatedRef = this._generateRelatedReference(fkr, tuple, true);
+                    fkName = _sourceColumnHelpers.generateForeignKeyName(fkr, true);
                 }
+
+                // it it's already added to the visible-columns (inline related) don't add it again.
+                if (currentColumns[fkName]) {
+                    continue;
+                }
+                this._related.push(relatedRef);
             }
 
             if (notSorted && this._related.length !== 0) {

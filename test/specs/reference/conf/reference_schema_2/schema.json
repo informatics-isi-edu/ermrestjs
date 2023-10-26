@@ -45,7 +45,28 @@
                     "typename": "text"
                 }
             }],
-            "annotations": {}
+            "annotations": {
+                "tag:isrd.isi.edu,2016:visible-columns" : {
+                    "*": [
+                        "id_1", "id_2", "id_3",
+                        ["reference_schema_2", "fk_inbound_related_table_1_to_reference_table_no_order"],
+                        {
+                            "source": [
+                                {"inbound": ["reference_schema_2", "fk_inbound_related_table_2_to_reference_table_no_order"]},
+                                "RID"
+                            ]
+                        },
+                        ["reference_schema_2", "fk_assoc_table_1_to_reference_table_no_order"],
+                        {
+                            "source": [
+                                {"inbound": ["reference_schema_2", "fk_assoc_table_2_to_reference_table_no_order"]},
+                                {"outbound": ["reference_schema_2", "fk_assoc_table_2_to_assoc_related_table_2"]},
+                                "RID"
+                            ]
+                        }
+                    ]
+                }
+            }
         },
         "related_reference_no_order": {
             "kind": "table",
@@ -242,6 +263,332 @@
                 },
                 {
                     "name": "details",
+                    "type": {"typename": "text"}
+                }
+            ]
+        },
+        "inbound_related_table_1": {
+            "kind": "table",
+            "schema_name": "reference_schema_2",
+            "table_name": "inbound_related_table_1",
+            "keys": [
+                {"unique_columns": ["id"]}
+            ],
+            "foreign_keys": [
+                {
+                    "comment": null,
+                    "names": [["reference_schema_2", "fk_inbound_related_table_1_to_reference_table_no_order"]],
+                    "foreign_key_columns": [{
+                        "table_name": "inbound_related_table_1",
+                        "schema_name": "reference_schema_2",
+                        "column_name": "id"
+                    }],
+                    "referenced_columns": [{
+                        "table_name": "reference_table_no_order",
+                        "schema_name": "reference_schema_2",
+                        "column_name": "id_1"
+                    }]
+                }
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {"typename": "text"}
+                }
+            ]
+        },
+        "inbound_related_table_2": {
+            "kind": "table",
+            "schema_name": "reference_schema_2",
+            "table_name": "inbound_related_table_2",
+            "keys": [
+                {"unique_columns": ["id"]}
+            ],
+            "foreign_keys": [
+                {
+                    "comment": null,
+                    "names": [["reference_schema_2", "fk_inbound_related_table_2_to_reference_table_no_order"]],
+                    "foreign_key_columns": [{
+                        "table_name": "inbound_related_table_2",
+                        "schema_name": "reference_schema_2",
+                        "column_name": "id"
+                    }],
+                    "referenced_columns": [{
+                        "table_name": "reference_table_no_order",
+                        "schema_name": "reference_schema_2",
+                        "column_name": "id_1"
+                    }]
+                }
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {"typename": "text"}
+                }
+            ]
+        },
+        "assoc_table_1": {
+            "kind": "table",
+            "schema_name": "reference_schema_2",
+            "table_name": "assoc_table_1",
+            "keys": [
+                {"unique_columns": ["id_1", "id_2"]}
+            ],
+            "foreign_keys": [
+                {
+                    "comment": null,
+                    "names": [["reference_schema_2", "fk_assoc_table_1_to_reference_table_no_order"]],
+                    "foreign_key_columns": [{
+                        "table_name": "assoc_table_1",
+                        "schema_name": "reference_schema_2",
+                        "column_name": "id_1"
+                    }],
+                    "referenced_columns": [{
+                        "table_name": "reference_table_no_order",
+                        "schema_name": "reference_schema_2",
+                        "column_name": "id_1"
+                    }]
+                },
+                {
+                    "comment": null,
+                    "names": [["reference_schema_2", "fk_assoc_table_1_to_assoc_related_table_1"]],
+                    "foreign_key_columns": [{
+                        "table_name": "assoc_table_1",
+                        "schema_name": "reference_schema_2",
+                        "column_name": "id_2"
+                    }],
+                    "referenced_columns": [{
+                        "table_name": "assoc_related_table_1",
+                        "schema_name": "reference_schema_2",
+                        "column_name": "id"
+                    }]
+                }
+            ],
+            "column_definitions": [
+                {
+                    "name": "id_1",
+                    "nullok": false,
+                    "type": {"typename": "text"}
+                },
+                {
+                    "name": "id_2",
+                    "nullok": false,
+                    "type": {"typename": "text"}
+                }
+            ]
+        },
+        "assoc_related_table_1": {
+            "kind": "table",
+            "schema_name": "reference_schema_2",
+            "table_name": "assoc_related_table_1",
+            "keys": [
+                {"unique_columns": ["id"]}
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {"typename": "text"}
+                }
+            ]
+        },
+        "assoc_table_2": {
+            "kind": "table",
+            "schema_name": "reference_schema_2",
+            "table_name": "assoc_table_2",
+            "keys": [
+                {"unique_columns": ["id_1", "id_2"]}
+            ],
+            "foreign_keys": [
+                {
+                    "comment": null,
+                    "names": [["reference_schema_2", "fk_assoc_table_2_to_reference_table_no_order"]],
+                    "foreign_key_columns": [{
+                        "table_name": "assoc_table_2",
+                        "schema_name": "reference_schema_2",
+                        "column_name": "id_1"
+                    }],
+                    "referenced_columns": [{
+                        "table_name": "reference_table_no_order",
+                        "schema_name": "reference_schema_2",
+                        "column_name": "id_1"
+                    }]
+                },
+                {
+                    "comment": null,
+                    "names": [["reference_schema_2", "fk_assoc_table_2_to_assoc_related_table_2"]],
+                    "foreign_key_columns": [{
+                        "table_name": "assoc_table_2",
+                        "schema_name": "reference_schema_2",
+                        "column_name": "id_2"
+                    }],
+                    "referenced_columns": [{
+                        "table_name": "assoc_related_table_2",
+                        "schema_name": "reference_schema_2",
+                        "column_name": "id"
+                    }]
+                }
+            ],
+            "column_definitions": [
+                {
+                    "name": "id_1",
+                    "nullok": false,
+                    "type": {"typename": "text"}
+                },
+                {
+                    "name": "id_2",
+                    "nullok": false,
+                    "type": {"typename": "text"}
+                }
+            ]
+        },
+        "assoc_related_table_2": {
+            "kind": "table",
+            "schema_name": "reference_schema_2",
+            "table_name": "assoc_related_table_2",
+            "keys": [
+                {"unique_columns": ["id"]}
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {"typename": "text"}
+                }
+            ]
+        },
+        "table_w_vis_fks_and_vis_cols": {
+            "kind": "table",
+            "schema_name": "reference_schema_2",
+            "table_name": "table_w_vis_fks_and_vis_cols",
+            "keys": [
+                {"unique_columns": ["id"]}
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {"typename": "text"}
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2016:visible-columns": {
+                    "detailed": [
+                        "id",
+                        ["reference_schema_2", "inbound_related_to_table_w_vis_fks_fk1"],
+                        ["reference_schema_2", "assoc_table_to_table_w_vis_fks_fk1"]
+                    ]
+                },
+                "tag:isrd.isi.edu,2016:visible-foreign-keys": {
+                    "detailed": [
+                        {
+                            "source": [{"inbound": ["reference_schema_2", "inbound_related_to_table_w_vis_fks_fk1"]}, "RID"]
+                        },
+                        {
+                            "source": [
+                                {"inbound": ["reference_schema_2", "assoc_table_to_table_w_vis_fks_fk1"]},
+                                {"outbound": ["reference_schema_2", "assoc_table_to_table_w_vis_fks_fk2"]},
+                                "RID"
+                            ]
+                        }
+                    ]
+                }
+            }
+        },
+        "inbound_related_to_table_w_vis_fks": {
+            "kind": "table",
+            "schema_name": "reference_schema_2",
+            "table_name": "inbound_related_to_table_w_vis_fks",
+            "keys": [
+                {"unique_columns": ["id"]}
+            ],
+            "foreign_keys": [
+                {
+                    "comment": null,
+                    "names": [["reference_schema_2", "inbound_related_to_table_w_vis_fks_fk1"]],
+                    "foreign_key_columns": [{
+                        "table_name": "inbound_related_to_table_w_vis_fks",
+                        "schema_name": "reference_schema_2",
+                        "column_name": "id"
+                    }],
+                    "referenced_columns": [{
+                        "table_name": "table_w_vis_fks_and_vis_cols",
+                        "schema_name": "reference_schema_2",
+                        "column_name": "id"
+                    }]
+                }
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {"typename": "text"}
+                }
+            ]
+        },
+        "assoc_table_to_table_w_vis_fks": {
+            "kind": "table",
+            "schema_name": "reference_schema_2",
+            "table_name": "assoc_table_to_table_w_vis_fks",
+            "keys": [
+                {"unique_columns": ["id_1", "id_2"]}
+            ],
+            "foreign_keys": [
+                {
+                    "comment": null,
+                    "names": [["reference_schema_2", "assoc_table_to_table_w_vis_fks_fk1"]],
+                    "foreign_key_columns": [{
+                        "table_name": "assoc_table_to_table_w_vis_fks",
+                        "schema_name": "reference_schema_2",
+                        "column_name": "id_1"
+                    }],
+                    "referenced_columns": [{
+                        "table_name": "table_w_vis_fks_and_vis_cols",
+                        "schema_name": "reference_schema_2",
+                        "column_name": "id"
+                    }]
+                },
+                {
+                    "comment": null,
+                    "names": [["reference_schema_2", "assoc_table_to_table_w_vis_fks_fk2"]],
+                    "foreign_key_columns": [{
+                        "table_name": "assoc_table_to_table_w_vis_fks",
+                        "schema_name": "reference_schema_2",
+                        "column_name": "id_2"
+                    }],
+                    "referenced_columns": [{
+                        "table_name": "assoc_related_to_table_w_vis_fks",
+                        "schema_name": "reference_schema_2",
+                        "column_name": "id"
+                    }]
+                }
+            ],
+            "column_definitions": [
+                {
+                    "name": "id_1",
+                    "nullok": false,
+                    "type": {"typename": "text"}
+                },
+                {
+                    "name": "id_2",
+                    "nullok": false,
+                    "type": {"typename": "text"}
+                }
+            ]
+        },
+        "assoc_related_to_table_w_vis_fks": {
+            "kind": "table",
+            "schema_name": "reference_schema_2",
+            "table_name": "assoc_related_to_table_w_vis_fks",
+            "keys": [
+                {"unique_columns": ["id"]}
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
                     "type": {"typename": "text"}
                 }
             ]

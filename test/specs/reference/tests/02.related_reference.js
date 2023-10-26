@@ -4,6 +4,7 @@ exports.execute = function(options) {
     describe('.related, ', function() {
         var catalog_id = process.env.DEFAULT_CATALOG,
             schemaName = "reference_schema",
+            schemaName2 = "reference_schema_2",
             tableName = "reference_table",
             inboundTableName = "inbound_related_reference_table",
             associationTableWithToName = "association_table_with_toname",
@@ -121,9 +122,8 @@ exports.execute = function(options) {
         describe("related reference list, ", function () {
 
             describe('when visible foreign keys are not defined, ', function() {
-                var schemaName2 = "reference_schema_2",
-                tableName2 = "reference_table_no_order",
-                related2;
+                var tableName2 = "reference_table_no_order",
+                ref2, related2;
 
                 var noOrderUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName2 + ":" + tableName2;
 
@@ -131,15 +131,29 @@ exports.execute = function(options) {
                     options.ermRest.resolve(noOrderUri, {
                         cid: "test"
                     }).then(function(response) {
-                        related2 = response.contextualize.detailed.related;
+                        ref2 = response.contextualize.detailed;
+                        related2 = ref2.related;
                         done();
                     }, function(err) {
                         done.fail(err);
                     });
                 });
 
-                it('should include all foreign keys.', function() {
+                it('should include all foreign keys and exclude the ones already added to visible-columns.', function() {
                     expect(related2.length).toBe(4);
+
+                    // just a sanity check that the visible-columns is correctly added.
+                    // the actual tests for .columns API are done in a separate spec
+                    expect(ref2.columns.length).toBe(7);
+                    expect(ref2.columns.map((col) => {
+                        return col._constraintName ? col._constraintName : col.name
+                    })).toEqual([
+                        'id_1', 'id_2', 'id_3',
+                        ['reference_schema_2', 'fk_inbound_related_table_1_to_reference_table_no_order'].join('_'),
+                        ['reference_schema_2', 'fk_inbound_related_table_2_to_reference_table_no_order'].join('_'),
+                        ['reference_schema_2', 'fk_assoc_table_1_to_reference_table_no_order'].join('_'),
+                        ['reference_schema_2', 'fk_assoc_table_2_to_reference_table_no_order'].join('_')
+                    ]);
                 });
 
                 it('should be sorted by displayname.', function() {
@@ -159,12 +173,35 @@ exports.execute = function(options) {
             });
 
             describe("when visible foreign keys are defined, ", function () {
+                it ('should ignore the ones already added to visible-columns (inline realted).', (done) => {
+                    options.ermRest.resolve(`${options.url}/catalog/${catalog_id}/entity/${schemaName2}:table_w_vis_fks_and_vis_cols`, {
+                        cid: "test"
+                    }).then((response) => {
+                        response = response.contextualize.detailed;
+
+                        expect(response.related.length).toBe(0, 'related length missmatch');
+
+                        // just a sanity check that the visible-columns is correctly added.
+                        // the actual tests for .columns API are done in a separate spec
+                        expect(response.columns.length).toBe(3, 'columns length missmatch');
+                        expect(response.columns.map((col) => {
+                            return col._constraintName ? col._constraintName : col.name
+                        })).toEqual([
+                            'id',
+                            ['reference_schema_2', 'inbound_related_to_table_w_vis_fks_fk1'].join('_'),
+                            ['reference_schema_2', 'assoc_table_to_table_w_vis_fks_fk1'].join('_'),
+                        ], 'colum names mismatch');
+
+                        done();
+                    }).catch((err) => done.fail(err));
+                });
+
                 it('should be defined and not empty.', function() {
                     expect(reference.related).toBeDefined();
                     expect(related).not.toEqual([]);
                 });
 
-                it('should only include visible foreign keys that are defined in the annotation. Should support path.', function() {
+                it('should only include visible foreign keys that are defined in the annotation. Should support path', function() {
                     expect(related.length).toBe(7);
                 });
 
