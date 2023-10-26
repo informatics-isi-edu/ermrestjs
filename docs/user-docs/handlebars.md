@@ -329,6 +329,28 @@ To access these variables in another block helper
 {{#escape [str with a space]}}{{/escape}}
 ```
 
+This syntax can also be used for accessing properties of an object. For example with this context,
+
+```
+{
+  "values": {
+    "name": "resonant scan",
+    "power (uW)": 123.4,
+  }
+}
+```
+
+You can do
+```
+{{{values.name}}} power: {{{values.[power (uW)]}}}
+```
+Which returns
+```
+resonant scan power: 123.4
+```
+
+
+
 ### Subexpressions
 
 Handlebars offers support for `subexpressions`, which allows you to invoke multiple helpers within a single mustache `{{}}`, and pass in the results of inner helper invocations as arguments to outer helpers. Subexpressions are delimited by parentheses.
