@@ -246,7 +246,7 @@
                         },
                         {
                             "source": [
-                                {"filter": "RCT", "negate": true, "operand_pattern": "{{{$moment.year}}}-{{{$moment.month}}}-{{{$moment.day}}}", "operator": "::lt::"},
+                                {"filter": "RCT", "negate": true, "operand_pattern": "{{{$moment.year}}}-{{{$moment.month}}}-{{{$moment.date}}}", "operator": "::lt::"},
                                 {"inbound": ["reference_schema","fromname_fk_inbound_related_to_reference"]},
                                 {"inbound":["reference_schema","fk_to_inbound_related_reference_table"]},
                                 {"filter": "RID", "negate": true, "operand_pattern": "-1"},
