@@ -85,7 +85,7 @@ exports.execute = function (options) {
         var i, facetObj, ref;
 
         var currDate = new Date();
-        var currentDateString = options.ermRest._fixedEncodeURIComponent(currDate.getFullYear() + "-" + (currDate.getMonth()+1) + "-" + currDate.getDay());
+        var currentDateString = options.ermRest._fixedEncodeURIComponent(currDate.getFullYear() + "-" + (currDate.getMonth()+1) + "-" + currDate.getDate());
 
         var createURL = function (tableName, facet) {
             var res = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + tableName;
@@ -691,7 +691,7 @@ exports.execute = function (options) {
                                             "negate": true,
                                             "and": [
                                                 {"operand_pattern": "some_non_used_value", "filter": "path_prefix_o1_col"},
-                                                {"operator": "::gt::", "filter": "date_col", "operand_pattern": "{{{$moment.year}}}-{{{$moment.month}}}-{{{$moment.day}}}"},
+                                                {"operator": "::gt::", "filter": "date_col", "operand_pattern": "{{{$moment.year}}}-{{{$moment.month}}}-{{{$moment.date}}}"},
                                             ]
                                         },
                                         "path_prefix_o1_col"

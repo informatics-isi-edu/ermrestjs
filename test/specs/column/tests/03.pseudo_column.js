@@ -136,7 +136,7 @@ exports.execute = function (options) {
              '8siu02fMCXJ2DfB4GLv93Q', 'OLbAesieGW5dpAhzqTSzqw', 'MJVZnQ5mBRdCFPfjIOMvkA',
              "asset", "asset_filename", 'IKxB9JkO83__MmKlV0Nnow', 'wjUK75uqILcMMo85UxnPnQ',
              "$virtual-column-1", "$virtual-column-1-1", "rxU1VoEIaH0rnNoNVr0fwA",
-             "kDWbu6FLabJ84GjvcmjfYQ"
+             "up2zcsXMZsWvCSiWNXt2Kg"
         ];
 
         var detailedPseudoColumnIndices = [
@@ -369,7 +369,7 @@ exports.execute = function (options) {
                             {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
                             {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
                             {"or": [
-                                {"filter": "RCT", "operand_pattern": "{{{$moment.year}}}-{{{$moment.month}}}-{{{$moment.day}}}", "operator": "::gt::"},
+                                {"filter": "RCT", "operand_pattern": "{{{$moment.year}}}-{{{$moment.month}}}-{{{$moment.date}}}", "operator": "::gt::"},
                                 {"filter": "RID", "operator": "::null::", "negate": true}
                             ]},
                             "id"
@@ -898,7 +898,7 @@ exports.execute = function (options) {
                         {"i": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
                         {"o": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
                         {"or": [
-                            {"f": "RCT", "opd": "{{{$moment.year}}}-{{{$moment.month}}}-{{{$moment.day}}}", "opr": "::gt::"},
+                            {"f": "RCT", "opd": "{{{$moment.year}}}-{{{$moment.month}}}-{{{$moment.date}}}", "opr": "::gt::"},
                             {"f": "RID", "opr": "::null::", "n": true}
                         ]},
                         "id"

@@ -313,7 +313,7 @@
                                 {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
                                 {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
                                 {"or": [
-                                    {"filter": "RCT", "operand_pattern": "{{{$moment.year}}}-{{{$moment.month}}}-{{{$moment.day}}}", "operator": "::gt::"},
+                                    {"filter": "RCT", "operand_pattern": "{{{$moment.year}}}-{{{$moment.month}}}-{{{$moment.date}}}", "operator": "::gt::"},
                                     {"filter": "RID", "operator": "::null::", "negate": true}
                                 ]},
                                 "id"
