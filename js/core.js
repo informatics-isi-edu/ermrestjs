@@ -804,12 +804,12 @@
 
         /**
          * @desc Documentation for this schema
-         * @type {string}
+         * @type {Object}
          */
-        this.comment = jsonSchema.comment;
+        this.comment = _processModelComment(jsonSchema.comment);
         if (this.annotations.contains(module._annotations.DISPLAY)) {
             var cm = _processModelComment(this.annotations.get(module._annotations.DISPLAY).content.comment);
-            if (typeof cm === "string") {
+            if (cm) {
                 this.comment = cm;
             }
         }
@@ -1076,12 +1076,13 @@
 
         /**
          * @desc Documentation for this table
-         * @type {string}
+         * @type {Object}
+         * @deprecated comment can be contextualized, so please do `this.getDisplay(context).comment` instead.
          */
-        this.comment = jsonTable.comment;
+        this.comment = _processModelComment(jsonTable.comment);
         if (this.annotations.contains(module._annotations.DISPLAY)) {
             var cm = _processModelComment(this.annotations.get(module._annotations.DISPLAY).content.comment);
-            if (typeof cm === "string") {
+            if (cm) {
                 this.comment = cm;
             }
         }
@@ -1174,7 +1175,7 @@
         getDisplay: function (context) {
             // check _display for information about current context
             if (!(context in this._display)) {
-                var comment_annotation = null, comment_display_annotation = null;
+                var comment_annotation = null;
                 if (this.annotations.contains(module._annotations.DISPLAY)) {
                     // comment can be a string or an object
                     comment_annotation = this.annotations.get(module._annotations.DISPLAY).get("comment");
@@ -1183,33 +1184,36 @@
                     if (typeof comment_annotation == "object") {
                         comment_annotation = module._getAnnotationValueByContext(context, comment_annotation);
                     }
-
-                    comment_display_annotation = module._getAnnotationValueByContext(context, this.annotations.get(module._annotations.DISPLAY).get("comment_display"));
                 }
 
-                var comment = this.comment,
-                    tableCommentDisplay = module._commentDisplayModes.tooltip,
-                    columnCommentDisplay = module._commentDisplayModes.tooltip;
-
-                // comment is contextualized
+                var comment = this.comment;
                 if (_isValidModelComment(comment_annotation)) {
-                    comment = _processModelComment(comment_annotation);
+                    comment = comment_annotation;
                 }
 
-                // since in the model we cannot define the comment_display settings,
-                // this annotation can be used in conjunction with the model's comments
-                // and we don't need to make sure the comment is coming from annotation
-                if (comment_display_annotation && _isValidModelCommentDisplay(comment_display_annotation.column_comment_display)) {
-                    columnCommentDisplay = comment_display_annotation.column_comment_display;
-                }
-                if (comment_display_annotation && _isValidModelCommentDisplay(comment_display_annotation.table_comment_display)) {
-                    tableCommentDisplay = comment_display_annotation.table_comment_display;
+                var displayProps = module._getHierarchicalDisplayAnnotationValue(this, context, "comment_display", true);
+                var tableCommentDisplayMode = module._commentDisplayModes.tooltip,
+                    columnCommentDisplayMode = module._commentDisplayModes.tooltip,
+                    commentRenderMd = true;
+                if (isObjectAndNotNull(displayProps)) {
+                    if (_isValidModelCommentDisplay(displayProps.table_comment_display)) {
+                        tableCommentDisplayMode = displayProps.table_comment_display;
+                    }
+
+                    if (_isValidModelCommentDisplay(displayProps.column_comment_display)) {
+                        columnCommentDisplayMode = displayProps.column_comment_display;
+                    }
+
+                    if (typeof displayProps.comment_render_markdown === 'boolean') {
+                        commentRenderMd = displayProps.comment_render_markdown;
+                    }
                 }
 
                 this._display[context] = {
-                    "columnCommentDisplay": columnCommentDisplay,
-                    "comment": comment, // coming from the model, or annotation
-                    "tableCommentDisplay": tableCommentDisplay
+                    "columnCommentDisplayMode": columnCommentDisplayMode,
+                    "tableCommentDisplayMode": tableCommentDisplayMode,
+                    "comment": _processModelComment(comment, commentRenderMd, tableCommentDisplayMode),
+                    "commentRenderMarkdown": commentRenderMd
                 };
             }
             return this._display[context];
@@ -3097,19 +3101,20 @@
 
         /**
          * @desc Documentation for this column
-         * @type {string}
+         * @type {Object}
+         * @deprecated comment can be contextualized, so please do `this.getDisplay(context).comment` instead.
          */
-        this.comment = jsonColumn.comment;
+        this.comment = _processModelComment(jsonColumn.comment);
         if (this.annotations.contains(module._annotations.DISPLAY)) {
             var cm = _processModelComment(this.annotations.get(module._annotations.DISPLAY).content.comment);
-            if (typeof cm === "string") {
+            if (cm) {
                 this.comment = cm;
             }
         }
 
         // If the comment is not defined for a system column, then it is assigned a default comment
-        if((this.comment == null || this.comment == undefined) && this.isSystemColumn){
-            this.comment = module._defaultColumnComment[this.name];
+        if((this.comment === null || this.comment === undefined) && this.isSystemColumn){
+            this.comment = _processModelComment(module._defaultColumnComment[this.name]);
         }
 
         /**
@@ -3322,6 +3327,31 @@
                     }
                 }
 
+                var comment = this.comment;
+                if (this.annotations.contains(module._annotations.DISPLAY)) {
+                    // comment can be a string or an object
+                    var commentAnnot = this.annotations.get(module._annotations.DISPLAY).get("comment");
+                    // point to comment since that is what is contextualized in this annotation
+                    // if it's an object, that means it's contextualized
+                    if (typeof commentAnnot == "object") {
+                        commentAnnot = module._getAnnotationValueByContext(context, commentAnnot);
+                    }
+                    if (_isValidModelComment(commentAnnot)) {
+                        comment = commentAnnot;
+                    }
+                }
+
+                var displayProps = module._getHierarchicalDisplayAnnotationValue(this, context, "comment_display", false);
+                var columnCommentDisplayMode = module._commentDisplayModes.tooltip, commentRenderMd = true;
+                if (isObjectAndNotNull(displayProps)) {
+                    if (_isValidModelCommentDisplay(displayProps.column_comment_display)) {
+                        columnCommentDisplayMode = displayProps.column_comment_display;
+                    }
+                    if (typeof displayProps.comment_render_markdown === 'boolean') {
+                        commentRenderMd = displayProps.comment_render_markdown;
+                    }
+                }
+
                 this._display[context] = {
                     "hideColumnHeader": annotation.hide_column_header || false, // only hide if the annotation value is true
                     "isPreformat": hasPreformat,
@@ -3331,7 +3361,10 @@
                     "isHTML": (typeof annotation.markdown_pattern === 'string') || (module._HTMLColumnType.indexOf(this.type.name) != -1),
                     "markdownPattern": annotation.markdown_pattern,
                     "templateEngine": annotation.template_engine,
-                    "columnOrder": columnOrder
+                    "columnOrder": columnOrder,
+                    "comment": _processModelComment(comment, commentRenderMd, columnCommentDisplayMode),
+                    "commentRenderMarkdown": commentRenderMd,
+                    "commentDisplayMode": columnCommentDisplayMode
                 };
             }
             return this._display[context];
@@ -3702,12 +3735,12 @@
 
         /**
          * @desc Documentation for this key
-         * @type {string}
+         * @type {Object}
          */
-        this.comment = jsonKey.comment;
+        this.comment = _processModelComment(jsonKey.comment);
         if (this.annotations.contains(module._annotations.DISPLAY)) {
             var cm = _processModelComment(this.annotations.get(module._annotations.DISPLAY).content.comment);
-            if (typeof cm === "string") {
+            if (cm) {
                 this.comment = cm;
             }
         }
@@ -4433,9 +4466,9 @@
 
         /**
          * @desc Documentation for this foreign key reference
-         * @type {string}
+         * @type {Object}
          */
-        this.comment = jsonFKR.comment;
+        this.comment = _processModelComment(jsonFKR.comment);
 
         this._display = {};
 

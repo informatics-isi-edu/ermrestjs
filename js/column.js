@@ -291,26 +291,22 @@ ReferenceColumn.prototype = {
      */
     get comment() {
         if (this._comment === undefined) {
-            var com = _processSourceObjectColumn(this.sourceObject);
-            if (typeof com === "string") {
-                this._comment = com;
-            } else {
-                this._comment = this._simple ? this._baseCols[0].comment : null;
+            var comment = null, commentDisplayMode, commentRenderMarkdown;
+            if (this._simple) {
+                var display = this._baseCols[0].getDisplay(this._context);
+                comment = display.comment;
+                commentDisplayMode = display.commentDisplayMode;
+                commentRenderMarkdown = display.commentRenderMarkdown;
             }
+
+            if (!this.sourceObject) {
+                this._comment = comment;
+            } else {
+                this._comment = _processSourceObjectComment(sourceObject, comment, commentRenderMarkdown, commentDisplayMode);
+            }
+
         }
         return this._comment;
-    },
-
-    get commentDisplay() {
-        if (this._commentDisplay === undefined) {
-            if (this.sourceObject && _isValidModelComment(this.sourceObject.comment) && _isValidModelCommentDisplay(this.sourceObject.comment_display)) {
-                // only change commentDisplay if comment and comment_display are both defined
-                this._commentDisplay = this.sourceObject.comment_display;
-            } else {
-                this._commentDisplay = module._commentDisplayModes.tooltip;
-            }
-        }
-        return this._commentDisplay;
     },
 
     /**
@@ -1355,12 +1351,7 @@ PseudoColumn.prototype._determineInputDisabled = function () {
 Object.defineProperty(PseudoColumn.prototype, "comment", {
     get: function () {
         if (this._comment === undefined) {
-            var getComment = function (self) {
-                var com = _processSourceObjectColumn(self.sourceObject);
-                if (typeof com === "string") {
-                    return com;
-                }
-
+            var getDefaultCommentProps = function (self) {
                 if (self.hasAggregate) {
                     var agIndex = module._pseudoColAggregateFns.indexOf(self.sourceObject.aggregate);
                     var dname = self._baseCols[0].displayname.unformatted;
@@ -1368,59 +1359,35 @@ Object.defineProperty(PseudoColumn.prototype, "comment", {
                         dname = self._baseCols[0].table.displayname.unformatted;
                     }
 
-                    return [module._pseudoColAggregateExplicitName[agIndex], dname].join(" ");
+                    return {
+                        comment: [module._pseudoColAggregateExplicitName[agIndex], dname].join(" "),
+                        commentRenderMarkdown: false
+                    };
                 }
 
+                var temp;
                 if (!self.isEntityMode) {
-                    return self._baseCols[0].comment;
+                    temp = self._baseCols[0].getDisplay(self._context);
+                    return {
+                        comment: temp.comment,
+                        commentDisplayMode: temp.commentDisplayMode,
+                        commentRenderMarkdown: temp.commentRenderMarkdown
+                    };
                 }
 
                 // self.table should be leaf table
-                return self.table.getDisplay(self._context).comment;
+                temp = self.table.getDisplay(self._context).comment;
+                return {
+                    comment: temp.comment,
+                    commentDisplayMode: temp.tableCommentDisplayMode,
+                    commentRenderMarkdown: temp.commentRenderMarkdown
+                };
             };
 
-            this._comment = getComment(this);
+            var def = getDefaultCommentProps(this);
+            this._comment = _processSourceObjectComment(this.sourceObject, def.comment, def.commentRenderMarkdown, def.commentDisplayMode);
         }
         return this._comment;
-    }
-});
-
-// NOTE: this only works for multi hop with inbound foreign key
-/**
- * The mode the tooltip should be displayed in for this column.
- * It will return the first applicable rule:
- * 1. commentDisplay that is defined on the sourceObject
- * 2. commentDisplay that is defined on the table in the display annotation
- * 3. default to "tooltip"
- *
- * @member {Object} commentDisplay
- * @memberof ERMrest.PseudoColumn#
- */
-Object.defineProperty(PseudoColumn.prototype, "commentDisplay", {
-    get: function () {
-        if (this._commentDisplay === undefined) {
-            var getDisplay = function (self) {
-                if (self.sourceObject && _isValidModelComment(self.sourceObject.comment) && _isValidModelCommentDisplay(self.sourceObject.comment_display)) {
-                    return self.sourceObject.comment_display;
-                }
-
-                var def = module._commentDisplayModes.tooltip;
-                if (!self.isEntityMode || self.hasAggregate) {
-                    return def;
-                }
-
-                // self.table should be leaf table
-                var display = self.table.getDisplay(self._context);
-                if (_isValidModelCommentDisplay(display.tableCommentDisplay) && _isValidModelComment(display.comment)) {
-                    return display.tableCommentDisplay;
-                }
-
-                return def;
-            };
-
-            this._commentDisplay = getDisplay(this);
-        }
-        return this._commentDisplay;
     }
 });
 
@@ -1555,7 +1522,6 @@ Object.defineProperty(PseudoColumn.prototype, "reference", {
             if (self.hasPath) {
                 self._reference._displayname = self.displayname;
                 self._reference._comment = self.comment;
-                self._reference._commentDisplay = self.commentDisplay;
             }
         }
         return this._reference;
@@ -2868,23 +2834,9 @@ Object.defineProperty(InboundForeignKeyPseudoColumn.prototype, "displayname", {
 Object.defineProperty(InboundForeignKeyPseudoColumn.prototype, "comment", {
     get: function () {
         if (this._comment === undefined) {
-            var com = _processSourceObjectColumn(this.sourceObject);
-            if (typeof com === "string") {
-                this._comment = com;
-            } else {
-                this._comment = this.reference.comment;
-            }
+            this._comment = this.reference.comment;
         }
         return this._comment;
-    }
-});
-
-Object.defineProperty(InboundForeignKeyPseudoColumn.prototype, "commentDisplay", {
-    get: function () {
-        if (this._commentDisplay === undefined) {
-            this._commentDisplay = this.reference.commentDisplay;
-        }
-        return this._commentDisplay;
     }
 });
 
@@ -3325,14 +3277,15 @@ FacetColumn.prototype = {
      */
     get comment () {
         if (this._comment === undefined) {
-            var com = _processSourceObjectColumn(this._facetObject);
-            if (typeof com === "string") {
-                this._comment = com;
-            } else if (!this.isEntityMode) {
-                    this._comment = this._column.comment;
+            var commentDisplayMode, disp;
+            if (!this.isEntityMode) {
+                disp = this._column.getDisplay(module._contexts.COMPACT_SELECT);
+                commentDisplayMode = disp.commentDisplayMode;
             } else {
-                this._comment = this._column.table.comment;
+                disp = this._column.table.getDisplay(module._contexts.COMPACT_SELECT);
+                commentDisplayMode = disp.tableCommentDisplayMode;
             }
+            this._comment = _processSourceObjectComment(this.sourceObject, disp.comment, disp.commentRenderMarkdown, commentDisplayMode);
         }
         return this._comment;
     },
@@ -4455,7 +4408,7 @@ ColumnGroupAggregateFn.prototype = {
             }
 
             aggregateColumns.push(
-                new AttributeGroupColumn(countColName, countName, null, "Number of Occurrences", new Type({typename: "int"}), "", true, !hideNumOccurrences)
+                new AttributeGroupColumn(countColName, countName, null, "Number of Occurrences", new Type({typename: "int"}), null, true, !hideNumOccurrences)
             );
         }
 

@@ -831,17 +831,20 @@
     };
 
     /**
-     * Given the source object, will return the comment that should be used.
-     * - if sourceObject.comment=false: use empty string.
-     * - if sourceObject.comment=string: use the defined value
-     * - otherwise return null
-     * TODO should be renamed or changed. the name doesn't make sense.
-     * (I wanted to use _processSourceObjectComment but called it this way accidentally)
+     * Given the source object and default comment props, will return the comment that should be used.
      * @private
      */
-    _processSourceObjectColumn = function (sourceObject) {
-        if (!sourceObject) return null;
-        return _processModelComment(sourceObject.comment);
+    _processSourceObjectComment = function (sourceObject, defaultComment, defaultCommentRenderMd, defaultDisplayMode) {
+        if (sourceObject && _isValidModelComment(sourceObject)) {
+            defaultComment = sourceObject.comment;
+        }
+        if (sourceObject && _isValidModelCommentDisplay(sourceObject.comment_display)) {
+            defaultDisplayMode = sourceObject.comment_display;
+        }
+        if (sourceObject && typeof sourceObject.comment_render_markdown === 'boolean') {
+            defaultCommentRenderMd = sourceObject.comment_render_markdown;
+        }
+        return _processModelComment(defaultComment, defaultCommentRenderMd, defaultDisplayMode);
     };
 
     /**
@@ -851,10 +854,22 @@
      *   - otherwise returns null
      * @private
      */
-    _processModelComment = function (comment) {
-        if (comment === false) return "";
-        if (typeof comment === "string") return comment;
-        return null;
+    _processModelComment = function (comment, isMarkdown, displayMode) {
+        if (comment !== false && typeof comment !== 'string') {
+            return null;
+        }
+
+        var usedDisplayMode = _isValidModelComment(displayMode) ? displayMode : module._commentDisplayModes.tooltip;
+        if (comment === false) {
+            return { isHTML: false, unformatted: '', value: '', displayMode: usedDisplayMode };
+        }
+
+        return {
+            isHTML: isMarkdown === true,
+            unformatted: comment,
+            value: (isMarkdown === true) ? module.renderMarkdown(comment) : comment,
+            displayMode: usedDisplayMode
+        };
     };
 
     /**

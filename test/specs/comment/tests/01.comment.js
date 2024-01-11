@@ -33,8 +33,8 @@ exports.execute = function (options) {
                 // comment should be the same when fetched with getDisplay function
                 expect(table.getDisplay("detailed").comment).toBe("", "comment from getDisplay is incorrect");
                 // should use the default comment display value
-                expect(table.getDisplay("detailed").columnCommentDisplay).toBe("tooltip", "default column comment display is incorrect");
-                expect(table.getDisplay("detailed").tableCommentDisplay).toBe("tooltip", "default table comment display is incorrect");
+                expect(table.getDisplay("detailed").columnCommentDisplayMode).toBe("tooltip", "default column comment display is incorrect");
+                expect(table.getDisplay("detailed").tableCommentDisplayMode).toBe("tooltip", "default table comment display is incorrect");
             });
 
             it('table_w_contextualized_display_comment should use the contextualized display comment.', function () {
@@ -43,13 +43,13 @@ exports.execute = function (options) {
                 // comment will be from the table not the annotation
                 expect(table.comment).not.toBe(annotationComment, "table comment is the same as annotaiton comment");
                 // should use the default values since this context is not defined
-                expect(table.getDisplay("*").columnCommentDisplay).toBe("tooltip", "* context, column comment display is incorrect");
-                expect(table.getDisplay("*").tableCommentDisplay).toBe("tooltip", "* context, table comment display is incorrect");
+                expect(table.getDisplay("*").columnCommentDisplayMode).toBe("tooltip", "* context, column comment display is incorrect");
+                expect(table.getDisplay("*").tableCommentDisplayMode).toBe("tooltip", "* context, table comment display is incorrect");
 
                 expect(table.getDisplay("detailed").comment).toBe(annotationComment, "detailed context, comment is incorrect");
                 // should use the comment display values from annotation
-                expect(table.getDisplay("detailed").columnCommentDisplay).toBe("tooltip", "detailed context, column comment display is incorrect");
-                expect(table.getDisplay("detailed").tableCommentDisplay).toBe("inline", "detailed context, table comment display is incorrect");
+                expect(table.getDisplay("detailed").columnCommentDisplayMode).toBe("tooltip", "detailed context, column comment display is incorrect");
+                expect(table.getDisplay("detailed").tableCommentDisplayMode).toBe("inline", "detailed context, table comment display is incorrect");
             });
         });
 

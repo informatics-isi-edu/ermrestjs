@@ -295,7 +295,7 @@
         /**
          * The comment for this reference.
          *
-         * @type {String}
+         * @type {Object}
          */
         get comment () {
             /* Note that comment is context dependent. For instance,
@@ -306,29 +306,10 @@
              * In one directoin, the FKR is named "parent" in the other
              * direction it is named "child".
              */
-            if (this._comment === undefined)
+            if (this._comment === undefined) {
                 this._comment = this._table.getDisplay(this._context).comment;
+            }
             return this._comment;
-        },
-
-        /**
-         * The comment display property for this reference.
-         * can be either "tooltip" or "inline"
-         *
-         * @type {String}
-         */
-        get commentDisplay () {
-            /* Note that commentDisplay is context dependent. However, a 'related'
-             * reference will use the FKR's commentDisplay (actually its "to comment display" or
-             * "from comment display"). Like a Person table might have a FKR to its parent.
-             * In one directoin, the FKR is named "parent" in the other
-             * direction it is named "child".
-             */
-            if (this._commentDisplay === undefined)
-                // default value is tooltip
-                // NOTE: This is used as part of the conditional check before showing a comment, so getDisplay needs to also be called here
-                this._commentDisplay = this._table.getDisplay(this._context).tableCommentDisplay;
-            return this._commentDisplay;
         },
 
         /**
@@ -4021,8 +4002,7 @@
             // the main table
             newRef.mainTable = this.table;
 
-            // comment display defaults to "tooltip"
-            newRef._commentDisplay = module._commentDisplayModes.tooltip;
+            var comment, commentDisplayMode, commentRenderMarkdown, tableDisplay;
 
             dataSource.push({"inbound": fkr.constraint_names[0]});
 
@@ -4054,16 +4034,21 @@
                 // display = otherFK.getDisplay(this._context);
 
                 // comment
-                if (otherFK.to_comment && typeof otherFK.to_comment === "string") {
-                    // use fkr to_comment
-                    newRef._comment = otherFK.to_comment;
-                    newRef._commentDisplay = otherFK.to_comment_display;
+                tableDisplay = otherFK.key.colset.columns[0].table.getDisplay(this._context);
+                if (_isValidModelComment(otherFK.from_comment)) {
+                    comment = otherFK.from_comment;
                 } else {
-                    // use comment from leaf table diplay annotation or table model comment
-                    display = otherFK.key.colset.columns[0].table.getDisplay(this._context);
-
-                    newRef._comment = display.comment;
-                    newRef._commentDisplay = display.tableCommentDisplay;
+                    comment = tableDisplay.comment ? tableDisplay.comment.unformatted : null;
+                }
+                if (_isValidModelCommentDisplay(otherFK.from_comment_display)) {
+                    commentDisplayMode = otherFK.from_comment_display;
+                } else {
+                    commentDisplayMode = tableDisplay.tableCommentDisplayMode;
+                }
+                if (typeof otherFK.comment_render_markdown === 'boolean') {
+                    commentRenderMarkdown = otherFK.comment_render_markdown;
+                } else {
+                    commentRenderMarkdown = tableDisplay.commentRenderMarkdown;
                 }
 
                 // uri and location
@@ -4102,16 +4087,21 @@
                 // display = fkr.getDisplay(this._context);
 
                 // comment
-                if (fkr.from_comment && typeof fkr.from_comment === "string") {
-                    // use fkr annotation from_comment
-                    newRef._comment = fkr.from_comment;
-                    newRef._commentDisplay = fkr.from_comment_display;
+                tableDisplay = newRef._table.getDisplay(this._context);
+                if (_isValidModelComment(fkr.from_comment)) {
+                    comment = fkr.from_comment;
                 } else {
-                    // use comment from leaf table diplay annotation or table model comment
-                    display = newRef._table.getDisplay(this._context);
-
-                    newRef._comment = display.comment;
-                    newRef._commentDisplay = display.tableCommentDisplay;
+                    comment = tableDisplay.comment ? tableDisplay.comment.unformatted : null;
+                }
+                if (_isValidModelCommentDisplay(fkr.from_comment_display)) {
+                    commentDisplayMode = fkr.from_comment_display;
+                } else {
+                    commentDisplayMode = tableDisplay.tableCommentDisplayMode;
+                }
+                if (typeof fkr.comment_render_markdown === 'boolean') {
+                    commentRenderMarkdown = fkr.comment_render_markdown;
+                } else {
+                    commentRenderMarkdown = tableDisplay.commentRenderMarkdown;
                 }
 
                 // uri and location
@@ -4140,13 +4130,7 @@
                 dataSource = dataSource.concat(newRef._table.shortestKey[0].name);
             }
 
-            // if comment|comment_display in source object are defined
-            // comment_display was already set to it's default above
-            if (sourceObject && _isValidModelComment(sourceObject.comment)) {
-                newRef._comment = _processModelComment(sourceObject.comment);
-                // only change commentDisplay if comment and comment_display are both defined
-                if (_isValidModelCommentDisplay(sourceObject.comment_display)) newRef._commentDisplay = sourceObject.comment_display;
-            }
+            newRef._comment = _processSourceObjectComment(sourceObject, comment, commentRenderMarkdown, commentDisplayMode);
 
             // attach the compressedDataSource
             newRef.compressedDataSource = _compressSource(dataSource);

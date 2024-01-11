@@ -124,7 +124,7 @@
              *
              * @returns boolean if the value matches the regexp
              */
-            regexMatch: function (value, regexp) {
+            regexMatch: function (value, regexp, options) {
                 var regexpObj = new RegExp(regexp);
                 return regexpObj.test(value);
             },
