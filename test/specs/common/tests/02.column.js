@@ -471,7 +471,15 @@ exports.execute = function(options) {
 
                 it('should have a default comment.', function(){
                     for(var i=0;i<systemColumns.length;i++){
-                        expect(table1_schema2.columns.get(systemColumns[i]).comment).toBe(comments[systemColumns[i]], "Column "+ systemColumns[i]+ " doesn't have the correct default comment.");
+                        expect(table1_schema2.columns.get(systemColumns[i]).comment).toEqual(
+                            {
+                                isHTML: false,
+                                unformatted: comments[systemColumns[i]],
+                                value: comments[systemColumns[i]],
+                                displayMode: 'tooltip'
+                            },
+                            "Column "+ systemColumns[i]+ " doesn't have the correct default comment."
+                        );
                     }
                 });
             });

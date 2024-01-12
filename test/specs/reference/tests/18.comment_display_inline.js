@@ -39,7 +39,7 @@
  **/
 exports.execute = function (options) {
 
-    describe("testing visible columns annotation,", function () {
+    describe("comment related annotations,", function () {
 
         var catalog_id = process.env.DEFAULT_CATALOG,
             schemaName = "comment_display_inline_schema",
@@ -47,7 +47,7 @@ exports.execute = function (options) {
 
         // simple "inbound" FK
         // main <- inbound leaf
-        describe("testing comment and comment_display for simple foreign key", function() {
+        describe("testing comment for simple foreign key", function() {
 
             var tableSimpleFKName = "comment_display_simple_fk_table";
 
@@ -74,35 +74,39 @@ exports.execute = function (options) {
 
             });
 
-            describe("for comment,", function () {
-                it("source syntax in visible foreign keys should be used first", function () {
-                    expect(simpleReference.columns[0].comment).toBe("simple fk source syntax comment");
-                });
-
-                it("then the from_comment in foreign-key annotation", function () {
-                    expect(simpleReference.columns[1].comment).toBe("simple fk from_comment comment");
-                });
-
-                it("next use display annotation on leaf table", function () {
-                    expect(simpleReference.columns[3].comment).toBe("simple fk leaf table display comment");
+            it("source syntax in visible foreign keys should be used first", () => {
+                expect(simpleReference.columns[0].comment).toEqual({
+                    value: "<p>simple fk source syntax comment</p>\n",
+                    unformatted: "simple fk source syntax comment",
+                    isHTML: true,
+                    displayMode: 'inline'
                 });
             });
 
-            describe("for comment_display,", function () {
-                it("source syntax in visible foreign keys should be used first", function () {
-                    expect(simpleReference.columns[0].commentDisplay).toBe("inline");
+            it("when from_comment and from_comment_display both are not defined", () => {
+                expect(simpleReference.columns[1].comment).toEqual({
+                    value: "<p>simple fk from_comment comment</p>\n",
+                    unformatted: "simple fk from_comment comment",
+                    isHTML: true,
+                    displayMode: 'inline'
                 });
+            });
 
-                it("then the from_comment_display property in foreign-key annotation if from_comment was defined", function () {
-                    expect(simpleReference.columns[1].commentDisplay).toBe("inline");
+            it ('if from_comment is not defined but from_comment_display is used', () => {
+                expect(simpleReference.columns[2].comment).toEqual({
+                    value: "<p>simple fk with NO from comment</p>\n",
+                    unformatted: "simple fk with NO from comment",
+                    isHTML: true,
+                    displayMode: 'inline'
                 });
+            })
 
-                it("ignore the from_comment_display property if from_comment is not defined", function () {
-                    expect(simpleReference.columns[2].commentDisplay).toBe("tooltip");
-                });
-
-                it("next use display annotation on leaf table", function () {
-                    expect(simpleReference.columns[3].commentDisplay).toBe("inline");
+            it("when from_comment and from_comment_display both are not defined", function () {
+                expect(simpleReference.columns[3].comment).toEqual({
+                    value: '<p>simple fk leaf table display comment</p>\n',
+                    unformatted: 'simple fk leaf table display comment',
+                    isHTML: true,
+                    displayMode: 'inline'
                 });
             });
         });

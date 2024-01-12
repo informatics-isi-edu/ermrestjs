@@ -835,7 +835,7 @@
      * @private
      */
     _processSourceObjectComment = function (sourceObject, defaultComment, defaultCommentRenderMd, defaultDisplayMode) {
-        if (sourceObject && _isValidModelComment(sourceObject)) {
+        if (sourceObject && _isValidModelComment(sourceObject.comment)) {
             defaultComment = sourceObject.comment;
         }
         if (sourceObject && _isValidModelCommentDisplay(sourceObject.comment_display)) {
@@ -852,6 +852,7 @@
      *   - if =false : returns empty string.
      *   - if =string: returns the string.
      *   - otherwise returns null
+     * TODO update comment
      * @private
      */
     _processModelComment = function (comment, isMarkdown, displayMode) {
@@ -859,15 +860,15 @@
             return null;
         }
 
-        var usedDisplayMode = _isValidModelComment(displayMode) ? displayMode : module._commentDisplayModes.tooltip;
+        var usedDisplayMode = _isValidModelCommentDisplay(displayMode) ? displayMode : module._commentDisplayModes.tooltip;
         if (comment === false) {
             return { isHTML: false, unformatted: '', value: '', displayMode: usedDisplayMode };
         }
 
         return {
-            isHTML: isMarkdown === true,
+            isHTML: isMarkdown !== false,
             unformatted: comment,
-            value: (isMarkdown === true) ? module.renderMarkdown(comment) : comment,
+            value: (isMarkdown !== false && comment.length > 0) ? module.renderMarkdown(comment) : comment,
             displayMode: usedDisplayMode
         };
     };

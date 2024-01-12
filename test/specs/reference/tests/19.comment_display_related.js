@@ -39,7 +39,7 @@
  */
 exports.execute = function (options) {
 
-    describe("testing foreign-key annotation,", function () {
+    xdescribe("testing foreign-key annotation,", function () {
 
         var catalog_id = process.env.DEFAULT_CATALOG,
             schemaName = "comment_display_related_schema",

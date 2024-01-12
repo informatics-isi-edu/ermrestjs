@@ -294,7 +294,7 @@ ReferenceColumn.prototype = {
             var comment = null, commentDisplayMode, commentRenderMarkdown;
             if (this._simple) {
                 var display = this._baseCols[0].getDisplay(this._context);
-                comment = display.comment;
+                comment = display.comment ? display.comment.unformatted : null;
                 commentDisplayMode = display.commentDisplayMode;
                 commentRenderMarkdown = display.commentRenderMarkdown;
             }
@@ -302,7 +302,7 @@ ReferenceColumn.prototype = {
             if (!this.sourceObject) {
                 this._comment = comment;
             } else {
-                this._comment = _processSourceObjectComment(sourceObject, comment, commentRenderMarkdown, commentDisplayMode);
+                this._comment = _processSourceObjectComment(this.sourceObject, comment, commentRenderMarkdown, commentDisplayMode);
             }
 
         }
@@ -1361,6 +1361,7 @@ Object.defineProperty(PseudoColumn.prototype, "comment", {
 
                     return {
                         comment: [module._pseudoColAggregateExplicitName[agIndex], dname].join(" "),
+                        commentDisplayMode: module._commentDisplayModes.tooltip,
                         commentRenderMarkdown: false
                     };
                 }
@@ -1369,16 +1370,16 @@ Object.defineProperty(PseudoColumn.prototype, "comment", {
                 if (!self.isEntityMode) {
                     temp = self._baseCols[0].getDisplay(self._context);
                     return {
-                        comment: temp.comment,
+                        comment: temp.comment ? temp.comment.unformatted: null,
                         commentDisplayMode: temp.commentDisplayMode,
                         commentRenderMarkdown: temp.commentRenderMarkdown
                     };
                 }
 
                 // self.table should be leaf table
-                temp = self.table.getDisplay(self._context).comment;
+                temp = self.table.getDisplay(self._context);
                 return {
-                    comment: temp.comment,
+                    comment: temp.comment ? temp.comment.unformatted: null,
                     commentDisplayMode: temp.tableCommentDisplayMode,
                     commentRenderMarkdown: temp.commentRenderMarkdown
                 };
@@ -1985,13 +1986,15 @@ Object.defineProperty(ForeignKeyPseudoColumn.prototype, "name", {
 Object.defineProperty(ForeignKeyPseudoColumn.prototype, "displayname", {
     get: function () {
         if (this._displayname === undefined) {
-            var foreignKey = this.foreignKey, value, isHTML, unformatted;
+            var context = this._context, foreignKey = this.foreignKey
+            var toName = foreignKey.getDisplay(context).toName;
+            var value, isHTML, unformatted;
             if (this.sourceObject.markdown_name) {
                 unformatted = this.sourceObject.markdown_name;
                 value = module.renderMarkdown(unformatted, true);
                 isHTML = true;
-            } else if (foreignKey.to_name !== "") {
-                value = unformatted = foreignKey.to_name;
+            } else if (toName) {
+                value = unformatted = toName;
                 isHTML = false;
             } else if (foreignKey.simple) {
                 value = this._baseCols[0].displayname.value;
@@ -2017,7 +2020,7 @@ Object.defineProperty(ForeignKeyPseudoColumn.prototype, "displayname", {
 
                 // disambiguate
                 var tableCount = foreignKey._table.foreignKeys.all().filter(function (fk) {
-                    return !fk.simple && fk.to_name === "" && fk.key.table == foreignKey.key.table;
+                    return !fk.simple && !fk.getDisplay(context).toName && fk.key.table == foreignKey.key.table;
                 }).length;
 
                 if (tableCount > 1) {
@@ -2058,7 +2061,7 @@ Object.defineProperty(ForeignKeyPseudoColumn.prototype, "comment", {
         if (this._comment === undefined) {
             // calling the parent
             Object.getOwnPropertyDescriptor(ForeignKeyPseudoColumn.super,"comment").get.call(this);
-            this._comment = (this._comment !== null) ? this._comment : this.foreignKey.comment;
+            this._comment = (this._comment !== null) ? this._comment : this.foreignKey.getDisplay(this._context).comment;
         }
         return this._comment;
     }
@@ -2261,7 +2264,7 @@ Object.defineProperty(KeyPseudoColumn.prototype, "comment", {
         if (this._comment === undefined) {
             // calling the parent
             Object.getOwnPropertyDescriptor(KeyPseudoColumn.super,"comment").get.call(this);
-            this._comment = (this._comment !== null) ? this._comment : this.key.comment;
+            this._comment = (this._comment !== null) ? this._comment : this.key.getDisplay(this._context).comment;
         }
         return this._comment;
     }
@@ -3239,14 +3242,15 @@ FacetColumn.prototype = {
                 // Otherwise
                 var value, unformatted, isHTML = false;
                 var lastFKIsInbound = self.lastForeignKeyNode.isInbound;
+                var lastFKDisplay = lastFK.getDisplay(module._contexts.COMPACT_SELECT);
 
                 // use from_name of the last fk if it's inbound
-                if (lastFKIsInbound && lastFK.from_name !== "") {
-                    value = unformatted = lastFK.from_name;
+                if (lastFKIsInbound && lastFKDisplay.fromName) {
+                    value = unformatted = lastFKDisplay.fromName;
                 }
                 // use to_name of the last fk if it's outbound
-                else if (!lastFKIsInbound && lastFK.to_name !== "") {
-                    value = unformatted = lastFK.to_name;
+                else if (!lastFKIsInbound && lastFKDisplay.toName) {
+                    value = unformatted = lastFKDisplay.toName;
                 }
                 // use the table name if it was not defined
                 else {
@@ -3285,7 +3289,12 @@ FacetColumn.prototype = {
                 disp = this._column.table.getDisplay(module._contexts.COMPACT_SELECT);
                 commentDisplayMode = disp.tableCommentDisplayMode;
             }
-            this._comment = _processSourceObjectComment(this.sourceObject, disp.comment, disp.commentRenderMarkdown, commentDisplayMode);
+            this._comment = _processSourceObjectComment(
+                this._facetObject,
+                disp.comment ? disp.comment.unformatted : null,
+                disp.commentRenderMarkdown,
+                commentDisplayMode
+            );
         }
         return this._comment;
     },
@@ -4346,7 +4355,7 @@ ColumnGroupAggregateFn.prototype = {
             keyColumns.push(new AttributeGroupColumn(
                 colAlias,
                 module._fixedEncodeURIComponent(col.name),
-                col, displayname, null, col.comment, true, isVisible
+                col, displayname, null, col.getDisplay(context).comment, true, isVisible
             ));
             return colAlias;
         };

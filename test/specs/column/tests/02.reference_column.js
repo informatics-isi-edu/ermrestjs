@@ -441,21 +441,46 @@ exports.execute = function (options) {
         describe('.comment, ', function () {
             describe('for pseudoColumns, ', function () {
                 it('that are inbound foreignkey should return table\'s comment.', function () {
-                    expect(detailedColumns[3].comment).toEqual("inbound related to columns_table");
+                    expect(detailedColumns[3].comment).toEqual({
+                        isHTML: true,
+                        displayMode: 'tooltip',
+                        value: '<p>inbound related to columns_table</p>\n',
+                        unformatted: 'inbound related to columns_table'
+                    });
                 });
 
                 it('when key/foreign key is simple should use column\'s comment.', function () {
-                    expect(compactColumns[0].comment).toBe("not part of any FKRs.");
-                    expect(compactColumns[1].comment).toBe("simple fk to reference, col_1");
+                    expect(compactColumns[0].comment).toEqual({
+                        isHTML: true,
+                        displayMode: 'tooltip',
+                        value: '<p>not part of any FKRs.</p>\n',
+                        unformatted: 'not part of any FKRs.'
+                    });
+                    expect(compactColumns[1].comment).toEqual({
+                        isHTML: true,
+                        displayMode: 'tooltip',
+                        value: '<p>simple fk to reference, col_1</p>\n',
+                        unformatted: 'simple fk to reference, col_1'
+                    });
                 });
 
                 it('otherwise should use key/foreignkey\'s comment.', function () {
-                    expect(compactColumns[16].comment).toBe("composite fk to table_w_composite_key with to_name");
+                    expect(compactColumns[16].comment).toEqual({
+                        isHTML: true,
+                        displayMode: 'tooltip',
+                        value: '<p>composite fk to table_w_composite_key with to_name</p>\n',
+                        unformatted: 'composite fk to table_w_composite_key with to_name'
+                    });
                 });
             });
 
             it('for other columns should return the base column\'s comment.', function () {
-                expect(compactColumns[9].comment).toBe("not part of any FKRs.");
+                expect(compactColumns[9].comment).toEqual({
+                    isHTML: true,
+                    displayMode: 'tooltip',
+                    value: '<p>not part of any FKRs.</p>\n',
+                    unformatted: 'not part of any FKRs.'
+                });
             });
         });
 

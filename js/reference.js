@@ -4002,7 +4002,7 @@
             // the main table
             newRef.mainTable = this.table;
 
-            var comment, commentDisplayMode, commentRenderMarkdown, tableDisplay;
+            var comment, commentDisplayMode, commentRenderMarkdown, tableDisplay, fkDisplay;
 
             dataSource.push({"inbound": fkr.constraint_names[0]});
 
@@ -4023,30 +4023,29 @@
                 newRef._table = otherFK.key.table;
                 newRef._shortestKey = newRef._table.shortestKey;
 
+                fkDisplay = otherFK.getDisplay(this._context);
+                tableDisplay = otherFK.key.colset.columns[0].table.getDisplay(this._context);
+
                 // displayname
-                if (otherFK.to_name) {
-                    newRef._displayname = {"isHTML": false, "value": otherFK.to_name, "unformatted": otherFK.to_name};
+                if (fkDisplay.toName) {
+                    newRef._displayname = {"isHTML": false, "value": fkDisplay.toName, "unformatted": fkDisplay.toName};
                 } else {
                     newRef._displayname = otherFK.colset.columns[0].table.displayname;
                 }
 
-                // NOTE: this is for contextualized toComment and toCommentDisplay, to be implemented later
-                // display = otherFK.getDisplay(this._context);
-
                 // comment
-                tableDisplay = otherFK.key.colset.columns[0].table.getDisplay(this._context);
-                if (_isValidModelComment(otherFK.from_comment)) {
-                    comment = otherFK.from_comment;
+                if (fkDisplay.toComment) {
+                    comment = fkDisplay.toComment.unformatted;
                 } else {
                     comment = tableDisplay.comment ? tableDisplay.comment.unformatted : null;
                 }
-                if (_isValidModelCommentDisplay(otherFK.from_comment_display)) {
-                    commentDisplayMode = otherFK.from_comment_display;
+                if (_isValidModelCommentDisplay(fkDisplay.toCommentDisplayMode)) {
+                    commentDisplayMode = fkDisplay.toCommentDisplayMode;
                 } else {
                     commentDisplayMode = tableDisplay.tableCommentDisplayMode;
                 }
-                if (typeof otherFK.comment_render_markdown === 'boolean') {
-                    commentRenderMarkdown = otherFK.comment_render_markdown;
+                if (typeof fkDisplay.commentRenderMarkdown === 'boolean') {
+                    commentRenderMarkdown = fkDisplay.commentRenderMarkdown;
                 } else {
                     commentRenderMarkdown = tableDisplay.commentRenderMarkdown;
                 }
@@ -4076,30 +4075,29 @@
                 newRef._table = fkrTable;
                 newRef._shortestKey = newRef._table.shortestKey;
 
+                fkDisplay = fkr.getDisplay(this._context);
+                tableDisplay = newRef._table.getDisplay(this._context);
+
                 // displayname
-                if (fkr.from_name) {
-                    newRef._displayname = {"isHTML": false, "value": fkr.from_name, "unformatted": fkr.from_name};
+                if (fkDisplay.fromName) {
+                    newRef._displayname = {"isHTML": false, "value": fkDisplay.fromName, "unformatted": fkDisplay.fromName};
                 } else {
                     newRef._displayname = newRef._table.displayname;
                 }
 
-                // NOTE: this is for contextualized toComment and toCommentDisplay, to be implemented later
-                // display = fkr.getDisplay(this._context);
-
                 // comment
-                tableDisplay = newRef._table.getDisplay(this._context);
-                if (_isValidModelComment(fkr.from_comment)) {
-                    comment = fkr.from_comment;
+                if (fkDisplay.fromComment) {
+                    comment = fkDisplay.fromComment;
                 } else {
                     comment = tableDisplay.comment ? tableDisplay.comment.unformatted : null;
                 }
-                if (_isValidModelCommentDisplay(fkr.from_comment_display)) {
-                    commentDisplayMode = fkr.from_comment_display;
+                if (_isValidModelCommentDisplay(fkDisplay.fromCommentDisplayMode)) {
+                    commentDisplayMode = fkDisplay.fromCommentDisplayMode;
                 } else {
                     commentDisplayMode = tableDisplay.tableCommentDisplayMode;
                 }
-                if (typeof fkr.comment_render_markdown === 'boolean') {
-                    commentRenderMarkdown = fkr.comment_render_markdown;
+                if (typeof fkDisplay.commentRenderMarkdown === 'boolean') {
+                    commentRenderMarkdown = fkDisplay.commentRenderMarkdown;
                 } else {
                     commentRenderMarkdown = tableDisplay.commentRenderMarkdown;
                 }
