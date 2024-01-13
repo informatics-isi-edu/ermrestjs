@@ -4087,7 +4087,7 @@
 
                 // comment
                 if (fkDisplay.fromComment) {
-                    comment = fkDisplay.fromComment;
+                    comment = fkDisplay.fromComment.unformatted;
                 } else {
                     comment = tableDisplay.comment ? tableDisplay.comment.unformatted : null;
                 }

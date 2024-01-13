@@ -848,11 +848,10 @@
     };
 
     /**
-     * Given an input string for the comment, will return the actual strng that should be used.
-     *   - if =false : returns empty string.
-     *   - if =string: returns the string.
-     *   - otherwise returns null
-     * TODO update comment
+     * Turn a comment annotaiton/string value into a proper comment object.
+     * @param {string|null|false} comment
+     * @param {boolean=true} isMarkdown whether the given comment should be rendered as markdown (default: true).
+     * @param {string} displayMode the display mode of the comment (inline, tooltip)
      * @private
      */
     _processModelComment = function (comment, isMarkdown, displayMode) {

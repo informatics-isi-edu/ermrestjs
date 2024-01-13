@@ -23,6 +23,7 @@ Column directive allows instruction of a data source and modification of its pre
   - [2. Presentation properties](#2-presentation-properties)
     - [markdown\_name](#markdown_name)
     - [comment](#comment)
+    - [comment\_render\_markdown](#comment-render-markdown)
     - [comment\_display](#comment_display)
     - [hide\_column\_header](#hide_column_header)
     - [self-link](#self-link)
@@ -359,6 +360,14 @@ In Chaise, comment is displayed as tooltip associated with columns. To change th
 
     "comment": "New comment"
 
+#### comment_render_markdown
+
+A boolean value that dictates whether the comment should be treated as markdown or not. If not defined, its value will be inherited from the underlying column or table which could be inherited from the schema or the catalog. If it's not defined on any of the models, the default behavior is to treat comments as markdown.
+
+    "comment_render_markdown": false
+
+This boolean works independent of the `comment` property. Which means that you can define `commen_render_markdown` to be used in combination with the comment that is derived based on the heuristics.
+
 #### comment_display
 
 By default Chaise will display `comment` as a tooltip. Set this value to `inline` to show it as text or `tooltip` to show as a hover tooltip. This property is only supported for related tables in detailed context of `visible-foreign-keys` annotation, and is not honored in other annotations.
@@ -404,7 +413,7 @@ While generating a default presentation for all outbound foreign key paths, ERMr
 
 ##### selector_ux_mode
 
-While generating a default presentation in `entry` mode for single outbound foreign key paths, Chaise will show a modal popup dialog for selecting rows. Using this attribute, you can modify this behavior. If this attribute is missing, we are going to use the inherited behavior from the [foreign key](annotation.md#tag-2016-foreign-key) annotation defined on the foreign key relationship. If that one is missing too, [table display](annotation.md#tag-2016-table-display) annotation will be applied. Supported values are `"facet-search-popup"` and `"simple-search-dropdown"`, with `"facet-search-popup"` being the default. 
+While generating a default presentation in `entry` mode for single outbound foreign key paths, Chaise will show a modal popup dialog for selecting rows. Using this attribute, you can modify this behavior. If this attribute is missing, we are going to use the inherited behavior from the [foreign key](annotation.md#tag-2016-foreign-key) annotation defined on the foreign key relationship. If that one is missing too, [table display](annotation.md#tag-2016-table-display) annotation will be applied. Supported values are `"facet-search-popup"` and `"simple-search-dropdown"`, with `"facet-search-popup"` being the default.
 
 ##### show_key_link
 

@@ -294,7 +294,7 @@ ReferenceColumn.prototype = {
             var comment = null, commentDisplayMode, commentRenderMarkdown;
             if (this._simple) {
                 var display = this._baseCols[0].getDisplay(this._context);
-                comment = display.comment ? display.comment.unformatted : null;
+                comment = display.comment;
                 commentDisplayMode = display.commentDisplayMode;
                 commentRenderMarkdown = display.commentRenderMarkdown;
             }
@@ -302,7 +302,12 @@ ReferenceColumn.prototype = {
             if (!this.sourceObject) {
                 this._comment = comment;
             } else {
-                this._comment = _processSourceObjectComment(this.sourceObject, comment, commentRenderMarkdown, commentDisplayMode);
+                this._comment = _processSourceObjectComment(
+                    this.sourceObject,
+                    comment ? comment.unformatted : null,
+                    commentRenderMarkdown,
+                    commentDisplayMode
+                );
             }
 
         }
@@ -1351,42 +1356,43 @@ PseudoColumn.prototype._determineInputDisabled = function () {
 Object.defineProperty(PseudoColumn.prototype, "comment", {
     get: function () {
         if (this._comment === undefined) {
-            var getDefaultCommentProps = function (self) {
+            var getComment = function (self) {
                 if (self.hasAggregate) {
+                    // if defined on the sourceObject use it.
+                    var com = _processSourceObjectComment(self.sourceObject);
+                    if (com) {
+                        return com;
+                    }
+
+                    // otherwise generate one
                     var agIndex = module._pseudoColAggregateFns.indexOf(self.sourceObject.aggregate);
                     var dname = self._baseCols[0].displayname.unformatted;
                     if (self.isEntityMode) {
                         dname = self._baseCols[0].table.displayname.unformatted;
                     }
 
-                    return {
-                        comment: [module._pseudoColAggregateExplicitName[agIndex], dname].join(" "),
-                        commentDisplayMode: module._commentDisplayModes.tooltip,
-                        commentRenderMarkdown: false
-                    };
+                    return _processModelComment([module._pseudoColAggregateExplicitName[agIndex], dname].join(" "), false);
                 }
 
-                var temp;
+                // if it's not aggregate, we can get it from the table or column depending on entity mode:
+                var disp, commentDisplayMode;
                 if (!self.isEntityMode) {
-                    temp = self._baseCols[0].getDisplay(self._context);
-                    return {
-                        comment: temp.comment ? temp.comment.unformatted: null,
-                        commentDisplayMode: temp.commentDisplayMode,
-                        commentRenderMarkdown: temp.commentRenderMarkdown
-                    };
+                    disp = self._baseCols[0].getDisplay(self._context);
+                    commentDisplayMode = disp.commentDisplayMode;
+                } else {
+                    disp = self.table.getDisplay(self._context);
+                    commentDisplayMode = disp.tableCommentDisplayMode;
                 }
 
-                // self.table should be leaf table
-                temp = self.table.getDisplay(self._context);
-                return {
-                    comment: temp.comment ? temp.comment.unformatted: null,
-                    commentDisplayMode: temp.tableCommentDisplayMode,
-                    commentRenderMarkdown: temp.commentRenderMarkdown
-                };
-            };
+                return _processSourceObjectComment(
+                    self.sourceObject,
+                    disp.comment ? disp.comment.unformatted : null,
+                    disp.commentRenderMarkdown,
+                    commentDisplayMode
+                );
+            }
 
-            var def = getDefaultCommentProps(this);
-            this._comment = _processSourceObjectComment(this.sourceObject, def.comment, def.commentRenderMarkdown, def.commentDisplayMode);
+            this._comment = getComment(this);
         }
         return this._comment;
     }
