@@ -553,7 +553,21 @@ exports.execute = function (options) {
                     };
 
                     for (var i in expectedComments) {
-                        expect(detailedColsWTuple[i].comment).toBe(expectedComments[i],"missmatch for index=" + i);
+                        if (expectedComments[i] === '') {
+                            expect(detailedColsWTuple[i].comment).toEqual({
+                                isHTML: false,
+                                displayMode: 'tooltip',
+                                value: '',
+                                unformatted: ''
+                            }, "missmatch for index=" + i);
+                        } else {
+                            expect(detailedColsWTuple[i].comment).toEqual({
+                                isHTML: true,
+                                displayMode: 'tooltip',
+                                value: `<p>${expectedComments[i]}</p>\n`,
+                                unformatted: expectedComments[i]
+                            }, "missmatch for index=" + i);
+                        }
                     }
                 });
 
@@ -601,7 +615,12 @@ exports.execute = function (options) {
 
                 describe(".comment", function () {
                     it ("should return the defined comment.", function () {
-                        expect(detailedColsWTuple[26].comment).toBe("virtual comment", "missmatch for index=26");
+                        expect(detailedColsWTuple[26].comment).toEqual({
+                            isHTML: true,
+                            displayMode: 'tooltip',
+                            value: '<p>virtual comment</p>\n',
+                            unformatted: 'virtual comment'
+                        }, "missmatch for index=26");
                     });
 
                     it ("otherwise it should be null", function () {
@@ -715,8 +734,18 @@ exports.execute = function (options) {
 
             describe("comment, ", function () {
                 it ('if `comment` is defined, should use it.', function () {
-                    expect(detailedColsWTuple[6].comment).toBe("outbound len 2 cm", "missmatch for index=6");
-                    expect(detailedColsWTuple[21].comment).toBe("has long values", "missmatch for index=6");
+                    expect(detailedColsWTuple[6].comment).toEqual({
+                        isHTML: true,
+                        displayMode: 'tooltip',
+                        value: '<p>outbound len 2 cm</p>\n',
+                        unformatted: 'outbound len 2 cm'
+                    }, "missmatch for index=6");
+                    expect(detailedColsWTuple[21].comment).toEqual({
+                        isHTML: true,
+                        displayMode: 'tooltip',
+                        value: '<p>has long values</p>\n',
+                        unformatted: 'has long values'
+                    }, "missmatch for index=6");
                 });
 
                 it ("if it has aggregate, should append the aggregate function to the column comment.", function () {
@@ -724,16 +753,31 @@ exports.execute = function (options) {
                         'Number of inbound_2', 'Number of distinct inbound_2_outbound_1', 'Minimum id', 'Maximum col name', "List of id", "List of inbound_2", "List of distinct inbound_2"
                     ];
                     for (var i = 11; i <= 17; i++) {
-                        expect(detailedColsWTuple[i].comment).toBe(aggregateComments[i-11], "missmatch for index =" + i);
+                        expect(detailedColsWTuple[i].comment).toEqual({
+                            isHTML: false,
+                            displayMode: 'tooltip',
+                            value: aggregateComments[i-11],
+                            unformatted: aggregateComments[i-11]
+                        }, "missmatch for index =" + i);
                     }
                 });
 
                 it ("if it's in entity mode, should return the table's comment.", function () {
-                    expect(detailedColsWTuple[5].comment).toBe("outbound_1_outbound_1 comment");
+                    expect(detailedColsWTuple[5].comment).toEqual({
+                        isHTML: true,
+                        displayMode: 'tooltip',
+                        value: '<p>outbound_1_outbound_1 comment</p>\n',
+                        unformatted: 'outbound_1_outbound_1 comment'
+                    });
                 });
 
                 it ("if it's in scalar mode, should return the column's comment.", function () {
-                    expect(detailedColsWTuple[4].comment).toBe("id of outbound_1");
+                    expect(detailedColsWTuple[4].comment).toEqual({
+                        isHTML: true,
+                        displayMode: 'tooltip',
+                        value: '<p>id of outbound_1</p>\n',
+                        unformatted: 'id of outbound_1'
+                    });
                 });
             });
 

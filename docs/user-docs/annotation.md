@@ -91,7 +91,7 @@ element and its nested model elements.
 Supported JSON payload patterns:
 
 - `{`... `"comment":` _comment_ || `{` _context_: _ccomment_ `}` ...`}`: The _comment_ (tooltip) to be used in place of the model element's original comment. Set this to `false` if you don't want any tooltips.
-- `{`... `"comment_display":` `{` _context_: `{` `"table_comment_display"`: _comment_display_ `,` `"column_comment_display"`: _comment_display_ `}` ... `}`
+- `{`... `"comment_display":` `{` _context_: `{` `"table_comment_display"`: _comment_display_ `,` `"column_comment_display"`: _comment_display_ `,` `"comment_render_markdown"`: _comment_render_markdown_ `}` ... `}`
 - `{`... `"name":` _name_ ...`}`: The _name_ to use in place of the model element's original name.
 - `{`... `"markdown_name"`: _markdown_ `}`: The _markdown_ to use in place of the model element's original name.
 - `{`... `"name_style":` `{` `"underline_space"`: _uspace_ `,` `"title_case":` _tcase_ `,` `"markdown"`: _render_ `}` ...`}`: Element name conversion instructions.
@@ -110,6 +110,11 @@ Supported JSON _comment_display_ patterns:
 
 - `tooltip`: Set to tooltip to show the comment as a hover over tooltip.
 - `inline`: Set to inline to show the comment as an inline tooltip.
+
+Supported JSON _comment_render_markdown_ patterns:
+
+- `false`: Don't treat the defined `comment` on this model and its descendants as markdown.
+- `true`: Treat the defined `comment` on this model and its descendants as markdown.
 
 Supported JSON _uspace_ patterns:
 
@@ -158,7 +163,7 @@ Supported JSON _context_ patterns:
 #### Tag: 2015 Display Settings Hierarchy
 
 - The `"comment"` setting applies *only* to the model element which is annotated.
-  - Currently the contextualized `comment` is only supported for tables.
+- The `"_comment_render_markdown_": false` should be used if you don't want us to treat the comment as a markdown value. By default we're assuming given comments are markdown.
 - The `"table_comment_display"` and `"column_comment_display"` setting applies *only* to the model element which is annotated.
   - Currently the contextualized `table_comment_display` is supported for `compact` context for the title and the tables in detailed context when they are part of a foreign key relationship in `visible-columns` or `visible-foreign-keys`.
   - `column_comment_display` is accepted as a parameter, but currently doesn't do anything.
@@ -426,6 +431,7 @@ Supported JSON payload patterns:
 - `{` ... `"from_name":` _fname_ ... `}`: The _fname_ string is a preferred name for the set of entities containing foreign key references described by this constraint.
 - `{` ... `"to_name":` _tname_ ... `}`: The _tname_ string is a preferred name for the set of entities containing keys described by this constraint.
 - `{` ... `"from_comment":` _comment_ ... `}`: The _comment_ string is a preferred comment for the set of entities containing keys described by this constraint.
+- `{` ... `"comment_render_markdown":` _boolean_value_ ... `}`: The _boolean_value_ dictates whether the comments for this foreignkey should be treated as markdown or not. If not defined, its value will be inherited from the table (which could be inherited from the schema or the catalog. If it's not defined on any of the models, the default behavior is to treat comments as markdown).
 - `{` ... `"to_comment":` _comment_ ... `}`: The _comment_ string is a preferred comment for the set of entities containing keys described by this constraint.
 - `{` ... `"from_comment_display":` _comment_display_ ... `}`: The display mode for the tooltip. Set to `inline` to show it as text or `tooltip` to show as a hover tooltip.
     - Currently the `comment_display` is only supported for foreign key relationships in detailed context when they are part of `visible-columns` or `visible-foreign-keys`.
@@ -1300,6 +1306,7 @@ The following attributes can be used to manipulate the presentation settings of 
 
 - `markdown_name`: The markdown to use in place of the default heuristics for title of column.
 - `comment`: The tooltip to be used in place of the default heuristics for the column. Set this to `false` if you don't want any tooltip.
+- `comment_render_markdown`: A boolean value that dictates whether the comment should be treated as markdown or not. If not defined, its value will be inherited from the underlying column or table (which could be inherited from the schema or the catalog. If it's not defined on any of the models, the default behavior is to treat comments as markdown).
 - `comment_display`: The display mode for the tooltip. Set to `inline` to show it as text or `tooltip` to show as a hover tooltip.
   - Currently `comment_display` is only supported for related tables in detailed context.
 - `hide_column_header`: Hide the column header (and still show the value). This is only supported in `detailed` context of `visible-columns` annotation.

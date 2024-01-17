@@ -153,7 +153,7 @@ to use for ERMrest JavaScript agents.
         * [.rights](#ERMrest.Schema+rights) : <code>Object</code>
         * [.displayname](#ERMrest.Schema+displayname) : <code>object</code>
         * [.tables](#ERMrest.Schema+tables) : [<code>Tables</code>](#ERMrest.Tables)
-        * [.comment](#ERMrest.Schema+comment) : <code>string</code>
+        * [.comment](#ERMrest.Schema+comment) : <code>Object</code>
     * [.Tables](#ERMrest.Tables)
         * [new Tables()](#new_ERMrest.Tables_new)
         * [.all()](#ERMrest.Tables+all) ⇒ <code>Array</code>
@@ -177,7 +177,7 @@ to use for ERMrest JavaScript agents.
             * [.rights](#ERMrest.Table+rights) : <code>Object</code>
             * [.foreignKeys](#ERMrest.Table+foreignKeys) : [<code>ForeignKeys</code>](#ERMrest.ForeignKeys)
             * [.referredBy](#ERMrest.Table+referredBy) : [<code>ForeignKeys</code>](#ERMrest.ForeignKeys)
-            * [.comment](#ERMrest.Table+comment) : <code>string</code>
+            * ~~[.comment](#ERMrest.Table+comment) : <code>Object</code>~~
             * [._showSavedQuery](#ERMrest.Table+_showSavedQuery) : <code>boolean</code>
             * [.favoritesPath](#ERMrest.Table+favoritesPath) : <code>string</code>
             * [.kind](#ERMrest.Table+kind) : <code>string</code>
@@ -246,7 +246,7 @@ to use for ERMrest JavaScript agents.
             * [.isAssetMd5](#ERMrest.Column+isAssetMd5) : <code>boolean</code>
             * [.isAssetSha256](#ERMrest.Column+isAssetSha256) : <code>boolean</code>
             * [.annotations](#ERMrest.Column+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
-            * [.comment](#ERMrest.Column+comment) : <code>string</code>
+            * ~~[.comment](#ERMrest.Column+comment) : <code>Object</code>~~
             * [.nullok](#ERMrest.Column+nullok) : <code>Boolean</code>
             * [.displayname](#ERMrest.Column+displayname) : <code>object</code>
             * [.memberOfKeys](#ERMrest.Column+memberOfKeys) : [<code>Array.&lt;Key&gt;</code>](#ERMrest.Key)
@@ -286,7 +286,7 @@ to use for ERMrest JavaScript agents.
         * [.table](#ERMrest.Key+table) : <code>Table</code>
         * [.colset](#ERMrest.Key+colset) : [<code>ColSet</code>](#ERMrest.ColSet)
         * [.annotations](#ERMrest.Key+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
-        * [.comment](#ERMrest.Key+comment) : <code>string</code>
+        * [.comment](#ERMrest.Key+comment) : <code>Object</code>
         * [.RID](#ERMrest.Key+RID) : <code>string</code>
         * [.constraint_names](#ERMrest.Key+constraint_names) : <code>Array</code>
         * [.name](#ERMrest.Key+name) : <code>string</code>
@@ -325,13 +325,13 @@ to use for ERMrest JavaScript agents.
         * [.constraint_names](#ERMrest.ForeignKeyRef+constraint_names) : <code>Array</code>
         * [.from_name](#ERMrest.ForeignKeyRef+from_name) : <code>string</code>
         * [.to_name](#ERMrest.ForeignKeyRef+to_name) : <code>string</code>
-        * [.to_comment](#ERMrest.ForeignKeyRef+to_comment) : <code>string</code>
-        * [.from_comment](#ERMrest.ForeignKeyRef+from_comment) : <code>string</code>
-        * [.to_comment_display](#ERMrest.ForeignKeyRef+to_comment_display) : <code>string</code>
-        * [.from_comment_display](#ERMrest.ForeignKeyRef+from_comment_display) : <code>string</code>
+        * [.to_comment](#ERMrest.ForeignKeyRef+to_comment) : <code>string</code> \| <code>null</code>
+        * [.from_comment](#ERMrest.ForeignKeyRef+from_comment) : <code>string</code> \| <code>null</code>
+        * [.to_comment_display](#ERMrest.ForeignKeyRef+to_comment_display) : <code>string</code> \| <code>null</code>
+        * [.from_comment_display](#ERMrest.ForeignKeyRef+from_comment_display) : <code>string</code> \| <code>null</code>
         * [.ignore](#ERMrest.ForeignKeyRef+ignore) : <code>boolean</code>
         * [.annotations](#ERMrest.ForeignKeyRef+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
-        * [.comment](#ERMrest.ForeignKeyRef+comment) : <code>string</code>
+        * [.comment](#ERMrest.ForeignKeyRef+comment) : <code>Object</code>
         * [.compressedDataSource](#ERMrest.ForeignKeyRef+compressedDataSource)
         * [.name](#ERMrest.ForeignKeyRef+name) : <code>string</code>
         * [.simple](#ERMrest.ForeignKeyRef+simple) : <code>Boolean</code>
@@ -407,8 +407,7 @@ to use for ERMrest JavaScript agents.
         * [.contextualize](#ERMrest.Reference+contextualize)
         * [.aggregate](#ERMrest.Reference+aggregate) : [<code>ReferenceAggregateFn</code>](#ERMrest.ReferenceAggregateFn)
         * [.displayname](#ERMrest.Reference+displayname) : <code>object</code>
-        * [.comment](#ERMrest.Reference+comment) : <code>String</code>
-        * [.commentDisplay](#ERMrest.Reference+commentDisplay) : <code>String</code>
+        * [.comment](#ERMrest.Reference+comment) : <code>Object</code>
         * [.uri](#ERMrest.Reference+uri) : <code>string</code>
         * [.table](#ERMrest.Reference+table) : [<code>Table</code>](#ERMrest.Table)
         * [.facetBaseTable](#ERMrest.Reference+facetBaseTable) : [<code>Table</code>](#ERMrest.Table)
@@ -530,7 +529,6 @@ to use for ERMrest JavaScript agents.
         * [.isUnique](#ERMrest.PseudoColumn+isUnique) : <code>boolean</code>
         * [.hasAggregate](#ERMrest.PseudoColumn+hasAggregate) : <code>boolean</code>
         * [.comment](#ERMrest.PseudoColumn+comment) : <code>Object</code>
-        * [.commentDisplay](#ERMrest.PseudoColumn+commentDisplay) : <code>Object</code>
         * [.displayname](#ERMrest.PseudoColumn+displayname) : <code>Object</code>
         * [.key](#ERMrest.PseudoColumn+key) : <code>boolean</code>
         * [.reference](#ERMrest.PseudoColumn+reference) : [<code>Reference</code>](#ERMrest.Reference)
@@ -741,8 +739,7 @@ to use for ERMrest JavaScript agents.
         * [.contextualize](#ERMrest.Reference+contextualize)
         * [.aggregate](#ERMrest.Reference+aggregate) : [<code>ReferenceAggregateFn</code>](#ERMrest.ReferenceAggregateFn)
         * [.displayname](#ERMrest.Reference+displayname) : <code>object</code>
-        * [.comment](#ERMrest.Reference+comment) : <code>String</code>
-        * [.commentDisplay](#ERMrest.Reference+commentDisplay) : <code>String</code>
+        * [.comment](#ERMrest.Reference+comment) : <code>Object</code>
         * [.uri](#ERMrest.Reference+uri) : <code>string</code>
         * [.table](#ERMrest.Reference+table) : [<code>Table</code>](#ERMrest.Table)
         * [.facetBaseTable](#ERMrest.Reference+facetBaseTable) : [<code>Table</code>](#ERMrest.Table)
@@ -1124,7 +1121,7 @@ it will throw an error
     * [.rights](#ERMrest.Schema+rights) : <code>Object</code>
     * [.displayname](#ERMrest.Schema+displayname) : <code>object</code>
     * [.tables](#ERMrest.Schema+tables) : [<code>Tables</code>](#ERMrest.Tables)
-    * [.comment](#ERMrest.Schema+comment) : <code>string</code>
+    * [.comment](#ERMrest.Schema+comment) : <code>Object</code>
 
 <a name="new_ERMrest.Schema_new"></a>
 
@@ -1179,7 +1176,7 @@ this.displayname.value has the value
 **Kind**: instance property of [<code>Schema</code>](#ERMrest.Schema)  
 <a name="ERMrest.Schema+comment"></a>
 
-#### schema.comment : <code>string</code>
+#### schema.comment : <code>Object</code>
 Documentation for this schema
 
 **Kind**: instance property of [<code>Schema</code>](#ERMrest.Schema)  
@@ -1265,7 +1262,7 @@ check for table name existence
         * [.rights](#ERMrest.Table+rights) : <code>Object</code>
         * [.foreignKeys](#ERMrest.Table+foreignKeys) : [<code>ForeignKeys</code>](#ERMrest.ForeignKeys)
         * [.referredBy](#ERMrest.Table+referredBy) : [<code>ForeignKeys</code>](#ERMrest.ForeignKeys)
-        * [.comment](#ERMrest.Table+comment) : <code>string</code>
+        * ~~[.comment](#ERMrest.Table+comment) : <code>Object</code>~~
         * [._showSavedQuery](#ERMrest.Table+_showSavedQuery) : <code>boolean</code>
         * [.favoritesPath](#ERMrest.Table+favoritesPath) : <code>string</code>
         * [.kind](#ERMrest.Table+kind) : <code>string</code>
@@ -1371,7 +1368,9 @@ All the FKRs to this table.
 **Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
 <a name="ERMrest.Table+comment"></a>
 
-#### table.comment : <code>string</code>
+#### ~~table.comment : <code>Object</code>~~
+***Deprecated***
+
 Documentation for this table
 
 **Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
@@ -1843,7 +1842,7 @@ Constructor for Columns.
         * [.isAssetMd5](#ERMrest.Column+isAssetMd5) : <code>boolean</code>
         * [.isAssetSha256](#ERMrest.Column+isAssetSha256) : <code>boolean</code>
         * [.annotations](#ERMrest.Column+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
-        * [.comment](#ERMrest.Column+comment) : <code>string</code>
+        * ~~[.comment](#ERMrest.Column+comment) : <code>Object</code>~~
         * [.nullok](#ERMrest.Column+nullok) : <code>Boolean</code>
         * [.displayname](#ERMrest.Column+displayname) : <code>object</code>
         * [.memberOfKeys](#ERMrest.Column+memberOfKeys) : [<code>Array.&lt;Key&gt;</code>](#ERMrest.Key)
@@ -1984,7 +1983,9 @@ if this column is a sha256 for an asset column
 **Kind**: instance property of [<code>Column</code>](#ERMrest.Column)  
 <a name="ERMrest.Column+comment"></a>
 
-#### column.comment : <code>string</code>
+#### ~~column.comment : <code>Object</code>~~
+***Deprecated***
+
 Documentation for this column
 
 **Kind**: instance property of [<code>Column</code>](#ERMrest.Column)  
@@ -2277,7 +2278,7 @@ get the key by the column set
     * [.table](#ERMrest.Key+table) : <code>Table</code>
     * [.colset](#ERMrest.Key+colset) : [<code>ColSet</code>](#ERMrest.ColSet)
     * [.annotations](#ERMrest.Key+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
-    * [.comment](#ERMrest.Key+comment) : <code>string</code>
+    * [.comment](#ERMrest.Key+comment) : <code>Object</code>
     * [.RID](#ERMrest.Key+RID) : <code>string</code>
     * [.constraint_names](#ERMrest.Key+constraint_names) : <code>Array</code>
     * [.name](#ERMrest.Key+name) : <code>string</code>
@@ -2311,7 +2312,7 @@ Reference to the table that this Key belongs to.
 **Kind**: instance property of [<code>Key</code>](#ERMrest.Key)  
 <a name="ERMrest.Key+comment"></a>
 
-#### key.comment : <code>string</code>
+#### key.comment : <code>Object</code>
 Documentation for this key
 
 **Kind**: instance property of [<code>Key</code>](#ERMrest.Key)  
@@ -2553,13 +2554,13 @@ get the foreign key of the given column set
     * [.constraint_names](#ERMrest.ForeignKeyRef+constraint_names) : <code>Array</code>
     * [.from_name](#ERMrest.ForeignKeyRef+from_name) : <code>string</code>
     * [.to_name](#ERMrest.ForeignKeyRef+to_name) : <code>string</code>
-    * [.to_comment](#ERMrest.ForeignKeyRef+to_comment) : <code>string</code>
-    * [.from_comment](#ERMrest.ForeignKeyRef+from_comment) : <code>string</code>
-    * [.to_comment_display](#ERMrest.ForeignKeyRef+to_comment_display) : <code>string</code>
-    * [.from_comment_display](#ERMrest.ForeignKeyRef+from_comment_display) : <code>string</code>
+    * [.to_comment](#ERMrest.ForeignKeyRef+to_comment) : <code>string</code> \| <code>null</code>
+    * [.from_comment](#ERMrest.ForeignKeyRef+from_comment) : <code>string</code> \| <code>null</code>
+    * [.to_comment_display](#ERMrest.ForeignKeyRef+to_comment_display) : <code>string</code> \| <code>null</code>
+    * [.from_comment_display](#ERMrest.ForeignKeyRef+from_comment_display) : <code>string</code> \| <code>null</code>
     * [.ignore](#ERMrest.ForeignKeyRef+ignore) : <code>boolean</code>
     * [.annotations](#ERMrest.ForeignKeyRef+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
-    * [.comment](#ERMrest.ForeignKeyRef+comment) : <code>string</code>
+    * [.comment](#ERMrest.ForeignKeyRef+comment) : <code>Object</code>
     * [.compressedDataSource](#ERMrest.ForeignKeyRef+compressedDataSource)
     * [.name](#ERMrest.ForeignKeyRef+name) : <code>string</code>
     * [.simple](#ERMrest.ForeignKeyRef+simple) : <code>Boolean</code>
@@ -2625,19 +2626,19 @@ The constraint names for this foreign key
 **Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
 <a name="ERMrest.ForeignKeyRef+to_comment"></a>
 
-#### foreignKeyRef.to\_comment : <code>string</code>
+#### foreignKeyRef.to\_comment : <code>string</code> \| <code>null</code>
 **Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
 <a name="ERMrest.ForeignKeyRef+from_comment"></a>
 
-#### foreignKeyRef.from\_comment : <code>string</code>
+#### foreignKeyRef.from\_comment : <code>string</code> \| <code>null</code>
 **Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
 <a name="ERMrest.ForeignKeyRef+to_comment_display"></a>
 
-#### foreignKeyRef.to\_comment\_display : <code>string</code>
+#### foreignKeyRef.to\_comment\_display : <code>string</code> \| <code>null</code>
 **Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
 <a name="ERMrest.ForeignKeyRef+from_comment_display"></a>
 
-#### foreignKeyRef.from\_comment\_display : <code>string</code>
+#### foreignKeyRef.from\_comment\_display : <code>string</code> \| <code>null</code>
 **Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
 <a name="ERMrest.ForeignKeyRef+ignore"></a>
 
@@ -2649,7 +2650,7 @@ The constraint names for this foreign key
 **Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
 <a name="ERMrest.ForeignKeyRef+comment"></a>
 
-#### foreignKeyRef.comment : <code>string</code>
+#### foreignKeyRef.comment : <code>Object</code>
 Documentation for this foreign key reference
 
 **Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
@@ -3179,8 +3180,7 @@ Constructor for a ParsedFilter.
     * [.contextualize](#ERMrest.Reference+contextualize)
     * [.aggregate](#ERMrest.Reference+aggregate) : [<code>ReferenceAggregateFn</code>](#ERMrest.ReferenceAggregateFn)
     * [.displayname](#ERMrest.Reference+displayname) : <code>object</code>
-    * [.comment](#ERMrest.Reference+comment) : <code>String</code>
-    * [.commentDisplay](#ERMrest.Reference+commentDisplay) : <code>String</code>
+    * [.comment](#ERMrest.Reference+comment) : <code>Object</code>
     * [.uri](#ERMrest.Reference+uri) : <code>string</code>
     * [.table](#ERMrest.Reference+table) : [<code>Table</code>](#ERMrest.Table)
     * [.facetBaseTable](#ERMrest.Reference+facetBaseTable) : [<code>Table</code>](#ERMrest.Table)
@@ -3283,15 +3283,8 @@ displayname.value has the value
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+comment"></a>
 
-#### reference.comment : <code>String</code>
+#### reference.comment : <code>Object</code>
 The comment for this reference.
-
-**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
-<a name="ERMrest.Reference+commentDisplay"></a>
-
-#### reference.commentDisplay : <code>String</code>
-The comment display property for this reference.
-can be either "tooltip" or "inline"
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+uri"></a>
@@ -4793,7 +4786,6 @@ it will append "-<integer>" to it.
     * [.isUnique](#ERMrest.PseudoColumn+isUnique) : <code>boolean</code>
     * [.hasAggregate](#ERMrest.PseudoColumn+hasAggregate) : <code>boolean</code>
     * [.comment](#ERMrest.PseudoColumn+comment) : <code>Object</code>
-    * [.commentDisplay](#ERMrest.PseudoColumn+commentDisplay) : <code>Object</code>
     * [.displayname](#ERMrest.PseudoColumn+displayname) : <code>Object</code>
     * [.key](#ERMrest.PseudoColumn+key) : <code>boolean</code>
     * [.reference](#ERMrest.PseudoColumn+reference) : [<code>Reference</code>](#ERMrest.Reference)
@@ -4861,16 +4853,6 @@ It will return the first applicable rule:
 3. if aggregate and entity use the "<function> <table_displayname>"
 3. In entity mode, return the table's displayname.
 4. In scalar return the column's displayname.
-
-**Kind**: instance property of [<code>PseudoColumn</code>](#ERMrest.PseudoColumn)  
-<a name="ERMrest.PseudoColumn+commentDisplay"></a>
-
-#### pseudoColumn.commentDisplay : <code>Object</code>
-The mode the tooltip should be displayed in for this column.
-It will return the first applicable rule:
-1. commentDisplay that is defined on the sourceObject
-2. commentDisplay that is defined on the table in the display annotation
-3. default to "tooltip"
 
 **Kind**: instance property of [<code>PseudoColumn</code>](#ERMrest.PseudoColumn)  
 <a name="ERMrest.PseudoColumn+displayname"></a>
@@ -7029,8 +7011,7 @@ get PathColumn object by column name
     * [.contextualize](#ERMrest.Reference+contextualize)
     * [.aggregate](#ERMrest.Reference+aggregate) : [<code>ReferenceAggregateFn</code>](#ERMrest.ReferenceAggregateFn)
     * [.displayname](#ERMrest.Reference+displayname) : <code>object</code>
-    * [.comment](#ERMrest.Reference+comment) : <code>String</code>
-    * [.commentDisplay](#ERMrest.Reference+commentDisplay) : <code>String</code>
+    * [.comment](#ERMrest.Reference+comment) : <code>Object</code>
     * [.uri](#ERMrest.Reference+uri) : <code>string</code>
     * [.table](#ERMrest.Reference+table) : [<code>Table</code>](#ERMrest.Table)
     * [.facetBaseTable](#ERMrest.Reference+facetBaseTable) : [<code>Table</code>](#ERMrest.Table)
@@ -7133,15 +7114,8 @@ displayname.value has the value
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+comment"></a>
 
-#### reference.comment : <code>String</code>
+#### reference.comment : <code>Object</code>
 The comment for this reference.
-
-**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
-<a name="ERMrest.Reference+commentDisplay"></a>
-
-#### reference.commentDisplay : <code>String</code>
-The comment display property for this reference.
-can be either "tooltip" or "inline"
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+uri"></a>

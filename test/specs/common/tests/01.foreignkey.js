@@ -233,44 +233,55 @@ exports.execute = function(options) {
                 });
             });
 
-            describe('.from_name and .to_name ', function() {
+            describe('fromName and toName ', function() {
                 it('should return the values that are defined in foreign-key annotation.', function() {
                     table1_schema1.foreignKeys.all().forEach(function(fk, index) {
                         // NOTE: this if statement assumes that only one foreignKey in table1_schema1 has annotation.
                         if (fk.annotations.length() > 0) {
-                            expect(fk.from_name).toBe("from_name_value");
-                            expect(fk.to_name).toBe("to_name_value");
+                            var disp = fk.getDisplay('*');
+                            expect(disp.fromName).toBe("from_name_value");
+                            expect(disp.toName).toBe("to_name_value");
                         }
                     });
                 });
 
-                it('should return empty strings when annotations are not defined.', function() {
-                    expect(table2_schema1.foreignKeys.all()[0].from_name).toBe("");
-                    expect(table2_schema1.foreignKeys.all()[0].to_name).toBe("");
+                it('should return null when annotations are not defined.', function() {
+                    var disp = table2_schema1.foreignKeys.all()[0].getDisplay('*');
+                    expect(disp.fromName).toBeFalsy();
+                    expect(disp.toName).toBeFalsy();
                 });
             });
 
-            describe('.from_comment with display and .to_comment with display ', function() {
+            describe('fromComment with display and toComment with display ', function() {
                 it('should return the values that are defined in foreign-key annotation.', function() {
                     table1_schema1.foreignKeys.all().forEach(function(fk, index) {
                         // NOTE: this if statement assumes that only one foreignKey in table1_schema1 has annotation.
                         if (fk.annotations.length() > 0) {
-                            expect(fk.from_comment).toBe("from_comment_value");
-                            expect(fk.from_comment_display).toBe("inline");
-                            expect(fk.to_comment).toBe("to_comment_value");
-                            expect(fk.to_comment_display).toBe("inline");
+                            var disp = fk.getDisplay('*');
+                            expect(disp.fromComment).toEqual({
+                                value: "<p>from_comment_value</p>\n",
+                                unformatted: "from_comment_value",
+                                isHTML: true,
+                                displayMode: "inline"
+                            });
+                            expect(disp.fromCommentDisplayMode).toBe("inline");
+                            expect(disp.toComment).toEqual({
+                                value: "<p>to_comment_value</p>\n",
+                                unformatted: "to_comment_value",
+                                isHTML: true,
+                                displayMode: "inline"
+                            });
+                            expect(disp.toCommentDisplayMode).toBe("inline");
                         }
                     });
                 });
 
-                it('should return empty strings when annotations are not defined.', function() {
-                    expect(table2_schema1.foreignKeys.all()[0].from_comment).toBe("");
-                    expect(table2_schema1.foreignKeys.all()[0].to_comment).toBe("");
-                });
-
-                it('should return default value when annotations are not defined.', function() {
-                    expect(table2_schema1.foreignKeys.all()[0].from_comment_display).toBe("tooltip");
-                    expect(table2_schema1.foreignKeys.all()[0].to_comment_display).toBe("tooltip");
+                it('should return null when annotations are not defined.', function() {
+                    var disp = table2_schema1.foreignKeys.all()[0].getDisplay('*');
+                    expect(disp.fromComment).toBeFalsy();
+                    expect(disp.toComment).toBeFalsy();
+                    expect(disp.fromCommentDisplayMode).toBeFalsy();
+                    expect(disp.toCommentDisplayMode).toBeFalsy();
                 });
             });
 

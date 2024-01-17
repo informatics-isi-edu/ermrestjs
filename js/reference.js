@@ -295,7 +295,7 @@
         /**
          * The comment for this reference.
          *
-         * @type {String}
+         * @type {Object}
          */
         get comment () {
             /* Note that comment is context dependent. For instance,
@@ -306,29 +306,10 @@
              * In one directoin, the FKR is named "parent" in the other
              * direction it is named "child".
              */
-            if (this._comment === undefined)
+            if (this._comment === undefined) {
                 this._comment = this._table.getDisplay(this._context).comment;
+            }
             return this._comment;
-        },
-
-        /**
-         * The comment display property for this reference.
-         * can be either "tooltip" or "inline"
-         *
-         * @type {String}
-         */
-        get commentDisplay () {
-            /* Note that commentDisplay is context dependent. However, a 'related'
-             * reference will use the FKR's commentDisplay (actually its "to comment display" or
-             * "from comment display"). Like a Person table might have a FKR to its parent.
-             * In one directoin, the FKR is named "parent" in the other
-             * direction it is named "child".
-             */
-            if (this._commentDisplay === undefined)
-                // default value is tooltip
-                // NOTE: This is used as part of the conditional check before showing a comment, so getDisplay needs to also be called here
-                this._commentDisplay = this._table.getDisplay(this._context).tableCommentDisplay;
-            return this._commentDisplay;
         },
 
         /**
@@ -4021,8 +4002,7 @@
             // the main table
             newRef.mainTable = this.table;
 
-            // comment display defaults to "tooltip"
-            newRef._commentDisplay = module._commentDisplayModes.tooltip;
+            var comment, commentDisplayMode, commentRenderMarkdown, tableDisplay, fkDisplay;
 
             dataSource.push({"inbound": fkr.constraint_names[0]});
 
@@ -4043,27 +4023,31 @@
                 newRef._table = otherFK.key.table;
                 newRef._shortestKey = newRef._table.shortestKey;
 
+                fkDisplay = otherFK.getDisplay(this._context);
+                tableDisplay = otherFK.key.colset.columns[0].table.getDisplay(this._context);
+
                 // displayname
-                if (otherFK.to_name) {
-                    newRef._displayname = {"isHTML": false, "value": otherFK.to_name, "unformatted": otherFK.to_name};
+                if (fkDisplay.toName) {
+                    newRef._displayname = {"isHTML": false, "value": fkDisplay.toName, "unformatted": fkDisplay.toName};
                 } else {
                     newRef._displayname = otherFK.colset.columns[0].table.displayname;
                 }
 
-                // NOTE: this is for contextualized toComment and toCommentDisplay, to be implemented later
-                // display = otherFK.getDisplay(this._context);
-
                 // comment
-                if (otherFK.to_comment && typeof otherFK.to_comment === "string") {
-                    // use fkr to_comment
-                    newRef._comment = otherFK.to_comment;
-                    newRef._commentDisplay = otherFK.to_comment_display;
+                if (fkDisplay.toComment) {
+                    comment = fkDisplay.toComment.unformatted;
                 } else {
-                    // use comment from leaf table diplay annotation or table model comment
-                    display = otherFK.key.colset.columns[0].table.getDisplay(this._context);
-
-                    newRef._comment = display.comment;
-                    newRef._commentDisplay = display.tableCommentDisplay;
+                    comment = tableDisplay.comment ? tableDisplay.comment.unformatted : null;
+                }
+                if (_isValidModelCommentDisplay(fkDisplay.toCommentDisplayMode)) {
+                    commentDisplayMode = fkDisplay.toCommentDisplayMode;
+                } else {
+                    commentDisplayMode = tableDisplay.tableCommentDisplayMode;
+                }
+                if (typeof fkDisplay.commentRenderMarkdown === 'boolean') {
+                    commentRenderMarkdown = fkDisplay.commentRenderMarkdown;
+                } else {
+                    commentRenderMarkdown = tableDisplay.commentRenderMarkdown;
                 }
 
                 // uri and location
@@ -4091,27 +4075,31 @@
                 newRef._table = fkrTable;
                 newRef._shortestKey = newRef._table.shortestKey;
 
+                fkDisplay = fkr.getDisplay(this._context);
+                tableDisplay = newRef._table.getDisplay(this._context);
+
                 // displayname
-                if (fkr.from_name) {
-                    newRef._displayname = {"isHTML": false, "value": fkr.from_name, "unformatted": fkr.from_name};
+                if (fkDisplay.fromName) {
+                    newRef._displayname = {"isHTML": false, "value": fkDisplay.fromName, "unformatted": fkDisplay.fromName};
                 } else {
                     newRef._displayname = newRef._table.displayname;
                 }
 
-                // NOTE: this is for contextualized toComment and toCommentDisplay, to be implemented later
-                // display = fkr.getDisplay(this._context);
-
                 // comment
-                if (fkr.from_comment && typeof fkr.from_comment === "string") {
-                    // use fkr annotation from_comment
-                    newRef._comment = fkr.from_comment;
-                    newRef._commentDisplay = fkr.from_comment_display;
+                if (fkDisplay.fromComment) {
+                    comment = fkDisplay.fromComment.unformatted;
                 } else {
-                    // use comment from leaf table diplay annotation or table model comment
-                    display = newRef._table.getDisplay(this._context);
-
-                    newRef._comment = display.comment;
-                    newRef._commentDisplay = display.tableCommentDisplay;
+                    comment = tableDisplay.comment ? tableDisplay.comment.unformatted : null;
+                }
+                if (_isValidModelCommentDisplay(fkDisplay.fromCommentDisplayMode)) {
+                    commentDisplayMode = fkDisplay.fromCommentDisplayMode;
+                } else {
+                    commentDisplayMode = tableDisplay.tableCommentDisplayMode;
+                }
+                if (typeof fkDisplay.commentRenderMarkdown === 'boolean') {
+                    commentRenderMarkdown = fkDisplay.commentRenderMarkdown;
+                } else {
+                    commentRenderMarkdown = tableDisplay.commentRenderMarkdown;
                 }
 
                 // uri and location
@@ -4140,13 +4128,7 @@
                 dataSource = dataSource.concat(newRef._table.shortestKey[0].name);
             }
 
-            // if comment|comment_display in source object are defined
-            // comment_display was already set to it's default above
-            if (sourceObject && _isValidModelComment(sourceObject.comment)) {
-                newRef._comment = _processModelComment(sourceObject.comment);
-                // only change commentDisplay if comment and comment_display are both defined
-                if (_isValidModelCommentDisplay(sourceObject.comment_display)) newRef._commentDisplay = sourceObject.comment_display;
-            }
+            newRef._comment = _processSourceObjectComment(sourceObject, comment, commentRenderMarkdown, commentDisplayMode);
 
             // attach the compressedDataSource
             newRef.compressedDataSource = _compressSource(dataSource);

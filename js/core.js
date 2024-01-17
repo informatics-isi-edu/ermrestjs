@@ -804,12 +804,12 @@
 
         /**
          * @desc Documentation for this schema
-         * @type {string}
+         * @type {Object}
          */
-        this.comment = jsonSchema.comment;
+        this.comment = _processModelComment(jsonSchema.comment);
         if (this.annotations.contains(module._annotations.DISPLAY)) {
             var cm = _processModelComment(this.annotations.get(module._annotations.DISPLAY).content.comment);
-            if (typeof cm === "string") {
+            if (cm) {
                 this.comment = cm;
             }
         }
@@ -1076,12 +1076,13 @@
 
         /**
          * @desc Documentation for this table
-         * @type {string}
+         * @type {Object}
+         * @deprecated comment can be contextualized, so please do `this.getDisplay(context).comment` instead.
          */
-        this.comment = jsonTable.comment;
+        this.comment = _processModelComment(jsonTable.comment);
         if (this.annotations.contains(module._annotations.DISPLAY)) {
             var cm = _processModelComment(this.annotations.get(module._annotations.DISPLAY).content.comment);
-            if (typeof cm === "string") {
+            if (cm) {
                 this.comment = cm;
             }
         }
@@ -1174,42 +1175,45 @@
         getDisplay: function (context) {
             // check _display for information about current context
             if (!(context in this._display)) {
-                var comment_annotation = null, comment_display_annotation = null;
+                var annotComment = null;
                 if (this.annotations.contains(module._annotations.DISPLAY)) {
                     // comment can be a string or an object
-                    comment_annotation = this.annotations.get(module._annotations.DISPLAY).get("comment");
+                    annotComment = this.annotations.get(module._annotations.DISPLAY).get("comment");
                     // point to comment since that is what is contextualized in this annotation
                     // if it's an object, that means it's contextualized
-                    if (typeof comment_annotation == "object") {
-                        comment_annotation = module._getAnnotationValueByContext(context, comment_annotation);
+                    if (typeof annotComment == "object") {
+                        annotComment = module._getAnnotationValueByContext(context, annotComment);
+                    }
+                }
+
+                var comment = this.comment ? this.comment.unformatted : null;
+                if (_isValidModelComment(annotComment)) {
+                    comment = annotComment;
+                }
+
+                var displayProps = module._getHierarchicalDisplayAnnotationValue(this, context, "comment_display", true);
+                var tableCommentDisplayMode = module._commentDisplayModes.tooltip,
+                    columnCommentDisplayMode = module._commentDisplayModes.tooltip,
+                    commentRenderMarkdown;
+                if (isObjectAndNotNull(displayProps)) {
+                    if (_isValidModelCommentDisplay(displayProps.table_comment_display)) {
+                        tableCommentDisplayMode = displayProps.table_comment_display;
                     }
 
-                    comment_display_annotation = module._getAnnotationValueByContext(context, this.annotations.get(module._annotations.DISPLAY).get("comment_display"));
-                }
+                    if (_isValidModelCommentDisplay(displayProps.column_comment_display)) {
+                        columnCommentDisplayMode = displayProps.column_comment_display;
+                    }
 
-                var comment = this.comment,
-                    tableCommentDisplay = module._commentDisplayModes.tooltip,
-                    columnCommentDisplay = module._commentDisplayModes.tooltip;
-
-                // comment is contextualized
-                if (_isValidModelComment(comment_annotation)) {
-                    comment = _processModelComment(comment_annotation);
-                }
-
-                // since in the model we cannot define the comment_display settings,
-                // this annotation can be used in conjunction with the model's comments
-                // and we don't need to make sure the comment is coming from annotation
-                if (comment_display_annotation && _isValidModelCommentDisplay(comment_display_annotation.column_comment_display)) {
-                    columnCommentDisplay = comment_display_annotation.column_comment_display;
-                }
-                if (comment_display_annotation && _isValidModelCommentDisplay(comment_display_annotation.table_comment_display)) {
-                    tableCommentDisplay = comment_display_annotation.table_comment_display;
+                    if (typeof displayProps.comment_render_markdown === 'boolean') {
+                        commentRenderMarkdown = displayProps.comment_render_markdown;
+                    }
                 }
 
                 this._display[context] = {
-                    "columnCommentDisplay": columnCommentDisplay,
-                    "comment": comment, // coming from the model, or annotation
-                    "tableCommentDisplay": tableCommentDisplay
+                    "columnCommentDisplayMode": columnCommentDisplayMode,
+                    "tableCommentDisplayMode": tableCommentDisplayMode,
+                    "comment": _processModelComment(comment, commentRenderMarkdown, tableCommentDisplayMode),
+                    "commentRenderMarkdown": commentRenderMarkdown
                 };
             }
             return this._display[context];
@@ -3097,19 +3101,20 @@
 
         /**
          * @desc Documentation for this column
-         * @type {string}
+         * @type {Object}
+         * @deprecated comment can be contextualized, so please do `this.getDisplay(context).comment` instead.
          */
-        this.comment = jsonColumn.comment;
+        this.comment = _processModelComment(jsonColumn.comment);
         if (this.annotations.contains(module._annotations.DISPLAY)) {
             var cm = _processModelComment(this.annotations.get(module._annotations.DISPLAY).content.comment);
-            if (typeof cm === "string") {
+            if (cm) {
                 this.comment = cm;
             }
         }
 
         // If the comment is not defined for a system column, then it is assigned a default comment
-        if((this.comment == null || this.comment == undefined) && this.isSystemColumn){
-            this.comment = module._defaultColumnComment[this.name];
+        if((this.comment === null || this.comment === undefined) && this.isSystemColumn){
+            this.comment = _processModelComment(module._defaultColumnComment[this.name], false);
         }
 
         /**
@@ -3322,6 +3327,31 @@
                     }
                 }
 
+                var comment = this.comment ? this.comment.unformatted : null;
+                if (this.annotations.contains(module._annotations.DISPLAY)) {
+                    // comment can be a string or an object
+                    var commentAnnot = this.annotations.get(module._annotations.DISPLAY).get("comment");
+                    // point to comment since that is what is contextualized in this annotation
+                    // if it's an object, that means it's contextualized
+                    if (typeof commentAnnot == "object") {
+                        commentAnnot = module._getAnnotationValueByContext(context, commentAnnot);
+                    }
+                    if (_isValidModelComment(commentAnnot)) {
+                        comment = commentAnnot;
+                    }
+                }
+
+                var displayProps = module._getHierarchicalDisplayAnnotationValue(this, context, "comment_display", false);
+                var columnCommentDisplayMode = module._commentDisplayModes.tooltip, commentRenderMarkdown;
+                if (isObjectAndNotNull(displayProps)) {
+                    if (_isValidModelCommentDisplay(displayProps.column_comment_display)) {
+                        columnCommentDisplayMode = displayProps.column_comment_display;
+                    }
+                    if (typeof displayProps.comment_render_markdown === 'boolean') {
+                        commentRenderMarkdown = displayProps.comment_render_markdown;
+                    }
+                }
+
                 this._display[context] = {
                     "hideColumnHeader": annotation.hide_column_header || false, // only hide if the annotation value is true
                     "isPreformat": hasPreformat,
@@ -3331,7 +3361,10 @@
                     "isHTML": (typeof annotation.markdown_pattern === 'string') || (module._HTMLColumnType.indexOf(this.type.name) != -1),
                     "markdownPattern": annotation.markdown_pattern,
                     "templateEngine": annotation.template_engine,
-                    "columnOrder": columnOrder
+                    "columnOrder": columnOrder,
+                    "comment": _processModelComment(comment, commentRenderMarkdown, columnCommentDisplayMode),
+                    "commentRenderMarkdown": commentRenderMarkdown,
+                    "commentDisplayMode": columnCommentDisplayMode
                 };
             }
             return this._display[context];
@@ -3702,12 +3735,13 @@
 
         /**
          * @desc Documentation for this key
-         * @type {string}
+         * @type {Object}
+         * @deprecated comment can be contextualized, so please do `this.getDisplay(context).comment` instead.
          */
-        this.comment = jsonKey.comment;
+        this.comment = _processModelComment(jsonKey.comment);
         if (this.annotations.contains(module._annotations.DISPLAY)) {
             var cm = _processModelComment(this.annotations.get(module._annotations.DISPLAY).content.comment);
-            if (typeof cm === "string") {
+            if (cm) {
                 this.comment = cm;
             }
         }
@@ -3841,12 +3875,37 @@
                     }
                 }
 
+                var annotComment = null;
+                if (this.annotations.contains(module._annotations.DISPLAY)) {
+                    annotComment = this.annotations.get(module._annotations.DISPLAY).get("comment");
+                    if (typeof annotComment == "object") {
+                        annotComment = module._getAnnotationValueByContext(context, annotComment);
+                    }
+                }
+
+                var comment = this.comment ? this.comment.unformatted : null;
+                if (_isValidModelComment(annotComment)) {
+                    comment = annotComment;
+                }
+
+                var displayProps = module._getHierarchicalDisplayAnnotationValue(this, context, "comment_display", false);
+                var commentDisplay = module._commentDisplayModes.tooltip, commentRenderMarkdown;
+                if (isObjectAndNotNull(displayProps)) {
+                    if (_isValidModelCommentDisplay(displayProps.column_comment_display)) {
+                        commentDisplay = displayProps.column_comment_display;
+                    }
+                    if (typeof displayProps.comment_render_markdown === 'boolean') {
+                        commentRenderMarkdown = displayProps.comment_render_markdown;
+                    }
+                }
+
                 this._display[context] = {
                     "columnOrder": columnOrder,
                     "isMarkdownPattern": (typeof annotation.markdown_pattern === 'string'),
                     "templateEngine": annotation.template_engine,
                     "markdownPattern": annotation.markdown_pattern,
-                    "showKeyLink": showKeyLink
+                    "showKeyLink": showKeyLink,
+                    "comment": _processModelComment(comment, commentRenderMarkdown, commentDisplay)
                 };
             }
 
@@ -4359,36 +4418,6 @@
         }
 
         /**
-         * @type {string}
-         */
-        this.from_name = "";
-
-        /**
-         * @type {string}
-         */
-        this.to_name = "";
-
-        /**
-         * @type {string}
-         */
-        this.to_comment = "";
-
-        /**
-         * @type {string}
-         */
-        this.from_comment = "";
-
-        /**
-         * @type {string}
-         */
-        this.to_comment_display = module._commentDisplayModes.tooltip;
-
-        /**
-         * @type {string}
-         */
-        this.from_comment_display = module._commentDisplayModes.tooltip;
-
-        /**
          * @type {boolean}
          */
         this.ignore = false;
@@ -4407,35 +4436,14 @@
                 (jsonAnnotation === null || isEmptyArray(jsonAnnotation))) {
                 this.ignore = true;
             }
-
-            // determine the from_name and to_name using the annotation
-            if (uri == module._annotations.FOREIGN_KEY && jsonAnnotation) {
-                if(jsonAnnotation.from_name){
-                    this.from_name = jsonAnnotation.from_name;
-                }
-                if(jsonAnnotation.to_name){
-                    this.to_name = jsonAnnotation.to_name;
-                }
-
-                if (_isValidModelComment(jsonAnnotation.to_comment)) {
-                    // check for null, false, empty string when digesting comment for first time
-                    this.to_comment = _processModelComment(jsonAnnotation.to_comment);
-                    if (_isValidModelCommentDisplay(jsonAnnotation.to_comment_display)) this.to_comment_display = jsonAnnotation.to_comment_display;
-                }
-
-                if (_isValidModelComment(jsonAnnotation.from_comment)) {
-                    // check for null, false, empty string when digesting comment for first time
-                    this.from_comment = _processModelComment(jsonAnnotation.from_comment);
-                    if (_isValidModelCommentDisplay(jsonAnnotation.from_comment_display)) this.from_comment_display = jsonAnnotation.from_comment_display;
-                }
-            }
         }
 
         /**
          * @desc Documentation for this foreign key reference
-         * @type {string}
+         * @type {Object}
+         * @deprecated comment can be contextualized, so please do `this.getDisplay(context).comment` instead.
          */
-        this.comment = jsonFKR.comment;
+        this.comment = _processModelComment(jsonFKR.comment);
 
         this._display = {};
 
@@ -4527,15 +4535,48 @@
 
         getDisplay: function(context) {
             if (!(context in this._display)) {
-                var self = this, annotation = -1, columnOrder = [], showFKLink = true, inputDisplayMode = module._foreignKeyInputModes[0], toTableAnnotation = -1;
-                // NOTE: commenting out contextualized functionality since it isn't being supported just yet
-                // var fromComment = null, fromCommentDisplay = "tooltip", toComment = null, toCommentDisplay = "tooltip";
+                var self = this, fkAnnot, displayAnnot = -1, columnOrder = [], showFKLink = true,
+                    inputDisplayMode = module._foreignKeyInputModes[0], toTableAnnotation = -1;
+
+                var fromName, toName,
+                    fromComment = null, toComment = null,
+                    fromCommentDisplayMode, toCommentDisplayMode,
+                    commentRenderMarkdown;
+
                 if (this.annotations.contains(module._annotations.FOREIGN_KEY)) {
-                    annotation = module._getAnnotationValueByContext(context, this.annotations.get(module._annotations.FOREIGN_KEY).get("display"));
+                    fkAnnot = this.annotations.get(module._annotations.FOREIGN_KEY);
+                    displayAnnot = module._getAnnotationValueByContext(context, fkAnnot.get("display"));
+
+                    fkAnnot = fkAnnot.content;
                 }
 
-                columnOrder = _processColumnOrderList(annotation.column_order, this.key.table);
-                showFKLink = annotation.show_foreign_key_link;
+                // from_name and to_name
+                if (fkAnnot && fkAnnot.from_name) {
+                    fromName = fkAnnot.from_name;
+                }
+                if (fkAnnot && fkAnnot.to_name) {
+                    toName = fkAnnot.to_name;
+                }
+
+                // comment related props
+                if (fkAnnot && _isValidModelComment(fkAnnot.from_comment)) {
+                    fromComment = _processModelComment(fkAnnot.from_comment).unformatted;
+                }
+                if (fkAnnot && _isValidModelCommentDisplay(fkAnnot.from_comment_display)) {
+                    fromCommentDisplayMode = fkAnnot.from_comment_display;
+                }
+                if (fkAnnot && _isValidModelComment(fkAnnot.to_comment)) {
+                    toComment = _processModelComment(fkAnnot.to_comment).unformatted;
+                }
+                if (fkAnnot && _isValidModelCommentDisplay(fkAnnot.to_comment_display)) {
+                    toCommentDisplayMode = fkAnnot.to_comment_display;
+                }
+                if (fkAnnot && typeof fkAnnot.comment_render_markdown === 'boolean') {
+                    commentRenderMarkdown = fkAnnot.comment_render_markdown;
+                }
+
+                columnOrder = _processColumnOrderList(displayAnnot.column_order, this.key.table);
+                showFKLink = displayAnnot.show_foreign_key_link;
                 if (typeof showFKLink !== "boolean") {
                     showFKLink = module._getHierarchicalDisplayAnnotationValue(
                         self, context, "show_foreign_key_link"
@@ -4562,7 +4603,6 @@
                  *
                  * supported _foreignKeyInputModes are ['facet-search-popup', 'simple-search-dropdown']
                  */
-
                 // NOTE: this property is only used when the table is used as the leaf for a foreign key
                 // using index 0 ensures we only support this on single outbound foreign key relationships when table-display is on the leaf table
                 var fromCol = this.colset.columns[0];
@@ -4575,23 +4615,23 @@
                     }
                 }
 
-                if (annotation.selector_ux_mode && module._foreignKeyInputModes.indexOf(annotation.selector_ux_mode) !== -1) {
-                    inputDisplayMode = annotation.selector_ux_mode;
+                if (displayAnnot.selector_ux_mode && module._foreignKeyInputModes.indexOf(displayAnnot.selector_ux_mode) !== -1) {
+                    inputDisplayMode = displayAnnot.selector_ux_mode;
                 }
-
-                // fromComment = _processModelComment(annotation.from_comment);
-                // toComment = _processModelComment(annotation.to_comment);
-                // fromCommentDisplay = (annotation.from_comment && typeof annotation.from_comment_display === "string") ? annotation.from_comment_display : "tooltip";
-                // toCommentDisplay = (annotation.to_comment && typeof annotation.to_comment_display === "string") ? annotation.to_comment_display : "tooltip";
 
                 this._display[context] = {
                     "columnOrder": columnOrder,
-                    // "fromComment": fromComment,
-                    // "fromCommentDisplay": fromCommentDisplay,
                     "inputDisplayMode": inputDisplayMode,
                     "showForeignKeyLink": showFKLink,
-                    // "toComment": toComment,
-                    // "toCommentDisplay": toCommentDisplay
+                    "fromName": fromName,
+                    "fromComment": _processModelComment(fromComment, commentRenderMarkdown, fromCommentDisplayMode),
+                    "fromCommentDisplayMode": fromCommentDisplayMode,
+                    "toName": toName,
+                    "toComment": _processModelComment(toComment, commentRenderMarkdown, toCommentDisplayMode),
+                    "toCommentDisplayMode": toCommentDisplayMode,
+                    "commentRenderMarkdown": commentRenderMarkdown,
+                    // TODO this is left for backwards compatibility and should most probably be removed in favor of toComment and fromComment
+                    "comment": _processModelComment(this.comment ? this.comment.unformatted : null, commentRenderMarkdown),
                 };
             }
 

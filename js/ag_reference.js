@@ -938,9 +938,17 @@ function AttributeGroupColumn(alias, term, baseColumn, displayname, colType, com
 
     /**
      * tooltip
-     * @type {string}
+     * @type {Object}
      */
     this.comment = comment;
+    if (typeof comment === 'string') {
+        this.comment = {
+            isHTML: false,
+            value: comment,
+            unformatted: comment,
+            displayMode: module._commentDisplayModes.tooltip
+        };
+    }
 
     if (sortable === false) {
         this._sortable = false;
@@ -1290,7 +1298,7 @@ function BucketAttributeGroupReference(baseColumn, baseRef, min, max, numberOfBu
     }
 
     var aggregateColumns = [
-        new AttributeGroupColumn("c2", countName, null, "Number of Occurrences", new Type({typename: "int"}), "", true, true)
+        new AttributeGroupColumn("c2", countName, null, "Number of Occurrences", new Type({typename: "int"}), null, true, true)
     ];
 
     // call the parent constructor

@@ -1364,20 +1364,45 @@ exports.execute = function (options) {
 
             describe("comment", function () {
                 it("return the comment defined on the facet.", function () {
-                    expect(mainFacets[6].comment).toBe("long text comment in facet");
+                    expect(mainFacets[6].comment).toEqual({
+                        isHTML: true,
+                        displayMode: 'tooltip',
+                        value: '<p>long text comment in facet</p>\n',
+                        unformatted: 'long text comment in facet'
+                    });
                 });
 
                 it("return empty string if the defined comment is `false`.", function () {
-                    expect(mainFacets[7].comment).toBe("", "missmatch for index=7");
-                    expect(mainFacets[10].comment).toBe("", "missmatch for index=10");
+                    expect(mainFacets[7].comment).toEqual({
+                        isHTML: false,
+                        displayMode: 'tooltip',
+                        value: '',
+                        unformatted: ''
+                    }, "missmatch for index=7");
+                    expect(mainFacets[10].comment).toEqual({
+                        isHTML: false,
+                        displayMode: 'tooltip',
+                        value: '',
+                        unformatted: ''
+                    }, "missmatch for index=10");
                 });
 
                 it('if in scalar mode, return column\'s comment', function () {
-                    expect(mainFacets[5].comment).toBe("text comment");
+                    expect(mainFacets[5].comment).toEqual({
+                        isHTML: true,
+                        displayMode: 'tooltip',
+                        value: '<p>text comment</p>\n',
+                        unformatted: 'text comment'
+                    });
                 });
 
                 it('otherwise return table\'s comment.', function () {
-                    expect(mainFacets[11].comment).toBe("has fk to main table + has rowname");
+                    expect(mainFacets[11].comment).toEqual({
+                        isHTML: true,
+                        displayMode: 'tooltip',
+                        value: '<p>has fk to main table + has rowname</p>\n',
+                        unformatted: 'has fk to main table + has rowname'
+                    });
                 });
             });
 
