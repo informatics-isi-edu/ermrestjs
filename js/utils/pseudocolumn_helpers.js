@@ -653,7 +653,7 @@
         waitFors.forEach(function (wf, index) {
             var errorMessage = "wait_for defined on table=`" + currentTable.name + "`, " + message + "`, index=" + index + ": ";
             if (typeof wf !== "string") {
-                module._log.warn(errorMessage + "must be an string");
+                module._log.warn(errorMessage + "must be a string");
                 return;
             }
 
@@ -1220,19 +1220,19 @@
 
         /**
          * return a new sourceObjectWrapper that is created by merging the given sourceObject and existing object.
-         * 
+         *
          * Useful when we have an object with sourcekey and want to find the actual definition. You can then call
          * clone on the source-def and pass the object.
-         * 
+         *
          * const myCol = {"sourcekey": "some_key"};
          * const sd = table.sourceDefinitions.sources[myCol.sourcekey];
          * if (sd) {
          *   const wrapper = sd.clone(myCol, table, consNames);
          * }
-         * 
+         *
          * - attributes in sourceObject will override the similar ones in the current object.
          * - "source" of sourceObject will be ignored. so "sourcekey" always has priority over "source".
-         * 
+         *
          * @param {Object} sourceObject the source object
          * @param {ERMrest.Table} table the table that these sources belong to.
          * @param {Object} consNames the constraint names

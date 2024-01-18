@@ -5938,7 +5938,7 @@
                  *     - use the template with result of `_getFormattedKeyValues` to get the value.
                  *   - otherwise:
                  *     - if json, attach <pre> tag to the formatted value.
-                 *     - if array, call printArray which will return an string.
+                 *     - if array, call printArray which will return a string.
                  *     - otherwise return the formatted value.
                  */
 

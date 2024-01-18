@@ -567,7 +567,7 @@ exports.execute = function (options) {
                         });
 
                         describe("uniqueId, ", function () {
-                            it ("should return an string based on raw values of shortest key.", function () {
+                            it ("should return a string based on raw values of shortest key.", function () {
                                 expect(tuples[0].uniqueId).toBe("**test2**_true");
                             });
 

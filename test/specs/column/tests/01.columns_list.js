@@ -498,7 +498,7 @@ exports.execute = function (options) {
                             checkCol("uri1");
                         });
 
-                        it("should create asset column if annotation is available, but disable it if url_pattern is not an string", function() {
+                        it("should create asset column if annotation is available, but disable it if url_pattern is not a string", function() {
                             checkCol("uri2");
                         });
 
