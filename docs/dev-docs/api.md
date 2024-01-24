@@ -286,7 +286,7 @@ to use for ERMrest JavaScript agents.
         * [.table](#ERMrest.Key+table) : <code>Table</code>
         * [.colset](#ERMrest.Key+colset) : [<code>ColSet</code>](#ERMrest.ColSet)
         * [.annotations](#ERMrest.Key+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
-        * [.comment](#ERMrest.Key+comment) : <code>Object</code>
+        * ~~[.comment](#ERMrest.Key+comment) : <code>Object</code>~~
         * [.RID](#ERMrest.Key+RID) : <code>string</code>
         * [.constraint_names](#ERMrest.Key+constraint_names) : <code>Array</code>
         * [.name](#ERMrest.Key+name) : <code>string</code>
@@ -323,15 +323,9 @@ to use for ERMrest JavaScript agents.
         * [.rights](#ERMrest.ForeignKeyRef+rights) : <code>Object</code>
         * [.mapping](#ERMrest.ForeignKeyRef+mapping) : [<code>Mapping</code>](#ERMrest.Mapping)
         * [.constraint_names](#ERMrest.ForeignKeyRef+constraint_names) : <code>Array</code>
-        * [.from_name](#ERMrest.ForeignKeyRef+from_name) : <code>string</code>
-        * [.to_name](#ERMrest.ForeignKeyRef+to_name) : <code>string</code>
-        * [.to_comment](#ERMrest.ForeignKeyRef+to_comment) : <code>string</code> \| <code>null</code>
-        * [.from_comment](#ERMrest.ForeignKeyRef+from_comment) : <code>string</code> \| <code>null</code>
-        * [.to_comment_display](#ERMrest.ForeignKeyRef+to_comment_display) : <code>string</code> \| <code>null</code>
-        * [.from_comment_display](#ERMrest.ForeignKeyRef+from_comment_display) : <code>string</code> \| <code>null</code>
         * [.ignore](#ERMrest.ForeignKeyRef+ignore) : <code>boolean</code>
         * [.annotations](#ERMrest.ForeignKeyRef+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
-        * [.comment](#ERMrest.ForeignKeyRef+comment) : <code>Object</code>
+        * ~~[.comment](#ERMrest.ForeignKeyRef+comment) : <code>Object</code>~~
         * [.compressedDataSource](#ERMrest.ForeignKeyRef+compressedDataSource)
         * [.name](#ERMrest.ForeignKeyRef+name) : <code>string</code>
         * [.simple](#ERMrest.ForeignKeyRef+simple) : <code>Boolean</code>
@@ -2278,7 +2272,7 @@ get the key by the column set
     * [.table](#ERMrest.Key+table) : <code>Table</code>
     * [.colset](#ERMrest.Key+colset) : [<code>ColSet</code>](#ERMrest.ColSet)
     * [.annotations](#ERMrest.Key+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
-    * [.comment](#ERMrest.Key+comment) : <code>Object</code>
+    * ~~[.comment](#ERMrest.Key+comment) : <code>Object</code>~~
     * [.RID](#ERMrest.Key+RID) : <code>string</code>
     * [.constraint_names](#ERMrest.Key+constraint_names) : <code>Array</code>
     * [.name](#ERMrest.Key+name) : <code>string</code>
@@ -2312,7 +2306,9 @@ Reference to the table that this Key belongs to.
 **Kind**: instance property of [<code>Key</code>](#ERMrest.Key)  
 <a name="ERMrest.Key+comment"></a>
 
-#### key.comment : <code>Object</code>
+#### ~~key.comment : <code>Object</code>~~
+***Deprecated***
+
 Documentation for this key
 
 **Kind**: instance property of [<code>Key</code>](#ERMrest.Key)  
@@ -2552,15 +2548,9 @@ get the foreign key of the given column set
     * [.rights](#ERMrest.ForeignKeyRef+rights) : <code>Object</code>
     * [.mapping](#ERMrest.ForeignKeyRef+mapping) : [<code>Mapping</code>](#ERMrest.Mapping)
     * [.constraint_names](#ERMrest.ForeignKeyRef+constraint_names) : <code>Array</code>
-    * [.from_name](#ERMrest.ForeignKeyRef+from_name) : <code>string</code>
-    * [.to_name](#ERMrest.ForeignKeyRef+to_name) : <code>string</code>
-    * [.to_comment](#ERMrest.ForeignKeyRef+to_comment) : <code>string</code> \| <code>null</code>
-    * [.from_comment](#ERMrest.ForeignKeyRef+from_comment) : <code>string</code> \| <code>null</code>
-    * [.to_comment_display](#ERMrest.ForeignKeyRef+to_comment_display) : <code>string</code> \| <code>null</code>
-    * [.from_comment_display](#ERMrest.ForeignKeyRef+from_comment_display) : <code>string</code> \| <code>null</code>
     * [.ignore](#ERMrest.ForeignKeyRef+ignore) : <code>boolean</code>
     * [.annotations](#ERMrest.ForeignKeyRef+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
-    * [.comment](#ERMrest.ForeignKeyRef+comment) : <code>Object</code>
+    * ~~[.comment](#ERMrest.ForeignKeyRef+comment) : <code>Object</code>~~
     * [.compressedDataSource](#ERMrest.ForeignKeyRef+compressedDataSource)
     * [.name](#ERMrest.ForeignKeyRef+name) : <code>string</code>
     * [.simple](#ERMrest.ForeignKeyRef+simple) : <code>Boolean</code>
@@ -2616,30 +2606,6 @@ The exact `names` array in foreign key definition
 The constraint names for this foreign key
 
 **Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
-<a name="ERMrest.ForeignKeyRef+from_name"></a>
-
-#### foreignKeyRef.from\_name : <code>string</code>
-**Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
-<a name="ERMrest.ForeignKeyRef+to_name"></a>
-
-#### foreignKeyRef.to\_name : <code>string</code>
-**Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
-<a name="ERMrest.ForeignKeyRef+to_comment"></a>
-
-#### foreignKeyRef.to\_comment : <code>string</code> \| <code>null</code>
-**Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
-<a name="ERMrest.ForeignKeyRef+from_comment"></a>
-
-#### foreignKeyRef.from\_comment : <code>string</code> \| <code>null</code>
-**Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
-<a name="ERMrest.ForeignKeyRef+to_comment_display"></a>
-
-#### foreignKeyRef.to\_comment\_display : <code>string</code> \| <code>null</code>
-**Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
-<a name="ERMrest.ForeignKeyRef+from_comment_display"></a>
-
-#### foreignKeyRef.from\_comment\_display : <code>string</code> \| <code>null</code>
-**Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
 <a name="ERMrest.ForeignKeyRef+ignore"></a>
 
 #### foreignKeyRef.ignore : <code>boolean</code>
@@ -2650,7 +2616,9 @@ The constraint names for this foreign key
 **Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
 <a name="ERMrest.ForeignKeyRef+comment"></a>
 
-#### foreignKeyRef.comment : <code>Object</code>
+#### ~~foreignKeyRef.comment : <code>Object</code>~~
+***Deprecated***
+
 Documentation for this foreign key reference
 
 **Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  

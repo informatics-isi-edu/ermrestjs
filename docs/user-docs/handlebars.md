@@ -928,6 +928,8 @@ This would result in:
 
 The `regexFindFirst` helper will take the input regular expression and return the first matching substring from the supplied string. Will return `""` otherwise.
 
+> The regular expression syntax that Javascript supports is a bit different from other languages, please refer to [MDN regular expressions document](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions) for more information.
+
 A simple example where we try to match the file extension `jpg` or `png` with testString="jumpng-fox.jpg":
 ```
 {{#regexFindFirst testString "jpg|png"}}{{this}}{{/regexFindFirst}}
@@ -948,10 +950,18 @@ Result:
 "index.html"
 ```
 
+You can also use the `flags` named optional argument to pass [regular expression flags](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions#advanced_searching_with_flags). For example you can use the `i` flag for case-insensitive searching:
+```
+{{#regexFindFirst testString "human" flags="i" }}{{this}}{{/regexFindFirst}}
+```
+
+> If `flags` argument is not used, by default we are using the `g` (global search) flag for the regular expression search.
 
 ### Findall helper
 
 The `regexFindAll` helper will take the input regular expression and return all the matching substrings from the supplied string in an array. Will return `[]` otherwise.
+
+> The regular expression syntax that Javascript supports is a bit different from other languages, please refer to [MDN regular expressions document](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions) for more information.
 
 A simple example where we try to match the file extension `jpg` or `png` with testString="jumpng-fox.jpg":
 ```
@@ -963,9 +973,20 @@ Result:
 "png\njpg\n"
 ```
 
+You can also use the `flags` named optional argument to pass [regular expression flags](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions#advanced_searching_with_flags). For example you can use the `i` flag for case-insensitive searching:
+```
+{{#regexFindAll testString "ACO1" flags="i" }}{{this}}{{/regexFindFirst}}
+```
+
+> If `flags` argument is not used, by default we are using the `g` (global search) flag for the regular expression search.
+
 ### Replace helper
 
-The `replace` helper will take the input regular expression (first argument) and replace all matches in the supplied string with the supplied substring (second argument). This helper behaves the same way as the `replace` function for Strings in javascript. One example would be to replace all underscores with whitespace characters for table name display.
+The `replace` helper will take the input regular expression (first argument) and replace all matches in the supplied string with the supplied substring (second argument). This helper behaves the same way as the `replace` function for Strings in javascript.
+
+> The regular expression syntax that Javascript supports is a bit different from other languages, please refer to [MDN regular expressions document](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions) for more information.
+
+One example would be to replace all underscores with whitespace characters for table name display.
 
 Template:
 ```
@@ -976,6 +997,30 @@ Result:
 ```
 table name with underscores
 ```
+
+You can also use the `flags` named optional argument to pass [regular expression flags](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions#advanced_searching_with_flags). By default we're using the `g` flag, that's why the example above is replacing all the matches. Examples of using the `flags` named argument:
+
+- If you only want to replace the first match, you can pass empty string for flags:
+  - Template:
+  ```
+  {{#replace "_" " " flags=""}}table_name_with_underscores{{/replace}}
+  ```
+
+  - Result:
+  ```
+  table name_with_underscores
+  ```
+
+- Use the `i` flag for case-insensitive searching (in this example we're also using `g` flag to make sure we're still replacing all the matches):
+  - Template:
+  ```
+  {{#replace "aco1" "ACO1" flags="ig"}}{{{Gene_Names}}}{{/replace}}
+  ```
+
+  - Result (assuming `Gene_Names` is `"Aco1, ACO1"`):
+  ```
+  ACO1, ACO1
+  ```
 
 ### ToTitleCase helper
 
@@ -1055,6 +1100,15 @@ Using the `regexMatch` function you can check whether a given value matches the 
 .. content
 {{/if}}
 ```
+
+You can also use the `flags` named optional argument to pass [regular expression flags](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions#advanced_searching_with_flags). For example you can use the `i` flag for case-insensitive matching:
+```
+{{#if (regexMatch value "film analysis" flags="i" )}}
+.. content
+{{/if}}
+```
+
+> If `flags` argument is not used, by default we are using the `g` (global search) flag for the regular expression search.
 
 ### Logical Helpers
 

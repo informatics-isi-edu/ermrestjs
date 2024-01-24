@@ -1390,7 +1390,7 @@ Object.defineProperty(PseudoColumn.prototype, "comment", {
                     disp.commentRenderMarkdown,
                     commentDisplayMode
                 );
-            }
+            };
 
             this._comment = getComment(this);
         }
@@ -1992,7 +1992,7 @@ Object.defineProperty(ForeignKeyPseudoColumn.prototype, "name", {
 Object.defineProperty(ForeignKeyPseudoColumn.prototype, "displayname", {
     get: function () {
         if (this._displayname === undefined) {
-            var context = this._context, foreignKey = this.foreignKey
+            var context = this._context, foreignKey = this.foreignKey;
             var toName = foreignKey.getDisplay(context).toName;
             var value, isHTML, unformatted;
             if (this.sourceObject.markdown_name) {

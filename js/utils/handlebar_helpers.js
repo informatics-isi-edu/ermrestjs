@@ -8,8 +8,8 @@
         return args.reduce(reducer, first);
     };
 
-    var regexpFindAll = function (value, regexp) {
-        var regexpObj = new RegExp(regexp, 'g');
+    var regexpFindAll = function (value, regexp, flags) {
+        var regexpObj = new RegExp(regexp, flags);
         var matches = value.match(regexpObj);
 
         return matches;
@@ -109,11 +109,16 @@
              *  string
              * {{/replace}}
              *
+             * {{replace value regexp flags="ig"}}
+             *
              * @returns replaces each match of the regexp with newSubstr
              */
             replace: function (substr, newSubstr, options) {
-                var regexpObj = new RegExp(substr, 'g');
-
+                var flags = 'g';
+                if (options && isObjectAndNotNull(options.hash) && typeof options.hash.flags === 'string') {
+                    flags = options.hash.flags;
+                }
+                var regexpObj = new RegExp(substr, flags);
                 return options.fn(this).replace(regexpObj, newSubstr);
             },
 
@@ -122,10 +127,16 @@
              *   .. content
              * {{/if}}
              *
+             * {{regexMatch value regexp flags="i"}}
+             *
              * @returns boolean if the value matches the regexp
              */
-            regexMatch: function (value, regexp) {
-                var regexpObj = new RegExp(regexp);
+            regexMatch: function (value, regexp, options) {
+                var flags = 'g';
+                if (options && isObjectAndNotNull(options.hash) && typeof options.hash.flags === 'string') {
+                    flags = options.hash.flags;
+                }
+                var regexpObj = new RegExp(regexp, flags);
                 return regexpObj.test(value);
             },
 
@@ -134,10 +145,16 @@
              *   {{this}}
              * {{/each}}
              *
+             * {{regexFindFirst value regexp flags="i"}}
+             *
              * @returns first string from value that matches the regular expression or empty string
              */
-            regexFindFirst: function (value, regexp) {
-                var matches = regexpFindAll(value, regexp);
+            regexFindFirst: function (value, regexp, options) {
+                var flags = 'g';
+                if (options && isObjectAndNotNull(options.hash) && typeof options.hash.flags === 'string') {
+                    flags = options.hash.flags;
+                }
+                var matches = regexpFindAll(value, regexp, flags);
                 return (matches && matches[0]) || "";
             },
 
@@ -146,10 +163,16 @@
              *   {{this}}
              * {{/each}}
              *
+             * {{regexFindFirst value regexp flags="ig"}}
+             *
              * @returns array of strings from value that match the regular expression or
              */
-            regexFindAll: function (value, regexp) {
-                return regexpFindAll(value, regexp) || [];
+            regexFindAll: function (value, regexp, options) {
+                var flags = 'g';
+                if (options && isObjectAndNotNull(options.hash) && typeof options.hash.flags === 'string') {
+                    flags = options.hash.flags;
+                }
+                return regexpFindAll(value, regexp, flags) || [];
             },
 
             /**

@@ -732,6 +732,11 @@ exports.execute = function (options) {
                 var template = '{{#if (regexMatch type "jpg|png")}}image{{else}}other{{/if}}';
                 expect(module.renderHandlebarsTemplate(template, {"type": "jpg"})).toBe("image", "missmatch for 01");
                 expect(module.renderHandlebarsTemplate(template, {"type": "txt"})).toBe("other", "missmatch for 02");
+
+                var template = '{{#if (regexMatch File_Name "film analysis" flags="i")}}matched{{else}}other{{/if}}';
+                expect(module.renderHandlebarsTemplate(template, {"File_Name": "film analysis"})).toBe("matched", "missmatch for 01");
+                expect(module.renderHandlebarsTemplate(template, {"File_Name": "FILM Analysis"})).toBe("matched", "missmatch for 02");
+                expect(module.renderHandlebarsTemplate(template, {"File_Name": "FILM"})).toBe("other", "missmatch for 03");
             });
 
             it ('regexFindFirst helper', function () {
@@ -745,6 +750,9 @@ exports.execute = function (options) {
 
                 var template3 = '{{#regexFindFirst testString "[^\/]+$"}}{{this}}{{/regexFindFirst}}';
                 expect(module.renderHandlebarsTemplate(template3, {"testString": "/var/www/html/index.html"}) ).toBe("index.html", "missmatch for 5th test");
+
+                var template4 = '{{#regexFindFirst testString "test" flags="i"}}{{this}}{{/regexFindFirst}}';
+                expect(module.renderHandlebarsTemplate(template4, {"testString": "my very own TEST"}) ).toBe("TEST", "missmatch for 6th test");
             });
 
             it ('regexFindAll helper', function () {
@@ -758,6 +766,12 @@ exports.execute = function (options) {
 
                 var template3 = '{{#each (regexFindAll testString "[^\/]+$")}}{{this}}\n{{/each}}';
                 expect(module.renderHandlebarsTemplate(template3, {"testString": "/var/www/html/index.html"}) ).toBe("index.html\n", "missmatch for 5th test");
+
+                var template4 = '{{#each (regexFindAll testString "jpg|png" flags="")}}{{this}}\n{{/each}}';
+                expect(module.renderHandlebarsTemplate(template4, {"testString": "jumpng-fox.jpg"}) ).toBe("png\n", "missmatch for 6th test");
+
+                var template5 = '{{#each (regexFindAll testString "jpg|png" flags="ig")}}{{this}}\n{{/each}}';
+                expect(module.renderHandlebarsTemplate(template5, {"testString": "jumPNG-fox.JPG"}) ).toBe("PNG\nJPG\n", "missmatch for 6th test");
             });
 
             it ('replace helper', function () {
@@ -766,6 +780,16 @@ exports.execute = function (options) {
                 var template = '{{#replace "_" " "}}{{{string}}}{{/replace}}'
 
                 expect(module.renderHandlebarsTemplate(template, {string: underscoreToWhitespace})).toEqual("change this table name", "missmatch for 1st test");
+
+                expect(module.renderHandlebarsTemplate(
+                    '{{#replace "foo" "" flags=""}}{{{string}}}{{/replace}}',
+                    {string: 'foo example foo'})
+                ).toEqual(' example foo');
+
+                expect(module.renderHandlebarsTemplate(
+                    '{{#replace "foo" "" flags="ig"}}{{{string}}}{{/replace}}',
+                    {string: 'foo example FoO'})
+                ).toEqual(' example ');
             });
 
             it ('jsonStringify helper', function () {

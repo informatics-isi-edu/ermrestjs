@@ -850,7 +850,7 @@
     /**
      * Turn a comment annotaiton/string value into a proper comment object.
      * @param {string|null|false} comment
-     * @param {boolean=true} isMarkdown whether the given comment should be rendered as markdown (default: true).
+     * @param {boolean?} isMarkdown whether the given comment should be rendered as markdown (default: true).
      * @param {string} displayMode the display mode of the comment (inline, tooltip)
      * @private
      */
