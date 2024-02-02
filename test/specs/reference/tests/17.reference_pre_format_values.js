@@ -67,13 +67,13 @@ exports.execute = function (options) {
 
         describe("testing tuple values for format", function() {
             var testObjects = [{
-                "expectedValues": ["4000","Hank","http://example.com/google.com","No","10000000000 1024 1024 1.024e+3","   0.234","<pre>null</pre>", "", ""]
+                "expectedValues": ["4000","Hank","http://example.com/google.com","No","10000000000 1024 1024 1.024e+3","   0.234","", "", ""]
             },
             {
                 "expectedValues": ["4001","Harold", "","Yes","", "10,000.345", "<pre>My name is Harold Durden. My age is 29 years and I study at USC located in Los Angeles, CA. My GPA is 3.93</pre>", "", ""]
             },
             {
-                "expectedValues": ["4002", null, "http://example.com/google.com","","10001100101001 9001 9001 9.001e+3","","<pre>null</pre>", "<p>YES, NOPE, <em>No value</em></p>\n", "<p>2.340, 2.400, <em>No value</em></p>\n"]
+                "expectedValues": ["4002", null, "http://example.com/google.com","","10001100101001 9001 9001 9.001e+3","","", "<p>YES, NOPE, <em>No value</em></p>\n", "<p>2.340, 2.400, <em>No value</em></p>\n"]
             }];
 
             var i = 0;

@@ -2780,12 +2780,10 @@
 
             var self = this;
 
-            //This check has been added to show "null" in all the rows if the user inputs blank string
-            //We are opting json out here because we want null in the UI instead of "", so we do not call _getNullValue for json
-            if (data === undefined || (data === null && this.type.name.indexOf('json') === -1)) {
+            // this used to treat json differently but we don't want that anymore.
+            // since we cannot distinguish between json null and database null, we decided to show it as database null anyways.
+            if (data === undefined || data === null) {
                 return this._getNullValue(context);
-            } else if (data === null && this.type.name.indexOf('json') !== 0) {
-                return data;
             }
 
             var display = this.getDisplay(context);
@@ -2848,7 +2846,13 @@
              * If column doesn't has column-display annotation and is not of type markdown
              * but the column type is json then append <pre> tag and return the value
              */
-            if (!display.isHTML && this.type.name.indexOf('json') !== -1) {
+            if (!display.isHTML && this.type.name.indexOf('json') === 0) {
+                // jsonb column should be treated similar to other columns, so
+                // If value is null or empty, return value on based on `show_null` instead of adding the code block.
+                if (rawValue === null || rawValue === undefined) {
+                    return { isHTML: false, value: this._getNullValue(context), unformatted: this._getNullValue(context) };
+                }
+
                 return { isHTML: true, value: '<pre>' + formattedValue + '</pre>', unformatted: formattedValue};
             }
 
