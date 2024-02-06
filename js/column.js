@@ -2992,6 +2992,9 @@ FacetColumn.prototype = {
      * 4. return choices if int or serial, part of key, and not null.
      * 5. return ranges or choices based on the type.
      *
+     *  Note:
+     *   - null and not-null are applicaple in all types, so we're ignoring those while figuring out the preferred mode.
+     *
      * @type {string}
      */
     get preferredMode() {
@@ -3014,19 +3017,18 @@ FacetColumn.prototype = {
                 // see if only one type of facet is preselected
                 var onlyChoice = false, onlyRange = false;
 
-                // (not-null can be applied to both choices and ranges)
-                var filterLen = self.filters.length;
+                // not-null and null can be applied to both choices and ranges
+                var filterLen = self.filters.length, choiceFilterLen = self.choiceFilters.length;
                 if (self.hasNotNullFilter) {
                     filterLen--;
                 }
-
-                // null is acceptable for check_presence
-                if (filterLen === 1 && self.hasNullFilter && self._facetObject.ux_mode === modes.PRESENCE) {
-                    return modes.PRESENCE;
+                if (self.hasNullFilter) {
+                    filterLen--;
+                    choiceFilterLen--;
                 }
 
                 if (filterLen > 0) {
-                    onlyChoice = self.choiceFilters.length === filterLen;
+                    onlyChoice = choiceFilterLen === filterLen;
                     onlyRange = self.rangeFilters.length === filterLen;
                 }
                 // if only choices or ranges preselected, honor it
