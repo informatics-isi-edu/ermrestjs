@@ -50,6 +50,7 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
                             .use(require('../vendor/markdown-it-sub.min.js')) // add subscript support
                             .use(require('../vendor/markdown-it-sup.min.js')) // add superscript support;
                             .use(require('../vendor/markdown-it-span.js')) // add span support
+                            .use(require('../vendor/markdown-it-escape')) // add escape support
                             .use(require('../vendor/markdown-it-attrs.js')); // add attrs support
 
 
@@ -150,7 +151,8 @@ if (typeof module === 'object' && module.exports && typeof require === 'function
                     .use(window.markdownitSub)
                     .use(window.markdownitSup)
                     .use(window.markdownItAttrs)
-                    .use(window.markdownitSpan);
+                    .use(window.markdownitSpan)
+                    .use(window.markdownitEscape);
 
             // set custom markdown tags using markdown-it-container plugin
             ERMrest._bindCustomMarkdownTags(ERMrest._markdownIt, markdownitContainer);

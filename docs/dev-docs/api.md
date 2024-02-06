@@ -47,21 +47,25 @@ to use for ERMrest JavaScript agents.</p>
 <dd><p>{{#replace substr newSubstr}}
  string
 {{/replace}}</p>
+<p>{{replace value regexp flags=&quot;ig&quot;}}</p>
 </dd>
 <dt><a href="#regexMatch">regexMatch()</a> ⇒</dt>
 <dd><p>{{#if (regexMatch value regexp)}}
   .. content
 {{/if}}</p>
+<p>{{regexMatch value regexp flags=&quot;i&quot;}}</p>
 </dd>
 <dt><a href="#regexFindFirst">regexFindFirst()</a> ⇒</dt>
 <dd><p>{{#each (regexFindFirst value regexp)}}
   {{this}}
 {{/each}}</p>
+<p>{{regexFindFirst value regexp flags=&quot;i&quot;}}</p>
 </dd>
 <dt><a href="#regexFindAll">regexFindAll()</a> ⇒</dt>
 <dd><p>{{#each (regexFindAll value regexp)}}
   {{this}}
 {{/each}}</p>
+<p>{{regexFindFirst value regexp flags=&quot;ig&quot;}}</p>
 </dd>
 <dt><a href="#toTitleCase">toTitleCase()</a> ⇒</dt>
 <dd><p>{{#toTitleCase}}
@@ -5454,6 +5458,9 @@ The logic is as follows,
 4. return choices if int or serial, part of key, and not null.
 5. return ranges or choices based on the type.
 
+ Note:
+  - null and not-null are applicaple in all types, so we're ignoring those while figuring out the preferred mode.
+
 **Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
 <a name="ERMrest.FacetColumn+barPlot"></a>
 
@@ -8395,6 +8402,8 @@ or
  string
 {{/replace}}
 
+{{replace value regexp flags="ig"}}
+
 **Kind**: global function  
 **Returns**: replaces each match of the regexp with newSubstr  
 <a name="regexMatch"></a>
@@ -8403,6 +8412,8 @@ or
 {{#if (regexMatch value regexp)}}
   .. content
 {{/if}}
+
+{{regexMatch value regexp flags="i"}}
 
 **Kind**: global function  
 **Returns**: boolean if the value matches the regexp  
@@ -8413,6 +8424,8 @@ or
   {{this}}
 {{/each}}
 
+{{regexFindFirst value regexp flags="i"}}
+
 **Kind**: global function  
 **Returns**: first string from value that matches the regular expression or empty string  
 <a name="regexFindAll"></a>
@@ -8421,6 +8434,8 @@ or
 {{#each (regexFindAll value regexp)}}
   {{this}}
 {{/each}}
+
+{{regexFindFirst value regexp flags="ig"}}
 
 **Kind**: global function  
 **Returns**: array of strings from value that match the regular expression or  

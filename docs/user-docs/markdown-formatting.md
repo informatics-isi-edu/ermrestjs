@@ -48,8 +48,9 @@ For common markdown syntax please refer to [this reference sheet](http://commonm
     + [11. Subscript](#11-subscript)
     + [12. Superscript](#12-superscript)
     + [13. Span (Attach Attributes To Text)](#13-span-attach-attributes-to-text)
-    + [14. RID link](#14-rid-link)
-    + [15. Table](#15-table)
+    + [14. Escape markdown content](#14-escape-markdown-content)
+    + [15. RID link](#15-rid-link)
+    + [16. Table](#15-table)
 
 
 
@@ -945,7 +946,34 @@ You can also have empty span. You can use this to display icons.
 ```
 > <p><span class="fa-solid fa-download"></span></p>
 
-### 14. RID link
+
+### 14. Escape markdown content
+
+This is not part of commonMark specification and it will result in an [inline](#inline-vs-block) element. Opening tag is `:mdEscape:` and closing is `:/mdEscape:`.
+
+This tag can be used to print the content as is and escape the markdown rendering. For example, if you want to show a JSON column value, by default, the `{}` will be treated as attributes of markdown, so you would need to escape the content.
+
+```html
+:mdEscape:{"first_name": "John", "last_name": "Smith"}:/mdEscape: should be superscript.
+
+# OUTPUT:
+<p>
+	<span>{"first_name": "John", "last_name": "Smith"}</span>
+</p>
+```
+> <p>{"first_name": "John", "last_name": "Smith"}</p>
+
+```html
+The following is how you can add links: :mdEscape:[caption](link):/mdEscape:
+
+# OUTPUT:
+<p>
+	The following is how you can add links: <span>[caption](link)</span>
+</p>
+```
+> The following is how you can add links: <span>\[caption](link)</span>
+
+### 15. RID link
 
 Takes an RID of an existing record and generates a resolvable link for that record. This is not part of commonMark specification. It will result in an [inline](#inline-vs-block) element. You have to follow the syntax completely.
 
@@ -965,7 +993,7 @@ Takes an RID of an existing record and generates a resolvable link for that reco
 > <a href="/id/1-3X0H">1-3X0H</a>
 
 
-### 15. Table
+### 16. Table
 
 Tables are not part of the commonMark specifications, but the parser that we use follows the [GitHub Flavored Markdown specification for tables](https://github.github.com/gfm/#tables-extension-).
 

@@ -83,6 +83,7 @@ LIB=$(VENDOR)/lz-string.min.js \
 	$(VENDOR)/markdown-it-sub.min.js \
 	$(VENDOR)/markdown-it-sup.min.js \
 	$(VENDOR)/markdown-it-span.js \
+	$(VENDOR)/markdown-it-escape.js \
 	$(VENDOR)/markdown-it-attrs.js \
 	$(VENDOR)/markdown-it-container.min.js
 

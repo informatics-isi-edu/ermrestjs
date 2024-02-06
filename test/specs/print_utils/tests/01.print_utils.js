@@ -326,6 +326,13 @@ exports.execute = function (options) {
                 expect(printMarkdown(":span::/span:{.glyph-icon .glyph-danger}", {inline: true})).toBe('<span class="glyph-icon glyph-danger"></span>', "invalid empty inline span with attrs");
             });
 
+            it ("should support :mdEscape:.", function () {
+                expect(printMarkdown("This :mdEscape: [caption](example.com) should not be rendered :/mdEscape:.")).toBe("<p>This <span> [caption](example.com) should not be rendered </span>.</p>\n", "invalid span");
+                expect(printMarkdown("This :mdEscape: [caption](example.com) should not be rendered :/mdEscape:.", {inline: true})).toBe("This <span> [caption](example.com) should not be rendered </span>.", "invalid inline span");
+
+                expect(printMarkdown("JSON: :mdEscape:{\"name\": \"a valid name\"}:/mdEscape:", {inline: true})).toEqual('JSON: <span>{“name”: “a valid name”}</span>');
+            });
+
             it("should support table with classname attribute.", function () {
                 var mkString = "|heading|\n|-|\n|text|\n\n{.class-name}";
                 expect(printMarkdown(mkString)).toBe('<table class="class-name">\n<thead>\n<tr>\n<th>heading</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td>text</td>\n</tr>\n</tbody>\n</table>\n');
