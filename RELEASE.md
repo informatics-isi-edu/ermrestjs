@@ -10,6 +10,55 @@ This document is a summary of code changes in ERMRestJS. This is the vocabulary 
   - `[Annotation]`: when the describe modification is related to annotation.
   - `[No changes]`: means that ERMRestJS hasn't been changed in the described duration.
 
+
+# 1/31/24
+
+- [Improved] added the `flags` optional parameter to regular expression handlebar functions ([link](https://github.com/informatics-isi-edu/ermrestjs/commit/d6690571e767a3b2dfe1caa5a5cee02c337ed8a0))
+- [Added] support for markdown values in comment ([link](https://github.com/informatics-isi-edu/ermrestjs/pull/1000))
+- [Changed] how `.comment` API works to be similar to `.displayname` API (link above)
+- [Added] support for contextualized `comment` (link above)
+- [Fixed] the inheritance of `comment_display` from the parent catalog, schema, or table (link above)
+- [Changed] `comment`, `comment_display`, and `comment_render_markdown` can come from different levels and don't affect each other. Before, we used to only get the `comment_display` from where the `comment` was defined. But now `comment_display` can come from the column directive while the comment is derived from the table, or vice versa (link above)
+
+# 11/30/23
+
+- [Fixed] spacing issue in the full-screen-btn of iframes ([link](https://github.com/informatics-isi-edu/ermrestjs/pull/994))
+- [Improved] visible-columns and rowname heuristics ([link](https://github.com/informatics-isi-edu/ermrestjs/pull/995))
+- [Changed] how data can be accessed through `page_markdown_pattern` for consistency (link above) 
+
+# 9/30/23
+
+- [Added][Annotation] `input_iframe` property to column-directives ([link](https://github.com/informatics-isi-edu/ermrestjs/pull/988))
+- [Added][Annotation] `selector_ux_mode` property to visible-columns, foreign-ke, table-display, and display annotations ([link](https://github.com/informatics-isi-edu/ermrestjs/pull/986))
+- [Improved] default presentation of asset columns and its metadata ([link](https://github.com/informatics-isi-edu/ermrestjs/pull/985))
+- [Added][Annotation] asset related propreties to the column-defaults (link above)
+- [Added][Annotation] `data-chaise-tooltip` attribute to our markdown rendering that can be used for showing tooltips (link above)
+- [Improved][Annotation] add a new argument to the `huamnizeBytes` handlebars function to show the raw value in the tooltip (link above)
+- [Fixed] issues in parser related to search ([link](https://github.com/informatics-isi-edu/ermrestjs/commit/3268586e0ca8cead6337c5701a808e329cff72c0))
+- [Fixed] issues related to uncontextualized reference ([link](https://github.com/informatics-isi-edu/ermrestjs/commit/af9e210d6df7e79b52299767abcba67b516ba382))
+- [Fixed] avoid adding non-sortable shortest key columns to the default sort ([link](https://github.com/informatics-isi-edu/ermrestjs/commit/e0f6e9d27500b10fd2c01bcf0d72f0942e2c7ab1))
+- [Improved] allow other ways of using encodeFacet and jsonStringify handlebar helpers ([link](https://github.com/informatics-isi-edu/ermrestjs/commit/e490a86533bcf7af38327d91805bdbedba83feec))
+- [Added] `root-intall` make target ([link](https://github.com/informatics-isi-edu/ermrestjs/commit/e0f6c38043e0b2ad19aa9b0a5df12ee888891195))
+- [Improved] allow `entity`, `aggregate`, and `self_link` to be defined at the same type as `sourcekey` ([link](https://github.com/informatics-isi-edu/ermrestjs/pull/992))
+- [Improved] default visible columns heuristics regarding the display key (link above)
+
+# 7/31/23
+
+- [Added][Annotation] `humanizeBytes` handlebars function ([link](https://github.com/informatics-isi-edu/ermrestjs/pull/978))
+- [Added][Annotation] `skip_root_path` to allow export template to skip adding the root path ([link](https://github.com/informatics-isi-edu/ermrestjs/pull/980))
+- [Improved][Annotation] how export annotation handles `limit` query parameter (link above)
+
+# 5/31/23
+
+- [Improved] properly handle URL length limitation while validating facet filters ([link](https://github.com/informatics-isi-edu/ermrestjs/pull/975))
+- [Improved] how ermrest-data-utils is used for testing ([link](https://github.com/informatics-isi-edu/ermrestjs/pull/974))
+
+# 3/31/23
+
+- [Added] support for immutable, generated, and non-deletable annotations on catalog ([link](https://github.com/informatics-isi-edu/ermrestjs/commit/ab249623a19afa5e2e260a6c473c0901c80f7ca3))
+- [Added][Annotation] support for column-defaults annotation ([link](https://github.com/informatics-isi-edu/ermrestjs/pull/972))
+- [Added][Annotation] support for `image_preview` to `asset` annotation ([link](https://github.com/informatics-isi-edu/ermrestjs/pull/973))
+
 # 1/31/23
 
 - [Improved] make sure fast_filter_source is honored for urls with join ([link](https://github.com/informatics-isi-edu/ermrestjs/commit/a2a234534ca120a1308027a443c96d158fd5a130)).
