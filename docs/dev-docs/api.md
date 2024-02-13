@@ -540,6 +540,8 @@ to use for ERMrest JavaScript agents.
         * [.reference](#ERMrest.ForeignKeyPseudoColumn+reference) : [<code>Reference</code>](#ERMrest.Reference)
         * [.foreignKey](#ERMrest.ForeignKeyPseudoColumn+foreignKey) : [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)
         * [.hasDomainFilter](#ERMrest.ForeignKeyPseudoColumn+hasDomainFilter) : <code>Boolean</code>
+        * [.domainFilterUsedColumns](#ERMrest.ForeignKeyPseudoColumn+domainFilterUsedColumns) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
+        * [.domainFilterRawString](#ERMrest.ForeignKeyPseudoColumn+domainFilterRawString) : <code>string</code>
         * [.defaultValues](#ERMrest.ForeignKeyPseudoColumn+defaultValues) : <code>Object</code>
         * [.defaultReference](#ERMrest.ForeignKeyPseudoColumn+defaultReference) : <code>ERMrest.Refernece</code>
         * [.displayname](#ERMrest.ForeignKeyPseudoColumn+displayname) : <code>Object</code>
@@ -4935,6 +4937,8 @@ In other cases, the returned data will only include the scalar value.
     * [.reference](#ERMrest.ForeignKeyPseudoColumn+reference) : [<code>Reference</code>](#ERMrest.Reference)
     * [.foreignKey](#ERMrest.ForeignKeyPseudoColumn+foreignKey) : [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)
     * [.hasDomainFilter](#ERMrest.ForeignKeyPseudoColumn+hasDomainFilter) : <code>Boolean</code>
+    * [.domainFilterUsedColumns](#ERMrest.ForeignKeyPseudoColumn+domainFilterUsedColumns) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
+    * [.domainFilterRawString](#ERMrest.ForeignKeyPseudoColumn+domainFilterRawString) : <code>string</code>
     * [.defaultValues](#ERMrest.ForeignKeyPseudoColumn+defaultValues) : <code>Object</code>
     * [.defaultReference](#ERMrest.ForeignKeyPseudoColumn+defaultReference) : <code>ERMrest.Refernece</code>
     * [.displayname](#ERMrest.ForeignKeyPseudoColumn+displayname) : <code>Object</code>
@@ -4980,6 +4984,18 @@ The Foreign key object that this PseudoColumn is created based on
 
 #### foreignKeyPseudoColumn.hasDomainFilter : <code>Boolean</code>
 Whether this column has domain-filter annotation
+
+**Kind**: instance property of [<code>ForeignKeyPseudoColumn</code>](#ERMrest.ForeignKeyPseudoColumn)  
+<a name="ERMrest.ForeignKeyPseudoColumn+domainFilterUsedColumns"></a>
+
+#### foreignKeyPseudoColumn.domainFilterUsedColumns : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
+The visible columns that are used as part of the domain-filter
+
+**Kind**: instance property of [<code>ForeignKeyPseudoColumn</code>](#ERMrest.ForeignKeyPseudoColumn)  
+<a name="ERMrest.ForeignKeyPseudoColumn+domainFilterRawString"></a>
+
+#### foreignKeyPseudoColumn.domainFilterRawString : <code>string</code>
+The raw string value of the ermerst_path_pattern used in domain filter
 
 **Kind**: instance property of [<code>ForeignKeyPseudoColumn</code>](#ERMrest.ForeignKeyPseudoColumn)  
 <a name="ERMrest.ForeignKeyPseudoColumn+defaultValues"></a>
