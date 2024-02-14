@@ -58,6 +58,7 @@ In this category, you use the [`source`](#source) property to define the data so
   "markdown_name": <display name>,
   "comment": <tooltip message>,
   "comment_display": <inline|tooltip>,
+  "comment_render_markdown": <boolean>,
   "hide_column_header": <boolean>
   "display": {
       "markdown_pattern": <pattern>,
@@ -93,6 +94,7 @@ In this category, the [`sourcekey`](#sourcekey) proprety is used to refer to one
   "markdown_name": <display name>,
   "comment": <tooltip message>,
   "comment_display": <inline|tooltip>,
+  "comment_render_markdown": <boolean>,
   "hide_column_header": <boolean>
   "display": {
       "markdown_pattern": <pattern>,
@@ -370,8 +372,13 @@ This boolean works independent of the `comment` property. Which means that you c
 
 #### comment_display
 
-By default Chaise will display `comment` as a tooltip. Set this value to `inline` to show it as text or `tooltip` to show as a hover tooltip. This property is only supported for related tables in detailed context of `visible-foreign-keys` annotation, and is not honored in other annotations.
+By default Chaise will display `comment` as a tooltip. Set this value to `inline` to show it as text or `tooltip` to show as a hover tooltip.
 
+`inline` comments are only supported in the following scenarios:
+
+- `visible-foreign-keys` annotation in `detailed` context (related entities).
+- `visible-columns` annotation in `detailed` context only for inline related entities.
+- `visible-columns` annotation in `entry` contexts.
 
 #### hide_column_header
 

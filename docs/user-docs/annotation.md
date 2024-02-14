@@ -91,7 +91,7 @@ element and its nested model elements.
 Supported JSON payload patterns:
 
 - `{`... `"comment":` _comment_ || `{` _context_: _ccomment_ `}` ...`}`: The _comment_ (tooltip) to be used in place of the model element's original comment. Set this to `false` if you don't want any tooltips.
-- `{`... `"comment_display":` `{` _context_: `{` `"table_comment_display"`: _comment_display_ `,` `"column_comment_display"`: _comment_display_ `,` `"comment_render_markdown"`: _comment_render_markdown_ `}` ... `}`
+- `{`... `"comment_display":` `{` _context_: `{` `"table_comment_display"`: _comment_display_ `,` `"column_comment_display"`: _comment_display_ `,` `"comment_render_markdown"`: _comment_render_markdown_ `}` ... `}`: Change how comments are displayed. As the name suggests, `column_comment_display` is used for comments defined on the columns, and `table_comment_display` for displaying the table comments.
 - `{`... `"name":` _name_ ...`}`: The _name_ to use in place of the model element's original name.
 - `{`... `"markdown_name"`: _markdown_ `}`: The _markdown_ to use in place of the model element's original name.
 - `{`... `"name_style":` `{` `"underline_space"`: _uspace_ `,` `"title_case":` _tcase_ `,` `"markdown"`: _render_ `}` ...`}`: Element name conversion instructions.
@@ -162,11 +162,11 @@ Supported JSON _context_ patterns:
 
 #### Tag: 2015 Display Settings Hierarchy
 
-- The `"comment"` setting applies *only* to the model element which is annotated.
-- The `"_comment_render_markdown_": false` should be used if you don't want us to treat the comment as a markdown value. By default we're assuming given comments are markdown.
-- The `"table_comment_display"` and `"column_comment_display"` setting applies *only* to the model element which is annotated.
-  - Currently the contextualized `table_comment_display` is supported for `compact` context for the title and the tables in detailed context when they are part of a foreign key relationship in `visible-columns` or `visible-foreign-keys`.
-  - `column_comment_display` is accepted as a parameter, but currently doesn't do anything.
+- Comment related settings:
+  - The `"comment"` setting applies *only* to the model element which is annotated.
+  - The `"comment_render_markdown": false` should be used if you don't want us to treat the comment as a markdown value. By default we're assuming all comments are markdown.
+  - `"table_comment_display"` is only supported for `compact` context for the title and the tables in `detailed` context when they are part of a foreign key relationship in `visible-columns` or `visible-foreign-keys`.
+  - `"column_comment_display"` is only used in `entry` context.
 - The `"name"` and `"markdown_name"` setting applies *only* to the model element which is annotated. They bypass the `name_style` controls which only apply to actual model names.
   - The `"markdown_name"` setting takes precedence if both are specified.
 - The `"name_style"` setting applies to the annotated model element and is also the default for any nested element.
@@ -1308,7 +1308,7 @@ The following attributes can be used to manipulate the presentation settings of 
 - `comment`: The tooltip to be used in place of the default heuristics for the column. Set this to `false` if you don't want any tooltip.
 - `comment_render_markdown`: A boolean value that dictates whether the comment should be treated as markdown or not. If not defined, its value will be inherited from the underlying column or table (which could be inherited from the schema or the catalog. If it's not defined on any of the models, the default behavior is to treat comments as markdown).
 - `comment_display`: The display mode for the tooltip. Set to `inline` to show it as text or `tooltip` to show as a hover tooltip.
-  - Currently `comment_display` is only supported for related tables in detailed context.
+  - Currently `comment_display` is only supported for related tables in `detailed` context and `visible-columns` in `entry` context.
 - `hide_column_header`: Hide the column header (and still show the value). This is only supported in `detailed` context of `visible-columns` annotation.
 - `self-link`: If you want to show a self-link to the current row, you need to make sure the source is based on a not-null unique column of the current table and add the `"self_link": true` to the definition. Applicaple only to read-only non-filter context of `visible-columns` annotation.
 - `display`: A JSON object that describes the display settings for generating the value for this column. Please refer to [column-directive display document](column-directive-display.md) for more information. This object can have the following properties:
