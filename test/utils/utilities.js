@@ -26,6 +26,20 @@ exports.checkPageValues = function(pageData, tuples, sortBy) {
     }
 };
 
+exports.checkColumnList = function (columns, expectedColNames, message) {
+    expect(columns.map(function (col) {
+        // the name for pseudoColumns is a hash, this way of testing it is easier to read
+        if (col.isPathColumn) {
+            return col.sourceObject.source;
+        }
+        if (col.isPseudo && (col.isKey || col.isForeignKey || col.isInboundForeignKey)) {
+
+            return col._constraintName;
+        }
+        return  col.name;
+    })).toEqual(expectedColNames, message);
+}
+
 
 exports.setCatalogAcls = function (ERMrest, done, uri, catalogId, acls, cb, userCookie) {
     ermrestImport.importAcls(acls).then(function () {

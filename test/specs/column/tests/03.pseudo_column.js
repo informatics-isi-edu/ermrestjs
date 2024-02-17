@@ -1,3 +1,5 @@
+const utils = require('./../../../utils/utilities.js');
+
 /**
  * The structure of table and contexts used:
  * main -> f1 -> f2
@@ -64,8 +66,6 @@
  * 1: inbound_3 association
  * 1: inbound_3_outbound_1 (association -> fk)
  */
-
- var utils = require('./../../../utils/utilities.js');
 
 
 exports.execute = function (options) {
@@ -1321,18 +1321,7 @@ exports.execute = function (options) {
 
     function checkReferenceColumns(tesCases) {
         tesCases.forEach(function (test) {
-            var expected;
-            expect(test.ref.columns.map(function (col) {
-                // the name for pseudoColumns is a hash, this way of testing it is easier to read
-                if (col.isPathColumn) {
-                    return col.sourceObject.source;
-                }
-                if (col.isPseudo && (col.isKey || col.isForeignKey || col.isInboundForeignKey)) {
-
-                    return col._constraintName;
-                }
-                return  col.name;
-            })).toEqual(test.expected, test.message ? test.message : "checkReferenceColumns");
+            utils.checkColumnList(test.ref.columns, test.expected, test.message ? test.message : "checkReferenceColumns");
         });
     }
 

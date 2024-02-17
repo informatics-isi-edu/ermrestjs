@@ -1299,7 +1299,8 @@
                         "tag:isrd.isi.edu,2016:foreign-key": {
                             "domain_filter": {
                                 "ermrest_path_pattern": "position_type_col={{{_position_text_col}}}",
-                                "display_markdown_pattern": "**position_type_col**: {{{_position_text_col}}}"
+                                "display_markdown_pattern": "**position_type_col**: {{{_position_text_col}}}",
+                                "pattern_sources": ["position_text_col"]
                             }
                         }
                     },
@@ -1325,7 +1326,8 @@
                         "tag:isrd.isi.edu,2016:foreign-key": {
                             "domain_filter": {
                                 "ermrest_path_pattern": "fk2={{{_fk1}}}&position_col={{{_position_text_col}}}",
-                                "display_markdown_pattern": "**fk2**: {{{_fk1}}} and **position_col**:{{{_position_text_col}}}"
+                                "display_markdown_pattern": "**fk2**: {{{_fk1}}} and **position_col**:{{{_position_text_col}}}",
+                                "pattern_sources": ["position_text_col", ["columns_schema", "fk_no_constraint"], "some_invalid_column"]
                             }
                         }
                     },
@@ -1351,7 +1353,16 @@
                         "tag:isrd.isi.edu,2016:foreign-key": {
                             "domain_filter": {
                                 "ermrest_path_pattern": "fk2={{{$fkeys.columns_schema.fk_position_predefined.values._int_value}}}&position_col={{{$fkeys.columns_schema.fk_position_user_defined.values._int_value}}}&id={{{_fk1}}}",
-                                "display_markdown_pattern": "**fk2**: {{{$fkeys.columns_schema.fk_position_predefined.values._int_value}}} and **position_col**:{{{$fkeys.columns_schema.fk_position_user_defined.values._int_value}}}"
+                                "display_markdown_pattern": "**fk2**: {{{$fkeys.columns_schema.fk_position_predefined.values._int_value}}} and **position_col**:{{{$fkeys.columns_schema.fk_position_user_defined.values._int_value}}}",
+                                "pattern_sources": [
+                                    {"sourcekey": "fk2"},
+                                    {
+                                        "source": [
+                                            {"outbound": ["columns_schema", "fk_position_user_defined"]},
+                                            "RID"
+                                        ]
+                                    }
+                                ]
                             }
                         }
                     },
@@ -1439,6 +1450,18 @@
                         "position_text_col", ["columns_schema", "fk_position_user_defined"],
                         ["columns_schema", "fk_multi_constrained"], ["columns_schema", "fk_using_fkeys"]
                     ]
+                },
+                "tag:isrd.isi.edu,2019:source-definitions": {
+                    "columns": true,
+                    "fkeys": true,
+                    "sources": {
+                        "fk2": {
+                            "source": [
+                                {"outbound": ["columns_schema", "fk_position_predefined"]},
+                                "RID"
+                            ]
+                        }
+                    }
                 }
             }
         },

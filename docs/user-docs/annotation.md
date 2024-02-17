@@ -470,7 +470,7 @@ Supported _domainfilter_ syntax:
 
 Supported _columnlist_ patterns:
 
- - `[` ... _columndirective_ `,` ... `]`: The list of [columns directives](#column-directive) that are used in the pattern.
+ - `[` ... _columndirective_ `,` ... `]`: The list of [columns directives](#column-directive) that are used in the `ermrest_path_pattern`. Make sure to use the same column directive as visible columns. For example if you've used column named `fk_col` in the pattern, but the foreign key that this column is part of visible, you should include the foreign key column here (and not the `fk_col` itself).
 
 Supported _filter_ syntax:
 

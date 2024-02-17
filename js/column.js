@@ -1918,6 +1918,8 @@ Object.defineProperty(ForeignKeyPseudoColumn.prototype, "hasDomainFilter", {
             var populateDomainFilterProps = function (self) {
                 // the annotaion didn't exist
                 if (!self.foreignKey.annotations.contains(module._annotations.FOREIGN_KEY)) {
+                    self._domainFilterRawString = '';
+                    self._domainFilterUsedColumns = [];
                     return false;
                 }
 
@@ -1929,19 +1931,7 @@ Object.defineProperty(ForeignKeyPseudoColumn.prototype, "hasDomainFilter", {
 
                     var usedColumns = [];
                     if (Array.isArray(content.domain_filter.pattern_sources)) {
-                        content.domain_filter.pattern_sources.forEach(function (col) {
-                            var visCol;
-                            try {
-                                // TODO we might be more smart about this
-                                // for example if a raw column is used but the fk is visible, should we mention the fk?
-                                // TODO I should most probably move the vis-col logic somewhere so it can be called from here
-                                // that way they can use sourcekey etc...
-                                visCol = self._baseReference.getColumnByName(Array.isArray(col) ? col.join('_') : col);
-                            } catch(exp) {
-                                // fail silently
-                            }
-                            if (visCol) usedColumns.push(visCol);
-                        });
+                        usedColumns = self._baseReference.generateColumnsList(undefined, content.domain_filter.pattern_sources, true, true);
                     }
                     self._domainFilterUsedColumns = usedColumns;
 
