@@ -1,3 +1,5 @@
+const utils = require('./../../../utils/utilities.js');
+
 /**
  * All the test cases related to the ReferenceColumn object.
  */
@@ -577,7 +579,7 @@ exports.execute = function (options) {
             });
         });
 
-        describe('.filteredRef and .hasDomainFilter, ', function() {
+        describe('domain-filter related APIs, ', function() {
             var mainEntityReference, mainEntityColumns, filteredReference, mainEntityData, foreignKeyData,
                 mainEntityTableName = "main-entity-table",
                 schemaUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":";
@@ -633,6 +635,32 @@ exports.execute = function (options) {
                         expect(mainEntityColumns.map(function (col) {
                             return !!col.hasDomainFilter;
                         })).toEqual(jasmine.arrayContaining([false, false, true, true, false, true, true, true]), "fkeys elements missmatch.");
+                    });
+
+                    it ('domainFilterRawString should return the proper values.', () => {
+                        expect(mainEntityColumns.map(col => col.domainFilterRawString)).toEqual(jasmine.arrayContaining([
+                            undefined, '',
+                            'fk2={{{_fk1}}}', 'position_type_col=fixed', undefined,
+                            'position_type_col={{{_position_text_col}}}', 'fk2={{{_fk1}}}&position_col={{{_position_text_col}}}',
+                            'fk2={{{$fkeys.columns_schema.fk_position_predefined.values._int_value}}}&position_col={{{$fkeys.columns_schema.fk_position_user_defined.values._int_value}}}&id={{{_fk1}}}',
+                        ]));
+                    });
+
+                    it ('domainFilterUsedColumns should return the proper values (should be able to handle different type of columns).', () => {
+                        utils.checkColumnList(mainEntityColumns[5].domainFilterUsedColumns, ['position_text_col'], 'mainEntityColumns[5]');
+
+                        utils.checkColumnList(
+                            mainEntityColumns[6].domainFilterUsedColumns,
+                            ['position_text_col', 'columns_schema_fk_no_constraint'],
+                            'mainEntityColumns[6]'
+                        );
+
+                        utils.checkColumnList(
+                            mainEntityColumns[7].domainFilterUsedColumns,
+                            ["columns_schema_fk_position_predefined", "columns_schema_fk_position_user_defined"],
+                            'mainEntityColumns[7]'
+                        );
+                        // mainEntityColumns
                     });
 
                     describe('should return a filtered reference based on provided data.', function () {

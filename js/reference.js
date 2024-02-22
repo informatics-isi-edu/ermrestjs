@@ -3186,15 +3186,15 @@
          *      we should hide the foreign key (and all of its columns) that created the link.
          *
          * @param  {ERMrest.Tuple} tuple the data for the current refe
+         * @param  {Object[]} columnsList if passed, we will skip the annotation and heuristics and use this list instead.
+         * @param  {boolean?} dontChangeReference whether we should mutate the reference or just return the generated list.
+         * @param  {boolean?} skipLog whether we should skip logging the warning messages
          * @return {ERMrest.ReferenceColumn[]}  Array of {@link ERMrest.ReferenceColumn}.
          */
-        generateColumnsList: function(tuple) {
-
-            this._referenceColumns = [];
+        generateColumnsList: function(tuple, columnsList, dontChangeReference, skipLog) {
+            var resultColumns = [];
 
             var self = this;
-
-
             var columns = -1,
                 consideredColumns = {}, // to avoid duplicate pseudo columns
                 tableColumns = {}, // to make sure the hashes we genereate are not clashing with table column names
@@ -3230,7 +3230,7 @@
             var _addAssetColumn = function (col, sourceObjectWrapper, name, heuristics) {
                 var assetCol = new AssetPseudoColumn(self, col, sourceObjectWrapper, name, tuple);
                 assetColumns.push(assetCol);
-                self._referenceColumns.push(assetCol);
+                resultColumns.push(assetCol);
 
                 // as part of heuristics we only want the asset be added and not the column,
                 // so adding it to considered ones to avoid adding it again.
@@ -3271,14 +3271,16 @@
                 }
 
                 // add it as a reference column
-                self._referenceColumns.push(new ReferenceColumn(self, [col], sourceObjectWrapper, name, tuple));
+                resultColumns.push(new ReferenceColumn(self, [col], sourceObjectWrapper, name, tuple));
             };
 
             // make sure generated hash is not the name of any columns in the table
             var nameExistsInTable = function (name, obj) {
                 if (name in tableColumns) {
-                    module._log.info("Generated Hash `" + name + "` for pseudo-column exists in table `" + self.table.name +"`.");
-                    module._log.info("Ignoring the following in visible-columns: ", obj);
+                    if (!skipLog) {
+                        module._log.info("Generated Hash `" + name + "` for pseudo-column exists in table `" + self.table.name +"`.");
+                        module._log.info("Ignoring the following in visible-columns: ", obj);
+                    }
                     return true;
                 }
                 return false;
@@ -3287,7 +3289,7 @@
             var pf = module._printf;
             var wm = module._warningMessages;
             var logCol = function (bool, message, i) {
-                if (bool) {
+                if (bool && !skipLog) {
                     module._log.info("columns list for table: " + self.table.name + ", context: " + context + ", column index:" + i);
                     module._log.info(message);
                 }
@@ -3299,8 +3301,12 @@
                 tableColumns[c.name] = true;
             });
 
+            // get columns from the input (used when we just want to process the given list of columns)
+            if (Array.isArray(columnsList)) {
+                columns = columnsList;
+            }
             // get column orders from annotation
-            if (this._table.annotations.contains(module._annotations.VISIBLE_COLUMNS)) {
+            else if (this._table.annotations.contains(module._annotations.VISIBLE_COLUMNS)) {
                 columns = module._getRecursiveAnnotationValue(this._context, this._table.annotations.get(module._annotations.VISIBLE_COLUMNS).content);
             }
 
@@ -3323,7 +3329,7 @@
                                             // avoid duplicate and same name in database
                                             if (!logCol((fkName in consideredColumns), wm.DUPLICATE_FK, i) && !nameExistsInTable(fkName, col)) {
                                                 consideredColumns[fkName] = true;
-                                                this._referenceColumns.push(new ForeignKeyPseudoColumn(this, fk));
+                                                resultColumns.push(new ForeignKeyPseudoColumn(this, fk));
                                             }
                                         }
                                         // inbound foreignkey
@@ -3332,7 +3338,7 @@
                                             fkName = _sourceColumnHelpers.generateForeignKeyName(fk, true);
                                             if (!logCol(fkName in consideredColumns, wm.DUPLICATE_FK, i) && !logCol(context !== module._contexts.DETAILED && context.indexOf(module._contexts.EXPORT) == -1, wm.NO_INBOUND_IN_NON_DETAILED, i) && !nameExistsInTable(fkName, col)) {
                                                 consideredColumns[fkName] = true;
-                                                this._referenceColumns.push(new InboundForeignKeyPseudoColumn(this, this._generateRelatedReference(fk, tuple, true), null, fkName));
+                                                resultColumns.push(new InboundForeignKeyPseudoColumn(this, this._generateRelatedReference(fk, tuple, true), null, fkName));
                                             }
                                         } else {
                                             logCol(true, wm.FK_NOT_RELATED, i);
@@ -3355,7 +3361,7 @@
                                                 }
                                             }
                                         } else {
-                                            this._referenceColumns.push(new KeyPseudoColumn(this, fk));
+                                            resultColumns.push(new KeyPseudoColumn(this, fk));
                                         }
                                     }
                                     break;
@@ -3382,7 +3388,7 @@
                                     pseudoName += "-" + extra;
                                 }
                                 virtualColumnNames[pseudoName] = true;
-                                this._referenceColumns.push(new VirtualColumn(this, new SourceObjectWrapper(col), pseudoName, tuple));
+                                resultColumns.push(new VirtualColumn(this, new SourceObjectWrapper(col), pseudoName, tuple));
                             }
                             continue;
                         }
@@ -3474,7 +3480,7 @@
 
                                 // in entry mode, pseudo-column, inbound fk, and key are not allowed
                                 if (!removePseudo) {
-                                    this._referenceColumns.push(refCol);
+                                    resultColumns.push(refCol);
                                 }
                             }
                         }
@@ -3524,7 +3530,7 @@
                     });
 
                     if (ridKey) {
-                        this._referenceColumns.push(new KeyPseudoColumn(this, ridKey));
+                        resultColumns.push(new KeyPseudoColumn(this, ridKey));
                         consideredColumns[ridKey.colset.columns[0].name] = true;
                     }
                 }
@@ -3553,7 +3559,7 @@
                             }
                             // otherwise just add the key pseudo-column
                             else {
-                                this._referenceColumns.push(new KeyPseudoColumn(this, key));
+                                resultColumns.push(new KeyPseudoColumn(this, key));
                             }
                         }
                     }
@@ -3633,7 +3639,7 @@
                             if (fk.simple) { // simple FKR
                                 if (!(fkName in consideredColumns) && !nameExistsInTable(fkName, fk._constraintName)) {
                                     consideredColumns[fkName] = true;
-                                    this._referenceColumns.push(new ForeignKeyPseudoColumn(this, fk));
+                                    resultColumns.push(new ForeignKeyPseudoColumn(this, fk));
                                 }
                             } else { // composite FKR
 
@@ -3658,7 +3664,7 @@
 
                 // append composite FKRs
                 for (i = 0; i < compositeFKs.length; i++) {
-                    this._referenceColumns.push(compositeFKs[i]);
+                    resultColumns.push(compositeFKs[i]);
                 }
 
             }
@@ -3667,8 +3673,8 @@
             if (!isEntry) {
 
                 // Iterate over all reference columns
-                for (i = 0; i < this._referenceColumns.length; i++) {
-                    refCol = this._referenceColumns[i];
+                for (i = 0; i < resultColumns.length; i++) {
+                    refCol = resultColumns[i];
                     var isHidden = false;
 
                     // Iterate over the base columns. If any of them are hidden then hide the column
@@ -3681,13 +3687,16 @@
 
                     // If isHidden flag is true then remove the column at ith index
                     if (isHidden) {
-                        this._referenceColumns.splice(i, 1);
+                        resultColumns.splice(i, 1);
                         i--;
                     }
                 }
             }
 
-            return this._referenceColumns;
+            if (!dontChangeReference) {
+                this._referenceColumns = resultColumns;
+            }
+            return resultColumns;
         },
 
         /**

@@ -449,7 +449,7 @@ to use for ERMrest JavaScript agents.
         * [.getAggregates(aggregateList)](#ERMrest.Reference+getAggregates) ⇒ <code>Promise</code>
         * [.setSamePaging(page)](#ERMrest.Reference+setSamePaging) ⇒ [<code>Reference</code>](#ERMrest.Reference)
         * [.getColumnByName(name)](#ERMrest.Reference+getColumnByName) ⇒ [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)
-        * [.generateColumnsList(tuple)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
+        * [.generateColumnsList(tuple, columnsList, dontChangeReference, skipLog)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
         * [.generateActiveList([tuple])](#ERMrest.Reference+generateActiveList) ⇒ <code>Object</code>
         * [._getReadPath(useEntity, getTRS, getTCRS, getUnlinkTRS)](#ERMrest.Reference+_getReadPath) : <code>Object</code>
             * [~processSortObject()](#ERMrest.Reference+_getReadPath..processSortObject)
@@ -540,6 +540,8 @@ to use for ERMrest JavaScript agents.
         * [.reference](#ERMrest.ForeignKeyPseudoColumn+reference) : [<code>Reference</code>](#ERMrest.Reference)
         * [.foreignKey](#ERMrest.ForeignKeyPseudoColumn+foreignKey) : [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)
         * [.hasDomainFilter](#ERMrest.ForeignKeyPseudoColumn+hasDomainFilter) : <code>Boolean</code>
+        * [.domainFilterUsedColumns](#ERMrest.ForeignKeyPseudoColumn+domainFilterUsedColumns) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
+        * [.domainFilterRawString](#ERMrest.ForeignKeyPseudoColumn+domainFilterRawString) : <code>string</code>
         * [.defaultValues](#ERMrest.ForeignKeyPseudoColumn+defaultValues) : <code>Object</code>
         * [.defaultReference](#ERMrest.ForeignKeyPseudoColumn+defaultReference) : <code>ERMrest.Refernece</code>
         * [.displayname](#ERMrest.ForeignKeyPseudoColumn+displayname) : <code>Object</code>
@@ -781,7 +783,7 @@ to use for ERMrest JavaScript agents.
         * [.getAggregates(aggregateList)](#ERMrest.Reference+getAggregates) ⇒ <code>Promise</code>
         * [.setSamePaging(page)](#ERMrest.Reference+setSamePaging) ⇒ [<code>Reference</code>](#ERMrest.Reference)
         * [.getColumnByName(name)](#ERMrest.Reference+getColumnByName) ⇒ [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)
-        * [.generateColumnsList(tuple)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
+        * [.generateColumnsList(tuple, columnsList, dontChangeReference, skipLog)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
         * [.generateActiveList([tuple])](#ERMrest.Reference+generateActiveList) ⇒ <code>Object</code>
         * [._getReadPath(useEntity, getTRS, getTCRS, getUnlinkTRS)](#ERMrest.Reference+_getReadPath) : <code>Object</code>
             * [~processSortObject()](#ERMrest.Reference+_getReadPath..processSortObject)
@@ -3196,7 +3198,7 @@ Constructor for a ParsedFilter.
     * [.getAggregates(aggregateList)](#ERMrest.Reference+getAggregates) ⇒ <code>Promise</code>
     * [.setSamePaging(page)](#ERMrest.Reference+setSamePaging) ⇒ [<code>Reference</code>](#ERMrest.Reference)
     * [.getColumnByName(name)](#ERMrest.Reference+getColumnByName) ⇒ [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)
-    * [.generateColumnsList(tuple)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
+    * [.generateColumnsList(tuple, columnsList, dontChangeReference, skipLog)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
     * [.generateActiveList([tuple])](#ERMrest.Reference+generateActiveList) ⇒ <code>Object</code>
     * [._getReadPath(useEntity, getTRS, getTCRS, getUnlinkTRS)](#ERMrest.Reference+_getReadPath) : <code>Object</code>
         * [~processSortObject()](#ERMrest.Reference+_getReadPath..processSortObject)
@@ -3908,7 +3910,7 @@ Will throw an error if
 
 <a name="ERMrest.Reference+generateColumnsList"></a>
 
-#### reference.generateColumnsList(tuple) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
+#### reference.generateColumnsList(tuple, columnsList, dontChangeReference, skipLog) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
 Generates the list of visible columns
 The logic is as follows:
 
@@ -3961,6 +3963,9 @@ NOTE:
 | Param | Type | Description |
 | --- | --- | --- |
 | tuple | [<code>Tuple</code>](#ERMrest.Tuple) | the data for the current refe |
+| columnsList | <code>Array.&lt;Object&gt;</code> | if passed, we will skip the annotation and heuristics and use this list instead. |
+| dontChangeReference | <code>boolean</code> | whether we should mutate the reference or just return the generated list. |
+| skipLog | <code>boolean</code> | whether we should skip logging the warning messages |
 
 <a name="ERMrest.Reference+generateActiveList"></a>
 
@@ -4935,6 +4940,8 @@ In other cases, the returned data will only include the scalar value.
     * [.reference](#ERMrest.ForeignKeyPseudoColumn+reference) : [<code>Reference</code>](#ERMrest.Reference)
     * [.foreignKey](#ERMrest.ForeignKeyPseudoColumn+foreignKey) : [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)
     * [.hasDomainFilter](#ERMrest.ForeignKeyPseudoColumn+hasDomainFilter) : <code>Boolean</code>
+    * [.domainFilterUsedColumns](#ERMrest.ForeignKeyPseudoColumn+domainFilterUsedColumns) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
+    * [.domainFilterRawString](#ERMrest.ForeignKeyPseudoColumn+domainFilterRawString) : <code>string</code>
     * [.defaultValues](#ERMrest.ForeignKeyPseudoColumn+defaultValues) : <code>Object</code>
     * [.defaultReference](#ERMrest.ForeignKeyPseudoColumn+defaultReference) : <code>ERMrest.Refernece</code>
     * [.displayname](#ERMrest.ForeignKeyPseudoColumn+displayname) : <code>Object</code>
@@ -4980,6 +4987,18 @@ The Foreign key object that this PseudoColumn is created based on
 
 #### foreignKeyPseudoColumn.hasDomainFilter : <code>Boolean</code>
 Whether this column has domain-filter annotation
+
+**Kind**: instance property of [<code>ForeignKeyPseudoColumn</code>](#ERMrest.ForeignKeyPseudoColumn)  
+<a name="ERMrest.ForeignKeyPseudoColumn+domainFilterUsedColumns"></a>
+
+#### foreignKeyPseudoColumn.domainFilterUsedColumns : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
+The visible columns that are used as part of the domain-filter
+
+**Kind**: instance property of [<code>ForeignKeyPseudoColumn</code>](#ERMrest.ForeignKeyPseudoColumn)  
+<a name="ERMrest.ForeignKeyPseudoColumn+domainFilterRawString"></a>
+
+#### foreignKeyPseudoColumn.domainFilterRawString : <code>string</code>
+The raw string value of the ermerst_path_pattern used in domain filter
 
 **Kind**: instance property of [<code>ForeignKeyPseudoColumn</code>](#ERMrest.ForeignKeyPseudoColumn)  
 <a name="ERMrest.ForeignKeyPseudoColumn+defaultValues"></a>
@@ -7030,7 +7049,7 @@ get PathColumn object by column name
     * [.getAggregates(aggregateList)](#ERMrest.Reference+getAggregates) ⇒ <code>Promise</code>
     * [.setSamePaging(page)](#ERMrest.Reference+setSamePaging) ⇒ [<code>Reference</code>](#ERMrest.Reference)
     * [.getColumnByName(name)](#ERMrest.Reference+getColumnByName) ⇒ [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)
-    * [.generateColumnsList(tuple)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
+    * [.generateColumnsList(tuple, columnsList, dontChangeReference, skipLog)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
     * [.generateActiveList([tuple])](#ERMrest.Reference+generateActiveList) ⇒ <code>Object</code>
     * [._getReadPath(useEntity, getTRS, getTCRS, getUnlinkTRS)](#ERMrest.Reference+_getReadPath) : <code>Object</code>
         * [~processSortObject()](#ERMrest.Reference+_getReadPath..processSortObject)
@@ -7742,7 +7761,7 @@ Will throw an error if
 
 <a name="ERMrest.Reference+generateColumnsList"></a>
 
-#### reference.generateColumnsList(tuple) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
+#### reference.generateColumnsList(tuple, columnsList, dontChangeReference, skipLog) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
 Generates the list of visible columns
 The logic is as follows:
 
@@ -7795,6 +7814,9 @@ NOTE:
 | Param | Type | Description |
 | --- | --- | --- |
 | tuple | [<code>Tuple</code>](#ERMrest.Tuple) | the data for the current refe |
+| columnsList | <code>Array.&lt;Object&gt;</code> | if passed, we will skip the annotation and heuristics and use this list instead. |
+| dontChangeReference | <code>boolean</code> | whether we should mutate the reference or just return the generated list. |
+| skipLog | <code>boolean</code> | whether we should skip logging the warning messages |
 
 <a name="ERMrest.Reference+generateActiveList"></a>
 

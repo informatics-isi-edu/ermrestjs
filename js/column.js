@@ -1915,9 +1915,11 @@ ForeignKeyPseudoColumn.prototype._determineSortable = function () {
 Object.defineProperty(ForeignKeyPseudoColumn.prototype, "hasDomainFilter", {
     get: function () {
         if (this._hasDomainFilter === undefined) {
-            var checkDomainFilter = function (self) {
+            var populateDomainFilterProps = function (self) {
                 // the annotaion didn't exist
                 if (!self.foreignKey.annotations.contains(module._annotations.FOREIGN_KEY)) {
+                    self._domainFilterRawString = '';
+                    self._domainFilterUsedColumns = [];
                     return false;
                 }
 
@@ -1925,21 +1927,62 @@ Object.defineProperty(ForeignKeyPseudoColumn.prototype, "hasDomainFilter", {
 
                 // the annotation is properly defined
                 if (isObjectAndNotNull(content.domain_filter) && isStringAndNotEmpty(content.domain_filter.ermrest_path_pattern)) {
+                    self._domainFilterRawString = content.domain_filter.ermrest_path_pattern;
+
+                    var usedColumns = [];
+                    if (Array.isArray(content.domain_filter.pattern_sources)) {
+                        usedColumns = self._baseReference.generateColumnsList(undefined, content.domain_filter.pattern_sources, true, true);
+                    }
+                    self._domainFilterUsedColumns = usedColumns;
+
                     return true;
                 }
                 // backward compatibility
                 else if (typeof content.domain_filter_pattern === "string") {
+                    self._domainFilterRawString = content.domain_filter_pattern;
+                    self._domainFilterUsedColumns = [];
                     return true;
                 }
 
+                self._domainFilterRawString = '';
+                self._domainFilterUsedColumns = [];
                 return false;
             };
 
-            this._hasDomainFilter = checkDomainFilter(this);
+            this._hasDomainFilter = populateDomainFilterProps(this);
         }
         return this._hasDomainFilter;
     }
 });
+/**
+ * The visible columns that are used as part of the domain-filter
+ * @member {ERMrest.ReferenceColumn[]} domainFilterUsedColumns
+ * @memberof ERMrest.ForeignKeyPseudoColumn#
+ */
+Object.defineProperty(ForeignKeyPseudoColumn.prototype, 'domainFilterUsedColumns', {
+    get: function () {
+        if (this._domainFilterUsedColumns === undefined) {
+            // this will popuplate _domainFilterUsedColumns too
+            var temp = this.hasDomainFilter;
+        }
+        return this._domainFilterUsedColumns;
+    }
+});
+/**
+ * The raw string value of the ermerst_path_pattern used in domain filter
+ * @member {string} domainFilterRawString
+ * @memberof ERMrest.ForeignKeyPseudoColumn#
+ */
+Object.defineProperty(ForeignKeyPseudoColumn.prototype, 'domainFilterRawString', {
+    get: function () {
+        if (this._domainFilterRawString === undefined) {
+            // this will popuplate _domainFilterRawString too
+            var temp = this.hasDomainFilter;
+        }
+        return this._domainFilterRawString;
+    }
+});
+
 
 /**
  * returns the raw default values of the constituent columns.

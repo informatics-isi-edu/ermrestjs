@@ -463,8 +463,14 @@ Supported _columnorder_key_ syntax:
 
 Supported _domainfilter_ syntax:
 - `{ "ermrest_path_pattern":` _pathpattern_ `}`: The _pathpattern_ yields a _filter_ via [Pattern Expansion](#pattern-expansion). With this syntax, the applied filter will be hidden from the user.
+- `{ "ermrest_path_pattern":` _pathpattern_ `, "pattern_sources":` _columnlist_ `}`: The added `pattern_sources` allows the client to proceed more meaningful errors to users.
 - `{ "ermrest_path_pattern":` _pathpattern_ `, "display_markdown_pattern":` _displaypattern_ `}`: The _pathpattern_ yields a _filter_ via [Pattern Expansion](#pattern-expansion). _displaypattern_ will provide the visual presentation of the filter which will be computed by performing [Pattern Expansion](#pattern-expansion) to obtain a markdown-formatted text value which MAY be rendered using a markdown-aware renderer.
   - If the computed _filter_ is an empty string, the _domain_filter_ will be ignored, and the client behaves as if this annotation is not even defined. Therefore, while rendering the list of allowed foreign key rows in recordedit, users will see the whole list.
+- `{ "ermrest_path_pattern":` _pathpattern_ `, "display_markdown_pattern":` _displaypattern_ `, "pattern_sources":` _columnlist_ `}`:  The added `pattern_sources` allows the client to proceed more meaningful errors to users.
+
+Supported _columnlist_ patterns:
+
+ - `[` ... _columndirective_ `,` ... `]`: The list of [columns directives](#column-directive) that are used in the `ermrest_path_pattern`. Make sure to use the same column directive as visible columns. For example if you've used column named `fk_col` in the pattern, but the foreign key that this column is part of visible, you should include the foreign key column here (and not the `fk_col` itself).
 
 Supported _filter_ syntax:
 
