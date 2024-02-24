@@ -330,6 +330,7 @@ to use for ERMrest JavaScript agents.
         * [.ignore](#ERMrest.ForeignKeyRef+ignore) : <code>boolean</code>
         * [.annotations](#ERMrest.ForeignKeyRef+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
         * ~~[.comment](#ERMrest.ForeignKeyRef+comment) : <code>Object</code>~~
+        * [.onDeleteCascade](#ERMrest.ForeignKeyRef+onDeleteCascade) : <code>boolean</code>
         * [.compressedDataSource](#ERMrest.ForeignKeyRef+compressedDataSource)
         * [.name](#ERMrest.ForeignKeyRef+name) : <code>string</code>
         * [.simple](#ERMrest.ForeignKeyRef+simple) : <code>Boolean</code>
@@ -432,6 +433,7 @@ to use for ERMrest JavaScript agents.
         * [.defaultExportTemplate](#ERMrest.Reference+defaultExportTemplate) : <code>string</code>
         * [.citation](#ERMrest.Reference+citation) : <code>ERMrest.Citation</code>
         * [.googleDatasetMetadata](#ERMrest.Reference+googleDatasetMetadata) : <code>ERMrest.GoogleDatasetMetadata</code>
+        * [.cascadingDeletedItems](#ERMrest.Reference+cascadingDeletedItems) : <code>Array.&lt;Object&gt;</code>
         * [.generateFacetColumns()](#ERMrest.Reference+generateFacetColumns)
         * [.validateFacetsFilters(facetAndFilters, facetObjectWrappers, searchTerm, skipMappingEntityChoices, changeLocation)](#ERMrest.Reference+validateFacetsFilters)
         * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
@@ -766,6 +768,7 @@ to use for ERMrest JavaScript agents.
         * [.defaultExportTemplate](#ERMrest.Reference+defaultExportTemplate) : <code>string</code>
         * [.citation](#ERMrest.Reference+citation) : <code>ERMrest.Citation</code>
         * [.googleDatasetMetadata](#ERMrest.Reference+googleDatasetMetadata) : <code>ERMrest.GoogleDatasetMetadata</code>
+        * [.cascadingDeletedItems](#ERMrest.Reference+cascadingDeletedItems) : <code>Array.&lt;Object&gt;</code>
         * [.generateFacetColumns()](#ERMrest.Reference+generateFacetColumns)
         * [.validateFacetsFilters(facetAndFilters, facetObjectWrappers, searchTerm, skipMappingEntityChoices, changeLocation)](#ERMrest.Reference+validateFacetsFilters)
         * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
@@ -2557,6 +2560,7 @@ get the foreign key of the given column set
     * [.ignore](#ERMrest.ForeignKeyRef+ignore) : <code>boolean</code>
     * [.annotations](#ERMrest.ForeignKeyRef+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
     * ~~[.comment](#ERMrest.ForeignKeyRef+comment) : <code>Object</code>~~
+    * [.onDeleteCascade](#ERMrest.ForeignKeyRef+onDeleteCascade) : <code>boolean</code>
     * [.compressedDataSource](#ERMrest.ForeignKeyRef+compressedDataSource)
     * [.name](#ERMrest.ForeignKeyRef+name) : <code>string</code>
     * [.simple](#ERMrest.ForeignKeyRef+simple) : <code>Boolean</code>
@@ -2626,6 +2630,12 @@ The constraint names for this foreign key
 ***Deprecated***
 
 Documentation for this foreign key reference
+
+**Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
+<a name="ERMrest.ForeignKeyRef+onDeleteCascade"></a>
+
+#### foreignKeyRef.onDeleteCascade : <code>boolean</code>
+whether the "on delete cascade" is set for this foreign key.
 
 **Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
 <a name="ERMrest.ForeignKeyRef+compressedDataSource"></a>
@@ -3181,6 +3191,7 @@ Constructor for a ParsedFilter.
     * [.defaultExportTemplate](#ERMrest.Reference+defaultExportTemplate) : <code>string</code>
     * [.citation](#ERMrest.Reference+citation) : <code>ERMrest.Citation</code>
     * [.googleDatasetMetadata](#ERMrest.Reference+googleDatasetMetadata) : <code>ERMrest.GoogleDatasetMetadata</code>
+    * [.cascadingDeletedItems](#ERMrest.Reference+cascadingDeletedItems) : <code>Array.&lt;Object&gt;</code>
     * [.generateFacetColumns()](#ERMrest.Reference+generateFacetColumns)
     * [.validateFacetsFilters(facetAndFilters, facetObjectWrappers, searchTerm, skipMappingEntityChoices, changeLocation)](#ERMrest.Reference+validateFacetsFilters)
     * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
@@ -3564,6 +3575,12 @@ In the future we might also want to generate citation based on page and not nece
 #### reference.googleDatasetMetadata : <code>ERMrest.GoogleDatasetMetadata</code>
 If annotation is defined and has the required attributes, will return
 a Metadata object
+
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+cascadingDeletedItems"></a>
+
+#### reference.cascadingDeletedItems : <code>Array.&lt;Object&gt;</code>
+The related reference or tables that might be deleted as a result of deleting the current table.
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+generateFacetColumns"></a>
@@ -7032,6 +7049,7 @@ get PathColumn object by column name
     * [.defaultExportTemplate](#ERMrest.Reference+defaultExportTemplate) : <code>string</code>
     * [.citation](#ERMrest.Reference+citation) : <code>ERMrest.Citation</code>
     * [.googleDatasetMetadata](#ERMrest.Reference+googleDatasetMetadata) : <code>ERMrest.GoogleDatasetMetadata</code>
+    * [.cascadingDeletedItems](#ERMrest.Reference+cascadingDeletedItems) : <code>Array.&lt;Object&gt;</code>
     * [.generateFacetColumns()](#ERMrest.Reference+generateFacetColumns)
     * [.validateFacetsFilters(facetAndFilters, facetObjectWrappers, searchTerm, skipMappingEntityChoices, changeLocation)](#ERMrest.Reference+validateFacetsFilters)
     * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
@@ -7415,6 +7433,12 @@ In the future we might also want to generate citation based on page and not nece
 #### reference.googleDatasetMetadata : <code>ERMrest.GoogleDatasetMetadata</code>
 If annotation is defined and has the required attributes, will return
 a Metadata object
+
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+cascadingDeletedItems"></a>
+
+#### reference.cascadingDeletedItems : <code>Array.&lt;Object&gt;</code>
+The related reference or tables that might be deleted as a result of deleting the current table.
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+generateFacetColumns"></a>
