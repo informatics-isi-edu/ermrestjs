@@ -411,6 +411,11 @@
         "alias": "a",
         "inbound": "i",
         "outbound": "o",
+        'remote_schema': 'r_s',
+        'remote_table': 'r_t',
+        'remote_columns': 'r_c',
+        'local_columns': 'l_c',
+        'local_to_remote_columns': 'n_to_f_c',
         "source": "src",
         "sourcekey": "key",
         "choices": "ch",
@@ -433,7 +438,14 @@
         OR: "or",
         OPERATOR: "operator",
         OPERAND_PATTERN: "operand_pattern",
-        NEGATE: "negate"
+        NEGATE: "negate",
+        LOCAL_SCHEMA: 'local_schema',
+        LOCAL_TABLE: 'local_table',
+        REMOTE_SCHEMA: 'remote_schema',
+        REMOTE_TABLE: 'remote_table',
+        LOCAL_COLUMNS: 'local_columns',
+        REMOTE_COLUMNS: 'remote_columns',
+        LOCAL_TO_REMOTE_COLUMNS: 'local_to_remote_columns'
     });
 
     module._exportKnownAPIs = ['entity','attribute', 'attributegroup', 'aggregate'];

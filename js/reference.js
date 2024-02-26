@@ -4901,6 +4901,7 @@
                     // facetColumns is applying extra logic for alternative, and it only
                     // makes sense in the context of facetColumns list. not here.
                     // Therefore we should go based on the facets on the location object, not facetColumns.
+                    // TODO should be modified to support the alternative syntaxes
                     var modifyFacetFilters = function (funct) {
                         currentFacets.forEach(function (f) {
                             if (!f.source) return;

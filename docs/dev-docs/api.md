@@ -197,6 +197,9 @@ to use for ERMrest JavaScript agents.
             * [.pureBinaryForeignKeys](#ERMrest.Table+pureBinaryForeignKeys) : [<code>Array.&lt;ForeignKeyRef&gt;</code>](#ERMrest.ForeignKeyRef)
             * [._getRowDisplayKey(context)](#ERMrest.Table+_getRowDisplayKey)
             * [._getNullValue()](#ERMrest.Table+_getNullValue) : <code>object</code>
+            * [._findForeignKeyByRemoteColumns(remoteTable, remoteColumnNames, nameMapping)](#ERMrest.Table+_findForeignKeyByRemoteColumns)
+                * [~matchFk()](#ERMrest.Table+_findForeignKeyByRemoteColumns..matchFk)
+            * [.findForeignKey()](#ERMrest.Table+findForeignKey)
             * [._assignAssetCategories()](#ERMrest.Table+_assignAssetCategories)
         * _static_
             * [.Entity](#ERMrest.Table.Entity)
@@ -1281,6 +1284,9 @@ check for table name existence
         * [.pureBinaryForeignKeys](#ERMrest.Table+pureBinaryForeignKeys) : [<code>Array.&lt;ForeignKeyRef&gt;</code>](#ERMrest.ForeignKeyRef)
         * [._getRowDisplayKey(context)](#ERMrest.Table+_getRowDisplayKey)
         * [._getNullValue()](#ERMrest.Table+_getNullValue) : <code>object</code>
+        * [._findForeignKeyByRemoteColumns(remoteTable, remoteColumnNames, nameMapping)](#ERMrest.Table+_findForeignKeyByRemoteColumns)
+            * [~matchFk()](#ERMrest.Table+_findForeignKeyByRemoteColumns..matchFk)
+        * [.findForeignKey()](#ERMrest.Table+findForeignKey)
         * [._assignAssetCategories()](#ERMrest.Table+_assignAssetCategories)
     * _static_
         * [.Entity](#ERMrest.Table.Entity)
@@ -1498,6 +1504,37 @@ sort the "well formed" keys that are not simple fk based on the following and re
 #### table.\_getNullValue() : <code>object</code>
 return the null value that should be shown for the columns under
 this table for the given context.
+
+**Kind**: instance method of [<code>Table</code>](#ERMrest.Table)  
+<a name="ERMrest.Table+_findForeignKeyByRemoteColumns"></a>
+
+#### table.\_findForeignKeyByRemoteColumns(remoteTable, remoteColumnNames, nameMapping)
+return the fk that is related to the remote table and column names (it could be inbound or outbound)
+
+**Kind**: instance method of [<code>Table</code>](#ERMrest.Table)  
+
+| Param | Type |
+| --- | --- |
+| remoteTable | <code>string</code> | 
+| remoteColumnNames | <code>Array.&lt;string&gt;</code> | 
+| nameMapping | <code>Object</code> | 
+
+<a name="ERMrest.Table+_findForeignKeyByRemoteColumns..matchFk"></a>
+
+##### _findForeignKeyByRemoteColumns~matchFk()
+inbound: from = remote, to = local
+outbound: from = local, to = remote
+
+**Kind**: inner method of [<code>\_findForeignKeyByRemoteColumns</code>](#ERMrest.Table+_findForeignKeyByRemoteColumns)  
+<a name="ERMrest.Table+findForeignKey"></a>
+
+#### table.findForeignKey()
+find the foreignkey that is part of this table, or has a path to it.
+
+{ "remote_schema": "s2", "remote_table": "t2", "local_to_remote_columns": { "x": "a", "y": "b", ... }
+{ "remote_schema": "s2", "remote_table": "t2", "remote_columns": [ "a", "b" ]}
+
+{"local_columns": ["x", "y", ...]}
 
 **Kind**: instance method of [<code>Table</code>](#ERMrest.Table)  
 <a name="ERMrest.Table+_assignAssetCategories"></a>

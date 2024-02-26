@@ -119,6 +119,26 @@ exports.execute = function (options) {
                             isEntityMode: true,
                             isFiltered: false
                         },
+                        "fk1_col_entity_column_mapping": {
+                            name: "DfGbmoqMIfSqDHRJasrtnQ",
+                            columnName: "RID",
+                            tableName: "main",
+                            isHash: true,
+                            hasPath: true,
+                            hasInbound: false,
+                            isEntityMode: true,
+                            isFiltered: false
+                        },
+                        "fk1_col_entity_remote_columns": {
+                            name: "DfGbmoqMIfSqDHRJasrtnQ",
+                            columnName: "RID",
+                            tableName: "main",
+                            isHash: true,
+                            hasPath: true,
+                            hasInbound: false,
+                            isEntityMode: true,
+                            isFiltered: false
+                        },
                         "fk1_col_scalar": {
                             name: "KAR6cMQDIO5pmnfhz5d4fw",
                             columnName: "RID",
@@ -444,7 +464,7 @@ exports.execute = function (options) {
                             foreignKeyPathLength: 3,
                             isFiltered: true
                         }
-                        
+
                     };
                     for (var key in expectedSources) {
                         if (!(expectedSources.hasOwnProperty(key))) continue;
@@ -468,7 +488,10 @@ exports.execute = function (options) {
                     var expectedSourceMapping = {
                         "col": ["new_col", "new_col_2"],
                         "KAR6cMQDIO5pmnfhz5d4fw": ["fk1_col_scalar", "fk1_col_scalar_duplicate"],
-                        "DfGbmoqMIfSqDHRJasrtnQ": ["fk1_col_entity", "fk1_col_entity_duplicate"],
+                        "DfGbmoqMIfSqDHRJasrtnQ": [
+                            "fk1_col_entity", "fk1_col_entity_column_mapping",
+                            "fk1_col_entity_remote_columns", "fk1_col_entity_duplicate",
+                        ],
                         "TCvUzQfnU6gwYiBVTtE7jQ": ["all_outbound_col"],
                         "gYt7pa2yjoSRQ4pgF9KEWQ": ["inbound1_col", "inbound1_col_2"],
                         "hVBgA7x0-AB8fNuiQ0uGYA": ["agg1_cnt"],
@@ -596,7 +619,7 @@ exports.execute = function (options) {
                                     ]
                                 );
                             });
-    
+
                             it ("should handle sources with path prefix that just change end column", function () {
                                 testSourceWrapperAPIs(
                                     tableMainSources["path_to_outbound2_outbound1_w_prefix_diff_col"],
@@ -633,7 +656,7 @@ exports.execute = function (options) {
                                     "case 2"
                                 );
                             });
-    
+
                             it ("should handle sources with path prefix that just change end column (recursive)", function () {
                                 testSourceWrapperAPIs(
                                     tableMainSources["path_to_outbound2_outbound1_w_prefix_diff_col_recursive"],
@@ -650,7 +673,7 @@ exports.execute = function (options) {
                                     ]
                                 );
                             });
-    
+
                             it ("should handle sources with recursive path prefix", function () {
                                 testSourceWrapperAPIs(
                                     tableMainSources["path_to_outbound2_outbound1_inbound1_inbound1_w_recursive_prefix"],
@@ -717,7 +740,7 @@ exports.execute = function (options) {
                                     ].join("/"),
                                     [
                                         {"filter": "RID", "negate": true, "operand_pattern": "1"},
-                                        {"outbound": ["source_definitions_schema", "main_fk1"], "alias": "alias"}, 
+                                        {"outbound": ["source_definitions_schema", "main_fk1"], "alias": "alias"},
                                     ],
                                     "case 2"
                                 );
@@ -855,7 +878,7 @@ exports.execute = function (options) {
                                         "(id)=(source_definitions_schema:outbound2:id)",
                                         "(id)=(source_definitions_schema:main:id)"
                                     ].join("/"),
-                                    [   
+                                    [
                                         {"filter": "col w space", "operator": "::ciregexp::", "operand_pattern": "some val"},
                                         {"inbound": ["source_definitions_schema", "outbound2_fk1"]},
                                         {"inbound": ["source_definitions_schema", "main_fk2"]},
