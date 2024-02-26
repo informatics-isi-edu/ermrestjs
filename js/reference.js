@@ -3926,7 +3926,7 @@
          * a Metadata object
          * @type {ERMrest.GoogleDatasetMetadata}
          */
-         get googleDatasetMetadata() {
+        get googleDatasetMetadata() {
             if (this._googleDatasetMetadata === undefined) {
                 var table = this.table;
                 if (!table.annotations.contains(module._annotations.GOOGLE_DATASET_METADATA)) {
@@ -3937,6 +3937,48 @@
                 }
             }
             return this._googleDatasetMetadata;
+        },
+
+        /**
+         * The related reference or tables that might be deleted as a result of deleting the current table.
+         * @type {Object[]}
+         */
+        get cascadingDeletedItems () {
+            if (this._cascadingDeletedItems === undefined) {
+                var self = this, res = [], consideredFKs = {};
+                var detailedRef = (self._context === module._contexts.DETAILED) ? self : self.contextualize.detailed;
+
+                // inline tables
+                detailedRef.columns.forEach(function (col) {
+                    if (col.isInboundForeignKey || (col.isPathColumn && col.hasPath && !col.isUnique && !col.hasAggregate)) {
+                        var fk = col.foreignKey ? col.foreignKey : col.firstForeignKeyNode.nodeObject;
+                        consideredFKs[fk.name] = 1;
+                        if (fk && fk.onDeleteCascade) {
+                            res.push(col.reference);
+                        }
+                    }
+                });
+
+                // related tables
+                detailedRef.related.forEach(function (ref) {
+                    var fk = ref.pseudoColumn ? ref.pseudoColumn.firstForeignKeyNode.nodeObject : ref.origFKR;
+                    consideredFKs[fk.name] = 1;
+                    if (fk && fk.onDeleteCascade) {
+                        res.push(ref);
+                    }
+                });
+
+                // list the tables that are not added yet
+                self.table.referredBy.all().forEach(function (fk) {
+                    if ((fk.name in consideredFKs) || !fk.onDeleteCascade) return;
+
+                    res.push(fk.table);
+                });
+
+                self._cascadingDeletedItems = res;
+            }
+
+            return this._cascadingDeletedItems;
         },
 
         /**

@@ -4449,6 +4449,12 @@
          */
         this.comment = _processModelComment(jsonFKR.comment);
 
+        /**
+         * whether the "on delete cascade" is set for this foreign key.
+         * @type {boolean}
+         */
+        this.onDeleteCascade = jsonFKR.on_delete === 'CASCADE';
+
         this._display = {};
 
     }
