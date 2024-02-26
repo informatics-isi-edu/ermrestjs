@@ -360,11 +360,6 @@
                     "annotations": {
                         "tag:misd.isi.edu,2015:display": {
                             "name": "Column 3 Name"
-                        },
-                        "tag:isrd.isi.edu,2016:column-display": {
-                            "*": {
-                                "column_order": false
-                            }
                         }
                     }
                 },
@@ -377,9 +372,12 @@
                     "comment": "is in multiple composite FKRs",
                     "annotations": {
                         "tag:isrd.isi.edu,2016:generated": {},
+                        "tag:misd.isi.edu,2015:display": {
+                            "name": "Column 4 Name"
+                        },
                         "tag:isrd.isi.edu,2016:column-display": {
                             "*": {
-                                "column_order": ["columns_schema_outbound_fk_7"]
+                                "column_order": false
                             }
                         }
                     }
@@ -392,7 +390,12 @@
                     },
                     "comment": "is in multiple composite FKRs",
                     "annotations": {
-                        "tag:isrd.isi.edu,2016:generated": {}
+                        "tag:isrd.isi.edu,2016:generated": {},
+                        "tag:isrd.isi.edu,2016:column-display": {
+                            "*": {
+                                "column_order": ["columns_schema_outbound_fk_7"]
+                            }
+                        }
                     }
                 },
                 {
@@ -787,7 +790,7 @@
             "annotations": {
                 "tag:isrd.isi.edu,2016:table-display": {
                     "row_name": {
-                        "row_markdown_pattern": "[{{id}}](https://dev.isrd.isi.edu/chaise/search)"
+                        "row_markdown_pattern": "[{{id}}](https://example.org/chaise/search)"
                     },
                     "*" : {
                         "row_order": [{"column":"id_2", "descending":true}]
@@ -888,7 +891,7 @@
             "column_definitions": [
                 {
                     "name": "id",
-                    "comment": "id, asset should be ignored",
+                    "comment": "id, asset should be used and key ignored",
                     "nullok": false,
                     "type": {
                         "typename": "text"
@@ -1056,6 +1059,7 @@
                         "tag:isrd.isi.edu,2017:asset": {
                             "url_pattern": "/hatrac/{{col_asset_6}}",
                             "filename_column": "col_asset_6_filename",
+                            "byte_count_column": "col_asset_6_byte_count",
                             "display": {
                                 "entry": {
                                     "image_preview": true
@@ -1069,14 +1073,25 @@
                     "type": {
                         "typename": "text"
                     }
+                },
+                {
+                    "name": "col_asset_6_byte_count",
+                    "type": {
+                        "typename": "int8"
+                    },
+                    "annotations": {
+                        "tag:isrd.isi.edu,2016:column-display" : {
+                            "*" : {
+                                "markdown_pattern" : "{{{$self}}}"
+                            }
+                        }
+                    }
                 }
             ],
             "annotations": {
                 "tag:isrd.isi.edu,2016:visible-columns": {
-                    "detailed": ["col_asset_3", "col_asset_4", "col_asset_6"],
-                    "entry/create": ["col_filename","col_byte","col_md5","col_sha256"],
                     "entry/edit": ["col_asset_3", "col_filename","col_byte","col_md5","col_sha256"],
-                    "compact/brief": ["col_asset_3", "col_filename","col_byte","col_md5","col_sha256"]
+                    "compact/brief": ["col_asset_3", "col_filename","col_byte","col_md5","col_sha256", "col_asset_6_byte_count"]
                 }
             }
         },
@@ -1284,7 +1299,8 @@
                         "tag:isrd.isi.edu,2016:foreign-key": {
                             "domain_filter": {
                                 "ermrest_path_pattern": "position_type_col={{{_position_text_col}}}",
-                                "display_markdown_pattern": "**position_type_col**: {{{_position_text_col}}}"
+                                "display_markdown_pattern": "**position_type_col**: {{{_position_text_col}}}",
+                                "pattern_sources": ["position_text_col"]
                             }
                         }
                     },
@@ -1310,7 +1326,8 @@
                         "tag:isrd.isi.edu,2016:foreign-key": {
                             "domain_filter": {
                                 "ermrest_path_pattern": "fk2={{{_fk1}}}&position_col={{{_position_text_col}}}",
-                                "display_markdown_pattern": "**fk2**: {{{_fk1}}} and **position_col**:{{{_position_text_col}}}"
+                                "display_markdown_pattern": "**fk2**: {{{_fk1}}} and **position_col**:{{{_position_text_col}}}",
+                                "pattern_sources": ["position_text_col", ["columns_schema", "fk_no_constraint"], "some_invalid_column"]
                             }
                         }
                     },
@@ -1336,7 +1353,16 @@
                         "tag:isrd.isi.edu,2016:foreign-key": {
                             "domain_filter": {
                                 "ermrest_path_pattern": "fk2={{{$fkeys.columns_schema.fk_position_predefined.values._int_value}}}&position_col={{{$fkeys.columns_schema.fk_position_user_defined.values._int_value}}}&id={{{_fk1}}}",
-                                "display_markdown_pattern": "**fk2**: {{{$fkeys.columns_schema.fk_position_predefined.values._int_value}}} and **position_col**:{{{$fkeys.columns_schema.fk_position_user_defined.values._int_value}}}"
+                                "display_markdown_pattern": "**fk2**: {{{$fkeys.columns_schema.fk_position_predefined.values._int_value}}} and **position_col**:{{{$fkeys.columns_schema.fk_position_user_defined.values._int_value}}}",
+                                "pattern_sources": [
+                                    {"sourcekey": "fk2"},
+                                    {
+                                        "source": [
+                                            {"outbound": ["columns_schema", "fk_position_user_defined"]},
+                                            "RID"
+                                        ]
+                                    }
+                                ]
                             }
                         }
                     },
@@ -1424,6 +1450,18 @@
                         "position_text_col", ["columns_schema", "fk_position_user_defined"],
                         ["columns_schema", "fk_multi_constrained"], ["columns_schema", "fk_using_fkeys"]
                     ]
+                },
+                "tag:isrd.isi.edu,2019:source-definitions": {
+                    "columns": true,
+                    "fkeys": true,
+                    "sources": {
+                        "fk2": {
+                            "source": [
+                                {"outbound": ["columns_schema", "fk_position_predefined"]},
+                                "RID"
+                            ]
+                        }
+                    }
                 }
             }
         },
@@ -1912,6 +1950,177 @@
                     "nullok": false
                 }
             ]
+        },
+        "iframe_input_test": {
+            "kind": "table",
+            "table_name": "iframe_input_test",
+            "schema_name": "columns_schema",
+            "keys": [{"unique_columns": ["id"]}],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "type": {"typename": "text"}
+                },
+                {
+                    "name": "col_w_valid_input_iframe_1",
+                    "type": { "typename":"text" }
+                },
+                {
+                    "name": "col_w_valid_input_iframe_2",
+                    "type": { "typename":"text" }
+                },
+                {
+                    "name": "col_w_valid_input_iframe_3",
+                    "type": { "typename":"text" }
+                },
+                {
+                    "name": "col_1",
+                    "type": { "typename":"text" }
+                },
+                {
+                    "name": "col_2",
+                    "type": { "typename":"text" }
+                },
+                {
+                    "name": "col_3",
+                    "type": { "typename":"text" }
+                },
+                {
+                    "name": "col_4",
+                    "type": { "typename":"text" }
+                },
+                {
+                    "name": "col_5",
+                    "type": { "typename":"text" }
+                },
+                {
+                    "name": "col_6",
+                    "type": { "typename":"text" }
+                },
+                {
+                    "name": "col_wo_url",
+                    "type": { "typename":"text" }
+                },
+                {
+                    "name": "col_wo_mapping",
+                    "type": { "typename":"text" }
+                },
+                {
+                    "name": "col_w_invalid_mapping",
+                    "type": { "typename":"text" }
+                },
+                {
+                    "name": "col_w_invalid_optional_fields",
+                    "type": { "typename":"text" }
+                },
+                {
+                    "name": "col_w_overlapping_mapping",
+                    "type": { "typename":"text" }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2016:visible-columns": {
+                    "entry/edit": [
+                        "id",
+                        {
+                            "comment": "valid, static url_pattern",
+                            "source": "col_w_valid_input_iframe_1",
+                            "input_iframe": {
+                                "url_pattern": "/apps/test/index.html",
+                                "field_mapping": {
+                                    "iframe_1_field_1": "col_1",
+                                    "iframe_1_field_2": "col_2",
+                                    "iframe_1_field_3": "col_3"
+                                },
+                                "optional_fields": ["col_2", "col_3"]
+                            }
+                        },
+                        {
+                            "comment": "valid, pattern url_pattern using $catalog.id",
+                            "source": "col_w_valid_input_iframe_2",
+                            "input_iframe": {
+                                "url_pattern": "/apps/test/index.html?catalog={{{$catalog.id}}}",
+                                "field_mapping": {
+                                    "iframe_2_field_1": "col_4"
+                                }
+                            }
+                        },
+                        {
+                            "comment": "valid, pattern url_pattern using data",
+                            "source": "col_w_valid_input_iframe_3",
+                            "input_iframe": {
+                                "url_pattern": "/apps/test/index.html?id={{id}}",
+                                "field_mapping": {
+                                    "iframe_3_field_1": "col_5",
+                                    "iframe_3_field_2": "col_6"
+                                },
+                                "empty_field_confirm_message_markdown": "**ARE YOU SURE??**"
+                            }
+                        },
+                        {
+                            "comment": "should be allowed",
+                            "source": "col_w_invalid_optional_fields",
+                            "input_iframe": {
+                                "url_pattern": "/apps/test/index.html{{#if true}}?q=test{{/if}}",
+                                "template_engine": "handlebars",
+                                "field_mapping": {
+                                    "field_1": "col_wo_url"
+                                },
+                                "optional_fields": ["unused_field"]
+                            }
+                        },
+                        {
+                            "comment": "should be ignored since the column is used in a mapping.",
+                            "source": "col_1"
+                        },
+                        {
+                            "comment": "should be ignored since the column is used in a mapping.",
+                            "source": "col_2"
+                        },
+                        {
+                            "comment": "should be ignored since the column is used in a mapping.",
+                            "source": "col_3"
+                        },
+                        {
+                            "comment": "should be ignored since the column is used in a mapping.",
+                            "source": "col_4"
+                        },
+                        {
+                            "comment": "should be ignored because col_wo_url is used above",
+                            "source": "col_w_overlapping_mapping",
+                            "input_iframe": {
+                                "this_field_1": "col_wo_url"
+                            }
+                        },
+                        {
+                            "comment": "should be ignored because one of the mapped columns doesn't exist",
+                            "source": "col_w_invalid_mapping",
+                            "input_iframe": {
+                                "url_pattern": "/apps/test/index.html",
+                                "field_mapping": {
+                                    "field_2": "some_col_that_does_not_exist"
+                                }
+                            }
+                        },
+                        {
+                            "comment": "should be ignored because field_mapping is missing",
+                            "source": "col_wo_mapping",
+                            "input_iframe": {
+                                "url_pattern": "/apps/test/index.html"
+                            }
+                        },
+                        {
+                            "comment": "should be ignored because url_pattern is missing",
+                            "source": "col_wo_url",
+                            "input_iframe": {
+                                "field_mapping": {
+                                    "field_1": "col_1"
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
         }
     }
 }

@@ -23,7 +23,7 @@ exports.execute = function (options) {
         var base2Uri = options.url + "/catalog/" + catalog_id + "/entity/"
             + schemaNameEncoded + ":" + baseTable2Encoded + "/value::gt::15@sort(id)";
 
-        var chaiseURL = "https://dev.isrd.isi.edu/chaise";
+        var chaiseURL = "https://example.org/chaise";
         var recordURL = chaiseURL + "/record";
         var record2URL = chaiseURL + "/record-two";
         var viewerURL = chaiseURL + "/viewer";

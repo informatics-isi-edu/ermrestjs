@@ -295,7 +295,7 @@
         /**
          * The comment for this reference.
          *
-         * @type {String}
+         * @type {Object}
          */
         get comment () {
             /* Note that comment is context dependent. For instance,
@@ -306,29 +306,10 @@
              * In one directoin, the FKR is named "parent" in the other
              * direction it is named "child".
              */
-            if (this._comment === undefined)
+            if (this._comment === undefined) {
                 this._comment = this._table.getDisplay(this._context).comment;
+            }
             return this._comment;
-        },
-
-        /**
-         * The comment display property for this reference.
-         * can be either "tooltip" or "inline"
-         *
-         * @type {String}
-         */
-        get commentDisplay () {
-            /* Note that commentDisplay is context dependent. However, a 'related'
-             * reference will use the FKR's commentDisplay (actually its "to comment display" or
-             * "from comment display"). Like a Person table might have a FKR to its parent.
-             * In one directoin, the FKR is named "parent" in the other
-             * direction it is named "child".
-             */
-            if (this._commentDisplay === undefined)
-                // default value is tooltip
-                // NOTE: This is used as part of the conditional check before showing a comment, so getDisplay needs to also be called here
-                this._commentDisplay = this._table.getDisplay(this._context).tableCommentDisplay;
-            return this._commentDisplay;
         },
 
         /**
@@ -523,6 +504,7 @@
                     obj = module._simpleDeepCopy(obj);
 
                     var sd, wrapper;
+                    // if both source and sourcekey are defined, ignore the source and use sourcekey
                     if (obj.sourcekey) {
                         sd = self.table.sourceDefinitions.sources[obj.sourcekey];
                         if (!sd) return;
@@ -1678,6 +1660,7 @@
                     columnProjections = [],     // the list of column names to use in the uri projection list
                     shortestKeyNames = [],      // list of shortest key names to use in the uri key list
                     keyWasModified = false,
+                    assetColumns,
                     tuple, oldData, allOldData = [], newData, allNewData = [], keyName;
 
                 // for loop variables, NOTE: maybe we should name these better
@@ -1696,11 +1679,87 @@
                     }
                 };
 
+                var addProjectionForColumnObject = function (column) {
+                    // If columns is a pusedo column
+                    if (column.isPseudo) {
+                        // If a column is an asset column then set values for
+                        // dependent properties like filename, bytes_count_column, md5 and sha
+                        if (column.isAsset) {
+                            var isNull = newData[column.name] === null ? true : false;
+
+                            /* Populate all values in row depending on column from current asset */
+                            assetColumns = [column.filenameColumn, column.byteCountColumn, column.md5, column.sha256];
+                            for (var colIndex = 0; colIndex < assetColumns.length; colIndex++) {
+                                // some metadata columns might not be defined.
+                                if (assetColumns[colIndex]) {
+                                    // If asset url is null then set the metadata also null
+                                    if (isNull) newData[assetColumns[colIndex].name] = null;
+                                    addProjection(assetColumns[colIndex].name);
+                                }
+                            }
+
+                            addProjection(column.name);
+
+                        } else {
+                            keyColumns = [];
+
+                            if (column.isKey) {
+                                keyColumns = column.key.colset.columns;
+                            } else if (column.isForeignKey) {
+                                keyColumns =  column.foreignKey.colset.columns;
+                            }
+
+                            for (n = 0; n < keyColumns.length; n++) {
+                                keyColumnName = keyColumns[n].name;
+
+                                addProjection(keyColumnName);
+                            }
+                        }
+                    } else {
+                        addProjection(column.name);
+                    }
+                };
+
                 // add data into submission data if in column projection set
                 var addSubmissionData = function(index, colName) {
                     // if the column is in the column projections list, add the data to submission data
                     if (columnProjections.indexOf(colName) > -1) {
                         submissionData[index][colName + newAlias] = newData[colName];
+                    }
+                };
+
+                var addSubmissionDataForColumnObject = function (index, column) {
+                    // If columns is a pusedo column
+                    if (column.isPseudo) {
+                        // If a column is an asset column then set values for
+                        // dependent properties like filename, bytes_count_column, md5 and sha
+                        if (column.isAsset) {
+                            /* Populate all values in row depending on column from current asset */
+                            assetColumns = [column.filenameColumn, column.byteCountColumn, column.md5, column.sha256];
+                            for (var colIndex2 = 0; colIndex2 < assetColumns.length; colIndex2++) {
+                                // some metadata columns might not be defined.
+                                if (assetColumns[colIndex2]) addSubmissionData(i, assetColumns[colIndex2].name);
+                            }
+
+                            addSubmissionData(i, column.name);
+
+                        } else {
+                            keyColumns = [];
+
+                            if (column.isKey) {
+                                keyColumns = column.key.colset.columns;
+                            } else if (column.isForeignKey) {
+                                keyColumns =  column.foreignKey.colset.columns;
+                            }
+
+                            for (n = 0; n < keyColumns.length; n++) {
+                                keyColumnName = keyColumns[n].name;
+
+                                addSubmissionData(i, keyColumnName);
+                            }
+                        }
+                    } else {
+                        addSubmissionData(i, column.name);
                     }
                 };
 
@@ -1742,60 +1801,14 @@
                             continue;
                         }
 
-                        // If columns is a pusedo column
-                        if (column.isPseudo) {
-                            // If a column is an asset column then set values for
-                            // dependent properties like filename, bytes_count_column, md5 and sha
-                            if (column.isAsset) {
-                                var isNull = newData[column.name] === null ? true : false;
-
-                                // If column has a filename column then add it to the projections
-                                if (column.filenameColumn) {
-                                    // If asset url is null then set filename also null
-                                    if (isNull) newData[column.filenameColumn.name] = null;
-                                    addProjection(column.filenameColumn.name);
-                                }
-
-                                // If column has a bytecount column thenadd it to the projections
-                                if (column.byteCountColumn) {
-                                    // If asset url is null then set filename also null
-                                    if (isNull) newData[column.byteCountColumn.name] = null;
-                                    addProjection(column.byteCountColumn.name);
-                                }
-
-                                // If column has a md5 column then add it to the projections
-                                if (column.md5 && typeof column.md5 === 'object') {
-                                    // If asset url is null then set filename also null
-                                    if (isNull) newData[column.md5.name] = null;
-                                    addProjection(column.md5.name);
-                                }
-
-                                // If column has a sha256 column then add it to the projections
-                                if (column.sha256 && typeof column.sha256 === 'object') {
-                                    // If asset url is null then set filename also null
-                                    if (isNull) newData[column.sha256.name] = null;
-                                    addProjection(column.sha256.name);
-                                }
-
-                                addProjection(column.name);
-
-                            } else {
-                                keyColumns = [];
-
-                                if (column.isKey) {
-                                    keyColumns = column.key.colset.columns;
-                                } else if (column.isForeignKey) {
-                                    keyColumns =  column.foreignKey.colset.columns;
-                                }
-
-                                for (n = 0; n < keyColumns.length; n++) {
-                                    keyColumnName = keyColumns[n].name;
-
-                                    addProjection(keyColumnName);
-                                }
+                        if (column.isInputIframe) {
+                            addProjectionForColumnObject(column);
+                            // make sure the columns in the input_iframe column mapping are also added to the projection list
+                            for (var colIndex3 = 0; colIndex3 < column.inputIframeProps.columns.length; colIndex3++) {
+                                addProjectionForColumnObject(column.inputIframeProps.columns[colIndex3]);
                             }
                         } else {
-                            addProjection(column.name);
+                            addProjectionForColumnObject(column);
                         }
                     }
                 }
@@ -1834,53 +1847,16 @@
                             continue;
                         }
 
-                        // If columns is a pusedo column
-                        if (column.isPseudo) {
-                            // If a column is an asset column then set values for
-                            // dependent properties like filename, bytes_count_column, md5 and sha
-                            if (column.isAsset) {
-                                /* Populate all values in row depending on column from current asset */
-
-                                // If column has a filename column then populate its value
-                                if (column.filenameColumn) {
-                                    addSubmissionData(i, column.filenameColumn.name);
-                                }
-
-                                // If column has a bytecount column then populate its value
-                                if (column.byteCountColumn) {
-                                    addSubmissionData(i, column.byteCountColumn.name);
-                                }
-
-                                // If column has a md5 column then populate its value
-                                if (column.md5 && typeof column.md5 === 'object') {
-                                    addSubmissionData(i, column.md5.name);
-                                }
-
-                                // If column has a sha256 column then populate its value
-                                if (column.sha256 && typeof column.sha256 === 'object') {
-                                    addSubmissionData(i, column.sha256.name);
-                                }
-
-                                addSubmissionData(i, column.name);
-
-                            } else {
-                                keyColumns = [];
-
-                                if (column.isKey) {
-                                    keyColumns = column.key.colset.columns;
-                                } else if (column.isForeignKey) {
-                                    keyColumns =  column.foreignKey.colset.columns;
-                                }
-
-                                for (n = 0; n < keyColumns.length; n++) {
-                                    keyColumnName = keyColumns[n].name;
-
-                                    addSubmissionData(i, keyColumnName);
-                                }
+                        if (column.isInputIframe) {
+                            addSubmissionDataForColumnObject(i, column);
+                            // make sure the values for columns in the input_iframe column mapping are also added
+                            for (var colIndex = 0; colIndex < column.inputIframeProps.columns.length; colIndex++) {
+                                addSubmissionDataForColumnObject(i, column.inputIframeProps.columns[colIndex]);
                             }
                         } else {
-                            addSubmissionData(i, column.name);
+                            addSubmissionDataForColumnObject(i, column);
                         }
+
                     }
                 }
 
@@ -2583,15 +2559,12 @@
 
             for(var i = 0; i < visibleFKs.length; i++) {
                 fkr = visibleFKs[i];
-                // if in the visible columns list
-                if (currentColumns[fkr.name]) {
-                    continue;
-                }
-
+                var relatedRef, fkName;
                 if (fkr.isPath) {
                     // since we're sure that the pseudoColumn either going to be
                     // general pseudoColumn or InboundForeignKeyPseudoColumn then it will have reference
-                    this._related.push(module._createPseudoColumn(this, fkr.sourceObjectWrapper, tuple).reference);
+                    relatedRef = module._createPseudoColumn(this, fkr.sourceObjectWrapper, tuple).reference;
+                    fkName = relatedRef.pseudoColumn.name;
                 } else {
                     fkr = fkr.foreignKey;
 
@@ -2600,9 +2573,15 @@
                     fkr._table._baseTable === this._table && fkr._table._altForeignKey === fkr) {
                         continue;
                     }
-
-                    this._related.push(this._generateRelatedReference(fkr, tuple, true));
+                    relatedRef = this._generateRelatedReference(fkr, tuple, true);
+                    fkName = _sourceColumnHelpers.generateForeignKeyName(fkr, true);
                 }
+
+                // it it's already added to the visible-columns (inline related) don't add it again.
+                if (currentColumns[fkName]) {
+                    continue;
+                }
+                this._related.push(relatedRef);
             }
 
             if (notSorted && this._related.length !== 0) {
@@ -2613,12 +2592,14 @@
                     }
 
                     // columns
-                    if (a._related_key_column_positions.join(",") != b._related_key_column_positions.join(",")) {
-                        return a._related_key_column_positions > b._related_key_column_positions ? 1 : -1;
+                    var keyColPositions = compareColumnPositions(a._related_key_column_positions, b._related_key_column_positions);
+                    if (keyColPositions !== 0) {
+                        return keyColPositions;
                     }
 
                     // foreignkey columns
-                    return a._related_fk_column_positions >= b._related_fk_column_positions ? 1 : -1;
+                    var fkeyColPositions = compareColumnPositions(a._related_fk_column_positions, b._related_fk_column_positions);
+                    return fkeyColPositions === -1 ? -1 : 1;
                 });
             }
 
@@ -3205,38 +3186,32 @@
          *      we should hide the foreign key (and all of its columns) that created the link.
          *
          * @param  {ERMrest.Tuple} tuple the data for the current refe
+         * @param  {Object[]} columnsList if passed, we will skip the annotation and heuristics and use this list instead.
+         * @param  {boolean?} dontChangeReference whether we should mutate the reference or just return the generated list.
+         * @param  {boolean?} skipLog whether we should skip logging the warning messages
          * @return {ERMrest.ReferenceColumn[]}  Array of {@link ERMrest.ReferenceColumn}.
          */
-        generateColumnsList: function(tuple) {
-
-            this._referenceColumns = [];
+        generateColumnsList: function(tuple, columnsList, dontChangeReference, skipLog) {
+            var resultColumns = [];
 
             var self = this;
-
-
             var columns = -1,
                 consideredColumns = {}, // to avoid duplicate pseudo columns
                 tableColumns = {}, // to make sure the hashes we genereate are not clashing with table column names
                 virtualColumnNames = {}, // to make sure the names generated for virtual names are not the same
                 compositeFKs = [], // to add composite keys at the end of the list
                 assetColumns = [], // columns that have asset annotation
+                usedIframeInputMappings = {}, // column names that are used in iframe column mappings.
                 hiddenFKR = this.origFKR,
                 hasOrigFKR,
                 refTable = this._table,
-                invalid,
-                colAdded,
-                fkName,
-                sourceCol, refCol,
-                pseudoNameObj, pseudoName, isHash,
-                hasInbound, isEntity, hasPath, isEntityMode,
-                isEntry,
-                isCompactEntry,
-                colFks,
+                fkName, refCol, pseudoName,
                 ignore, cols, col, fk, i, j;
 
             var context = this._context;
-            isEntry = module._isEntryContext(context);
-            isCompactEntry = (typeof context === "string" && context.startsWith(module._contexts.COMPACT_ENTRY));
+            var isEntry = module._isEntryContext(context),
+                isCompact = (typeof context === "string" && context.startsWith(module._contexts.COMPACT)),
+                isCompactEntry = (typeof context === "string" && context.startsWith(module._contexts.COMPACT_ENTRY));
 
             // check if we should hide some columns or not.
             // NOTE: if the reference is actually an inbound related reference, we should hide the foreign key that created this link.
@@ -3252,24 +3227,60 @@
                 return hasOrigFKR && hiddenFKR.colset.columns.indexOf(col) != -1;
             };
 
+            var _addAssetColumn = function (col, sourceObjectWrapper, name, heuristics) {
+                var assetCol = new AssetPseudoColumn(self, col, sourceObjectWrapper, name, tuple);
+                assetColumns.push(assetCol);
+                resultColumns.push(assetCol);
+
+                // as part of heuristics we only want the asset be added and not the column,
+                // so adding it to considered ones to avoid adding it again.
+                if (heuristics && assetCol.filenameColumn) {
+                    consideredColumns[assetCol.filenameColumn.name] = true;
+                }
+            };
+
             // this function will take care of adding column and asset column
-            var addColumn = function (col) {
-                if (col.type.name === "text" && col.annotations.contains(module._annotations.ASSET)) {
-                    var assetCol = new AssetPseudoColumn(self, col);
-                    assetColumns.push(assetCol);
-                    self._referenceColumns.push(assetCol);
+            var addColumn = function (col, sourceObjectWrapper, name, heuristics) {
+                if (col.isAssetURL) {
+                    _addAssetColumn(col, sourceObjectWrapper, name, heuristics);
                     return;
                 }
 
-                // if annotation is not present,
-                self._referenceColumns.push(new ReferenceColumn(self, [col]));
+                // in entry context we don't want to show any of the asset metadata columns as chaise cannot handle it.
+                if (isEntry && (col.isAssetFilename || col.isAssetByteCount || col.isAssetMd5 || col.isAssetSha256)) {
+                    return;
+                }
+
+                // for heuristics we should take care of  the asset metadata columns differently
+                if (heuristics) {
+                    // as part of heuristics, treat the asset filename the same as the asset itself.
+                    // and only add one of them.
+                    if (col.isAssetFilename) {
+                        if (col.assetURLColumnName in consideredColumns) {
+                            return;
+                        }
+                        consideredColumns[col.assetURLColumnName] = true;
+                        _addAssetColumn(self.table.columns.get(col.assetURLColumnName), sourceObjectWrapper, name, heuristics);
+                        return;
+                    }
+
+                    // in compact context we should hide md5 and sha256
+                    if (isCompact && (col.isAssetMd5 || col.isAssetSha256)) {
+                        return;
+                    }
+                }
+
+                // add it as a reference column
+                resultColumns.push(new ReferenceColumn(self, [col], sourceObjectWrapper, name, tuple));
             };
 
             // make sure generated hash is not the name of any columns in the table
             var nameExistsInTable = function (name, obj) {
                 if (name in tableColumns) {
-                    module._log.info("Generated Hash `" + name + "` for pseudo-column exists in table `" + self.table.name +"`.");
-                    module._log.info("Ignoring the following in visible-columns: ", obj);
+                    if (!skipLog) {
+                        module._log.info("Generated Hash `" + name + "` for pseudo-column exists in table `" + self.table.name +"`.");
+                        module._log.info("Ignoring the following in visible-columns: ", obj);
+                    }
                     return true;
                 }
                 return false;
@@ -3278,7 +3289,7 @@
             var pf = module._printf;
             var wm = module._warningMessages;
             var logCol = function (bool, message, i) {
-                if (bool) {
+                if (bool && !skipLog) {
                     module._log.info("columns list for table: " + self.table.name + ", context: " + context + ", column index:" + i);
                     module._log.info(message);
                 }
@@ -3290,8 +3301,12 @@
                 tableColumns[c.name] = true;
             });
 
+            // get columns from the input (used when we just want to process the given list of columns)
+            if (Array.isArray(columnsList)) {
+                columns = columnsList;
+            }
             // get column orders from annotation
-            if (this._table.annotations.contains(module._annotations.VISIBLE_COLUMNS)) {
+            else if (this._table.annotations.contains(module._annotations.VISIBLE_COLUMNS)) {
                 columns = module._getRecursiveAnnotationValue(this._context, this._table.annotations.get(module._annotations.VISIBLE_COLUMNS).content);
             }
 
@@ -3314,7 +3329,7 @@
                                             // avoid duplicate and same name in database
                                             if (!logCol((fkName in consideredColumns), wm.DUPLICATE_FK, i) && !nameExistsInTable(fkName, col)) {
                                                 consideredColumns[fkName] = true;
-                                                this._referenceColumns.push(new ForeignKeyPseudoColumn(this, fk));
+                                                resultColumns.push(new ForeignKeyPseudoColumn(this, fk));
                                             }
                                         }
                                         // inbound foreignkey
@@ -3323,7 +3338,7 @@
                                             fkName = _sourceColumnHelpers.generateForeignKeyName(fk, true);
                                             if (!logCol(fkName in consideredColumns, wm.DUPLICATE_FK, i) && !logCol(context !== module._contexts.DETAILED && context.indexOf(module._contexts.EXPORT) == -1, wm.NO_INBOUND_IN_NON_DETAILED, i) && !nameExistsInTable(fkName, col)) {
                                                 consideredColumns[fkName] = true;
-                                                this._referenceColumns.push(new InboundForeignKeyPseudoColumn(this, this._generateRelatedReference(fk, tuple, true), null, fkName));
+                                                resultColumns.push(new InboundForeignKeyPseudoColumn(this, this._generateRelatedReference(fk, tuple, true), null, fkName));
                                             }
                                         } else {
                                             logCol(true, wm.FK_NOT_RELATED, i);
@@ -3342,11 +3357,11 @@
                                                 col = cols[j];
                                                 if (!(col.name in consideredColumns) && !hideColumn(col)) {
                                                     consideredColumns[col.name] = true;
-                                                    this._referenceColumns.push(new ReferenceColumn(this, [cols[j]]));
+                                                    addColumn(col);
                                                 }
                                             }
                                         } else {
-                                            this._referenceColumns.push(new KeyPseudoColumn(this, fk));
+                                            resultColumns.push(new KeyPseudoColumn(this, fk));
                                         }
                                     }
                                     break;
@@ -3373,13 +3388,14 @@
                                     pseudoName += "-" + extra;
                                 }
                                 virtualColumnNames[pseudoName] = true;
-                                this._referenceColumns.push(new VirtualColumn(this, new SourceObjectWrapper(col), pseudoName, tuple));
+                                resultColumns.push(new VirtualColumn(this, new SourceObjectWrapper(col), pseudoName, tuple));
                             }
                             continue;
                         }
 
                         // pseudo-column
                         var sd, wrapper;
+                        // if both source and sourcekey are defined, ignore the source and use sourcekey
                         if (col.sourcekey) {
                             sd = self.table.sourceDefinitions.sources[col.sourcekey];
                             if (logCol(!sd, wm.INVALID_SOURCEKEY, i)) {
@@ -3396,12 +3412,17 @@
                             }
                         }
 
-                        // invalid/hidden pseudo-column:
-                        // 1. duplicate
-                        // 2. column/foreignkey that needs to be hidden.
-                        // 3. invalid self_link (must be not-null and part of a simple key)
-                        // 4. invalid aggregate function
+                        // definitions that will be ignored:
+                        // - duplicate
+                        // - used in another iframe_input mapping.
+                        // - column/foreignkey that needs to be hidden.
+                        // - invalid self_link (must be not-null and part of a simple key)
+                        // - invalid aggregate function
+                        // - invalid filter path usage
+                        // - used path in entry
+                        // - (the if statement after this) input_iframe with invalid or missing properties
                         ignore = logCol((wrapper.name in consideredColumns), wm.DUPLICATE_PC, i) ||
+                                 logCol((wrapper.name in usedIframeInputMappings), wm.USED_IN_IFRAME_INPUT, i) ||
                                  (wrapper.hasPath && !wrapper.hasInbound && wrapper.foreignKeyPathLength == 1 && hideFKR(wrapper.firstForeignKeyNode.nodeObject)) ||
                                  (!wrapper.hasPath && hideColumn(wrapper.column)) ||
                                  logCol(wrapper.sourceObject.self_link === true && !wrapper.column.isUniqueNotNull, wm.INVALID_SELF_LINK, i) ||
@@ -3411,38 +3432,56 @@
                                  logCol(wrapper.isUniqueFiltered, wm.FILTER_NO_PATH_NOT_ALLOWED) ||
                                  logCol(isEntry && wrapper.hasPath && (wrapper.hasInbound || wrapper.isFiltered || wrapper.foreignKeyPathLength > 1), wm.NO_PATH_IN_ENTRY, i);
 
+                        if (!ignore && isEntry && isObjectAndNotNull(wrapper.sourceObject.input_iframe)) {
+                            var inputIframeRes = wrapper.processInputIframe(this, tuple, usedIframeInputMappings);
+                            ignore = true;
+                            if (inputIframeRes.error) {
+                                logCol(true, 'processing iframe_input: ' + inputIframeRes.message, i);
+                            } else if (inputIframeRes.success) {
+                                ignore = false;
+                                // keep track of the columns used in the mapping
+                                var usedColumns = {}, iframeColIndex = 0;
+                                for (iframeColIndex = 0; iframeColIndex < inputIframeRes.columns.length; iframeColIndex++) {
+                                    usedColumns[inputIframeRes.columns[iframeColIndex].name] = true;
+                                }
+                                Object.assign(usedIframeInputMappings, usedColumns);
+                            }
+                        }
+
                         // avoid duplciates and hide the column
                         if (!ignore) {
                             consideredColumns[wrapper.name] = true;
                             refCol = module._createPseudoColumn(this, wrapper, tuple);
 
-                            // to make sure we're removing asset related (filename, size, etc.) column in entry
-                            if (refCol.isAsset) {
-                                assetColumns.push(refCol);
+                            // we want yo call the addColumn for asset and local columns since it will take care of other things as well.
+                            if (refCol.isAsset || !refCol.isPseudo) {
+                                addColumn(wrapper.column, wrapper, wrapper.name, false);
                             }
+                            else {
 
-                            // if entity and KeyPseudoColumn, we should instead add the underlying columns
-                            if (isEntry && refCol.isKey) {
-                                cols = refCol.key.colset.columns;
-                                for (j = 0; j < cols.length; j++) {
-                                    col = cols[j];
-                                    if (!(col.name in consideredColumns) && !hideColumn(col)) {
-                                        consideredColumns[col.name] = true;
-                                        this._referenceColumns.push(new ReferenceColumn(this, [cols[j]]));
+                                // if entity and KeyPseudoColumn, we should instead add the underlying columns
+                                if (isEntry && refCol.isKey) {
+                                    cols = refCol.key.colset.columns;
+                                    for (j = 0; j < cols.length; j++) {
+                                        col = cols[j];
+                                        if (!(col.name in consideredColumns) && !hideColumn(col)) {
+                                            consideredColumns[col.name] = true;
+                                            addColumn(col);
+                                        }
                                     }
                                 }
-                            }
 
-                            // 2 conditions:
-                            // isEntry && (refCol.isPathColumn || refCol.isInboundForeignKey || refCol.isKey)
-                            // OR
-                            // isCompactEntry && (refCol.hasWaitFor || refCol.hasAggregate || (refCol.isPathColumn && refCol.foreignKeyPathLength > 1)
-                            var removePseudo = (isEntry && (refCol.isPathColumn || refCol.isInboundForeignKey || refCol.isKey) ) ||
-                                    (isCompactEntry && (refCol.hasWaitFor || refCol.hasAggregate || (refCol.isPathColumn && refCol.foreignKeyPathLength > 1)) );
+                                // 2 conditions:
+                                // isEntry && (refCol.isPathColumn || refCol.isInboundForeignKey || refCol.isKey)
+                                // OR
+                                // isCompactEntry && (refCol.hasWaitFor || refCol.hasAggregate || (refCol.isPathColumn && refCol.foreignKeyPathLength > 1)
+                                var removePseudo = (isEntry && (refCol.isPathColumn || refCol.isInboundForeignKey || refCol.isKey) ) ||
+                                        (isCompactEntry && (refCol.hasWaitFor || refCol.hasAggregate || (refCol.isPathColumn && refCol.foreignKeyPathLength > 1)) );
 
-                            // in entry mode, pseudo-column, inbound fk, and key are not allowed
-                            if (!removePseudo) {
-                                this._referenceColumns.push(refCol);
+                                // in entry mode, pseudo-column, inbound fk, and key are not allowed
+                                if (!removePseudo) {
+                                    resultColumns.push(refCol);
+                                }
                             }
                         }
 
@@ -3491,7 +3530,7 @@
                     });
 
                     if (ridKey) {
-                        this._referenceColumns.push(new KeyPseudoColumn(this, ridKey));
+                        resultColumns.push(new KeyPseudoColumn(this, ridKey));
                         consideredColumns[ridKey.colset.columns[0].name] = true;
                     }
                 }
@@ -3514,7 +3553,14 @@
                                 consideredColumns[columns[i].name] = true;
                             }
 
-                            this._referenceColumns.push(new KeyPseudoColumn(this, key));
+                            // if the key is asset or asset filename, add the asset
+                            if (key.simple && (columns[0].isAssetURL || columns[0].isAssetFilename)) {
+                                addColumn(columns[0], undefined, undefined, true);
+                            }
+                            // otherwise just add the key pseudo-column
+                            else {
+                                resultColumns.push(new KeyPseudoColumn(this, key));
+                            }
                         }
                     }
                 }
@@ -3571,11 +3617,12 @@
                     // add the column if it's not part of any foreign keys
                     // or if the column type is array (currently ermrest doesn't suppor this either)
                     if (col.memberOfForeignKeys.length === 0) {
-                        addColumn(col);
+                        addColumn(col, undefined, undefined, true);
                     } else {
                         // sort foreign keys of a column
                         if (col.memberOfForeignKeys.length > 1) {
                             colFKs = col.memberOfForeignKeys.sort(function (a, b) {
+                                // sort by constraint name to ensure we're getting a deterministic result
                                 return a._constraintName.localeCompare(b._constraintName);
                             });
                         } else {
@@ -3592,14 +3639,15 @@
                             if (fk.simple) { // simple FKR
                                 if (!(fkName in consideredColumns) && !nameExistsInTable(fkName, fk._constraintName)) {
                                     consideredColumns[fkName] = true;
-                                    this._referenceColumns.push(new ForeignKeyPseudoColumn(this, fk));
+                                    resultColumns.push(new ForeignKeyPseudoColumn(this, fk));
                                 }
                             } else { // composite FKR
 
                                 // add the column if context is not entry and avoid duplicate
-                                if (!isEntry && !(col.name in consideredColumns)) {
+                                // don't add the column if it's also part of a simple fk
+                                if (!isEntry && !col.isPartOfSimpleForeignKey && !(col.name in consideredColumns)) {
                                     consideredColumns[col.name] = true;
-                                    this._referenceColumns.push(new ReferenceColumn(this, [col]));
+                                    addColumn(col, undefined, undefined, true);
                                 }
 
                                 if (!(fkName in consideredColumns) && !nameExistsInTable(fkName, fk._constraintName)) {
@@ -3616,52 +3664,17 @@
 
                 // append composite FKRs
                 for (i = 0; i < compositeFKs.length; i++) {
-                    this._referenceColumns.push(compositeFKs[i]);
+                    resultColumns.push(compositeFKs[i]);
                 }
 
-            }
-
-            // if edit context remove filename, bytecount, md5, and sha256 from visible columns
-            if (isEntry && assetColumns.length !== 0) {
-
-                // given a column will remove it from visible columns
-                // this function is used for removing filename, bytecount, md5, and sha256 from visible columns
-                var removeCol = function(col) {
-                    // if columns are not defined in the annotation, they will be null.
-                    // so we have to check it first.
-                    if (col === null) {
-                        return;
-                    }
-
-                    // column is not in list of visible columns
-                    if (!(col.name in consideredColumns)) {
-                        return;
-                    }
-
-                    // find the column and remove it
-                    for (var x = 0; x < self._referenceColumns.length; x++){
-                        if (!self._referenceColumns[x].isPseudo && self._referenceColumns[x].name === col.name) {
-                            self._referenceColumns.splice(x, 1);
-                            return;
-                        }
-                    }
-                };
-
-                for(i = 0; i < assetColumns.length; i++) {
-                    // hide the columns
-                    removeCol(assetColumns[i].filenameColumn);
-                    removeCol(assetColumns[i].byteCountColumn);
-                    removeCol(assetColumns[i].md5);
-                    removeCol(assetColumns[i].sha256);
-                }
             }
 
             // If not in edit context i.e in read context remove the hidden columns which cannot be selected.
             if (!isEntry) {
 
                 // Iterate over all reference columns
-                for (i = 0; i < this._referenceColumns.length; i++) {
-                    refCol = this._referenceColumns[i];
+                for (i = 0; i < resultColumns.length; i++) {
+                    refCol = resultColumns[i];
                     var isHidden = false;
 
                     // Iterate over the base columns. If any of them are hidden then hide the column
@@ -3674,13 +3687,16 @@
 
                     // If isHidden flag is true then remove the column at ith index
                     if (isHidden) {
-                        this._referenceColumns.splice(i, 1);
+                        resultColumns.splice(i, 1);
                         i--;
                     }
                 }
             }
 
-            return this._referenceColumns;
+            if (!dontChangeReference) {
+                this._referenceColumns = resultColumns;
+            }
+            return resultColumns;
         },
 
         /**
@@ -3910,7 +3926,7 @@
          * a Metadata object
          * @type {ERMrest.GoogleDatasetMetadata}
          */
-         get googleDatasetMetadata() {
+        get googleDatasetMetadata() {
             if (this._googleDatasetMetadata === undefined) {
                 var table = this.table;
                 if (!table.annotations.contains(module._annotations.GOOGLE_DATASET_METADATA)) {
@@ -3921,6 +3937,48 @@
                 }
             }
             return this._googleDatasetMetadata;
+        },
+
+        /**
+         * The related reference or tables that might be deleted as a result of deleting the current table.
+         * @type {Object[]}
+         */
+        get cascadingDeletedItems () {
+            if (this._cascadingDeletedItems === undefined) {
+                var self = this, res = [], consideredFKs = {};
+                var detailedRef = (self._context === module._contexts.DETAILED) ? self : self.contextualize.detailed;
+
+                // inline tables
+                detailedRef.columns.forEach(function (col) {
+                    if (col.isInboundForeignKey || (col.isPathColumn && col.hasPath && !col.isUnique && !col.hasAggregate)) {
+                        var fk = col.foreignKey ? col.foreignKey : col.firstForeignKeyNode.nodeObject;
+                        consideredFKs[fk.name] = 1;
+                        if (fk && fk.onDeleteCascade) {
+                            res.push(col.reference);
+                        }
+                    }
+                });
+
+                // related tables
+                detailedRef.related.forEach(function (ref) {
+                    var fk = ref.pseudoColumn ? ref.pseudoColumn.firstForeignKeyNode.nodeObject : ref.origFKR;
+                    consideredFKs[fk.name] = 1;
+                    if (fk && fk.onDeleteCascade) {
+                        res.push(ref);
+                    }
+                });
+
+                // list the tables that are not added yet
+                self.table.referredBy.all().forEach(function (fk) {
+                    if ((fk.name in consideredFKs) || !fk.onDeleteCascade) return;
+
+                    res.push(fk.table);
+                });
+
+                self._cascadingDeletedItems = res;
+            }
+
+            return this._cascadingDeletedItems;
         },
 
         /**
@@ -3995,8 +4053,7 @@
             // the main table
             newRef.mainTable = this.table;
 
-            // comment display defaults to "tooltip"
-            newRef._commentDisplay = module._commentDisplayModes.tooltip;
+            var comment, commentDisplayMode, commentRenderMarkdown, tableDisplay, fkDisplay;
 
             dataSource.push({"inbound": fkr.constraint_names[0]});
 
@@ -4017,27 +4074,31 @@
                 newRef._table = otherFK.key.table;
                 newRef._shortestKey = newRef._table.shortestKey;
 
+                fkDisplay = otherFK.getDisplay(this._context);
+                tableDisplay = otherFK.key.colset.columns[0].table.getDisplay(this._context);
+
                 // displayname
-                if (otherFK.to_name) {
-                    newRef._displayname = {"isHTML": false, "value": otherFK.to_name, "unformatted": otherFK.to_name};
+                if (fkDisplay.toName) {
+                    newRef._displayname = {"isHTML": false, "value": fkDisplay.toName, "unformatted": fkDisplay.toName};
                 } else {
                     newRef._displayname = otherFK.colset.columns[0].table.displayname;
                 }
 
-                // NOTE: this is for contextualized toComment and toCommentDisplay, to be implemented later
-                // display = otherFK.getDisplay(this._context);
-
                 // comment
-                if (otherFK.to_comment && typeof otherFK.to_comment === "string") {
-                    // use fkr to_comment
-                    newRef._comment = otherFK.to_comment;
-                    newRef._commentDisplay = otherFK.to_comment_display;
+                if (fkDisplay.toComment) {
+                    comment = fkDisplay.toComment.unformatted;
                 } else {
-                    // use comment from leaf table diplay annotation or table model comment
-                    display = otherFK.key.colset.columns[0].table.getDisplay(this._context);
-
-                    newRef._comment = display.comment;
-                    newRef._commentDisplay = display.tableCommentDisplay;
+                    comment = tableDisplay.comment ? tableDisplay.comment.unformatted : null;
+                }
+                if (_isValidModelCommentDisplay(fkDisplay.toCommentDisplayMode)) {
+                    commentDisplayMode = fkDisplay.toCommentDisplayMode;
+                } else {
+                    commentDisplayMode = tableDisplay.tableCommentDisplayMode;
+                }
+                if (typeof fkDisplay.commentRenderMarkdown === 'boolean') {
+                    commentRenderMarkdown = fkDisplay.commentRenderMarkdown;
+                } else {
+                    commentRenderMarkdown = tableDisplay.commentRenderMarkdown;
                 }
 
                 // uri and location
@@ -4065,27 +4126,31 @@
                 newRef._table = fkrTable;
                 newRef._shortestKey = newRef._table.shortestKey;
 
+                fkDisplay = fkr.getDisplay(this._context);
+                tableDisplay = newRef._table.getDisplay(this._context);
+
                 // displayname
-                if (fkr.from_name) {
-                    newRef._displayname = {"isHTML": false, "value": fkr.from_name, "unformatted": fkr.from_name};
+                if (fkDisplay.fromName) {
+                    newRef._displayname = {"isHTML": false, "value": fkDisplay.fromName, "unformatted": fkDisplay.fromName};
                 } else {
                     newRef._displayname = newRef._table.displayname;
                 }
 
-                // NOTE: this is for contextualized toComment and toCommentDisplay, to be implemented later
-                // display = fkr.getDisplay(this._context);
-
                 // comment
-                if (fkr.from_comment && typeof fkr.from_comment === "string") {
-                    // use fkr annotation from_comment
-                    newRef._comment = fkr.from_comment;
-                    newRef._commentDisplay = fkr.from_comment_display;
+                if (fkDisplay.fromComment) {
+                    comment = fkDisplay.fromComment.unformatted;
                 } else {
-                    // use comment from leaf table diplay annotation or table model comment
-                    display = newRef._table.getDisplay(this._context);
-
-                    newRef._comment = display.comment;
-                    newRef._commentDisplay = display.tableCommentDisplay;
+                    comment = tableDisplay.comment ? tableDisplay.comment.unformatted : null;
+                }
+                if (_isValidModelCommentDisplay(fkDisplay.fromCommentDisplayMode)) {
+                    commentDisplayMode = fkDisplay.fromCommentDisplayMode;
+                } else {
+                    commentDisplayMode = tableDisplay.tableCommentDisplayMode;
+                }
+                if (typeof fkDisplay.commentRenderMarkdown === 'boolean') {
+                    commentRenderMarkdown = fkDisplay.commentRenderMarkdown;
+                } else {
+                    commentRenderMarkdown = tableDisplay.commentRenderMarkdown;
                 }
 
                 // uri and location
@@ -4114,13 +4179,7 @@
                 dataSource = dataSource.concat(newRef._table.shortestKey[0].name);
             }
 
-            // if comment|comment_display in source object are defined
-            // comment_display was already set to it's default above
-            if (sourceObject && _isValidModelComment(sourceObject.comment)) {
-                newRef._comment = _processModelComment(sourceObject.comment);
-                // only change commentDisplay if comment and comment_display are both defined
-                if (_isValidModelCommentDisplay(sourceObject.comment_display)) newRef._commentDisplay = sourceObject.comment_display;
-            }
+            newRef._comment = _processSourceObjectComment(sourceObject, comment, commentRenderMarkdown, commentDisplayMode);
 
             // attach the compressedDataSource
             newRef.compressedDataSource = _compressSource(dataSource);
@@ -4345,8 +4404,11 @@
             } else { // no sort provieded: use shortest key for sort
                 sortObject = [];
                 for (var sk = 0; sk < this._shortestKey.length; sk++) {
-                    col = this._shortestKey[sk].name;
-                    sortObject.push({"column":col, "descending":false});
+                    col = this._shortestKey[sk];
+                    // make sure the column is sortable based on model
+                    if (module._nonSortableTypes.indexOf(col.type.name) === -1) {
+                        sortObject.push({"column":col.name, "descending":false});
+                    }
                 }
             }
 
@@ -5442,19 +5504,27 @@
             /*
              the object structure that is available on the annotation:
                $page = {
-                    values: [],
+                    rows: [
+                        {values, rowName, uri}
+                    ],
                     parent: {
                         values: [],
                         table: "",
                         schema: ""
                     }
+                    // deprecated
+                    values: [],
                 }
              */
             if (typeof display._pageMarkdownPattern === 'string') {
                 var $page = {
+                    rows: self.tuples.map(function (t, i) {
+                        return t.templateVariables;
+                    }),
+                    // (deprecated) should eventually be removed
                     values: self.tuples.map(function (t, i) {
                         return t.templateVariables.values;
-                    })
+                    }),
                 };
 
                 if (ref.mainTable) {
@@ -5920,7 +5990,7 @@
                  *     - use the template with result of `_getFormattedKeyValues` to get the value.
                  *   - otherwise:
                  *     - if json, attach <pre> tag to the formatted value.
-                 *     - if array, call printArray which will return an string.
+                 *     - if array, call printArray which will return a string.
                  *     - otherwise return the formatted value.
                  */
 

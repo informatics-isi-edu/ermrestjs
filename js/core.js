@@ -745,7 +745,7 @@
             if (uri === module._annotations.HIDDEN) {
                 this.ignore = true;
             } else if (uri === module._annotations.IGNORE &&
-                (jsonAnnotation === null || jsonAnnotation === [])) {
+                (jsonAnnotation === null || isEmptyArray(jsonAnnotation))) {
                 this.ignore = true;
             }
         }
@@ -804,12 +804,12 @@
 
         /**
          * @desc Documentation for this schema
-         * @type {string}
+         * @type {Object}
          */
-        this.comment = jsonSchema.comment;
+        this.comment = _processModelComment(jsonSchema.comment);
         if (this.annotations.contains(module._annotations.DISPLAY)) {
             var cm = _processModelComment(this.annotations.get(module._annotations.DISPLAY).content.comment);
-            if (typeof cm === "string") {
+            if (cm) {
                 this.comment = cm;
             }
         }
@@ -991,7 +991,7 @@
             if (uri === module._annotations.HIDDEN) {
                 this.ignore = true;
             } else if (uri === module._annotations.IGNORE &&
-                (jsonAnnotation === null || jsonAnnotation === [])) {
+                (jsonAnnotation === null || isEmptyArray(jsonAnnotation))) {
                 this.ignore = true;
             }
         }
@@ -1039,9 +1039,11 @@
          * @type {ERMrest.Columns}
          */
         this.columns = new Columns(this);
+
+        var assetCagetories = this._assignAssetCategories();
         for (var i = 0; i < jsonTable.column_definitions.length; i++) {
             var jsonColumn = jsonTable.column_definitions[i];
-            this.columns._push(new Column(this, jsonColumn));
+            this.columns._push(new Column(this, jsonColumn, assetCagetories[jsonColumn.name]));
         }
 
         /**
@@ -1074,12 +1076,13 @@
 
         /**
          * @desc Documentation for this table
-         * @type {string}
+         * @type {Object}
+         * @deprecated comment can be contextualized, so please do `this.getDisplay(context).comment` instead.
          */
-        this.comment = jsonTable.comment;
+        this.comment = _processModelComment(jsonTable.comment);
         if (this.annotations.contains(module._annotations.DISPLAY)) {
             var cm = _processModelComment(this.annotations.get(module._annotations.DISPLAY).content.comment);
-            if (typeof cm === "string") {
+            if (cm) {
                 this.comment = cm;
             }
         }
@@ -1172,42 +1175,45 @@
         getDisplay: function (context) {
             // check _display for information about current context
             if (!(context in this._display)) {
-                var comment_annotation = null, comment_display_annotation = null;
+                var annotComment = null;
                 if (this.annotations.contains(module._annotations.DISPLAY)) {
                     // comment can be a string or an object
-                    comment_annotation = this.annotations.get(module._annotations.DISPLAY).get("comment");
+                    annotComment = this.annotations.get(module._annotations.DISPLAY).get("comment");
                     // point to comment since that is what is contextualized in this annotation
                     // if it's an object, that means it's contextualized
-                    if (typeof comment_annotation == "object") {
-                        comment_annotation = module._getAnnotationValueByContext(context, comment_annotation);
+                    if (typeof annotComment == "object") {
+                        annotComment = module._getAnnotationValueByContext(context, annotComment);
+                    }
+                }
+
+                var comment = this.comment ? this.comment.unformatted : null;
+                if (_isValidModelComment(annotComment)) {
+                    comment = annotComment;
+                }
+
+                var displayProps = module._getHierarchicalDisplayAnnotationValue(this, context, "comment_display", true);
+                var tableCommentDisplayMode = module._commentDisplayModes.tooltip,
+                    columnCommentDisplayMode = module._commentDisplayModes.tooltip,
+                    commentRenderMarkdown;
+                if (isObjectAndNotNull(displayProps)) {
+                    if (_isValidModelCommentDisplay(displayProps.table_comment_display)) {
+                        tableCommentDisplayMode = displayProps.table_comment_display;
                     }
 
-                    comment_display_annotation = module._getAnnotationValueByContext(context, this.annotations.get(module._annotations.DISPLAY).get("comment_display"));
-                }
+                    if (_isValidModelCommentDisplay(displayProps.column_comment_display)) {
+                        columnCommentDisplayMode = displayProps.column_comment_display;
+                    }
 
-                var comment = this.comment,
-                    tableCommentDisplay = module._commentDisplayModes.tooltip,
-                    columnCommentDisplay = module._commentDisplayModes.tooltip;
-
-                // comment is contextualized
-                if (_isValidModelComment(comment_annotation)) {
-                    comment = _processModelComment(comment_annotation);
-                }
-
-                // since in the model we cannot define the comment_display settings,
-                // this annotation can be used in conjunction with the model's comments
-                // and we don't need to make sure the comment is coming from annotation
-                if (comment_display_annotation && _isValidModelCommentDisplay(comment_display_annotation.column_comment_display)) {
-                    columnCommentDisplay = comment_display_annotation.column_comment_display;
-                }
-                if (comment_display_annotation && _isValidModelCommentDisplay(comment_display_annotation.table_comment_display)) {
-                    tableCommentDisplay = comment_display_annotation.table_comment_display;
+                    if (typeof displayProps.comment_render_markdown === 'boolean') {
+                        commentRenderMarkdown = displayProps.comment_render_markdown;
+                    }
                 }
 
                 this._display[context] = {
-                    "columnCommentDisplay": columnCommentDisplay,
-                    "comment": comment, // coming from the model, or annotation
-                    "tableCommentDisplay": tableCommentDisplay
+                    "columnCommentDisplayMode": columnCommentDisplayMode,
+                    "tableCommentDisplayMode": tableCommentDisplayMode,
+                    "comment": _processModelComment(comment, commentRenderMarkdown, tableCommentDisplayMode),
+                    "commentRenderMarkdown": commentRenderMarkdown
                 };
             }
             return this._display[context];
@@ -1239,15 +1245,6 @@
                     if (ridKey) {
                         this._shortestKey = ridKey.colset.columns;
                     } else {
-                        // returns 1 if all the columns are serial/int, 0 otherwise
-                        var allSerialInt = function (key) {
-                            return (key.colset.columns.map(function (column) {
-                                return column.type.name;
-                            }).every(function (current, index, array) {
-                                return (current.toUpperCase().startsWith("INT") || current.toUpperCase().startsWith("SERIAL"));
-                            }) ? 1 : 0);
-                        };
-
                         // pick the first key that is shorter or is all serial/integer.
                         this._shortestKey = keys.sort(function (a, b) {
                             var compare;
@@ -1259,13 +1256,13 @@
                             }
 
                             // if key length equal, choose the one that all of its keys are serial or int
-                            compare = allSerialInt(b) - allSerialInt(a);
+                            compare = (b.colset.allSerialOrInt ? 1 : 0 ) - (a.colset.allSerialOrInt ? 1 : 0);
                             if (compare !== 0) {
                                 return compare;
                             }
 
                             // the one that has lower column position
-                            return (a.colset._getColumnPositions() > b.colset._getColumnPositions()) ? 1 : -1;
+                            return compareColumnPositions(a.colset._getColumnPositions(), b.colset._getColumnPositions(), true);
                         })[0].colset.columns;
                     }
 
@@ -1277,20 +1274,20 @@
         },
 
         /**
-         * The columns that create the shortest key that can be used for display purposes.
+         * The columns that create the shortest key that can be used for display purposes (rowname).
+         *
+         * sort the not-null keys based on the following and return the first one:
+         * 1. not simple fk to somewhere
+         * 2. not simple and made of any asset metadata (url, filename, bytecount, md5, sha256)
+         * 3. is shorter
+         * 4. has more text
+         * 5. made of columns defined earlier (column position)
          *
          * @type {ERMrest.Column[]}
          */
         get displayKey () {
             if (this._displayKey === undefined) {
                 if (this.keys.length() !== 0) {
-                    var countTextColumns = function(key) {
-                        for (var i = 0, res = 0; i < key.colset.columns.length; i++) {
-                            if (key.colset.columns[i].type.name == "text") res++;
-                        }
-                        return res;
-                    };
-
                     // find the keys with not-null columns
                     var keys = this.keys.all().filter(function (key) {
                         return key._notNull;
@@ -1304,6 +1301,28 @@
                     }
 
                     this._displayKey = keys.sort(function (keyA, keyB) {
+                        var keyACol = keyA.colset.columns[0], keyBCol = keyB.colset.columns[0];
+
+                        // not fk to somewhere
+                        var isPartOfSimpleFkA = keyA.simple && keyACol.isPartOfSimpleForeignKey;
+                        var isPartOfSimpleFkB = keyB.simple && keyBCol.isPartOfSimpleForeignKey;
+                        if (isPartOfSimpleFkA !== isPartOfSimpleFkB) {
+                            return isPartOfSimpleFkA ? 1 : -1;
+                        }
+
+                        // not simple and made of any asset metadata columns
+                        // !! is used to turn it into boolean
+                        var isAssetA = !!(keyA.simple && (
+                            keyACol.isAssetMd5 || keyACol.isAssetSha256 ||
+                            keyACol.isAssetURL || keyACol.isAssetFilename || keyACol.isAssetByteCount
+                        ));
+                        var isAssetB = !!(keyB.simple && (
+                            keyBCol.isAssetMd5 || keyBCol.isAssetSha256 ||
+                            keyBCol.isAssetURL || keyBCol.isAssetFilename || keyBCol.isAssetByteCount
+                        ));
+                        if (isAssetA !== isAssetB) {
+                            return isAssetA ? 1 : -1;
+                        }
 
                         // shorter
                         if (keyA.colset.columns.length != keyB.colset.columns.length) {
@@ -1311,14 +1330,14 @@
                         }
 
                         // has more text
-                        var aTextCount = countTextColumns(keyA);
-                        var bTextCount = countTextColumns(keyB);
-                        if (aTextCount != bTextCount) {
+                        var aTextCount = keyA.colset.textColumnsCount;
+                        var bTextCount = keyB.colset.textColumnsCount;
+                        if (aTextCount !== bTextCount) {
                             return bTextCount - aTextCount;
                         }
 
                         // the one that has lower column position
-                        return (keyA.colset._getColumnPositions() > keyB.colset._getColumnPositions()) ? 1 : -1;
+                        return compareColumnPositions(keyA.colset._getColumnPositions(), keyB.colset._getColumnPositions(), true);
                     })[0].colset.columns;
                 } else {
                     this._displayKey = this.columns.all();
@@ -1402,6 +1421,12 @@
          * @desc
          * This key will be used for referring to a row of data. Therefore it shouldn't be foreignkey and markdown type.
          * It's the same as displaykey but with extra restrictions. It might return undefined.
+         *
+         * sort the "well formed" keys that are not simple fk based on the following and return the first one:
+         * 2. not simple and made of hash asset metadata (md5, sha256)
+         * 3. is shorter
+         * 4. has more text
+         * 5. made of columns defined earlier (column position)
          */
         _getRowDisplayKey: function (context) {
             if (!(context in this._rowDisplayKeys)) {
@@ -1410,18 +1435,9 @@
                     var candidateKeys = [], key, fkeys, isPartOfSimpleFk, i, j;
                     for (i = 0; i < this.keys.length(); i++) {
                         key = this.keys.all()[i];
-                        isPartOfSimpleFk = false;
 
-                        // shouldn't select simple keys that their constituent column is part of any simple foreign key.
-                        if (key.simple && key.colset.columns[0].memberOfForeignKeys.length > 0) {
-                            fkeys = key.colset.columns[0].memberOfForeignKeys;
-                            for (j = 0; j < fkeys.length; j++) {
-                                if (fkeys[j].simple) {
-                                    isPartOfSimpleFk = true;
-                                    break;
-                                }
-                            }
-                        }
+                        // shouldn't select simple keys that their constituent column is part of a simple foreign key.
+                        isPartOfSimpleFk = key.simple && key.colset.columns[0].isPartOfSimpleForeignKey;
 
                         // select keys that none of their columns isHTMl and nullok.
                         if (!isPartOfSimpleFk && key._isWellFormed(context)) {
@@ -1431,14 +1447,15 @@
 
                     // sort the keys and pick the first one.
                     if (candidateKeys.length !== 0) {
-                        var countTextColumns = function(key) {
-                            for (var i = 0, res = 0; i < key.colset.columns.length; i++) {
-                                if (key.colset.columns[i].type.name == "text") res++;
-                            }
-                            return res;
-                        };
-
                         displayKey = candidateKeys.sort(function (keyA, keyB) {
+
+                            // is not simple and made of md5, sha256
+                            // !! is used to turn it into boolean
+                            var isAssetA = !!(keyA.simple && (keyA.colset.columns[0].isAssetMd5 || keyA.colset.columns[0].isAssetSha256));
+                            var isAssetB = !!(keyB.simple && (keyB.colset.columns[0].isAssetMd5 || keyB.colset.columns[0].isAssetSha256));
+                            if (isAssetA !== isAssetB) {
+                                return isAssetA ? 1 : -1;
+                            }
 
                             // shorter
                             if (keyA.colset.columns.length != keyB.colset.columns.length) {
@@ -1446,14 +1463,14 @@
                             }
 
                             // has more text
-                            var aTextCount = countTextColumns(keyA);
-                            var bTextCount = countTextColumns(keyB);
-                            if (aTextCount != bTextCount) {
+                            var aTextCount = keyA.colset.textColumnsCount;
+                            var bTextCount = keyB.colset.textColumnsCount;
+                            if (aTextCount !== bTextCount) {
                                 return bTextCount - aTextCount;
                             }
 
                             // the one that has lower column position
-                            return (keyA.colset._getColumnPositions() > keyB.colset._getColumnPositions()) ? 1 : -1;
+                            return compareColumnPositions(keyA.colset._getColumnPositions(), keyB.colset._getColumnPositions(), true);
                         })[0];
                     }
                 }
@@ -1599,7 +1616,7 @@
                     return false;
                 }
 
-                var sourceDef = annot.sources[key], pSource, hasPrefix;
+                var sourceDef = annot.sources[key], pSource, hasPrefix, hasSourcekey, usedSourcekey, valid;
                 try {
                     // if it has prefix, we have to make sure the prefix is processed beforehand
                     hasPrefix = typeof sourceDef === "object" && Array.isArray(sourceDef.source) &&
@@ -1611,7 +1628,7 @@
                         keysThatDependOnThis.push(key);
 
                         // make sure we've processed the prefix
-                        var valid = addSourceDef(sourceDef.source[0].sourcekey, keysThatDependOnThis);
+                        valid = addSourceDef(sourceDef.source[0].sourcekey, keysThatDependOnThis);
                         processedSources[key] = valid;
                         if (!valid) {
                             module._log.info(message + ": " + "given sourcekey (path prefix) is invalid.");
@@ -1755,6 +1772,7 @@
                         var src = sbDef[orOperator][index];
                         var pSource, sd;
 
+                        // sourcekey has priority over source. if both used, ignore source and only honor source.
                         if (src.sourcekey) {
                             sd = self.sourceDefinitions.sources[src.sourcekey];
                             if (!sd) {
@@ -2162,6 +2180,11 @@
             return module._getNullValue(this, context, true);
         },
 
+        /**
+         * return the fk that is based on the given column names (it could be inbound or outbound)
+         * @param {string[]} localColumnNames
+         * @private
+         */
         _findForeignKeyByLocalColumns: function (localColumnNames) {
             if (!Array.isArray(localColumnNames) || localColumnNames.length === 0) {
                 return {successful: false, message: 'local_columns must be a non-empty array.'};
@@ -2202,6 +2225,12 @@
             };
         },
 
+        /**
+         * return the fk that is related to the remote table and column names (it could be inbound or outbound)
+         * @param {string} remoteTable
+         * @param {string[]} remoteColumnNames
+         * @param {Object} nameMapping
+         */
         _findForeignKeyByRemoteColumns: function (remoteTable, remoteColumnNames, nameMapping) {
             if (!Array.isArray(remoteColumnNames) || remoteColumnNames.length === 0) {
                 return {successful: false, message: 'remote_columns or local_to_remote_columns must be defined properly.'};
@@ -2301,6 +2330,62 @@
             }
 
             return {successful: false, message: 'none of the acceptable combination was used.'};
+        },
+
+        /**
+         * returns an object that captures the asset category of columns.
+         * - the key of the returned object is the column name and value and the value is an object. The object has the following:
+         *  - category: the assigned category name
+         *  - URLColumn: the url column.
+         * - if a column is used in multiple asset annotations, only the first usage is used and other asset annotations
+         *   are discarded.
+         */
+        _assignAssetCategories: function () {
+            var mapAssetAnnotPropToCategory = {
+                'filename_column': 'filename',
+                'byte_count_column': 'byte_count',
+                'md5': 'md5',
+                'sha256': 'sha256'
+            };
+
+            var jsonTable = this._jsonTable;
+            var assignedColumns = {};
+            for (var i = 0; i < jsonTable.column_definitions.length; i++) {
+                var col = jsonTable.column_definitions[i];
+                var message = 'asset annotation on column ' + col.name + ' will be ignored. reason: ';
+
+                // column must be text type and have asset annotation to be treated as asset.
+                if (col.type.typename === "text" && module._annotations.ASSET in col.annotations) {
+                    // if the column already used, discard the asset annot
+                    if (col.name in assignedColumns) {
+                        module._log.warn(message + 'it\'s already used in an asset column mapping.');
+                    } else {
+
+                        // go over the props and see if they are already mapped or not
+                        var annot = col.annotations[module._annotations.ASSET], valid = true, temp = {};
+                        var keys = Object.keys(mapAssetAnnotPropToCategory);
+                        for (var j = 0; valid && j < keys.length; j++) {
+                            var prop = keys[j];
+                            if (isObjectAndNotNull(annot) && isStringAndNotEmpty(annot[prop])) {
+                                if (annot[prop] in assignedColumns) {
+                                    valid = false;
+                                    module._log.warn(message + '`' + annot[prop] + '` already used in another asset column mapping.');
+                                } else {
+                                    temp[annot[prop]] = { category: mapAssetAnnotPropToCategory[prop], URLColumnName: col.name };
+                                }
+                            }
+
+                        }
+
+                        if (valid) {
+                            assignedColumns[col.name] = { category: 'url' };
+                            Object.assign(assignedColumns, temp);
+                        }
+                    }
+
+                }
+            }
+            return assignedColumns;
         }
     };
 
@@ -2818,8 +2903,9 @@
      * @constructor
      * @param {ERMrest.Table} table the table object.
      * @param {string} jsonColumn the json column.
+     * @param {Object?} assetCategoryInfo if the column is an asset, this must be an object with categroy and URLColumn properties
      */
-    function Column(table, jsonColumn) {
+    function Column(table, jsonColumn, assetCategoryInfo) {
 
         this._jsonColumn = jsonColumn;
 
@@ -2846,18 +2932,13 @@
 
             var self = this;
 
-            //This check has been added to show "null" in all the rows if the user inputs blank string
-            //We are opting json out here because we want null in the UI instead of "", so we do not call _getNullValue for json
-            if (data === undefined || (data === null && this.type.name.indexOf('json') === -1)) {
+            // this used to treat json differently but we don't want that anymore.
+            // since we cannot distinguish between json null and database null, we decided to show it as database null anyways.
+            if (data === undefined || data === null) {
                 return this._getNullValue(context);
-            } else if (data === null && this.type.name.indexOf('json') !== 0) {
-                return data;
             }
 
             var display = this.getDisplay(context);
-            var isPartOfSimpleFk = self.memberOfForeignKeys.filter(function (fk) {
-                return fk.simple;
-            }).length > 0;
 
             var getFormattedValue = function (v) {
                 // in case of array, null and empty strings are valid values and we
@@ -2876,7 +2957,7 @@
 
                 // if int/serial and part of simple key or simple fk we don't want to format the value
                 if ((self.type.name.indexOf("int") === 0 || self.type.name.indexOf("serial") === 0) &&
-                    (self.isUniqueNotNull || isPartOfSimpleFk)) {
+                    (self.isUniqueNotNull || self.isPartOfSimpleForeignKey)) {
                     return v.toString();
                 }
 
@@ -2907,16 +2988,23 @@
                 options = {};
             }
 
+            var rawValue = data[this.name];
             var display = this.getDisplay(context);
 
             var formattedValue, unformatted;
-            formattedValue = this.formatvalue(data[this.name], context, options);
+            formattedValue = this.formatvalue(rawValue, context, options);
 
             /*
              * If column doesn't has column-display annotation and is not of type markdown
              * but the column type is json then append <pre> tag and return the value
              */
-            if (!display.isHTML && this.type.name.indexOf('json') !== -1) {
+            if (!display.isHTML && this.type.name.indexOf('json') === 0) {
+                // jsonb column should be treated similar to other columns, so
+                // If value is null or empty, return value on based on `show_null` instead of adding the code block.
+                if (rawValue === null || rawValue === undefined) {
+                    return { isHTML: false, value: this._getNullValue(context), unformatted: this._getNullValue(context) };
+                }
+
                 return { isHTML: true, value: '<pre>' + formattedValue + '</pre>', unformatted: formattedValue};
             }
 
@@ -2934,6 +3022,17 @@
                     unformatted: unformatted,
                     value: module.renderMarkdown(unformatted, options.inline)
                 };
+            }
+
+            // bytesize default display
+            if (!display.isMarkdownPattern && this.isAssetByteCount) {
+                return module.processMarkdownPattern(
+                    '{{humanizeBytes _value tooltip=true}}',
+                    {'_value': rawValue},
+                    this.table,
+                    context,
+                    { templateEngine: module.HANDLEBARS }
+                );
             }
 
             /*
@@ -2958,7 +3057,13 @@
                     templateVariables = module._getFormattedKeyValues(this.table, context, data);
                 }
 
-                unformatted = module._renderTemplate(template, templateVariables, this.table.schema.catalog, {templateEngine: display.templateEngine});
+                var keyValues = {};
+                Object.assign(keyValues, templateVariables, {
+                    "$self": formattedValue,
+                    "$_self": rawValue
+                });
+
+                unformatted = module._renderTemplate(template, keyValues, this.table.schema.catalog, {templateEngine: display.templateEngine});
             }
 
 
@@ -3037,6 +3142,61 @@
          */
         this.ignore = false;
 
+        if (isObjectAndNotNull(assetCategoryInfo) && isStringAndNotEmpty(assetCategoryInfo.category)) {
+            /**
+             * if it's used in an asset annotation, will return its category. available values:
+             * 'url', 'filename', 'byte_count', 'md5', 'sha256'
+             *
+             * @type {?string}
+             */
+            this.assetCategory = assetCategoryInfo.category;
+
+            if (isStringAndNotEmpty(assetCategoryInfo.URLColumnName)) {
+                /**
+                 * if the column is storing of the extra asset metadata, this will return the actual url column
+                 */
+                this.assetURLColumnName = assetCategoryInfo.URLColumnName;
+            }
+
+            switch (assetCategoryInfo.category) {
+                case 'url':
+                    /**
+                     * if this column is has a valid asset annotation
+                     * @type {boolean}
+                     */
+                    this.isAssetURL = true;
+                    break;
+                case 'filename':
+                    /**
+                     * if this column is a filename for an asset column
+                     * @type {boolean}
+                     */
+                    this.isAssetFilename = true;
+                    break;
+                case 'byte_count':
+                    /**
+                     * if this column is a byte count for an asset column
+                     * @type {boolean}
+                     */
+                    this.isAssetByteCount = true;
+                    break;
+                case 'md5':
+                    /**
+                     * if this column is a md5 for an asset column
+                     * @type {boolean}
+                     */
+                    this.isAssetMd5 = true;
+                    break;
+                case 'sha256':
+                    /**
+                     * if this column is a sha256 for an asset column
+                     * @type {boolean}
+                     */
+                    this.isAssetSha256 = true;
+                    break;
+            }
+        }
+
         /**
          *
          * @type {ERMrest.Annotations}
@@ -3068,6 +3228,18 @@
                 }
             }
         });
+        // then copy if it's an asset type (asset is the most specific one)
+        var assetCategory = this.assetCategory;
+        if (isStringAndNotEmpty(assetCategory)) {
+            ancestors.forEach(function (el) {
+                if (el.annotations.contains(defaultAnnotKey)) {
+                    var tempAnnot = el.annotations.get(defaultAnnotKey).content;
+                    if (isObjectAndNotNull(tempAnnot) && isObjectAndNotNull(tempAnnot.asset) && isObjectAndNotNull(tempAnnot.asset[assetCategory])) {
+                        Object.assign(annots, tempAnnot.asset[assetCategory]);
+                    }
+                }
+            });
+        }
 
         // then copy the existing annots on the column
         Object.assign(annots, jsonColumn.annotations);
@@ -3078,26 +3250,27 @@
             if (uri === module._annotations.HIDDEN) {
                 this.ignore = true;
             } else if (uri === module._annotations.IGNORE &&
-                (jsonAnnotation === null || jsonAnnotation === [])) {
+                (jsonAnnotation === null || isEmptyArray(jsonAnnotation)) ){
                 this.ignore = true;
             }
         }
 
         /**
          * @desc Documentation for this column
-         * @type {string}
+         * @type {Object}
+         * @deprecated comment can be contextualized, so please do `this.getDisplay(context).comment` instead.
          */
-        this.comment = jsonColumn.comment;
+        this.comment = _processModelComment(jsonColumn.comment);
         if (this.annotations.contains(module._annotations.DISPLAY)) {
             var cm = _processModelComment(this.annotations.get(module._annotations.DISPLAY).content.comment);
-            if (typeof cm === "string") {
+            if (cm) {
                 this.comment = cm;
             }
         }
 
         // If the comment is not defined for a system column, then it is assigned a default comment
-        if((this.comment == null || this.comment == undefined) && this.isSystemColumn){
-            this.comment = module._defaultColumnComment[this.name];
+        if((this.comment === null || this.comment === undefined) && this.isSystemColumn){
+            this.comment = _processModelComment(module._defaultColumnComment[this.name], false);
         }
 
         /**
@@ -3310,6 +3483,31 @@
                     }
                 }
 
+                var comment = this.comment ? this.comment.unformatted : null;
+                if (this.annotations.contains(module._annotations.DISPLAY)) {
+                    // comment can be a string or an object
+                    var commentAnnot = this.annotations.get(module._annotations.DISPLAY).get("comment");
+                    // point to comment since that is what is contextualized in this annotation
+                    // if it's an object, that means it's contextualized
+                    if (typeof commentAnnot == "object") {
+                        commentAnnot = module._getAnnotationValueByContext(context, commentAnnot);
+                    }
+                    if (_isValidModelComment(commentAnnot)) {
+                        comment = commentAnnot;
+                    }
+                }
+
+                var displayProps = module._getHierarchicalDisplayAnnotationValue(this, context, "comment_display", false);
+                var columnCommentDisplayMode = module._commentDisplayModes.tooltip, commentRenderMarkdown;
+                if (isObjectAndNotNull(displayProps)) {
+                    if (_isValidModelCommentDisplay(displayProps.column_comment_display)) {
+                        columnCommentDisplayMode = displayProps.column_comment_display;
+                    }
+                    if (typeof displayProps.comment_render_markdown === 'boolean') {
+                        commentRenderMarkdown = displayProps.comment_render_markdown;
+                    }
+                }
+
                 this._display[context] = {
                     "hideColumnHeader": annotation.hide_column_header || false, // only hide if the annotation value is true
                     "isPreformat": hasPreformat,
@@ -3319,7 +3517,10 @@
                     "isHTML": (typeof annotation.markdown_pattern === 'string') || (module._HTMLColumnType.indexOf(this.type.name) != -1),
                     "markdownPattern": annotation.markdown_pattern,
                     "templateEngine": annotation.template_engine,
-                    "columnOrder": columnOrder
+                    "columnOrder": columnOrder,
+                    "comment": _processModelComment(comment, commentRenderMarkdown, columnCommentDisplayMode),
+                    "commentRenderMarkdown": commentRenderMarkdown,
+                    "commentDisplayMode": columnCommentDisplayMode
                 };
             }
             return this._display[context];
@@ -3431,6 +3632,18 @@
             }
             return this._uniqueNotNullKey;
         },
+
+        /**
+         * whether there's a simple fk based on this column
+         */
+        get isPartOfSimpleForeignKey() {
+            if (this._isPartOfSimpleForeignKey === undefined) {
+                this._isPartOfSimpleForeignKey = this.memberOfForeignKeys.some(function (fk) {
+                    return fk.simple;
+                });
+            }
+            return this._isPartOfSimpleForeignKey;
+        }
     };
 
     /**
@@ -3678,12 +3891,13 @@
 
         /**
          * @desc Documentation for this key
-         * @type {string}
+         * @type {Object}
+         * @deprecated comment can be contextualized, so please do `this.getDisplay(context).comment` instead.
          */
-        this.comment = jsonKey.comment;
+        this.comment = _processModelComment(jsonKey.comment);
         if (this.annotations.contains(module._annotations.DISPLAY)) {
             var cm = _processModelComment(this.annotations.get(module._annotations.DISPLAY).content.comment);
-            if (typeof cm === "string") {
+            if (cm) {
                 this.comment = cm;
             }
         }
@@ -3817,12 +4031,37 @@
                     }
                 }
 
+                var annotComment = null;
+                if (this.annotations.contains(module._annotations.DISPLAY)) {
+                    annotComment = this.annotations.get(module._annotations.DISPLAY).get("comment");
+                    if (typeof annotComment == "object") {
+                        annotComment = module._getAnnotationValueByContext(context, annotComment);
+                    }
+                }
+
+                var comment = this.comment ? this.comment.unformatted : null;
+                if (_isValidModelComment(annotComment)) {
+                    comment = annotComment;
+                }
+
+                var displayProps = module._getHierarchicalDisplayAnnotationValue(this, context, "comment_display", false);
+                var commentDisplay = module._commentDisplayModes.tooltip, commentRenderMarkdown;
+                if (isObjectAndNotNull(displayProps)) {
+                    if (_isValidModelCommentDisplay(displayProps.column_comment_display)) {
+                        commentDisplay = displayProps.column_comment_display;
+                    }
+                    if (typeof displayProps.comment_render_markdown === 'boolean') {
+                        commentRenderMarkdown = displayProps.comment_render_markdown;
+                    }
+                }
+
                 this._display[context] = {
                     "columnOrder": columnOrder,
                     "isMarkdownPattern": (typeof annotation.markdown_pattern === 'string'),
                     "templateEngine": annotation.template_engine,
                     "markdownPattern": annotation.markdown_pattern,
-                    "showKeyLink": showKeyLink
+                    "showKeyLink": showKeyLink,
+                    "comment": _processModelComment(comment, commentRenderMarkdown, commentDisplay)
                 };
             }
 
@@ -3908,7 +4147,36 @@
                 }).sort();
             }
             return this._columnPositions;
-        }
+        },
+
+        /**
+         * how many text columns are in this colset
+         * @type {number}
+         */
+        get textColumnsCount() {
+            if (this._textColumnsCount === undefined) {
+                var res = 0 ;
+                for (var i = 0; i < this.columns.length; i++) {
+                    if (this.columns[i].type.name == "text") res++;
+                }
+                this._textColumnsCount = res;
+            }
+            return this._textColumnsCount;
+        },
+
+        /**
+         * whether all the columns are integer or serial
+         * @type {boolean}
+         */
+        get allSerialOrInt() {
+            if (this._allSerialOrInt === undefined) {
+                this._allSerialOrInt = this.columns.every(function (column) {
+                    var current = column.type.name;
+                    return current.toUpperCase().startsWith("INT") || current.toUpperCase().startsWith("SERIAL");
+                });
+            }
+            return this._allSerialOrInt;
+        },
     };
 
 
@@ -4085,18 +4353,19 @@
                 else if (typeof orders[i] === "object") {
                     var wrapper;
                     if (orders[i].source || orders[i].sourcekey) {
-                        if (orders[i].source) {
+                        // if both source and sourcekey are defined, ignore the source and use sourcekey
+                        if (orders[i].sourcekey) {
+                            var def = definitions.sources[orders[i].sourcekey];
+                            if (def) {
+                                wrapper = def.clone(orders[i], this._table, module._constraintNames);
+                            }
+                        } else {
                             try {
                                 wrapper = new SourceObjectWrapper(orders[i], this._table, module._constraintNames);
                             } catch (exp) {
                                 // we might want to show a better error message later.
                                 logErr(true, exp.message, i);
                                 invalid = true;
-                            }
-                        } else {
-                            var def = definitions.sources[orders[i].sourcekey];
-                            if (def) {
-                                wrapper = def.clone(orders[i], this._table, module._constraintNames);
                             }
                         }
 
@@ -4305,36 +4574,6 @@
         }
 
         /**
-         * @type {string}
-         */
-        this.from_name = "";
-
-        /**
-         * @type {string}
-         */
-        this.to_name = "";
-
-        /**
-         * @type {string}
-         */
-        this.to_comment = "";
-
-        /**
-         * @type {string}
-         */
-        this.from_comment = "";
-
-        /**
-         * @type {string}
-         */
-        this.to_comment_display = module._commentDisplayModes.tooltip;
-
-        /**
-         * @type {string}
-         */
-        this.from_comment_display = module._commentDisplayModes.tooltip;
-
-        /**
          * @type {boolean}
          */
         this.ignore = false;
@@ -4350,38 +4589,23 @@
             if (uri === module._annotations.HIDDEN) {
                 this.ignore = true;
             } else if (uri === module._annotations.IGNORE &&
-                (jsonAnnotation === null || jsonAnnotation === [])) {
+                (jsonAnnotation === null || isEmptyArray(jsonAnnotation))) {
                 this.ignore = true;
-            }
-
-            // determine the from_name and to_name using the annotation
-            if (uri == module._annotations.FOREIGN_KEY && jsonAnnotation) {
-                if(jsonAnnotation.from_name){
-                    this.from_name = jsonAnnotation.from_name;
-                }
-                if(jsonAnnotation.to_name){
-                    this.to_name = jsonAnnotation.to_name;
-                }
-
-                if (_isValidModelComment(jsonAnnotation.to_comment)) {
-                    // check for null, false, empty string when digesting comment for first time
-                    this.to_comment = _processModelComment(jsonAnnotation.to_comment);
-                    if (_isValidModelCommentDisplay(jsonAnnotation.to_comment_display)) this.to_comment_display = jsonAnnotation.to_comment_display;
-                }
-
-                if (_isValidModelComment(jsonAnnotation.from_comment)) {
-                    // check for null, false, empty string when digesting comment for first time
-                    this.from_comment = _processModelComment(jsonAnnotation.from_comment);
-                    if (_isValidModelCommentDisplay(jsonAnnotation.from_comment_display)) this.from_comment_display = jsonAnnotation.from_comment_display;
-                }
             }
         }
 
         /**
          * @desc Documentation for this foreign key reference
-         * @type {string}
+         * @type {Object}
+         * @deprecated comment can be contextualized, so please do `this.getDisplay(context).comment` instead.
          */
-        this.comment = jsonFKR.comment;
+        this.comment = _processModelComment(jsonFKR.comment);
+
+        /**
+         * whether the "on delete cascade" is set for this foreign key.
+         * @type {boolean}
+         */
+        this.onDeleteCascade = jsonFKR.on_delete === 'CASCADE';
 
         this._display = {};
 
@@ -4473,15 +4697,48 @@
 
         getDisplay: function(context) {
             if (!(context in this._display)) {
-                var self = this, annotation = -1, columnOrder = [], showFKLink = true;
-                // NOTE: commenting out contextualized functionality since it isn't being supported just yet
-                // var fromComment = null, fromCommentDisplay = "tooltip", toComment = null, toCommentDisplay = "tooltip";
+                var self = this, fkAnnot, displayAnnot = -1, columnOrder = [], showFKLink = true,
+                    inputDisplayMode = module._foreignKeyInputModes[0], toTableAnnotation = -1;
+
+                var fromName, toName,
+                    fromComment = null, toComment = null,
+                    fromCommentDisplayMode, toCommentDisplayMode,
+                    commentRenderMarkdown;
+
                 if (this.annotations.contains(module._annotations.FOREIGN_KEY)) {
-                    annotation = module._getAnnotationValueByContext(context, this.annotations.get(module._annotations.FOREIGN_KEY).get("display"));
+                    fkAnnot = this.annotations.get(module._annotations.FOREIGN_KEY);
+                    displayAnnot = module._getAnnotationValueByContext(context, fkAnnot.get("display"));
+
+                    fkAnnot = fkAnnot.content;
                 }
 
-                columnOrder = _processColumnOrderList(annotation.column_order, this.key.table);
-                showFKLink = annotation.show_foreign_key_link;
+                // from_name and to_name
+                if (fkAnnot && fkAnnot.from_name) {
+                    fromName = fkAnnot.from_name;
+                }
+                if (fkAnnot && fkAnnot.to_name) {
+                    toName = fkAnnot.to_name;
+                }
+
+                // comment related props
+                if (fkAnnot && _isValidModelComment(fkAnnot.from_comment)) {
+                    fromComment = _processModelComment(fkAnnot.from_comment).unformatted;
+                }
+                if (fkAnnot && _isValidModelCommentDisplay(fkAnnot.from_comment_display)) {
+                    fromCommentDisplayMode = fkAnnot.from_comment_display;
+                }
+                if (fkAnnot && _isValidModelComment(fkAnnot.to_comment)) {
+                    toComment = _processModelComment(fkAnnot.to_comment).unformatted;
+                }
+                if (fkAnnot && _isValidModelCommentDisplay(fkAnnot.to_comment_display)) {
+                    toCommentDisplayMode = fkAnnot.to_comment_display;
+                }
+                if (fkAnnot && typeof fkAnnot.comment_render_markdown === 'boolean') {
+                    commentRenderMarkdown = fkAnnot.comment_render_markdown;
+                }
+
+                columnOrder = _processColumnOrderList(displayAnnot.column_order, this.key.table);
+                showFKLink = displayAnnot.show_foreign_key_link;
                 if (typeof showFKLink !== "boolean") {
                     showFKLink = module._getHierarchicalDisplayAnnotationValue(
                         self, context, "show_foreign_key_link"
@@ -4499,18 +4756,44 @@
                     }
                 }
 
-                // fromComment = _processModelComment(annotation.from_comment);
-                // toComment = _processModelComment(annotation.to_comment);
-                // fromCommentDisplay = (annotation.from_comment && typeof annotation.from_comment_display === "string") ? annotation.from_comment_display : "tooltip";
-                // toCommentDisplay = (annotation.to_comment && typeof annotation.to_comment_display === "string") ? annotation.to_comment_display : "tooltip";
+                /**
+                 * inputDisplayMode is set based on the following rules:
+                 *   1. defined on display property in visible-columns
+                 *   2. foreign key annotation
+                 *   3. table-display annotation when defined on the leaf table of the fkey relationship
+                 *   4. default value of 'popup'
+                 *
+                 * supported _foreignKeyInputModes are ['facet-search-popup', 'simple-search-dropdown']
+                 */
+                // NOTE: this property is only used when the table is used as the leaf for a foreign key
+                // using index 0 ensures we only support this on single outbound foreign key relationships when table-display is on the leaf table
+                var fromCol = this.colset.columns[0];
+                var toCol = this.mapping.get(fromCol);
+                if (toCol.table.annotations.contains(module._annotations.TABLE_DISPLAY)) {
+                    toTableAnnotation = module._getRecursiveAnnotationValue(context, toCol.table.annotations.get(module._annotations.TABLE_DISPLAY).content);
+
+                    if (toTableAnnotation.selector_ux_mode && module._foreignKeyInputModes.indexOf(toTableAnnotation.selector_ux_mode) !== -1) {
+                        inputDisplayMode = toTableAnnotation.selector_ux_mode;
+                    }
+                }
+
+                if (displayAnnot.selector_ux_mode && module._foreignKeyInputModes.indexOf(displayAnnot.selector_ux_mode) !== -1) {
+                    inputDisplayMode = displayAnnot.selector_ux_mode;
+                }
 
                 this._display[context] = {
                     "columnOrder": columnOrder,
-                    // "fromComment": fromComment,
-                    // "fromCommentDisplay": fromCommentDisplay,
+                    "inputDisplayMode": inputDisplayMode,
                     "showForeignKeyLink": showFKLink,
-                    // "toComment": toComment,
-                    // "toCommentDisplay": toCommentDisplay
+                    "fromName": fromName,
+                    "fromComment": _processModelComment(fromComment, commentRenderMarkdown, fromCommentDisplayMode),
+                    "fromCommentDisplayMode": fromCommentDisplayMode,
+                    "toName": toName,
+                    "toComment": _processModelComment(toComment, commentRenderMarkdown, toCommentDisplayMode),
+                    "toCommentDisplayMode": toCommentDisplayMode,
+                    "commentRenderMarkdown": commentRenderMarkdown,
+                    // TODO this is left for backwards compatibility and should most probably be removed in favor of toComment and fromComment
+                    "comment": _processModelComment(this.comment ? this.comment.unformatted : null, commentRenderMarkdown),
                 };
             }
 

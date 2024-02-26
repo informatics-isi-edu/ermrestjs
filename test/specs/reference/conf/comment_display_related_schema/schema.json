@@ -49,7 +49,12 @@
                 },
                 "tag:isrd.isi.edu,2016:visible-foreign-keys": {
                     "detailed": [
-                        { "sourcekey": "simple_fk_1", "comment": "simple fk source syntax comment", "comment_display": "inline" },
+                        {
+                            "sourcekey": "simple_fk_1",
+                            "comment": "simple fk source syntax comment",
+                            "comment_display": "inline",
+                            "comment_render_markdown": false
+                        },
                         { "sourcekey": "simple_fk_2" },
                         { "sourcekey": "simple_fk_3" },
                         { "sourcekey": "simple_fk_4" }
@@ -146,7 +151,8 @@
                     "annotations": {
                         "tag:isrd.isi.edu,2016:foreign-key": {
                             "from_comment": "simple fk from_comment comment",
-                            "from_comment_display": "inline"
+                            "from_comment_display": "inline",
+                            "comment_render_markdown": true
                         }
                     }
                 }
@@ -204,7 +210,8 @@
                     ],
                     "annotations": {
                         "tag:isrd.isi.edu,2016:foreign-key": {
-                            "from_comment_display": "inline"
+                            "from_comment_display": "inline",
+                            "comment_render_markdown": true
                         }
                     }
                 }
@@ -287,7 +294,8 @@
                     },
                     "comment_display": {
                         "detailed": {
-                            "table_comment_display": "inline"
+                            "table_comment_display": "inline",
+                            "comment_render_markdown": false
                         }
                     }
                 }
@@ -379,18 +387,38 @@
                                 "RID"
                             ],
                             "entity": true
+                        },
+                        "multi_leaf_no_display": {
+                            "source": [
+                                {"inbound": ["comment_display_inline_schema", "association_related_to_reference"]},
+                                {"outbound": ["comment_display_inline_schema", "association_to_inbound_related"]},
+                                {"outbound": ["comment_display_inline_schema", "multi_hop_fk_4"]},
+                                "RID"
+                            ],
+                            "entity": true
                         }
                     }
                 },
                 "tag:isrd.isi.edu,2016:visible-foreign-keys": {
                     "detailed": [
-                        { "sourcekey": "pb_source_comment", "comment": "pure and binary fk source syntax comment", "comment_display": "inline" },
+                        {
+                            "sourcekey": "pb_source_comment",
+                            "comment": "pure and binary fk source syntax comment",
+                            "comment_display": "inline",
+                            "comment_render_markdown": false
+                        },
                         { "sourcekey": "pb_to_comment"},
                         { "sourcekey": "pb_to_comment_display" },
                         { "sourcekey": "pb_leaf_comment" },
-                        { "sourcekey": "multi_source_comment", "comment": "multi hop fk source syntax comment", "comment_display": "inline" },
+                        {
+                            "sourcekey": "multi_source_comment",
+                            "comment": "multi hop fk source syntax comment",
+                            "comment_display": "inline",
+                            "comment_render_markdown": false
+                        },
                         { "sourcekey": "multi_comment_display"},
-                        { "sourcekey": "multi_leaf_comment" }
+                        { "sourcekey": "multi_leaf_comment" },
+                        { "sourcekey": "multi_leaf_no_display" }
                     ]
                 }
             }
@@ -494,7 +522,8 @@
                     "annotations": {
                         "tag:isrd.isi.edu,2016:foreign-key": {
                             "to_comment": "pure and binary fk to_comment",
-                            "to_comment_display": "inline"
+                            "to_comment_display": "inline",
+                            "comment_render_markdown": true
                         }
                     }
                 }
@@ -652,14 +681,15 @@
                     },
                     "comment_display": {
                         "detailed": {
-                            "table_comment_display": "inline"
+                            "table_comment_display": "inline",
+                            "comment_render_markdown": false
                         }
                     }
                 }
             }
         },
         "inbound_related_reference_table_no_display": {
-            "comment": "foreign key to association table",
+            "comment": "foreign key to association table no display",
             "kind": "table",
             "table_name": "inbound_related_reference_table_no_display",
             "schema_name": "comment_display_related_schema",
@@ -723,6 +753,25 @@
                         }
                     ],
                     "annotations": {}
+                },
+                {
+                    "comment": "simple fk multi_hop_col_4 with comment_display",
+                    "names": [["comment_display_related_schema", "multi_hop_fk_4"]],
+                    "foreign_key_columns": [
+                        {
+                            "schema_name": "comment_display_related_schema",
+                            "table_name": "inbound_related_reference_table_no_display",
+                            "column_name": "multi_hop_col_4"
+                        }
+                    ],
+                    "referenced_columns": [
+                        {
+                            "schema_name": "comment_display_related_schema",
+                            "table_name": "multi_hop_related_reference_table_no_leaf_display",
+                            "column_name": "id"
+                        }
+                    ],
+                    "annotations": {}
                 }
             ],
             "column_definitions": [
@@ -749,6 +798,13 @@
                 },
                 {
                     "name": "multi_hop_col_3",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                },
+                {
+                    "name": "multi_hop_col_4",
                     "nullok": false,
                     "type": {
                         "typename": "text"
@@ -799,7 +855,8 @@
                 "tag:misd.isi.edu,2015:display": {
                     "comment_display": {
                         "detailed": {
-                            "table_comment_display": "inline"
+                            "table_comment_display": "inline",
+                            "comment_render_markdown": false
                         }
                     }
                 }
@@ -830,11 +887,32 @@
                     },
                     "comment_display": {
                         "detailed": {
-                            "table_comment_display": "inline"
+                            "table_comment_display": "inline",
+                            "comment_render_markdown": true
                         }
                     }
                 }
             }
+        },
+        "multi_hop_related_reference_table_no_leaf_display": {
+            "comment": "foreign key to association table with no leaf display",
+            "kind": "table",
+            "table_name": "multi_hop_related_reference_table_no_leaf_display",
+            "schema_name": "comment_display_inline_schema",
+            "keys": [{
+                "unique_columns": ["id"]
+            }],
+            "foreign_keys": [],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                }
+            ],
+            "annotations": {}
         }
     }
 }

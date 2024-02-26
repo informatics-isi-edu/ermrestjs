@@ -48,8 +48,9 @@ For common markdown syntax please refer to [this reference sheet](http://commonm
     + [11. Subscript](#11-subscript)
     + [12. Superscript](#12-superscript)
     + [13. Span (Attach Attributes To Text)](#13-span-attach-attributes-to-text)
-    + [14. RID link](#14-rid-link)
-    + [15. Table](#15-table)
+    + [14. Escape markdown content](#14-escape-markdown-content)
+    + [15. RID link](#15-rid-link)
+    + [16. Table](#15-table)
 
 
 
@@ -119,16 +120,25 @@ Depending on the markdown element type, different attrbiutes will be acceptable 
 
 ### Tooltip
 
-Using `title` attribute you can add a tooltip to any HTML element.
+Using `data-chaise-tooltip` attribute you can add a tooltip to any HTML element.
 
-```html
-[tooltip example](http://example.com){title="tooltip for this link"}
-#OUTPUT
-<p>
-  <a href="http://example.com" title="tooltip for this link">tooltip example</a>
-</p>
 ```
-> <p> <a href="http://example.com" title="tooltip for this link">tooltip example</a></p>
+[tooltip example](http://example.com){data-chaise-tooltip="tooltip for this link"}
+```
+
+By default the tooltip will be displayed at the bottom of the element. We're also showing the tooltip icon beside the element. If you don't want this behavior the following is ways to customize this:
+
+1. You can use the `data-chaise-tooltip-placement` to change this placement. Accepted values are `"top"`, `"right"`, `"bottom"`, `"left"`. For example,
+
+```
+:span:Caption:/span:{data-chaise-tooltip="tooltip for this link" data-chaise-tooltip-placement="right"}
+```
+
+2. By adding `data-chaise-tooltip-no-icon` to your definition we're not going to add the tooltip icon.
+
+```
+:span:Caption:/span:{data-chaise-tooltip="tooltip for this link" data-chaise-tooltip-no-icon}
+```
 
 ### Classes
 
@@ -175,27 +185,27 @@ The following is the list of special class names that you can use:
 
 This is part of commonMark specification. Links are [inline](#inline-vs.-block) elements.
 ```html
-[ChaiseLink](https://dev.isrd.isi.edu/chaise/search)
+[ChaiseLink](https://example.com/chaise/search)
 
 #OUTPUT:
 <p>
-   <a href="https://dev.isrd.isi.edu/chaise/search">ChaiseLink</a>
+   <a href="https://example.com/chaise/search">ChaiseLink</a>
 </p>
 ```
 
 
-> <p><a href="https://dev.isrd.isi.edu/chaise/search">ChaiseLink</a></p>
+> <p><a href="https://example.com/chaise/search">ChaiseLink</a></p>
 
 You can attach attributes to the link.
 ```html
-[ChaiseLink](https://dev.isrd.isi.edu/chaise/search){target=_blank}
+[ChaiseLink](https://example.com/chaise/search){target=_blank}
 
 # OUTPUT:
 <p>
-	<a href="https://dev.isrd.isi.edu/chaise/search" target="_blank">ChaiseLink</a>
+	<a href="https://example.com/chaise/search" target="_blank">ChaiseLink</a>
 </p>
 ```
-> <p><a href="https://dev.isrd.isi.edu/chaise/search" target="\_blank">ChaiseLink</a></p>
+> <p><a href="https://example.com/chaise/search" target="\_blank">ChaiseLink</a></p>
 
 ### 2. Download Button
 
@@ -203,7 +213,7 @@ Download button is a link with some predefined attributes. You can use these att
   - `download` will trigger the browser's default download behavior and displays the links like the following:
 ![download default UI](https://raw.githubusercontent.com/informatics-isi-edu/ermrestjs/master/docs/resources/download-alt-btn.png)
 
-  - `.download` will change the link to look like the following:
+  - `.download-alt` will change the link to look like the following:
 ![alternative download UI](https://raw.githubusercontent.com/informatics-isi-edu/ermrestjs/master/docs/resources/download-btn.png)
 
   - If you would like to create your own download button, we suggest adding a class attribute here and using this class for definining your own CSS rules.
@@ -378,7 +388,7 @@ The following list of terms are used to describe how to style iframes:
     <div class="figcaption-wrapper" style="width: 100%;">
         <figcaption class="embed-caption">CAPTION</figcaption>
         <div class="iframe-btn-container">
-            <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="fullscreen-icon"></span> Full screen</a>
+            <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a>
         </div>
     </div>
     <iframe src="https://example.com"></iframe>
@@ -395,7 +405,7 @@ The following list of terms are used to describe how to style iframes:
     <div class="figcaption-wrapper" style="width: 800px;">
         <figcaption class="embed-caption">CAPTION</figcaption>
         <div class="iframe-btn-container">
-            <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="fullscreen-icon"></span> Full screen</a>
+            <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a>
         </div>
     </div>
     <iframe src="https://example.com" width="800" height="300" ></iframe>
@@ -414,7 +424,7 @@ If you provide an invalid link then instead of an iframe you will just get the i
 	<a href="https://example.com">CAPTION</a>
 </p>
 ```
-> <p><em>Invalid</em> <a href="https://dev.isrd.isi.edu/chaise/search">CAPTION</a></p>
+> <p><em>Invalid</em> <a href="https://example.com/chaise/search">CAPTION</a></p>
 
 
 #### a.4. Iframe without scrolling
@@ -426,7 +436,7 @@ If you provide an invalid link then instead of an iframe you will just get the i
     <div class="figcaption-wrapper" style="width: 800px;">
         <figcaption class="embed-caption">CAPTION</figcaption>
         <div class="iframe-btn-container">
-            <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="fullscreen-icon"></span> Full screen</a>
+            <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a>
         </div>
     </div>
     <iframe src="https://example.com" width="800" height="300" scrolling="no"></iframe>
@@ -441,7 +451,7 @@ If you provide an invalid link then instead of an iframe you will just get the i
 # OUTPUT:
 <figure class="embed-block">
     <div class="iframe-btn-container">
-        <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="fullscreen-icon"></span> Full screen</a>
+        <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a>
     </div>
     <iframe src="https://example.com" style="border: 5px solid;" class="iframe-element-class"></iframe>
     <figcaption class="embed-caption">CAPTION</figcaption>
@@ -459,7 +469,7 @@ To style the whole iframe enclosing block (`<figure>`) you can either specify cl
 # OUTPUT:
 <figure class="embed-block iclass" style="border: 1px solid;">
     <div class="iframe-btn-container">
-        <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="fullscreen-icon"></span> Full screen</a>
+        <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a>
     </div>
     <iframe src="https://example.com"></iframe>
     <figcaption class="embed-caption"><a href="https://example.com">CAPTION</a></figcaption>
@@ -475,7 +485,7 @@ To style the whole iframe enclosing block (`<figure>`) you can either specify cl
 # OUTPUT:
 <figure class="embed-block iclass" style="border: 1px solid;">
     <div class="iframe-btn-container">
-        <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="fullscreen-icon"></span> Full screen</a>
+        <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a>
     </div>
     <iframe src="https://example.com"></iframe>
     <figcaption class="embed-caption cclass" style="font-weight: 500;"><a href="https://example.com">CAPTION</a></figcaption>
@@ -494,7 +504,7 @@ To style the whole iframe enclosing block (`<figure>`) you can either specify cl
     <div class="figcaption-wrapper" style="width: 800px;">
         <figcaption class="embed-caption"><a href="https://example.com">CAPTION</a></figcaption>
         <div class="iframe-btn-container">
-            <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="fullscreen-icon"></span> Full screen</a>
+            <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a>
         </div>
     </div>
     <iframe src="https://example.com" width="800" height="300"></iframe>
@@ -509,7 +519,7 @@ To style the whole iframe enclosing block (`<figure>`) you can either specify cl
 # OUTPUT:
 <figure class="embed-block">
     <div class="iframe-btn-container">
-        <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="fullscreen-icon"></span> Full screen</a>
+        <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a>
     </div>
     <iframe src="https://example.com" width="800" height="300"></iframe>
     <figcaption class="embed-caption"><a href="https://example.com">CAPTION</a></figcaption>
@@ -526,7 +536,7 @@ To style the caption of an iframe you can either specify classes using `caption-
 # OUTPUT:
 <figure class="embed-block">
     <div class="iframe-btn-container">
-        <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="fullscreen-icon"></span> Full screen</a>
+        <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a>
     </div>
     <iframe src="https://example.com"></iframe>
     <figcaption class="embed-caption cclass" style="font-weight: 500;"><a href="https://example.com">CAPTION</a></figcaption>
@@ -543,7 +553,7 @@ To have the caption open in a new tab, use `caption-target=_blank`.
     <div class="figcaption-wrapper" style="width: 800px;">
         <figcaption class="embed-caption"><a href="https://example.com" target="_blank">CAPTION</a></figcaption>
         <div class="iframe-btn-container">
-            <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="fullscreen-icon"></span> Full screen</a>
+            <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a>
         </div>
     </div>
     <iframe src="https://example.com" width="800" height="300"></iframe>
@@ -575,7 +585,7 @@ If parent container (cell in record app) has no styles, the iframe will only fil
     <div class="figcaption-wrapper" style="width: 100%;">
         <figcaption class="embed-caption">CAPTION</figcaption>
         <div class="iframe-btn-container">
-            <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="fullscreen-icon"></span> Full screen</a>
+            <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a>
         </div>
     </div>
     <iframe src="https://example.com" class="chaise-autofill"></iframe>
@@ -594,7 +604,7 @@ When a min-width value is defined, the parent container will stop resizing once 
     <div class="figcaption-wrapper" style="width: 100%;">
         <figcaption class="embed-caption">CAPTION</figcaption>
         <div class="iframe-btn-container">
-            <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="fullscreen-icon"></span> Full screen</a>
+            <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a>
         </div>
     </div>
     <iframe src="https://example.com" class="chaise-autofill" style="min-width: 500px;"></iframe>
@@ -613,7 +623,7 @@ When a min-height value is defined, the parent container will resize to allow fo
     <div class="figcaption-wrapper" style="width: 100%;">
         <figcaption class="embed-caption">CAPTION</figcaption>
         <div class="iframe-btn-container">
-            <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="fullscreen-icon"></span> Full screen</a>
+            <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a>
         </div>
     </div>
     <iframe src="https://example.com" class="chaise-autofill" style="min-width: 500px; min-height: 400px; max-height: 800px;"></iframe>
@@ -632,7 +642,7 @@ To have a responsive width and a set height, do not use `chaise-autofill` and se
     <div class="figcaption-wrapper" style="width: 100%;">
         <figcaption class="embed-caption">CAPTION</figcaption>
         <div class="iframe-btn-container">
-            <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="fullscreen-icon"></span> Full screen</a>
+            <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a>
         </div>
     </div>
     <iframe src="https://example.com" width=100% style="min-width: 300px; min-height: 400px;"></iframe>
@@ -651,7 +661,7 @@ To create an iframe that responds to the current viewport size, set the height u
     <div class="figcaption-wrapper" style="width: 100%;">
         <figcaption class="embed-caption">CAPTION</figcaption>
         <div class="iframe-btn-container">
-            <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="fullscreen-icon"></span> Full screen</a>
+            <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a>
         </div>
     </div>
     <iframe src="https://example.com" style="min-height: 400px; height: 75vh; max-height: 900px;"></iframe>
@@ -670,7 +680,7 @@ To hide the fullscreen button, use the `fullscreen-off` class attached to the fi
     <div class="figcaption-wrapper" style="width: 100%;">
         <figcaption class="embed-caption">CAPTION</figcaption>
         <div class="iframe-btn-container">
-            <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="fullscreen-icon"></span> Full screen</a>
+            <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com"><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a>
         </div>
     </div>
     <iframe src="https://example.com" width=100% class="chaise-autofill"></iframe>
@@ -689,7 +699,7 @@ To have the fullscreen button open in a new tab, use `fullscreen-target=_blank`.
     <div class="figcaption-wrapper" style="width: 100%;">
         <figcaption class="embed-caption">CAPTION</figcaption>
         <div class="iframe-btn-container">
-            <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com" target="_blank"><span class="fullscreen-icon"></span> Full screen</a>
+            <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com" target="_blank"><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a>
         </div>
     </div>
     <iframe src="https://example.com" width=100% class="chaise-autofill"></iframe>
@@ -703,8 +713,8 @@ This is not part of commonMark specification and it will result in a [block](#in
 
 ```sh
 # :::dropdown CPATION [LINKCAPTION1](URL1){download} [LINKCAPTION2](URL2){download}
-::: dropdown DROPDOWNCAPTION [CAPTION1](https://dev.isrd.isi.edu/chaise/search){download}                     [CAPTION2](https://dev.isrd.isi.edu/chaise/search){download}  \n:::
-# OUTPUT: <div class="btn-group markdown-dropdown"><button type="button"  class="btn btn-primary ">DROPDOWNCAPTION</button><button type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"  class="btn btn-primary dropdown-toggle "><span class="caret"></span><span class="sr-only">Toggle Dropdown</span></button><ul class="dropdown-menu"><li><a href="https://dev.isrd.isi.edu/chaise/search" download="" >CAPTION1</a></li><li><a href="https://dev.isrd.isi.edu/chaise/search" download="" >CAPTION2</a></li></ul></div>
+::: dropdown DROPDOWNCAPTION [CAPTION1](https://example.com/chaise/search){download}                     [CAPTION2](https://example.com/chaise/search){download}  \n:::
+# OUTPUT: <div class="btn-group markdown-dropdown"><button type="button"  class="btn btn-primary ">DROPDOWNCAPTION</button><button type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"  class="btn btn-primary dropdown-toggle "><span class="caret"></span><span class="sr-only">Toggle Dropdown</span></button><ul class="dropdown-menu"><li><a href="https://example.com/chaise/search" download="" >CAPTION1</a></li><li><a href="https://example.com/chaise/search" download="" >CAPTION2</a></li></ul></div>
 ```
 
 The button has an appearance similar to the [Bootstrap dropdown button](http://getbootstrap.com/components/#btn-dropdowns-split)
@@ -936,7 +946,34 @@ You can also have empty span. You can use this to display icons.
 ```
 > <p><span class="fa-solid fa-download"></span></p>
 
-### 14. RID link
+
+### 14. Escape markdown content
+
+This is not part of commonMark specification and it will result in an [inline](#inline-vs-block) element. Opening tag is `:mdEscape:` and closing is `:/mdEscape:`.
+
+This tag can be used to print the content as is and escape the markdown rendering. For example, if you want to show a JSON column value, by default, the `{}` will be treated as attributes of markdown, so you would need to escape the content.
+
+```html
+:mdEscape:{"first_name": "John", "last_name": "Smith"}:/mdEscape: should be superscript.
+
+# OUTPUT:
+<p>
+	<span>{"first_name": "John", "last_name": "Smith"}</span>
+</p>
+```
+> <p>{"first_name": "John", "last_name": "Smith"}</p>
+
+```html
+The following is how you can add links: :mdEscape:[caption](link):/mdEscape:
+
+# OUTPUT:
+<p>
+	The following is how you can add links: <span>[caption](link)</span>
+</p>
+```
+> The following is how you can add links: <span>\[caption](link)</span>
+
+### 15. RID link
 
 Takes an RID of an existing record and generates a resolvable link for that record. This is not part of commonMark specification. It will result in an [inline](#inline-vs-block) element. You have to follow the syntax completely.
 
@@ -956,7 +993,7 @@ Takes an RID of an existing record and generates a resolvable link for that reco
 > <a href="/id/1-3X0H">1-3X0H</a>
 
 
-### 15. Table
+### 16. Table
 
 Tables are not part of the commonMark specifications, but the parser that we use follows the [GitHub Flavored Markdown specification for tables](https://github.github.com/gfm/#tables-extension-).
 

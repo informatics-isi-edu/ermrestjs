@@ -2,7 +2,7 @@ angular.module("testApp", ['ermrestjs'])
 
     .controller('mainController', ['ermrestServerFactory', function(ermrestServerFactory) {
 
-        var server = ermrestServerFactory.getServer('https://dev.isrd.isi.edu/ermrest', {cid: 'ermrestjs-test'});
+        var server = ermrestServerFactory.getServer('https://dev.derivacloud.org/ermrest', {cid: 'ermrestjs-test'});
 
         console.log(server);
 
@@ -132,7 +132,7 @@ angular.module("testApp", ['ermrestjs'])
 
     .controller('editController', ['ermrestServerFactory', function(ermrestServerFactory){
 
-        var server = ermrestServerFactory.getServer('https://dev.isrd.isi.edu/ermrest');
+        var server = ermrestServerFactory.getServer('https://dev.derivacloud.org/ermrest');
 
         // build catalog schemas
         server.catalogs.get(1).then(function(catalog){
@@ -203,7 +203,7 @@ angular.module("testApp", ['ermrestjs'])
 
 .controller("ReferenceController", ['ERMrest', function(ERMrest) {
     var ref;
-    ERMrest.resolve("https://dev.isrd.isi.edu/ermrest/catalog/1/entity/legacy:dataset/id::gt::1000&id::lt::5000@sort(id::desc::)", {cid: "test"}).then(function(reference) {
+    ERMrest.resolve("https://dev.derivacloud.org/ermrest/catalog/1/entity/legacy:dataset/id::gt::1000&id::lt::5000@sort(id::desc::)", {cid: "test"}).then(function(reference) {
         console.log("Reference:", reference);
         ref = reference;
         return reference.read(10);
@@ -229,7 +229,7 @@ angular.module("testApp", ['ermrestjs'])
     });
 
 
-    ERMrest.resolve("https://dev.isrd.isi.edu/ermrest/catalog/1/entity/legacy:dataset/id::gt::1000&id::lt::5000@sort(id)@after(4898)", {cid: "test"}).then(function(reference) {
+    ERMrest.resolve("https://dev.derivacloud.org/ermrest/catalog/1/entity/legacy:dataset/id::gt::1000&id::lt::5000@sort(id)@after(4898)", {cid: "test"}).then(function(reference) {
         console.log("Reference:", reference);
         ref = reference;
         return reference.read(10);

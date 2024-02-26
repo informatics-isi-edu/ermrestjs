@@ -116,7 +116,7 @@ exports.execute = function (options) {
                 });
 
                 it ("link", function () {
-                    testMarkdown('[NormalLink](https://dev.isrd.isi.edu/chaise/search)', '<p><a href=\"https://dev.isrd.isi.edu/chaise/search\">NormalLink</a></p>\n');
+                    testMarkdown('[NormalLink](https://example.org/chaise/search)', '<p><a href=\"https://example.org/chaise/search\">NormalLink</a></p>\n');
                 });
 
                 it ("image", function () {
@@ -183,57 +183,57 @@ exports.execute = function (options) {
 
             it ("should support :::iframe.", function () {
                 // 01: Check for iframe with height and width
-                expect(printMarkdown('::: iframe [Chaise](https://dev.isrd.isi.edu/chaise/search){width=800 height=300} \n:::'))
-                    .toBe('<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 800px;"><figcaption class="embed-caption">Chaise</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://dev.isrd.isi.edu/chaise/search"><span class="fullscreen-icon"></span> Full screen</a></div></div><iframe src="https://dev.isrd.isi.edu/chaise/search" width="800" height="300"></iframe></figure>', "case 01");
+                expect(printMarkdown('::: iframe [Chaise](https://example.org/chaise/search){width=800 height=300} \n:::'))
+                    .toBe('<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 800px;"><figcaption class="embed-caption">Chaise</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.org/chaise/search"><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a></div></div><iframe src="https://example.org/chaise/search" width="800" height="300"></iframe></figure>', "case 01");
 
                 // 02: Check for iframe tag with a link and caption
-                var iframeMarkdown = '::: iframe [SOME LINK CAPTION](https://dev.isrd.isi.edu/chaise/search){height=400 link=https://dev.isrd.isi.edu/chaise/search} \n:::';
-                var iframeHTML = '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 100%;"><figcaption class="embed-caption"><a href="https://dev.isrd.isi.edu/chaise/search">SOME LINK CAPTION</a></figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://dev.isrd.isi.edu/chaise/search"><span class="fullscreen-icon"></span> Full screen</a></div></div><iframe src="https://dev.isrd.isi.edu/chaise/search" height="400"></iframe></figure>';
+                var iframeMarkdown = '::: iframe [SOME LINK CAPTION](https://example.org/chaise/search){height=400 link=https://example.org/chaise/search} \n:::';
+                var iframeHTML = '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 100%;"><figcaption class="embed-caption"><a href="https://example.org/chaise/search">SOME LINK CAPTION</a></figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.org/chaise/search"><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a></div></div><iframe src="https://example.org/chaise/search" height="400"></iframe></figure>';
                 expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML, "case 02");
 
                 // 03: Check for iframe tag with a link and caption at the bottom with no figure-style and figure-class
-                var iframeMarkdown = '::: iframe [CAPTION](https://dev.isrd.isi.edu/chaise/search){link="https://dev.isrd.isi.edu/chaise/search" pos="bottom"} \n:::';
-                var iframeHTML = '<figure class="embed-block -chaise-post-load"><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://dev.isrd.isi.edu/chaise/search"><span class="fullscreen-icon"></span> Full screen</a></div><iframe src="https://dev.isrd.isi.edu/chaise/search"></iframe><figcaption class="embed-caption"><a href="https://dev.isrd.isi.edu/chaise/search">CAPTION</a></figcaption></figure>';
+                var iframeMarkdown = '::: iframe [CAPTION](https://example.org/chaise/search){link="https://example.org/chaise/search" pos="bottom"} \n:::';
+                var iframeHTML = '<figure class="embed-block -chaise-post-load"><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.org/chaise/search"><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a></div><iframe src="https://example.org/chaise/search"></iframe><figcaption class="embed-caption"><a href="https://example.org/chaise/search">CAPTION</a></figcaption></figure>';
                 expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML, "case 03");
 
                 // 04: Check for iframe tag with a link and caption at the bottom with figure-style and figure-class
-                var iframeMarkdown = '::: iframe [CAPTION](https://dev.isrd.isi.edu/chaise/search){link="https://dev.isrd.isi.edu/chaise/search" pos="bottom" figure-class="iclass" figure-style="border:1px solid;"} \n:::';
-                var iframeHTML = '<figure class="embed-block -chaise-post-load iclass" style="border:1px solid;"><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://dev.isrd.isi.edu/chaise/search"><span class="fullscreen-icon"></span> Full screen</a></div><iframe src="https://dev.isrd.isi.edu/chaise/search"></iframe><figcaption class="embed-caption"><a href="https://dev.isrd.isi.edu/chaise/search">CAPTION</a></figcaption></figure>';
+                var iframeMarkdown = '::: iframe [CAPTION](https://example.org/chaise/search){link="https://example.org/chaise/search" pos="bottom" figure-class="iclass" figure-style="border:1px solid;"} \n:::';
+                var iframeHTML = '<figure class="embed-block -chaise-post-load iclass" style="border:1px solid;"><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.org/chaise/search"><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a></div><iframe src="https://example.org/chaise/search"></iframe><figcaption class="embed-caption"><a href="https://example.org/chaise/search">CAPTION</a></figcaption></figure>';
                 expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML, "case 04");
 
                 // 05: Check for iframe tag with a caption at the bottom with caption-style and caption-class
-                var iframeMarkdown = '::: iframe [CAPTION](https://dev.isrd.isi.edu/chaise/search){pos="bottom" caption-class="cclass" caption-style="font-weight:500;"} \n:::';
-                var iframeHTML = '<figure class="embed-block -chaise-post-load"><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://dev.isrd.isi.edu/chaise/search"><span class="fullscreen-icon"></span> Full screen</a></div><iframe src="https://dev.isrd.isi.edu/chaise/search"></iframe><figcaption class="embed-caption cclass" style="font-weight:500;">CAPTION</figcaption></figure>';
+                var iframeMarkdown = '::: iframe [CAPTION](https://example.org/chaise/search){pos="bottom" caption-class="cclass" caption-style="font-weight:500;"} \n:::';
+                var iframeHTML = '<figure class="embed-block -chaise-post-load"><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.org/chaise/search"><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a></div><iframe src="https://example.org/chaise/search"></iframe><figcaption class="embed-caption cclass" style="font-weight:500;">CAPTION</figcaption></figure>';
                 expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML, "case 05");
 
                 // 05.1: Check for iframe tag with min/max width applied to the iframe and the container for the caption and fullscreen button
-                var iframeMarkdown = '::: iframe [CAPTION](https://dev.isrd.isi.edu/chaise/search){style="min-width:400px; max-width:900px;"} \n:::';
-                var iframeHTML = '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 100%;min-width:400px;max-width:900px"><figcaption class="embed-caption">CAPTION</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://dev.isrd.isi.edu/chaise/search"><span class="fullscreen-icon"></span> Full screen</a></div></div><iframe src="https://dev.isrd.isi.edu/chaise/search" style="min-width:400px; max-width:900px;"></iframe></figure>';
+                var iframeMarkdown = '::: iframe [CAPTION](https://example.org/chaise/search){style="min-width:400px; max-width:900px;"} \n:::';
+                var iframeHTML = '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 100%;min-width:400px;max-width:900px"><figcaption class="embed-caption">CAPTION</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.org/chaise/search"><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a></div></div><iframe src="https://example.org/chaise/search" style="min-width:400px; max-width:900px;"></iframe></figure>';
                 expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML, "case 05.1");
 
                 // 06: Check for iframe tag with a caption at the bottom with figure-style and caption-class
-                var iframeMarkdown = '::: iframe [CAPTION](https://dev.isrd.isi.edu/chaise/search){pos="bottom" caption-class="cclass" figure-style="font-weight:500;"} \n:::';
-                var iframeHTML = '<figure class="embed-block -chaise-post-load" style="font-weight:500;"><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://dev.isrd.isi.edu/chaise/search"><span class="fullscreen-icon"></span> Full screen</a></div><iframe src="https://dev.isrd.isi.edu/chaise/search"></iframe><figcaption class="embed-caption cclass">CAPTION</figcaption></figure>';
+                var iframeMarkdown = '::: iframe [CAPTION](https://example.org/chaise/search){pos="bottom" caption-class="cclass" figure-style="font-weight:500;"} \n:::';
+                var iframeHTML = '<figure class="embed-block -chaise-post-load" style="font-weight:500;"><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.org/chaise/search"><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a></div><iframe src="https://example.org/chaise/search"></iframe><figcaption class="embed-caption cclass">CAPTION</figcaption></figure>';
                 expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML, "case 06");
 
                 // 07: check for iframe tag with classes and target=_blank for fullscreen button
-                var iframeMarkdown = '::: iframe [SOME LINK CAPTION](https://dev.isrd.isi.edu/chaise/search){.class-one .class-two fullscreen-target=_blank} \n:::';
-                var iframeHTML = '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 100%;"><figcaption class="embed-caption">SOME LINK CAPTION</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://dev.isrd.isi.edu/chaise/search" target=_blank><span class="fullscreen-icon"></span> Full screen</a></div></div><iframe src="https://dev.isrd.isi.edu/chaise/search" class="class-one class-two"></iframe></figure>';
+                var iframeMarkdown = '::: iframe [SOME LINK CAPTION](https://example.org/chaise/search){.class-one .class-two fullscreen-target=_blank} \n:::';
+                var iframeHTML = '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 100%;"><figcaption class="embed-caption">SOME LINK CAPTION</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.org/chaise/search" target=_blank><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a></div></div><iframe src="https://example.org/chaise/search" class="class-one class-two"></iframe></figure>';
                 expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML, "case 07");
 
                 // 08: Testing for YouTube video with classes
                 var iframeMarkdown = '::: iframe [SOME LINK CAPTION](https://www.youtube.com/embed/op1-Cw_l1Ow){.class-one .class-two} \n:::';
-                var iframeHTML = '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 100%;"><figcaption class="embed-caption">SOME LINK CAPTION</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://www.youtube.com/embed/op1-Cw_l1Ow"><span class="fullscreen-icon"></span> Full screen</a></div></div><span class="video-info-in-print" style="display:none;">Note: YouTube video ( https://www.youtube.com/embed/op1-Cw_l1Ow ) is hidden in print</span><iframe src="https://www.youtube.com/embed/op1-Cw_l1Ow" class="class-one class-two hide-in-print"></iframe></figure>';
+                var iframeHTML = '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 100%;"><figcaption class="embed-caption">SOME LINK CAPTION</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://www.youtube.com/embed/op1-Cw_l1Ow"><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a></div></div><span class="video-info-in-print" style="display:none;">Note: YouTube video ( https://www.youtube.com/embed/op1-Cw_l1Ow ) is hidden in print</span><iframe src="https://www.youtube.com/embed/op1-Cw_l1Ow" class="class-one class-two hide-in-print"></iframe></figure>';
                 expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML, "case 08");
 
                 // 09: Testing for YouTube video
                 var iframeMarkdown = '::: iframe [SOME LINK CAPTION](https://www.youtube.com/embed/op1-Cw_l1Ow){width=640 height=480 link=https://www.youtube.com/embed/op1-Cw_l1Ow} \n:::';
-                var iframeHTML = '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 640px;"><figcaption class="embed-caption"><a href="https://www.youtube.com/embed/op1-Cw_l1Ow">SOME LINK CAPTION</a></figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://www.youtube.com/embed/op1-Cw_l1Ow"><span class="fullscreen-icon"></span> Full screen</a></div></div><span class="video-info-in-print" style="display:none;">Note: YouTube video ( https://www.youtube.com/embed/op1-Cw_l1Ow ) is hidden in print</span><iframe src="https://www.youtube.com/embed/op1-Cw_l1Ow" width="640" height="480" class="hide-in-print"></iframe></figure>';
+                var iframeHTML = '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 640px;"><figcaption class="embed-caption"><a href="https://www.youtube.com/embed/op1-Cw_l1Ow">SOME LINK CAPTION</a></figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://www.youtube.com/embed/op1-Cw_l1Ow"><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a></div></div><span class="video-info-in-print" style="display:none;">Note: YouTube video ( https://www.youtube.com/embed/op1-Cw_l1Ow ) is hidden in print</span><iframe src="https://www.youtube.com/embed/op1-Cw_l1Ow" width="640" height="480" class="hide-in-print"></iframe></figure>';
                 expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML, "case 09");
 
                 // 10: Check for dropdown tag
-                var dropdownMarkdown = '::: dropdown MYCAPTION{.btn-lg} [CAPTION1](https://dev.isrd.isi.edu/chaise/search){.btn .btn-danger} [CAPTION2](https://dev.isrd.isi.edu/chaise/search) [CAPTION3](https://dev.isrd.isi.edu/chaise/search) \n:::';
-                var dropdownHTML = '<div class="btn-group markdown-dropdown"><button type="button"  class="btn btn-primary btn-lg">MYCAPTION</button><button type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"  class="btn btn-primary dropdown-toggle btn-lg"><span class="caret"></span><span class="sr-only">Toggle Dropdown</span></button><ul class="dropdown-menu"><li><a href="https://dev.isrd.isi.edu/chaise/search" class="btn btn-danger" >CAPTION1</a></li><li><a href="https://dev.isrd.isi.edu/chaise/search" >CAPTION2</a></li><li><a href="https://dev.isrd.isi.edu/chaise/search" >CAPTION3</a></li></ul></div>';
+                var dropdownMarkdown = '::: dropdown MYCAPTION{.btn-lg} [CAPTION1](https://example.org/chaise/search){.btn .btn-danger} [CAPTION2](https://example.org/chaise/search) [CAPTION3](https://example.org/chaise/search) \n:::';
+                var dropdownHTML = '<div class="btn-group markdown-dropdown"><button type="button"  class="btn btn-primary btn-lg">MYCAPTION</button><button type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"  class="btn btn-primary dropdown-toggle btn-lg"><span class="caret"></span><span class="sr-only">Toggle Dropdown</span></button><ul class="dropdown-menu"><li><a href="https://example.org/chaise/search" class="btn btn-danger" >CAPTION1</a></li><li><a href="https://example.org/chaise/search" >CAPTION2</a></li><li><a href="https://example.org/chaise/search" >CAPTION3</a></li></ul></div>';
                 expect(printMarkdown(dropdownMarkdown)).toBe(dropdownHTML, "case 10");
 
                 // 11: Check for iframe followed by a dropdown using markdown for both
@@ -324,6 +324,13 @@ exports.execute = function (options) {
                 expect(printMarkdown("This is :span: special case:/span:.", {inline: true})).toBe("This is <span> special case</span>.", "invalid inline span");
                 expect(printMarkdown(":span:special:/span:{.test}", {inline: true})).toBe('<span class="test">special</span>', "invalid inline span with attrs");
                 expect(printMarkdown(":span::/span:{.glyph-icon .glyph-danger}", {inline: true})).toBe('<span class="glyph-icon glyph-danger"></span>', "invalid empty inline span with attrs");
+            });
+
+            it ("should support :mdEscape:.", function () {
+                expect(printMarkdown("This :mdEscape: [caption](example.com) should not be rendered :/mdEscape:.")).toBe("<p>This <span> [caption](example.com) should not be rendered </span>.</p>\n", "invalid span");
+                expect(printMarkdown("This :mdEscape: [caption](example.com) should not be rendered :/mdEscape:.", {inline: true})).toBe("This <span> [caption](example.com) should not be rendered </span>.", "invalid inline span");
+
+                expect(printMarkdown("JSON: :mdEscape:{\"name\": \"a valid name\"}:/mdEscape:", {inline: true})).toEqual('JSON: <span>{“name”: “a valid name”}</span>');
             });
 
             it("should support table with classname attribute.", function () {
@@ -518,24 +525,24 @@ exports.execute = function (options) {
               "note1": "the URL here has a properly percent-encoded UTF-8 string: %C7%9D%C9%AF%C9%90u == ǝɯɐu",
               "note2": "the {{#escape}}...{{/escape}} is unnecessary here but doesn't hurt anything"
             }, {
-                "template" : "[{{str_witha_}}](https://dev.isrd.isi.edu/key={{str_witha_}})",
-                "after_mustache": "[**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12&#x2F;26&#x2F;2016 ( and **](https://dev.isrd.isi.edu/key=**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12&#x2F;26&#x2F;2016 ( and **)",
-                "after_render": '<p>[**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **](https://dev.isrd.isi.edu/key=**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **)</p>',
+                "template" : "[{{str_witha_}}](https://example.org/key={{str_witha_}})",
+                "after_mustache": "[**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12&#x2F;26&#x2F;2016 ( and **](https://example.org/key=**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12&#x2F;26&#x2F;2016 ( and **)",
+                "after_render": '<p>[**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **](https://example.org/key=**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **)</p>',
                 "note": "With no encoding and escaping. Should give malformed HTML"
             },{
-                "template" : "[{{str_witha_}}](https://dev.isrd.isi.edu/key={{#encode}}{{{str_witha_}}}{{/encode}})",
-                "after_mustache": "[**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12&#x2F;26&#x2F;2016 ( and **](https://dev.isrd.isi.edu/key=%2A%2Asomevalue%20%5D%20which%20is%20%21%20special%20and%20%5B%20contains%20special%20%3Cbold%3E%20characters%2012%2F26%2F2016%20%28%20and%20%2A%2A)",
-                "after_render": '<p>[**somevalue ] which is ! special and <a href="https://dev.isrd.isi.edu/key=%2A%2Asomevalue%20%5D%20which%20is%20%21%20special%20and%20%5B%20contains%20special%20%3Cbold%3E%20characters%2012%2F26%2F2016%20%28%20and%20%2A%2A"> contains special &lt;bold&gt; characters 12/26/2016 ( and **</a></p>',
+                "template" : "[{{str_witha_}}](https://example.org/key={{#encode}}{{{str_witha_}}}{{/encode}})",
+                "after_mustache": "[**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12&#x2F;26&#x2F;2016 ( and **](https://example.org/key=%2A%2Asomevalue%20%5D%20which%20is%20%21%20special%20and%20%5B%20contains%20special%20%3Cbold%3E%20characters%2012%2F26%2F2016%20%28%20and%20%2A%2A)",
+                "after_render": '<p>[**somevalue ] which is ! special and <a href="https://example.org/key=%2A%2Asomevalue%20%5D%20which%20is%20%21%20special%20and%20%5B%20contains%20special%20%3Cbold%3E%20characters%2012%2F26%2F2016%20%28%20and%20%2A%2A"> contains special &lt;bold&gt; characters 12/26/2016 ( and **</a></p>',
                 "note": "With encoding but no escaping. Should give malformed HTML with a valid link but invalid caption"
             },{
-                "template" : "[{{#escape}}{{{str_witha_}}}{{/escape}}](https://dev.isrd.isi.edu/key={{str_witha_}})",
-                "after_mustache": "[\\*\\*somevalue \\] which is \\! special and \\[ contains special &lt;bold&gt; characters 12\\/26\\/2016 \\( and \\*\\*](https://dev.isrd.isi.edu/key=**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12&#x2F;26&#x2F;2016 ( and **)",
-                "after_render": '<p>[**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **](https://dev.isrd.isi.edu/key=**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **)</p>',
+                "template" : "[{{#escape}}{{{str_witha_}}}{{/escape}}](https://example.org/key={{str_witha_}})",
+                "after_mustache": "[\\*\\*somevalue \\] which is \\! special and \\[ contains special &lt;bold&gt; characters 12\\/26\\/2016 \\( and \\*\\*](https://example.org/key=**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12&#x2F;26&#x2F;2016 ( and **)",
+                "after_render": '<p>[**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **](https://example.org/key=**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **)</p>',
                 "note": "With escaping but no encoding. Should give malformed HTML"
             },{
-                "template" : "[{{#escape}}{{{str_witha_}}}{{/escape}}](https://dev.isrd.isi.edu/key={{#encode}}{{{str_witha_}}}{{/encode}})",
-                "after_mustache": "[\\*\\*somevalue \\] which is \\! special and \\[ contains special &lt;bold&gt; characters 12\\/26\\/2016 \\( and \\*\\*](https://dev.isrd.isi.edu/key=%2A%2Asomevalue%20%5D%20which%20is%20%21%20special%20and%20%5B%20contains%20special%20%3Cbold%3E%20characters%2012%2F26%2F2016%20%28%20and%20%2A%2A)",
-                "after_render": '<p><a href="https://dev.isrd.isi.edu/key=%2A%2Asomevalue%20%5D%20which%20is%20%21%20special%20and%20%5B%20contains%20special%20%3Cbold%3E%20characters%2012%2F26%2F2016%20%28%20and%20%2A%2A">**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **</a></p>',
+                "template" : "[{{#escape}}{{{str_witha_}}}{{/escape}}](https://example.org/key={{#encode}}{{{str_witha_}}}{{/encode}})",
+                "after_mustache": "[\\*\\*somevalue \\] which is \\! special and \\[ contains special &lt;bold&gt; characters 12\\/26\\/2016 \\( and \\*\\*](https://example.org/key=%2A%2Asomevalue%20%5D%20which%20is%20%21%20special%20and%20%5B%20contains%20special%20%3Cbold%3E%20characters%2012%2F26%2F2016%20%28%20and%20%2A%2A)",
+                "after_render": '<p><a href="https://example.org/key=%2A%2Asomevalue%20%5D%20which%20is%20%21%20special%20and%20%5B%20contains%20special%20%3Cbold%3E%20characters%2012%2F26%2F2016%20%28%20and%20%2A%2A">**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **</a></p>',
                 "note": "With encoding and escaping. Should give correct HTML with valid caption a link"
             }];
 
@@ -587,52 +594,70 @@ exports.execute = function (options) {
                 expect(module.renderHandlebarsTemplate('{{humanizeBytes data }}', {data: 12345678})).toBe('12.3 MB');
                 expect(module.renderHandlebarsTemplate('{{humanizeBytes 12345678 }}')).toBe('12.3 MB');
                 expect(module.renderHandlebarsTemplate('{{humanizeBytes "12345678" }}')).toBe('12.3 MB');
-                expect(module.renderHandlebarsTemplate('{{humanizeBytes 12345678 "invalid"}}')).toBe('12.3 MB');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 12345678 mode="invalid"}}')).toBe('12.3 MB');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 12345678 tooltip=false}}')).toBe('12.3 MB');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 12345678 tooltip="invalid"}}')).toBe('12.3 MB');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes "12345678" tooltip=true }}')).toBe(':span:12.3 MB:/span:{data-chaise-tooltip&#x3D;&quot;12,345,678 bytes (1 MB &#x3D; 1,000,000 bytes)&quot;}');
 
                 // test si
-                expect(module.renderHandlebarsTemplate('{{humanizeBytes 999 "si"}}')).toBe('999 B');
-                expect(module.renderHandlebarsTemplate('{{humanizeBytes 999 "si" 1}}')).toBe('999 B');
-                expect(module.renderHandlebarsTemplate('{{humanizeBytes 41235552 "si"}}')).toBe('41.2 MB');
-                expect(module.renderHandlebarsTemplate('{{humanizeBytes 41235552 "si" 1}}')).toBe('41.2 MB');
-                expect(module.renderHandlebarsTemplate('{{humanizeBytes 41235552 "si" 6}}')).toBe('41.2355 MB');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 999 mode="si"}}')).toBe('999 B');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 999 mode="si" tooltip=true}}')).toBe('999 B');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 999 mode="si" precision=1}}')).toBe('999 B');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 41235552 mode="si"}}')).toBe('41.2 MB');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 41235552 mode="si" precision=1}}')).toBe('41.2 MB');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 41235552 precision=6}}')).toBe('41.2355 MB');
 
                 // test binary
-                expect(module.renderHandlebarsTemplate('{{humanizeBytes 1023 "binary"}}')).toBe('1023 B');
-                expect(module.renderHandlebarsTemplate('{{humanizeBytes 1023 "binary" 1}}')).toBe('1023 B');
-                expect(module.renderHandlebarsTemplate('{{humanizeBytes 41235532 "binary"}}')).toBe('39.32 MiB');
-                expect(module.renderHandlebarsTemplate('{{humanizeBytes 41235532 "binary" 1}}')).toBe('39.32 MiB');
-                expect(module.renderHandlebarsTemplate('{{humanizeBytes 41235532 "binary" 6}}')).toBe('39.3252 MiB');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 1023 mode="binary"}}')).toBe('1023 B');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 1023 mode="binary" tooltip=true}}')).toBe('1023 B');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 1023 mode="binary" precision=1}}')).toBe('1023 B');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 41235532 mode="binary"}}')).toBe('39.32 MiB');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 41235532 mode="binary" precision=1}}')).toBe('39.32 MiB');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 41235532 mode="binary" precision=6}}')).toBe('39.3252 MiB');
 
                 // test raw
-                expect(module.renderHandlebarsTemplate('{{humanizeBytes 41235532 "raw"}}')).toBe('41,235,532');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 41235532 mode="raw"}}')).toBe('41,235,532');
 
                 // test truncation (si)
                 expect(module.renderHandlebarsTemplate('{{humanizeBytes 9999999999999 }}')).toBe('9.99 TB');
-                expect(module.renderHandlebarsTemplate('{{humanizeBytes 9999999999999 "si"}}')).toBe('9.99 TB');
-                expect(module.renderHandlebarsTemplate('{{humanizeBytes 9999999999999 "si" 4}}')).toBe('9.999 TB');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 9999999999999 tooltip=true}}')).toBe(':span:9.99 TB:/span:{data-chaise-tooltip&#x3D;&quot;9,999,999,999,999 bytes (1 TB &#x3D; 1,000,000,000,000 bytes)&quot;}');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 9999999999999 mpde="si"}}')).toBe('9.99 TB');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 9999999999999 mode="si" precision=4}}')).toBe('9.999 TB');
 
                 // test truncation (binary)
-                expect(module.renderHandlebarsTemplate('{{humanizeBytes 1125899906842623 "binary"}}')).toBe('1023 TiB');
-                expect(module.renderHandlebarsTemplate('{{humanizeBytes 1125899906842623 "binary" 6}}')).toBe('1023.99 TiB');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 1125899906842623 mode="binary"}}')).toBe('1023 TiB');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 1125899906842623 mode="binary" tooltip=true}}')).toBe(':span:1023 TiB:/span:{data-chaise-tooltip&#x3D;&quot;1,125,899,906,842,623 bytes (1 TiB &#x3D; 1,099,511,627,776 bytes)&quot;}');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 1125899906842623 mode="binary" precision=6}}')).toBe('1023.99 TiB');
 
 
                 // test 0
                 expect(module.renderHandlebarsTemplate('{{humanizeBytes 0 }}')).toBe('0');
-                expect(module.renderHandlebarsTemplate('{{humanizeBytes 0 "binary"}}')).toBe('0');
-                expect(module.renderHandlebarsTemplate('{{humanizeBytes 0 "si"}}')).toBe('0');
-                expect(module.renderHandlebarsTemplate('{{humanizeBytes 0 "raw"}}')).toBe('0');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 0 mode="binary"}}')).toBe('0');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 0 mode="si"}}')).toBe('0');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 0 mode="raw"}}')).toBe('0');
 
                 // test very large numbers
                 expect(module.renderHandlebarsTemplate('{{humanizeBytes 123456712345671234656742232 }}')).toBe('123 YB');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 123456712345671234656742232 tooltip=true }}')).toBe(':span:123 YB:/span:{data-chaise-tooltip&#x3D;&quot;1.2,345,671,234,567,124e+26 bytes (1 YB &#x3D; 1e+24 bytes)&quot;}');
                 expect(module.renderHandlebarsTemplate('{{humanizeBytes 1234567123456712346567422321 }}')).toBe('1.2,345,671,234,567,124e+27');
-                expect(module.renderHandlebarsTemplate('{{humanizeBytes 1197940039285380274899124224 "binary" }}')).toBe('990.9 YiB');
-                expect(module.renderHandlebarsTemplate('{{humanizeBytes 1237940039285380274899124223 "binary" }}')).toBe('1.2,379,400,392,853,803e+27');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 1234567123456712346567422321 tooltip=true }}')).toBe('1.2,345,671,234,567,124e+27');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 1197940039285380274899124224 mode="binary" }}')).toBe('990.9 YiB');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 1197940039285380274899124224 mode="binary" tooltip=true }}')).toBe(':span:990.9 YiB:/span:{data-chaise-tooltip&#x3D;&quot;1.1,979,400,392,853,803e+27 bytes (1 YiB &#x3D; 1.2,089,258,196,146,292e+24 bytes)&quot;}');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 1237940039285380274899124223 mode="binary" }}')).toBe('1.2,379,400,392,853,803e+27');
+                expect(module.renderHandlebarsTemplate('{{humanizeBytes 1237940039285380274899124223 mode="binary" tooltip=true }}')).toBe('1.2,379,400,392,853,803e+27');
 
             });
 
             it('encodeFacet helper', function () {
-                var facet = '{"and": [{"source": "id", "choices": ["1"]}]}';
-                expect(module.renderHandlebarsTemplate("{{#encodeFacet}}" + facet + "{{/encodeFacet}}")).toBe('N4IghgdgJiBcAEBtUBnA9gVwE4GMCmc8IAljADRE4AWax+KhiIAjCALoC+nQA');
+                const facet = {"and": [{"source": "id", "choices": ["1"]}]};
+                const facetStr = JSON.stringify(facet);
+                const blob = 'N4IghgdgJiBcDaoDOB7ArgJwMYFM4gEsYAaELACxQNyTnhAEYQBdAXzaA';
+
+                expect(module.renderHandlebarsTemplate(`{{#encodeFacet}}${facetStr}{{/encodeFacet}}`)).toBe(blob);
+                expect(module.renderHandlebarsTemplate("{{#encodeFacet facet}}{{/encodeFacet}}", { facet })).toBe(blob);
+                expect(module.renderHandlebarsTemplate("{{encodeFacet facet}}", { facet })).toBe(blob);
+                expect(module.renderHandlebarsTemplate("{{#encodeFacet facetStr}}{{/encodeFacet}}", { facetStr })).toBe(blob);
+                expect(module.renderHandlebarsTemplate("{{encodeFacet facetStr}}", { facetStr })).toBe(blob);
             });
 
             it('add helper', function () {
@@ -714,6 +739,11 @@ exports.execute = function (options) {
                 var template = '{{#if (regexMatch type "jpg|png")}}image{{else}}other{{/if}}';
                 expect(module.renderHandlebarsTemplate(template, {"type": "jpg"})).toBe("image", "missmatch for 01");
                 expect(module.renderHandlebarsTemplate(template, {"type": "txt"})).toBe("other", "missmatch for 02");
+
+                var template = '{{#if (regexMatch File_Name "film analysis" flags="i")}}matched{{else}}other{{/if}}';
+                expect(module.renderHandlebarsTemplate(template, {"File_Name": "film analysis"})).toBe("matched", "missmatch for 01");
+                expect(module.renderHandlebarsTemplate(template, {"File_Name": "FILM Analysis"})).toBe("matched", "missmatch for 02");
+                expect(module.renderHandlebarsTemplate(template, {"File_Name": "FILM"})).toBe("other", "missmatch for 03");
             });
 
             it ('regexFindFirst helper', function () {
@@ -727,6 +757,9 @@ exports.execute = function (options) {
 
                 var template3 = '{{#regexFindFirst testString "[^\/]+$"}}{{this}}{{/regexFindFirst}}';
                 expect(module.renderHandlebarsTemplate(template3, {"testString": "/var/www/html/index.html"}) ).toBe("index.html", "missmatch for 5th test");
+
+                var template4 = '{{#regexFindFirst testString "test" flags="i"}}{{this}}{{/regexFindFirst}}';
+                expect(module.renderHandlebarsTemplate(template4, {"testString": "my very own TEST"}) ).toBe("TEST", "missmatch for 6th test");
             });
 
             it ('regexFindAll helper', function () {
@@ -740,6 +773,12 @@ exports.execute = function (options) {
 
                 var template3 = '{{#each (regexFindAll testString "[^\/]+$")}}{{this}}\n{{/each}}';
                 expect(module.renderHandlebarsTemplate(template3, {"testString": "/var/www/html/index.html"}) ).toBe("index.html\n", "missmatch for 5th test");
+
+                var template4 = '{{#each (regexFindAll testString "jpg|png" flags="")}}{{this}}\n{{/each}}';
+                expect(module.renderHandlebarsTemplate(template4, {"testString": "jumpng-fox.jpg"}) ).toBe("png\n", "missmatch for 6th test");
+
+                var template5 = '{{#each (regexFindAll testString "jpg|png" flags="ig")}}{{this}}\n{{/each}}';
+                expect(module.renderHandlebarsTemplate(template5, {"testString": "jumPNG-fox.JPG"}) ).toBe("PNG\nJPG\n", "missmatch for 6th test");
             });
 
             it ('replace helper', function () {
@@ -748,6 +787,16 @@ exports.execute = function (options) {
                 var template = '{{#replace "_" " "}}{{{string}}}{{/replace}}'
 
                 expect(module.renderHandlebarsTemplate(template, {string: underscoreToWhitespace})).toEqual("change this table name", "missmatch for 1st test");
+
+                expect(module.renderHandlebarsTemplate(
+                    '{{#replace "foo" "" flags=""}}{{{string}}}{{/replace}}',
+                    {string: 'foo example foo'})
+                ).toEqual(' example foo');
+
+                expect(module.renderHandlebarsTemplate(
+                    '{{#replace "foo" "" flags="ig"}}{{{string}}}{{/replace}}',
+                    {string: 'foo example FoO'})
+                ).toEqual(' example ');
             });
 
             it ('jsonStringify helper', function () {
@@ -758,12 +807,20 @@ exports.execute = function (options) {
                     "testInt": 4
                 };
 
-                var template = '{{#jsonStringify}}{{{json}}}{{/jsonStringify}}';
-
+                let template = '{{#jsonStringify}}{{{json}}}{{/jsonStringify}}';
                 expect(module.renderHandlebarsTemplate(template, {json: json})).toBe(JSON.stringify(json), "missmatch for 1st test");
 
-                var template2 = '{{#encodeFacet}}{{#jsonStringify}}{{{json}}}{{/jsonStringify}}{{/encodeFacet}}';
-                expect(module.renderHandlebarsTemplate(template2, {json: json})).toBe(options.ermRest.encodeFacetString(JSON.stringify(json)), "missmatch for 2nd test");
+                template = '{{#jsonStringify json}}{{/jsonStringify}}';
+                expect(module.renderHandlebarsTemplate(template, {json: json})).toBe(JSON.stringify(json), "missmatch for 2nd test");
+
+                template = '{{#encodeFacet}}{{#jsonStringify}}{{{json}}}{{/jsonStringify}}{{/encodeFacet}}';
+                expect(module.renderHandlebarsTemplate(template, {json: json})).toBe(options.ermRest.encodeFacetString(JSON.stringify(json)), "missmatch for 3rd test");
+
+                template = '{{#encodeFacet (jsonStringify json)}}{{/encodeFacet}}';
+                expect(module.renderHandlebarsTemplate(template, {json: json})).toBe(options.ermRest.encodeFacetString(JSON.stringify(json)), "missmatch for 4th test");
+
+                template = '{{encodeFacet (jsonStringify json)}}';
+                expect(module.renderHandlebarsTemplate(template, {json: json})).toBe(options.ermRest.encodeFacetString(JSON.stringify(json)), "missmatch for 5th test");
             });
 
             it ('toTitleCase helper', function () {
@@ -898,29 +955,29 @@ exports.execute = function (options) {
                   "note1": "the URL here has a properly percent-encoded UTF-8 string: %C7%9D%C9%AF%C9%90u == ǝɯɐu",
                   "note2": "the {{#escape}}...{{/escape}} is unnecessary here but doesn't hurt anything"
                 },{
-                    "template" : "[{{str_witha_}}](https://dev.isrd.isi.edu/key={{str_witha_}})",
-                    "after_mustache": "[**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **](https://dev.isrd.isi.edu/key=**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **)",
-                    "after_render": '<p>[**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **](https://dev.isrd.isi.edu/key=**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **)</p>',
+                    "template" : "[{{str_witha_}}](https://example.org/key={{str_witha_}})",
+                    "after_mustache": "[**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **](https://example.org/key=**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **)",
+                    "after_render": '<p>[**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **](https://example.org/key=**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **)</p>',
                     "note": "With no encoding and escaping. Should give malformed HTML"
                 },{
-                    "template" : "[{{str_witha_}}](https://dev.isrd.isi.edu/key={{#encode str_witha_}}{{/encode}})",
-                    "after_mustache": "[**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **](https://dev.isrd.isi.edu/key=%2A%2Asomevalue%20%5D%20which%20is%20%21%20special%20and%20%5B%20contains%20special%20%3Cbold%3E%20characters%2012%2F26%2F2016%20%28%20and%20%2A%2A)",
-                    "after_render": '<p>[**somevalue ] which is ! special and <a href="https://dev.isrd.isi.edu/key=%2A%2Asomevalue%20%5D%20which%20is%20%21%20special%20and%20%5B%20contains%20special%20%3Cbold%3E%20characters%2012%2F26%2F2016%20%28%20and%20%2A%2A"> contains special &lt;bold&gt; characters 12/26/2016 ( and **</a></p>',
+                    "template" : "[{{str_witha_}}](https://example.org/key={{#encode str_witha_}}{{/encode}})",
+                    "after_mustache": "[**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **](https://example.org/key=%2A%2Asomevalue%20%5D%20which%20is%20%21%20special%20and%20%5B%20contains%20special%20%3Cbold%3E%20characters%2012%2F26%2F2016%20%28%20and%20%2A%2A)",
+                    "after_render": '<p>[**somevalue ] which is ! special and <a href="https://example.org/key=%2A%2Asomevalue%20%5D%20which%20is%20%21%20special%20and%20%5B%20contains%20special%20%3Cbold%3E%20characters%2012%2F26%2F2016%20%28%20and%20%2A%2A"> contains special &lt;bold&gt; characters 12/26/2016 ( and **</a></p>',
                     "note": "With encoding but no escaping. Should give malformed HTML with a valid link but invalid caption"
                 },{
-                    "template" : "[{{str_witha_}}](https://dev.isrd.isi.edu/key={{encode str_witha_}})",
-                    "after_mustache": "[**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **](https://dev.isrd.isi.edu/key=%2A%2Asomevalue%20%5D%20which%20is%20%21%20special%20and%20%5B%20contains%20special%20%3Cbold%3E%20characters%2012%2F26%2F2016%20%28%20and%20%2A%2A)",
-                    "after_render": '<p>[**somevalue ] which is ! special and <a href="https://dev.isrd.isi.edu/key=%2A%2Asomevalue%20%5D%20which%20is%20%21%20special%20and%20%5B%20contains%20special%20%3Cbold%3E%20characters%2012%2F26%2F2016%20%28%20and%20%2A%2A"> contains special &lt;bold&gt; characters 12/26/2016 ( and **</a></p>',
+                    "template" : "[{{str_witha_}}](https://example.org/key={{encode str_witha_}})",
+                    "after_mustache": "[**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **](https://example.org/key=%2A%2Asomevalue%20%5D%20which%20is%20%21%20special%20and%20%5B%20contains%20special%20%3Cbold%3E%20characters%2012%2F26%2F2016%20%28%20and%20%2A%2A)",
+                    "after_render": '<p>[**somevalue ] which is ! special and <a href="https://example.org/key=%2A%2Asomevalue%20%5D%20which%20is%20%21%20special%20and%20%5B%20contains%20special%20%3Cbold%3E%20characters%2012%2F26%2F2016%20%28%20and%20%2A%2A"> contains special &lt;bold&gt; characters 12/26/2016 ( and **</a></p>',
                     "note": "With encoding but no escaping. Should give malformed HTML with a valid link but invalid caption"
                 },{
-                    "template" : "[{{#escape str_witha_}}{{/escape}}](https://dev.isrd.isi.edu/key={{str_witha_}})",
-                    "after_mustache": "[\\*\\*somevalue \\] which is \\! special and \\[ contains special &lt;bold&gt; characters 12\\/26\\/2016 \\( and \\*\\*](https://dev.isrd.isi.edu/key=**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **)",
-                    "after_render": '<p>[**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **](https://dev.isrd.isi.edu/key=**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **)</p>',
+                    "template" : "[{{#escape str_witha_}}{{/escape}}](https://example.org/key={{str_witha_}})",
+                    "after_mustache": "[\\*\\*somevalue \\] which is \\! special and \\[ contains special &lt;bold&gt; characters 12\\/26\\/2016 \\( and \\*\\*](https://example.org/key=**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **)",
+                    "after_render": '<p>[**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **](https://example.org/key=**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **)</p>',
                     "note": "With escaping but no encoding. Should give malformed HTML"
                 },{
-                    "template" : "[{{#escape str_witha_}}{{/escape}}](https://dev.isrd.isi.edu/key={{#encode str_witha_}}{{/encode}})",
-                    "after_mustache": "[\\*\\*somevalue \\] which is \\! special and \\[ contains special &lt;bold&gt; characters 12\\/26\\/2016 \\( and \\*\\*](https://dev.isrd.isi.edu/key=%2A%2Asomevalue%20%5D%20which%20is%20%21%20special%20and%20%5B%20contains%20special%20%3Cbold%3E%20characters%2012%2F26%2F2016%20%28%20and%20%2A%2A)",
-                    "after_render": '<p><a href="https://dev.isrd.isi.edu/key=%2A%2Asomevalue%20%5D%20which%20is%20%21%20special%20and%20%5B%20contains%20special%20%3Cbold%3E%20characters%2012%2F26%2F2016%20%28%20and%20%2A%2A">**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **</a></p>',
+                    "template" : "[{{#escape str_witha_}}{{/escape}}](https://example.org/key={{#encode str_witha_}}{{/encode}})",
+                    "after_mustache": "[\\*\\*somevalue \\] which is \\! special and \\[ contains special &lt;bold&gt; characters 12\\/26\\/2016 \\( and \\*\\*](https://example.org/key=%2A%2Asomevalue%20%5D%20which%20is%20%21%20special%20and%20%5B%20contains%20special%20%3Cbold%3E%20characters%2012%2F26%2F2016%20%28%20and%20%2A%2A)",
+                    "after_render": '<p><a href="https://example.org/key=%2A%2Asomevalue%20%5D%20which%20is%20%21%20special%20and%20%5B%20contains%20special%20%3Cbold%3E%20characters%2012%2F26%2F2016%20%28%20and%20%2A%2A">**somevalue ] which is ! special and [ contains special &lt;bold&gt; characters 12/26/2016 ( and **</a></p>',
                     "note": "With encoding and escaping. Should give correct HTML with valid caption a link"
                 }];
 

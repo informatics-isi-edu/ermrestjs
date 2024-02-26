@@ -10,7 +10,7 @@ The annotation is represented as follows:
 ```javascript
 {
    "CONTEXT_NAME" : {
-       "markdown_pattern": "[{{{title}}}](https://dev.isrd.isi.edu/chaise/search?name={{{name}}})"
+       "markdown_pattern": "[{{{title}}}](https://example.com/chaise/search?name={{{name}}})"
    }
 }
 ```

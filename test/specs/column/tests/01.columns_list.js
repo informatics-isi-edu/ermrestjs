@@ -23,7 +23,6 @@ exports.execute = function (options) {
             editContext = "entry/edit",
             detailedContext = "detailed";
 
-
         var singleEnitityUri = options.url + "/catalog/" + catalog_id + "/entity/" +
             schemaName + ":" + tableName + "/id=" + entityId;
 
@@ -51,7 +50,7 @@ exports.execute = function (options) {
         var singleEnitityUriSystemColumnsHeuristics = options.url + "/catalog/" + catalog_id + "/entity/" +
             schemaName + ":" + tableWithNoVisibleColumns + "/id=" + entityId;
 
-        var chaiseURL = "https://dev.isrd.isi.edu/chaise";
+        var chaiseURL = "https://example.org/chaise";
         var recordURL = chaiseURL + "/record";
         var record2URL = chaiseURL + "/record-two";
         var viewerURL = chaiseURL + "/viewer";
@@ -112,21 +111,20 @@ exports.execute = function (options) {
         ];
 
         var compactRefExpectedPartialValue = [
-            '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:columns_table/id=1">1</a>',
-            '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key/id=9000">9000</a>',
+            '<a href="https://example.org/chaise/record/columns_schema:columns_table/id=1">1</a>',
+            '<a href="https://example.org/chaise/record/columns_schema:table_w_simple_key/id=9000">9000</a>',
             '',
-            '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key/id=4000">4000</a>',
-            '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key_2/id=4000">4000</a>',
-            '4000',
+            '<a href="https://example.org/chaise/record/columns_schema:table_w_simple_key/id=4000">4000</a>',
+            '<a href="https://example.org/chaise/record/columns_schema:table_w_simple_key_2/id=4000">4000</a>',
             '4001',
             '4002',
             '4003',
              '',
              '<p><a href="http://example.com" class="external-link-icon external-link">12</a></p>\n',
-             '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/id_1=4000&id_2=4001">4000 , 4001</a>',
-             '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key_2/id_1=4000&id_2=4003">4000:4003</a>',
-             '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/id_1=4000&id_2=4002">4000 , 4002</a>',
-             '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/id_1=4001&id_2=4002">4001 , 4002</a>',
+             '<a href="https://example.org/chaise/record/columns_schema:table_w_composite_key/id_1=4000&id_2=4001">4000 , 4001</a>',
+             '<a href="https://example.org/chaise/record/columns_schema:table_w_composite_key_2/id_1=4000&id_2=4003">4000:4003</a>',
+             '<a href="https://example.org/chaise/record/columns_schema:table_w_composite_key/id_1=4000&id_2=4002">4000 , 4002</a>',
+             '<a href="https://example.org/chaise/record/columns_schema:table_w_composite_key/id_1=4001&id_2=4002">4001 , 4002</a>',
              ''
         ];
 
@@ -152,7 +150,7 @@ exports.execute = function (options) {
             'Hank',
             '12',
             '4000 : 4001',
-            '<a href="https://dev.isrd.isi.edu/chaise/search">1</a>',
+            '<a href="https://example.org/chaise/search">1</a>',
             '4000 : 4002',
             '4001 : 4002',
             ''
@@ -167,7 +165,7 @@ exports.execute = function (options) {
         ];
 
         var assetEntryExpectedValue = [
-            '1', '1', '1000', '10001', null, 'https://dev.isrd.isi.edu', 'https://dev.isrd.isi.edu', 'https://dev.isrd.isi.edu', 4
+            '1', '1', '1000', '10001', null, 'https://example.org', 'https://example.org', 'https://example.org', 4
         ];
 
         var compactRefExpectedLinkedValue, assetCompactExpectedValue, assetDetailedExpectedValue, tableWSlashData;
@@ -204,17 +202,18 @@ exports.execute = function (options) {
          * 2:   outbound_fk_2  -> is null
          * 3:   outbound_fk_3 (check disambiguation) (check nullok)
          * 4:   outbound_fk_4 (check disambiguation)
-         * 5:   col_3
-         * 6:   col_4
-         * 7:   col 5
-         * 8:   col_6
-         * 9:   col_7
-         * 10:  columns_schema_outbound_fk_7
-         * 11:  outbound_fk_5 (check to_name) (check nullok)
-         * 12:  outbound_fk_6 (check nullok)
-         * 13:  outbound_fk_8 (check disambiguation)
-         * 14:  outbound_fk_7 (check disambiguation) (check nullok)
-         * 15:  outbound_fk_9
+         * 5:   col_4
+         * 6:   col 5
+         * 7:   col_6
+         * 8:   col_7
+         * 9:   columns_schema_outbound_fk_7
+         * 10:  columns_schema_handlebars_col
+         * ...: system columns
+         * 16:  outbound_fk_5 (check to_name) (check nullok)
+         * 17:  outbound_fk_6 (check nullok)
+         * 18:  outbound_fk_8 (check disambiguation)
+         * 19:  outbound_fk_7 (check disambiguation) (check nullok)
+         * 20:  outbound_fk_9
          *
          * expected output for ref.columns in entry context:
          * 0:   id
@@ -254,41 +253,40 @@ exports.execute = function (options) {
          *
          * 2. table_w_asset:
          *  ref.columns for detailed (no context present):
-         *  0: table_w_asset_key_1 *KeyPseudoColumn*
+         *  0: table_w_asset_key_1 *AssetPseudoColumn*
          *  1: table_w_asset_fk_to_outbound *ForeignKeyPseudoColumn*
          *  2: col_1
          *  3: col_2
-         *  4: col_filename
+         *  4: col_asset_3 *AssetPseudoColumn* (asset with valid options) (was 10)
          *  5: col_byte
          *  6: col_md5
          *  7: col_sha256
          *  8: col_asset_1 *AssetPseudoColumn* disabeld (no url_pattern)
          *  9: col_asset_2 *AssetPseudoColumn* (asset with invalid options) has column-display (markdown and order)
-         *  10: col_asset_3 *AssetPseudoColumn* (asset with valid options)
-         *  11: col_asset_4 *AssetPseudoColumn* (asset with url_pattern and filename) has column-display (markdown)
-         *  12: col_asset_4_filename
-         *  13: col_asset_5 (asset with type not text)
-         *  14: col_asset_6 *AssetPseudoColumn* (asset with url_pattern, filename, and image_preview)
-         *  15: col_asset_5_filename
+         *  10: col_asset_4 *AssetPseudoColumn* (asset with url_pattern and filename) has column-display (markdown) (was 11)
+         *  11: col_asset_5 (asset with type not text) (was 13)
+         *  12: col_asset_6 *AssetPseudoColumn* (asset with url_pattern, filename, and image_preview) (wa 14)
+         *  13: col_asset_6_byte_count (was 16)
+         *  + system columns
          *
-         *  ref.columns for entry (no context present):
-         *  0: id
+         * ref.columns for compact (no context present):
+         *  0: table_w_asset_key_1 *KeyPseudoColumn*
          *  1: table_w_asset_fk_to_outbound *ForeignKeyPseudoColumn*
          *  2: col_1
          *  3: col_2
-         *  4: col_asset_1 *AssetPseudoColumn* (disabled)
-         *  5: col_asset_2 *AssetPseudoColumn*
-         *  6: col_asset_3 *AssetPseudoColumn*
-         *  7: col_asset_4
-         *  8: col_asset_5
-         *  9: col_asset_6 *AssetPseudoColumn* (with image_preview)
-         *
+         *  4: col_asset_3 *AssetPseudoColumn* (asset with valid options) (was 10)
+         *  5: col_byte
+         *  6: col_asset_1 *AssetPseudoColumn* disabeld (no url_pattern) (was 8)
+         *  7: col_asset_2 *AssetPseudoColumn* (asset with invalid options) has column-display (markdown and order) (was 9)
+         *  8: col_asset_4 *AssetPseudoColumn* (asset with url_pattern and filename) has column-display (markdown) (was 11)
+         *  9: col_asset_5 (asset with type not text) (was 13)
+         *  10: col_asset_6 *AssetPseudoColumn* (asset with url_pattern, filename, and image_preview) (was 14)
+         *  11: col_asset_6_byte_count
+         *  + system columns
          *
          *  contexts that are used:
          *  - compact: no visible-columns
-         *  - detailed: valid assets: col_asset_3, col_asset_4, col_asset_6
-         *  - edit: no visible-columns
-         *  - entry/create: does not include col_asset_3 -> so no ignore
+         *  - detailed: no vis-columns
          *  - entry/edit: includes col_asset_3 and all its contituent columns
          *  - compact/brief: includes col_asset_3 and all its contituent columns
          *  - compact/brief/inline: inlcudes inline table that should not be visible
@@ -304,7 +302,7 @@ exports.execute = function (options) {
         beforeAll(function (done) {
             options.ermRest.appLinkFn(appLinkFn);
             options.ermRest.setClientConfig({
-                internalHosts: [options.catalog.server.host, "dev.isrd.isi.edu"]
+                internalHosts: [options.catalog.server.host, "example.org"]
             });
             options.ermRest.resolve(singleEnitityUri, {
                 cid: "test"
@@ -332,6 +330,8 @@ exports.execute = function (options) {
                 assetRefCompact = ref.contextualize.compact;
                 assetRefCompactCols = assetRefCompact.columns;
                 assetRefEntry = ref.contextualize.entry;
+                assetRefDetailed = ref.contextualize.detailed;
+                assetRefDetailedCols = assetRefDetailed.columns;
                 done();
             }).catch(function (err) {
                 console.dir(err);
@@ -339,49 +339,49 @@ exports.execute = function (options) {
             });
 
             compactRefExpectedLinkedValue = [
-                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:columns_table/id=1">1</a>',
-                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key/RID=' + utils.findEntityRID(options, schemaName, "table_w_simple_key", "id", "9000") + '">Hank</a>',
+                '<a href="https://example.org/chaise/record/columns_schema:columns_table/id=1">1</a>',
+                '<a href="https://example.org/chaise/record/columns_schema:table_w_simple_key/RID=' + utils.findEntityRID(options, schemaName, "table_w_simple_key", "id", "9000") + '">Hank</a>',
                 '',
-                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key/RID=' + utils.findEntityRID(options, schemaName, "table_w_simple_key", "id", "4000") + '">John</a>',
-                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key_2/RID=' + utils.findEntityRID(options, schemaName, "table_w_simple_key_2", "id", "4000") + '">Hank</a>',
-                '4000',
+                '<a href="https://example.org/chaise/record/columns_schema:table_w_simple_key/RID=' + utils.findEntityRID(options, schemaName, "table_w_simple_key", "id", "4000") + '">John</a>',
+                '<a href="https://example.org/chaise/record/columns_schema:table_w_simple_key_2/RID=' + utils.findEntityRID(options, schemaName, "table_w_simple_key_2", "id", "4000") + '">Hank</a>',
                 '4001',
                 '4002',
                 '4003',
                 '',
                 '<p><a href="http://example.com" class="external-link-icon external-link">12</a></p>\n',
-                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/RID=' + utils.findEntityRID(options, schemaName, "table_w_composite_key", "id", "1") + '">4000 , 4001</a>',
-                '<a href="https://dev.isrd.isi.edu/chaise/search">1</a>',
-                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/RID=' + utils.findEntityRID(options, schemaName, "table_w_composite_key", "id", "2") + '">4000 , 4002</a>',
-                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_composite_key/RID=' + utils.findEntityRID(options, schemaName, "table_w_composite_key", "id", "4") + '">4001 , 4002</a>',
+                '<a href="https://example.org/chaise/record/columns_schema:table_w_composite_key/RID=' + utils.findEntityRID(options, schemaName, "table_w_composite_key", "id", "1") + '">4000 , 4001</a>',
+                '<a href="https://example.org/chaise/search">1</a>',
+                '<a href="https://example.org/chaise/record/columns_schema:table_w_composite_key/RID=' + utils.findEntityRID(options, schemaName, "table_w_composite_key", "id", "2") + '">4000 , 4002</a>',
+                '<a href="https://example.org/chaise/record/columns_schema:table_w_composite_key/RID=' + utils.findEntityRID(options, schemaName, "table_w_composite_key", "id", "4") + '">4001 , 4002</a>',
                 ''
             ];
 
             assetDetailedExpectedValue = [
-                '<a href="https://dev.isrd.isi.edu?uinit=1&amp;cid=test" download="" class="asset-permission">filename</a>',
+                '<a href="https://example.org?uinit=1&amp;cid=test" download="" class="asset-permission">filename</a>',
                 '<p>filename4</p>\n',
-                '<a href="https://dev.isrd.isi.edu/file.png?uinit=1&amp;cid=test" download="" class="asset-permission">filename6</a>'
+                '<a href="https://example.org/file.png?uinit=1&amp;cid=test" download="" class="asset-permission">filename6</a>'
             ];
 
             assetCompactExpectedValue = [
-                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_asset/id=1">1</a>',
-                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:columns_table/RID=' + utils.findEntityRID(options, schemaName, "columns_table", "id", "1") + '">1</a>',
-                '1000', '10001', 'filename', '1,242', 'md5', 'sha256',
+                '<a href="1?uinit=1&amp;cid=test" download="" class="asset-permission">1</a>',
+                '<a href="https://example.org/chaise/record/columns_schema:columns_table/RID=' + utils.findEntityRID(options, schemaName, "columns_table", "id", "1") + '">1</a>',
+                '1000', '10001',
+                '<a href="https://example.org?uinit=1&amp;cid=test" download="" class="asset-permission">filename</a>',
+                '<p><span data-chaise-tooltip="1,242 bytes (1 kB = 1,000 bytes)">1.24 kB</span></p>\n',
                 '',
                 '<h2>filename</h2>\n',
-                '<a href="https://dev.isrd.isi.edu?uinit=1&amp;cid=test" download="" class="asset-permission">filename</a>',
-                'filename4',
+                '<p>filename4</p>\n',
                 '4',
-                'filename6',
-                '<a href="https://dev.isrd.isi.edu/file.png?uinit=1&amp;cid=test" download="" class="asset-permission">filename6</a>'
+                '<a href="https://example.org/file.png?uinit=1&amp;cid=test" download="" class="asset-permission">filename6</a>',
+                '<p>9,234</p>\n'
             ];
 
             tableWSlashData = [
                 '1',
                 '1',
                 '2',
-                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key/RID=' + utils.findEntityRID(options, schemaName, "table_w_simple_key", "id", "9001") + '">Harold</a>',
-                '<a href="https://dev.isrd.isi.edu/chaise/record/columns_schema:table_w_simple_key/RID=' + utils.findEntityRID(options, schemaName, "table_w_simple_key", "id", "9000") + '">Hank</a>'
+                '<a href="https://example.org/chaise/record/columns_schema:table_w_simple_key/RID=' + utils.findEntityRID(options, schemaName, "table_w_simple_key", "id", "9001") + '">Harold</a>',
+                '<a href="https://example.org/chaise/record/columns_schema:table_w_simple_key/RID=' + utils.findEntityRID(options, schemaName, "table_w_simple_key", "id", "9000") + '">Hank</a>'
             ];
         });
 
@@ -450,7 +450,7 @@ exports.execute = function (options) {
 
                 describe('for asset columns,', function () {
                     describe('filname, byte, md5, and sha256 columns', function() {
-                        it('should be ignored in edit context if the asset column is present.', function() {
+                        it('should be ignored in edit and create context.', function() {
                             checkReferenceColumns([{
                                 ref: assetRef.contextualize.entryEdit,
                                 expected: [
@@ -459,20 +459,12 @@ exports.execute = function (options) {
                             }]);
                         });
 
-                        it('should not be ignored in any contexts if the asset column is not present.', function() {
-                            checkReferenceColumns([{
-                                ref: assetRef.contextualize.entryCreate,
-                                expected: [
-                                    "col_filename","col_byte","col_md5","col_sha256"
-                                ]
-                            }]);
-                        });
-
                         it('otherwise, should not be ignored.', function() {
                             checkReferenceColumns([{
                                 ref: assetRef.contextualize.compactBrief,
                                 expected: [
-                                    "col_asset_3", "col_filename","col_byte","col_md5","col_sha256"
+                                    "col_asset_3", "col_filename","col_byte","col_md5","col_sha256",
+                                    "col_asset_6_byte_count"
                                 ]
                             }]);
                         });
@@ -506,7 +498,7 @@ exports.execute = function (options) {
                             checkCol("uri1");
                         });
 
-                        it("should create asset column if annotation is available, but disable it if url_pattern is not an string", function() {
+                        it("should create asset column if annotation is available, but disable it if url_pattern is not a string", function() {
                             checkCol("uri2");
                         });
 
@@ -628,13 +620,13 @@ exports.execute = function (options) {
                 })
 
                 it('should not include duplicate Columns or PseudoColumns.', function() {
-                    expect(compactColumns.length).toBe(22);
+                    expect(compactColumns.length).toBe(21);
                     expect(entryRef.columns.length).toBe(17);
                 });
 
                 it('should include columns that are not part of any FKRs.', function () {
-                    expect(compactColumns[10].isPseudo).toBe(false);
-                    expect(compactColumns[10].name).toBe("columns_schema_outbound_fk_7");
+                    expect(compactColumns[9].isPseudo).toBe(false);
+                    expect(compactColumns[9].name).toBe("columns_schema_outbound_fk_7");
                 });
 
                 describe('for columns that are part of a simple FKR, ', function () {
@@ -656,20 +648,18 @@ exports.execute = function (options) {
                 describe('for columns that are part of composite FKR, ', function () {
 
                     it('should include the columns and avoid duplicate.', function () {
+                        // col_3 is not added because it's part of a simple fk
                         expect(compactColumns[5].isPseudo).toBe(false);
-                        expect(compactColumns[5].name).toBe("col_3");
+                        expect(compactColumns[5].name).toBe("col_4");
 
                         expect(compactColumns[6].isPseudo).toBe(false);
-                        expect(compactColumns[6].name).toBe("col_4");
+                        expect(compactColumns[6].name).toBe("col 5");
 
                         expect(compactColumns[7].isPseudo).toBe(false);
-                        expect(compactColumns[7].name).toBe("col 5");
+                        expect(compactColumns[7].name).toBe("col_6");
 
                         expect(compactColumns[8].isPseudo).toBe(false);
-                        expect(compactColumns[8].name).toBe("col_6");
-
-                        expect(compactColumns[9].isPseudo).toBe(false);
-                        expect(compactColumns[9].name).toBe("col_7");
+                        expect(compactColumns[8].name).toBe("col_7");
                     });
 
                     it('in edit or create context should not include the columns, and just create PseudoColumn for them.', function () {
@@ -685,26 +675,26 @@ exports.execute = function (options) {
                     });
 
                     it('should create just one PseudoColumn for the FKR.', function () {
+                        expect(compactColumns[16].isPseudo).toBe(true);
+                        expect(compactColumns[16]._constraintName).toBe(["columns_schema", "outbound_fk_5"].join("_"));
+
                         expect(compactColumns[17].isPseudo).toBe(true);
-                        expect(compactColumns[17]._constraintName).toBe(["columns_schema", "outbound_fk_5"].join("_"));
+                        expect(compactColumns[17]._constraintName).toBe(["columns_schema", "outbound_fk_6"].join("_"));
 
                         expect(compactColumns[18].isPseudo).toBe(true);
-                        expect(compactColumns[18]._constraintName).toBe(["columns_schema", "outbound_fk_6"].join("_"));
+                        expect(compactColumns[18]._constraintName).toBe(["columns_schema", "outbound_fk_8"].join("_"));
 
                         expect(compactColumns[19].isPseudo).toBe(true);
-                        expect(compactColumns[19]._constraintName).toBe(["columns_schema", "outbound_fk_8"].join("_"));
+                        expect(compactColumns[19]._constraintName).toBe(["columns_schema", "outbound_fk_7"].join("_"));
 
                         expect(compactColumns[20].isPseudo).toBe(true);
-                        expect(compactColumns[20]._constraintName).toBe(["columns_schema", "outbound_fk_7"].join("_"));
-
-                        expect(compactColumns[21].isPseudo).toBe(true);
-                        expect(compactColumns[21]._constraintName).toBe(["columns_schema", "outbound_fk_9"].join("_"));
+                        expect(compactColumns[20]._constraintName).toBe(["columns_schema", "outbound_fk_9"].join("_"));
                     });
                 });
 
                 describe('for asset columns,', function () {
                     describe('filename, byte, md5, and sha256 columns', function() {
-                        it('should be ignored in edit context.', function() {
+                        it('all should be ignored in edit context.', function() {
                             checkReferenceColumns([{
                                 ref: assetRefEntry,
                                 expected: [
@@ -716,16 +706,36 @@ exports.execute = function (options) {
                             }]);
                         });
 
-                        it('should not be ignored in other contexts.', function() {
-                            expect(assetRefCompactCols.length).toBe(21);
-                            expect(assetRefCompactCols[4].name).toBe("col_filename");
-                            expect(assetRefCompactCols[4].isPseudo).toBe(false);
-                            expect(assetRefCompactCols[5].name).toBe("col_byte");
-                            expect(assetRefCompactCols[5].isPseudo).toBe(false);
-                            expect(assetRefCompactCols[6].name).toBe("col_md5");
-                            expect(assetRefCompactCols[6].isPseudo).toBe(false);
-                            expect(assetRefCompactCols[7].name).toBe("col_sha256");
-                            expect(assetRefCompactCols[7].isPseudo).toBe(false);
+                        it ('only filename should be ignored in detailed context.', () => {
+                            expect(assetRefDetailed.columns.length).toBe(19);
+                            checkReferenceColumns([{
+                                ref: assetRefDetailed,
+                                expected: [
+                                    "id",
+                                    ["columns_schema", "table_w_asset_fk_to_outbound"].join("_"),
+                                    "col_1", "col_2",
+                                    "col_asset_3", // instead of filename
+                                    "col_byte", "col_md5", "col_sha256",
+                                    "col_asset_1", "col_asset_2",
+                                    "col_asset_4", "col_asset_5", "col_asset_6", "col_asset_6_byte_count"
+                                ]
+                            }]);
+                        });
+
+                        it ('filename, md5, and sha256 should be ignored in compact context.', () => {
+                            expect(assetRefCompact.columns.length).toBe(17);
+                            checkReferenceColumns([{
+                                ref: assetRefCompact,
+                                expected: [
+                                    "id",
+                                    ["columns_schema", "table_w_asset_fk_to_outbound"].join("_"),
+                                    "col_1", "col_2",
+                                    "col_asset_3", // instead of filename
+                                    "col_byte",
+                                    "col_asset_1", "col_asset_2",
+                                    "col_asset_4", "col_asset_5", "col_asset_6"
+                                ]
+                            }]);
                         });
                     });
 
@@ -740,15 +750,15 @@ exports.execute = function (options) {
                     });
 
                     it("if column type is not `text`, should ignore the asset annotation.", function() {
-                      expect(assetRefCompactCols[13].name).toBe("col_asset_5", "invalid name for compact");
-                      expect(assetRefCompactCols[13].isPseudo).toBe(false, "invalid isPseudo for compact");
+                      expect(assetRefCompactCols[9].name).toBe("col_asset_5", "invalid name for compact");
+                      expect(assetRefCompactCols[9].isPseudo).toBe(false, "invalid isPseudo for compact");
                       expect(assetRefEntry.columns[8].name).toBe("col_asset_5", "invalid name for entry");
                       expect(assetRefEntry.columns[8].isPseudo).toBe(false, "invalid isPseudo for entry");
                     });
 
-                    it('if columns has been used as the keyReferenceColumn, should ignore the asset annotation.', function () {
-                        expect(assetRefCompactCols[0]._constraintName).toBe(["columns_schema", "table_w_asset_key_1"].join("_"));
-                        expect(assetRefCompactCols[0].isKey).toBe(true);
+                    it('if the chosen row display key for heuristics is also an asset, should add it as an asset.', function () {
+                        expect(assetRefCompactCols[0].name).toBe("id");
+                        expect(assetRefCompactCols[0].isAsset).toBe(true);
                     });
 
                     it('if column is part of any foreignkeys, should ignore the asset annotation.', function() {
@@ -966,9 +976,10 @@ exports.execute = function (options) {
                 });
 
                 it('in detailed, should return the download button and image preview if applicaple.', function(done) {
-                    assetRefCompact.contextualize.detailed.read(limit).then(function (page) {
+                    assetRefDetailed.read(limit).then(function (page) {
                         var tuples = page.tuples;
                         expect(tuples[0].values).toEqual(jasmine.arrayContaining(assetDetailedExpectedValue));
+
                         done();
                     }, function (err) {
                         console.dir(err);

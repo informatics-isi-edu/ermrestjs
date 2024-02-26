@@ -91,7 +91,7 @@ element and its nested model elements.
 Supported JSON payload patterns:
 
 - `{`... `"comment":` _comment_ || `{` _context_: _ccomment_ `}` ...`}`: The _comment_ (tooltip) to be used in place of the model element's original comment. Set this to `false` if you don't want any tooltips.
-- `{`... `"comment_display":` `{` _context_: `{` `"table_comment_display"`: _comment_display_ `,` `"column_comment_display"`: _comment_display_ `}` ... `}`
+- `{`... `"comment_display":` `{` _context_: `{` `"table_comment_display"`: _comment_display_ `,` `"column_comment_display"`: _comment_display_ `,` `"comment_render_markdown"`: _comment_render_markdown_ `}` ... `}`: Change how comments are displayed. As the name suggests, `column_comment_display` is used for comments defined on the columns, and `table_comment_display` for displaying the table comments.
 - `{`... `"name":` _name_ ...`}`: The _name_ to use in place of the model element's original name.
 - `{`... `"markdown_name"`: _markdown_ `}`: The _markdown_ to use in place of the model element's original name.
 - `{`... `"name_style":` `{` `"underline_space"`: _uspace_ `,` `"title_case":` _tcase_ `,` `"markdown"`: _render_ `}` ...`}`: Element name conversion instructions.
@@ -110,6 +110,11 @@ Supported JSON _comment_display_ patterns:
 
 - `tooltip`: Set to tooltip to show the comment as a hover over tooltip.
 - `inline`: Set to inline to show the comment as an inline tooltip.
+
+Supported JSON _comment_render_markdown_ patterns:
+
+- `false`: Don't treat the defined `comment` on this model and its descendants as markdown.
+- `true`: Treat the defined `comment` on this model and its descendants as markdown.
 
 Supported JSON _uspace_ patterns:
 
@@ -157,11 +162,11 @@ Supported JSON _context_ patterns:
 
 #### Tag: 2015 Display Settings Hierarchy
 
-- The `"comment"` setting applies *only* to the model element which is annotated.
-  - Currently the contextualized `comment` is only supported for tables.
-- The `"table_comment_display"` and `"column_comment_display"` setting applies *only* to the model element which is annotated.
-  - Currently the contextualized `table_comment_display` is supported for `compact` context for the title and the tables in detailed context when they are part of a foreign key relationship in `visible-columns` or `visible-foreign-keys`.
-  - `column_comment_display` is accepted as a parameter, but currently doesn't do anything.
+- Comment related settings:
+  - The `"comment"` setting applies *only* to the model element which is annotated.
+  - The `"comment_render_markdown": false` should be used if you don't want us to treat the comment as a markdown value. By default we're assuming all comments are markdown.
+  - `"table_comment_display"` is only supported for `compact` context for the title and the tables in `detailed` context when they are part of a foreign key relationship in `visible-columns` or `visible-foreign-keys`.
+  - `"column_comment_display"` is only used in `entry` context.
 - The `"name"` and `"markdown_name"` setting applies *only* to the model element which is annotated. They bypass the `name_style` controls which only apply to actual model names.
   - The `"markdown_name"` setting takes precedence if both are specified.
 - The `"name_style"` setting applies to the annotated model element and is also the default for any nested element.
@@ -308,6 +313,7 @@ Supported _columnlist_ patterns:
   - Ignore listed _columndirective_ values that do not correspond to content from the table.
   - Do not present table columns that are not specified in the list. Please refer to [column directive](#column-directive) section for more information.
   - A list without any valid _columndirective_ will be treated the same as empty array `[]`. Client will not show any columns in this case.
+- Any non-string, non-array value (e.g., `null`): The client will use the default heuristics for generating list of visbile columns.
 
 
 Supported _facetlist_ pattern:
@@ -390,7 +396,7 @@ Supported JSON payload patterns:
 
 Supported display _option_ syntax:
 
-- `"markdown_pattern":` _pattern_: The visual presentation of the key SHOULD be computed by performing [Pattern Expansion](#pattern-expansion) on _pattern_ to obtain a markdown-formatted text value which MAY be rendered using a markdown-aware renderer.
+- `"markdown_pattern":` _pattern_: The visual presentation of the key SHOULD be computed by performing [Pattern Expansion](#pattern-expansion) on _pattern_ to obtain a markdown-formatted text value which MAY be rendered using a markdown-aware renderer. In the pattern you can use `$self` to access the formatted value of the current column, or `$_self` to access the raw value.
 - `"column_order"`: `[` _columnorder_key_ ... `]`: An alternative sort method to apply when a client wants to semantically sort by key values.
 - `"column_order": false`: Sorting by this key psuedo-column should not be offered.
 - `"show_key_link": true`: Override the inherited behavior of key display and add a link to the referred row.
@@ -425,6 +431,7 @@ Supported JSON payload patterns:
 - `{` ... `"from_name":` _fname_ ... `}`: The _fname_ string is a preferred name for the set of entities containing foreign key references described by this constraint.
 - `{` ... `"to_name":` _tname_ ... `}`: The _tname_ string is a preferred name for the set of entities containing keys described by this constraint.
 - `{` ... `"from_comment":` _comment_ ... `}`: The _comment_ string is a preferred comment for the set of entities containing keys described by this constraint.
+- `{` ... `"comment_render_markdown":` _boolean_value_ ... `}`: The _boolean_value_ dictates whether the comments for this foreignkey should be treated as markdown or not. If not defined, its value will be inherited from the table (which could be inherited from the schema or the catalog. If it's not defined on any of the models, the default behavior is to treat comments as markdown).
 - `{` ... `"to_comment":` _comment_ ... `}`: The _comment_ string is a preferred comment for the set of entities containing keys described by this constraint.
 - `{` ... `"from_comment_display":` _comment_display_ ... `}`: The display mode for the tooltip. Set to `inline` to show it as text or `tooltip` to show as a hover tooltip.
     - Currently the `comment_display` is only supported for foreign key relationships in detailed context when they are part of `visible-columns` or `visible-foreign-keys`.
@@ -445,6 +452,7 @@ Supported display _option_ syntax:
 - `"column_order": false`: Sorting by this foreign key psuedo-column should not be offered.
 - `"show_foreign_key_link": true`: Override the inherited behavior of foreign key display and add a link to the referred row.
 - `"show_foreign_key_link": false`: Override the inherited behavior of foreign key display by not adding any the extra.
+- `"selector_ux_mode"`: The display mode for the recordedit input field when this foreign key relationship is part of the visible columns. Supported values are `"facet-search-popup"` and `"simple-search-dropdown"`, with `"facet-search-popup"` being the default. Currently only supported in `entry` contexts.
 
 Supported _columnorder_key_ syntax:
 
@@ -455,8 +463,14 @@ Supported _columnorder_key_ syntax:
 
 Supported _domainfilter_ syntax:
 - `{ "ermrest_path_pattern":` _pathpattern_ `}`: The _pathpattern_ yields a _filter_ via [Pattern Expansion](#pattern-expansion). With this syntax, the applied filter will be hidden from the user.
+- `{ "ermrest_path_pattern":` _pathpattern_ `, "pattern_sources":` _columnlist_ `}`: The added `pattern_sources` allows the client to proceed more meaningful errors to users.
 - `{ "ermrest_path_pattern":` _pathpattern_ `, "display_markdown_pattern":` _displaypattern_ `}`: The _pathpattern_ yields a _filter_ via [Pattern Expansion](#pattern-expansion). _displaypattern_ will provide the visual presentation of the filter which will be computed by performing [Pattern Expansion](#pattern-expansion) to obtain a markdown-formatted text value which MAY be rendered using a markdown-aware renderer.
   - If the computed _filter_ is an empty string, the _domain_filter_ will be ignored, and the client behaves as if this annotation is not even defined. Therefore, while rendering the list of allowed foreign key rows in recordedit, users will see the whole list.
+- `{ "ermrest_path_pattern":` _pathpattern_ `, "display_markdown_pattern":` _displaypattern_ `, "pattern_sources":` _columnlist_ `}`:  The added `pattern_sources` allows the client to proceed more meaningful errors to users.
+
+Supported _columnlist_ patterns:
+
+ - `[` ... _columndirective_ `,` ... `]`: The list of [columns directives](#column-directive) that are used in the `ermrest_path_pattern`. Make sure to use the same column directive as visible columns. For example if you've used column named `fk_col` in the pattern, but the foreign key that this column is part of visible, you should include the foreign key column here (and not the `fk_col` itself).
 
 Supported _filter_ syntax:
 
@@ -562,12 +576,15 @@ Supported JSON _option_ payload patterns:
 - `"collapse_toc_panel":` `_boolean_`: Controls whether the table of contents panel is collapsed on page load (only supported in `detailed` context).
 - `"hide_column_header":` `_boolean_`: Controls whether the column names headers and separators between column values are shown (only supported in `detailed` context).
 - `"page_markdown_pattern"`: _pagepattern_: Render the page by composing a markdown representation only when `page_markdown_pattern` is non-null.
-  - Expand _pagepattern_ to obtain a markdown representation of whole page of dat via [Pattern Expansion](#pattern-expansion. In the pattern, you have access to a `$page` object that has the following attributes:
-      - `values`: An array of values. You can access each column value using the `{{{$page.values.<index>.<column>}}}` where `<index>` is the index of array element that you want (starting with zero), and `<column>` is the column name (`{{{$page.values.0.RID}}}`).
-      - `parent`: This variable is available when used for getting table content of related entities. Currently the `row_markdown_pattern` in `compact` context is used to provide a brief summary of table data. When used in this context, you can access the parent attributes under `$page.parent`. The attributes are:
-        - `values`: the parent data `{{{$page.parent.values.RID}}}`.
-        - `table`: the parent table name `{{{$page.parent.table}}}`.
-        - `schema`: the parent schema name `{{{$page.parent.schema}}}`.
+  - Expand _pagepattern_ to obtain a markdown representation of whole page of dat via [Pattern Expansion](#pattern-expansion). In the pattern, you have access to a `$page` object that has the following properties:
+      - `rows`: An array of objects. Each object represents the row data and has the following properties:
+        - `values`: The raw and formatted values of each column (e.g., `{{{$page.rows.0.values.RID}}}` returns the value of `RID` column for the first row).
+        - `rowName`: Row-name of the represented row (e.g., `{{{$page.rows.1.rowName}}}` returns the row-name of the second row).
+        - `uri.detailed`: a uri to the row in `detailed` context (e.g., `{{{$page.rows.0.uri.detailed}}}` returns the link to the detailed page for the first row).
+      - `parent`: This variable is available when used for getting table content of related entities. Currently the `page_markdown_pattern` in `compact` context is used to provide a brief summary of table data. When used in this context, you can access the parent properties under `$page.parent`. The properties are:
+        - `values`: the parent data (e.g., `{{{$page.parent.values.RID}}}` returns the value of `RID` column of the main record).
+        - `table`: the parent table name (e.g., `{{{$page.parent.table}}}` returns the name of the main table).
+        - `schema`: the parent schema name (e.g., `{{{$page.parent.schema}}}` return the schema of the main table).
 - `"row_markdown_pattern":` _rowpattern_: Render the row by composing a markdown representation only when `row_markdown_pattern` is non-null.
   - Expand _rowpattern_ to obtain a markdown representation of each row via [Pattern Expansion](#pattern-expansion).
   - The pattern has access to column values **after** any processing implied by [2016 Column Display](#column-display).
@@ -587,6 +604,7 @@ Supported JSON _option_ payload patterns:
     - The provided _pathsuffix_ MUST provide the appropriate projection-list to form a valid `/attribute/` API URI.
 	- The _pathsuffix_ MAY join additional tables to the path and MAY project from these tables as well as the table bound to the `S` table alias.
 	- The _pathsuffix_ SHOULD reset the path context to `$S` if it has joined other tables.
+- `"selector_ux_mode"`: The display mode for the recordedit input field when this table is part of a foreignkey relationship as the `outbound` table. Supported values are `"facet-search-popup"` and `"simple-search-dropdown"`, with `"facet-search-popup"` being the default. Currently only supported in `entry` contexts.
 
 It is not meaningful to use `page_markdown_pattern`, `row_markdown_pattern`, and `module` in for the same _context_. If they co-exist, the application will prefer `module` over `page_markdown_pattern` and `page_markdown_pattern` over `row_markdown_pattern`.
 
@@ -1049,6 +1067,7 @@ This key allows defining column-level annotations on catalog, schema, or tables.
 Supported JSON payload patterns:
 - `{`... `"by_name":` `{` _by_name_definition_ `,` ... `}`: Define annotations for columns with specific names.
 - `{`... `"by_type":` `{` _by_type_definition_ `,` ... `}`: Define annotations for columns with specific names.
+- `{`... `"asset":` `{` _asset_definition_ `,` ... `}`: Define annotations for specific asset columns.
 
 Where _by_name_definition_  is a JSON payload with the following pattern:
 
@@ -1057,6 +1076,14 @@ Where _by_name_definition_  is a JSON payload with the following pattern:
 And _by_type_definition_ is a JSON payload with the following pattern:
 
 - `{` ... _typename_ `:` _annot_payload_ `,` ... `}`: Define annotations (_annot_payload_) for columns with _typename_ types.
+
+And _asset_definition_ is a JSON payload with the following properties:
+
+- `{`... `"url":` `{` _annot_payload_ `,` ... `}`: Define annotations (_annot_payload_) for columns with [asset annotation](#tag-2017-asset).
+- `{`... `"byte_count":` `{` _annot_payload_ `,` ... `}`: Define annotations (_annot_payload_) for columns used as `byte_count_column` of an asset column.
+- `{`... `"filename":` `{` _annot_payload_ `,` ... `}`: Define annotations (_annot_payload_) for used as `filename_column` of an asset column.
+- `{`... `"md5":` `{` _annot_payload_ `,` ... `}`: Define annotations (_annot_payload_) for used as `md5` of an asset column.
+- `{`... `"sha256":` `{` _annot_payload_ `,` ... `}`: Define annotations (_annot_payload_) for used as `sha256` of an asset column.
 
 For example,
 
@@ -1088,20 +1115,31 @@ For example,
           }
         }
      }
+  },
+  "asset": {
+    "byte_count": {
+      "tag:isrd.isi.edu,2016:column-display": {
+        "*": {
+          "markdown_pattern": "{{humanizeBytes $_self mode='binary'}}",
+          "template_engine": "handlebars"
+        }
+      }
+    }
   }
 }
 ```
 
 Notes:
 - `by_type` should match exactly with the `typename` of the column. So, for example, for array columns, we would have to use `"timestamp[]"`.
-- While determining annotations for a column, the more specific one will be used. Annotations defined on the column have the highest priority, then the `by_name` annotations on table, schema, and catalog will be used. And after that, we will look at `by_type` annotations on the table, schema, and catalog.
+- While determining annotations for a column, the more specific one will be used. Annotations defined on the column have the highest priority. Then `asset` is used if the column has asset annotation or is used as a metadata for another asset column. Then by the `by_name` annotations on table, schema, and catalog will be used. And after that, we will look at `by_type` annotations on the table, schema, and catalog.
 - To implement this feature, we start by creating an empty JSON payload. On each step, we will add the annotations to the object (and if the annotation key is already defined on the object, it will be overwritten by the new value). To be more precise, the following is how the `annotations` JSON payload for a column is created and used:
 
   1. We start by looking at the applicable `by_type` property of the `column-defaults ` annotation defined on the catalog.
   2. Then, the applicable `by_type` property on the schema will be added. And if any annotation key is already defined on both catalog and schema, the one in the schema will override it.
   3. The same step as above continues with the table.
   4. We continue by looking at the matching `by_name` property of catalog, schema, and table in order. Just like in the previous steps, if the same annotation key is already defined in the created object, it will be overwritten by the new step.
-  5. Any annotation defined directly on the column will override the annotations of the previous steps.
+  5. If the column is an asset or is used in another asset column, the annotations under the appropriate `asset` of catalog, schema, and table will be used. Same as above, if the same annotation key is already defined in the created object, it will be overwritten by the new step.
+  6. Any annotation defined directly on the column will override the annotations of the previous steps.
 
 ## Context Names
 
@@ -1161,7 +1199,7 @@ As an example, a _column_ may have a [`tag:isrd.isi.edu,2016:column-display`](#t
 ```
 {
    "*" : {
-       "markdown_pattern": "[{{{title}}}](https://dev.isrd.isi.edu/chaise/search?name={{{_name}}})",
+       "markdown_pattern": "[{{{title}}}](https://example.com/chaise/search?name={{{_name}}})",
        "template_engine": "handlebars"
    }
 }
@@ -1171,7 +1209,7 @@ A web user agent that consumes this annotation and the related table data would 
 
 ```
 <p>
-    <img src="https://dev.isrd.isi.edu/chaise/search?name=col%20name" alt="Title of Image">
+    <img src="https://example.com/chaise/search?name=col%20name" alt="Title of Image">
 </p>
 ```
 
@@ -1274,8 +1312,9 @@ The following attributes can be used to manipulate the presentation settings of 
 
 - `markdown_name`: The markdown to use in place of the default heuristics for title of column.
 - `comment`: The tooltip to be used in place of the default heuristics for the column. Set this to `false` if you don't want any tooltip.
+- `comment_render_markdown`: A boolean value that dictates whether the comment should be treated as markdown or not. If not defined, its value will be inherited from the underlying column or table (which could be inherited from the schema or the catalog. If it's not defined on any of the models, the default behavior is to treat comments as markdown).
 - `comment_display`: The display mode for the tooltip. Set to `inline` to show it as text or `tooltip` to show as a hover tooltip.
-  - Currently `comment_display` is only supported for related tables in detailed context.
+  - Currently `comment_display` is only supported for related tables in `detailed` context and `visible-columns` in `entry` context.
 - `hide_column_header`: Hide the column header (and still show the value). This is only supported in `detailed` context of `visible-columns` annotation.
 - `self-link`: If you want to show a self-link to the current row, you need to make sure the source is based on a not-null unique column of the current table and add the `"self_link": true` to the definition. Applicaple only to read-only non-filter context of `visible-columns` annotation.
 - `display`: A JSON object that describes the display settings for generating the value for this column. Please refer to [column-directive display document](column-directive-display.md) for more information. This object can have the following properties:
@@ -1290,7 +1329,9 @@ The following attributes can be used to manipulate the presentation settings of 
       - `ulist` for unordered bullet list.
       - `csv` for comma-seperated values.
       - `raw` for space-seperated values.
+  - `"selector_ux_mode"`: The display mode for the recordedit input field when this column directive is a foreign key relationship. Supported values are `"facet-search-popup"` and `"simple-search-dropdown"`, with `"facet-search-popup"` being the default. Currently only supported in `entry` contexts.
 - `array_display`: This property is _deprecated_. It is the same as `array_ux_mode` that is defined above under `display` property.
 - `array_options`: Applicaple only to read-only non-filter context of `visible-columns` annotation. This property is meant to be an object of properties that control the display of `array` or `array_d` aggregate column. These options will only affect the display (and templating environment) and have no effect on the generated ERMrest query. The available options are:
     - `order`: An alternative sort method to apply when a client wants to semantically sort by key values. It follows the same syntax as `column_order`. In scalar array aggregate, you cannot sort based on other columns values, you can only sort based on the scalar value of the column.
     - `max_length`: `<number>` A number that defines the maximum number of elements that should be displayed.
+- `input_iframe`: Applicaple only to entry contexts. A JSON object that describes the settings for showing "input iframe" in entry apps. Please refer to the [input iframe document](input-iframe.md) for more information about this property.

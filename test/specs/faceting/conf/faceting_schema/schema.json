@@ -253,14 +253,11 @@
                                 {"inbound": ["faceting_schema", "secondpath_2_fk1"]},
                                 "id"
                             ], "hide_null_choice": true},
-                            {"sourcekey": "second_path_source_defnition", "entity": false},
+                            {"sourcekey": "second_path_source_definition"},
                             {
-                                "source": [
-                                    {"inbound": ["faceting_schema", "secondpath_1_fk1"]},
-                                    {"inbound": ["faceting_schema", "secondpath_2_fk1"]},
-                                    "RID"
-                                ],
-                                "entity": false
+                                "sourcekey": "second_path_source_definition",
+                                "entity": false,
+                                "comment": "test changing the entity mode while using sourcekey"
                             },
                             {"sourcekey": "path_to_f3_id"},
                             {"source": "numeric_col"},
@@ -311,7 +308,7 @@
                             "source": "text_col",
                             "ux_mode": "choices"
                         },
-                        "second_path_source_defnition": {
+                        "second_path_source_definition": {
                             "source": [
                                 {"inbound": ["faceting_schema", "secondpath_1_fk1"]},
                                 {"inbound": ["faceting_schema", "secondpath_2_fk1"]},
@@ -353,7 +350,7 @@
                             "source": [
                                 {"outbound": ["faceting_schema", "main_fk3"]},
                                 {"and": [
-                                    {"filter": "date_col", "operand_pattern": "{{{$moment.year}}}-{{{$moment.month}}}-{{{$moment.day}}}", "operator": "::gt::"},
+                                    {"filter": "date_col", "operand_pattern": "{{{$moment.year}}}-{{{$moment.month}}}-{{{$moment.date}}}", "operator": "::gt::"},
                                     {"filter": "path_prefix_o1_col", "operand_pattern": "some_non_used_value"}
                                 ], "negate": true},
                                 "path_prefix_o1_col"
@@ -1652,7 +1649,8 @@
             "table_name": "path_prefix_o1",
             "schema_name": "parse_schema",
             "keys": [
-                {"unique_columns": ["id"]}
+                {"unique_columns": ["id"]},
+                {"unique_columns": ["path_prefix_o1_col"]}
             ],
             "foreign_keys": [
                 {
@@ -1705,7 +1703,8 @@
             "table_name": "path_prefix_o1_o1",
             "schema_name": "parse_schema",
             "keys": [
-                {"unique_columns": ["id"]}
+                {"unique_columns": ["id"]},
+                {"unique_columns": ["path_prefix_o1_o1_col"]}
             ],
             "foreign_keys": [
                 {

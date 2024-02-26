@@ -42,8 +42,8 @@
      * @return {string}                     a path that ERMrestJS understands and can parse, can be undefined
      */
     module.createSearchPath = function (catalogId, schemaName, tableName, searchTerm, searchColumNames) {
-        verify(typeof catalogId === "string" && catalogId.length > 0, "catalogId must be an string.");
-        verify(typeof tableName === "string" && tableName.length > 0, "tableName must be an string.");
+        verify(typeof catalogId === "string" && catalogId.length > 0, "catalogId must be a string.");
+        verify(typeof tableName === "string" && tableName.length > 0, "tableName must be a string.");
 
         var hasSearch = (typeof searchTerm === "string" && searchTerm.trim().length > 0);
         var encode = module._fixedEncodeURIComponent;
@@ -87,8 +87,8 @@
      * @return {string}            a path that ERMrestJS understands and can parse, can be undefined
      */
     module.createPath = function (catalogId, schemaName, tableName, facets, cfacets) {
-        verify(typeof catalogId === "string" && catalogId.length > 0, "catalogId must be an string.");
-        verify(typeof tableName === "string" && tableName.length > 0, "tableName must be an string.");
+        verify(typeof catalogId === "string" && catalogId.length > 0, "catalogId must be a string.");
+        verify(typeof tableName === "string" && tableName.length > 0, "tableName must be a string.");
 
         var compactPath = "#" + catalogId + "/";
         if (schemaName) {
@@ -119,9 +119,9 @@
      * @return {string}            a path that ERMrestJS understands and can parse, can be undefined
      */
     module.createLocation = function (service, catalogId, schemaName, tableName, facets, cfacets, catalogObject) {
-        verify(typeof service === "string" && service.length > 0, "service must be an string.");
-        verify(typeof catalogId === "string" && catalogId.length > 0, "catalogId must be an string.");
-        verify(typeof tableName === "string" && tableName.length > 0, "tableName must be an string.");
+        verify(typeof service === "string" && service.length > 0, "service must be a string.");
+        verify(typeof catalogId === "string" && catalogId.length > 0, "catalogId must be a string.");
+        verify(typeof tableName === "string" && tableName.length > 0, "tableName must be a string.");
 
         var compactPath = "";
         if (schemaName) {

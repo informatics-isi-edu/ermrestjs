@@ -646,7 +646,7 @@
         waitFors.forEach(function (wf, index) {
             var errorMessage = "wait_for defined on table=`" + currentTable.name + "`, " + message + "`, index=" + index + ": ";
             if (typeof wf !== "string") {
-                module._log.warn(errorMessage + "must be an string");
+                module._log.warn(errorMessage + "must be a string");
                 return;
             }
 
@@ -1211,6 +1211,26 @@
 
     SourceObjectWrapper.prototype = {
 
+        /**
+         * return a new sourceObjectWrapper that is created by merging the given sourceObject and existing object.
+         *
+         * Useful when we have an object with sourcekey and want to find the actual definition. You can then call
+         * clone on the source-def and pass the object.
+         *
+         * const myCol = {"sourcekey": "some_key"};
+         * const sd = table.sourceDefinitions.sources[myCol.sourcekey];
+         * if (sd) {
+         *   const wrapper = sd.clone(myCol, table, consNames);
+         * }
+         *
+         * - attributes in sourceObject will override the similar ones in the current object.
+         * - "source" of sourceObject will be ignored. so "sourcekey" always has priority over "source".
+         *
+         * @param {Object} sourceObject the source object
+         * @param {ERMrest.Table} table the table that these sources belong to.
+         * @param {Object} consNames the constraint names
+         * @param {boolean} isFacet whether this is for a facet or not
+         */
         clone: function (sourceObject, table, consNames, isFacet) {
             var key, res, self = this;
 
@@ -1228,9 +1248,7 @@
                 }
             }
 
-            res = new SourceObjectWrapper(sourceObject, table, consNames, isFacet);
-
-            return res;
+            return new SourceObjectWrapper(sourceObject, table, consNames, isFacet);
         },
 
         /**
@@ -1507,6 +1525,109 @@
 
             return {"and": filters};
         },
+
+        /**
+         * if sourceObject has the required input_iframe properties, will attach `inputIframeProps` and `isInputIframe`
+         * to the sourceObject.
+         * The returned value of this function summarizes whether processing was successful or not.
+         *
+         * var res = processInputIframe(reference, tuple, usedColumnMapping);
+         * if (res.error) {
+         *   console.log(res.message);
+         * } else {
+         *  // success
+         * }
+         *
+         * @param {*} reference the reference object of the parent
+         * @param {*} tuple the tuple object
+         * @param {*} usedIframeInputMappings an object capturing columns used in other mappings. used to avoid overlapping
+         */
+        processInputIframe: function (reference, tuple, usedIframeInputMappings) {
+            var self = this;
+            var context = reference._context;
+            var annot = this.sourceObject.input_iframe;
+            if (!isObjectAndNotNull(annot) || !isStringAndNotEmpty(annot.url_pattern)) {
+                return { error: true, message: 'url_pattern not defined.' };
+            }
+
+            if (!isObjectAndNotNull(annot.field_mapping)) {
+                return { erorr: true, message: 'field_mapping not defined.' };
+            }
+
+            var optionalFieldNames = [];
+            if (Array.isArray(annot.optional_fields)) {
+                annot.optional_fields.forEach(function (f) {
+                    if (isStringAndNotEmpty(f)) optionalFieldNames.push(f);
+                });
+            }
+
+            var emptyFieldConfirmMessage = '';
+            if (isStringAndNotEmpty(annot.empty_field_confirm_message_markdown)) {
+                emptyFieldConfirmMessage = module.renderMarkdown(annot.empty_field_confirm_message_markdown);
+            }
+
+            var columns = [], fieldMapping = {};
+            for (var f in annot.field_mapping) {
+                var colName = annot.field_mapping[f];
+
+                // column already used in another mapping
+                if (colName in usedIframeInputMappings) {
+                    return { error: true, message: 'column `' + colName + '` already used in another field_mapping.' };
+                }
+
+                try {
+                    var c = self.column.table.columns.get(colName);
+                    var isSerial = (c.type.name.indexOf('serial') === 0);
+
+                    // we cannot use getInputDisabled since we just want to do this based on ACLs
+                    if (context === module._contexts.CREATE && (c.isSystemColumn || c.isGeneratedPerACLs || isSerial)) {
+                        if (colName in optionalFieldNames) continue;
+                        return { error: true, message: 'column `' + colName + '` cannot be modified by this user.'};
+                    }
+                    if ((context == module._contexts.EDIT || context == module._contexts.ENTRY) && (c.isSystemColumn || c.isImmutablePerACLs || isSerial)) {
+                        if (colName in optionalFieldNames) continue;
+                        return { error: true, message: 'column `' + colName + '` cannot be modified by this user.'};
+                    }
+
+                    // create a pseudo-column will make sure we're also handling assets
+                    var wrapper = new SourceObjectWrapper({'source': colName}, reference.table, module._constraintNames);
+                    var refCol = module._createPseudoColumn(reference, wrapper, tuple);
+
+                    fieldMapping[f] = refCol;
+                    columns.push(refCol);
+                } catch (exp) {
+                    if (colName in optionalFieldNames) continue;
+                    return { error: true, message: 'column `' + colName + '` not found.'};
+                }
+            }
+
+            self.isInputIframe = true;
+            self.inputIframeProps = {
+                /**
+                 * can be used for finding the location of iframe
+                 */
+                urlPattern: annot.url_pattern,
+                urlTemplateEngine: annot.template_engine,
+                /**
+                 * the columns used in the mapping
+                 */
+                columns: columns,
+                /**
+                 * an object from field name to column.
+                 */
+                fieldMapping: fieldMapping,
+                /**
+                 * name of optional fields
+                 */
+                optionalFieldNames: optionalFieldNames,
+                /**
+                 * the message that we should show when user wants to submit empty.
+                 */
+                emptyFieldConfirmMessage: emptyFieldConfirmMessage
+            };
+
+            return {success: true, columns: columns};
+        }
     };
 
     /**

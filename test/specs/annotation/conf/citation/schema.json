@@ -184,7 +184,7 @@
                     "author_pattern":  "John Doe",
                     "title_pattern":   "The First Data Row",
                     "year_pattern":    "2018",
-                    "url_pattern":     "https://dev.isrd.isi.edu/id=1",
+                    "url_pattern":     "https://example.org/id=1",
                     "id_pattern":      "1"
                 }
             }
@@ -234,7 +234,7 @@
                     "author_pattern":  "John Doe",
                     "title_pattern":   "The First Data Row",
                     "year_pattern":    "2018",
-                    "url_pattern":     "https://dev.isrd.isi.edu/id=1",
+                    "url_pattern":     "https://example.org/id=1",
                     "id_pattern":      "1"
                 }
             }

@@ -5,7 +5,6 @@
 // same as UNESCAPE_MD_RE plus a space
 var UNESCAPE_RE = /\\([ \\!"#$%&'()*+,.\/:;<=>?@[\]^_`{|}~-])/g;
 
-
 function renderSpan(state, silent) {
   var found,
       content,

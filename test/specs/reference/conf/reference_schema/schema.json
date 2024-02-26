@@ -166,8 +166,8 @@
                     "compact/select": [
                         {"invalid": true},
                         {"source": "id"},
-                        {"sourcekey": "path_w_length_three_scalar", "entity": true},
-                        {"sourcekey": "path_w_length_three_cnt_array"},
+                        {"sourcekey": "path_w_length_three", "entity": false, "comment": "should be ignored since it's scalar"},
+                        {"sourcekey": "path_w_length_three", "aggregate": "cnt", "comment": "should be ignored since it has aggregate"},
                         {
                             "source": [{"inbound": ["reference_schema", "id_fk_association_related_to_reference"]}, "ID"],
                             "display": {
@@ -246,7 +246,7 @@
                         },
                         {
                             "source": [
-                                {"filter": "RCT", "negate": true, "operand_pattern": "{{{$moment.year}}}-{{{$moment.month}}}-{{{$moment.day}}}", "operator": "::lt::"},
+                                {"filter": "RCT", "negate": true, "operand_pattern": "{{{$moment.year}}}-{{{$moment.month}}}-{{{$moment.date}}}", "operator": "::lt::"},
                                 {"inbound": ["reference_schema","fromname_fk_inbound_related_to_reference"]},
                                 {"inbound":["reference_schema","fk_to_inbound_related_reference_table"]},
                                 {"filter": "RID", "negate": true, "operand_pattern": "-1"},
@@ -277,24 +277,6 @@
                                 {"outbound": ["reference_schema", "fromname_fk_inbound_related_to_reference"]},
                                 "id"
                             ]
-                        },
-                        "path_w_length_three_scalar": {
-                            "source": [
-                                {"inbound": ["reference_schema", "id_fk_association_related_to_reference"]},
-                                {"outbound": ["reference_schema", "fk_to_inbound_related_reference_table"]},
-                                {"outbound": ["reference_schema", "fromname_fk_inbound_related_to_reference"]},
-                                "id"
-                            ],
-                            "entity": false
-                        },
-                        "path_w_length_three_cnt_array": {
-                            "source": [
-                                {"inbound": ["reference_schema", "id_fk_association_related_to_reference"]},
-                                {"outbound": ["reference_schema", "fk_to_inbound_related_reference_table"]},
-                                {"outbound": ["reference_schema", "fromname_fk_inbound_related_to_reference"]},
-                                "id"
-                            ],
-                            "aggregate": "cnt"
                         },
                         "path_to_outbound1": {
                             "source": [
@@ -422,7 +404,7 @@
                 },
                 "tag:isrd.isi.edu,2016:table-display": {
                     "*": {
-                        "page_markdown_pattern": "{{#$page.parent}}{{{schema}}}:{{{table}}}{{/$page.parent}}, parent name={{{$page.parent.values._name}}}, where id is one of {{#each $page.values}}{{{this._id}}}{{/each}}",
+                        "page_markdown_pattern": "{{#$page.parent}}{{{schema}}}:{{{table}}}{{/$page.parent}}, parent name={{{$page.parent.values._name}}}, where (id,link) is one of {{#each $page.rows}}{{{this.values._id}}}: [{{{this.rowName}}}]({{{this.uri.detailed}}})){{/each}}",
                         "template_engine": "handlebars"
                     }
                 }
@@ -1336,7 +1318,7 @@
                     "annotations": {
                         "tag:isrd.isi.edu,2016:column-display" : {
                             "*" : {
-                                "markdown_pattern" : "{{#name}}[link]({{url}}/{{name}}){{/name}}"
+                                "markdown_pattern" : "{{#name}}[link]({{$_self}}/{{name}}){{/name}}"
                             }
                         }
                     }
@@ -1410,7 +1392,7 @@
                     "annotations": {
                         "tag:isrd.isi.edu,2016:column-display" : {
                             "*" : {
-                                "markdown_pattern" : "{{{some_markdown_with_pattern}}} {{name}} \n{{{some_markdown}}}"
+                                "markdown_pattern" : "{{{$self}}} {{name}} \n{{{some_markdown}}}"
                             }
                         }
                     }

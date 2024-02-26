@@ -81,7 +81,7 @@ Mustache:
 {{#$fkey_schema_constraint}}{{{values.RID}}}{{/fkey_schema_constraint}}
 ```
 
-But the handlebars `if` block doesn't change the context. So if you're looking for an equivalent syntax for mustache block that also changes context, you should use the [with helper](#with-helper).
+But the handlebars `if` block doesn't change the context. So if you're looking for an equivalent syntax for mustache block that also changes context, you should use the [`with` helper](#with-helper).
 
 The equivalent handlebars template would be:
 ```
@@ -110,7 +110,7 @@ Handlebars:
 
 ### Restriction in the adjacency of opening and closing tags
 
-As we described [in the markdown document](markdown-formatting.md#attributes), you can add attributes to markdown elements using the `{}` syntax. Now imagine you want to create a link, and the attribute value comes from one of the columns. In Mustache, you could do the following (assume `btn_class` is the name of the column):
+As we described [in the markdown document](markdown-formatting.md#attributes), you can add attributes to markdown elements using the `{}` syntax. Now imagine you want to create a link and the attribute value comes from one of the columns. In Mustache, you could do the following (assume `btn_class` is the name of the column):
 
 Mustache:
 ```
@@ -141,20 +141,20 @@ The body for book with {{title}} authored by {{author.name}} is {{body}}
 ```
 
 That template works with this context
-```js
-var context = {
-  title: "My First Blog Post!",
-  author: {
-    id: 47,
-    name: "Yehuda Katz"
+```json
+{
+  "title": "My First Blog Post!",
+  "author": {
+    "id": 47,
+    "name": "Yehuda Katz"
   },
-  body: "My first post. Wheeeee!"
-};
+  "body": "My first post. Wheeeee!"
+}
 ```
 
 This makes it possible to use Handlebars templates with more raw JSON objects.
 
-Nested handlebars paths can also include ../ segments, which evaluate their paths against a parent context.
+Nested handlebars paths can also include `../` segments, which evaluate their paths against a parent context.
 
 ```
 {{#each comments}}
@@ -177,7 +177,7 @@ The exact value that `../` will resolve to varies based on the helper that is ca
 {{/each}}
 ```
 
-In this example all of the above reference the same `permalink` value even though they are located within different blocks.
+In this example, all of the above reference the same `permalink` value even though they are located within different blocks.
 
 **NOTE**: Handlebars also allows for name conflict resolution between helpers and data fields via a `this` reference:
 ```
@@ -187,29 +187,29 @@ Any of the above would cause the name field in the current context to be used ra
 
 ### Automatic null detection
 
-To avoid the need for adding individual checks for each `{{{column_name}}}` usage, we apply an automatic null detection. If the value of any of the columns which are being used in the `markdown_pattern` are either null or empty, then the pattern will fall back on the `show_null` display annotation to return the respective value. For example, if the title property in the JSON object is not defined or null, then the following template `[{{{title}}}]({{{url}}})` will resolve as null and use the `show_null` annotation to determine what should be done.
+To avoid the need for adding individual checks for each `{{{column_name}}}` usage, we apply an automatic null detection. If the value of any of the columns that are being used in the `markdown_pattern` are either null or empty, then the pattern will fall back on the `show_null` display annotation to return the respective value. For example, if the title property in the JSON object is not defined or null, then the following template `[{{{title}}}]({{{url}}})` will resolve as null and use the `show_null` annotation to determine what should be done.
 
 That being said, our current implementation has the following limitations/flaws:
 
 1. If you use the block syntax (`{{# `) in any part of the template, we will not apply this null detection logic.
 
-2. As we described in [here](#accessing-keys-with-spaces-and-special-characters), you can use the `[]` syntax to access columns with special characeters. The null detection will not work properly if your column name has `#` in it. For instance, assume you have a column named `# Released` and want to show its value. Doing `{{{[# Released]}}}` will not work as it's breaking our null detection. To get around this, you could use the [with helper](#with-helper), which will turn off the null detection:
+2. As we described in [here](#accessing-keys-with-spaces-and-special-characters), you can use the `[]` syntax to access columns with special characters. The null detection will not work properly if your column name has `#` in it. For instance, assume you have a column named `# Released` and want to show its value. Doing `{{{[# Released]}}}` will not work as it's breaking our null detection. As we mentioned in the previous limitation, usage of block syntax will turn off the null detection. So, to get around this, we suggest using any block helpers. For instance, you could use the [with helper](#with-helper):
 
+    ```
+    {{#with [# Released]}}{{{.}}}{{/with}}
+    ```
 
-```
-{{#with [# Released]}}{{{.}}}{{/with}}
-```
-
+    Since `with` is changing the context, it might not be ideal in complicated templates. If you want to turn off the null detection without any side effect, you could wrap it in a `{{#if true}}` block.
 
 ### Accessing current context
 
 The `this` keyword can be used for accessing the current context. It's mainly useful when dealing with arrays or JSON objects, allowing you to access the values of an array of objects. For example, if you have the following JSON column:
 
-```js
+```jsson
 {
-  person: {
-    firstname: "John",
-    lastname: "smith"
+  "person": {
+    "firstname": "John",
+    "lastname": "smith"
   }
 }
 ```
@@ -224,16 +224,16 @@ While you can use `{{{person.firstname}}}` to access the values inside the objec
 
 As we mentioned `this` is also useful for arrays, for more information please refer to the [Each Helper](#each-helper) section. To expand on this, you can also use `this` in the case that you have an array of objects. For example:
 
-```js
+```json
 {
-  authors: [
+  "authors": [
     {
-      firstname: "John",
-      lastname: "smith"
+      "firstname": "John",
+      "lastname": "smith"
     },
     {
-      firstname: "Joe",
-      lastname: "Doe"
+      "firstname": "Joe",
+      "lastname": "Doe"
     }
   ]
 }
@@ -285,12 +285,12 @@ Template:
 ```
 
 When used in this context:
-```js
+```json
 {
-  arr: [
-      {value: "first element"},
-      {value: "second element"},
-      {value: "third element"}
+  "arr": [
+      {"value": "first element"},
+      {"value": "second element"},
+      {"value": "third element"}
   ]
 }
 ```
@@ -328,6 +328,28 @@ To access these variables in another block helper
 {{#encode [str with a space]}}{{/encode}}
 {{#escape [str with a space]}}{{/escape}}
 ```
+
+This syntax can also be used for accessing properties of an object. For example with this context,
+
+```
+{
+  "values": {
+    "name": "resonant scan",
+    "power (uW)": 123.4,
+  }
+}
+```
+
+You can do
+```
+{{{values.name}}} power: {{{values.[power (uW)]}}}
+```
+Which returns
+```
+resonant scan power: 123.4
+```
+
+
 
 ### Subexpressions
 
@@ -387,9 +409,9 @@ ISO datetime is {{{$moment.ISOString}}}
 `$catalog` is an object that gives you access to the catalog information including version if it is present. The following properties are currently included:
 ```
 {
-  snapshot: <id>@<version>,
-  id: id,
-  version: version
+  "snapshot": <id>@<version>,
+  "id": id,
+  "version": version
 }
 ```
 
@@ -398,8 +420,8 @@ ISO datetime is {{{$moment.ISOString}}}
 `$dcctx` is an object that gives you access to the current `pid` and `cid` of the app. You may use this attribute to generate links with `ppid` and `pcid` as query parameters.
 ```
 {
-    pid: "the page id",
-    cid: "the context id(name of the app)"
+    "pid": "the page id",
+    "cid": "the context id(name of the app)"
 }
 ```
 
@@ -407,34 +429,36 @@ ISO datetime is {{{$moment.ISOString}}}
 `$location` is an object that gives you access to information about the current location of the document based on the URL. The following properties are included:
 ```
 {
-    origin: "the origin of the URL",
-    host: "the host of the URL, which is the hostname, and then, if the port of the URL is nonempty, a ':', and the port",
-    hostname: "the hostname of the URL",
-    chaise_path: "the path after the origin pointing to the install location of chaise. By default, this will be '/chaise/'"
+    "origin": "the origin of the URL",
+    "host": "the host of the URL, which is the hostname, and then, if the port of the URL is nonempty, a ':', and the port",
+    "hostname": "the hostname of the URL",
+    "chaise_path": "the path after the origin pointing to the install location of chaise. By default, this will be '/chaise/'"
 }
 ```
 
-For example, if the web url is `https://dev.isrd.isi.edu:8080/chaise/recordset/#1/isa:dataset`, the above object would look something like:
-```
+For example, if the web url is `https://dev.example.com:8080/chaise/recordset/#1/isa:dataset`, the above object would look something like:
+```json
 {
-    origin: "https://dev.isrd.isi.edu",
-    host: "dev.isrd.isi.edu:8080",
-    hostname: "dev.isrd.isi.edu",
-    chaise_path: "/chaise/"
+    "origin": "https://dev.example.com",
+    "host": "dev.example.com:8080",
+    "hostname": "dev.example.com",
+    "chaise_path": "/chaise/"
 }
 ```
 
 ### $session
 `$session` is an object that gives you access to information about the current logged in user's session. The properties are the same properties returned from the webauthn response. The following are some of the properties included (subject to change as properties are added and removed from webauthn):
 ```
-attributes: "the `attributes` array from the webauthn response. More info below about the objects in the `attributes` array"
-client: {
-    display_name: "the `display_name` of the user from webauthn client object",
-    email: "the `email` of the user from webauthn client object",
-    extensions: "an object containing more permissions the user might have. Used in the CFDE project for communicating ras permissions.",
-    full_name: "the `full_name` of the user from webauthn client object",
-    id: "the `id` of the user from webauthn client object",
-    identities: "the `identities` array of the user from webauthn client object",
+{
+  "attributes": "the `attributes` array from the webauthn response. More info below about the objects in the `attributes` array"
+  "client": {
+    "display_name": "the `display_name` of the user from webauthn client object",
+    "email": "the `email` of the user from webauthn client object",
+    "extensions": "an object containing more permissions the user might have. Used in the CFDE project for communicating ras permissions.",
+    "full_name": "the `full_name` of the user from webauthn client object",
+    "id": "the `id` of the user from webauthn client object",
+    "identities": "the `identities` array of the user from webauthn client object",
+  }
 }
 ```
 
@@ -481,32 +505,60 @@ You can use `humanizeBytes` helper to convert byte count to human readable forma
 
 Syntax:
 ```
-{{humanizeBytes value format precision}}
-
 {{humanizeBytes value}}
+```
+This will format the given value to a human readable string using "si" mode. If you would like to modify the behavior, you can also pass named optional arguments. You can choose to pass any combiniation of these named arguments.
 
-{{humanizeBytes value format}}
+Examples:
+
+```
+{{humanizeBytes 41235532}} ==> '41.2 MB'
+
+{{humanizeBytes 41235532 precision=4 }} ==> '41.23 MB'
+
+{{humanizeBytes 41235532 mode='binary'}} ==> '39.32 MiB'
+
+{{humanizeBytes 41235532 mode='binary' precision=5}} ==> '39.325 MiB'
+
+{{humanizeBytes 41235532 mode='binary' tootlip=true}} ==> ':span:39.32 MiB:/span:{data-chaise-tooltip="41235532 bytes (1 MiB = 1,048,576 bytes)"}'
+
+{{humanizeBytes 41235532 mode='binary' precision=5 tootlip=true}} ==> ':span:39.325 MiB:/span:{data-chaise-tooltip="41235532 bytes (1 MiB = 1,048,576 bytes)"}'
 ```
 
-The parameters are:
-- `value`: The value (or the column name that has the value).
-- `format`: Can either be `"binary"` or `"si"` depending on the output format that you would like. If missing or invalid, `"si"` will be used.
-- `precision`: An optional integer specifying the number of digits.
+The arguments are:
+
+#### `mode`
+
+This argument will allow you to change the output format. It can either be a string `"si"` or `"binary"`. Any other value will be ignored.
+
+```
+{{humanizeBytes value mode="si"}}
+
+{{humanizeBytes value mode='si'}}
+
+{{humanizeBytes value mode="binary"}}
+
+{{humanizeBytes value mode='binary'}}
+```
+
+#### `precision`
+
+An integer specifying the number of digits.
   - If we cannot show all the fractional digits of a number due to the defined precision, we will truncate the number (we will not round up or down). So for example `999999` with precision=3 will result in `999 kB`, and with precision=4 will be `999.9 kB`.
   - In 'si' mode, you cannot define precision of less than 3 since it would mean that we have to potentially truncate the integer part of the `value`. Similarly, precision of less than 4 are not allowed in `binary`.
   - Any invalid precision will be ignored and the minimum number allowed will be used (3 in `si` and 4 in `binary`).
 
-Example:
 ```
-{{humanizeBytes 41235532}} ==> '41.2 MB'
-
-{{humanizeBytes 41235532 'si' 4 }} ==> '41.23 MB'
-
-{{humanizeBytes 41235532 'binary'}} ==> '39.32 MiB'
-
-{{humanizeBytes 41235532 'binary' 5}} ==> '39.325 MiB'
+{{humanizeBytes value precision=6}}
 ```
 
+#### `tooltip`
+
+A boolean value specifying whether you want the output to include a tooltip or not. If this argument is missing, we will not return any tooltips.
+
+```
+{{humanizeBytes value tooltip=true}}
+```
 
 ### Math Helpers
 
@@ -535,19 +587,31 @@ Block helpers make it possible to define custom iterators and other functionalit
 
 ### If helper
 
-You can use the `if` helper to conditionally render a block. If its argument returns `false`, `undefined`, `null`, `""`, `0`, or `[]`, Handlebars will not render the block. You can use this helper in combination with any of the [Boolean Helpers](#boolean-helpers) to do more complicated logical operations.
+You can use the `if` helper to conditionally render a block. If its argument returns `false`, `undefined`, `null`, `""`, `0`, or `[]`, Handlebars will not render the block. You can use this helper with any of the [Boolean Helpers](#boolean-helpers) to do more complicated logical operations.
 
 ```
-{{#if author}} {{firstName}} {{lastName}}</h1>{{/if}}
+{{#if isVisible}} {{{firstName}}} {{{lastName}}}{{/if}}
 ```
-when used with an empty (`{}`) context, `author` will be `undefined`, resulting in an empty string:
+
+> If you're using `if` block only to check for a JSON object and then using it, consider using [`with` helper](#with-helper) which will do the truthy check and changes context at the same time similar to [how Mustache null checking works](#null-checking).
+
 
 When using a block expression, you can specify a template section to run if the expression returns a falsy value. The section, marked by `{{else}}` is called an "else section".
 
 ```
-{{#if author}} {{firstName}} {{lastName}}{{else}} Unknown Author {{/if}}
+{{#if isVisible}} {{{firstName}}} {{{lastName}}}{{else}}Hidden Author{{/if}}
 ```
-The above method will return `Unknown Author`.
+
+You can also use `else if`:
+
+```
+{{#if isVisible}} {{firstName}} {{lastName}}{{else if isKnown}} Unknown Author {{/if}}
+
+{{#if isVisible}} {{firstName}} {{lastName}}{{else if isKnown}} Unknown Author {{else}} Hidden and Unknown Author{{/if}}
+```
+
+Plesae refer to [Boolean Helpers](#boolean-helpers) section to learn how you can achieve more complicated comparisons inside the `if` block.
+
 
 ### Unless helper
 
@@ -572,7 +636,7 @@ You can iterate over a list using the built-in `each` helper. Inside the block, 
 when used with context
 ```js
 {
-  people: [
+  "people": [
     "Yehuda Katz",
     "Alan Johnson",
     "Charles Jolley"
@@ -639,50 +703,68 @@ Will create a `key` and `value` variable that children may access without the ne
 
 ### With helper
 
-Normally, Handlebars templates are evaluated against the context of the template.
+`With` helper can be used to shift the context. For example with the following context:
 
-```
-template => {{lastName}}, {{firstName}}
-contenxt => {firstName: "Alan", lastName: "Johnson"}
-```
-results in
-```
-Johnson, Alan
-```
-
-You can shift the context for a section of a template by using the built-in `with` block helper.
-
-```
-{{title}}
-{{#with author}}
-  By {{firstName}} {{lastName}}
-{{/with}}
-```
-
-when used in this context:
-```js
+```json
 {
-  title: "My first post!",
-  author: {
-    firstName: "Charles",
-    lastName: "Jolley"
+  "title": "My first post!",
+  "author": {
+    "firstName": "Charles",
+    "lastName": "Jolley"
   }
 }
 ```
-results in
+
+You can do:
+```
+{{title}}
+{{#with author}}
+  By {{{firstName}}} {{{lastName}}}
+{{/with}}
+```
+
+Which results in
 ```
 My first post! By Charles Jolley
 ```
 
+#### Accessing outer context
+
+If inside the `with` block you want to access the outer context, you need to prepend the column names with `../`. For example:
+
+```
+{{#with author}}
+  {{{firstName}}} {{{lastName}}} wrote {{{../title}}}.
+{{/with}}
+```
+
+#### Accessing current value
+
+As we described in [here](#null-checking), `with` can also be used for doing a "truthy" check. You can use `.` to access
+the value of the `with` block. For example:
+
+```
+{{#with column}}{{{.}}}{{{/with}}}
+```
+
+- With `{"column": null}` doesn't return anything.
+- WIth `{"column": "some value"}` returns `"some value"`.
+
+
+You can also use `else` as we decribed [here](#using-else-with-with-block). That being said, we recommend using [`if` helper](#if-helper) instead of `with` for boolean operations as its more flexible and doesn't change the context.
+
+#### Define known reference
+
 `with` can also be used with block parameters to define known references in the current block. The example above can be converted to
 
 ```
-{{title}}
 {{#with author as |myAuthor|}}
-  By {{myAuthor.firstName}} {{myAuthor.lastName}}</h2>
+  {{{myAuthor.firstName}}} {{{myAuthor.lastName}}} wrote {{{title}}}.
 {{/with}}
 ```
 This allows for complex templates to potentially provide clearer code than `../` depthed references allow for.
+
+#### Using `else` with `with` block
 
 You can optionally provide an `{{else}}` section which will display only when the passed value is empty.
 
@@ -742,8 +824,11 @@ for context `key="**somevalue ] which is ! special" and value="John"` will resul
 
 ### Encodefacet helper
 
-You can use the `encodeFacet` helper to compress a JSON object. The compressed string can be used for creating a URL path with facets. The string that you are passing as content MUST be JSON parsable. It will be ignored otherwise.
+You can use the `encodeFacet` helper to compress a JSON object. The compressed string can be used for creating a URL path with facets. This helper can be used for encoding both JSON objects and string representation of a JSON object.
 
+#### 1. Passing the string representation of a facet blob
+
+The string that you are passing as content MUST be JSON parsable. It will be ignored otherwise.
 
 Template (newline and indentation added for readability and should be removed):
 ```
@@ -763,19 +848,62 @@ Result:
 <a href="example.com/chaise/recordset/#1/S:T/*::facets::<facet-blob-representation>">caption</a>
 ```
 
-As you can see in this example I am escaping all the `"`s. This is because you are usually passing this value in a string in a JSON document. So all the `"`s must be escaped.
+As you can see in this example we are escaping all the `"`s. This is because you are usually passing this value in a string in a JSON document. So all the `"`s must be escaped.
+
+You can also pass the string representation of the JSON object like the following:
+
+```
+{{encodeFacet json_str}}
+```
+
+or
+```
+{{#encodeFacet json_str}}{{/encodeFacet}}
+```
+
+With the following context:
+
+```json
+{
+  "json_str": "{\"and\": [{\"source\": [{\"inbound\": [\"schema\", \"fk_1\"]}]}, \"RID\"], \"choices\": [\"{{{RID}}}\"]}]}"
+}
+```
+
+#### 2. Passing the JSON object representing a facet
+
+
+For instance, assuming `obj` is the name of the `jsonb` column that stores the facet object:
+```
+[caption](example.com/chaise/recordset/#1/S:T/*::facets::{{encodeFacet obj}})
+```
+
+or
+
+```
+[caption](example.com/chaise/recordset/#1/S:T/*::facets::{{#encodeFacet obj}}{{/encodeFacet}})
+```
+
+Result:
+```
+<a href="example.com/chaise/recordset/#1/S:T/*::facets::<facet-blob-representation>">caption</a>
+```
+
 
 ### JsonStringify helper
 
-The `jsonStringify` helper will convert the supplied JSON object into a string representation of the JSON object. This helper behaves the same way as the `JSON.stringify` function in javascript. This can be used in conjunction with the `encodeFacet` helper for creating facet URL strings.
+The `jsonStringify` helper will convert the supplied JSON object into a string representation of the JSON object. This helper behaves the same way as the `JSON.stringify` function in javascript.
 
-Template (newline and indentation added for readability and should be removed):
+The following are different ways of using this helper (assume `column` stores a JSON object):
 ```
-[caption](example.com/chaise/recordset/#1/S:T/*::facets::{{#encodeFacet}}
-    {{#jsonStringify}}
-      {{{col}}}
-    {{/jsonStringify}}
-{{/encodeFacet}}
+{{#jsonStringify}}{{{column}}}{{/jsonStringify}}
+
+{{#jsonStringify column}}{{/jsonStringify}}
+```
+
+This can be used in conjunction with the `encodeFacet` helper for creating facet URL strings. For example:
+
+```
+[caption](example.com/chaise/recordset/#1/S:T/*::facets::{{encodeFacet (jsonStringify col)}})
 ```
 
 Wher `col` is:
@@ -800,6 +928,8 @@ This would result in:
 
 The `regexFindFirst` helper will take the input regular expression and return the first matching substring from the supplied string. Will return `""` otherwise.
 
+> The regular expression syntax that Javascript supports is a bit different from other languages, please refer to [MDN regular expressions document](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions) for more information.
+
 A simple example where we try to match the file extension `jpg` or `png` with testString="jumpng-fox.jpg":
 ```
 {{#regexFindFirst testString "jpg|png"}}{{this}}{{/regexFindFirst}}
@@ -820,10 +950,18 @@ Result:
 "index.html"
 ```
 
+You can also use the `flags` named optional argument to pass [regular expression flags](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions#advanced_searching_with_flags). For example you can use the `i` flag for case-insensitive searching:
+```
+{{#regexFindFirst testString "human" flags="i" }}{{this}}{{/regexFindFirst}}
+```
+
+> If `flags` argument is not used, by default we are using the `g` (global search) flag for the regular expression search.
 
 ### Findall helper
 
 The `regexFindAll` helper will take the input regular expression and return all the matching substrings from the supplied string in an array. Will return `[]` otherwise.
+
+> The regular expression syntax that Javascript supports is a bit different from other languages, please refer to [MDN regular expressions document](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions) for more information.
 
 A simple example where we try to match the file extension `jpg` or `png` with testString="jumpng-fox.jpg":
 ```
@@ -835,9 +973,20 @@ Result:
 "png\njpg\n"
 ```
 
+You can also use the `flags` named optional argument to pass [regular expression flags](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions#advanced_searching_with_flags). For example you can use the `i` flag for case-insensitive searching:
+```
+{{#regexFindAll testString "ACO1" flags="i" }}{{this}}{{/regexFindFirst}}
+```
+
+> If `flags` argument is not used, by default we are using the `g` (global search) flag for the regular expression search.
+
 ### Replace helper
 
-The `replace` helper will take the input regular expression (first argument) and replace all matches in the supplied string with the supplied substring (second argument). This helper behaves the same way as the `replace` function for Strings in javascript. One example would be to replace all underscores with whitespace characters for table name display.
+The `replace` helper will take the input regular expression (first argument) and replace all matches in the supplied string with the supplied substring (second argument). This helper behaves the same way as the `replace` function for Strings in javascript.
+
+> The regular expression syntax that Javascript supports is a bit different from other languages, please refer to [MDN regular expressions document](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions) for more information.
+
+One example would be to replace all underscores with whitespace characters for table name display.
 
 Template:
 ```
@@ -848,6 +997,30 @@ Result:
 ```
 table name with underscores
 ```
+
+You can also use the `flags` named optional argument to pass [regular expression flags](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions#advanced_searching_with_flags). By default we're using the `g` flag, that's why the example above is replacing all the matches. Examples of using the `flags` named argument:
+
+- If you only want to replace the first match, you can pass empty string for flags:
+  - Template:
+  ```
+  {{#replace "_" " " flags=""}}table_name_with_underscores{{/replace}}
+  ```
+
+  - Result:
+  ```
+  table name_with_underscores
+  ```
+
+- Use the `i` flag for case-insensitive searching (in this example we're also using `g` flag to make sure we're still replacing all the matches):
+  - Template:
+  ```
+  {{#replace "aco1" "ACO1" flags="ig"}}{{{Gene_Names}}}{{/replace}}
+  ```
+
+  - Result (assuming `Gene_Names` is `"Aco1, ACO1"`):
+  ```
+  ACO1, ACO1
+  ```
 
 ### ToTitleCase helper
 
@@ -866,7 +1039,7 @@ This Is The Title Of My Page
 
 ## Boolean Helpers
 
-You can use the following helper to check for specific equality checks using the default `if` helper
+In this section we go over the helpers that can be used to do boolean operations. These helpers are commonly used with `if` or `unless`.
 
 ### Comparison Helpers
 
@@ -927,6 +1100,15 @@ Using the `regexMatch` function you can check whether a given value matches the 
 .. content
 {{/if}}
 ```
+
+You can also use the `flags` named optional argument to pass [regular expression flags](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions#advanced_searching_with_flags). For example you can use the `i` flag for case-insensitive matching:
+```
+{{#if (regexMatch value "film analysis" flags="i" )}}
+.. content
+{{/if}}
+```
+
+> If `flags` argument is not used, by default we are using the `g` (global search) flag for the regular expression search.
 
 ### Logical Helpers
 

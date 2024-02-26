@@ -7,6 +7,40 @@ Column directive allows instruction of a data source and modification of its pre
 - Using [Properties](#properties) section you can find all the available properties in column directive.
 - Please Find the examples in [this section](#examples).
 
+## Table of contents
+
+- [Overall structure](#overall-structure)
+  - [1. Column directive with `source`](#1-column-directive-with-source)
+  - [2. Column directive with `sourcekey`](#2-column-directive-with-sourcekey)
+  - [3. Column directive without any source](#3-column-directive-without-any-source)
+- [Properties](#properties)
+  - [1. Data source properties](#1-data-source-properties)
+    - [source](#source)
+      - [Source path with reusable prefix](#source-path-with-reusable-prefix)
+    - [sourcekey](#sourcekey)
+    - [entity](#entity)
+    - [aggregate](#aggregate)
+  - [2. Presentation properties](#2-presentation-properties)
+    - [markdown\_name](#markdown_name)
+    - [comment](#comment)
+    - [comment\_render\_markdown](#comment-render-markdown)
+    - [comment\_display](#comment_display)
+    - [hide\_column\_header](#hide_column_header)
+    - [self-link](#self-link)
+    - [display](#display)
+      - [markdown\_pattern](#markdown_pattern)
+      - [wait\_for](#wait_for)
+      - [show\_foreign\_key\_link](#show_foreign_key_link)
+      - [show\_key\_link](#show_key_link)
+      - [array\_ux\_mode](#array_ux_mode)
+    - [array\_options](#array_options)
+    - [input\_iframe](#input_iframe)
+- [Shorthand syntax](#shorthand-syntax)
+- [Examples](#examples)
+  - [Visible Column List](#visible-column-list)
+  - [Visible ForeignKey List](#visible-foreignkey-list)
+  - [Alternative syntax](#alternative-syntax)
+
 ## Overall structure
 
 As it was described, column directives are meant to intruct the data source and its presentation. Based on how the data source is defined, we can categorize them into the following:
@@ -24,6 +58,7 @@ In this category, you use the [`source`](#source) property to define the data so
   "markdown_name": <display name>,
   "comment": <tooltip message>,
   "comment_display": <inline|tooltip>,
+  "comment_render_markdown": <boolean>,
   "hide_column_header": <boolean>
   "display": {
       "markdown_pattern": <pattern>,
@@ -31,11 +66,17 @@ In this category, you use the [`source`](#source) property to define the data so
       "wait_for": <wait_for list>,
       "show_foreign_key_link": <boolean>,
       "show_key_link": <boolean>,
-      "array_ux_mode": <csv|ulist|olist|raw>
+      "array_ux_mode": <csv|ulist|olist|raw>,
+      "selector_ux_mode": <facet-search-popup|simple-search-dropdown>
   },
   "array_options": {
     "order": <change the default order>,
     "max_lengh": <max length>
+  },
+  "input_iframe": {
+    "url_pattern": <pattern>,
+    "field_mapping": <object>,
+    "optional_fields": <array of field names>
   }
 }
 ```
@@ -47,9 +88,13 @@ In this category, the [`sourcekey`](#sourcekey) proprety is used to refer to one
 ```
 {
   "sourcekey" : <source key>,
+  "entity": <true or false>,
+  "aggregate": <aggregate function>,
+  "self_link": <boolean>,
   "markdown_name": <display name>,
   "comment": <tooltip message>,
   "comment_display": <inline|tooltip>,
+  "comment_render_markdown": <boolean>,
   "hide_column_header": <boolean>
   "display": {
       "markdown_pattern": <pattern>,
@@ -57,7 +102,8 @@ In this category, the [`sourcekey`](#sourcekey) proprety is used to refer to one
       "wait_for": <wait_for list>,
       "show_foreign_key_link": <boolean>,
       "show_key_link": <boolean>,
-      "array_ux_mode": <csv|ulist|olist|raw>
+      "array_ux_mode": <csv|ulist|olist|raw>,
+      "selector_ux_mode": <facet-search-popup|simple-search-dropdown>
   },
   "array_options":{
     "order": <change the default order>,
@@ -284,7 +330,7 @@ RID;M:=array_d(M:*),F3:=array_d(F3:*),F2:=array_d(M_P1:*),F1:=array_d(M_P2:*)@so
 ```
 
 #### sourcekey
-Instead of defining a column directive in place, you can define them in the [`source-definitions` annotations](annotation.md#tag-2019-source-definitions), and refer to those definitions using `sourcekey`. If `sourcekey` is defined on a column directive, the rest of _data source attributes_ defined on the column directive will be ignored (but you still can modify the display and other types of attributes).
+Instead of defining a column directive in place, you can define them in the [`source-definitions` annotations](annotation.md#tag-2019-source-definitions), and refer to those definitions using `sourcekey`. You can also use this property to refer to an existing source definition and modify the display or data source attributes (apart from `source`) for this instance.
 
 #### entity
  If the column directive can be treated as entity (the column that is defined in source path is key of the table), setting `entity` attribute to `false` will force the scalar mode. This will affect different logic and heuristics. In a nutshell, entity-mode means we try to provide a UX around a set of entities (table rows).  Scalar mode means we try to provide a UX around a set of values like strings, integers, etc.
@@ -316,10 +362,23 @@ In Chaise, comment is displayed as tooltip associated with columns. To change th
 
     "comment": "New comment"
 
+#### comment_render_markdown
+
+A boolean value that dictates whether the comment should be treated as markdown or not. If not defined, its value will be inherited from the underlying column or table which could be inherited from the schema or the catalog. If it's not defined on any of the models, the default behavior is to treat comments as markdown.
+
+    "comment_render_markdown": false
+
+This boolean works independent of the `comment` property. Which means that you can define `commen_render_markdown` to be used in combination with the comment that is derived based on the heuristics.
+
 #### comment_display
 
-By default Chaise will display `comment` as a tooltip. Set this value to `inline` to show it as text or `tooltip` to show as a hover tooltip. This property is only supported for related tables in detailed context of `visible-foreign-keys` annotation, and is not honored in other annotations.
+By default Chaise will display `comment` as a tooltip. Set this value to `inline` to show it as text or `tooltip` to show as a hover tooltip.
 
+`inline` comments are only supported in the following scenarios:
+
+- `visible-foreign-keys` annotation in `detailed` context (related entities).
+- `visible-columns` annotation in `detailed` context only for inline related entities.
+- `visible-columns` annotation in `entry` contexts.
 
 #### hide_column_header
 
@@ -341,7 +400,8 @@ By using this attribute you can customize the presented value to the users. The 
         "wait_for": <wait_for list>,
         "show_foreign_key_link": <boolean>,
         "show_key_link": <boolean>
-        "array_ux_mode": <csv|ulist|olist|raw>
+        "array_ux_mode": <csv|ulist|olist|raw>,
+        "selector_ux_mode": <facet-search-popup|simple-search-dropdown>
     }
 }
 ```
@@ -357,6 +417,10 @@ Used to signal Chaise that this column directive's `markdown_pattern` relies on 
 ##### show_foreign_key_link
 
 While generating a default presentation for all outbound foreign key paths, ERMrestJS will display a link to the referred row. Using this attribute you can modify this behavior. If this attribute is missing, we are going to use the inherited behavior from the [foreign key](annotation.md#tag-2016-foreign-key) annotation defined on the last foreign key in the path. If that one is missing too, [display annotation](annotation.md#tag-2015-display) will be applied.
+
+##### selector_ux_mode
+
+While generating a default presentation in `entry` mode for single outbound foreign key paths, Chaise will show a modal popup dialog for selecting rows. Using this attribute, you can modify this behavior. If this attribute is missing, we are going to use the inherited behavior from the [foreign key](annotation.md#tag-2016-foreign-key) annotation defined on the foreign key relationship. If that one is missing too, [table display](annotation.md#tag-2016-table-display) annotation will be applied. Supported values are `"facet-search-popup"` and `"simple-search-dropdown"`, with `"facet-search-popup"` being the default.
 
 ##### show_key_link
 
@@ -456,6 +520,13 @@ cnt_d -> #
 4. In scalar mode, use the constituent column's logic for sorting.
 
 -->
+
+
+#### input_iframe
+
+This property can be used for integrating Chaise's recordedit app with any third-party tools. When this property is added to a visible column in entry contexts, Chaise will display a special input for them. Clicking on this input will open a modal to show the third-party tool in an iframe.
+
+For more information about this property, please refer to [this document](input-iframe.md).
 
 
 

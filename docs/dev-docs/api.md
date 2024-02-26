@@ -22,6 +22,16 @@ to use for ERMrest JavaScript agents.</p>
 <dd><p>{{#encodeFacet}}
  str
 {{/encodeFacet}}</p>
+<p>or</p>
+<p>{{encodeFacet obj}}</p>
+<p>or</p>
+<p>{{encodeFacet str}}</p>
+<p>This is order of checking syntax (first applicaple rule):</p>
+<ul>
+<li>first see if the block syntax with str inside it is used or not</li>
+<li>if the input is an object we will encode it</li>
+<li>try encoding as string (will return empty string if it wasn&#39;t a string)</li>
+</ul>
 </dd>
 <dt><a href="#formatDate">formatDate()</a> ⇒</dt>
 <dd><p>{{formatDate value format}}</p>
@@ -30,36 +40,43 @@ to use for ERMrest JavaScript agents.</p>
 <dd><p>{{#jsonStringify}}
  JSON Object
 {{/jsonStringify}}</p>
+<p>or</p>
+<p>{{#jsonStringify obj}}{{/jsonStringify}}</p>
 </dd>
 <dt><a href="#replace">replace()</a> ⇒</dt>
 <dd><p>{{#replace substr newSubstr}}
  string
 {{/replace}}</p>
+<p>{{replace value regexp flags=&quot;ig&quot;}}</p>
 </dd>
 <dt><a href="#regexMatch">regexMatch()</a> ⇒</dt>
 <dd><p>{{#if (regexMatch value regexp)}}
   .. content
 {{/if}}</p>
+<p>{{regexMatch value regexp flags=&quot;i&quot;}}</p>
 </dd>
 <dt><a href="#regexFindFirst">regexFindFirst()</a> ⇒</dt>
 <dd><p>{{#each (regexFindFirst value regexp)}}
   {{this}}
 {{/each}}</p>
+<p>{{regexFindFirst value regexp flags=&quot;i&quot;}}</p>
 </dd>
 <dt><a href="#regexFindAll">regexFindAll()</a> ⇒</dt>
 <dd><p>{{#each (regexFindAll value regexp)}}
   {{this}}
 {{/each}}</p>
+<p>{{regexFindFirst value regexp flags=&quot;ig&quot;}}</p>
 </dd>
 <dt><a href="#toTitleCase">toTitleCase()</a> ⇒</dt>
 <dd><p>{{#toTitleCase}}
  string
 {{/toTitleCase}}</p>
 </dd>
-<dt><a href="#humanizeBytes">humanizeBytes(value, mode, precision)</a> ⇒</dt>
+<dt><a href="#humanizeBytes">humanizeBytes()</a> ⇒</dt>
 <dd><p>{{humanizeBytes value }}
-{{humanizeBytes value mode }}
-{{humanizeBytes value mode precision}}</p>
+{{humanizeBytes value mode=&#39;si&#39; }}
+{{humanizeBytes value precision=4}}
+{{humanizeBytes value tooltip=true }}</p>
 </dd>
 </dl>
 
@@ -140,7 +157,7 @@ to use for ERMrest JavaScript agents.
         * [.rights](#ERMrest.Schema+rights) : <code>Object</code>
         * [.displayname](#ERMrest.Schema+displayname) : <code>object</code>
         * [.tables](#ERMrest.Schema+tables) : [<code>Tables</code>](#ERMrest.Tables)
-        * [.comment](#ERMrest.Schema+comment) : <code>string</code>
+        * [.comment](#ERMrest.Schema+comment) : <code>Object</code>
     * [.Tables](#ERMrest.Tables)
         * [new Tables()](#new_ERMrest.Tables_new)
         * [.all()](#ERMrest.Tables+all) ⇒ <code>Array</code>
@@ -164,7 +181,7 @@ to use for ERMrest JavaScript agents.
             * [.rights](#ERMrest.Table+rights) : <code>Object</code>
             * [.foreignKeys](#ERMrest.Table+foreignKeys) : [<code>ForeignKeys</code>](#ERMrest.ForeignKeys)
             * [.referredBy](#ERMrest.Table+referredBy) : [<code>ForeignKeys</code>](#ERMrest.ForeignKeys)
-            * [.comment](#ERMrest.Table+comment) : <code>string</code>
+            * ~~[.comment](#ERMrest.Table+comment) : <code>Object</code>~~
             * [._showSavedQuery](#ERMrest.Table+_showSavedQuery) : <code>boolean</code>
             * [.favoritesPath](#ERMrest.Table+favoritesPath) : <code>string</code>
             * [.kind](#ERMrest.Table+kind) : <code>string</code>
@@ -180,6 +197,10 @@ to use for ERMrest JavaScript agents.
             * [.pureBinaryForeignKeys](#ERMrest.Table+pureBinaryForeignKeys) : [<code>Array.&lt;ForeignKeyRef&gt;</code>](#ERMrest.ForeignKeyRef)
             * [._getRowDisplayKey(context)](#ERMrest.Table+_getRowDisplayKey)
             * [._getNullValue()](#ERMrest.Table+_getNullValue) : <code>object</code>
+            * [._findForeignKeyByRemoteColumns(remoteTable, remoteColumnNames, nameMapping)](#ERMrest.Table+_findForeignKeyByRemoteColumns)
+                * [~matchFk()](#ERMrest.Table+_findForeignKeyByRemoteColumns..matchFk)
+            * [.findForeignKey()](#ERMrest.Table+findForeignKey)
+            * [._assignAssetCategories()](#ERMrest.Table+_assignAssetCategories)
         * _static_
             * [.Entity](#ERMrest.Table.Entity)
                 * [new Entity(server, table)](#new_ERMrest.Table.Entity_new)
@@ -211,7 +232,7 @@ to use for ERMrest JavaScript agents.
         * [.get(name)](#ERMrest.Columns+get) ⇒ [<code>Column</code>](#ERMrest.Column)
         * [.getByPosition(pos)](#ERMrest.Columns+getByPosition) ⇒ [<code>Column</code>](#ERMrest.Column)
     * [.Column](#ERMrest.Column)
-        * [new Column(table, jsonColumn)](#new_ERMrest.Column_new)
+        * [new Column(table, jsonColumn, assetCategoryInfo)](#new_ERMrest.Column_new)
         * _instance_
             * [.position](#ERMrest.Column+position) : <code>number</code>
             * [.table](#ERMrest.Column+table) : [<code>Table</code>](#ERMrest.Table)
@@ -224,8 +245,15 @@ to use for ERMrest JavaScript agents.
             * [.RID](#ERMrest.Column+RID) : <code>string</code>
             * [.type](#ERMrest.Column+type) : [<code>Type</code>](#ERMrest.Type)
             * [.ignore](#ERMrest.Column+ignore) : <code>boolean</code>
+            * [.assetCategory](#ERMrest.Column+assetCategory) : <code>string</code>
+            * [.assetURLColumnName](#ERMrest.Column+assetURLColumnName)
+            * [.isAssetURL](#ERMrest.Column+isAssetURL) : <code>boolean</code>
+            * [.isAssetFilename](#ERMrest.Column+isAssetFilename) : <code>boolean</code>
+            * [.isAssetByteCount](#ERMrest.Column+isAssetByteCount) : <code>boolean</code>
+            * [.isAssetMd5](#ERMrest.Column+isAssetMd5) : <code>boolean</code>
+            * [.isAssetSha256](#ERMrest.Column+isAssetSha256) : <code>boolean</code>
             * [.annotations](#ERMrest.Column+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
-            * [.comment](#ERMrest.Column+comment) : <code>string</code>
+            * ~~[.comment](#ERMrest.Column+comment) : <code>Object</code>~~
             * [.nullok](#ERMrest.Column+nullok) : <code>Boolean</code>
             * [.displayname](#ERMrest.Column+displayname) : <code>object</code>
             * [.memberOfKeys](#ERMrest.Column+memberOfKeys) : [<code>Array.&lt;Key&gt;</code>](#ERMrest.Key)
@@ -234,6 +262,7 @@ to use for ERMrest JavaScript agents.
             * [.default](#ERMrest.Column+default) ⇒ <code>string</code>
             * [.isUniqueNotNull](#ERMrest.Column+isUniqueNotNull) : <code>Boolean</code>
             * [.uniqueNotNullKey](#ERMrest.Column+uniqueNotNullKey) : [<code>Key</code>](#ERMrest.Key)
+            * [.isPartOfSimpleForeignKey](#ERMrest.Column+isPartOfSimpleForeignKey)
             * [.formatvalue(data, context)](#ERMrest.Column+formatvalue) ⇒ <code>string</code> \| <code>Array.&lt;string&gt;</code>
             * [.formatPresentation(data, context, templateVariables, options)](#ERMrest.Column+formatPresentation) ⇒ <code>Object</code>
             * [.toString()](#ERMrest.Column+toString) ⇒ <code>string</code>
@@ -264,7 +293,7 @@ to use for ERMrest JavaScript agents.
         * [.table](#ERMrest.Key+table) : <code>Table</code>
         * [.colset](#ERMrest.Key+colset) : [<code>ColSet</code>](#ERMrest.ColSet)
         * [.annotations](#ERMrest.Key+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
-        * [.comment](#ERMrest.Key+comment) : <code>string</code>
+        * ~~[.comment](#ERMrest.Key+comment) : <code>Object</code>~~
         * [.RID](#ERMrest.Key+RID) : <code>string</code>
         * [.constraint_names](#ERMrest.Key+constraint_names) : <code>Array</code>
         * [.name](#ERMrest.Key+name) : <code>string</code>
@@ -273,6 +302,8 @@ to use for ERMrest JavaScript agents.
     * [.ColSet](#ERMrest.ColSet)
         * [new ColSet(columns)](#new_ERMrest.ColSet_new)
         * [.columns](#ERMrest.ColSet+columns) : <code>Array</code>
+        * [.textColumnsCount](#ERMrest.ColSet+textColumnsCount) : <code>number</code>
+        * [.allSerialOrInt](#ERMrest.ColSet+allSerialOrInt) : <code>boolean</code>
         * [.toString()](#ERMrest.ColSet+toString) ⇒ <code>string</code>
         * [.length()](#ERMrest.ColSet+length) ⇒ <code>Number</code>
     * [.Mapping](#ERMrest.Mapping)
@@ -299,15 +330,10 @@ to use for ERMrest JavaScript agents.
         * [.rights](#ERMrest.ForeignKeyRef+rights) : <code>Object</code>
         * [.mapping](#ERMrest.ForeignKeyRef+mapping) : [<code>Mapping</code>](#ERMrest.Mapping)
         * [.constraint_names](#ERMrest.ForeignKeyRef+constraint_names) : <code>Array</code>
-        * [.from_name](#ERMrest.ForeignKeyRef+from_name) : <code>string</code>
-        * [.to_name](#ERMrest.ForeignKeyRef+to_name) : <code>string</code>
-        * [.to_comment](#ERMrest.ForeignKeyRef+to_comment) : <code>string</code>
-        * [.from_comment](#ERMrest.ForeignKeyRef+from_comment) : <code>string</code>
-        * [.to_comment_display](#ERMrest.ForeignKeyRef+to_comment_display) : <code>string</code>
-        * [.from_comment_display](#ERMrest.ForeignKeyRef+from_comment_display) : <code>string</code>
         * [.ignore](#ERMrest.ForeignKeyRef+ignore) : <code>boolean</code>
         * [.annotations](#ERMrest.ForeignKeyRef+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
-        * [.comment](#ERMrest.ForeignKeyRef+comment) : <code>string</code>
+        * ~~[.comment](#ERMrest.ForeignKeyRef+comment) : <code>Object</code>~~
+        * [.onDeleteCascade](#ERMrest.ForeignKeyRef+onDeleteCascade) : <code>boolean</code>
         * [.compressedDataSource](#ERMrest.ForeignKeyRef+compressedDataSource)
         * [.name](#ERMrest.ForeignKeyRef+name) : <code>string</code>
         * [.simple](#ERMrest.ForeignKeyRef+simple) : <code>Boolean</code>
@@ -383,8 +409,7 @@ to use for ERMrest JavaScript agents.
         * [.contextualize](#ERMrest.Reference+contextualize)
         * [.aggregate](#ERMrest.Reference+aggregate) : [<code>ReferenceAggregateFn</code>](#ERMrest.ReferenceAggregateFn)
         * [.displayname](#ERMrest.Reference+displayname) : <code>object</code>
-        * [.comment](#ERMrest.Reference+comment) : <code>String</code>
-        * [.commentDisplay](#ERMrest.Reference+commentDisplay) : <code>String</code>
+        * [.comment](#ERMrest.Reference+comment) : <code>Object</code>
         * [.uri](#ERMrest.Reference+uri) : <code>string</code>
         * [.table](#ERMrest.Reference+table) : [<code>Table</code>](#ERMrest.Table)
         * [.facetBaseTable](#ERMrest.Reference+facetBaseTable) : [<code>Table</code>](#ERMrest.Table)
@@ -411,6 +436,7 @@ to use for ERMrest JavaScript agents.
         * [.defaultExportTemplate](#ERMrest.Reference+defaultExportTemplate) : <code>string</code>
         * [.citation](#ERMrest.Reference+citation) : <code>ERMrest.Citation</code>
         * [.googleDatasetMetadata](#ERMrest.Reference+googleDatasetMetadata) : <code>ERMrest.GoogleDatasetMetadata</code>
+        * [.cascadingDeletedItems](#ERMrest.Reference+cascadingDeletedItems) : <code>Array.&lt;Object&gt;</code>
         * [.generateFacetColumns()](#ERMrest.Reference+generateFacetColumns)
         * [.validateFacetsFilters(facetAndFilters, facetObjectWrappers, searchTerm, skipMappingEntityChoices, changeLocation)](#ERMrest.Reference+validateFacetsFilters)
         * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
@@ -428,7 +454,7 @@ to use for ERMrest JavaScript agents.
         * [.getAggregates(aggregateList)](#ERMrest.Reference+getAggregates) ⇒ <code>Promise</code>
         * [.setSamePaging(page)](#ERMrest.Reference+setSamePaging) ⇒ [<code>Reference</code>](#ERMrest.Reference)
         * [.getColumnByName(name)](#ERMrest.Reference+getColumnByName) ⇒ [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)
-        * [.generateColumnsList(tuple)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
+        * [.generateColumnsList(tuple, columnsList, dontChangeReference, skipLog)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
         * [.generateActiveList([tuple])](#ERMrest.Reference+generateActiveList) ⇒ <code>Object</code>
         * [._getReadPath(useEntity, getTRS, getTCRS, getUnlinkTRS)](#ERMrest.Reference+_getReadPath) : <code>Object</code>
             * [~processSortObject()](#ERMrest.Reference+_getReadPath..processSortObject)
@@ -472,6 +498,8 @@ to use for ERMrest JavaScript agents.
         * [new ReferenceColumn(reference, baseCols, sourceObjectWrapper, name, mainTuple)](#new_ERMrest.ReferenceColumn_new)
         * [.isFiltered](#ERMrest.ReferenceColumn+isFiltered) : <code>boolean</code>
         * [.filterProps](#ERMrest.ReferenceColumn+filterProps) : <code>Object</code>
+        * [.isInputIframe](#ERMrest.ReferenceColumn+isInputIframe) : <code>boolean</code>
+        * [.inputIframeProps](#ERMrest.ReferenceColumn+inputIframeProps) : <code>Object</code>
         * [.isPseudo](#ERMrest.ReferenceColumn+isPseudo) : <code>boolean</code>
         * [.table](#ERMrest.ReferenceColumn+table) : [<code>Table</code>](#ERMrest.Table)
         * [.name](#ERMrest.ReferenceColumn+name) : <code>string</code>
@@ -493,6 +521,7 @@ to use for ERMrest JavaScript agents.
         * [.formatPresentation(data, [context], [templateVariables], [options])](#ERMrest.ReferenceColumn+formatPresentation) ⇒ <code>Object</code>
         * [._getShowForeignKeyLink(context)](#ERMrest.ReferenceColumn+_getShowForeignKeyLink) ⇒ <code>boolean</code>
         * [.sourceFormatPresentation(templateVariables, columnValue, mainTuple)](#ERMrest.ReferenceColumn+sourceFormatPresentation) ⇒ <code>Object</code>
+        * [.renderInputIframeUrl(data, linkedData)](#ERMrest.ReferenceColumn+renderInputIframeUrl)
     * [.VirtualColumn](#ERMrest.VirtualColumn)
         * [new VirtualColumn(reference, column, sourceObjectWrapper, name, mainTuple)](#new_ERMrest.VirtualColumn_new)
     * [.PseudoColumn](#ERMrest.PseudoColumn)
@@ -503,7 +532,6 @@ to use for ERMrest JavaScript agents.
         * [.isUnique](#ERMrest.PseudoColumn+isUnique) : <code>boolean</code>
         * [.hasAggregate](#ERMrest.PseudoColumn+hasAggregate) : <code>boolean</code>
         * [.comment](#ERMrest.PseudoColumn+comment) : <code>Object</code>
-        * [.commentDisplay](#ERMrest.PseudoColumn+commentDisplay) : <code>Object</code>
         * [.displayname](#ERMrest.PseudoColumn+displayname) : <code>Object</code>
         * [.key](#ERMrest.PseudoColumn+key) : <code>boolean</code>
         * [.reference](#ERMrest.PseudoColumn+reference) : [<code>Reference</code>](#ERMrest.Reference)
@@ -517,6 +545,8 @@ to use for ERMrest JavaScript agents.
         * [.reference](#ERMrest.ForeignKeyPseudoColumn+reference) : [<code>Reference</code>](#ERMrest.Reference)
         * [.foreignKey](#ERMrest.ForeignKeyPseudoColumn+foreignKey) : [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)
         * [.hasDomainFilter](#ERMrest.ForeignKeyPseudoColumn+hasDomainFilter) : <code>Boolean</code>
+        * [.domainFilterUsedColumns](#ERMrest.ForeignKeyPseudoColumn+domainFilterUsedColumns) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
+        * [.domainFilterRawString](#ERMrest.ForeignKeyPseudoColumn+domainFilterRawString) : <code>string</code>
         * [.defaultValues](#ERMrest.ForeignKeyPseudoColumn+defaultValues) : <code>Object</code>
         * [.defaultReference](#ERMrest.ForeignKeyPseudoColumn+defaultReference) : <code>ERMrest.Refernece</code>
         * [.displayname](#ERMrest.ForeignKeyPseudoColumn+displayname) : <code>Object</code>
@@ -714,8 +744,7 @@ to use for ERMrest JavaScript agents.
         * [.contextualize](#ERMrest.Reference+contextualize)
         * [.aggregate](#ERMrest.Reference+aggregate) : [<code>ReferenceAggregateFn</code>](#ERMrest.ReferenceAggregateFn)
         * [.displayname](#ERMrest.Reference+displayname) : <code>object</code>
-        * [.comment](#ERMrest.Reference+comment) : <code>String</code>
-        * [.commentDisplay](#ERMrest.Reference+commentDisplay) : <code>String</code>
+        * [.comment](#ERMrest.Reference+comment) : <code>Object</code>
         * [.uri](#ERMrest.Reference+uri) : <code>string</code>
         * [.table](#ERMrest.Reference+table) : [<code>Table</code>](#ERMrest.Table)
         * [.facetBaseTable](#ERMrest.Reference+facetBaseTable) : [<code>Table</code>](#ERMrest.Table)
@@ -742,6 +771,7 @@ to use for ERMrest JavaScript agents.
         * [.defaultExportTemplate](#ERMrest.Reference+defaultExportTemplate) : <code>string</code>
         * [.citation](#ERMrest.Reference+citation) : <code>ERMrest.Citation</code>
         * [.googleDatasetMetadata](#ERMrest.Reference+googleDatasetMetadata) : <code>ERMrest.GoogleDatasetMetadata</code>
+        * [.cascadingDeletedItems](#ERMrest.Reference+cascadingDeletedItems) : <code>Array.&lt;Object&gt;</code>
         * [.generateFacetColumns()](#ERMrest.Reference+generateFacetColumns)
         * [.validateFacetsFilters(facetAndFilters, facetObjectWrappers, searchTerm, skipMappingEntityChoices, changeLocation)](#ERMrest.Reference+validateFacetsFilters)
         * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
@@ -759,7 +789,7 @@ to use for ERMrest JavaScript agents.
         * [.getAggregates(aggregateList)](#ERMrest.Reference+getAggregates) ⇒ <code>Promise</code>
         * [.setSamePaging(page)](#ERMrest.Reference+setSamePaging) ⇒ [<code>Reference</code>](#ERMrest.Reference)
         * [.getColumnByName(name)](#ERMrest.Reference+getColumnByName) ⇒ [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)
-        * [.generateColumnsList(tuple)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
+        * [.generateColumnsList(tuple, columnsList, dontChangeReference, skipLog)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
         * [.generateActiveList([tuple])](#ERMrest.Reference+generateActiveList) ⇒ <code>Object</code>
         * [._getReadPath(useEntity, getTRS, getTCRS, getUnlinkTRS)](#ERMrest.Reference+_getReadPath) : <code>Object</code>
             * [~processSortObject()](#ERMrest.Reference+_getReadPath..processSortObject)
@@ -1097,7 +1127,7 @@ it will throw an error
     * [.rights](#ERMrest.Schema+rights) : <code>Object</code>
     * [.displayname](#ERMrest.Schema+displayname) : <code>object</code>
     * [.tables](#ERMrest.Schema+tables) : [<code>Tables</code>](#ERMrest.Tables)
-    * [.comment](#ERMrest.Schema+comment) : <code>string</code>
+    * [.comment](#ERMrest.Schema+comment) : <code>Object</code>
 
 <a name="new_ERMrest.Schema_new"></a>
 
@@ -1152,7 +1182,7 @@ this.displayname.value has the value
 **Kind**: instance property of [<code>Schema</code>](#ERMrest.Schema)  
 <a name="ERMrest.Schema+comment"></a>
 
-#### schema.comment : <code>string</code>
+#### schema.comment : <code>Object</code>
 Documentation for this schema
 
 **Kind**: instance property of [<code>Schema</code>](#ERMrest.Schema)  
@@ -1238,7 +1268,7 @@ check for table name existence
         * [.rights](#ERMrest.Table+rights) : <code>Object</code>
         * [.foreignKeys](#ERMrest.Table+foreignKeys) : [<code>ForeignKeys</code>](#ERMrest.ForeignKeys)
         * [.referredBy](#ERMrest.Table+referredBy) : [<code>ForeignKeys</code>](#ERMrest.ForeignKeys)
-        * [.comment](#ERMrest.Table+comment) : <code>string</code>
+        * ~~[.comment](#ERMrest.Table+comment) : <code>Object</code>~~
         * [._showSavedQuery](#ERMrest.Table+_showSavedQuery) : <code>boolean</code>
         * [.favoritesPath](#ERMrest.Table+favoritesPath) : <code>string</code>
         * [.kind](#ERMrest.Table+kind) : <code>string</code>
@@ -1254,6 +1284,10 @@ check for table name existence
         * [.pureBinaryForeignKeys](#ERMrest.Table+pureBinaryForeignKeys) : [<code>Array.&lt;ForeignKeyRef&gt;</code>](#ERMrest.ForeignKeyRef)
         * [._getRowDisplayKey(context)](#ERMrest.Table+_getRowDisplayKey)
         * [._getNullValue()](#ERMrest.Table+_getNullValue) : <code>object</code>
+        * [._findForeignKeyByRemoteColumns(remoteTable, remoteColumnNames, nameMapping)](#ERMrest.Table+_findForeignKeyByRemoteColumns)
+            * [~matchFk()](#ERMrest.Table+_findForeignKeyByRemoteColumns..matchFk)
+        * [.findForeignKey()](#ERMrest.Table+findForeignKey)
+        * [._assignAssetCategories()](#ERMrest.Table+_assignAssetCategories)
     * _static_
         * [.Entity](#ERMrest.Table.Entity)
             * [new Entity(server, table)](#new_ERMrest.Table.Entity_new)
@@ -1343,7 +1377,9 @@ All the FKRs to this table.
 **Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
 <a name="ERMrest.Table+comment"></a>
 
-#### table.comment : <code>string</code>
+#### ~~table.comment : <code>Object</code>~~
+***Deprecated***
+
 Documentation for this table
 
 **Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
@@ -1387,7 +1423,14 @@ The columns that create the shortest key
 <a name="ERMrest.Table+displayKey"></a>
 
 #### table.displayKey : [<code>Array.&lt;Column&gt;</code>](#ERMrest.Column)
-The columns that create the shortest key that can be used for display purposes.
+The columns that create the shortest key that can be used for display purposes (rowname).
+
+sort the not-null keys based on the following and return the first one:
+1. not simple fk to somewhere
+2. not simple and made of any asset metadata (url, filename, bytecount, md5, sha256)
+3. is shorter
+4. has more text
+5. made of columns defined earlier (column position)
 
 **Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
 <a name="ERMrest.Table+stableKey"></a>
@@ -1443,6 +1486,12 @@ if the table is pure and binary, will return the two foreignkeys that create it
 This key will be used for referring to a row of data. Therefore it shouldn't be foreignkey and markdown type.
 It's the same as displaykey but with extra restrictions. It might return undefined.
 
+sort the "well formed" keys that are not simple fk based on the following and return the first one:
+2. not simple and made of hash asset metadata (md5, sha256)
+3. is shorter
+4. has more text
+5. made of columns defined earlier (column position)
+
 **Kind**: instance method of [<code>Table</code>](#ERMrest.Table)  
 **Returns{column[]|undefined}**: list of columns. If couldn't find a suitable columns will return undefined.  
 
@@ -1455,6 +1504,48 @@ It's the same as displaykey but with extra restrictions. It might return undefin
 #### table.\_getNullValue() : <code>object</code>
 return the null value that should be shown for the columns under
 this table for the given context.
+
+**Kind**: instance method of [<code>Table</code>](#ERMrest.Table)  
+<a name="ERMrest.Table+_findForeignKeyByRemoteColumns"></a>
+
+#### table.\_findForeignKeyByRemoteColumns(remoteTable, remoteColumnNames, nameMapping)
+return the fk that is related to the remote table and column names (it could be inbound or outbound)
+
+**Kind**: instance method of [<code>Table</code>](#ERMrest.Table)  
+
+| Param | Type |
+| --- | --- |
+| remoteTable | <code>string</code> | 
+| remoteColumnNames | <code>Array.&lt;string&gt;</code> | 
+| nameMapping | <code>Object</code> | 
+
+<a name="ERMrest.Table+_findForeignKeyByRemoteColumns..matchFk"></a>
+
+##### _findForeignKeyByRemoteColumns~matchFk()
+inbound: from = remote, to = local
+outbound: from = local, to = remote
+
+**Kind**: inner method of [<code>\_findForeignKeyByRemoteColumns</code>](#ERMrest.Table+_findForeignKeyByRemoteColumns)  
+<a name="ERMrest.Table+findForeignKey"></a>
+
+#### table.findForeignKey()
+find the foreignkey that is part of this table, or has a path to it.
+
+{ "remote_schema": "s2", "remote_table": "t2", "local_to_remote_columns": { "x": "a", "y": "b", ... }
+{ "remote_schema": "s2", "remote_table": "t2", "remote_columns": [ "a", "b" ]}
+
+{"local_columns": ["x", "y", ...]}
+
+**Kind**: instance method of [<code>Table</code>](#ERMrest.Table)  
+<a name="ERMrest.Table+_assignAssetCategories"></a>
+
+#### table.\_assignAssetCategories()
+returns an object that captures the asset category of columns.
+- the key of the returned object is the column name and value and the value is an object. The object has the following:
+ - category: the assigned category name
+ - URLColumn: the url column.
+- if a column is used in multiple asset annotations, only the first usage is used and other asset annotations
+  are discarded.
 
 **Kind**: instance method of [<code>Table</code>](#ERMrest.Table)  
 <a name="ERMrest.Table.Entity"></a>
@@ -1770,7 +1861,7 @@ Constructor for Columns.
 **Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
 
 * [.Column](#ERMrest.Column)
-    * [new Column(table, jsonColumn)](#new_ERMrest.Column_new)
+    * [new Column(table, jsonColumn, assetCategoryInfo)](#new_ERMrest.Column_new)
     * _instance_
         * [.position](#ERMrest.Column+position) : <code>number</code>
         * [.table](#ERMrest.Column+table) : [<code>Table</code>](#ERMrest.Table)
@@ -1783,8 +1874,15 @@ Constructor for Columns.
         * [.RID](#ERMrest.Column+RID) : <code>string</code>
         * [.type](#ERMrest.Column+type) : [<code>Type</code>](#ERMrest.Type)
         * [.ignore](#ERMrest.Column+ignore) : <code>boolean</code>
+        * [.assetCategory](#ERMrest.Column+assetCategory) : <code>string</code>
+        * [.assetURLColumnName](#ERMrest.Column+assetURLColumnName)
+        * [.isAssetURL](#ERMrest.Column+isAssetURL) : <code>boolean</code>
+        * [.isAssetFilename](#ERMrest.Column+isAssetFilename) : <code>boolean</code>
+        * [.isAssetByteCount](#ERMrest.Column+isAssetByteCount) : <code>boolean</code>
+        * [.isAssetMd5](#ERMrest.Column+isAssetMd5) : <code>boolean</code>
+        * [.isAssetSha256](#ERMrest.Column+isAssetSha256) : <code>boolean</code>
         * [.annotations](#ERMrest.Column+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
-        * [.comment](#ERMrest.Column+comment) : <code>string</code>
+        * ~~[.comment](#ERMrest.Column+comment) : <code>Object</code>~~
         * [.nullok](#ERMrest.Column+nullok) : <code>Boolean</code>
         * [.displayname](#ERMrest.Column+displayname) : <code>object</code>
         * [.memberOfKeys](#ERMrest.Column+memberOfKeys) : [<code>Array.&lt;Key&gt;</code>](#ERMrest.Key)
@@ -1793,6 +1891,7 @@ Constructor for Columns.
         * [.default](#ERMrest.Column+default) ⇒ <code>string</code>
         * [.isUniqueNotNull](#ERMrest.Column+isUniqueNotNull) : <code>Boolean</code>
         * [.uniqueNotNullKey](#ERMrest.Column+uniqueNotNullKey) : [<code>Key</code>](#ERMrest.Key)
+        * [.isPartOfSimpleForeignKey](#ERMrest.Column+isPartOfSimpleForeignKey)
         * [.formatvalue(data, context)](#ERMrest.Column+formatvalue) ⇒ <code>string</code> \| <code>Array.&lt;string&gt;</code>
         * [.formatPresentation(data, context, templateVariables, options)](#ERMrest.Column+formatPresentation) ⇒ <code>Object</code>
         * [.toString()](#ERMrest.Column+toString) ⇒ <code>string</code>
@@ -1804,7 +1903,7 @@ Constructor for Columns.
 
 <a name="new_ERMrest.Column_new"></a>
 
-#### new Column(table, jsonColumn)
+#### new Column(table, jsonColumn, assetCategoryInfo)
 Constructs a Column.
 
 
@@ -1812,6 +1911,7 @@ Constructs a Column.
 | --- | --- | --- |
 | table | [<code>Table</code>](#ERMrest.Table) | the table object. |
 | jsonColumn | <code>string</code> | the json column. |
+| assetCategoryInfo | <code>Object</code> | if the column is an asset, this must be an object with categroy and URLColumn properties |
 
 <a name="ERMrest.Column+position"></a>
 
@@ -1874,13 +1974,58 @@ The RID of this column (might not be defined)
 
 #### column.ignore : <code>boolean</code>
 **Kind**: instance property of [<code>Column</code>](#ERMrest.Column)  
+<a name="ERMrest.Column+assetCategory"></a>
+
+#### column.assetCategory : <code>string</code>
+if it's used in an asset annotation, will return its category. available values:
+'url', 'filename', 'byte_count', 'md5', 'sha256'
+
+**Kind**: instance property of [<code>Column</code>](#ERMrest.Column)  
+<a name="ERMrest.Column+assetURLColumnName"></a>
+
+#### column.assetURLColumnName
+if the column is storing of the extra asset metadata, this will return the actual url column
+
+**Kind**: instance property of [<code>Column</code>](#ERMrest.Column)  
+<a name="ERMrest.Column+isAssetURL"></a>
+
+#### column.isAssetURL : <code>boolean</code>
+if this column is has a valid asset annotation
+
+**Kind**: instance property of [<code>Column</code>](#ERMrest.Column)  
+<a name="ERMrest.Column+isAssetFilename"></a>
+
+#### column.isAssetFilename : <code>boolean</code>
+if this column is a filename for an asset column
+
+**Kind**: instance property of [<code>Column</code>](#ERMrest.Column)  
+<a name="ERMrest.Column+isAssetByteCount"></a>
+
+#### column.isAssetByteCount : <code>boolean</code>
+if this column is a byte count for an asset column
+
+**Kind**: instance property of [<code>Column</code>](#ERMrest.Column)  
+<a name="ERMrest.Column+isAssetMd5"></a>
+
+#### column.isAssetMd5 : <code>boolean</code>
+if this column is a md5 for an asset column
+
+**Kind**: instance property of [<code>Column</code>](#ERMrest.Column)  
+<a name="ERMrest.Column+isAssetSha256"></a>
+
+#### column.isAssetSha256 : <code>boolean</code>
+if this column is a sha256 for an asset column
+
+**Kind**: instance property of [<code>Column</code>](#ERMrest.Column)  
 <a name="ERMrest.Column+annotations"></a>
 
 #### column.annotations : [<code>Annotations</code>](#ERMrest.Annotations)
 **Kind**: instance property of [<code>Column</code>](#ERMrest.Column)  
 <a name="ERMrest.Column+comment"></a>
 
-#### column.comment : <code>string</code>
+#### ~~column.comment : <code>Object</code>~~
+***Deprecated***
+
 Documentation for this column
 
 **Kind**: instance property of [<code>Column</code>](#ERMrest.Column)  
@@ -1932,6 +2077,12 @@ Whether this column is unique (part of a simple key) and not-null
 #### column.uniqueNotNullKey : [<code>Key</code>](#ERMrest.Key)
 If the column is unique and not-null, will return the simple key
 that is made of this column. Otherwise it will return `null`
+
+**Kind**: instance property of [<code>Column</code>](#ERMrest.Column)  
+<a name="ERMrest.Column+isPartOfSimpleForeignKey"></a>
+
+#### column.isPartOfSimpleForeignKey
+whether there's a simple fk based on this column
 
 **Kind**: instance property of [<code>Column</code>](#ERMrest.Column)  
 <a name="ERMrest.Column+formatvalue"></a>
@@ -2167,7 +2318,7 @@ get the key by the column set
     * [.table](#ERMrest.Key+table) : <code>Table</code>
     * [.colset](#ERMrest.Key+colset) : [<code>ColSet</code>](#ERMrest.ColSet)
     * [.annotations](#ERMrest.Key+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
-    * [.comment](#ERMrest.Key+comment) : <code>string</code>
+    * ~~[.comment](#ERMrest.Key+comment) : <code>Object</code>~~
     * [.RID](#ERMrest.Key+RID) : <code>string</code>
     * [.constraint_names](#ERMrest.Key+constraint_names) : <code>Array</code>
     * [.name](#ERMrest.Key+name) : <code>string</code>
@@ -2201,7 +2352,9 @@ Reference to the table that this Key belongs to.
 **Kind**: instance property of [<code>Key</code>](#ERMrest.Key)  
 <a name="ERMrest.Key+comment"></a>
 
-#### key.comment : <code>string</code>
+#### ~~key.comment : <code>Object</code>~~
+***Deprecated***
+
 Documentation for this key
 
 **Kind**: instance property of [<code>Key</code>](#ERMrest.Key)  
@@ -2248,6 +2401,8 @@ whether key has a column
 * [.ColSet](#ERMrest.ColSet)
     * [new ColSet(columns)](#new_ERMrest.ColSet_new)
     * [.columns](#ERMrest.ColSet+columns) : <code>Array</code>
+    * [.textColumnsCount](#ERMrest.ColSet+textColumnsCount) : <code>number</code>
+    * [.allSerialOrInt](#ERMrest.ColSet+allSerialOrInt) : <code>boolean</code>
     * [.toString()](#ERMrest.ColSet+toString) ⇒ <code>string</code>
     * [.length()](#ERMrest.ColSet+length) ⇒ <code>Number</code>
 
@@ -2266,6 +2421,18 @@ Constructor for ColSet, a set of Column objects.
 #### colSet.columns : <code>Array</code>
 It won't preserve the order of given columns.
 Returns set of columns sorted by their names.
+
+**Kind**: instance property of [<code>ColSet</code>](#ERMrest.ColSet)  
+<a name="ERMrest.ColSet+textColumnsCount"></a>
+
+#### colSet.textColumnsCount : <code>number</code>
+how many text columns are in this colset
+
+**Kind**: instance property of [<code>ColSet</code>](#ERMrest.ColSet)  
+<a name="ERMrest.ColSet+allSerialOrInt"></a>
+
+#### colSet.allSerialOrInt : <code>boolean</code>
+whether all the columns are integer or serial
 
 **Kind**: instance property of [<code>ColSet</code>](#ERMrest.ColSet)  
 <a name="ERMrest.ColSet+toString"></a>
@@ -2427,15 +2594,10 @@ get the foreign key of the given column set
     * [.rights](#ERMrest.ForeignKeyRef+rights) : <code>Object</code>
     * [.mapping](#ERMrest.ForeignKeyRef+mapping) : [<code>Mapping</code>](#ERMrest.Mapping)
     * [.constraint_names](#ERMrest.ForeignKeyRef+constraint_names) : <code>Array</code>
-    * [.from_name](#ERMrest.ForeignKeyRef+from_name) : <code>string</code>
-    * [.to_name](#ERMrest.ForeignKeyRef+to_name) : <code>string</code>
-    * [.to_comment](#ERMrest.ForeignKeyRef+to_comment) : <code>string</code>
-    * [.from_comment](#ERMrest.ForeignKeyRef+from_comment) : <code>string</code>
-    * [.to_comment_display](#ERMrest.ForeignKeyRef+to_comment_display) : <code>string</code>
-    * [.from_comment_display](#ERMrest.ForeignKeyRef+from_comment_display) : <code>string</code>
     * [.ignore](#ERMrest.ForeignKeyRef+ignore) : <code>boolean</code>
     * [.annotations](#ERMrest.ForeignKeyRef+annotations) : [<code>Annotations</code>](#ERMrest.Annotations)
-    * [.comment](#ERMrest.ForeignKeyRef+comment) : <code>string</code>
+    * ~~[.comment](#ERMrest.ForeignKeyRef+comment) : <code>Object</code>~~
+    * [.onDeleteCascade](#ERMrest.ForeignKeyRef+onDeleteCascade) : <code>boolean</code>
     * [.compressedDataSource](#ERMrest.ForeignKeyRef+compressedDataSource)
     * [.name](#ERMrest.ForeignKeyRef+name) : <code>string</code>
     * [.simple](#ERMrest.ForeignKeyRef+simple) : <code>Boolean</code>
@@ -2491,30 +2653,6 @@ The exact `names` array in foreign key definition
 The constraint names for this foreign key
 
 **Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
-<a name="ERMrest.ForeignKeyRef+from_name"></a>
-
-#### foreignKeyRef.from\_name : <code>string</code>
-**Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
-<a name="ERMrest.ForeignKeyRef+to_name"></a>
-
-#### foreignKeyRef.to\_name : <code>string</code>
-**Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
-<a name="ERMrest.ForeignKeyRef+to_comment"></a>
-
-#### foreignKeyRef.to\_comment : <code>string</code>
-**Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
-<a name="ERMrest.ForeignKeyRef+from_comment"></a>
-
-#### foreignKeyRef.from\_comment : <code>string</code>
-**Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
-<a name="ERMrest.ForeignKeyRef+to_comment_display"></a>
-
-#### foreignKeyRef.to\_comment\_display : <code>string</code>
-**Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
-<a name="ERMrest.ForeignKeyRef+from_comment_display"></a>
-
-#### foreignKeyRef.from\_comment\_display : <code>string</code>
-**Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
 <a name="ERMrest.ForeignKeyRef+ignore"></a>
 
 #### foreignKeyRef.ignore : <code>boolean</code>
@@ -2525,8 +2663,16 @@ The constraint names for this foreign key
 **Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
 <a name="ERMrest.ForeignKeyRef+comment"></a>
 
-#### foreignKeyRef.comment : <code>string</code>
+#### ~~foreignKeyRef.comment : <code>Object</code>~~
+***Deprecated***
+
 Documentation for this foreign key reference
+
+**Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
+<a name="ERMrest.ForeignKeyRef+onDeleteCascade"></a>
+
+#### foreignKeyRef.onDeleteCascade : <code>boolean</code>
+whether the "on delete cascade" is set for this foreign key.
 
 **Kind**: instance property of [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)  
 <a name="ERMrest.ForeignKeyRef+compressedDataSource"></a>
@@ -3055,8 +3201,7 @@ Constructor for a ParsedFilter.
     * [.contextualize](#ERMrest.Reference+contextualize)
     * [.aggregate](#ERMrest.Reference+aggregate) : [<code>ReferenceAggregateFn</code>](#ERMrest.ReferenceAggregateFn)
     * [.displayname](#ERMrest.Reference+displayname) : <code>object</code>
-    * [.comment](#ERMrest.Reference+comment) : <code>String</code>
-    * [.commentDisplay](#ERMrest.Reference+commentDisplay) : <code>String</code>
+    * [.comment](#ERMrest.Reference+comment) : <code>Object</code>
     * [.uri](#ERMrest.Reference+uri) : <code>string</code>
     * [.table](#ERMrest.Reference+table) : [<code>Table</code>](#ERMrest.Table)
     * [.facetBaseTable](#ERMrest.Reference+facetBaseTable) : [<code>Table</code>](#ERMrest.Table)
@@ -3083,6 +3228,7 @@ Constructor for a ParsedFilter.
     * [.defaultExportTemplate](#ERMrest.Reference+defaultExportTemplate) : <code>string</code>
     * [.citation](#ERMrest.Reference+citation) : <code>ERMrest.Citation</code>
     * [.googleDatasetMetadata](#ERMrest.Reference+googleDatasetMetadata) : <code>ERMrest.GoogleDatasetMetadata</code>
+    * [.cascadingDeletedItems](#ERMrest.Reference+cascadingDeletedItems) : <code>Array.&lt;Object&gt;</code>
     * [.generateFacetColumns()](#ERMrest.Reference+generateFacetColumns)
     * [.validateFacetsFilters(facetAndFilters, facetObjectWrappers, searchTerm, skipMappingEntityChoices, changeLocation)](#ERMrest.Reference+validateFacetsFilters)
     * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
@@ -3100,7 +3246,7 @@ Constructor for a ParsedFilter.
     * [.getAggregates(aggregateList)](#ERMrest.Reference+getAggregates) ⇒ <code>Promise</code>
     * [.setSamePaging(page)](#ERMrest.Reference+setSamePaging) ⇒ [<code>Reference</code>](#ERMrest.Reference)
     * [.getColumnByName(name)](#ERMrest.Reference+getColumnByName) ⇒ [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)
-    * [.generateColumnsList(tuple)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
+    * [.generateColumnsList(tuple, columnsList, dontChangeReference, skipLog)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
     * [.generateActiveList([tuple])](#ERMrest.Reference+generateActiveList) ⇒ <code>Object</code>
     * [._getReadPath(useEntity, getTRS, getTCRS, getUnlinkTRS)](#ERMrest.Reference+_getReadPath) : <code>Object</code>
         * [~processSortObject()](#ERMrest.Reference+_getReadPath..processSortObject)
@@ -3159,15 +3305,8 @@ displayname.value has the value
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+comment"></a>
 
-#### reference.comment : <code>String</code>
+#### reference.comment : <code>Object</code>
 The comment for this reference.
-
-**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
-<a name="ERMrest.Reference+commentDisplay"></a>
-
-#### reference.commentDisplay : <code>String</code>
-The comment display property for this reference.
-can be either "tooltip" or "inline"
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+uri"></a>
@@ -3473,6 +3612,12 @@ In the future we might also want to generate citation based on page and not nece
 #### reference.googleDatasetMetadata : <code>ERMrest.GoogleDatasetMetadata</code>
 If annotation is defined and has the required attributes, will return
 a Metadata object
+
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+cascadingDeletedItems"></a>
+
+#### reference.cascadingDeletedItems : <code>Array.&lt;Object&gt;</code>
+The related reference or tables that might be deleted as a result of deleting the current table.
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+generateFacetColumns"></a>
@@ -3819,7 +3964,7 @@ Will throw an error if
 
 <a name="ERMrest.Reference+generateColumnsList"></a>
 
-#### reference.generateColumnsList(tuple) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
+#### reference.generateColumnsList(tuple, columnsList, dontChangeReference, skipLog) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
 Generates the list of visible columns
 The logic is as follows:
 
@@ -3872,6 +4017,9 @@ NOTE:
 | Param | Type | Description |
 | --- | --- | --- |
 | tuple | [<code>Tuple</code>](#ERMrest.Tuple) | the data for the current refe |
+| columnsList | <code>Array.&lt;Object&gt;</code> | if passed, we will skip the annotation and heuristics and use this list instead. |
+| dontChangeReference | <code>boolean</code> | whether we should mutate the reference or just return the generated list. |
+| skipLog | <code>boolean</code> | whether we should skip logging the warning messages |
 
 <a name="ERMrest.Reference+generateActiveList"></a>
 
@@ -4385,6 +4533,8 @@ count aggregate representation
     * [new ReferenceColumn(reference, baseCols, sourceObjectWrapper, name, mainTuple)](#new_ERMrest.ReferenceColumn_new)
     * [.isFiltered](#ERMrest.ReferenceColumn+isFiltered) : <code>boolean</code>
     * [.filterProps](#ERMrest.ReferenceColumn+filterProps) : <code>Object</code>
+    * [.isInputIframe](#ERMrest.ReferenceColumn+isInputIframe) : <code>boolean</code>
+    * [.inputIframeProps](#ERMrest.ReferenceColumn+inputIframeProps) : <code>Object</code>
     * [.isPseudo](#ERMrest.ReferenceColumn+isPseudo) : <code>boolean</code>
     * [.table](#ERMrest.ReferenceColumn+table) : [<code>Table</code>](#ERMrest.Table)
     * [.name](#ERMrest.ReferenceColumn+name) : <code>string</code>
@@ -4406,6 +4556,7 @@ count aggregate representation
     * [.formatPresentation(data, [context], [templateVariables], [options])](#ERMrest.ReferenceColumn+formatPresentation) ⇒ <code>Object</code>
     * [._getShowForeignKeyLink(context)](#ERMrest.ReferenceColumn+_getShowForeignKeyLink) ⇒ <code>boolean</code>
     * [.sourceFormatPresentation(templateVariables, columnValue, mainTuple)](#ERMrest.ReferenceColumn+sourceFormatPresentation) ⇒ <code>Object</code>
+    * [.renderInputIframeUrl(data, linkedData)](#ERMrest.ReferenceColumn+renderInputIframeUrl)
 
 <a name="new_ERMrest.ReferenceColumn_new"></a>
 
@@ -4431,6 +4582,18 @@ If the pseudoColumn has filter in its path
 
 #### referenceColumn.filterProps : <code>Object</code>
 The properties related to filter in source
+
+**Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
+<a name="ERMrest.ReferenceColumn+isInputIframe"></a>
+
+#### referenceColumn.isInputIframe : <code>boolean</code>
+whether we should show an iframe input in recordedit
+
+**Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
+<a name="ERMrest.ReferenceColumn+inputIframeProps"></a>
+
+#### referenceColumn.inputIframeProps : <code>Object</code>
+the props for inputIframe
 
 **Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
 <a name="ERMrest.ReferenceColumn+isPseudo"></a>
@@ -4506,7 +4669,7 @@ Whether the UI should hide the column header or not.
 Indicates if the input should be disabled
 true: input must be disabled
 false:  input can be enabled
-object: input msut be disabled (show .message to user)
+object: input must be disabled (show .message to user)
 
 **Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
 <a name="ERMrest.ReferenceColumn+sortable"></a>
@@ -4606,6 +4769,18 @@ Should be called once every value is retrieved
 | columnValue | <code>Object</code> | the value of aggregate column (if it's aggregate) |
 | mainTuple | [<code>Tuple</code>](#ERMrest.Tuple) | [description] |
 
+<a name="ERMrest.ReferenceColumn+renderInputIframeUrl"></a>
+
+#### referenceColumn.renderInputIframeUrl(data, linkedData)
+render the location of iframe. will return empty string if invalid or missing.
+
+**Kind**: instance method of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| data | <code>Object</code> | raw data of the columns |
+| linkedData | <code>Object</code> | raw data of the foreign key columns |
+
 <a name="ERMrest.VirtualColumn"></a>
 
 ### ERMrest.VirtualColumn
@@ -4642,7 +4817,6 @@ it will append "-<integer>" to it.
     * [.isUnique](#ERMrest.PseudoColumn+isUnique) : <code>boolean</code>
     * [.hasAggregate](#ERMrest.PseudoColumn+hasAggregate) : <code>boolean</code>
     * [.comment](#ERMrest.PseudoColumn+comment) : <code>Object</code>
-    * [.commentDisplay](#ERMrest.PseudoColumn+commentDisplay) : <code>Object</code>
     * [.displayname](#ERMrest.PseudoColumn+displayname) : <code>Object</code>
     * [.key](#ERMrest.PseudoColumn+key) : <code>boolean</code>
     * [.reference](#ERMrest.PseudoColumn+reference) : [<code>Reference</code>](#ERMrest.Reference)
@@ -4710,16 +4884,6 @@ It will return the first applicable rule:
 3. if aggregate and entity use the "<function> <table_displayname>"
 3. In entity mode, return the table's displayname.
 4. In scalar return the column's displayname.
-
-**Kind**: instance property of [<code>PseudoColumn</code>](#ERMrest.PseudoColumn)  
-<a name="ERMrest.PseudoColumn+commentDisplay"></a>
-
-#### pseudoColumn.commentDisplay : <code>Object</code>
-The mode the tooltip should be displayed in for this column.
-It will return the first applicable rule:
-1. commentDisplay that is defined on the sourceObject
-2. commentDisplay that is defined on the table in the display annotation
-3. default to "tooltip"
 
 **Kind**: instance property of [<code>PseudoColumn</code>](#ERMrest.PseudoColumn)  
 <a name="ERMrest.PseudoColumn+displayname"></a>
@@ -4830,6 +4994,8 @@ In other cases, the returned data will only include the scalar value.
     * [.reference](#ERMrest.ForeignKeyPseudoColumn+reference) : [<code>Reference</code>](#ERMrest.Reference)
     * [.foreignKey](#ERMrest.ForeignKeyPseudoColumn+foreignKey) : [<code>ForeignKeyRef</code>](#ERMrest.ForeignKeyRef)
     * [.hasDomainFilter](#ERMrest.ForeignKeyPseudoColumn+hasDomainFilter) : <code>Boolean</code>
+    * [.domainFilterUsedColumns](#ERMrest.ForeignKeyPseudoColumn+domainFilterUsedColumns) : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
+    * [.domainFilterRawString](#ERMrest.ForeignKeyPseudoColumn+domainFilterRawString) : <code>string</code>
     * [.defaultValues](#ERMrest.ForeignKeyPseudoColumn+defaultValues) : <code>Object</code>
     * [.defaultReference](#ERMrest.ForeignKeyPseudoColumn+defaultReference) : <code>ERMrest.Refernece</code>
     * [.displayname](#ERMrest.ForeignKeyPseudoColumn+displayname) : <code>Object</code>
@@ -4875,6 +5041,18 @@ The Foreign key object that this PseudoColumn is created based on
 
 #### foreignKeyPseudoColumn.hasDomainFilter : <code>Boolean</code>
 Whether this column has domain-filter annotation
+
+**Kind**: instance property of [<code>ForeignKeyPseudoColumn</code>](#ERMrest.ForeignKeyPseudoColumn)  
+<a name="ERMrest.ForeignKeyPseudoColumn+domainFilterUsedColumns"></a>
+
+#### foreignKeyPseudoColumn.domainFilterUsedColumns : [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
+The visible columns that are used as part of the domain-filter
+
+**Kind**: instance property of [<code>ForeignKeyPseudoColumn</code>](#ERMrest.ForeignKeyPseudoColumn)  
+<a name="ERMrest.ForeignKeyPseudoColumn+domainFilterRawString"></a>
+
+#### foreignKeyPseudoColumn.domainFilterRawString : <code>string</code>
+The raw string value of the ermerst_path_pattern used in domain filter
 
 **Kind**: instance property of [<code>ForeignKeyPseudoColumn</code>](#ERMrest.ForeignKeyPseudoColumn)  
 <a name="ERMrest.ForeignKeyPseudoColumn+defaultValues"></a>
@@ -5352,6 +5530,9 @@ The logic is as follows,
 3. use choices if in entity mode
 4. return choices if int or serial, part of key, and not null.
 5. return ranges or choices based on the type.
+
+ Note:
+  - null and not-null are applicaple in all types, so we're ignoring those while figuring out the preferred mode.
 
 **Kind**: instance property of [<code>FacetColumn</code>](#ERMrest.FacetColumn)  
 <a name="ERMrest.FacetColumn+barPlot"></a>
@@ -6878,8 +7059,7 @@ get PathColumn object by column name
     * [.contextualize](#ERMrest.Reference+contextualize)
     * [.aggregate](#ERMrest.Reference+aggregate) : [<code>ReferenceAggregateFn</code>](#ERMrest.ReferenceAggregateFn)
     * [.displayname](#ERMrest.Reference+displayname) : <code>object</code>
-    * [.comment](#ERMrest.Reference+comment) : <code>String</code>
-    * [.commentDisplay](#ERMrest.Reference+commentDisplay) : <code>String</code>
+    * [.comment](#ERMrest.Reference+comment) : <code>Object</code>
     * [.uri](#ERMrest.Reference+uri) : <code>string</code>
     * [.table](#ERMrest.Reference+table) : [<code>Table</code>](#ERMrest.Table)
     * [.facetBaseTable](#ERMrest.Reference+facetBaseTable) : [<code>Table</code>](#ERMrest.Table)
@@ -6906,6 +7086,7 @@ get PathColumn object by column name
     * [.defaultExportTemplate](#ERMrest.Reference+defaultExportTemplate) : <code>string</code>
     * [.citation](#ERMrest.Reference+citation) : <code>ERMrest.Citation</code>
     * [.googleDatasetMetadata](#ERMrest.Reference+googleDatasetMetadata) : <code>ERMrest.GoogleDatasetMetadata</code>
+    * [.cascadingDeletedItems](#ERMrest.Reference+cascadingDeletedItems) : <code>Array.&lt;Object&gt;</code>
     * [.generateFacetColumns()](#ERMrest.Reference+generateFacetColumns)
     * [.validateFacetsFilters(facetAndFilters, facetObjectWrappers, searchTerm, skipMappingEntityChoices, changeLocation)](#ERMrest.Reference+validateFacetsFilters)
     * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
@@ -6923,7 +7104,7 @@ get PathColumn object by column name
     * [.getAggregates(aggregateList)](#ERMrest.Reference+getAggregates) ⇒ <code>Promise</code>
     * [.setSamePaging(page)](#ERMrest.Reference+setSamePaging) ⇒ [<code>Reference</code>](#ERMrest.Reference)
     * [.getColumnByName(name)](#ERMrest.Reference+getColumnByName) ⇒ [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)
-    * [.generateColumnsList(tuple)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
+    * [.generateColumnsList(tuple, columnsList, dontChangeReference, skipLog)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
     * [.generateActiveList([tuple])](#ERMrest.Reference+generateActiveList) ⇒ <code>Object</code>
     * [._getReadPath(useEntity, getTRS, getTCRS, getUnlinkTRS)](#ERMrest.Reference+_getReadPath) : <code>Object</code>
         * [~processSortObject()](#ERMrest.Reference+_getReadPath..processSortObject)
@@ -6982,15 +7163,8 @@ displayname.value has the value
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+comment"></a>
 
-#### reference.comment : <code>String</code>
+#### reference.comment : <code>Object</code>
 The comment for this reference.
-
-**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
-<a name="ERMrest.Reference+commentDisplay"></a>
-
-#### reference.commentDisplay : <code>String</code>
-The comment display property for this reference.
-can be either "tooltip" or "inline"
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+uri"></a>
@@ -7296,6 +7470,12 @@ In the future we might also want to generate citation based on page and not nece
 #### reference.googleDatasetMetadata : <code>ERMrest.GoogleDatasetMetadata</code>
 If annotation is defined and has the required attributes, will return
 a Metadata object
+
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+cascadingDeletedItems"></a>
+
+#### reference.cascadingDeletedItems : <code>Array.&lt;Object&gt;</code>
+The related reference or tables that might be deleted as a result of deleting the current table.
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+generateFacetColumns"></a>
@@ -7642,7 +7822,7 @@ Will throw an error if
 
 <a name="ERMrest.Reference+generateColumnsList"></a>
 
-#### reference.generateColumnsList(tuple) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
+#### reference.generateColumnsList(tuple, columnsList, dontChangeReference, skipLog) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
 Generates the list of visible columns
 The logic is as follows:
 
@@ -7695,6 +7875,9 @@ NOTE:
 | Param | Type | Description |
 | --- | --- | --- |
 | tuple | [<code>Tuple</code>](#ERMrest.Tuple) | the data for the current refe |
+| columnsList | <code>Array.&lt;Object&gt;</code> | if passed, we will skip the annotation and heuristics and use this list instead. |
+| dontChangeReference | <code>boolean</code> | whether we should mutate the reference or just return the generated list. |
+| skipLog | <code>boolean</code> | whether we should skip logging the warning messages |
 
 <a name="ERMrest.Reference+generateActiveList"></a>
 
@@ -8260,6 +8443,19 @@ escape markdown characters
  str
 {{/encodeFacet}}
 
+or
+
+{{encodeFacet obj}}
+
+or
+
+{{encodeFacet str}}
+
+This is order of checking syntax (first applicaple rule):
+- first see if the block syntax with str inside it is used or not
+- if the input is an object we will encode it
+- try encoding as string (will return empty string if it wasn't a string)
+
 **Kind**: global function  
 **Returns**: encoded facet string that can be used in url  
 <a name="formatDate"></a>
@@ -8276,6 +8472,10 @@ escape markdown characters
  JSON Object
 {{/jsonStringify}}
 
+or
+
+{{#jsonStringify obj}}{{/jsonStringify}}
+
 **Kind**: global function  
 **Returns**: string representation of the given JSON object  
 <a name="replace"></a>
@@ -8284,6 +8484,8 @@ escape markdown characters
 {{#replace substr newSubstr}}
  string
 {{/replace}}
+
+{{replace value regexp flags="ig"}}
 
 **Kind**: global function  
 **Returns**: replaces each match of the regexp with newSubstr  
@@ -8294,6 +8496,8 @@ escape markdown characters
   .. content
 {{/if}}
 
+{{regexMatch value regexp flags="i"}}
+
 **Kind**: global function  
 **Returns**: boolean if the value matches the regexp  
 <a name="regexFindFirst"></a>
@@ -8303,6 +8507,8 @@ escape markdown characters
   {{this}}
 {{/each}}
 
+{{regexFindFirst value regexp flags="i"}}
+
 **Kind**: global function  
 **Returns**: first string from value that matches the regular expression or empty string  
 <a name="regexFindAll"></a>
@@ -8311,6 +8517,8 @@ escape markdown characters
 {{#each (regexFindAll value regexp)}}
   {{this}}
 {{/each}}
+
+{{regexFindFirst value regexp flags="ig"}}
 
 **Kind**: global function  
 **Returns**: array of strings from value that match the regular expression or  
@@ -8325,20 +8533,14 @@ escape markdown characters
 **Returns**: string representation of the given JSON object  
 <a name="humanizeBytes"></a>
 
-## humanizeBytes(value, mode, precision) ⇒
+## humanizeBytes() ⇒
 {{humanizeBytes value }}
-{{humanizeBytes value mode }}
-{{humanizeBytes value mode precision}}
+{{humanizeBytes value mode='si' }}
+{{humanizeBytes value precision=4}}
+{{humanizeBytes value tooltip=true }}
 
 **Kind**: global function  
 **Returns**: formatted string of `value` with corresponding `mode`  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| value | <code>\*</code> | the value |
-| mode | <code>string</code> | mode can be `si`, `binary`, or `raw`. |
-| precision | <code>number</code> | An integer specifying the number of significant digits. |
-
 <a name="appLinkFn"></a>
 
 ## appLinkFn : <code>function</code>

@@ -18,7 +18,7 @@ exports.execute = function (options) {
 
         var reference, page, tuples;
 
-        var chaiseURL = "https://dev.isrd.isi.edu/chaise";
+        var chaiseURL = "https://example.org/chaise";
         var recordURL = chaiseURL + "/record";
         var record2URL = chaiseURL + "/record-two";
         var viewerURL = chaiseURL + "/viewer";
@@ -63,7 +63,7 @@ exports.execute = function (options) {
                                         '<p><img src="http://example.com/4000.png" alt="image" class="-chaise-post-load"></p>\n',
                                         '<p><img src="https://www.google.com/4000.png" alt="image with size" width="400" height="400" class="-chaise-post-load"></p>\n',
                                         '<p><a href="https://www.google.com" download="">download link</a></p>\n',
-                                        '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 300px;"><figcaption class="embed-caption">Hank caption</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="http://example.com/iframe"><span class="fullscreen-icon"></span> Full screen</a></div></div><iframe src="http://example.com/iframe" width="300"></iframe></figure>',
+                                        '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 300px;"><figcaption class="embed-caption">Hank caption</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="http://example.com/iframe"><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a></div></div><iframe src="http://example.com/iframe" width="300"></iframe></figure>',
                                         '<p><strong>date is :</strong></p>\n',
                                         '<p><strong>Name is :</strong> Hank<br>\n<strong>date is :</strong></p>\n',
                                         '<code>GATCGATCGC GTATT</code>',
@@ -86,7 +86,7 @@ exports.execute = function (options) {
                                 '<p><img src="http://example.com/4001.png" alt="image" class="-chaise-post-load"></p>\n',
                                 '<p><img src="/4001.png" alt="image with size" width="400" height="400" class="-chaise-post-load"></p>\n',
                                 '<p><a href="" download="">download link</a></p>\n',
-                                '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 300px;"><figcaption class="embed-caption">Harold caption</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="http://example.com/iframe"><span class="fullscreen-icon"></span> Full screen</a></div></div><iframe src="http://example.com/iframe" width="300"></iframe></figure>',
+                                '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 300px;"><figcaption class="embed-caption">Harold caption</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="http://example.com/iframe"><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a></div></div><iframe src="http://example.com/iframe" width="300"></iframe></figure>',
                                 '<p><strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
                                 '<p><strong>Name is :</strong> Harold<br>\n<strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
                                 '',
@@ -155,7 +155,7 @@ exports.execute = function (options) {
                                 '<p><img src="http://example.com/4004.png" alt="image" class="-chaise-post-load"></p>\n',
                                 '<p><img src="/4004.png" alt="image with size" width="400" height="400" class="-chaise-post-load"></p>\n',
                                 '<p><a href="" download="">download link</a></p>\n',
-                                '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 300px;"><figcaption class="embed-caption">weird &amp; HTML &lt;  caption</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="http://example.com/iframe"><span class="fullscreen-icon"></span> Full screen</a></div></div><iframe src="http://example.com/iframe" width="300"></iframe></figure>',
+                                '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 300px;"><figcaption class="embed-caption">weird &amp; HTML &lt;  caption</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="http://example.com/iframe"><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a></div></div><iframe src="http://example.com/iframe" width="300"></iframe></figure>',
                                 '<p><strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
                                 '<p><strong>Name is :</strong> weird &amp; HTML &lt;<br>\n<strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
                                 '',
@@ -178,7 +178,7 @@ exports.execute = function (options) {
                                 '<p><img src="http://example.com/4005.png" alt="image" class="-chaise-post-load"></p>\n',
                                 '<p><img src="/4005.png" alt="image with size" width="400" height="400" class="-chaise-post-load"></p>\n',
                                 '<p><a href="" download="">download link</a></p>\n',
-                                '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 300px;"><figcaption class="embed-caption">&lt;a href=‘javascript:alert();’&gt;&lt;/a&gt; caption</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="http://example.com/iframe"><span class="fullscreen-icon"></span> Full screen</a></div></div><iframe src="http://example.com/iframe" width="300"></iframe></figure>',
+                                '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 300px;"><figcaption class="embed-caption">&lt;a href=‘javascript:alert();’&gt;&lt;/a&gt; caption</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="http://example.com/iframe"><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a></div></div><iframe src="http://example.com/iframe" width="300"></iframe></figure>',
                                 '<p><strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
                                 '<p><strong>Name is :</strong> &lt;a href=\'javascript:alert();\'&gt;&lt;/a&gt;<br>\n<strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
                                 '',
@@ -201,7 +201,7 @@ exports.execute = function (options) {
                                 '<p><img src="http://example.com/4006.png" alt="image" class="-chaise-post-load"></p>\n',
                                 '<p><img src="/4006.png" alt="image with size" width="400" height="400" class="-chaise-post-load"></p>\n',
                                 '<p><a href="" download="">download link</a></p>\n',
-                                '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 300px;"><figcaption class="embed-caption">&lt;script&gt;alert();&lt;/script&gt; caption</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="http://example.com/iframe"><span class="fullscreen-icon"></span> Full screen</a></div></div><iframe src="http://example.com/iframe" width="300"></iframe></figure>',
+                                '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 300px;"><figcaption class="embed-caption">&lt;script&gt;alert();&lt;/script&gt; caption</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="http://example.com/iframe"><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a></div></div><iframe src="http://example.com/iframe" width="300"></iframe></figure>',
                                 '<p><strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
                                 '<p><strong>Name is :</strong> &lt;script&gt;alert();&lt;/script&gt;<br>\n<strong>This is some markdown</strong> with some <code>code</code> and a <a href="http://www.example.com">link</a></p>\n',
                                 '<code>GATCGATCGC GTATT</code>',
@@ -264,22 +264,22 @@ exports.execute = function (options) {
                 var rowValues = testObjects[key].expectedValue;
                 switch (key) {
                     case "test2":
-                        rowValues[12] = '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/RID=' + getRID(1) + '" class="class-10">4000 , 4001</a></p>\n';
+                        rowValues[12] = '<p><a href="https://example.org/chaise/record/reference_schema:table_w_composite_key/RID=' + getRID(1) + '" class="class-10">4000 , 4001</a></p>\n';
                         break;
                     case "test3":
-                        rowValues[12] = '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/RID=' + getRID(2) + '" class="class-20">4000 , 4002</a></p>\n';
+                        rowValues[12] = '<p><a href="https://example.org/chaise/record/reference_schema:table_w_composite_key/RID=' + getRID(2) + '" class="class-20">4000 , 4002</a></p>\n';
                         break;
                     case "test4":
-                        rowValues[12] = '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/RID=' + getRID(3) + '" class="class-30">4000 , 4003</a></p>\n';
+                        rowValues[12] = '<p><a href="https://example.org/chaise/record/reference_schema:table_w_composite_key/RID=' + getRID(3) + '" class="class-30">4000 , 4003</a></p>\n';
                         break;
                     case "test5":
-                        rowValues[12] = '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/RID=' + getRID(4) + '" class="class-40">4001 , 4002</a></p>\n';
+                        rowValues[12] = '<p><a href="https://example.org/chaise/record/reference_schema:table_w_composite_key/RID=' + getRID(4) + '" class="class-40">4001 , 4002</a></p>\n';
                         break;
                     case "test6":
-                        rowValues[12] = '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/RID=' + getRID(5) + '" class="class-50">4002 , 4000</a></p>\n';
+                        rowValues[12] = '<p><a href="https://example.org/chaise/record/reference_schema:table_w_composite_key/RID=' + getRID(5) + '" class="class-50">4002 , 4000</a></p>\n';
                         break;
                     case "test7":
-                        rowValues[12] = '<p><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:table_w_composite_key/RID=' + getRID(6) + '" class="class-60">4000 , 4000</a></p>\n';
+                        rowValues[12] = '<p><a href="https://example.org/chaise/record/reference_schema:table_w_composite_key/RID=' + getRID(6) + '" class="class-60">4000 , 4000</a></p>\n';
                         break;
                 }
             }

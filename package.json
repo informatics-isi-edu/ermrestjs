@@ -26,8 +26,8 @@
     "uglify-js": "3.9.2"
   },
   "devDependencies": {
-    "@isrd-isi-edu/ermrest-data-utils": "0.0.2",
-    "axios": "0.25.0",
+    "@isrd-isi-edu/ermrest-data-utils": "0.0.5",
+    "axios": "1.6.0",
     "buffer-slice": "0.0.1",
     "file-api": "^0.10.4",
     "handlebars": "4.7.7",

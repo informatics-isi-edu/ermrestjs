@@ -1,0 +1,108 @@
+<!-- This is the template for the input_iframe integration -->
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>Input iframe template</title>
+  <script>
+
+    /**
+     * The callback that will send data back to chaise
+     *
+     * - You can show alerts in the popup by calling the `showAlert` function. This is useful if you want to
+     *   show some errors or warning to the users.
+     * - If a field is an asset in chaise, you need to send a JavaScript File object for it. For instance:
+     *     ```
+     *     const blob = new Blob([fileContent], { type: 'application/json' });
+     *     const file = new File([blob], 'input_iframe.json', { type: 'application/json' });
+     *     ```
+     * - In the end, this function should send the data to chaise like the following:
+     *     ```
+     *     dispatchMessage('submit-data', submittedData);
+     *     ```
+     *   Where `submittedData` is the data that chaise expects.
+     */
+    const submitData = () => {
+      // TODO
+    }
+
+    /**
+     * The callback to configure the iframe based on the data that chaise sends.
+     * Call `dataReady()` when iframe is ready. This will signal to chaise to hide the spinner.
+     */
+    const configureIframe = (existingValue) => {
+      // TODO
+    }
+
+    /**
+     * should be called when iframe's data is ready
+     */
+    const dataReady = () => {
+      dispatchMessage('iframe-data-ready');
+
+      // TODO
+      // depending on your implementation, you might need to add some logic for when iframe is ready.
+      // For example if you're showing an spinner inside the app, you should remove it here.
+    }
+
+    // ------------------------------- general functions --------------------------------- //
+
+    /**
+     * show an alert in the popup
+     * @param {'error'|'warning'|'success'|'info'} type type of the alert
+     * @param {string} message the message that will be displayed
+     */
+    const showAlert = (type, message) => {
+      dispatchMessage('show-alert', { type: type, message: message });
+    }
+
+    /**
+     * send a message to chaise. The available messages are:
+     *  - 'iframe-ready': When iframe is loaded and chaise can send data to it.
+     *  - 'iframe-data-ready': When iframe has fully loaded all data and chaise should stop showing the spinner.
+     *  - 'show-alert': for showing alerts in chaise.
+     *  - 'submit-data': for submitting data to chaise.
+     * @param {string} type the message type
+     * @param {object?} data the data (could be undefined)
+     * @returns
+     */
+    const dispatchMessage = (type, content) => {
+      if (!window.parent) {
+        if (content.message) {
+          console.log(content.message);
+        }
+        return;
+      }
+      window.parent.postMessage({ type: type, content: content }, window.location.origin);
+    }
+
+    /**
+     * recieve messages
+     */
+    window.addEventListener('message', (event) => {
+      if (event.origin !== window.location.origin) return;
+      const type = event.data.type;
+      const content = event.data.content;
+
+      switch (type) {
+        case 'initialize-iframe':
+          configureIframe(content);
+          break;
+      }
+
+    });
+
+    // let the parent know that the iframe is loaded and ready to recieve messages
+    window.addEventListener('DOMContentLoaded', () => {
+      dispatchMessage('iframe-ready');
+    });
+
+  </script>
+</head>
+
+<body>
+  <!-- the body of the app  -->
+ </body>
+
+</html>

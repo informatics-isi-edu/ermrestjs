@@ -214,15 +214,15 @@ node test/jasmine-runner.js
 
 ### How To Get Your AUTH_COOKIE
 
-1. Open up [https://dev.isrd.isi.edu/chaise/search/](https://dev.isrd.isi.edu/chaise/search/) website.
+1. Open up [https://dev.derivacloud.org/](https://dev.derivacloud.org/) website.
 2. Login. The account that you are using must have delete and create access. We use this cookie to create and delete catalogs.
 3. Open the Developer tools in your browser.
 4. Go to the console section and write `$.cookie("webauthn")`.
-6. voilà! :satisfied:
+5. voilà! :satisfied:
 
 ### Sample Enviroment Variables
 ```sh
-export ERMREST_URL="https://dev.isrd.isi.edu/ermrest" # No trailing `/`
+export ERMREST_URL="https://dev.derivacloud.org/ermrest" # No trailing `/`
 export AUTH_COOKIE="webauthn=PutYourCookieHere;"; # You have to put `webauthn=` at the beginging and `;` at the end.
 export RESTRICTED_AUTH_COOKIE="webauthn=AnotherCookie;"
 ```

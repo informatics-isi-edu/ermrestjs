@@ -144,6 +144,10 @@
     });
 
     module._nonSortableTypes = [
+        /**
+         * sorting json and jsonb columns is expensive and doesn't produce a meaningful sort. that's why we're marking
+         * these columns as non-sortable
+         */
         "json", "jsonb"
     ];
 
@@ -167,6 +171,8 @@
     module._facetUnsupportedTypes = [
         "json"
     ];
+
+    module._foreignKeyInputModes = ['facet-search-popup', 'simple-search-dropdown'];
 
     module._facetUXModes = Object.freeze({
         CHOICE: "choices",
@@ -307,6 +313,7 @@
         INVALID_SOURCEKEY: "given object is invalid. The defined `sourcekey` is invalid.",
         INVALID_VIRTUAL_NO_NAME: "`markdown_name` is required when `source` and `sourcekey` are undefiend.",
         INVALID_VIRTUAL_NO_VALUE: "`display.markdown_pattern` is required when `source` and `sourcekey` are undefiend.",
+        INVALID_BOTH_SOURCE: 'given object is invalid. only one of `source` or `sourcekey` are allowed not both.',
         DUPLICATE_COLUMN: "ignoring duplicate column definition.",
         DUPLICATE_KEY: "ignoring duplicate key definition.",
         DUPLICATE_FK: "ignoring duplicate foreign key definition.",
@@ -327,7 +334,8 @@
         INVALID_COLUMN_IN_SOURCE_PATH: "end column in the path is not valid (not available in the end table)",
         NO_INBOUND_IN_NON_DETAILED: "inline table is not valid in this context.",
         FILTER_NOT_ALLOWED: "filter in source is only supported in `filter` context of visible-columns",
-        FILTER_NO_PATH_NOT_ALLOWED: "filter in source is not supported with local columns or all-outbound paths."
+        FILTER_NO_PATH_NOT_ALLOWED: "filter in source is not supported with local columns or all-outbound paths.",
+        USED_IN_IFRAME_INPUT: 'the column already used in another column mapping.'
     });
 
     module._permissionMessages = Object.freeze({
@@ -380,7 +388,8 @@
         TEXT_SEARCH: "::ts::"
     });
 
-    module._sourceDefinitionAttributes = ["source", "aggregate", "entity", "self_link"];
+    // the attributes that cannot be changed when using sourcekey
+    module._sourceDefinitionAttributes = ["source"];
 
     module._classNames = Object.freeze({
         externalLink: "external-link",

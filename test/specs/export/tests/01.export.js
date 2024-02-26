@@ -682,7 +682,7 @@ exports.execute = function (options) {
             it("exporter.run should return the proper response from export service", function (done) {
                 exportObj.run().then(function (response) {
                     expect(response.data.length).toBe(1);
-                    expect(response.data[0].startsWith("https://dev.isrd.isi.edu/deriva/export/bdbag/")).toBeTruthy();
+                    expect(response.data[0].includes("/deriva/export/bdbag/")).toBeTruthy();
 
                     done();
                 }).catch(function (err) {
@@ -731,7 +731,7 @@ exports.execute = function (options) {
             it("exporter.run should return the proper response from export service", function (done) {
                 exportObj.run().then(function (response) {
                     expect(response.data.length).toBe(1);
-                    expect(response.data[0].startsWith("https://dev.isrd.isi.edu/deriva/export/file/")).toBeTruthy();
+                    expect(response.data[0].includes("/deriva/export/file/")).toBeTruthy();
 
                     done();
                 }, function(error) {
@@ -781,7 +781,7 @@ exports.execute = function (options) {
             it("exporter.run should return the proper response from export service", function (done) {
                 exportObj.run().then(function (response) {
                     expect(response.data.length).toBe(1);
-                    expect(response.data[0].startsWith("https://dev.isrd.isi.edu/deriva/export/file/")).toBeTruthy();
+                    expect(response.data[0].includes("/deriva/export/file/")).toBeTruthy();
 
                     done();
                 }).catch(function (err) {
@@ -857,7 +857,7 @@ exports.execute = function (options) {
             it("exporter.run should return the proper response from export service", function (done) {
                 exportObj.run().then(function (response) {
                     expect(response.data.length).toBe(1);
-                    expect(response.data[0].startsWith("https://dev.isrd.isi.edu/deriva/export/bdbag/")).toBeTruthy();
+                    expect(response.data[0].includes("/deriva/export/bdbag/")).toBeTruthy();
 
                     done();
                 }).catch(function (err) {

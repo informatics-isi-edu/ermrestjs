@@ -8,8 +8,8 @@
         return args.reduce(reducer, first);
     };
 
-    var regexpFindAll = function (value, regexp) {
-        var regexpObj = new RegExp(regexp, 'g');
+    var regexpFindAll = function (value, regexp, flags) {
+        var regexpObj = new RegExp(regexp, flags);
         var matches = value.match(regexpObj);
 
         return matches;
@@ -45,10 +45,30 @@
              *  str
              * {{/encodeFacet}}
              *
+             * or
+             *
+             * {{encodeFacet obj}}
+             *
+             * or
+             *
+             * {{encodeFacet str}}
+             *
+             * This is order of checking syntax (first applicaple rule):
+             * - first see if the block syntax with str inside it is used or not
+             * - if the input is an object we will encode it
+             * - try encoding as string (will return empty string if it wasn't a string)
+             *
              * @returns encoded facet string that can be used in url
              */
             encodeFacet: function (options) {
-                return module.encodeFacetString(options.fn(this));
+                try {
+                    return module.encodeFacetString(options.fn(this));
+                } catch (exp) {
+                    if (isObjectAndNotNull(options)) {
+                        return module.encodeFacet(options);
+                    }
+                }
+                return module.encodeFacetString(options);
             },
 
             /**
@@ -70,10 +90,18 @@
              *  JSON Object
              * {{/jsonStringify}}
              *
+             * or
+             *
+             * {{#jsonStringify obj}}{{/jsonStringify}}
+             *
              * @returns string representation of the given JSON object
              */
             jsonStringify: function (options) {
-                return JSON.stringify(options.fn(this));
+                try {
+                    return JSON.stringify(options.fn(this));
+                } catch (exp) {
+                    return JSON.stringify(options);
+                }
             },
 
             /**
@@ -81,11 +109,16 @@
              *  string
              * {{/replace}}
              *
+             * {{replace value regexp flags="ig"}}
+             *
              * @returns replaces each match of the regexp with newSubstr
              */
             replace: function (substr, newSubstr, options) {
-                var regexpObj = new RegExp(substr, 'g');
-
+                var flags = 'g';
+                if (options && isObjectAndNotNull(options.hash) && typeof options.hash.flags === 'string') {
+                    flags = options.hash.flags;
+                }
+                var regexpObj = new RegExp(substr, flags);
                 return options.fn(this).replace(regexpObj, newSubstr);
             },
 
@@ -94,10 +127,16 @@
              *   .. content
              * {{/if}}
              *
+             * {{regexMatch value regexp flags="i"}}
+             *
              * @returns boolean if the value matches the regexp
              */
-            regexMatch: function (value, regexp) {
-                var regexpObj = new RegExp(regexp);
+            regexMatch: function (value, regexp, options) {
+                var flags = 'g';
+                if (options && isObjectAndNotNull(options.hash) && typeof options.hash.flags === 'string') {
+                    flags = options.hash.flags;
+                }
+                var regexpObj = new RegExp(regexp, flags);
                 return regexpObj.test(value);
             },
 
@@ -106,10 +145,16 @@
              *   {{this}}
              * {{/each}}
              *
+             * {{regexFindFirst value regexp flags="i"}}
+             *
              * @returns first string from value that matches the regular expression or empty string
              */
-            regexFindFirst: function (value, regexp) {
-                var matches = regexpFindAll(value, regexp);
+            regexFindFirst: function (value, regexp, options) {
+                var flags = 'g';
+                if (options && isObjectAndNotNull(options.hash) && typeof options.hash.flags === 'string') {
+                    flags = options.hash.flags;
+                }
+                var matches = regexpFindAll(value, regexp, flags);
                 return (matches && matches[0]) || "";
             },
 
@@ -118,10 +163,16 @@
              *   {{this}}
              * {{/each}}
              *
+             * {{regexFindFirst value regexp flags="ig"}}
+             *
              * @returns array of strings from value that match the regular expression or
              */
-            regexFindAll: function (value, regexp) {
-                return regexpFindAll(value, regexp) || [];
+            regexFindAll: function (value, regexp, options) {
+                var flags = 'g';
+                if (options && isObjectAndNotNull(options.hash) && typeof options.hash.flags === 'string') {
+                    flags = options.hash.flags;
+                }
+                return regexpFindAll(value, regexp, flags) || [];
             },
 
             /**
@@ -142,17 +193,20 @@
 
             /**
              * {{humanizeBytes value }}
-             * {{humanizeBytes value mode }}
-             * {{humanizeBytes value mode precision}}
-             *
-             * @param {*} value - the value
-             * @param {string} mode - mode can be `si`, `binary`, or `raw`.
-             * @param {number} precision - An integer specifying the number of significant digits.
+             * {{humanizeBytes value mode='si' }}
+             * {{humanizeBytes value precision=4}}
+             * {{humanizeBytes value tooltip=true }}
              *
              * @returns formatted string of `value` with corresponding `mode`
              */
-            humanizeBytes: function (value, mode, precision) {
-                return module._formatUtils.humanizeBytes(value, mode, precision);
+            humanizeBytes: function (value, options) {
+                var mode, precision, tooltip;
+                if (options && isObjectAndNotNull(options.hash)) {
+                    mode = options.hash.mode;
+                    precision = options.hash.precision;
+                    tooltip = options.hash.tooltip;
+                }
+                return module._formatUtils.humanizeBytes(value, mode, precision, tooltip);
             }
 
         });

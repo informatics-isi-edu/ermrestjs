@@ -85,7 +85,7 @@ exports.execute = function (options) {
         var i, facetObj, ref;
 
         var currDate = new Date();
-        var currentDateString = options.ermRest._fixedEncodeURIComponent(currDate.getFullYear() + "-" + (currDate.getMonth()+1) + "-" + currDate.getDay());
+        var currentDateString = options.ermRest._fixedEncodeURIComponent(currDate.getFullYear() + "-" + (currDate.getMonth()+1) + "-" + currDate.getDate());
 
         var createURL = function (tableName, facet) {
             var res = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + tableName;
@@ -114,7 +114,7 @@ exports.execute = function (options) {
             expect(col.name).toBe(colName, fcName + ": colname missmatch.");
         };
 
-        var chaiseURL = "https://dev.isrd.isi.edu/chaise",
+        var chaiseURL = "https://example.org/chaise",
             recordURL = chaiseURL + "/record",
             record2URL = chaiseURL + "/record-two",
             viewerURL = chaiseURL + "/viewer",
@@ -691,7 +691,7 @@ exports.execute = function (options) {
                                             "negate": true,
                                             "and": [
                                                 {"operand_pattern": "some_non_used_value", "filter": "path_prefix_o1_col"},
-                                                {"operator": "::gt::", "filter": "date_col", "operand_pattern": "{{{$moment.year}}}-{{{$moment.month}}}-{{{$moment.day}}}"},
+                                                {"operator": "::gt::", "filter": "date_col", "operand_pattern": "{{{$moment.year}}}-{{{$moment.month}}}-{{{$moment.date}}}"},
                                             ]
                                         },
                                         "path_prefix_o1_col"
@@ -994,7 +994,7 @@ exports.execute = function (options) {
                                 },
                                 //8
                                 {
-                                    "sourcekey": "second_path_source_defnition",
+                                    "sourcekey": "second_path_source_definition",
                                     "source_domain": {
                                         "schema": "faceting_schema",
                                         "table": "secondpath_2",
@@ -1004,7 +1004,7 @@ exports.execute = function (options) {
                                 },
                                 //9
                                 {
-                                    "sourcekey": "second_path_source_defnition",
+                                    "sourcekey": "second_path_source_definition",
                                     "markdown_name": "Name 9",
                                     "source_domain": {
                                         "schema": "faceting_schema",
@@ -1049,7 +1049,7 @@ exports.execute = function (options) {
                             expectedSubMessage += "  - test2\n";
                             expectedSubMessage += "- path_to_path_prefix_o1_o1 (1 choice):\n";
                             expectedSubMessage += "  - test3\n";
-                            expectedSubMessage += "- second_path_source_defnition (2 choices):\n";
+                            expectedSubMessage += "- second_path_source_definition (2 choices):\n";
                             expectedSubMessage += "  - 213145\n";
                             expectedSubMessage += "  - 213147\n";
                             expectedSubMessage += "- Name 9 (2 choices):\n";
@@ -1281,14 +1281,27 @@ exports.execute = function (options) {
             });
 
             describe("preferredMode, ", function () {
-                it("if facet has check_presence mode in annotation and also null, should return check_presence.", function () {
-                    var newRef = mainFacets[13].addChoiceFilters([null]);
-                    expect(newRef.facetColumns[13].preferredMode).toBe("check_presence");
-                });
 
                 it('if facet has preselected choices or ranges facet, honor it.', function () {
                     expect(mainFacets[0].preferredMode).toBe("choices", "missmatch for facet index=0");
                     expect(mainFacets[1].preferredMode).toBe("ranges", "missmatch for facet index=0");
+                });
+
+                it ('null and not-null preselected choices should be ignored as they are available in all types.', () => {
+                    var newRef = mainFacets[13].addChoiceFilters([null]);
+                    expect(newRef.facetColumns[13].preferredMode).toBe("check_presence");
+
+                    newRef = mainFacets[13].addNotNullFilter();
+                    expect(newRef.facetColumns[13].preferredMode).toBe("check_presence");
+
+                    newRef = mainFacets[8].addNotNullFilter();
+                    expect(newRef.facetColumns[8].preferredMode).toBe("ranges");
+
+                    newRef = mainFacets[8].addChoiceFilters([null]);
+                    expect(newRef.facetColumns[8].preferredMode).toBe("ranges");
+
+                    newRef = mainFacets[1].addChoiceFilters([null]);
+                    expect(newRef.facetColumns[1].preferredMode).toBe("ranges");
                 });
 
                 it('if ux_mode is defined and is valid, should return it.', function () {
@@ -1364,20 +1377,45 @@ exports.execute = function (options) {
 
             describe("comment", function () {
                 it("return the comment defined on the facet.", function () {
-                    expect(mainFacets[6].comment).toBe("long text comment in facet");
+                    expect(mainFacets[6].comment).toEqual({
+                        isHTML: true,
+                        displayMode: 'tooltip',
+                        value: '<p>long text comment in facet</p>\n',
+                        unformatted: 'long text comment in facet'
+                    });
                 });
 
                 it("return empty string if the defined comment is `false`.", function () {
-                    expect(mainFacets[7].comment).toBe("", "missmatch for index=7");
-                    expect(mainFacets[10].comment).toBe("", "missmatch for index=10");
+                    expect(mainFacets[7].comment).toEqual({
+                        isHTML: false,
+                        displayMode: 'tooltip',
+                        value: '',
+                        unformatted: ''
+                    }, "missmatch for index=7");
+                    expect(mainFacets[10].comment).toEqual({
+                        isHTML: false,
+                        displayMode: 'tooltip',
+                        value: '',
+                        unformatted: ''
+                    }, "missmatch for index=10");
                 });
 
                 it('if in scalar mode, return column\'s comment', function () {
-                    expect(mainFacets[5].comment).toBe("text comment");
+                    expect(mainFacets[5].comment).toEqual({
+                        isHTML: true,
+                        displayMode: 'tooltip',
+                        value: '<p>text comment</p>\n',
+                        unformatted: 'text comment'
+                    });
                 });
 
                 it('otherwise return table\'s comment.', function () {
-                    expect(mainFacets[11].comment).toBe("has fk to main table + has rowname");
+                    expect(mainFacets[11].comment).toEqual({
+                        isHTML: true,
+                        displayMode: 'tooltip',
+                        value: '<p>has fk to main table + has rowname</p>\n',
+                        unformatted: 'has fk to main table + has rowname'
+                    });
                 });
             });
 
@@ -2542,13 +2580,14 @@ exports.execute = function (options) {
                         );
                     });
 
-                    // sourcekey used before the prefix
+                    // sourcekey used before the prefix (also using scalar mode instead of entity)
                     describe("case 2", function () {
                         testReadAndReadPath(
                             {
                                 "and": [
                                     {
                                         "sourcekey": "path_to_path_prefix_o1_o1",
+                                        "entity": false, // just to make sure it's ignored when matching facets
                                         "choices": ["two_o1_o1"]
                                     },
                                     {

@@ -1,3 +1,5 @@
+const utils = require('./../../../utils/utilities.js');
+
 /**
  * The structure of table and contexts used:
  * main -> f1 -> f2
@@ -18,8 +20,8 @@
  * 13: same as 10 in non-entity mode with `min` aggregate (PseudoColumn)
  * 14: col - max (PseudoColumn)
  * 15: same as 8 with `array` in non entity mode
- * 16: same as 8 with `array` in entity mode
- * 17: same as 8 with `array_d` in entity with array_display ulist
+ * 16: same as 8 with `array` in entity mode (use sourcekey, array in vis-col)
+ * 17: same as 8 with `array_d` in entity with array_display ulist (use sourcekey, diff agg in vis-col)
  * 18: same as 8 with `array_d` in entity with array_display olist
  * 19: same path as 8 ending in RID with array_d and array_options
  * 20: same path as 8 ending in timestamp_col with array_d and array_options
@@ -65,8 +67,6 @@
  * 1: inbound_3_outbound_1 (association -> fk)
  */
 
- var utils = require('./../../../utils/utilities.js');
-
 
 exports.execute = function (options) {
     describe('PseudoColumn, ', function () {
@@ -88,7 +88,7 @@ exports.execute = function (options) {
         var mainEntityUriNoAggVal = options.url + "/catalog/" + catalog_id + "/entity/" +
             schemaName + ":" + tableName + "/main_table_id_col=1111;main_table_id_col=1112;main_table_id_col=1113";
 
-        var chaiseURL = "https://dev.isrd.isi.edu/chaise";
+        var chaiseURL = "https://example.org/chaise";
         var recordURL = chaiseURL + "/record";
         var record2URL = chaiseURL + "/record-two";
         var viewerURL = chaiseURL + "/viewer";
@@ -136,7 +136,7 @@ exports.execute = function (options) {
              '8siu02fMCXJ2DfB4GLv93Q', 'OLbAesieGW5dpAhzqTSzqw', 'MJVZnQ5mBRdCFPfjIOMvkA',
              "asset", "asset_filename", 'IKxB9JkO83__MmKlV0Nnow', 'wjUK75uqILcMMo85UxnPnQ',
              "$virtual-column-1", "$virtual-column-1-1", "rxU1VoEIaH0rnNoNVr0fwA",
-             "kDWbu6FLabJ84GjvcmjfYQ"
+             "up2zcsXMZsWvCSiWNXt2Kg"
         ];
 
         var detailedPseudoColumnIndices = [
@@ -161,7 +161,8 @@ exports.execute = function (options) {
                 mainRef = response;
                 mainRefDetailed = response.contextualize.detailed;
                 detailedCols = mainRefDetailed.columns;
-                mainRefEntry = response.contextualize.entry;
+                mainRefEntry = response.contextualize.entryCreate;
+                mainRefEntryEdit = response.contextualize.entryEdit;
                 mainRefCompactEntry = response.contextualize.compactEntry;
                 return options.ermRest.resolve(invalidEntityUri, {cid: "test"});
             }).then(function (response) {
@@ -174,8 +175,8 @@ exports.execute = function (options) {
 
             detailedExpectedValue = [
                 '01', '<p>01: col val 01</p>\n', '01',
-                '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:outbound_1/RID=' + utils.findEntityRID(options, schemaName, 'outbound_1', 'id','01') + '">01</a>',
-                '<p>01: 10</p>\n', '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:outbound_1_outbound_1/RID=' + utils.findEntityRID(options, schemaName, 'outbound_1_outbound_1', 'id', '01') + '">01</a>',
+                '<a href="https://example.org/chaise/record/pseudo_column_schema:outbound_1/RID=' + utils.findEntityRID(options, schemaName, 'outbound_1', 'id','01') + '">01</a>',
+                '<p>01: 10</p>\n', '<a href="https://example.org/chaise/record/pseudo_column_schema:outbound_1_outbound_1/RID=' + utils.findEntityRID(options, schemaName, 'outbound_1_outbound_1', 'id', '01') + '">01</a>',
                 '01', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '<p>01 virtual value 01</p>\n', '<p>01 virtual value 1</p>\n', ''
             ];
         });
@@ -368,7 +369,7 @@ exports.execute = function (options) {
                             {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
                             {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
                             {"or": [
-                                {"filter": "RCT", "operand_pattern": "{{{$moment.year}}}-{{{$moment.month}}}-{{{$moment.day}}}", "operator": "::gt::"},
+                                {"filter": "RCT", "operand_pattern": "{{{$moment.year}}}-{{{$moment.month}}}-{{{$moment.date}}}", "operator": "::gt::"},
                                 {"filter": "RID", "operator": "::null::", "negate": true}
                             ]},
                             "id"
@@ -552,7 +553,21 @@ exports.execute = function (options) {
                     };
 
                     for (var i in expectedComments) {
-                        expect(detailedColsWTuple[i].comment).toBe(expectedComments[i],"missmatch for index=" + i);
+                        if (expectedComments[i] === '') {
+                            expect(detailedColsWTuple[i].comment).toEqual({
+                                isHTML: false,
+                                displayMode: 'tooltip',
+                                value: '',
+                                unformatted: ''
+                            }, "missmatch for index=" + i);
+                        } else {
+                            expect(detailedColsWTuple[i].comment).toEqual({
+                                isHTML: true,
+                                displayMode: 'tooltip',
+                                value: `<p>${expectedComments[i]}</p>\n`,
+                                unformatted: expectedComments[i]
+                            }, "missmatch for index=" + i);
+                        }
                     }
                 });
 
@@ -600,7 +615,12 @@ exports.execute = function (options) {
 
                 describe(".comment", function () {
                     it ("should return the defined comment.", function () {
-                        expect(detailedColsWTuple[26].comment).toBe("virtual comment", "missmatch for index=26");
+                        expect(detailedColsWTuple[26].comment).toEqual({
+                            isHTML: true,
+                            displayMode: 'tooltip',
+                            value: '<p>virtual comment</p>\n',
+                            unformatted: 'virtual comment'
+                        }, "missmatch for index=26");
                     });
 
                     it ("otherwise it should be null", function () {
@@ -714,8 +734,18 @@ exports.execute = function (options) {
 
             describe("comment, ", function () {
                 it ('if `comment` is defined, should use it.', function () {
-                    expect(detailedColsWTuple[6].comment).toBe("outbound len 2 cm", "missmatch for index=6");
-                    expect(detailedColsWTuple[21].comment).toBe("has long values", "missmatch for index=6");
+                    expect(detailedColsWTuple[6].comment).toEqual({
+                        isHTML: true,
+                        displayMode: 'tooltip',
+                        value: '<p>outbound len 2 cm</p>\n',
+                        unformatted: 'outbound len 2 cm'
+                    }, "missmatch for index=6");
+                    expect(detailedColsWTuple[21].comment).toEqual({
+                        isHTML: true,
+                        displayMode: 'tooltip',
+                        value: '<p>has long values</p>\n',
+                        unformatted: 'has long values'
+                    }, "missmatch for index=6");
                 });
 
                 it ("if it has aggregate, should append the aggregate function to the column comment.", function () {
@@ -723,16 +753,31 @@ exports.execute = function (options) {
                         'Number of inbound_2', 'Number of distinct inbound_2_outbound_1', 'Minimum id', 'Maximum col name', "List of id", "List of inbound_2", "List of distinct inbound_2"
                     ];
                     for (var i = 11; i <= 17; i++) {
-                        expect(detailedColsWTuple[i].comment).toBe(aggregateComments[i-11], "missmatch for index =" + i);
+                        expect(detailedColsWTuple[i].comment).toEqual({
+                            isHTML: false,
+                            displayMode: 'tooltip',
+                            value: aggregateComments[i-11],
+                            unformatted: aggregateComments[i-11]
+                        }, "missmatch for index =" + i);
                     }
                 });
 
                 it ("if it's in entity mode, should return the table's comment.", function () {
-                    expect(detailedColsWTuple[5].comment).toBe("outbound_1_outbound_1 comment");
+                    expect(detailedColsWTuple[5].comment).toEqual({
+                        isHTML: true,
+                        displayMode: 'tooltip',
+                        value: '<p>outbound_1_outbound_1 comment</p>\n',
+                        unformatted: 'outbound_1_outbound_1 comment'
+                    });
                 });
 
                 it ("if it's in scalar mode, should return the column's comment.", function () {
-                    expect(detailedColsWTuple[4].comment).toBe("id of outbound_1");
+                    expect(detailedColsWTuple[4].comment).toEqual({
+                        isHTML: true,
+                        displayMode: 'tooltip',
+                        value: '<p>id of outbound_1</p>\n',
+                        unformatted: 'id of outbound_1'
+                    });
                 });
             });
 
@@ -746,6 +791,33 @@ exports.execute = function (options) {
                 });
 
                 // the rest of tests are in 02.referenced_column.js
+            });
+
+            describe(".inputDisplayMode", function () {
+                var entryCols;
+                beforeAll(function () {
+                    entryCols = mainRefEntryEdit.columns;
+                });
+
+                it('should return the `selector_ux_mode` defined on the table-display annotation', function () {
+                    // table-display on outbound_2 says 'simple-search-dropdown' that overrides default ('facet-search-popup')
+                    expect(entryCols[1].display.inputDisplayMode).toBe('simple-search-dropdown', "missmatch for index=2");
+                });
+
+                it('should return the `selector_ux_mode` defined on the foreign-key annotation', function () {
+                    // foreign-key on ["pseudo_column_schema", "main_fk1"] says 'facet-search-popup' that overrides table-display 'simple-search-dropdown'
+                    expect(entryCols[2].display.inputDisplayMode).toBe('facet-search-popup', "missmatch for index=2");
+                });
+
+                it ("should return the `selector_ux_mode` defined on the source and ignore the foreign-key", function () {
+                    // source says 'facet-search-popup'that overrides foreign-key on ["pseudo_column_schema", "main_fk3"] 'simple-search-dropdown'
+                    expect(entryCols[3].display.inputDisplayMode).toBe('facet-search-popup', "missmatch for index=1");
+                });
+
+                it ("should return the default value when no `selector_ux_mode` is defined", function () {
+                    // foreign-key ["pseudo_column_schema", "main_fk4"] uses default value
+                    expect(entryCols[4].display.inputDisplayMode).toBe('facet-search-popup', "missmatch for index=1");
+                });
             })
 
             describe(".table, ", function () {
@@ -870,7 +942,7 @@ exports.execute = function (options) {
                         {"i": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
                         {"o": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
                         {"or": [
-                            {"f": "RCT", "opd": "{{{$moment.year}}}-{{{$moment.month}}}-{{{$moment.day}}}", "opr": "::gt::"},
+                            {"f": "RCT", "opd": "{{{$moment.year}}}-{{{$moment.month}}}-{{{$moment.date}}}", "opr": "::gt::"},
                             {"f": "RID", "opr": "::null::", "n": true}
                         ]},
                         "id"
@@ -941,7 +1013,7 @@ exports.execute = function (options) {
                             expect(detailedColsWTuple[5].formatPresentation(
                                 {"col": "A value", "id": "101"},
                                 "detailed"
-                            ).value).toEqual('<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:outbound_1_outbound_1/id=101">101</a>', "index=5 missmatch.");
+                            ).value).toEqual('<a href="https://example.org/chaise/record/pseudo_column_schema:outbound_1_outbound_1/id=101">101</a>', "index=5 missmatch.");
                         });
 
                         it ("should not apply the foreignkey logic if the show_foreign_key_link:false is defined.", function () {
@@ -992,7 +1064,7 @@ exports.execute = function (options) {
                     ];
 
                     inboundTwoValues = facets.map(function (facet, index) {
-                        return '<a href="https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:inbound_2/RID=' + utils.findEntityRID(options, schemaName, "inbound_2","id","0" + (index+1)) + '">0' + (index+1) + ', facet: ' + facet + '</a>'
+                        return '<a href="https://example.org/chaise/record/pseudo_column_schema:inbound_2/RID=' + utils.findEntityRID(options, schemaName, "inbound_2","id","0" + (index+1)) + '">0' + (index+1) + ', facet: ' + facet + '</a>'
                     });
                 })
 
@@ -1039,7 +1111,7 @@ exports.execute = function (options) {
 
                 it ("should handle aggregates with path prefix.", function (done) {
                     var RIDval = utils.findEntityRID(options, schemaName, "inbound_1_outbound_1_outbound_1", "id", "01");
-                    var url = "https://dev.isrd.isi.edu/chaise/record/pseudo_column_schema:inbound_1_outbound_1_outbound_1/RID=" + RIDval;
+                    var url = "https://example.org/chaise/record/pseudo_column_schema:inbound_1_outbound_1_outbound_1/RID=" + RIDval;
                     var value = '<p><a href="' + url + '">01</a></p>\n';
 
                     testGetAggregatedValue(28, value, true, done);
@@ -1249,21 +1321,7 @@ exports.execute = function (options) {
 
     function checkReferenceColumns(tesCases) {
         tesCases.forEach(function (test) {
-            var expected;
-            expect(test.ref.columns.map(function (col) {
-                // the name for pseudoColumns is a hash, this way of testing it is easier to read
-                if (col.isPathColumn) {
-                    return col.sourceObject.source;
-                }
-                if (col.isPseudo && (col.isKey || col.isForeignKey || col.isInboundForeignKey)) {
-                    if (col.isKey) {
-                        console.log("HERE: "+ col.key.colset.columns[0].name);
-                    }
-
-                    return col._constraintName;
-                }
-                return  col.name;
-            })).toEqual(test.expected, test.message ? test.message : "checkReferenceColumns");
+            utils.checkColumnList(test.ref.columns, test.expected, test.message ? test.message : "checkReferenceColumns");
         });
     }
 

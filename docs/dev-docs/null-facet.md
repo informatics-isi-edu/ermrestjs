@@ -28,7 +28,7 @@ Based on this, we will offer null option if:
 
 Assume that the following is the ERD of the database:
 
-![image](https://dev.isrd.isi.edu/~ashafaei/wiki-images/check_presence_right_join.png)
+![image](https://github.com/informatics-isi-edu/ermrestjs/raw/master/docs/resources/faceting/check-presence-right-join.png)
 
 And we're navigating to recordset for table `A` which is showing three facets for table `C`, `E`, and `F`. Assume that we want to generate the request when the following filters are selected for each facet:
 
@@ -59,19 +59,19 @@ These will be the requests that we should send to ermrest:
 
 To better understand this, in the following you can see a more complicated example. In here, we tried to summarize the queries that ERMrestJS will generate in a facet within facet UX.
 
-![](https://dev.isrd.isi.edu/~ashafaei/wiki-images/null_facet_example.png)
+![](https://github.com/informatics-isi-edu/ermrestjs/raw/master/docs/resources/faceting/null-facet-example.png)
 
 
 ### Summary
 
 Assuming that the following is a general url syntax (F means the `<facets>/<filter>/<cfacets>` combination):
 
-![](https://dev.isrd.isi.edu/~ashafaei/wiki-images/PR736_01.png)
+![](https://github.com/informatics-isi-edu/ermrestjs/raw/master/docs/resources/faceting/null-facet-parse-01.png)
 
 When we're parsing the facets, we need to add alias to the tables so we can use that alias in the facets. So the actual request to ermrest would be:
 
-![](https://dev.isrd.isi.edu/~ashafaei/wiki-images/PR736_02.png)
+![](https://github.com/informatics-isi-edu/ermrestjs/raw/master/docs/resources/faceting/null-facet-parse-02.png)
 
 Now if the `Fi` has actually has a null filter, the url should start with its parsed value which will include the right join to the table before it. And then url would be in the following format:
 
-![](https://dev.isrd.isi.edu/~ashafaei/wiki-images/PR736_03.png)
+![](https://github.com/informatics-isi-edu/ermrestjs/raw/master/docs/resources/faceting/null-facet-parse-03.png)

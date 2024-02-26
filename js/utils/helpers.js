@@ -104,6 +104,15 @@
         return typeof obj === "object" && obj !== null;
     };
 
+    /**
+     * Returns true if given parameter is object and doesn't have any items.
+     * @param  {*} obj
+     * @return {boolean}
+     */
+    var isEmptyArray = function (obj) {
+        return Array.isArray(obj) && obj.length === 0;
+    };
+
     var isStringAndNotEmpty = function (obj) {
         return typeof obj === "string" && obj.length > 0;
     };
@@ -142,6 +151,36 @@
      */
     var isInteger = function (x) {
         return (typeof x === 'number') && (x % 1 === 0);
+    };
+
+    /**
+     * can be used to compare the "position columns" of colsets.
+     *
+     * @private
+     * @param {Array} a an array of sorted integer values
+     * @param {Array} b an array of sorted integer values
+     * @param {boolean?} greater - whether we should do greater check instead of greater equal
+     *
+     * return,
+     *  -  1 if the position in the first argument are before the second one.
+     *  - -1 if the other way around.
+     *  - 0 if identical
+     * Notes:
+     * - both arguments are array and sorted ascendingly
+     * - if greater argument is true, we're doing a greater check so
+     *   in the identical case this function will return -1.
+     */
+    var compareColumnPositions = function (a, b, greater) {
+        for (var i = 0; i < a.length && i < b.length ; i++) {
+            if (a[i] !== b[i]) {
+                return a[i] > b[i] ? 1 : -1;
+            }
+        }
+        // all the columns were identical and only one has extra
+        if (a.length !== b.length) {
+            return a.length > b.length ? 1 : -1;
+        }
+        return greater ? -1 : 0;
     };
 
     var verifyClientConfig = function () {
@@ -267,7 +306,7 @@
      */
     module._shallowCopyExtras = function (copyTo, copyFrom, enforcedList) {
         for (var key in copyFrom) {
-            if (copyFrom.hasOwnProperty(key) && (!copyTo.hasOwnProperty(key) || enforcedList.indexOf(key) !== -1)) {
+            if (copyFrom.hasOwnProperty(key) && (!copyTo.hasOwnProperty(key) || (Array.isArray(enforcedList) && enforcedList.indexOf(key) !== -1))) {
                 copyTo[key] = copyFrom[key];
             }
         }
@@ -792,30 +831,45 @@
     };
 
     /**
-     * Given the source object, will return the comment that should be used.
-     * - if sourceObject.comment=false: use empty string.
-     * - if sourceObject.comment=string: use the defined value
-     * - otherwise return null
-     * TODO should be renamed or changed. the name doesn't make sense.
-     * (I wanted to use _processSourceObjectComment but called it this way accidentally)
+     * Given the source object and default comment props, will return the comment that should be used.
      * @private
      */
-    _processSourceObjectColumn = function (sourceObject) {
-        if (!sourceObject) return null;
-        return _processModelComment(sourceObject.comment);
+    _processSourceObjectComment = function (sourceObject, defaultComment, defaultCommentRenderMd, defaultDisplayMode) {
+        if (sourceObject && _isValidModelComment(sourceObject.comment)) {
+            defaultComment = sourceObject.comment;
+        }
+        if (sourceObject && _isValidModelCommentDisplay(sourceObject.comment_display)) {
+            defaultDisplayMode = sourceObject.comment_display;
+        }
+        if (sourceObject && typeof sourceObject.comment_render_markdown === 'boolean') {
+            defaultCommentRenderMd = sourceObject.comment_render_markdown;
+        }
+        return _processModelComment(defaultComment, defaultCommentRenderMd, defaultDisplayMode);
     };
 
     /**
-     * Given an input string for the comment, will return the actual strng that should be used.
-     *   - if =false : returns empty string.
-     *   - if =string: returns the string.
-     *   - otherwise returns null
+     * Turn a comment annotaiton/string value into a proper comment object.
+     * @param {string|null|false} comment
+     * @param {boolean?} isMarkdown whether the given comment should be rendered as markdown (default: true).
+     * @param {string} displayMode the display mode of the comment (inline, tooltip)
      * @private
      */
-    _processModelComment = function (comment) {
-        if (comment === false) return "";
-        if (typeof comment === "string") return comment;
-        return null;
+    _processModelComment = function (comment, isMarkdown, displayMode) {
+        if (comment !== false && typeof comment !== 'string') {
+            return null;
+        }
+
+        var usedDisplayMode = _isValidModelCommentDisplay(displayMode) ? displayMode : module._commentDisplayModes.tooltip;
+        if (comment === false) {
+            return { isHTML: false, unformatted: '', value: '', displayMode: usedDisplayMode };
+        }
+
+        return {
+            isHTML: isMarkdown !== false,
+            unformatted: comment,
+            value: (isMarkdown !== false && comment.length > 0) ? module.renderMarkdown(comment) : comment,
+            displayMode: usedDisplayMode
+        };
     };
 
     /**
@@ -1960,11 +2014,12 @@
          * 'raw' will return the "formatted" value.
          *
          * @param {*} value
-         * @param {string} mode either `raw`, `si`, or `binary` (if invalid or missing, 'si' will be used)
-         * @param {number} precision An integer specifying the number of digits to be displayed
+         * @param {?string} mode either `raw`, `si`, or `binary` (if invalid or missing, 'si' will be used)
+         * @param {?number} precision An integer specifying the number of digits to be displayed
          *                           (if invalid or missing, `3` will be used by default.)
+         * @param {?boolean} withTooltip whether we should return it with tooltip or just the value.
          */
-        humanizeBytes: function (value, mode, precision) {
+        humanizeBytes: function (value, mode, precision, withTooltip) {
             // we cannot use parseInt here since it won't allow larger numbers.
             var v = parseFloat(value);
              mode = ['raw', 'si', 'binary'].indexOf(mode) === -1 ? 'si' : mode;
@@ -1996,7 +2051,14 @@
             // we don't want to truncate the value, so we should set a minimum
             var minP = mode === "si" ? 3 : 4;
 
-            return (u ? module._toPrecision(v, precision, minP) : v) + ' ' + units[u];
+            var res = (u ? module._toPrecision(v, precision, minP) : v) + ' ' + units[u];
+            if (typeof withTooltip === 'boolean' && withTooltip && u > 0) {
+                var numBytes = module._formatUtils.printInteger(Math.pow(divisor, u));
+                var tooltip = module._formatUtils.printInteger(value);
+                tooltip += ' bytes (1 ' + units[u] + ' = ' + numBytes + ' bytes)';
+                res = ':span:' + res + ':/span:{data-chaise-tooltip="' + tooltip + '"}';
+            }
+            return res;
         }
     };
 
@@ -2308,7 +2370,7 @@
                             var contentsWidthStyle = 'style="width: ' + captionContainerWidth + '"';
 
                             // fullscreen button html that is attached to the top right corner of the iframe
-                            var buttonHtml = '<div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="' + iframeSrc + '"' + fullscreenTarget + '><span class="fullscreen-icon"></span> Full screen</a></div>';
+                            var buttonHtml = '<div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="' + iframeSrc + '"' + fullscreenTarget + '><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a></div>';
 
                             // Encapsulate the captionHTML inside a figcaption tag with class embed-caption
                             if (posTop) {
@@ -3448,8 +3510,8 @@
             res = table ? table._getNullValue(context) : "";
             return {isHTML: false, value: res, unformatted: res};
         }
-
-        return {isHTML: true, value: module.renderMarkdown(res, false), unformatted: res};
+        var isInline = options && options.isInline ? true : false;
+        return {isHTML: true, value: module.renderMarkdown(res, isInline), unformatted: res};
     };
 
     // module._constraintNames[catalogId][schemaName][constraintName] will return an object.

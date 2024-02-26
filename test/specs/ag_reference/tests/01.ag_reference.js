@@ -31,6 +31,7 @@ exports.execute = function (options) {
         var ref, refWithModifiers, refColumnOrder, refColumnOrderSorted, unicodeRef;
         var loc, locWithModifiers, unicodeLoc;
         var keyColVisible, keyColVisible2, keyColInvisible, keyColOrder, keyColOrder2, aggColVisible, aggColInvisible, aggColNoSort, unicodeID, unicodeCol;
+        var mdComment = { isHTML: true, value: '<p><strong>comment</strong></p>\n', unformatted: '**comment**', displayMode: 'tooltip' };
 
         var checkLocation = function (objName, obj, path) {
             expect(obj).toBeDefined(objName + " was not defined.");
@@ -44,7 +45,15 @@ exports.execute = function (options) {
             expect(obj.term).toBe(term, objName + " term missmatch");
             expect(obj.displayname.value).toBe(displayname, objName + " displayname missmatch");
             expect(obj.type.name).toBe(typeName, objName + " type missmatch");
-            expect(obj.comment).toBe(comment, objName + " comment missmatch");
+            if (typeof comment === 'string') {
+                comment = {
+                    isHTML: false,
+                    value: comment,
+                    unformatted: comment,
+                    displayMode: 'tooltip'
+                }
+            }
+            expect(obj.comment).toEqual(comment, objName + " comment missmatch");
             expect(obj.sortable).toBe(sortable, objName + " sortable missmatch");
         };
 
@@ -152,7 +161,7 @@ exports.execute = function (options) {
                 );
 
                 keyColInvisible = new options.ermRest.AttributeGroupColumn(
-                    "alias", "invis_col", null, "invisible column", "text", "", true, false
+                    "alias", "invis_col", null, "invisible column", "text", mdComment, true, false
                 );
 
 
@@ -184,7 +193,7 @@ exports.execute = function (options) {
 
                 checkColumn("keyColVisible with base column", keyColVisible2, "col_w_pre_format", "col_w_pre_format", "boolean", null, true);
 
-                checkColumn("keyColInvisible", keyColInvisible, "invis_col", "invisible column", "text", "", true);
+                checkColumn("keyColInvisible", keyColInvisible, "invis_col", "invisible column", "text", mdComment, true);
 
                 checkColumn("aggColVisible", aggColVisible, "cnt(*)", "count", "int4", "", true);
 
@@ -558,7 +567,7 @@ exports.execute = function (options) {
                         });
 
                         describe("uniqueId, ", function () {
-                            it ("should return an string based on raw values of shortest key.", function () {
+                            it ("should return a string based on raw values of shortest key.", function () {
                                 expect(tuples[0].uniqueId).toBe("**test2**_true");
                             });
 

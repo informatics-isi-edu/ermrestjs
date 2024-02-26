@@ -39,7 +39,7 @@ To understand the impact of different annotations and heuristics, it is helpful 
 
 The following sections are based on this Entity Relationship diagram, and also the `table-alternatives` annotation on `base` table:
 
-![ER Diagram 01](https://dev.isrd.isi.edu/~ashafaei/wiki-images/alt_in_main_2.png)
+![ER Diagram 01](https://github.com/informatics-isi-edu/ermrestjs/raw/master/docs/resources/table-alt/alt_in_main_2.png)
 
 ```json
 "tag:isrd.isi.edu,2016:table-alternatives": {
@@ -91,7 +91,7 @@ If the annotation was not defined, ermrsetjs will apply the following heuristics
 
 ##### Example: scenario 2.1---Heuristics, without `detailed` alternative table
 
-![ER Diagram 01](https://dev.isrd.isi.edu/~ashafaei/wiki-images/alt_in_main_1.png)
+![ER Diagram 01](https://github.com/informatics-isi-edu/ermrestjs/raw/master/docs/resources/table-alt/alt_in_main_1.png)
 
 ```json
 "tag:isrd.isi.edu,2016:table-alternatives": {
@@ -104,7 +104,7 @@ In our example for 2.1, with no facet annotation, you will see two facets:  `com
 
 ##### Example: scenario 2.2---Heuristics, with `detailed` alternative table
 
-![ER Diagram 01](https://dev.isrd.isi.edu/~ashafaei/wiki-images/alt_in_main_2.png)
+![ER Diagram 01](https://github.com/informatics-isi-edu/ermrestjs/raw/master/docs/resources/table-alt/alt_in_main_2.png)
 
 ```json
 "tag:isrd.isi.edu,2016:table-alternatives": {
@@ -128,7 +128,7 @@ If the wrong tables are used in the facet list, this might cause a problem. To b
 In the annotation, you can either use the facet `base` table or `compact alt` in your path. Regardless, ermrestjs will apply the facet on `compact/select` table of the facet `base` table. In order for Ermrest to generate the facet correctly, the facet of the `base` table has to be defined on the key column that is being used by the alternative table. If the facet is defined on a different key column, Ermrestjs will treat this as an ERROR case and will ignore this facet.
 
 ##### Example: Proper facet source path  
-![ER Diagram](https://dev.isrd.isi.edu/~ashafaei/wiki-images/alt_in_facet_1_1.png)
+![ER Diagram](https://github.com/informatics-isi-edu/ermrestjs/raw/master/docs/resources/table-alt/alt_in_facet_1_1.png)
 
 Facet List for table `main`:
 ```json
@@ -144,7 +144,7 @@ Since we're going to show the table in `compact/select`, you will see `compact a
 ##### Example: Invalid facet source path
 In the following scenario, ERMrestjs cannot change the table and will just ignore this entry from facet list.
 
-![ER Diagram 03](https://dev.isrd.isi.edu/~ashafaei/wiki-images/alt_in_facet_1_2.png)
+![ER Diagram 03](https://github.com/informatics-isi-edu/ermrestjs/raw/master/docs/resources/table-alt/alt_in_facet_1_2.png)
 ```json
 "filter": {
     "and": [
@@ -157,7 +157,7 @@ In the following scenario, ERMrestjs cannot change the table and will just ignor
 
 Entity Relationship Diagram:
 
-![ER Diagram 04](https://dev.isrd.isi.edu/~ashafaei/wiki-images/alt_in_facet_3.png)
+![ER Diagram 04](https://github.com/informatics-isi-edu/ermrestjs/raw/master/docs/resources/table-alt/alt_in_facet_3.png)
 ```json
 "filter": {
     "and": [
@@ -170,7 +170,7 @@ In this scenario, we are faceting based on `detailed alt` table. ERMrestjs is no
 #### Scenario 3: Table Without Alternative For compact/select, Facet on Another Alternative Table (Not supported)
 
 Entity Relationship Diagram:
-![ER Diagram 04](https://dev.isrd.isi.edu/~ashafaei/wiki-images/alt_in_facet_2.png)
+![ER Diagram 04](https://github.com/informatics-isi-edu/ermrestjs/raw/master/docs/resources/table-alt/alt_in_facet_2.png)
 ```json
 "filter": {
     "and": [

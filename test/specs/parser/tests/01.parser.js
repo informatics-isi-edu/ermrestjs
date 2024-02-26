@@ -1662,10 +1662,10 @@ exports.execute = function(options) {
             it('should throw error if parameters are invalid.', function() {
                 expect(function () {
                     options.ermRest.createPath(2, null, "table");
-                }).toThrow("catalogId must be an string.");
+                }).toThrow("catalogId must be a string.");
                 expect(function () {
                     options.ermRest.createPath("2", null);
-                }).toThrow("tableName must be an string.");
+                }).toThrow("tableName must be a string.");
             });
 
             it("should handle not passing any schemaName", function() {
@@ -1694,10 +1694,10 @@ exports.execute = function(options) {
             it('should throw error if parameters are invalid.', function() {
                 expect(function () {
                     options.ermRest.createSearchPath(2, null, "table");
-                }).toThrow("catalogId must be an string.");
+                }).toThrow("catalogId must be a string.");
                 expect(function () {
                     options.ermRest.createSearchPath("2", null);
-                }).toThrow("tableName must be an string.");
+                }).toThrow("tableName must be a string.");
             });
 
             it("should handle not passing any schemaName", function() {
@@ -1735,10 +1735,10 @@ exports.execute = function(options) {
             it('should throw error if parameters are invalid.', function() {
                 expect(function () {
                     options.ermRest.createLocation(service, 2, null, "table");
-                }).toThrow("catalogId must be an string.");
+                }).toThrow("catalogId must be a string.");
                 expect(function () {
                     options.ermRest.createLocation(service, "2", null);
-                }).toThrow("tableName must be an string.");
+                }).toThrow("tableName must be a string.");
             });
 
             it("should handle not passing any schemaName", function() {

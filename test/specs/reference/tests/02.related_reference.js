@@ -4,6 +4,7 @@ exports.execute = function(options) {
     describe('.related, ', function() {
         var catalog_id = process.env.DEFAULT_CATALOG,
             schemaName = "reference_schema",
+            schemaName2 = "reference_schema_2",
             tableName = "reference_table",
             inboundTableName = "inbound_related_reference_table",
             associationTableWithToName = "association_table_with_toname",
@@ -20,9 +21,9 @@ exports.execute = function(options) {
             + schemaName + ":" + tableName + "/id=" + entityId;
 
         var currDate = new Date();
-        var currentDateString = options.ermRest._fixedEncodeURIComponent(currDate.getFullYear() + "-" + (currDate.getMonth()+1) + "-" + currDate.getDay());
+        var currentDateString = options.ermRest._fixedEncodeURIComponent(currDate.getFullYear() + "-" + (currDate.getMonth()+1) + "-" + currDate.getDate());
 
-        var chaiseURL = "https://dev.isrd.isi.edu/chaise";
+        var chaiseURL = "https://example.org/chaise";
         var recordURL = chaiseURL + "/record";
         var record2URL = chaiseURL + "/record-two";
         var viewerURL = chaiseURL + "/viewer";
@@ -121,9 +122,8 @@ exports.execute = function(options) {
         describe("related reference list, ", function () {
 
             describe('when visible foreign keys are not defined, ', function() {
-                var schemaName2 = "reference_schema_2",
-                tableName2 = "reference_table_no_order",
-                related2;
+                var tableName2 = "reference_table_no_order",
+                ref2, related2;
 
                 var noOrderUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName2 + ":" + tableName2;
 
@@ -131,15 +131,29 @@ exports.execute = function(options) {
                     options.ermRest.resolve(noOrderUri, {
                         cid: "test"
                     }).then(function(response) {
-                        related2 = response.contextualize.detailed.related;
+                        ref2 = response.contextualize.detailed;
+                        related2 = ref2.related;
                         done();
                     }, function(err) {
                         done.fail(err);
                     });
                 });
 
-                it('should include all foreign keys.', function() {
+                it('should include all foreign keys and exclude the ones already added to visible-columns.', function() {
                     expect(related2.length).toBe(4);
+
+                    // just a sanity check that the visible-columns is correctly added.
+                    // the actual tests for .columns API are done in a separate spec
+                    expect(ref2.columns.length).toBe(7);
+                    expect(ref2.columns.map((col) => {
+                        return col._constraintName ? col._constraintName : col.name
+                    })).toEqual([
+                        'id_1', 'id_2', 'id_3',
+                        ['reference_schema_2', 'fk_inbound_related_table_1_to_reference_table_no_order'].join('_'),
+                        ['reference_schema_2', 'fk_inbound_related_table_2_to_reference_table_no_order'].join('_'),
+                        ['reference_schema_2', 'fk_assoc_table_1_to_reference_table_no_order'].join('_'),
+                        ['reference_schema_2', 'fk_assoc_table_2_to_reference_table_no_order'].join('_')
+                    ]);
                 });
 
                 it('should be sorted by displayname.', function() {
@@ -159,12 +173,35 @@ exports.execute = function(options) {
             });
 
             describe("when visible foreign keys are defined, ", function () {
+                it ('should ignore the ones already added to visible-columns (inline realted).', (done) => {
+                    options.ermRest.resolve(`${options.url}/catalog/${catalog_id}/entity/${schemaName2}:table_w_vis_fks_and_vis_cols`, {
+                        cid: "test"
+                    }).then((response) => {
+                        response = response.contextualize.detailed;
+
+                        expect(response.related.length).toBe(0, 'related length missmatch');
+
+                        // just a sanity check that the visible-columns is correctly added.
+                        // the actual tests for .columns API are done in a separate spec
+                        expect(response.columns.length).toBe(3, 'columns length missmatch');
+                        expect(response.columns.map((col) => {
+                            return col._constraintName ? col._constraintName : col.name
+                        })).toEqual([
+                            'id',
+                            ['reference_schema_2', 'inbound_related_to_table_w_vis_fks_fk1'].join('_'),
+                            ['reference_schema_2', 'assoc_table_to_table_w_vis_fks_fk1'].join('_'),
+                        ], 'colum names mismatch');
+
+                        done();
+                    }).catch((err) => done.fail(err));
+                });
+
                 it('should be defined and not empty.', function() {
                     expect(reference.related).toBeDefined();
                     expect(related).not.toEqual([]);
                 });
 
-                it('should only include visible foreign keys that are defined in the annotation. Should support path.', function() {
+                it('should only include visible foreign keys that are defined in the annotation. Should support path', function() {
                     expect(related.length).toBe(7);
                 });
 
@@ -697,15 +734,17 @@ exports.execute = function(options) {
 
                 it ("should use the markdown_pattern defined on the visible-foreign-key annotation.", function (done) {
                     var content = '<p>';
-                    content += '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:association%20table%20with%20id/RID=' + utils.findEntityRID(options, schemaName, associationTableWithID, "ID", "2") + '">2</a>';
+                    content += '<a href="https://example.org/chaise/record/reference_schema:association%20table%20with%20id/RID=' + utils.findEntityRID(options, schemaName, associationTableWithID, "ID", "2") + '">2</a>';
                     content += ', ';
-                    content += '<a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:association%20table%20with%20id/RID=' + utils.findEntityRID(options, schemaName, associationTableWithID, "ID", "3") + '">3</a>';
+                    content += '<a href="https://example.org/chaise/record/reference_schema:association%20table%20with%20id/RID=' + utils.findEntityRID(options, schemaName, associationTableWithID, "ID", "3") + '">3</a>';
                     content += '</p>\n';
                     testPageContent(pathRelatedWithTuple[0], 5, content, done);
                 })
 
                 it ("should be able to use page_markdown_pattern and have access to the parent attributes.", function (done) {
-                    testPageContent(relatedWithTuple[1], 1, '<p>reference_schema:reference_table, parent name=Henry, where id is one of 1</p>\n', done);
+                    const linkVal = `https://example.org/chaise/record/reference_schema:inbound_related_reference_table/RID=${utils.findEntityRID(options, schemaName, inboundTableName, 'id', '1')}`;
+                    const expectedValue = `<p>reference_schema:reference_table, parent name=Henry, where (id,link) is one of 1: <a href="${linkVal}">1</a>)</p>\n`
+                    testPageContent(relatedWithTuple[1], 1, expectedValue, done);
                 });
 
                 it ("otherwise should use the row_markdown_pattern.", function (done) {
@@ -714,8 +753,8 @@ exports.execute = function(options) {
 
                 it ("if none of the markdown_patterns are not defined, should return a list of rownames.", function (done) {
                     content = '<ul>\n';
-                    content += '<li><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table/RID=' + utils.findEntityRID(options, schemaName, tableName, "id", "9002") + '">Heather</a></li>\n';
-                    content += '<li><a href="https://dev.isrd.isi.edu/chaise/record/reference_schema:reference_table/RID=' + utils.findEntityRID(options, schemaName, tableName, "id", "9003") + '">Henry</a></li>\n';
+                    content += '<li><a href="https://example.org/chaise/record/reference_schema:reference_table/RID=' + utils.findEntityRID(options, schemaName, tableName, "id", "9002") + '">Heather</a></li>\n';
+                    content += '<li><a href="https://example.org/chaise/record/reference_schema:reference_table/RID=' + utils.findEntityRID(options, schemaName, tableName, "id", "9003") + '">Henry</a></li>\n';
                     content += '</ul>\n';
 
                     testPageContent(pathRelatedWithTuple[1], 5, content, done);
@@ -727,6 +766,38 @@ exports.execute = function(options) {
                     content += '<li><a href="https://example.com">two</a></li>\n';
                     content += '</ul>\n';
                     testPageContent(pathRelatedWithTuple[3], 3, content, done);
+                });
+            });
+
+            describe('Reference.cascadingDeletedItems', () => {
+                it ('should return empty array if the table does not have any on delete cascade inbound fks', () => {
+                    expect(reference.cascadingDeletedItems.length).toBe(0);
+                });
+
+                it ('should include both related references and tables', (done) => {
+                    options.ermRest.resolve(`${options.url}/catalog/${catalog_id}/entity/${schemaName2}:table_w_inbound_cascade_delete`, {
+                        cid: "test"
+                    }).then((response) => {
+                        response = response.contextualize.detailed;
+                        expect(response.related.length).toBe(4, 'related length missmatch');
+
+                        const expectedVals = [
+                            {type: 'Reference', displayname: 'vis col inbound related'},
+                            {type: 'Reference', displayname: 'vis col path related'},
+                            {type: 'Reference', displayname: 'inbound related'},
+                            {type: 'Reference', displayname: 'assoc_table_to_table_w_inbound_cascade_delete'},
+                            {type: 'Reference', displayname: 'path related'},
+                            {type: 'Table', displayname: 'inbound_2_to_table_w_inbound_cascade_delete'}
+                        ];
+                        const items = response.cascadingDeletedItems;
+                        expect(items.length).toBe(expectedVals.length, 'cascadingDeletedItems length missmatch');
+                        items.forEach((item, index) => {
+                            expect(item.constructor.name).toEqual(expectedVals[index].type, `type missmatch for i=${index}`);
+                            expect(item.displayname.value).toEqual(expectedVals[index].displayname, `displayname missmatch for i=${index}`);
+                        });
+
+                        done();
+                    }).catch((err) => done.fail(err));
                 });
             });
         });

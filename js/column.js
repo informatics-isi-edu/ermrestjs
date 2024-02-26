@@ -51,7 +51,7 @@ module._createPseudoColumn = function (reference, sourceObjectWrapper, mainTuple
          }
 
         // no path, scalar, asset
-        if (column.type.name === "text" && column.annotations.contains(module._annotations.ASSET)) {
+        if (column.type.name === "text" && column.isAssetURL) {
             return new AssetPseudoColumn(reference, column, sourceObjectWrapper);
         }
 
@@ -124,6 +124,21 @@ function ReferenceColumn(reference, cols, sourceObjectWrapper, name, mainTuple) 
          * @type {Object}
          */
         this.filterProps = this.sourceObjectWrapper.filterProps;
+
+
+        if (sourceObjectWrapper.isInputIframe) {
+            /**
+             * whether we should show an iframe input in recordedit
+             * @type {boolean}
+             */
+            this.isInputIframe = true;
+            /**
+             * the props for inputIframe
+             *
+             * @type {Object}
+             */
+            this.inputIframeProps = sourceObjectWrapper.inputIframeProps;
+        }
     } else {
         this.isFiltered = false;
         this.filterProps = {};
@@ -147,6 +162,7 @@ function ReferenceColumn(reference, cols, sourceObjectWrapper, name, mainTuple) 
     this._mainTuple = mainTuple;
 
     this.isUnique = true;
+
 }
 
 ReferenceColumn.prototype = {
@@ -275,26 +291,27 @@ ReferenceColumn.prototype = {
      */
     get comment() {
         if (this._comment === undefined) {
-            var com = _processSourceObjectColumn(this.sourceObject);
-            if (typeof com === "string") {
-                this._comment = com;
-            } else {
-                this._comment = this._simple ? this._baseCols[0].comment : null;
+            var comment = null, commentDisplayMode, commentRenderMarkdown;
+            if (this._simple) {
+                var display = this._baseCols[0].getDisplay(this._context);
+                comment = display.comment;
+                commentDisplayMode = display.commentDisplayMode;
+                commentRenderMarkdown = display.commentRenderMarkdown;
             }
+
+            if (!this.sourceObject) {
+                this._comment = comment;
+            } else {
+                this._comment = _processSourceObjectComment(
+                    this.sourceObject,
+                    comment ? comment.unformatted : null,
+                    commentRenderMarkdown,
+                    commentDisplayMode
+                );
+            }
+
         }
         return this._comment;
-    },
-
-    get commentDisplay() {
-        if (this._commentDisplay === undefined) {
-            if (this.sourceObject && _isValidModelComment(this.sourceObject.comment) && _isValidModelCommentDisplay(this.sourceObject.comment_display)) {
-                // only change commentDisplay if comment and comment_display are both defined
-                this._commentDisplay = this.sourceObject.comment_display;
-            } else {
-                this._commentDisplay = module._commentDisplayModes.tooltip;
-            }
-        }
-        return this._commentDisplay;
     },
 
     /**
@@ -312,7 +329,7 @@ ReferenceColumn.prototype = {
      * @desc Indicates if the input should be disabled
      * true: input must be disabled
      * false:  input can be enabled
-     * object: input msut be disabled (show .message to user)
+     * object: input must be disabled (show .message to user)
      *
      * @type {boolean|object}
      */
@@ -729,6 +746,35 @@ ReferenceColumn.prototype = {
         }
         return pres;
 
+    },
+
+    /**
+     * render the location of iframe. will return empty string if invalid or missing.
+     * @param {Object} data raw data of the columns
+     * @param {Object} linkedData raw data of the foreign key columns
+     */
+    renderInputIframeUrl: function (data, linkedData) {
+        var self = this;
+        var baseTable = self._baseReference.table;
+
+        var keyValues = module._getFormattedKeyValues(baseTable, self._context, data, linkedData);
+
+        if (!self.isInputIframe) {
+            return '';
+        }
+
+        var url = module._renderTemplate(
+            self.inputIframeProps.urlPattern,
+            keyValues,
+            baseTable.schema.catalog,
+            {templateEngine: self.inputIframeProps.urlTemplateEngine}
+        );
+
+        if (typeof url !== "string") {
+            return '';
+        }
+
+        return url;
     }
 };
 
@@ -1311,71 +1357,44 @@ Object.defineProperty(PseudoColumn.prototype, "comment", {
     get: function () {
         if (this._comment === undefined) {
             var getComment = function (self) {
-                var com = _processSourceObjectColumn(self.sourceObject);
-                if (typeof com === "string") {
-                    return com;
-                }
-
                 if (self.hasAggregate) {
+                    // if defined on the sourceObject use it.
+                    var com = _processSourceObjectComment(self.sourceObject);
+                    if (com) {
+                        return com;
+                    }
+
+                    // otherwise generate one
                     var agIndex = module._pseudoColAggregateFns.indexOf(self.sourceObject.aggregate);
                     var dname = self._baseCols[0].displayname.unformatted;
                     if (self.isEntityMode) {
                         dname = self._baseCols[0].table.displayname.unformatted;
                     }
 
-                    return [module._pseudoColAggregateExplicitName[agIndex], dname].join(" ");
+                    return _processModelComment([module._pseudoColAggregateExplicitName[agIndex], dname].join(" "), false);
                 }
 
+                // if it's not aggregate, we can get it from the table or column depending on entity mode:
+                var disp, commentDisplayMode;
                 if (!self.isEntityMode) {
-                    return self._baseCols[0].comment;
+                    disp = self._baseCols[0].getDisplay(self._context);
+                    commentDisplayMode = disp.commentDisplayMode;
+                } else {
+                    disp = self.table.getDisplay(self._context);
+                    commentDisplayMode = disp.tableCommentDisplayMode;
                 }
 
-                // self.table should be leaf table
-                return self.table.getDisplay(self._context).comment;
+                return _processSourceObjectComment(
+                    self.sourceObject,
+                    disp.comment ? disp.comment.unformatted : null,
+                    disp.commentRenderMarkdown,
+                    commentDisplayMode
+                );
             };
 
             this._comment = getComment(this);
         }
         return this._comment;
-    }
-});
-
-// NOTE: this only works for multi hop with inbound foreign key
-/**
- * The mode the tooltip should be displayed in for this column.
- * It will return the first applicable rule:
- * 1. commentDisplay that is defined on the sourceObject
- * 2. commentDisplay that is defined on the table in the display annotation
- * 3. default to "tooltip"
- *
- * @member {Object} commentDisplay
- * @memberof ERMrest.PseudoColumn#
- */
-Object.defineProperty(PseudoColumn.prototype, "commentDisplay", {
-    get: function () {
-        if (this._commentDisplay === undefined) {
-            var getDisplay = function (self) {
-                if (self.sourceObject && _isValidModelComment(self.sourceObject.comment) && _isValidModelCommentDisplay(self.sourceObject.comment_display)) {
-                    return self.sourceObject.comment_display;
-                }
-
-                var def = module._commentDisplayModes.tooltip;
-                if (!self.isEntityMode || self.hasAggregate) {
-                    return def;
-                }
-
-                // self.table should be leaf table
-                var display = self.table.getDisplay(self._context);
-                if (_isValidModelCommentDisplay(display.tableCommentDisplay) && _isValidModelComment(display.comment)) {
-                    return display.tableCommentDisplay;
-                }
-
-                return def;
-            };
-
-            this._commentDisplay = getDisplay(this);
-        }
-        return this._commentDisplay;
     }
 });
 
@@ -1510,7 +1529,6 @@ Object.defineProperty(PseudoColumn.prototype, "reference", {
             if (self.hasPath) {
                 self._reference._displayname = self.displayname;
                 self._reference._comment = self.comment;
-                self._reference._commentDisplay = self.commentDisplay;
             }
         }
         return this._reference;
@@ -1897,9 +1915,11 @@ ForeignKeyPseudoColumn.prototype._determineSortable = function () {
 Object.defineProperty(ForeignKeyPseudoColumn.prototype, "hasDomainFilter", {
     get: function () {
         if (this._hasDomainFilter === undefined) {
-            var checkDomainFilter = function (self) {
+            var populateDomainFilterProps = function (self) {
                 // the annotaion didn't exist
                 if (!self.foreignKey.annotations.contains(module._annotations.FOREIGN_KEY)) {
+                    self._domainFilterRawString = '';
+                    self._domainFilterUsedColumns = [];
                     return false;
                 }
 
@@ -1907,21 +1927,62 @@ Object.defineProperty(ForeignKeyPseudoColumn.prototype, "hasDomainFilter", {
 
                 // the annotation is properly defined
                 if (isObjectAndNotNull(content.domain_filter) && isStringAndNotEmpty(content.domain_filter.ermrest_path_pattern)) {
+                    self._domainFilterRawString = content.domain_filter.ermrest_path_pattern;
+
+                    var usedColumns = [];
+                    if (Array.isArray(content.domain_filter.pattern_sources)) {
+                        usedColumns = self._baseReference.generateColumnsList(undefined, content.domain_filter.pattern_sources, true, true);
+                    }
+                    self._domainFilterUsedColumns = usedColumns;
+
                     return true;
                 }
                 // backward compatibility
                 else if (typeof content.domain_filter_pattern === "string") {
+                    self._domainFilterRawString = content.domain_filter_pattern;
+                    self._domainFilterUsedColumns = [];
                     return true;
                 }
 
+                self._domainFilterRawString = '';
+                self._domainFilterUsedColumns = [];
                 return false;
             };
 
-            this._hasDomainFilter = checkDomainFilter(this);
+            this._hasDomainFilter = populateDomainFilterProps(this);
         }
         return this._hasDomainFilter;
     }
 });
+/**
+ * The visible columns that are used as part of the domain-filter
+ * @member {ERMrest.ReferenceColumn[]} domainFilterUsedColumns
+ * @memberof ERMrest.ForeignKeyPseudoColumn#
+ */
+Object.defineProperty(ForeignKeyPseudoColumn.prototype, 'domainFilterUsedColumns', {
+    get: function () {
+        if (this._domainFilterUsedColumns === undefined) {
+            // this will popuplate _domainFilterUsedColumns too
+            var temp = this.hasDomainFilter;
+        }
+        return this._domainFilterUsedColumns;
+    }
+});
+/**
+ * The raw string value of the ermerst_path_pattern used in domain filter
+ * @member {string} domainFilterRawString
+ * @memberof ERMrest.ForeignKeyPseudoColumn#
+ */
+Object.defineProperty(ForeignKeyPseudoColumn.prototype, 'domainFilterRawString', {
+    get: function () {
+        if (this._domainFilterRawString === undefined) {
+            // this will popuplate _domainFilterRawString too
+            var temp = this.hasDomainFilter;
+        }
+        return this._domainFilterRawString;
+    }
+});
+
 
 /**
  * returns the raw default values of the constituent columns.
@@ -1974,13 +2035,15 @@ Object.defineProperty(ForeignKeyPseudoColumn.prototype, "name", {
 Object.defineProperty(ForeignKeyPseudoColumn.prototype, "displayname", {
     get: function () {
         if (this._displayname === undefined) {
-            var foreignKey = this.foreignKey, value, isHTML, unformatted;
+            var context = this._context, foreignKey = this.foreignKey;
+            var toName = foreignKey.getDisplay(context).toName;
+            var value, isHTML, unformatted;
             if (this.sourceObject.markdown_name) {
                 unformatted = this.sourceObject.markdown_name;
                 value = module.renderMarkdown(unformatted, true);
                 isHTML = true;
-            } else if (foreignKey.to_name !== "") {
-                value = unformatted = foreignKey.to_name;
+            } else if (toName) {
+                value = unformatted = toName;
                 isHTML = false;
             } else if (foreignKey.simple) {
                 value = this._baseCols[0].displayname.value;
@@ -2006,7 +2069,7 @@ Object.defineProperty(ForeignKeyPseudoColumn.prototype, "displayname", {
 
                 // disambiguate
                 var tableCount = foreignKey._table.foreignKeys.all().filter(function (fk) {
-                    return !fk.simple && fk.to_name === "" && fk.key.table == foreignKey.key.table;
+                    return !fk.simple && !fk.getDisplay(context).toName && fk.key.table == foreignKey.key.table;
                 }).length;
 
                 if (tableCount > 1) {
@@ -2047,7 +2110,7 @@ Object.defineProperty(ForeignKeyPseudoColumn.prototype, "comment", {
         if (this._comment === undefined) {
             // calling the parent
             Object.getOwnPropertyDescriptor(ForeignKeyPseudoColumn.super,"comment").get.call(this);
-            this._comment = (this._comment !== null) ? this._comment : this.foreignKey.comment;
+            this._comment = (this._comment !== null) ? this._comment : this.foreignKey.getDisplay(this._context).comment;
         }
         return this._comment;
     }
@@ -2062,6 +2125,10 @@ Object.defineProperty(ForeignKeyPseudoColumn.prototype, "display", {
                 if (typeof displ.markdown_pattern === "string") {
                     sourceDisplay.sourceMarkdownPattern = displ.markdown_pattern;
                     sourceDisplay.sourceTemplateEngine = displ.template_engine;
+                }
+
+                if (module._foreignKeyInputModes.indexOf(displ.selector_ux_mode) !== -1) {
+                    sourceDisplay.inputDisplayMode = displ.selector_ux_mode;
                 }
             }
 
@@ -2246,7 +2313,7 @@ Object.defineProperty(KeyPseudoColumn.prototype, "comment", {
         if (this._comment === undefined) {
             // calling the parent
             Object.getOwnPropertyDescriptor(KeyPseudoColumn.super,"comment").get.call(this);
-            this._comment = (this._comment !== null) ? this._comment : this.key.comment;
+            this._comment = (this._comment !== null) ? this._comment : this.key.getDisplay(this._context).comment;
         }
         return this._comment;
     }
@@ -2819,23 +2886,9 @@ Object.defineProperty(InboundForeignKeyPseudoColumn.prototype, "displayname", {
 Object.defineProperty(InboundForeignKeyPseudoColumn.prototype, "comment", {
     get: function () {
         if (this._comment === undefined) {
-            var com = _processSourceObjectColumn(this.sourceObject);
-            if (typeof com === "string") {
-                this._comment = com;
-            } else {
-                this._comment = this.reference.comment;
-            }
+            this._comment = this.reference.comment;
         }
         return this._comment;
-    }
-});
-
-Object.defineProperty(InboundForeignKeyPseudoColumn.prototype, "commentDisplay", {
-    get: function () {
-        if (this._commentDisplay === undefined) {
-            this._commentDisplay = this.reference.commentDisplay;
-        }
-        return this._commentDisplay;
     }
 });
 
@@ -2982,6 +3035,9 @@ FacetColumn.prototype = {
      * 4. return choices if int or serial, part of key, and not null.
      * 5. return ranges or choices based on the type.
      *
+     *  Note:
+     *   - null and not-null are applicaple in all types, so we're ignoring those while figuring out the preferred mode.
+     *
      * @type {string}
      */
     get preferredMode() {
@@ -3004,19 +3060,18 @@ FacetColumn.prototype = {
                 // see if only one type of facet is preselected
                 var onlyChoice = false, onlyRange = false;
 
-                // (not-null can be applied to both choices and ranges)
-                var filterLen = self.filters.length;
+                // not-null and null can be applied to both choices and ranges
+                var filterLen = self.filters.length, choiceFilterLen = self.choiceFilters.length;
                 if (self.hasNotNullFilter) {
                     filterLen--;
                 }
-
-                // null is acceptable for check_presence
-                if (filterLen === 1 && self.hasNullFilter && self._facetObject.ux_mode === modes.PRESENCE) {
-                    return modes.PRESENCE;
+                if (self.hasNullFilter) {
+                    filterLen--;
+                    choiceFilterLen--;
                 }
 
                 if (filterLen > 0) {
-                    onlyChoice = self.choiceFilters.length === filterLen;
+                    onlyChoice = choiceFilterLen === filterLen;
                     onlyRange = self.rangeFilters.length === filterLen;
                 }
                 // if only choices or ranges preselected, honor it
@@ -3238,14 +3293,15 @@ FacetColumn.prototype = {
                 // Otherwise
                 var value, unformatted, isHTML = false;
                 var lastFKIsInbound = self.lastForeignKeyNode.isInbound;
+                var lastFKDisplay = lastFK.getDisplay(module._contexts.COMPACT_SELECT);
 
                 // use from_name of the last fk if it's inbound
-                if (lastFKIsInbound && lastFK.from_name !== "") {
-                    value = unformatted = lastFK.from_name;
+                if (lastFKIsInbound && lastFKDisplay.fromName) {
+                    value = unformatted = lastFKDisplay.fromName;
                 }
                 // use to_name of the last fk if it's outbound
-                else if (!lastFKIsInbound && lastFK.to_name !== "") {
-                    value = unformatted = lastFK.to_name;
+                else if (!lastFKIsInbound && lastFKDisplay.toName) {
+                    value = unformatted = lastFKDisplay.toName;
                 }
                 // use the table name if it was not defined
                 else {
@@ -3276,14 +3332,20 @@ FacetColumn.prototype = {
      */
     get comment () {
         if (this._comment === undefined) {
-            var com = _processSourceObjectColumn(this._facetObject);
-            if (typeof com === "string") {
-                this._comment = com;
-            } else if (!this.isEntityMode) {
-                    this._comment = this._column.comment;
+            var commentDisplayMode, disp;
+            if (!this.isEntityMode) {
+                disp = this._column.getDisplay(module._contexts.COMPACT_SELECT);
+                commentDisplayMode = disp.commentDisplayMode;
             } else {
-                this._comment = this._column.table.comment;
+                disp = this._column.table.getDisplay(module._contexts.COMPACT_SELECT);
+                commentDisplayMode = disp.tableCommentDisplayMode;
             }
+            this._comment = _processSourceObjectComment(
+                this._facetObject,
+                disp.comment ? disp.comment.unformatted : null,
+                disp.commentRenderMarkdown,
+                commentDisplayMode
+            );
         }
         return this._comment;
     },
@@ -4344,7 +4406,7 @@ ColumnGroupAggregateFn.prototype = {
             keyColumns.push(new AttributeGroupColumn(
                 colAlias,
                 module._fixedEncodeURIComponent(col.name),
-                col, displayname, null, col.comment, true, isVisible
+                col, displayname, null, col.getDisplay(context).comment, true, isVisible
             ));
             return colAlias;
         };
@@ -4406,7 +4468,7 @@ ColumnGroupAggregateFn.prototype = {
             }
 
             aggregateColumns.push(
-                new AttributeGroupColumn(countColName, countName, null, "Number of Occurrences", new Type({typename: "int"}), "", true, !hideNumOccurrences)
+                new AttributeGroupColumn(countColName, countName, null, "Number of Occurrences", new Type({typename: "int"}), null, true, !hideNumOccurrences)
             );
         }
 
