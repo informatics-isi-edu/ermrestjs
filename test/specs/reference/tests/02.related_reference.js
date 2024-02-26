@@ -781,14 +781,16 @@ exports.execute = function(options) {
                         response = response.contextualize.detailed;
                         expect(response.related.length).toBe(4, 'related length missmatch');
 
-                        const items = response.cascadingDeletedItems;
-                        expect(items.length).toBe(4, 'cascadingDeletedItems length missmatch');
                         const expectedVals = [
+                            {type: 'Reference', displayname: 'vis col inbound related'},
+                            {type: 'Reference', displayname: 'vis col path related'},
                             {type: 'Reference', displayname: 'inbound related'},
                             {type: 'Reference', displayname: 'assoc_table_to_table_w_inbound_cascade_delete'},
                             {type: 'Reference', displayname: 'path related'},
                             {type: 'Table', displayname: 'inbound_2_to_table_w_inbound_cascade_delete'}
                         ];
+                        const items = response.cascadingDeletedItems;
+                        expect(items.length).toBe(expectedVals.length, 'cascadingDeletedItems length missmatch');
                         items.forEach((item, index) => {
                             expect(item.constructor.name).toEqual(expectedVals[index].type, `type missmatch for i=${index}`);
                             expect(item.displayname.value).toEqual(expectedVals[index].displayname, `displayname missmatch for i=${index}`);
