@@ -1669,13 +1669,33 @@
                 var column, keyColumns, referenceColumn;
 
                 // add column name into list of column projections if not in column projections set and data has changed
-                var addProjection = function(colName) {
+                var addProjection = function(colName, colType) {
                     // don't add a column name in if it's already there
                     // this can be the case for multi-edit
                     // and if the data is unchanged, no need to add the column name to the projections list
                     // NOTE: This doesn't properly verify if date/timestamp/timestamptz values were changed
-                    if ( (columnProjections.indexOf(colName) === -1) && (oldData[colName] != newData[colName]) ) {
-                        columnProjections.push(colName);
+                    if (columnProjections.indexOf(colName) === -1) {
+                        var typename = colType.rootName;
+                        var compareWithMoment = typename === 'date' || typename === 'timestamp' || typename === 'timestamptz';
+                        if (compareWithMoment) {
+                            var moment = module._moment;
+                            var formats = module._dataFormats;
+
+                            // default to DATE format, if timestamp or timestamptz, change the format used
+                            var formatToUse = formats.DATE;
+                            if (typename === 'timestamp') {
+                                formatToUse = formats.TIMESTAMP;
+                            } else if (typename === 'timestamptz') {
+                                formatToUse = formats.DATETIME.return;
+                            }
+
+                            var oldVal = moment(oldData[colName], formatToUse, true).format(formatToUse);
+                            var newVal = moment(newData[colName], formatToUse, true).format(formatToUse);
+
+                            if (oldVal != newVal) columnProjections.push(colName);
+                        } else if ( (oldData[colName] != newData[colName]) ) {
+                            columnProjections.push(colName);
+                        }
                     }
                 };
 
@@ -1694,11 +1714,11 @@
                                 if (assetColumns[colIndex]) {
                                     // If asset url is null then set the metadata also null
                                     if (isNull) newData[assetColumns[colIndex].name] = null;
-                                    addProjection(assetColumns[colIndex].name);
+                                    addProjection(assetColumns[colIndex].name, assetColumns[colIndex].type);
                                 }
                             }
 
-                            addProjection(column.name);
+                            addProjection(column.name, column.type);
 
                         } else {
                             keyColumns = [];
@@ -1712,11 +1732,11 @@
                             for (n = 0; n < keyColumns.length; n++) {
                                 keyColumnName = keyColumns[n].name;
 
-                                addProjection(keyColumnName);
+                                addProjection(keyColumnName, keyColumns[n].type);
                             }
                         }
                     } else {
-                        addProjection(column.name);
+                        addProjection(column.name, column.type);
                     }
                 };
 
