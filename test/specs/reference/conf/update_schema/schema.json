@@ -243,6 +243,50 @@
             ],
             "annotations": {}
         },
+        "update_table_with_date_and_timestamps": {
+            "comment": "Table to represent a reference object with date and timestamp columns.",
+            "kind": "table",
+            "keys": [
+                {
+                    "comment": null,
+                    "annotations": {},
+                    "unique_columns": [
+                        "key"
+                    ]
+                }
+            ],
+            "foreign_keys": [],
+            "table_name": "update_table_with_date_and_timestamps",
+            "schema_name": "update_schema",
+            "column_definitions": [
+                {
+                    "name": "key",
+                    "nullok": false,
+                    "type": {
+                        "typename": "text"
+                    }
+                }, {
+                    "name": "date_col",
+                    "nullok": true,
+                    "type": {
+                        "typename": "date"
+                    }
+                }, {
+                    "name": "timestamp_col",
+                    "nullok": true,
+                    "type": {
+                        "typename": "timestamp"
+                    }
+                }, {
+                    "name": "timestamptz_col",
+                    "nullok": true,
+                    "type": {
+                        "typename": "timestamptz"
+                    }
+                }
+            ],
+            "annotations": {}
+        },
         "table_w_composite_key": {
             "comment": "Table with composite key",
             "kind": "table",
@@ -383,6 +427,7 @@
         "alias_table",
         "update_table",
         "update_table_with_foreign_key",
+        "update_table_with_date_and_timestamps",
         "table_w_composite_key",
         "table_w_composite_key_as_shortest_key",
         "table_w_independent_key"

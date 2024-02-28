@@ -1820,6 +1820,145 @@ exports.execute = function (options) {
             });
         });
 
+        describe("for updating entities with date and timestamp columns ", function () {
+            var tableName = "update_table_with_date_and_timestamps",
+                sortBy = "key", // column used to sort the data
+                uriSingle = options.url + "/catalog/" + catalogId + "/entity/" + schemaName + ':' + tableName + "/key=1";
+
+            var reference;
+
+            beforeAll(function (done) {
+                options.ermRest.resolve(uriSingle, {cid: "test"}).then(function (response) {
+                    reference = response;
+
+                    done();
+                }).catch(function (error) {
+                    console.dir(error);
+                    done.fail();
+                });
+            });
+
+            it("a single entity should should throw an error when no data was updated.", function (done) {
+                // makes sure case added to validate 2 null date values are properly compared still and recognized as unchanged
+                reference = reference.contextualize.entryEdit;
+
+                reference.read(1).then(function (response) {
+                    return reference.update(response.tuples);
+                }).then(function (response) {
+                    throw new Error("Did not return any errors");
+                }).catch(function (err) {
+                    expect(err instanceof options.ermRest.NoDataChangedError).toBe(true);
+                    expect(err.message).toEqual("No data was changed in the update request. Please check the form content and resubmit the data.", "Wrong error message was returned");
+
+                    done();
+                });
+            });
+
+            it("should throw an error when timestamp value is sent to be updated but is unchanged.", function (done) {
+                var updateData = {
+                    "timestamp_col": "2024-02-27T14:14:12"
+                };
+
+                reference = reference.contextualize.entryEdit;
+
+                reference.read(1).then(function (response) {
+                    tuples = response.tuples;
+                    tuple = tuples[0];
+                    var data = tuple.data;
+
+                    for (var key in updateData) {
+                        data[key] = updateData[key];
+                    }
+
+                    return reference.update(response.tuples);
+                }).then(function (response) {
+                    throw new Error("Did not return any errors");
+                }).catch(function (err) {
+                    expect(err instanceof options.ermRest.NoDataChangedError).toBe(true);
+                    expect(err.message).toEqual("No data was changed in the update request. Please check the form content and resubmit the data.", "Wrong error message was returned");
+
+                    done();
+                });
+            });
+
+            it("should throw an error when timestamptz value is sent to be updated with a different timezone but value is unchanged.", function (done) {
+                var updateData = {
+                    "timestamptz_col": "2024-02-28T12:39:25-08:00"
+                };
+
+                reference = reference.contextualize.entryEdit;
+
+                reference.read(1).then(function (response) {
+                    tuples = response.tuples;
+                    tuple = tuples[0];
+                    var data = tuple.data;
+
+                    for (var key in updateData) {
+                        data[key] = updateData[key];
+                    }
+
+                    return reference.update(response.tuples);
+                }).then(function (response) {
+                    throw new Error("Did not return any errors");
+                }).catch(function (err) {
+                    expect(err instanceof options.ermRest.NoDataChangedError).toBe(true);
+                    expect(err.message).toEqual("No data was changed in the update request. Please check the form content and resubmit the data.", "Wrong error message was returned");
+
+                    done();
+                });
+            });
+
+            it("should update the date, timestamp, and timestamptz columns when all are changed.", function (done) {
+                var tuples;
+
+                var updateData = {
+                    "date_col": "2024-02-28",
+                    "timestamp_col": "2024-02-28T12:56:12",
+                    "timestamptz_col": "2024-02-28T12:52:21+00:00"
+                };
+
+                reference = reference.contextualize.entryEdit;
+
+                reference.read(1).then(function (response) {
+                    tuples = response.tuples;
+                    tuple = tuples[0];
+                    var data = tuple.data;
+
+                    for (var key in updateData) {
+                        data[key] = updateData[key];
+                    }
+
+                    return reference.update(response.tuples);
+                }).then(function (response) {
+                    response = response.successful;
+                    expect(response._data.length).toBe(1, "response data is not the same size as given.");
+                    expect(response.reference._context).toEqual("compact", "page reference is not in the correct context.");
+
+                    utils.checkPageValues(response._data, tuples, sortBy);
+
+                    return options.ermRest.resolve(uriSingle, {cid: "test"});
+                }).then(function (response) {
+                    return response.read(1);
+                }).then(function (response) {
+                    var pageData = response._data[0];
+
+                    expect(pageData['date_col']).toBe(updateData['date_col'], "updated date is not correct.");
+                    expect(pageData['date_col']).not.toBe(tuple._oldData['date_col'], "date has not been updated.");
+
+                    expect(pageData['timestamp_col']).toBe(updateData['timestamp_col'], "updated timestamp is not correct.");
+                    expect(pageData['timestamp_col']).not.toBe(tuple._oldData['timestamp_col'], "timestamp has not been updated.");
+
+                    expect(pageData['timestamptz_col']).toBe(updateData['timestamptz_col'], "updated timestamptz is not correct.");
+                    expect(pageData['timestamptz_col']).not.toBe(tuple._oldData['timestamptz_col'], "timestamptz has not been updated.");
+
+                    done();
+                }).catch(function (error) {
+                    console.dir(error);
+                    done.fail();
+                });
+            });
+        })
+
         describe("for updating multiple entities should return a page object, when", function () {
             var tableName = "table_w_composite_key_as_shortest_key",
                 sortBy = "id_1",
