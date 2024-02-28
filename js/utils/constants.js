@@ -103,11 +103,10 @@
         DEFAULT: '*',
         ROWNAME: 'row_name'
     });
-  
+
     module._dataFormats = Object.freeze({
         DATE: "YYYY-MM-DD",
         TIME: "HH:mm:ss",
-        TIMESTAMP: 'YYYY-MM-DDTHH:mm:ss',
         DATETIME: {
             display: "YYYY-MM-DD HH:mm:ss",
             return: "YYYY-MM-DDTHH:mm:ssZ", // the format that the database returns when there are no fractional seconds to show

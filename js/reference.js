@@ -1673,29 +1673,26 @@
                     // don't add a column name in if it's already there
                     // this can be the case for multi-edit
                     // and if the data is unchanged, no need to add the column name to the projections list
-                    // NOTE: This doesn't properly verify if date/timestamp/timestamptz values were changed
-                    if (columnProjections.indexOf(colName) === -1) {
-                        var typename = colType.rootName;
-                        var compareWithMoment = typename === 'date' || typename === 'timestamp' || typename === 'timestamptz';
-                        if (compareWithMoment) {
-                            var moment = module._moment;
-                            var formats = module._dataFormats;
+                    if (columnProjections.indexOf(colName) !== -1) return;
 
-                            // default to DATE format, if timestamp or timestamptz, change the format used
-                            var formatToUse = formats.DATE;
-                            if (typename === 'timestamp') {
-                                formatToUse = formats.TIMESTAMP;
-                            } else if (typename === 'timestamptz') {
-                                formatToUse = formats.DATETIME.return;
-                            }
+                    var oldVal = oldData[colName]
+                    var newVal = newData[colName]
 
-                            var oldVal = moment(oldData[colName], formatToUse, true).format(formatToUse);
-                            var newVal = moment(newData[colName], formatToUse, true).format(formatToUse);
+                    var typename = colType.rootName;
+                    var compareWithMoment = typename === 'date' || typename === 'timestamp' || typename === 'timestamptz';
+                    // test with moment if datetime column type and one of the 2 values are defined
+                    // NOTE: moment will test 2 null values as different even though they are both null
+                    if (compareWithMoment && (oldVal || newVal)) {
+                        var moment = module._moment;
+                        
+                        var oldMoment = moment(oldData[colName])
+                        var newMoment = moment(newData[colName])
 
-                            if (oldVal != newVal) columnProjections.push(colName);
-                        } else if ( (oldData[colName] != newData[colName]) ) {
+                        if (!oldMoment.isSame(newMoment)) {
                             columnProjections.push(colName);
                         }
+                    } else if (oldData[colName] != newData[colName]) {
+                        columnProjections.push(colName);
                     }
                 };
 
