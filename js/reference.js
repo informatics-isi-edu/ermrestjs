@@ -1669,12 +1669,29 @@
                 var column, keyColumns, referenceColumn;
 
                 // add column name into list of column projections if not in column projections set and data has changed
-                var addProjection = function(colName) {
+                var addProjection = function(colName, colType) {
                     // don't add a column name in if it's already there
                     // this can be the case for multi-edit
                     // and if the data is unchanged, no need to add the column name to the projections list
-                    // NOTE: This doesn't properly verify if date/timestamp/timestamptz values were changed
-                    if ( (columnProjections.indexOf(colName) === -1) && (oldData[colName] != newData[colName]) ) {
+                    if (columnProjections.indexOf(colName) !== -1) return;
+
+                    var oldVal = oldData[colName]
+                    var newVal = newData[colName]
+
+                    var typename = colType.rootName;
+                    var compareWithMoment = typename === 'date' || typename === 'timestamp' || typename === 'timestamptz';
+                    // test with moment if datetime column type and one of the 2 values are defined
+                    // NOTE: moment will test 2 null values as different even though they are both null
+                    if (compareWithMoment && (oldVal || newVal)) {
+                        var moment = module._moment;
+                        
+                        var oldMoment = moment(oldData[colName])
+                        var newMoment = moment(newData[colName])
+
+                        if (!oldMoment.isSame(newMoment)) {
+                            columnProjections.push(colName);
+                        }
+                    } else if (oldData[colName] != newData[colName]) {
                         columnProjections.push(colName);
                     }
                 };
@@ -1694,11 +1711,11 @@
                                 if (assetColumns[colIndex]) {
                                     // If asset url is null then set the metadata also null
                                     if (isNull) newData[assetColumns[colIndex].name] = null;
-                                    addProjection(assetColumns[colIndex].name);
+                                    addProjection(assetColumns[colIndex].name, assetColumns[colIndex].type);
                                 }
                             }
 
-                            addProjection(column.name);
+                            addProjection(column.name, column.type);
 
                         } else {
                             keyColumns = [];
@@ -1712,11 +1729,11 @@
                             for (n = 0; n < keyColumns.length; n++) {
                                 keyColumnName = keyColumns[n].name;
 
-                                addProjection(keyColumnName);
+                                addProjection(keyColumnName, keyColumns[n].type);
                             }
                         }
                     } else {
-                        addProjection(column.name);
+                        addProjection(column.name, column.type);
                     }
                 };
 
