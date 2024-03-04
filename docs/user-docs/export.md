@@ -55,7 +55,8 @@ To have a overall picture of how the export templates look like, you can refer t
         "transforms": [], // refer to export module for more details
         "postprocessors": [], // refer to export module for more details
         "public": <Boolean>, // refer to export module for more details
-        "bag_archiver": <string> // refer to export module for more details
+        "bag_archiver": <string>, // refer to export module for more details
+        "bag_idempotent": <Boolean> // refer to export module for more details (defaulted to false it not present)
       }
     ]
   }
