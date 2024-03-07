@@ -409,6 +409,9 @@
                 if (template.bag_archiver != null) {
                     exportParameters.bag.bag_archiver = template.bag_archiver;
                 }
+                if (template.bag_idempotent != null) {
+                    exportParameters.bag.bag_idempotent = template.bag_idempotent;
+                }
                 this._exportParameters = exportParameters;
             }
 
