@@ -12,6 +12,17 @@ exports.execute = function (options) {
             expect(printFloat(1234.0, options)).toBe('1,234.0000');
             expect(printFloat(23.0)).toBe('23.0000');
             expect(printFloat(.000)).toBe('0.0000');
+
+            // scientific notation tests
+            expect(printFloat(100000000000)).toBe('100,000,000,000.0000');
+            expect(printFloat(1000000000000)).toBe('1.0000e+12');
+            expect(printFloat(.000001)).toBe('0.0000');
+            expect(printFloat(.0000001)).toBe('1.0000e-7');
+
+            expect(printFloat(1e11)).toBe('100,000,000,000.0000');
+            expect(printFloat(1e12)).toBe('1.0000e+12');
+            expect(printFloat(1e-6)).toBe('0.0000');
+            expect(printFloat(1e-7)).toBe('1.0000e-7');
         });
 
         it('printBoolean() should format booleans correctly.', function () {
