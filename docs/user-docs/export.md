@@ -52,11 +52,11 @@ To have a overall picture of how the export templates look like, you can refer t
             }
           }, ...
         ],
-        "transforms": [], // refer to export module for more details
-        "postprocessors": [], // refer to export module for more details
-        "public": <Boolean>, // refer to export module for more details
-        "bag_archiver": <string>, // refer to export module for more details
-        "bag_idempotent": <Boolean> // refer to export module for more details (defaulted to false it not present)
+        "transforms": [], // optional
+        "postprocessors": [], // optional
+        "public": <boolean>, // optional
+        "bag_archiver": <string>, // optional
+        "bag_idempotent": <boolean> // optional
       }
     ]
   }
@@ -71,12 +71,17 @@ The object structure of an export template annotation is defined as follows:
 | Variable | Type | Inclusion| Description |
 | --- | --- | --- | --- |
 | `templates` | array[`template`] | required | An array of `template` objects.
+
 #### `template` (object)
 | Variable | Type | Inclusion| Description |
 | --- | --- | --- | --- |
 | `displayname` | string | required | The display name that will be used to populate the Chaise export format drop-down box for this `template`.
 | `type` | string, enum [`"FILE"`,`"BAG"`] | required | One of two keywords; `"FILE"` or `"BAG"`, used to determine the container format for results.
 | `outputs` | array[`output`] | required | An array of `output` objects. See below.
+| `transforms` | array[`transform_processor`] | optional | The defined value will be passed as `transform_processors` to the deriva backend services. Find more information [here](https://github.com/informatics-isi-edu/deriva-py/blob/master/docs/cli/deriva-download-cli.md#supported-transform_processors).
+| `postprocessors` | array | optional | The defined value will be passed as `post_processors` to the deriva backend services.
+| `public` | boolean | optional | A flag to the export service which is serving the result "download" to the client to allow anonymous access. The default is only the user who initiated the export can actually download the content.
+| `bag_archiver` | enum [`"zip"`,`"tar"`,`"tgz"`] | optional | A string representing the default archiving format to use if not otherwise specified. Valid values are "zip", "tar", and "tgz".
 
 #### `output` (object)
 | Variable | Type | Inclusion| Description |
