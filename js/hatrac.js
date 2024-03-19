@@ -193,6 +193,7 @@ var ERMrest = (function(module) {
 })(ERMrest || {});
 
 var ERMrest = (function(module) {
+    var FILENAME_REGEXP = /[^a-zA-Z0-9_.-]/ig;
 
     var allowedHttpErrors = [500, 503, 408, 401];
 
@@ -310,6 +311,7 @@ var ERMrest = (function(module) {
 
         this.http = this.reference._server.http;
 
+        this.updateDispositionOnly = false;
         this.isPaused = false;
         this.otherInfo = otherInfo;
 
@@ -430,9 +432,22 @@ var ERMrest = (function(module) {
             var headers = module.getResponseHeader(response);
             var md5 = headers["content-md5"];
             var length = headers["content-length"];
+            var contentDisposition = headers["content-disposition"];
 
             // If the file is not same, then simply resolve the promise without setting completed and jobDone
             if ((md5 != self.hash.md5_base64) || (length != self.file.size)) {
+                deferred.resolve(self.url);
+                return;
+            }
+
+            // hatrac only supports `filename*=UTF-8''` in the content disposition so check for this string to get the filename
+            var contentDispositionPrefix = "filename*=UTF-8''";
+            var filenameIndex = contentDisposition.indexOf(contentDispositionPrefix) + contentDispositionPrefix.length;
+
+            // check if filename in content disposition is different from filename being uploaded
+            // if it is, instead set a different flag and don't mark it as done 
+            if (contentDisposition.substring(filenameIndex, contentDisposition.length) != self.file.name.replace(FILENAME_REGEXP, '_')) {
+                self.updateDispositionOnly = true;
                 deferred.resolve(self.url);
                 return;
             }
@@ -496,7 +511,7 @@ var ERMrest = (function(module) {
                     "content-length": self.file.size,
                     "content-type": self.file.type,
                     "content-md5": self.hash.md5_base64,
-                    "content-disposition": "filename*=UTF-8''" + self.file.name.replace(/[^a-zA-Z0-9_.-]/ig, '_')
+                    "content-disposition": "filename*=UTF-8''" + self.file.name.replace(FILENAME_REGEXP, '_')
                 };
 
                 if (!contextHeaderParams || !_isObject(contextHeaderParams)) {
@@ -527,6 +542,52 @@ var ERMrest = (function(module) {
 
         return deferred.promise;
     };
+
+    upload.prototype.createUpdateMetadataJob = function (contextHeaderParams) {
+        var self = this;
+        this.erred = false;
+
+        var deferred = module._q.defer();
+
+        if (this.completed && this.jobDone) {
+            deferred.resolve(this.chunkUrl);
+            return deferred.promise;
+        }
+
+        // Prepend the url with server uri if it is relative
+        var url =  self._getAbsoluteUrl(self.url + ";metadata/content-disposition");
+
+        var data = "filename*=UTF-8''" + self.file.name.replace(FILENAME_REGEXP, '_');
+
+        if (!contextHeaderParams || !_isObject(contextHeaderParams)) {
+            contextHeaderParams = {
+                action: "upload/metadata/update",
+                referrer: self.reference.defaultLogInfo
+            };
+            contextHeaderParams.referrer.column = self.column.name;
+        }
+
+        var config = {
+            headers: _generateContextHeader(contextHeaderParams)
+        };
+        config.headers['content-type'] = 'text/plain';
+
+        self.http.put(url, data, config).then(function (response) {
+            if (response) {
+                // mark as completed and job done since this is a metadata update request that doesn't transfer file data
+                self.isPaused = false;
+                self.completed = true;
+                self.jobDone = true;
+
+                deferred.resolve();
+            }
+        }, function(response) {
+            var error = module.responseToError(response);
+            deferred.reject(error);
+        });
+
+        return deferred.promise;
+    }
 
 
     /**
