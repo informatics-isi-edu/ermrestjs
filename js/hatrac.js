@@ -543,6 +543,12 @@ var ERMrest = (function(module) {
         return deferred.promise;
     };
 
+    /**
+     * @desc Call this function to create an update metadata request for updating the content-disposition
+     *
+     * @returns {Promise} A promise resolved with no value or the url if it already exists
+     * or rejected with error
+     */
     upload.prototype.createUpdateMetadataJob = function (contextHeaderParams) {
         var self = this;
         this.erred = false;
