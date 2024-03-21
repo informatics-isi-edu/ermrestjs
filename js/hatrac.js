@@ -474,11 +474,12 @@ var ERMrest = (function(module) {
 
     /**
      * @desc Call this function to create an upload job for chunked uploading
+     * @param {object} row - row object containing keyvalues of entity
      *
      * @returns {Promise} A promise resolved with a url where we will upload the file
      * or rejected with error if unable to calculate checkum
      */
-    upload.prototype.createUploadJob = function(contextHeaderParams) {
+    upload.prototype.createUploadJob = function(row, contextHeaderParams) {
         var self = this;
         this.erred = false;
 
@@ -505,14 +506,28 @@ var ERMrest = (function(module) {
 
                 // Prepend the url with server uri if it is relative
                 var url =  self._getAbsoluteUrl(self.url + ";upload?parents=true");
+                
+                var customFilename = self.file.name;
+                if (self.column.filenamePattern) {
+                    // row should contain all values for asset annotation already since _generateURL is called and updates `row` there
+                    var keyValues = module._getFormattedKeyValues(self.reference.table, self.reference._context, row);
+                    var filename = module._renderTemplate(self.column.filenamePattern, keyValues, self.reference.table.schema.catalog, { avoidValidation: true, templateEngine: self.column.templateEngine });
+
+                    if (filename && filename.trim() !== '') customFilename = filename;
+                }
 
                 var data = {
                     "chunk-length" : self.PART_SIZE,
                     "content-length": self.file.size,
                     "content-type": self.file.type,
-                    "content-md5": self.hash.md5_base64,
-                    "content-disposition": "filename*=UTF-8''" + self.file.name.replace(FILENAME_REGEXP, '_')
+                    "content-md5": self.hash.md5_base64
                 };
+
+                // do not set a content disposition if the annotation value is set to false
+                // if not set, this allows hatrac to use the object name as the content disposition during GET requests
+                if (!(typeof self.column.filenamePattern === 'boolean' && self.column.filenamePattern === false)) {
+                    data['content-disposition'] =  "filename*=UTF-8''" + customFilename.replace(FILENAME_REGEXP, '_')
+                }
 
                 if (!contextHeaderParams || !_isObject(contextHeaderParams)) {
                     contextHeaderParams = {

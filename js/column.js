@@ -2730,6 +2730,18 @@ Object.defineProperty(AssetPseudoColumn.prototype, "sha256", {
 });
 
 /**
+ * 
+ */
+Object.defineProperty(AssetPseudoColumn.prototype, "filenamePattern", {
+    get: function () {
+        if (this._filenamePattern === undefined) {
+            this._filenamePattern = this._annotation.filename_pattern;
+        }
+        return this._filenamePattern;
+    }
+});
+
+/**
  * The column object that file extension is stored in.
  * @member {string[]} filenameExtFilter
  * @memberof ERMrest.AssetPseudoColumn#
