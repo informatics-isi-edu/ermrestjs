@@ -298,7 +298,7 @@ exports.execute = function (options) {
                 });
             });
 
-            it("should verify the job doesn't exist yet but a version of the same file does with a different filename.", function (done) {
+            it("should verify the job doesn't exist yet but a version of the same file does with a different filename. The file metadata update request should then run", function (done) {
                 uploadObjDiffName._getExistingJobStatus().then(function (response) {
                     expect(response).not.toBeDefined("Job status is defined");
 
@@ -306,7 +306,9 @@ exports.execute = function (options) {
                 }).then(function (response) {
                     expect(response).toBe(serverFilePath, "Server file path is incorrect");
 
-                    expect(uploadObjDiffName.updateDispositionOnly).toBeTruthy('update disposition only flag is incorrect');
+                    expect(uploadObjDiffName.isPaused).toBeFalsy("is paused is incorrect");
+                    expect(uploadObjDiffName.completed).toBeTruthy("completed is incorrect");
+                    expect(uploadObjDiffName.jobDone).toBeTruthy("job done is incorrect");
 
                     done();
                 }).catch(function (err) {
@@ -315,11 +317,9 @@ exports.execute = function (options) {
                 });
             });
 
-            it("should verify the update metadata job is created and succeeds.", function (done) {
-                uploadObjDiffName.createUpdateMetadataJob().then(function () {
-                    expect(uploadObjDiffName.isPaused).toBeFalsy("is paused is incorrect");
-                    expect(uploadObjDiffName.completed).toBeTruthy("completed is incorrect");
-                    expect(uploadObjDiffName.jobDone).toBeTruthy("job done is incorrect");
+            it("should verify the upload doesn't run and returns before getting existing job status.", function (done) {
+                uploadObjDiffName.createUploadJob().then(function (response) {
+                    expect(response).toBeFalsy("create upload job returned the wrong response")
 
                     done();
                 }, function (err) {

@@ -445,11 +445,29 @@ var ERMrest = (function(module) {
             var filenameIndex = contentDisposition.indexOf(contentDispositionPrefix) + contentDispositionPrefix.length;
 
             // check if filename in content disposition is different from filename being uploaded
-            // if it is, instead set a different flag and don't mark it as done 
+            // if it is, create an update metadata request for updating the content-disposition
             if (contentDisposition.substring(filenameIndex, contentDisposition.length) != self.file.name.replace(FILENAME_REGEXP, '_')) {
-                self.updateDispositionOnly = true;
-                deferred.resolve(self.url);
-                return;
+                // Prepend the url with server uri if it is relative
+                var url =  self._getAbsoluteUrl(self.url + ";metadata/content-disposition");
+                var data = "filename*=UTF-8''" + self.file.name.replace(FILENAME_REGEXP, '_');
+                contextHeaderParams.action = "upload/metadata/update"
+
+                var config = {
+                    headers: _generateContextHeader(contextHeaderParams)
+                };
+                config.headers['content-type'] = 'text/plain';
+
+                return self.http.put(url, data, config).then(function (response) {
+                    // mark as completed and job done since this is a metadata update request that doesn't transfer file data
+                    self.isPaused = false;
+                    self.completed = true;
+                    self.jobDone = true;
+
+                    deferred.resolve(self.url);
+                }, function(response) {
+                    var error = module.responseToError(response);
+                    deferred.reject(error);
+                });
             }
 
             self.isPaused = false;
@@ -520,14 +538,9 @@ var ERMrest = (function(module) {
                     "chunk-length" : self.PART_SIZE,
                     "content-length": self.file.size,
                     "content-type": self.file.type,
-                    "content-md5": self.hash.md5_base64
+                    "content-md5": self.hash.md5_base64,
+                    "content-disposition": "filename*=UTF-8''" + self.file.name.replace(FILENAME_REGEXP, '_')
                 };
-
-                // do not set a content disposition if the annotation value is set to false
-                // if not set, this allows hatrac to use the object name as the content disposition during GET requests
-                if (!(typeof self.column.filenamePattern === 'boolean' && self.column.filenamePattern === false)) {
-                    data['content-disposition'] =  "filename*=UTF-8''" + customFilename.replace(FILENAME_REGEXP, '_')
-                }
 
                 if (!contextHeaderParams || !_isObject(contextHeaderParams)) {
                     contextHeaderParams = {
