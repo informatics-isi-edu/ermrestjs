@@ -448,16 +448,8 @@ var ERMrest = (function(module) {
             if (contentDisposition.substring(filenameIndex, contentDisposition.length) != self.file.name.replace(FILENAME_REGEXP, '_')) {
                 // Prepend the url with server uri if it is relative
                 var url =  self._getAbsoluteUrl(self.url + ";metadata/content-disposition");
-
                 var data = "filename*=UTF-8''" + self.file.name.replace(FILENAME_REGEXP, '_');
-
-                if (!contextHeaderParams || !_isObject(contextHeaderParams)) {
-                    contextHeaderParams = {
-                        action: "upload/metadata/update",
-                        referrer: self.reference.defaultLogInfo
-                    };
-                    contextHeaderParams.referrer.column = self.column.name;
-                }
+                contextHeaderParams.action = "upload/metadata/update"
 
                 var config = {
                     headers: _generateContextHeader(contextHeaderParams)
