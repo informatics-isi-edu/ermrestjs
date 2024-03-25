@@ -312,7 +312,6 @@ var ERMrest = (function(module) {
 
         this.http = this.reference._server.http;
 
-        this.updateDispositionOnly = false;
         this.isPaused = false;
         this.otherInfo = otherInfo;
 
@@ -493,12 +492,11 @@ var ERMrest = (function(module) {
 
     /**
      * @desc Call this function to create an upload job for chunked uploading
-     * @param {object} row - row object containing keyvalues of entity
      *
      * @returns {Promise} A promise resolved with a url where we will upload the file
      * or rejected with error if unable to calculate checkum
      */
-    upload.prototype.createUploadJob = function(row, contextHeaderParams) {
+    upload.prototype.createUploadJob = function(contextHeaderParams) {
         var self = this;
         this.erred = false;
 
@@ -562,58 +560,6 @@ var ERMrest = (function(module) {
 
         return deferred.promise;
     };
-
-    /**
-     * @desc Call this function to create an update metadata request for updating the content-disposition
-     *
-     * @returns {Promise} A promise resolved with no value or the url if it already exists
-     * or rejected with error
-     */
-    upload.prototype.createUpdateMetadataJob = function (contextHeaderParams) {
-        var self = this;
-        this.erred = false;
-
-        var deferred = module._q.defer();
-
-        if (this.completed && this.jobDone) {
-            deferred.resolve(this.chunkUrl);
-            return deferred.promise;
-        }
-
-        // Prepend the url with server uri if it is relative
-        var url =  self._getAbsoluteUrl(self.url + ";metadata/content-disposition");
-
-        var data = "filename*=UTF-8''" + self.file.name.replace(FILENAME_REGEXP, '_');
-
-        if (!contextHeaderParams || !_isObject(contextHeaderParams)) {
-            contextHeaderParams = {
-                action: "upload/metadata/update",
-                referrer: self.reference.defaultLogInfo
-            };
-            contextHeaderParams.referrer.column = self.column.name;
-        }
-
-        var config = {
-            headers: _generateContextHeader(contextHeaderParams)
-        };
-        config.headers['content-type'] = 'text/plain';
-
-        self.http.put(url, data, config).then(function (response) {
-            if (response) {
-                // mark as completed and job done since this is a metadata update request that doesn't transfer file data
-                self.isPaused = false;
-                self.completed = true;
-                self.jobDone = true;
-
-                deferred.resolve();
-            }
-        }, function(response) {
-            var error = module.responseToError(response);
-            deferred.reject(error);
-        });
-
-        return deferred.promise;
-    }
 
 
     /**
