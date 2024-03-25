@@ -2735,7 +2735,7 @@ Object.defineProperty(AssetPseudoColumn.prototype, "sha256", {
 Object.defineProperty(AssetPseudoColumn.prototype, "filenamePattern", {
     get: function () {
         if (this._filenamePattern === undefined) {
-            this._filenamePattern = this._annotation.filename_pattern;
+            this._filenamePattern = this._annotation.stored_filename_pattern;
         }
         return this._filenamePattern;
     }

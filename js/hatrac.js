@@ -298,6 +298,7 @@ var ERMrest = (function(module) {
         this.CHUNK_QUEUE_SIZE = otherInfo.chunkQueueSize || 4;
 
         this.file = file;
+        this.storedFilename = file.name; // the name that will be used for content-disposition and filename column
 
         if (isNode) this.file.buffer = require('fs').readFileSync(file.path);
 
@@ -524,22 +525,13 @@ var ERMrest = (function(module) {
 
                 // Prepend the url with server uri if it is relative
                 var url =  self._getAbsoluteUrl(self.url + ";upload?parents=true");
-                
-                var customFilename = self.file.name;
-                if (self.column.filenamePattern) {
-                    // row should contain all values for asset annotation already since _generateURL is called and updates `row` there
-                    var keyValues = module._getFormattedKeyValues(self.reference.table, self.reference._context, row);
-                    var filename = module._renderTemplate(self.column.filenamePattern, keyValues, self.reference.table.schema.catalog, { avoidValidation: true, templateEngine: self.column.templateEngine });
-
-                    if (filename && filename.trim() !== '') customFilename = filename;
-                }
 
                 var data = {
                     "chunk-length" : self.PART_SIZE,
                     "content-length": self.file.size,
                     "content-type": self.file.type,
                     "content-md5": self.hash.md5_base64,
-                    "content-disposition": "filename*=UTF-8''" + self.file.name.replace(FILENAME_REGEXP, '_')
+                    "content-disposition": "filename*=UTF-8''" + self.storedFilename.replace(FILENAME_REGEXP, '_')
                 };
 
                 if (!contextHeaderParams || !_isObject(contextHeaderParams)) {
@@ -891,13 +883,18 @@ var ERMrest = (function(module) {
         if (this.column.md5 && typeof this.column.md5 === 'object') row[this.column.md5.name] = this.hash.md5_hex;
         if (this.column.sha256 && typeof this.column.sha256 === 'object') row[this.column.sha256.name] = this.hash.sha256;
 
-        row[this.column.name].filename = this.file.name;
         row[this.column.name].size = this.file.size;
         row[this.column.name].mimetype = this.file.type;
         row[this.column.name].md5_hex = this.hash.md5_hex;
         row[this.column.name].md5_base64 = this.hash.md5_base64;
         row[this.column.name].sha256 = this.hash.sha256;
+        row[this.column.name].filename = this.file.name;
         row[this.column.name].filename_ext = _getFilenameExtension(this.file.name, this.column.filenameExtFilter, this.column.filenameExtRegexp);
+        // filename_stem is everything from the file name except the last ext
+        // For example if we have a file nameed "file.tar.zip"
+        //    => "file.tar" is the stem
+        //    => ".zip" is the extension
+        row[this.column.name].filename_stem = this.file.name.substring(0, this.file.name.lastIndexOf('.'));
 
         // Generate url
 
@@ -906,6 +903,16 @@ var ERMrest = (function(module) {
         var keyValues = module._getFormattedKeyValues(this.reference.table, this.reference._context, row);
 
         var url = module._renderTemplate(template, keyValues, this.reference.table.schema.catalog, { avoidValidation: true, templateEngine: this.column.templateEngine });
+
+        if (this.column.filenamePattern) {
+            var filename = module._renderTemplate(this.column.filenamePattern, keyValues, this.reference.table.schema.catalog, { avoidValidation: true, templateEngine: this.column.templateEngine });
+
+            if (filename && filename.trim() !== '') {
+                this.storedFilename = filename;
+                // update the filename column value on the row being submitted
+                if (this.column.filenameColumn) row[this.column.filenameColumn.name] = this.storedFilename;
+            }
+        }
         
         // If the template is null then throw an error
         if (url === null || url.trim() === '')  {
@@ -935,6 +942,7 @@ var ERMrest = (function(module) {
 
         this.url = url;
 
+        // NOTE: url is returned but not used in either place this function is called
         return this.url;
     };
 
