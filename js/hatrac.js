@@ -446,10 +446,10 @@ var ERMrest = (function(module) {
 
             // check if filename in content disposition is different from filename being uploaded
             // if it is, create an update metadata request for updating the content-disposition
-            if (contentDisposition.substring(filenameIndex, contentDisposition.length) != self.file.name.replace(FILENAME_REGEXP, '_')) {
+            if (contentDisposition.substring(filenameIndex, contentDisposition.length) != self.storedFilename.replace(FILENAME_REGEXP, '_')) {
                 // Prepend the url with server uri if it is relative
                 var url =  self._getAbsoluteUrl(self.url + ";metadata/content-disposition");
-                var data = "filename*=UTF-8''" + self.file.name.replace(FILENAME_REGEXP, '_');
+                var data = "filename*=UTF-8''" + self.storedFilename.replace(FILENAME_REGEXP, '_');
                 contextHeaderParams.action = "upload/metadata/update"
 
                 var config = {
@@ -835,12 +835,13 @@ var ERMrest = (function(module) {
         row[this.column.name].md5_base64 = this.hash.md5_base64;
         row[this.column.name].sha256 = this.hash.sha256;
         row[this.column.name].filename = this.file.name;
-        row[this.column.name].filename_ext = _getFilenameExtension(this.file.name, this.column.filenameExtFilter, this.column.filenameExtRegexp);
-        // filename_stem is everything from the file name except the last ext
-        // For example if we have a file nameed "file.tar.zip"
-        //    => "file.tar" is the stem
+        var filename_ext = _getFilenameExtension(this.file.name, this.column.filenameExtFilter, this.column.filenameExtRegexp);
+        row[this.column.name].filename_ext = filename_ext
+        // filename_basename is everything from the file name except the last ext
+        // For example if we have a file named "file.tar.zip"
+        //    => "file.tar" is the basename
         //    => ".zip" is the extension
-        row[this.column.name].filename_stem = this.file.name.substring(0, this.file.name.lastIndexOf('.'));
+        row[this.column.name].filename_basename = this.file.name.substring(0, this.file.name.indexOf(filename_ext));
 
         // Generate url
 

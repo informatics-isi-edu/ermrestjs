@@ -180,10 +180,10 @@ exports.execute = function (options) {
             column, reference, uploadObj, ermRest;
 
         var file = {
-            name: "testfile500kb.png",
+            name: "testfile500kb.png.zip",
             size: 512000,
             displaySize: "500KB",
-            type: "image/png",
+            type: "application/zip",
             hash: "4b178700e5f3b15ce799f2c6c1465741",
             hash_64: "SxeHAOXzsVznmfLGwUZXQQ=="
         };
@@ -247,11 +247,11 @@ exports.execute = function (options) {
             uploadObj.calculateChecksum(validRow).then(function(url) {
                 expect(uploadObj.hash instanceof ermRest.Checksum).toBeTruthy("Upload object hash is not of type ermRest.Checksum");
 
-                expect(url).toBe("/hatrac/js/ermrestjs/testfile500kb/" + file.hash, "File generated url is not the same");
+                expect(url).toBe("/hatrac/js/ermrestjs/testfile500kb.png/" + file.hash, "File generated url is not the same");
 
                 // values that are attached to the row
                 expect(validRow.filename).not.toBe(file.name, "valid row filename is the same as original file's name");
-                expect(validRow.filename).toBe(time + ".png", "valid row filename was not generated properly");
+                expect(validRow.filename).toBe(time + ".zip", "valid row filename was not generated properly");
                 expect(validRow.bytes).toBe(file.size, "valid row bytes is incorrect");
                 expect(validRow.checksum).toBe(file.hash, "valid row checksum is incorrect");
 

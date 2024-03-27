@@ -740,7 +740,7 @@ Default heuristics:
   - `size` for size in bytes
   - `mimetype` for mimetype of the selected file.
   - `filename` for filename. NOTE: this is the filename of the uploaded file before `stored_filename_pattern` is generated
-  - `filename_stem` for the filename without the extension
+  - `filename_basename` for the filename without the extension. Note: the following will be true `filename_basename + filename_ext = filename`
   - `filename_ext` for the file extension based on the filename. This value is derived based on the optionally defined `filename_ext_filter` and `filename_ext_regexp`. If these annotations are missing, the last part of the filename after the last dot will be returned (also includes the `.` e.g. `.png`).
     - If we cannot find matches, this property will return `null`. So make sure you're doing null checking while using this property (otherwise, the whole `url_pattern` might result in an empty string).
 - Nothing may be inferred without additional payload patterns present.
