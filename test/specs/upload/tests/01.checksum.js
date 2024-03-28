@@ -8,7 +8,6 @@ exports.execute = function (options) {
         var schemaName = "upload",
             schema,
             tableName = "file",
-            table,
             columnName = "uri",
             column,
             columnNameWOHatrac = "uri_wo_hatrac",
@@ -59,9 +58,8 @@ exports.execute = function (options) {
                 f.file = new File(filePath);
             });
 
-            options.ermRest.resolve(baseUri, { cid: "test" }).then(function (response) {
-                reference = response;
-                reference = reference.contextualize.entryCreate;
+            ermRest.resolve(baseUri, { cid: "test" }).then(function (response) {
+                reference = response.contextualize.entryCreate;
                 column = reference.columns.find(function(c) { return c.name == columnName;  });
                 columnWOHatrac = reference.columns.find(function(c) { return c.name == columnNameWOHatrac;  });
 
@@ -127,10 +125,7 @@ exports.execute = function (options) {
                         expect(uploadObj.validateURL(validRow)).toBe(true);
                     });
 
-
                     it("should show progress on calculation of checksum as well as calculate correct hash in hex and base64 format with correct url", function(done) {
-                        var chunkSize = uploadObj.PART_SIZE;
-
                         uploadObj.calculateChecksum(validRow).then(function(url) {
                             expect(uploadObj.hash instanceof ermRest.Checksum).toBeTruthy("Upload object hash is not of type ermRest.Checksum");
 
@@ -177,4 +172,108 @@ exports.execute = function (options) {
         })
 
     });
+
+    describe('For a file with a "custom filename" to be generated and used in place of the initial file name, ', function () {
+        var schemaName = "upload",
+            tableName = "file_custom_filename",
+            columnName = "uri",
+            column, reference, uploadObj, ermRest;
+
+        var file = {
+            name: "testfile500kb.png.zip",
+            size: 512000,
+            displaySize: "500KB",
+            type: "application/zip",
+            hash: "4b178700e5f3b15ce799f2c6c1465741",
+            hash_64: "SxeHAOXzsVznmfLGwUZXQQ=="
+        };
+
+        var time = Date.now();
+        var validRow = {
+            timestamp: time,
+            uri: { md5_hex: file.hash }
+        };
+
+        var baseUri = options.url + "/catalog/" + process.env.DEFAULT_CATALOG + "/entity/"
+            + schemaName + ":" + tableName;
+
+        beforeAll(function (done) {
+            ermRest = options.ermRest;
+
+            var filePath = "test/specs/upload/files/" + file.name
+
+            exec("perl -e 'print \"\1\" x " + file.size + "' > " + filePath);
+
+            file.file = new File(filePath);
+
+            ermRest.resolve(baseUri, { cid: "test" }).then(function (response) {
+                reference = response.contextualize.entryCreate;
+                column = reference.columns.find(function(c) { return c.name == columnName;  });
+
+                if (!column) throw new Error("Unable to find column " + columnName);
+                done();
+            }, function (err) {
+                console.dir(err);
+                done.fail();
+            });
+        });
+
+        it("should create an upload object", function(done) {
+
+            try {
+                uploadObj = new ermRest.Upload(file.file, {
+                    column: column,
+                    reference: reference,
+                    chunkSize: 5 * 1024 * 1024
+                });
+
+                expect(uploadObj instanceof ermRest.Upload).toBe(true);
+                done();
+            } catch(e) {
+                console.dir(e);
+                done.fail();
+            }
+        });
+
+        it("should contain properties of file in `file` property of uploadObj (Size: " + file.size + " (" + file.displaySize + "), type: " + file.type + ", name: " + file.name + ")", function() {
+            expect(uploadObj.file.size).toBe(file.size);
+            // the file object should continue to inform us about the file being uploaded
+            // the name won't be updated when we readt the annotation and calculated the filename for content-disposition and the database
+            expect(uploadObj.file.name).toBe(file.name);
+            expect(uploadObj.file.type).toBe(file.type);
+        });
+
+        it("should calculate correct hash in hex and base64 format with correct url and generated filename", function(done) {
+            uploadObj.calculateChecksum(validRow).then(function(url) {
+                expect(uploadObj.hash instanceof ermRest.Checksum).toBeTruthy("Upload object hash is not of type ermRest.Checksum");
+
+                expect(url).toBe("/hatrac/js/ermrestjs/testfile500kb.png/" + file.hash, "File generated url is not the same");
+
+                // values that are attached to the row
+                expect(validRow.filename).not.toBe(file.name, "valid row filename is the same as original file's name");
+                expect(validRow.filename).toBe(time + ".zip", "valid row filename was not generated properly");
+                expect(validRow.bytes).toBe(file.size, "valid row bytes is incorrect");
+                expect(validRow.checksum).toBe(file.hash, "valid row checksum is incorrect");
+
+                done();
+
+            }, function(e) {
+                console.dir(e);
+                expect(file).toBe("");
+                done.fail();
+            }, function(uploadedSize) {
+                uploaded = uploadedSize;
+            });
+
+        });
+
+        it("should have the checksum properly defined.", function () {
+            var checksum = uploadObj.hash;
+
+            expect(checksum.file).toEqual(uploadObj.file, "file is incorrect");
+            expect(checksum.md5_hex).toBe(file.hash, "md5 hex is incorrect");
+            expect(checksum.md5_base64).toBe(file.hash_64, "md5 base64 is incorrect");
+        });
+
+    })
 }
