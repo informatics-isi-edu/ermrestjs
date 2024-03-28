@@ -386,6 +386,12 @@
 
                         queryParams.query_path = "/" + queryStr;
                         queryParams.output_path = dest.name || output_path;
+                        if (dest.output_path != null) {
+                            queryParams.output_path = dest.output_path;
+                        }
+                        if (dest.output_filename != null) {
+                            queryParams.output_filename = dest.output_filename;
+                        }
                         if (dest.impl != null) {
                             query.processor_type = dest.impl;
                         }
