@@ -298,8 +298,9 @@ var ERMrest = (function(module) {
         this.CHUNK_QUEUE_SIZE = otherInfo.chunkQueueSize || 4;
 
         this.file = file;
-        this.storedFilename = file.name; // the name that will be used for content-disposition and filename column
+        if (!this.file) throw new Error("No file provided while creating hatrac file object");
 
+        this.storedFilename = file.name; // the name that will be used for content-disposition and filename column
         if (isNode) this.file.buffer = require('fs').readFileSync(file.path);
 
         this.column = otherInfo.column;
@@ -841,7 +842,7 @@ var ERMrest = (function(module) {
         // For example if we have a file named "file.tar.zip"
         //    => "file.tar" is the basename
         //    => ".zip" is the extension
-        row[this.column.name].filename_basename = this.file.name.substring(0, this.file.name.indexOf(filename_ext));
+        row[this.column.name].filename_basename = filename_ext ? this.file.name.substring(0, this.file.name.length - filename_ext.length) : this.file.name;
 
         // Generate url
 
