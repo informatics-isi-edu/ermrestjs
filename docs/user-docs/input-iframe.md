@@ -4,6 +4,25 @@ This document will cover how to include any third-party tools inside the Chaise'
 
 In the following, we will first go over what we expect from the iframe and mention how Chaise and iframe should communicate. We then will review the `input_iframe` property that should be added to annotations.  In the [limitations](#limitations) section, we will go over the limitations and assumptions in the current implementation of this feature.
 
+## Table of contents
+
+* [Limitations](#limitations)
+* [Iframe communication](#iframe-communication)
+* [Annotation](#annotation)
+  + [url_pattern](#url_pattern)
+  + [field_mapping](#field_mapping)
+  + [optional_fields](#optional_fields)
+  + [empty_field_confirm_message_markdown](#empty_field_confirm_message_markdown)
+
+## Limitations
+
+Given that this is an experimental feature for now, there are some limitations/assumptions in the implementation of it we've listed below:
+
+- When users select a value for this input, we will show the raw value of the column that this property is defined on. So, it's important to use a `source` that will be populated by the iframe. That's why in the examples in this document, we're using `"source": "ID"` which is populated by the iframe and identifies the chosen value.
+
+- In recordedit, the required inputs are marked with a `*`. These inputs must have a value, and if users attempt to submit the form without a value for them, we will complain. This check for column directives with `input_iframe` is done only based on the column itself. We will not do additional checks to see whether the columns used in the `field_mapping` are required. If the column is not required, but additional columns are, you should consider adding the [required annotation](https://github.com/informatics-isi-edu/ermrestjs/blob/master/docs/user-docs/annotation.md#tag-2018-required) to the column.
+
+
 ## Iframe communication
 
 As mentioned, the third-party tool will be displayed in an iframe in Chaise. To facilitate this, you should start with [this template](input-iframe-template.html) we've prepared for implementing this iframe page. In the following, we will go over different parts of this template.
@@ -133,12 +152,4 @@ This optional field can be used to customize the message that we show to users w
     "empty_field_confirm_message_markdown": "You are closing the registration UI without submitting your changes. Are you sure you want to proceed? \n\n If you would like to submit your registry, please close this popup and click on `REVIEW AND REGISTER` button on bottom right of the Registration UI."
   }
 }
-
-
-## Limitations
-
-Given that this is an experimental feature for now, there are some limitations/assumptions in the implementation of it we've listed below:
-
-- When users select a value for this input, we will show the raw value of the column that this property is defined on. So, it's important to use a `source` that will be populated by the iframe. That's why in the examples in this document, we're using `"source": "ID"` which is populated by the iframe and identifies the chosen value.
-
-- In recordedit, the required inputs are marked with a `*`. These inputs must have a value, and if users attempt to submit the form without a value for them, we will complain. This check for column directives with `input_iframe` is done only based on the column itself. We will not do additional checks to see whether the columns used in the `field_mapping` are required. If the column is not required, but additional columns are, you should consider adding the [required annotation](https://github.com/informatics-isi-edu/ermrestjs/blob/master/docs/user-docs/annotation.md#tag-2018-required) to the column.
+```
