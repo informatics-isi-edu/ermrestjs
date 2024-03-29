@@ -36,7 +36,7 @@ exports.execute = function (options) {
             var printInteger = formatUtils.printInteger;
             expect(printInteger(null)).toBe('');
             expect(printInteger(12341234)).toBe('12,341,234');
-            expect(printInteger(0001)).toBe('1');
+            expect(printInteger('0001')).toBe('1');
             expect(printInteger(233)).toBe('233');
             expect(printInteger(23.)).toBe('23');
             expect(printInteger(23.000000000)).toBe('23');
@@ -598,6 +598,12 @@ exports.execute = function (options) {
                 expect(module.renderHandlebarsTemplate("{{formatDate 'aaa' 'YYYY'}}")).toBe("");
                 // should be able to handle null value
                 expect(module.renderHandlebarsTemplate("{{formatDate date 'YYYY'}}", {date: null})).toBe("");
+            });
+
+            it('printf helper', function () {
+                const render = (t, v) => module.renderHandlebarsTemplate(t, v);
+                expect(render('{{printf 3.1415 "%.1f" }}', {})).toBe('3.1');
+                expect(render('{{printf num "%4d" }}', { num: 43 })).toBe('  43');
             });
 
             it('humanizeByte helper', function () {

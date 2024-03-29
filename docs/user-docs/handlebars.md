@@ -24,6 +24,7 @@ This document summarizes the key concepts of Handlebars that are relevant to Der
   - [$location](#location)
   - [$session](#session)
 - [Helpers](#helpers)
+  - [printf helper](#printf-helper)
   - [formatDate helper](#formatdate-helper)
   - [humanizeBytes helper](#humanizebytes-helper)
   - [Math Helpers](#math-helpers)
@@ -485,9 +486,27 @@ A Handlebars helper call is a simple identifier, followed by zero or more parame
 {{HELPER_NAME PARAM1 PARAM2 }}
 ```
 
+### printf helper
+
+You can use the `printf` helper to format a value. The expected format follows the same syntax as [PreFormat](pre-format.md#syntax).
+
+Syntax:
+```
+{{printf value format }}
+```
+
+Example:
+```
+{{printf 3.1415 "%.1f" }} ==> "3.1"
+
+{{printf 43 "%4d" }} ==> "  43"
+```
+
+Keep in mind that `printf` doesn't check the validity of the given values. So for example if the value might not be a number, you cannot blindly use the `d` type and should guard against it.
+
 ### formatDate helper
 
-You can use the `formatDate` helper to take any `date` or `timestamp[tz]` value and format it according to the [Pre Format Guide](pre-format.md#syntax-for-dates-and-timestamps).
+You can use the `formatDate` helper to take any `date`, `timestamp`, or `timestamptz` value and format it according to the [Pre Format Guide](pre-format.md#syntax-for-dates-and-timestamps).
 
 Syntax:
 ```

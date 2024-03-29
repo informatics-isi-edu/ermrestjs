@@ -72,6 +72,13 @@
             },
 
             /**
+             * {{printf value "%4d" }}
+             */
+            printf: function (value, format) {
+                return module._printf({ format: format }, value);
+            },
+
+            /**
              * {{formatDate value format}}
              *
              * @returns formatted string of `value` with corresponding `format`
