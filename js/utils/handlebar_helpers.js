@@ -21,7 +21,7 @@
 
             /**
              * escape markdown characters
-             *
+             * @ignore
              * @returns escaped characeters
              */
             escape: function () {
@@ -31,7 +31,7 @@
             },
 
             /**
-             *
+             * @ignore
              * @returns url-encoded string
              */
             encode: function () {
@@ -57,7 +57,7 @@
              * - first see if the block syntax with str inside it is used or not
              * - if the input is an object we will encode it
              * - try encoding as string (will return empty string if it wasn't a string)
-             *
+             * @ignore
              * @returns encoded facet string that can be used in url
              */
             encodeFacet: function (options) {
@@ -73,6 +73,7 @@
 
             /**
              * {{printf value "%4d" }}
+             * @ignore
              */
             printf: function (value, format) {
                 return module._printf({ format: format }, value);
@@ -80,7 +81,7 @@
 
             /**
              * {{formatDate value format}}
-             *
+             * @ignore
              * @returns formatted string of `value` with corresponding `format`
              */
             formatDate: function (value, format) {
@@ -100,7 +101,7 @@
              * or
              *
              * {{#jsonStringify obj}}{{/jsonStringify}}
-             *
+             * @ignore
              * @returns string representation of the given JSON object
              */
             jsonStringify: function (options) {
@@ -117,7 +118,7 @@
              * {{/replace}}
              *
              * {{replace value regexp flags="ig"}}
-             *
+             * @ignore
              * @returns replaces each match of the regexp with newSubstr
              */
             replace: function (substr, newSubstr, options) {
@@ -135,7 +136,7 @@
              * {{/if}}
              *
              * {{regexMatch value regexp flags="i"}}
-             *
+             * @ignore
              * @returns boolean if the value matches the regexp
              */
             regexMatch: function (value, regexp, options) {
@@ -153,7 +154,7 @@
              * {{/each}}
              *
              * {{regexFindFirst value regexp flags="i"}}
-             *
+             * @ignore
              * @returns first string from value that matches the regular expression or empty string
              */
             regexFindFirst: function (value, regexp, options) {
@@ -171,7 +172,7 @@
              * {{/each}}
              *
              * {{regexFindFirst value regexp flags="ig"}}
-             *
+             * @ignore
              * @returns array of strings from value that match the regular expression or
              */
             regexFindAll: function (value, regexp, options) {
@@ -186,7 +187,7 @@
              * {{#toTitleCase}}
              *  string
              * {{/toTitleCase}}
-             *
+             * @ignore
              * @returns string representation of the given JSON object
              */
             toTitleCase: function (options) {
@@ -203,7 +204,7 @@
              * {{humanizeBytes value mode='si' }}
              * {{humanizeBytes value precision=4}}
              * {{humanizeBytes value tooltip=true }}
-             *
+             * @ignore
              * @returns formatted string of `value` with corresponding `mode`
              */
             humanizeBytes: function (value, options) {

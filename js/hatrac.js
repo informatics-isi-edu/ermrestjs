@@ -210,15 +210,15 @@ var ERMrest = (function(module) {
         headers[module.contextHeaderName] = contextHeaderParams;
         return headers;
     };
-    
+
     /**
      * given a filename, will return the extension
      * By default, it will extract the last of the filename after the last `.`.
      * The second parameter can be used for passing a regular expression
      * if we want a different method of extracting the extension.
-     * @param {string} filename 
+     * @param {string} filename
      * @param {string[]} allowedExtensions
-     * @param {string[]} regexArr 
+     * @param {string[]} regexArr
      * @returns the filename extension string. if we cannot find any matches, it will return null
      * @private
      * @ignore
@@ -227,7 +227,7 @@ var ERMrest = (function(module) {
         if (typeof filename !== 'string' || filename.length === 0) {
             return null;
         }
-        
+
         // first find in the list of allowed extensions
         var res = -1;
         var isInAllowed = Array.isArray(allowedExtensions) && allowedExtensions.some(function (ext) {
@@ -264,7 +264,7 @@ var ERMrest = (function(module) {
                 res = filename.slice(dotIndex);
             }
         }
-        
+
         return res;
     };
 
@@ -451,7 +451,7 @@ var ERMrest = (function(module) {
                 // Prepend the url with server uri if it is relative
                 var url =  self._getAbsoluteUrl(self.url + ";metadata/content-disposition");
                 var data = "filename*=UTF-8''" + self.storedFilename.replace(FILENAME_REGEXP, '_');
-                contextHeaderParams.action = "upload/metadata/update"
+                contextHeaderParams.action = "upload/metadata/update";
 
                 var config = {
                     headers: _generateContextHeader(contextHeaderParams)
@@ -837,7 +837,7 @@ var ERMrest = (function(module) {
         row[this.column.name].sha256 = this.hash.sha256;
         row[this.column.name].filename = this.file.name;
         var filename_ext = _getFilenameExtension(this.file.name, this.column.filenameExtFilter, this.column.filenameExtRegexp);
-        row[this.column.name].filename_ext = filename_ext
+        row[this.column.name].filename_ext = filename_ext;
         // filename_basename is everything from the file name except the last ext
         // For example if we have a file named "file.tar.zip"
         //    => "file.tar" is the basename
@@ -861,7 +861,7 @@ var ERMrest = (function(module) {
                 if (this.column.filenameColumn) row[this.column.filenameColumn.name] = this.storedFilename;
             }
         }
-        
+
         // If the template is null then throw an error
         if (url === null || url.trim() === '')  {
             throw new module.MalformedURIError("Some column values are null in the template or the template is invalid. The used template: " + template);

@@ -1675,8 +1675,8 @@
                     // and if the data is unchanged, no need to add the column name to the projections list
                     if (columnProjections.indexOf(colName) !== -1) return;
 
-                    var oldVal = oldData[colName]
-                    var newVal = newData[colName]
+                    var oldVal = oldData[colName];
+                    var newVal = newData[colName];
 
                     var typename = colType.rootName;
                     var compareWithMoment = typename === 'date' || typename === 'timestamp' || typename === 'timestamptz';
@@ -1684,9 +1684,9 @@
                     // NOTE: moment will test 2 null values as different even though they are both null
                     if (compareWithMoment && (oldVal || newVal)) {
                         var moment = module._moment;
-                        
-                        var oldMoment = moment(oldData[colName])
-                        var newMoment = moment(newData[colName])
+
+                        var oldMoment = moment(oldData[colName]);
+                        var newMoment = moment(newData[colName]);
 
                         if (!oldMoment.isSame(newMoment)) {
                             columnProjections.push(colName);

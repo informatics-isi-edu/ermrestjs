@@ -1823,15 +1823,15 @@
                 //          If there are 22 digits or more, then scientific notation is used
                 //          ecmascript language spec: https://262.ecma-international.org/5.1/#sec-9.8.1
                 if (Math.abs(value) >= 1000000000000 || Math.abs(value) < 0.000001) {
-                    // this also ensures there are more digits than the precision used 
+                    // this also ensures there are more digits than the precision used
                     // so the number will be converted to scientific notation instead of
                     // being padded with zeroes with no conversion
                     // for example: 0.000001.toPrecision(4) ==> '0.000001000'
-                    value = value.toPrecision(5)
+                    value = value.toPrecision(5);
                 } else {
                     value = value.toFixed(4);
                 }
-                
+
             }
 
             // Remove leading zeroes
