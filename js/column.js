@@ -2730,7 +2730,7 @@ Object.defineProperty(AssetPseudoColumn.prototype, "sha256", {
 });
 
 /**
- * 
+ *
  */
 Object.defineProperty(AssetPseudoColumn.prototype, "filenamePattern", {
     get: function () {
@@ -3364,37 +3364,35 @@ FacetColumn.prototype = {
 
     /**
      * Whether client should hide the null choice.
-     * `null` filter could mean any of the following:
+     *
+     * Before going through the logic, it's good to know the following:
+     * -`null` filter could mean any of the following:
      *   - Scalar value being `null`. In terms of ermrest, a simple col::null:: query
      *   - No value exists in the given path (checking presence of a value in the path). In terms of ermrest,
      *     we have to construct an outer join. For performance we're going to use right outer join.
      *     Because of ermrest limitation, we cannot have more than two right outer joins and therefore
      *     two such null checks cannot co-exist.
-     * Since we're not going to show two different options for these two meanings,
-     * we have to make sure to offer `null` option when only one of these two meanings would make sense.
-     * Based on this, we can categorize facets into these three groups:
-     *   1. (G1) Facets without any path.
-     *   2. (G2) Facets with path where the column is nullable: `null` could mean any of those.
-     *   3. (G3) Facets with path where the column is not nullable. Here `null` can only mean path existence.
-     *   3. (G3.1) Facets with only one hop where the column used in foreignkey is the same column for faceting.
-     *      In this case, we can completely ignore the foreignkey path and just do a value check on main table.
-     * Other types of facet that null won't be applicable to them and therefore
-     * we shouldn't even offer the option:
-     *   1. (G4) Scalar columns of main table that are not-null.
-     *   2. (G5) All outbound foreignkey facets that all the columns invloved are not-null
-     *   3. (G6) Facets with `filter` in their source definition. We cannot combine filter
-     *           and null together.
+     * - Since we're not going to show two different options for these two meanings,
+     *   we have to make sure to offer `null` option when only one of these two meanings would make sense.
+     * - There are some cases when the `null` is not even possible based on the model. So we shouldn't offer this option.
+     * - Due to ermrest and our parse limitations, facets with filter cannot support null.
      *
-     * Based on this, the following will be the logic for this function:
-     *     - If facet has `null` filter: `false`
-     *     - If facet has `"hide_null_choice": true`: `true`
-     *     - If G6: true
-     *     - If G1: `true` if the column is not-null
-     *     - If G5: `true`
-     *     - If G2: `true`
-     *     - If G3.1: `false`
-     *     - If G3 and no other G3 has null: `false`
-     *     - otherwise: `false`
+     * Therefore, the following is the logic for this function:
+     *   1. If the facet already has `null` filter, return `false`.
+     *   2. If facet has `"hide_null_choice": true`, return `true`.
+     *   3. If facet has filer, return `true` as our parse can't handle it.
+     *   4. If it's a local column,
+     *     4.1. if it's not-null, return `true`.
+     *     4.2. if it's nullable, return `false`.
+     *   5. If it's an all-outbound path where all the columns in the path are not-null,
+     *     5.1. If the end column is nullable, return `false` as null value only means scalar value being null.
+     *     5.2. If the end column is not-null, return `true` as null value is not possible.
+     *   6. For any other paths, if the end column is nullable, `null` filter could mean both scalar and path. so return `true`.
+     *   7. Facets with only one hop where the column used in foreignkey is the same column for faceting.
+     *      In this case, we can completely ignore the foreignkey path and just do a value check on main table. so return `false`.
+     *   8. any other cases (facet with arbiarty path),
+     *    8.1. if other facets have `null` filter, return `true` as we cannot support multiple right outer joins.
+     *    8.2. otherwise, return `false`.
      *
      * NOTE this function used to check for select access as well as versioned catalog,
      * but we decided to remove them since it's not the desired behavior:
@@ -3414,22 +3412,26 @@ FacetColumn.prototype = {
                     return true;
                 }
 
-                // G6
+                // parse cannot support this
                 if (self.sourceObjectWrapper.isFiltered) {
                     return true;
                 }
 
-                // G1 / G4
+                // local column
                 if (self.foreignKeyPathLength === 0) {
                     return !self._column.nullok;
                 }
 
-                // G5
+                // path cannot be null
                 if (self.sourceObjectWrapper.isAllOutboundNotNullPerModel) {
-                    return true;
+                    /**
+                     * if the last column is not-null, then "null" can never happen so there's no point in showing the option.
+                     * but if it's nullable, then this check could only mean scalar value being null and so we can show null facet
+                     */
+                    return !self._column.nullok;
                 }
 
-                // G2
+                // has arbitary path
                 if (self._column.nullok) {
                     return true;
                 }
@@ -3478,7 +3480,7 @@ FacetColumn.prototype = {
                 }
 
                 //if all outbound not-null don't show it.
-                return self.sourceObjectWrapper.isAllOutboundNotNullPerModel;
+                return self.sourceObjectWrapper.isAllOutboundNotNullPerModel && !self._column.nullok;
             };
 
             this._hideNotNullChoice = getHideNotNull(this);

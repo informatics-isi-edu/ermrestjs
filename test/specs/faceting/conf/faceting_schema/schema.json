@@ -292,7 +292,8 @@
                                 {"sourcekey": "path_to_path_prefix_o1_o1_w_filter"},
                                 {"inbound": ["faceting_schema", "path_prefix_o1_o1_i1_fk1"]},
                                 "path_prefix_o1_o1_i1_col"
-                            ]}
+                            ]},
+                            {"source": [{"outbound": ["faceting_schema", "main_fk2"]}, "fk_to_f1"], "comment": "all outbound path with nullok last column"}
                         ]
                     }
                 },
