@@ -1382,7 +1382,7 @@
             // change alias of the previous part
             var lastPart = loc.lastPathPart;
             if (lastPart) {
-                var alias = module._parserAliases.JOIN_TABLE_PREFIX + (loc.pathParts.length > 1 ? (loc.pathParts.length-1) : "");
+                var alias = module._parserAliases.JOIN_TABLE_PREFIX + (loc.pathParts.length > 0 ? (loc.pathParts.length) : "");
                 lastPart.alias = alias;
             }
 
