@@ -1381,8 +1381,27 @@
             var loc = clone ? this._clone() : this;
             // change alias of the previous part
             var lastPart = loc.lastPathPart;
+
+            /**
+             * since we're adding a path part, we have to change the alias of previous part.
+             * this alias is for the projected table. if there are joins, it will be added to the last
+             * join and if there aren't, it will be attached to the schema:table.
+             *
+             * when there aren't any joins, this could be the schema:table, so we have to start with T.
+             * but if there are joins, we can start with T1, as T alias is always the first schema:table.
+             */
             if (lastPart) {
-                var alias = module._parserAliases.JOIN_TABLE_PREFIX + (loc.pathParts.length > 0 ? (loc.pathParts.length) : "");
+                var aliasNumber = "";
+                if (lastPart.joins && lastPart.joins.length > 0) {
+                    if (loc.pathParts.length > 0) {
+                        aliasNumber = loc.pathParts.length;
+                    }
+                }
+                else if (loc.pathParts.length > 1) {
+                    aliasNumber = loc.pathParts.length - 1;
+                }
+
+                var alias = module._parserAliases.JOIN_TABLE_PREFIX + aliasNumber;
                 lastPart.alias = alias;
             }
 
