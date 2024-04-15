@@ -370,29 +370,35 @@ Ermrestjs allows users to access some pre-defined variables in the template envi
 
 `$moment` is a datetime object which will give you access to date and time when the app was loaded. For instance if the app was loaded at Thu Oct 19 2017 16:04:46 GMT-0700 (PDT), it will contain following properties
 
-* date: 19
-* day: 4
-* month: 10
-* year: 2017
-* dateString: Thu Oct 19 2017
-* hours: 16
-* minutes: 4
-* seconds: 14
-* milliseconds: 873
-* timeString: 16:04:46 GMT-0700 (PDT)
-* ISOString: 2017-10-19T23:04:46.873Z
-* GTMString: Thu, 19 Oct 2017 23:04:46 GMT
-* UTCString: Thu, 19 Oct 2017 23:04:46 GMT
-* LocaleDateString: 10/19/2017
-* LocaleTimeString: 4:04:46 PM
-* LocalString: 10/19/2017, 4:04:46 PM
+* `date`: Day of the month: 19
+* `day`: Day of the week: 4
+* `month`: 10
+* `year`: 2017
+* `dateString`: Thu Oct 19 2017
+* `hours`: 16
+* `minutes`: 4
+* `seconds`: 14
+* `milliseconds`: 873
+* `timeString`: 16:04:46 GMT-0700 (PDT)
+* `ISOString`: 2017-10-19T23:04:46.873Z
+* `GTMString`: Thu, 19 Oct 2017 23:04:46 GMT
+* `UTCString`: Thu, 19 Oct 2017 23:04:46 GMT
+* `LocaleDateString`: 10/19/2017
+* `LocaleTimeString`: 4:04:46 PM
+* `LocalString`: 10/19/2017, 4:04:46 PM
 
-The `$moment` object can be referred directly in the Mustache environment
+The `$moment` object can be referred directly in the Mustache environment. If you would like to display the current date and time in a different format, you can use `$moment.ISOString` with [`formatDate`](#formatDate) helper.
 
 **Examples**
+
 ```js
-Todays date is {{{$moment.month}}}/{{{$moment.date}}}/{{{$moment.year}}}
+Today's date is {{formatDate $moment.ISOString "YYYY/M/D"}}.
 ```
+
+```js
+Today's is date {{{$moment.month}}}/{{{$moment.date}}}/{{{$moment.year}}}
+``
+
 ```js
 Current time is {{{$moment.hours}}}:{{{$moment.minutes}}}:{{{$moment.seconds}}}:{{{$moment.milliseconds}}}
 ```
@@ -405,6 +411,7 @@ Locale datetime is {{{$moment.LocaleString}}}
 ```js
 ISO datetime is {{{$moment.ISOString}}}
 ```
+
 
 ### $catalog
 `$catalog` is an object that gives you access to the catalog information including version if it is present. The following properties are currently included:
@@ -515,7 +522,9 @@ Syntax:
 
 Example:
 ```
-{{formatDate '30-08-2018' 'YYYY'}} ==> '2018'
+{{formatDate "30-08-2018' 'YYYY'}} ==> '2018'
+
+{{formatDate '30-08-2018' 'YYYY/M/D'}} ==> '2018/8/30'
 ```
 
 ### humanizeBytes helper
