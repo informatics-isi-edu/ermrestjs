@@ -320,6 +320,7 @@ var ERMrest = (function(module) {
         this.uploadingSize = 0;
 
         this.chunks = [];
+        this.chunkTracker = [];
 
         this.log = console.log;
 
@@ -411,7 +412,7 @@ var ERMrest = (function(module) {
      * If it does then set isPaused, completed and jobDone to true
      * @returns {Promise}
      */
-    upload.prototype.fileExists = function(contextHeaderParams) {
+    upload.prototype.fileExists = function(jobUrl, contextHeaderParams) {
         var self = this;
 
         var deferred = module._q.defer();
@@ -480,10 +481,16 @@ var ERMrest = (function(module) {
             // 403 - file exists but user can't read it -> create a new one
             // 404 - file doesn't exist -> create new one
             // 409 - The parent path does not denote a namespace OR the namespace already exists (from hatrac docs)
-            if (response.status == 403 || response.status == 404 || response.status == 409) {
-              deferred.resolve(self.url);
+            if (response.status == 403 || response.status == 404) {
+                deferred.resolve(self.url);
+            } else if (response.status == 409) {
+                // the namespace might exist with no content, maybe there is a partial upload
+                // set the chunkUrl to the jobUrl that we stored in chaise with a parital upload
+                // jobUrl = self.url + ';upload/' + job.hash
+                if (jobUrl) self.chunkUrl = jobUrl;
+                deferred.resolve(self.url);
             } else {
-              deferred.reject(module.responseToError(response));
+                deferred.reject(module.responseToError(response));
             }
         });
 
@@ -572,7 +579,7 @@ var ERMrest = (function(module) {
      * or rejected with error if unable to upload any chunk
      * and notified with a progress handler, sending number in bytes uploaded uptil now
      */
-    upload.prototype.start = function() {
+    upload.prototype.start = function(startChunkIdx) {
         var self = this;
 
         this.erred = false;
@@ -610,6 +617,10 @@ var ERMrest = (function(module) {
                     this.chunks.push(chunk);
                     start = end;
                 }
+
+                var areChunksUploaded = Array(this.chunks.length);
+                for (var j = 0; j < startChunkIdx; j++) areChunksUploaded[j] = true;
+                this.chunkTracker = areChunksUploaded;
             }
         }
 
@@ -618,7 +629,9 @@ var ERMrest = (function(module) {
 
         this.chunkQueue = [];
 
-        this.chunks.forEach(function(chunk) {
+        this.chunks.forEach(function(chunk, idx) {
+            if (idx < startChunkIdx) return;
+
             chunk.retryCount = 0;
             self.chunkQueue.push(chunk);
             part++;
@@ -913,9 +926,9 @@ var ERMrest = (function(module) {
         var config = {
             headers: _generateContextHeader(contextHeaderParams)
         };
-        // If chunkUrl is not null then fetch  the status of the uploadJob
+        // If chunkUrl is not null then fetch the status of the uploadJob
         // and resolve promise with it.
-        // else just resolved it without any response
+        // else resolve it without any response
         if (this.chunkUrl) {
             this.http.get(this._getAbsoluteUrl(this.chunkUrl), config).then(function(response) {
                 deferred.resolve(response);
@@ -959,7 +972,11 @@ var ERMrest = (function(module) {
      * In addition if the upload has been combleted then it will call onUploadCompleted for regular upload
      * and completeUpload to complete the chunk upload
      */
-    upload.prototype._updateProgressBar = function() {
+    upload.prototype._updateProgressBar = function(indexUploaded) {
+        if (indexUploaded !== undefined && indexUploaded !== null) {
+            this.chunkTracker[indexUploaded] = true;
+        }
+
         var length = this.chunks.length;
         var progressDone = 0;
         var chunksComplete = 0;
@@ -1064,7 +1081,7 @@ var ERMrest = (function(module) {
 
             deferred.resolve();
 
-            upload._updateProgressBar();
+            upload._updateProgressBar(this.index);
 
             return deferred.promise;
         }
@@ -1130,7 +1147,7 @@ var ERMrest = (function(module) {
 
             deferred.resolve();
 
-            upload._updateProgressBar();
+            upload._updateProgressBar(self.index);
         }, function(response) {
             self.progress = 0;
             var status = response.status;

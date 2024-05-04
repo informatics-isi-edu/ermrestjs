@@ -48,7 +48,8 @@
      * @private
      * @type {Number}
      */
-    var _default_max_retries = 10;
+    // var _default_max_retries = 10;
+    var _default_max_retries = 2;
 
     /**
      * Initial timeout delay. This dely will be doubled each time to perform
