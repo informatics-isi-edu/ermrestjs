@@ -321,6 +321,7 @@ var ERMrest = (function(module) {
 
         this.chunks = [];
         this.chunkTracker = [];
+        this.startChunkIdx = 0;
 
         this.log = console.log;
 
@@ -620,6 +621,7 @@ var ERMrest = (function(module) {
 
                 var areChunksUploaded = Array(this.chunks.length);
                 for (var j = 0; j < startChunkIdx; j++) areChunksUploaded[j] = true;
+                this.startChunkIdx = startChunkIdx;
                 this.chunkTracker = areChunksUploaded;
             }
         }
@@ -978,8 +980,9 @@ var ERMrest = (function(module) {
         }
 
         var length = this.chunks.length;
-        var progressDone = 0;
-        var chunksComplete = 0;
+        // progressDone and chunksComplete should be intiialized if we had an existing upload job
+        var progressDone = this.startChunkIdx * this.PART_SIZE;
+        var chunksComplete = this.startChunkIdx;
         for (var i = 0; i < length; i++) {
             progressDone = progressDone + this.chunks[i].progress;
             if (this.chunks[i].completed) chunksComplete++;
