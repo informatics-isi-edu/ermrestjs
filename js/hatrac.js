@@ -320,6 +320,8 @@ var ERMrest = (function(module) {
         this.uploadingSize = 0;
 
         this.chunks = [];
+         // array of true values for tracking which chunks are uploaded so far
+         // used to determine what chunk to resume upload from if needed
         this.chunkTracker = [];
         this.startChunkIdx = 0;
 
@@ -411,6 +413,10 @@ var ERMrest = (function(module) {
      * @desc Call this function to determine file exists on the server
      * If it doesn't then resolve the promise with url.
      * If it does then set isPaused, completed and jobDone to true
+     * @param {string} jobUrl - if an existing job is being tracked locally and the checksum for current `upload` 
+     *     matches that matched job, send the stored jobUrl to be used if a 409 is returned
+     *       - a 409 could mean the namespace already exists and we have an existing job for that namespace we know is partially uplaoded
+     *       - if all the above is true, set the `upload.chunkUrl` to the jobUrl we were tracking locally
      * @returns {Promise}
      */
     upload.prototype.fileExists = function(jobUrl, contextHeaderParams) {
@@ -576,6 +582,7 @@ var ERMrest = (function(module) {
      * If the completed flag is true, then this means that all chunks were already uploaded, thus it will resolve the promize with url
      * else it will start uploading the chunks. If the job was paused then resume by uploading just those chunks which were not completed.
      *
+     * @param {number} startChunkIdx - the index of the chunk to start uploading from in case of resuming a found incomplete upload job
      * @returns {Promise} A promise resolved with a url where we uploaded the file
      * or rejected with error if unable to upload any chunk
      * and notified with a progress handler, sending number in bytes uploaded uptil now
@@ -619,10 +626,9 @@ var ERMrest = (function(module) {
                     start = end;
                 }
 
-                var areChunksUploaded = Array(this.chunks.length);
-                for (var j = 0; j < startChunkIdx; j++) areChunksUploaded[j] = true;
                 this.startChunkIdx = startChunkIdx;
-                this.chunkTracker = areChunksUploaded;
+                this.chunkTracker = Array(this.chunks.length);
+                for (var j = 0; j < startChunkIdx; j++) this.chunkTracker[j] = true;
             }
         }
 
@@ -971,14 +977,10 @@ var ERMrest = (function(module) {
      * @private
      * @desc This function should be called to update the progress of upload
      * It calls the onProgressChanged callback that the user subscribes
-     * In addition if the upload has been combleted then it will call onUploadCompleted for regular upload
+     * In addition if the upload has been completed then it will call onUploadCompleted for regular upload
      * and completeUpload to complete the chunk upload
      */
-    upload.prototype._updateProgressBar = function(indexUploaded) {
-        if (indexUploaded !== undefined && indexUploaded !== null) {
-            this.chunkTracker[indexUploaded] = true;
-        }
-
+    upload.prototype._updateProgressBar = function() {
         var length = this.chunks.length;
         // progressDone and chunksComplete should be intiialized if we had an existing upload job
         var progressDone = this.startChunkIdx * this.PART_SIZE;
@@ -1084,7 +1086,7 @@ var ERMrest = (function(module) {
 
             deferred.resolve();
 
-            upload._updateProgressBar(this.index);
+            upload._updateProgressBar();
 
             return deferred.promise;
         }
@@ -1150,7 +1152,9 @@ var ERMrest = (function(module) {
 
             deferred.resolve();
 
-            upload._updateProgressBar(self.index);
+            // this chunk was successfully uploaded, update the chunkTracker
+            this.chunkTracker[self.index] = true;
+            upload._updateProgressBar();
         }, function(response) {
             self.progress = 0;
             var status = response.status;
