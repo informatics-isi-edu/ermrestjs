@@ -626,7 +626,7 @@ var ERMrest = (function(module) {
                     start = end;
                 }
 
-                this.startChunkIdx = startChunkIdx;
+                this.startChunkIdx = startChunkIdx || 0;
                 this.chunkTracker = Array(this.chunks.length);
                 for (var j = 0; j < startChunkIdx; j++) this.chunkTracker[j] = true;
             }
@@ -1153,7 +1153,7 @@ var ERMrest = (function(module) {
             deferred.resolve();
 
             // this chunk was successfully uploaded, update the chunkTracker
-            this.chunkTracker[self.index] = true;
+            upload.chunkTracker[self.index] = true;
             upload._updateProgressBar();
         }, function(response) {
             self.progress = 0;
