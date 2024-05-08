@@ -1,5 +1,28 @@
 # Facet JSON Structure
 
+This document will go over the syntax that can be used for defining facets. Facets are defined as part of the [`visible-columns`](annotation.md#tag-2016-visible-columns) annotation.
+
+## Table of contents
+
+- [Table of contents](#table-of-contents)
+- [Structure](#structure)
+- [Logical operators](#logical-operators)
+- [Source path](#source-path)
+- [Source key](#source-key)
+- [Fast filter source](#fast-filter-source)
+- [Constraints](#constraints)
+- [Extra properties](#extra-properties)
+  - [entity v.s. scalar facet](#entity-vs-scalar-facet)
+  - [markdown\_name](#markdown_name)
+  - [comment](#comment)
+  - [open](#open)
+  - [ux\_mode](#ux_mode)
+  - [hide\_null\_choice/hide\_not\_null\_choice](#hide_null_choicehide_not_null_choice)
+  - [bar\_plot](#bar_plot)
+  - [order](#order)
+  - [hide\_num\_occurrences](#hide_num_occurrences)
+- [Examples](#examples)
+
 ## Structure
 
 The overall structure of filters is as follows. Each facet term combines a data source and constraint spec, and so all combinations of constraint kind and data source path are possible in the syntax.
@@ -50,7 +73,7 @@ Instead of defining a new `source`, you can refer to the sources that are define
 
 ## Fast filter source
 
-While defining the `source` of a column directive, you must be mindful of the structure of the path and the projected table. This can cause performance issues as ERMrestJS would introduce joins for filtering matching results. If you would like to improve the performance of your queries, you could define an alternative `fast_filter_source` that will only be used for filtering. With this alternative source, you can denormalize the tables and create data warehouses that are more optimized for filtering. 
+While defining the `source` of a column directive, you must be mindful of the structure of the path and the projected table. This can cause performance issues as ERMrestJS would introduce joins for filtering matching results. If you would like to improve the performance of your queries, you could define an alternative `fast_filter_source` that will only be used for filtering. With this alternative source, you can denormalize the tables and create data warehouses that are more optimized for filtering.
 
 - The defined `fast_filter_source` attribute supports the same syntax as [source path](#source-path).
 - As the name suggests, the new source will only be used for filtering requests and won't be used for defining a projection. That's why we'll only use this property while parsing the `facets`.
@@ -95,7 +118,9 @@ A half-open range might be `{"min" lower}` or `{"max": upper}`. By default both 
 
 ## Extra properties
 
-#### entity v.s. scalar facet
+In this section we will go over the properties that can be used to customize the displayed facets.
+
+### entity v.s. scalar facet
  If the facet can be treated as entity (the column that is being used for facet is key of the table), setting `entity` attribute to `false` will force the facet to show scalar mode.
 
 ```javascript
@@ -111,7 +136,7 @@ If a multi-modal facet control UX is available, we might even mix-in several for
 The mixing of several constraints would be disjunctive to be consistent with the disjunctive list of options in each constraint.
 -->
 
-#### markdown_name
+### markdown_name
 
 To change the default displayname of facets, `markdown_name` can be used.
 
@@ -122,7 +147,8 @@ To change the default displayname of facets, `markdown_name` can be used.
 ### comment
 
 The tooltip to be used in place of the default heuristics for the facet. Set this to `false` if you don't want any tooltip.
-#### open
+
+### open
 
 Using `open` you can force the facet to open by default.
 
@@ -130,7 +156,7 @@ Using `open` you can force the facet to open by default.
 "open": true
 ```
 
-#### ux_mode
+### ux_mode
 
  If a multi-modal facet control UX is available, it will specify the default UX mode that should be used (If `ux_mode` is defined, the other type of constraint will not be displayed even if you have defined it in the annotation). The available options are
   - `choices`: for a list of selectable values.
@@ -152,7 +178,44 @@ Notes:
 
 ### hide_null_choice/hide_not_null_choice
 
-If applicable we are going to add "null" and "not-null" options in the choice picker by default. Setting any of these variables to `true`, will hide its respective option.
+If applicable we are going to show "null" and "not-null" options on the facet panel. Setting any of these variables to `true`, will hide its respective option.
+
+#### Default heuristics
+
+If these properties are missing, we're going to use our internal heuristics for condiotionally hiding or showing these options. Before going through the heuristics, it's good to know the following:
+
+- `null` filter could mean any of the following:
+  - Scalar value being `null`. In terms of ermrest, a simple `col::null::` query
+  - No value exists in the given path (checking presence of a value in the path). In terms of ermrest, we have to construct an outer join. To increase the performance we're using right outer join, but because of ermrest limitation, we cannot have more than two right outer joins and therefore two such null checks cannot co-exist.
+
+  Since we're not going to show two different options for these two meanings, we have to make sure to offer "null" option when only one of these two meanings would apply.
+
+- There are some cases when the `null` is not even possible based on the model. So we shouldn't offer this option.
+- Due to ermrest and our parse limitations, facets with filter cannot support "null" option.
+- There are two special cases that ermrest might return a null value for a not-null column:
+  1. When user right is null and therefore it's row-based.
+  2. When user is looking at a snapshot of old catalog and data might be missing.
+
+  But we decided to ignore these two cases as these null values are not the general intended usecase. For more information please refer to this [issue](https://github.com/informatics-isi-edu/ermrestjs/issues/888).
+
+
+Therefore, the following is the logic for hiding or showing the "null" option (first applicaple rule will be used):
+
+1. If it's a local column, we're going to show the option if the column is nullable and hide it if it's not-null.
+2. If it's an all-outbound path where all the columns in the path are not-null,
+  2.1. If the end column is nullable, we're allowing "null" option as null value only means scalar value being null.
+  2.2. If the end column is not-null, we're hiding the "null" option as null value is not possible.
+1. For any other paths, if the end column is nullable, "null" option could mean both scalar and path. So we're not allowing it.
+2. Facets with only one hop where the column used in foreignkey is the same column for faceting. In this case, we can completely ignore the foreignkey path and just do a value check on main table. so return `false`.
+3. any other cases (facet with arbiarty path),
+  4.1. if other facets have "null" filter, hide "null" option as we cannot support multiple right outer joins.
+  4.2. otherwise show it.
+
+And the following is the logic for "not-null" option (first applicaple rule will be used):
+
+1. If it's a local column, we're going to show the option if the column is nullable and hide it if it's not-null.
+2. If facet it's an all outbound path where all the columns in the path and the end column are not-null, hide it.
+3. Otherwise show it.
 
 
 ### bar_plot
@@ -176,7 +239,7 @@ Assuming your path ends with column `COL`, the default order is the following:
 
 As you can see, you can use `"num_occurrences": true` to refer to the number of occurrences (frequency) column.
 
-## hide_num_occurrences
+### hide_num_occurrences
 
 In _scalar_ facets we show an extra column called "number of occurrences". Use this attribute to hide the column from users.
 
