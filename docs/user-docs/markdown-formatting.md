@@ -169,8 +169,8 @@ The following is the list of special class names that you can use:
 - `.vocab`: Used to represent a vocabulary.
 - `.chaise-autofill`: Used to set the height and width to fill the parent container based on the user's browser.
 - `.fullscreen-off`: When applied in iframe template, this class hides the full screen button that appears at the top right corner.
-- `.reduce-margin-after-header`: Used on a `<h3>` or other header tag to reduce the space after the header to 5px.
-- `.iframe-after`: Reduces the margin after content when an iframe is the next element. This class will reduce the margin and pull the iframe content closer.
+- `.chaise-reduce-header-margin`: Used on a `<h3>` or other header tag to reduce the space after the header to 5px. [Link to implementation](https://github.com/informatics-isi-edu/chaise/blob/master/src/assets/scss/_markdown-container.scss#L107-L109)
+- `.chaise-iframe-after`: Reduces the margin after the element's content when an iframe is the next element. This class will reduce the margin and pull the iframe content closer. [Link to implementation](https://github.com/informatics-isi-edu/chaise/blob/master/src/assets/scss/_markdown-container.scss#L112-L114)
 - `.chaise-image-preview`: When applied to an image, Chaise will properly display a scaled down version of the image to the users. Clicking on the image would allow users to see the fully scaled version of the image. You can find an example [here](#6-image-with-zoom-capabilties). While the behavior looks like a zoom, by clicking on images with this class, we're switching between these two modes:
   - The scaled-down version,
     - The height of the image is limited to 50vh. Therefore small images will be displayed fully, while the bigger images will be scaled down to fit the limited size.
