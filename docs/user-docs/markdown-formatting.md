@@ -180,11 +180,14 @@ The following is the list of special class names that you can use:
     - The height and width of the image are not limited; instead, the limits mentioned above are moved to the image's container. That's why we will see scrollbars in larger images, and in smaller images, nothing will change.
     > The max height mentioned above can be changed by defining the `image-preview-max-height` property. Please refer to the example for more information.
 - content classes for positioning:
-  - `.chaise-content-left`: Aligns the inner content to the left side of the container this class is attached to
-  - `.chaise-content-rightt`: Aligns the inner content to the right side of the container this class is attached to
-  - `.chaise-content-top`: Aligns the inner content to the top of the container this class is attached to
-  - `.chaise-content-bottom`: Aligns the inner content to the bottom of the container this class is attached to
-  - `.chaise-content-middle`: Aligns the inner content to the middle of the container this class is attached to
+  - classes for horizontal alignment:
+    - `.chaise-content-left`: Aligns the inner content to the left side of the container this class is attached to
+    - `.chaise-content-center`: Aligns the inner content to the center of the container this class is attached to
+    - `.chaise-content-right`: Aligns the inner content to the right side of the container this class is attached to
+  - classes for vertical alignment:
+    - `.chaise-content-top`: Aligns the inner content to the top of the container this class is attached to
+    - `.chaise-content-middle`: Aligns the inner content to the middle of the container this class is attached to
+    - `.chaise-content-bottom`: Aligns the inner content to the bottom of the container this class is attached to
 
 
 ## Examples
