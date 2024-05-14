@@ -229,6 +229,14 @@ ReferenceColumn.prototype = {
         return this._displayname;
     },
 
+
+    get RID() {
+        if (this._RID === undefined) {
+            // what do we use if not simple?
+            this._RID = this._simple ? this._baseCols[0].RID : null;
+        }
+        return this._RID;
+    },
     /**
      *
      * @type {ERMrest.Type}
