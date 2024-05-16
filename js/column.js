@@ -2028,6 +2028,15 @@ Object.defineProperty(ForeignKeyPseudoColumn.prototype, "name", {
     }
 });
 
+Object.defineProperty(ForeignKeyPseudoColumn.prototype, "RID", {
+    get: function () {
+        if (this._RID === undefined) {
+            this._RID = this.foreignKey.RID;
+        }
+        return this._RID;
+    }
+});
+
 /**
  * 1. If `to_name` in `foreign key` annotation is available, use it as the displayname.
  * 2. Otherwise,
