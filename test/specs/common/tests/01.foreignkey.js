@@ -302,6 +302,7 @@ exports.execute = function(options) {
             var testFKColumn = function (col, message) {
                 expect(col.isForeignKey).toBe(true, "is not foreignkey: " + message);
                 expect(col.foreignKey._constraintName).toEqual("common_schema_2_table_show_fk_links_fk1", "invalid constraint name: " + message);
+                expect(col.RID).toBeDefined();
             }
 
             var testFKValue = function (col, context) {
