@@ -5767,10 +5767,8 @@
 
           /**
           * Foreign key data RID names.
-          * During the read we get extra information about the foreign keys,
-          * client could use these extra information for different purposes.
-          * One of these usecases is domain_filter_pattern which they can
-          * include foreignkey data in the pattern language.
+          * Map of `column.name` keys with the `column.RID` as the value so RIDs
+          * can be used in cases that require safe strings
           *
           * @type {Object}
           */
