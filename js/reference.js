@@ -5179,6 +5179,7 @@
          * var fkData = this._linkedData[i][column.name];
          */
         this._linkedData = [];
+        this._linkedDataRIDs = [];
         this._data = [];
         this._rightsSummary = [];
         this._associationRightsSummary = [];
@@ -5212,6 +5213,7 @@
 
                     // fk data
                     this._linkedData.push({});
+                    this._linkedDataRIDs.push({});
                     for (j = allOutBounds.length - 1; j >= 0; j--) {
                         /**
                          * if we've used scalar value in the projection list,
@@ -5233,6 +5235,7 @@
                         } else {
                             this._linkedData[i][allOutBounds[j].name] = data[i][fkAliasPreix + (j+1)][0];
                         }
+                        this._linkedDataRIDs[i][allOutBounds[j].name] = allOutBounds[j].RID;
                     }
 
                     // table rights
@@ -5294,11 +5297,14 @@
 
                 // add the main table data to linkedData
                 this._linkedData = [];
+                this._linkedDataRIDs = [];
                 for (i = 0; i < data.length; i++) {
                     tempData = {};
+                    linkedDataMap = {};
                     for (j = 0; j < fks.length; j++) {
                         fkName = fks[j].name;
                         tempData[fkName] = {};
+                        linkedDataMap[fkName] = fks[j].RID
 
                         for (k = 0; k < fks[j].colset.columns.length; k++) {
                             col = fks[j].colset.columns[k];
@@ -5306,6 +5312,7 @@
                         }
                     }
                     this._linkedData.push(tempData);
+                    this._linkedDataRIDs.push(linkedDataMap);
                 }
 
                 // extra data
@@ -5367,7 +5374,7 @@
             if (this._tuples === undefined) {
                 this._tuples = [];
                 for (var i = 0; i < this._data.length; i++) {
-                    this._tuples.push(new Tuple(this._ref, this, this._data[i], this._linkedData[i], this._rightsSummary[i], this._associationRightsSummary[i]));
+                    this._tuples.push(new Tuple(this._ref, this, this._data[i], this._linkedData[i], this._linkedDataRIDs[i], this._rightsSummary[i], this._associationRightsSummary[i]));
                 }
             }
             return this._tuples;
@@ -5665,12 +5672,15 @@
      * @param {!ERMrest.Page} page The Page object from which
      * this data was acquired.
      * @param {!Object} data The unprocessed tuple of data returned from ERMrest.
+     * @param {!Object} linkedData extra foreign key data that is fetched during read
+     * @param {!Object} linkedDataRIDs map of column name keys with column RID as values
      */
-    function Tuple(pageReference, page, data, linkedData, rightsSummary, associationRightsSummary) {
+    function Tuple(pageReference, page, data, linkedData, linkedDataRIDs, rightsSummary, associationRightsSummary) {
         this._pageRef = pageReference;
         this._page = page;
         this._data = data || {};
         this._linkedData = (typeof linkedData === "object") ? linkedData : {};
+        this._linkedDataRIDs = (typeof linkedDataRIDs === "object") ? linkedDataRIDs : {};
         this._rightsSummary = (typeof rightsSummary === "object") ? rightsSummary : {};
         this._associationRightsSummary = (typeof associationRightsSummary === "object") ? associationRightsSummary : {};
     }
@@ -5756,6 +5766,17 @@
          get linkedData() {
              return this._linkedData;
          },
+
+          /**
+          * Foreign key data RID names.
+          * Map of `column.name` keys with the `column.RID` as the value so RIDs
+          * can be used in cases that require safe strings
+          *
+          * @type {Object}
+          */
+          get linkedDataRIDs() {
+            return this._linkedDataRIDs;
+        },
 
         /**
          * Used for getting the current set of data for the reference.
