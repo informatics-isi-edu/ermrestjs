@@ -230,10 +230,13 @@ ReferenceColumn.prototype = {
     },
 
 
+    /**
+     * @type {string}
+     * @desc ermrest generated RID for this column
+     */
     get RID() {
         if (this._RID === undefined) {
-            // what do we use if not simple?
-            this._RID = this._simple ? this._baseCols[0].RID : null;
+            this._RID = this._baseCols[0].RID;
         }
         return this._RID;
     },
@@ -2028,6 +2031,11 @@ Object.defineProperty(ForeignKeyPseudoColumn.prototype, "name", {
     }
 });
 
+/**
+ * returns the ermrest generated RID for the foreign key relationship this pseudo clumn represents
+ * @member {string} RID
+ * @memberof ERMrest.ForeignKeyPseudoColumn#
+ */
 Object.defineProperty(ForeignKeyPseudoColumn.prototype, "RID", {
     get: function () {
         if (this._RID === undefined) {

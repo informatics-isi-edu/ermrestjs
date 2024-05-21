@@ -5304,7 +5304,7 @@
                     for (j = 0; j < fks.length; j++) {
                         fkName = fks[j].name;
                         tempData[fkName] = {};
-                        linkedDataMap[fks[j].name] = fks[j].RID
+                        linkedDataMap[fkName] = fks[j].RID
 
                         for (k = 0; k < fks[j].colset.columns.length; k++) {
                             col = fks[j].colset.columns[k];
@@ -5672,6 +5672,8 @@
      * @param {!ERMrest.Page} page The Page object from which
      * this data was acquired.
      * @param {!Object} data The unprocessed tuple of data returned from ERMrest.
+     * @param {!Object} linkedData extra foreign key data that is fetched during read
+     * @param {!Object} linkedDataRIDs map of column name keys with column RID as values
      */
     function Tuple(pageReference, page, data, linkedData, linkedDataRIDs, rightsSummary, associationRightsSummary) {
         this._pageRef = pageReference;
