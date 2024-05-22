@@ -178,8 +178,8 @@ exports.execute = function (options) {
 
             it("next the leaf table comment and comment_display should be used.", function () {
                 expect(pBReference.columns[3].comment).toEqual({
-                    value: '<p>pure and binary fk leaf table display comment</p>\n',
-                    unformatted: 'pure and binary fk leaf table display comment',
+                    value: '<p>pure and binary fk association table display comment</p>\n',
+                    unformatted: 'pure and binary fk association table display comment',
                     isHTML: true,
                     displayMode: 'inline'
                 });
@@ -187,8 +187,8 @@ exports.execute = function (options) {
 
             it ('if to_comment_display is defined but not the to_comment, leaf table comment and this proeprty should be mixed', () => {
                 expect(pBReference.columns[2].comment).toEqual({
-                    value: "foreign key to association table no display",
-                    unformatted: "foreign key to association table no display",
+                    value: "has fk to comment_display_pb_table and inbound_related_reference_table. fk to inbound_related_reference_table has to_comment_display with no to_comment",
+                    unformatted: "has fk to comment_display_pb_table and inbound_related_reference_table. fk to inbound_related_reference_table has to_comment_display with no to_comment",
                     isHTML: false,
                     displayMode: 'inline'
                 });

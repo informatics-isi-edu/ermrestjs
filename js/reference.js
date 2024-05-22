@@ -4010,16 +4010,18 @@
          *      0.4 compressedDataSource: the compressed source path from the main to the related table (might be undefined)
          *
          * 1. If it's pure and binary association. (current reference: T1) <-F1-(A)-F2-> (T2)
-         *      1.1 displayname: F2.to_name or T2.displayname
-         *      1.2 table: T2
-         *      1.3 derivedAssociationReference: points to the association table (A)
-         *      1.4 location (uri):
+         *      1.1 displayname: F2.to_name or A.displayname
+         *      1.2 comment and comment_display: F2.to_comment or A.comment
+         *      1.3 table: T2
+         *      1.4 derivedAssociationReference: points to the association table (A)
+         *      1.5 location (uri):
          *          2.1.4.1 Uses the linkage to get to the T2.
          *          2.1.4.2 if tuple was given, it will use the value of shortestKey to create the facet
          * 2. Otherwise.
          *      2.1 displayname: F1.from_name or T2.displayname
-         *      2.2 table: T2
-         *      2.3 location (uri):
+         *      2.2 comment: F1.from_comment or T2.comment
+         *      2.3 table: T2
+         *      2.4 location (uri):
          *          2.3.1 Uses the linkage to get to the T2.
          *          2.3.2 if tuple was given, it will use the value of shortestKey to create the facet
          *
@@ -4080,7 +4082,7 @@
             if (checkForAssociation && fkrTable.isPureBinaryAssociation) { // Association Table
 
                 // find the other foreignkey
-                var otherFK, pureBinaryFKs = fkrTable.pureBinaryForeignKeys;
+                var otherFK, pureBinaryFKs = fkrTable.pureBinaryForeignKeys, assocTable;
                 for (j = 0; j < pureBinaryFKs.length; j++) {
                     if(pureBinaryFKs[j] !== fkr) {
                         otherFK = pureBinaryFKs[j];
@@ -4091,14 +4093,18 @@
                 newRef._table = otherFK.key.table;
                 newRef._shortestKey = newRef._table.shortestKey;
 
+                assocTable = otherFK.colset.columns[0].table;
+
+                // all the display settings must come from the same table (assoc table)
+                // so if we get the comment from assoc table, displayname must also be from assoc table
                 fkDisplay = otherFK.getDisplay(this._context);
-                tableDisplay = otherFK.key.colset.columns[0].table.getDisplay(this._context);
+                tableDisplay = assocTable.getDisplay(this._context);
 
                 // displayname
                 if (fkDisplay.toName) {
                     newRef._displayname = {"isHTML": false, "value": fkDisplay.toName, "unformatted": fkDisplay.toName};
                 } else {
-                    newRef._displayname = otherFK.colset.columns[0].table.displayname;
+                    newRef._displayname = assocTable.displayname;
                 }
 
                 // comment
