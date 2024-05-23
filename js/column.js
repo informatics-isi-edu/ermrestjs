@@ -229,6 +229,17 @@ ReferenceColumn.prototype = {
         return this._displayname;
     },
 
+
+    /**
+     * @type {string}
+     * @desc ermrest generated RID for this column
+     */
+    get RID() {
+        if (this._RID === undefined) {
+            this._RID = this._baseCols[0].RID;
+        }
+        return this._RID;
+    },
     /**
      *
      * @type {ERMrest.Type}
@@ -2017,6 +2028,20 @@ Object.defineProperty(ForeignKeyPseudoColumn.prototype, "name", {
             this._name = this.foreignKey.name;
         }
         return this._name;
+    }
+});
+
+/**
+ * returns the ermrest generated RID for the foreign key relationship this pseudo clumn represents
+ * @member {string} RID
+ * @memberof ERMrest.ForeignKeyPseudoColumn#
+ */
+Object.defineProperty(ForeignKeyPseudoColumn.prototype, "RID", {
+    get: function () {
+        if (this._RID === undefined) {
+            this._RID = this.foreignKey.RID;
+        }
+        return this._RID;
     }
 });
 

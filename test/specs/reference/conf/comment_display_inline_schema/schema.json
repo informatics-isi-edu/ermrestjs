@@ -654,7 +654,20 @@
                     "nullok": false,
                     "type": {"typename":"text"}
                 }
-            ]
+            ],
+            "annotations": {
+                "tag:misd.isi.edu,2015:display": {
+                    "comment": {
+                        "detailed": "pure and binary fk association table display comment"
+                    },
+                    "comment_display": {
+                        "detailed": {
+                            "table_comment_display": "inline",
+                            "comment_render_markdown": true
+                        }
+                    }
+                }
+            }
         },
         "inbound_related_reference_table": {
             "comment": "foreign key to association table",
@@ -677,13 +690,7 @@
             "annotations": {
                 "tag:misd.isi.edu,2015:display": {
                     "comment": {
-                        "detailed": "pure and binary fk leaf table display comment"
-                    },
-                    "comment_display": {
-                        "detailed": {
-                            "table_comment_display": "inline",
-                            "comment_render_markdown": true
-                        }
+                        "detailed": "pure and binary fk leaf table display comment that should not be used for related ref"
                     }
                 }
             }
