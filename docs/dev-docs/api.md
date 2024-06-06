@@ -399,10 +399,11 @@ to use for ERMrest JavaScript agents.
         * [.next](#ERMrest.Page+next) : [<code>Reference</code>](#ERMrest.Reference) \| <code>undefined</code>
         * [.content](#ERMrest.Page+content) : <code>string</code> \| <code>null</code>
     * [.Tuple](#ERMrest.Tuple)
-        * [new Tuple(reference, page, data)](#new_ERMrest.Tuple_new)
+        * [new Tuple(reference, page, data, linkedData, linkedDataRIDs)](#new_ERMrest.Tuple_new)
         * [.reference](#ERMrest.Tuple+reference) ⇒ [<code>Reference</code>](#ERMrest.Reference) \| <code>\*</code>
         * [.page](#ERMrest.Tuple+page) ⇒ [<code>Page</code>](#ERMrest.Page) \| <code>\*</code>
         * [.linkedData](#ERMrest.Tuple+linkedData) : <code>Object</code>
+        * [.linkedDataRIDs](#ERMrest.Tuple+linkedDataRIDs) : <code>Object</code>
         * [.data](#ERMrest.Tuple+data) : <code>Object</code>
         * [.data](#ERMrest.Tuple+data)
         * [.canUpdate](#ERMrest.Tuple+canUpdate) : <code>boolean</code>
@@ -435,6 +436,7 @@ to use for ERMrest JavaScript agents.
         * [.name](#ERMrest.ReferenceColumn+name) : <code>string</code>
         * [.compressedDataSource](#ERMrest.ReferenceColumn+compressedDataSource)
         * [.displayname](#ERMrest.ReferenceColumn+displayname) : <code>object</code>
+        * [.RID](#ERMrest.ReferenceColumn+RID) : <code>string</code>
         * [.type](#ERMrest.ReferenceColumn+type) : [<code>Type</code>](#ERMrest.Type)
         * [.nullok](#ERMrest.ReferenceColumn+nullok) : <code>Boolean</code>
         * [.default](#ERMrest.ReferenceColumn+default) : <code>string</code>
@@ -479,6 +481,7 @@ to use for ERMrest JavaScript agents.
         * [.domainFilterRawString](#ERMrest.ForeignKeyPseudoColumn+domainFilterRawString) : <code>string</code>
         * [.defaultValues](#ERMrest.ForeignKeyPseudoColumn+defaultValues) : <code>Object</code>
         * [.defaultReference](#ERMrest.ForeignKeyPseudoColumn+defaultReference) : <code>ERMrest.Refernece</code>
+        * [.RID](#ERMrest.ForeignKeyPseudoColumn+RID) : <code>string</code>
         * [.displayname](#ERMrest.ForeignKeyPseudoColumn+displayname) : <code>Object</code>
         * [.filteredRef(column, data)](#ERMrest.ForeignKeyPseudoColumn+filteredRef) ⇒ [<code>Reference</code>](#ERMrest.Reference)
     * [.KeyPseudoColumn](#ERMrest.KeyPseudoColumn)
@@ -619,9 +622,9 @@ to use for ERMrest JavaScript agents.
         * [new upload(file, {otherInfo})](#new_ERMrest.upload_new)
         * [.validateURL(row)](#ERMrest.upload+validateURL) ⇒ <code>boolean</code>
         * [.calculateChecksum(row)](#ERMrest.upload+calculateChecksum) ⇒ <code>Promise</code>
-        * [.fileExists()](#ERMrest.upload+fileExists) ⇒ <code>Promise</code>
+        * [.fileExists(jobUrl)](#ERMrest.upload+fileExists) ⇒ <code>Promise</code>
         * [.createUploadJob()](#ERMrest.upload+createUploadJob) ⇒ <code>Promise</code>
-        * [.start()](#ERMrest.upload+start) ⇒ <code>Promise</code>
+        * [.start(startChunkIdx)](#ERMrest.upload+start) ⇒ <code>Promise</code>
         * [.completeUpload()](#ERMrest.upload+completeUpload) ⇒ <code>Promise</code>
         * [.pause()](#ERMrest.upload+pause)
         * [.resume()](#ERMrest.upload+resume)
@@ -4154,10 +4157,11 @@ It will return:
 **Kind**: static class of [<code>ERMrest</code>](#ERMrest)  
 
 * [.Tuple](#ERMrest.Tuple)
-    * [new Tuple(reference, page, data)](#new_ERMrest.Tuple_new)
+    * [new Tuple(reference, page, data, linkedData, linkedDataRIDs)](#new_ERMrest.Tuple_new)
     * [.reference](#ERMrest.Tuple+reference) ⇒ [<code>Reference</code>](#ERMrest.Reference) \| <code>\*</code>
     * [.page](#ERMrest.Tuple+page) ⇒ [<code>Page</code>](#ERMrest.Page) \| <code>\*</code>
     * [.linkedData](#ERMrest.Tuple+linkedData) : <code>Object</code>
+    * [.linkedDataRIDs](#ERMrest.Tuple+linkedDataRIDs) : <code>Object</code>
     * [.data](#ERMrest.Tuple+data) : <code>Object</code>
     * [.data](#ERMrest.Tuple+data)
     * [.canUpdate](#ERMrest.Tuple+canUpdate) : <code>boolean</code>
@@ -4179,7 +4183,7 @@ It will return:
 
 <a name="new_ERMrest.Tuple_new"></a>
 
-#### new Tuple(reference, page, data)
+#### new Tuple(reference, page, data, linkedData, linkedDataRIDs)
 Constructs a new Tuple. In database jargon, a tuple is a row in a
 relation. This object represents a row returned by a query to ERMrest.
 
@@ -4193,6 +4197,8 @@ Usage:
 | reference | [<code>Reference</code>](#ERMrest.Reference) | The reference object from which this data was acquired. |
 | page | [<code>Page</code>](#ERMrest.Page) | The Page object from which this data was acquired. |
 | data | <code>Object</code> | The unprocessed tuple of data returned from ERMrest. |
+| linkedData | <code>Object</code> | extra foreign key data that is fetched during read |
+| linkedDataRIDs | <code>Object</code> | map of column name keys with column RID as values |
 
 <a name="ERMrest.Tuple+reference"></a>
 
@@ -4216,6 +4222,14 @@ During the read we get extra information about the foreign keys,
 client could use these extra information for different purposes.
 One of these usecases is domain_filter_pattern which they can
 include foreignkey data in the pattern language.
+
+**Kind**: instance property of [<code>Tuple</code>](#ERMrest.Tuple)  
+<a name="ERMrest.Tuple+linkedDataRIDs"></a>
+
+#### tuple.linkedDataRIDs : <code>Object</code>
+Foreign key data RID names.
+Map of `column.name` keys with the `column.RID` as the value so RIDs
+can be used in cases that require safe strings
 
 **Kind**: instance property of [<code>Tuple</code>](#ERMrest.Tuple)  
 <a name="ERMrest.Tuple+data"></a>
@@ -4470,6 +4484,7 @@ count aggregate representation
     * [.name](#ERMrest.ReferenceColumn+name) : <code>string</code>
     * [.compressedDataSource](#ERMrest.ReferenceColumn+compressedDataSource)
     * [.displayname](#ERMrest.ReferenceColumn+displayname) : <code>object</code>
+    * [.RID](#ERMrest.ReferenceColumn+RID) : <code>string</code>
     * [.type](#ERMrest.ReferenceColumn+type) : [<code>Type</code>](#ERMrest.Type)
     * [.nullok](#ERMrest.ReferenceColumn+nullok) : <code>Boolean</code>
     * [.default](#ERMrest.ReferenceColumn+default) : <code>string</code>
@@ -4553,6 +4568,12 @@ the compressed source path from the main reference to this column
 
 #### referenceColumn.displayname : <code>object</code>
 name of the column.
+
+**Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
+<a name="ERMrest.ReferenceColumn+RID"></a>
+
+#### referenceColumn.RID : <code>string</code>
+ermrest generated RID for this column
 
 **Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
 <a name="ERMrest.ReferenceColumn+type"></a>
@@ -4928,6 +4949,7 @@ In other cases, the returned data will only include the scalar value.
     * [.domainFilterRawString](#ERMrest.ForeignKeyPseudoColumn+domainFilterRawString) : <code>string</code>
     * [.defaultValues](#ERMrest.ForeignKeyPseudoColumn+defaultValues) : <code>Object</code>
     * [.defaultReference](#ERMrest.ForeignKeyPseudoColumn+defaultReference) : <code>ERMrest.Refernece</code>
+    * [.RID](#ERMrest.ForeignKeyPseudoColumn+RID) : <code>string</code>
     * [.displayname](#ERMrest.ForeignKeyPseudoColumn+displayname) : <code>Object</code>
     * [.filteredRef(column, data)](#ERMrest.ForeignKeyPseudoColumn+filteredRef) ⇒ [<code>Reference</code>](#ERMrest.Reference)
 
@@ -4995,6 +5017,12 @@ returns the raw default values of the constituent columns.
 
 #### foreignKeyPseudoColumn.defaultReference : <code>ERMrest.Refernece</code>
 returns a reference using raw default values of the constituent columns.
+
+**Kind**: instance property of [<code>ForeignKeyPseudoColumn</code>](#ERMrest.ForeignKeyPseudoColumn)  
+<a name="ERMrest.ForeignKeyPseudoColumn+RID"></a>
+
+#### foreignKeyPseudoColumn.RID : <code>string</code>
+returns the ermrest generated RID for the foreign key relationship this pseudo clumn represents
 
 **Kind**: instance property of [<code>ForeignKeyPseudoColumn</code>](#ERMrest.ForeignKeyPseudoColumn)  
 <a name="ERMrest.ForeignKeyPseudoColumn+displayname"></a>
@@ -5539,37 +5567,35 @@ Could be used as tooltip to provide more information about the facetColumn
 
 #### facetColumn.hideNullChoice : <code>Boolean</code>
 Whether client should hide the null choice.
-`null` filter could mean any of the following:
+
+Before going through the logic, it's good to know the following:
+-`null` filter could mean any of the following:
   - Scalar value being `null`. In terms of ermrest, a simple col::null:: query
   - No value exists in the given path (checking presence of a value in the path). In terms of ermrest,
     we have to construct an outer join. For performance we're going to use right outer join.
     Because of ermrest limitation, we cannot have more than two right outer joins and therefore
     two such null checks cannot co-exist.
-Since we're not going to show two different options for these two meanings,
-we have to make sure to offer `null` option when only one of these two meanings would make sense.
-Based on this, we can categorize facets into these three groups:
-  1. (G1) Facets without any path.
-  2. (G2) Facets with path where the column is nullable: `null` could mean any of those.
-  3. (G3) Facets with path where the column is not nullable. Here `null` can only mean path existence.
-  3. (G3.1) Facets with only one hop where the column used in foreignkey is the same column for faceting.
-     In this case, we can completely ignore the foreignkey path and just do a value check on main table.
-Other types of facet that null won't be applicable to them and therefore
-we shouldn't even offer the option:
-  1. (G4) Scalar columns of main table that are not-null.
-  2. (G5) All outbound foreignkey facets that all the columns invloved are not-null
-  3. (G6) Facets with `filter` in their source definition. We cannot combine filter
-          and null together.
+- Since we're not going to show two different options for these two meanings,
+  we have to make sure to offer `null` option when only one of these two meanings would make sense.
+- There are some cases when the `null` is not even possible based on the model. So we shouldn't offer this option.
+- Due to ermrest and our parse limitations, facets with filter cannot support null.
 
-Based on this, the following will be the logic for this function:
-    - If facet has `null` filter: `false`
-    - If facet has `"hide_null_choice": true`: `true`
-    - If G6: true
-    - If G1: `true` if the column is not-null
-    - If G5: `true`
-    - If G2: `true`
-    - If G3.1: `false`
-    - If G3 and no other G3 has null: `false`
-    - otherwise: `false`
+Therefore, the following is the logic for this function:
+  1. If the facet already has `null` filter, return `false`.
+  2. If facet has `"hide_null_choice": true`, return `true`.
+  3. If facet has filer, return `true` as our parse can't handle it.
+  4. If it's a local column,
+    4.1. if it's not-null, return `true`.
+    4.2. if it's nullable, return `false`.
+  5. If it's an all-outbound path where all the columns in the path are not-null,
+    5.1. If the end column is nullable, return `false` as null value only means scalar value being null.
+    5.2. If the end column is not-null, return `true` as null value is not possible.
+  6. For any other paths, if the end column is nullable, `null` filter could mean both scalar and path. so return `true`.
+  7. Facets with only one hop where the column used in foreignkey is the same column for faceting.
+     In this case, we can completely ignore the foreignkey path and just do a value check on main table. so return `false`.
+  8. any other cases (facet with arbiarty path),
+   8.1. if other facets have `null` filter, return `true` as we cannot support multiple right outer joins.
+   8.2. otherwise, return `false`.
 
 NOTE this function used to check for select access as well as versioned catalog,
 but we decided to remove them since it's not the desired behavior:
@@ -6482,9 +6508,9 @@ Calculates  MD5 checksum for a file using spark-md5 library
     * [new upload(file, {otherInfo})](#new_ERMrest.upload_new)
     * [.validateURL(row)](#ERMrest.upload+validateURL) ⇒ <code>boolean</code>
     * [.calculateChecksum(row)](#ERMrest.upload+calculateChecksum) ⇒ <code>Promise</code>
-    * [.fileExists()](#ERMrest.upload+fileExists) ⇒ <code>Promise</code>
+    * [.fileExists(jobUrl)](#ERMrest.upload+fileExists) ⇒ <code>Promise</code>
     * [.createUploadJob()](#ERMrest.upload+createUploadJob) ⇒ <code>Promise</code>
-    * [.start()](#ERMrest.upload+start) ⇒ <code>Promise</code>
+    * [.start(startChunkIdx)](#ERMrest.upload+start) ⇒ <code>Promise</code>
     * [.completeUpload()](#ERMrest.upload+completeUpload) ⇒ <code>Promise</code>
     * [.pause()](#ERMrest.upload+pause)
     * [.resume()](#ERMrest.upload+resume)
@@ -6540,12 +6566,17 @@ and notified with a progress handler, sending number in bytes done
 
 <a name="ERMrest.upload+fileExists"></a>
 
-#### upload.fileExists() ⇒ <code>Promise</code>
+#### upload.fileExists(jobUrl) ⇒ <code>Promise</code>
 Call this function to determine file exists on the server
 If it doesn't then resolve the promise with url.
 If it does then set isPaused, completed and jobDone to true
 
 **Kind**: instance method of [<code>upload</code>](#ERMrest.upload)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| jobUrl | <code>string</code> | if an existing job is being tracked locally and the checksum for current `upload`      matches that matched job, return the stored previousJobUrl to be used if a 409 is returned       - a 409 could mean the namespace already exists and we have an existing job for that namespace we know is partially uplaoded       - if all the above is true, set the `upload.chunkUrl` to the jobUrl we were tracking locally |
+
 <a name="ERMrest.upload+createUploadJob"></a>
 
 #### upload.createUploadJob() ⇒ <code>Promise</code>
@@ -6556,7 +6587,7 @@ Call this function to create an upload job for chunked uploading
 or rejected with error if unable to calculate checkum  
 <a name="ERMrest.upload+start"></a>
 
-#### upload.start() ⇒ <code>Promise</code>
+#### upload.start(startChunkIdx) ⇒ <code>Promise</code>
 Call this function to start chunked upload to server. It reads the file and divides in into chunks
 If the completed flag is true, then this means that all chunks were already uploaded, thus it will resolve the promize with url
 else it will start uploading the chunks. If the job was paused then resume by uploading just those chunks which were not completed.
@@ -6565,6 +6596,11 @@ else it will start uploading the chunks. If the job was paused then resume by up
 **Returns**: <code>Promise</code> - A promise resolved with a url where we uploaded the file
 or rejected with error if unable to upload any chunk
 and notified with a progress handler, sending number in bytes uploaded uptil now  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| startChunkIdx | <code>number</code> | the index of the chunk to start uploading from in case of resuming a found incomplete upload job |
+
 <a name="ERMrest.upload+completeUpload"></a>
 
 #### upload.completeUpload() ⇒ <code>Promise</code>
