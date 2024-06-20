@@ -165,8 +165,10 @@ Supported JSON _context_ patterns:
 - Comment related settings:
   - The `"comment"` setting applies *only* to the model element which is annotated.
   - The `"comment_render_markdown": false` should be used if you don't want us to treat the comment as a markdown value. By default we're assuming all comments are markdown.
-  - `"table_comment_display"` is only supported for `compact` context for the title and the tables in `detailed` context when they are part of a foreign key relationship in `visible-columns` or `visible-foreign-keys`.
-  - `"column_comment_display"` is only used in `entry` context.
+  - Using the `"inline"` value for `"table_comment_display"` is currently only supported in the following scenarios:
+    - The recordset page title (`compact` context).
+    - The inline entities and related entities displayed on the record page (`detailed` context is used in both cases).
+  - Using the `"inline"` value for `"column_comment_display"` is currently only supported in the `entry` context (recordedit app).
 - The `"name"` and `"markdown_name"` setting applies *only* to the model element which is annotated. They bypass the `name_style` controls which only apply to actual model names.
   - The `"markdown_name"` setting takes precedence if both are specified.
 - The `"name_style"` setting applies to the annotated model element and is also the default for any nested element.
