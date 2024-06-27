@@ -770,34 +770,73 @@ exports.execute = function(options) {
             });
 
             describe('Reference.cascadingDeletedItems', () => {
-                it ('should return empty array if the table does not have any on delete cascade inbound fks', () => {
+                it('should return empty array if the table does not have any on delete cascade inbound fks', () => {
                     expect(reference.cascadingDeletedItems.length).toBe(0);
                 });
 
-                it ('should include both related references and tables', (done) => {
-                    options.ermRest.resolve(`${options.url}/catalog/${catalog_id}/entity/${schemaName2}:table_w_inbound_cascade_delete`, {
-                        cid: "test"
-                    }).then((response) => {
-                        response = response.contextualize.detailed;
-                        expect(response.related.length).toBe(4, 'related length missmatch');
+                describe('should include both related references and tables', () => {
+                    let usedRefForCascading;
+
+                    beforeAll((done) => {
+                        options.ermRest.resolve(`${options.url}/catalog/${catalog_id}/entity/${schemaName2}:table_w_inbound_cascade_delete`, {
+                            cid: "test"
+                        }).then((response) => {
+                            usedRefForCascading = response.contextualize.detailed;
+                            done();
+                        }).catch((err) => done.fail(err));
+                    });
+
+                    it('should include both related references and tables', () => {
+                        expect(usedRefForCascading.related.length).toBe(6, 'related length missmatch');
+                        expect(usedRefForCascading.columns.length).toBe(4, 'related length missmatch');
 
                         const expectedVals = [
-                            {type: 'Reference', displayname: 'vis col inbound related'},
-                            {type: 'Reference', displayname: 'vis col path related'},
-                            {type: 'Reference', displayname: 'inbound related'},
-                            {type: 'Reference', displayname: 'assoc_table_to_table_w_inbound_cascade_delete'},
-                            {type: 'Reference', displayname: 'path related'},
-                            {type: 'Table', displayname: 'inbound_2_to_table_w_inbound_cascade_delete'}
+                            { type: 'Reference', displayname: 'vis col inbound related' },
+                            { type: 'Reference', displayname: 'vis col path related' },
+                            { type: 'Reference', displayname: 'inbound_5_to_table_w_inbound_cascade_delete' },
+                            { type: 'Reference', displayname: 'inbound related' },
+                            { type: 'Reference', displayname: 'assoc_table_to_table_w_inbound_cascade_delete' },
+                            { type: 'Reference', displayname: 'path related' },
+                            { type: 'Reference', displayname: 'inbound_6_to_table_w_inbound_cascade_delete' },
+                            { type: 'Table', displayname: 'inbound_2_to_table_w_inbound_cascade_delete' }
                         ];
-                        const items = response.cascadingDeletedItems;
+                        const items = usedRefForCascading.cascadingDeletedItems;
                         expect(items.length).toBe(expectedVals.length, 'cascadingDeletedItems length missmatch');
                         items.forEach((item, index) => {
                             expect(item.constructor.name).toEqual(expectedVals[index].type, `type missmatch for i=${index}`);
                             expect(item.displayname.value).toEqual(expectedVals[index].displayname, `displayname missmatch for i=${index}`);
                         });
+                    });
 
-                        done();
-                    }).catch((err) => done.fail(err));
+                    // chaise might call this on related references (there was a bug related to this, that's why we're testing it).
+                    it ('should handle calling it on a related reference', () => {
+                        const expectedVals = [
+                            [], [], [], [], [{ type: 'Reference', displayname: 'inbound_to_inbound_6_to_table_w_inbound_cascade_delete' }], []
+                        ];
+                        usedRefForCascading.related.forEach((r, rIndex) => {
+                            const items = r.cascadingDeletedItems;
+                            expect(items.length).toBe(expectedVals[rIndex].length, 'cascadingDeletedItems length missmatch');
+                            items.forEach((item, itemIndex) => {
+                                expect(item.constructor.name).toEqual(expectedVals[rIndex][itemIndex].type);
+                                expect(item.displayname.value).toEqual(expectedVals[rIndex][itemIndex].displayname);
+                            });
+                        });
+                    });
+
+                    // chaise might call this on inline related references (there was a bug related to this, that's why we're testing it).
+                    it ('should handle calling it on an inline related reference', () => {
+                        const expectedVals = [
+                            [], [], [{ type: 'Reference', displayname: 'inbound_to_inbound_5_to_table_w_inbound_cascade_delete' }], []
+                        ];
+                        usedRefForCascading.columns.forEach((c, rIndex) => {
+                            const items = c.reference.cascadingDeletedItems;
+                            expect(items.length).toBe(expectedVals[rIndex].length, 'cascadingDeletedItems length missmatch');
+                            items.forEach((item, itemIndex) => {
+                                expect(item.constructor.name).toEqual(expectedVals[rIndex][itemIndex].type);
+                                expect(item.displayname.value).toEqual(expectedVals[rIndex][itemIndex].displayname);
+                            });
+                        });
+                    });
                 });
             });
         });

@@ -628,7 +628,9 @@
                                 {"inbound": ["reference_schema_2", "path_related_2_to_table_w_inbound_cascade_delete_fk1"]},
                                 "RID"
                             ]
-                        }
+                        },
+                        ["reference_schema_2", "inbound_5_to_table_w_inbound_cascade_delete_fk1"],
+                        ["reference_schema_2", "inbound_7_to_table_w_inbound_cascade_delete_fk1"]
                     ]
                 },
                 "tag:isrd.isi.edu,2016:visible-foreign-keys": {
@@ -664,7 +666,9 @@
                                 {"inbound": ["reference_schema_2", "path_related_to_table_w_inbound_cascade_delete_fk1"]},
                                 "RID"
                             ]
-                        }
+                        },
+                        ["reference_schema_2", "inbound_6_to_table_w_inbound_cascade_delete_fk1"],
+                        ["reference_schema_2", "inbound_8_to_table_w_inbound_cascade_delete_fk1"]
                     ]
                 }
             }
@@ -787,6 +791,196 @@
                         "column_name": "id"
                     }],
                     "on_delete": "CASCADE"
+                }
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {"typename": "text"}
+                }
+            ]
+        },
+        "inbound_5_to_table_w_inbound_cascade_delete": {
+            "kind": "table",
+            "schema_name": "reference_schema_2",
+            "table_name": "inbound_5_to_table_w_inbound_cascade_delete",
+            "keys": [
+                {"unique_columns": ["id"]}
+            ],
+            "foreign_keys": [
+                {
+                    "comment": "has on delete cascade",
+                    "names": [["reference_schema_2", "inbound_5_to_table_w_inbound_cascade_delete_fk1"]],
+                    "foreign_key_columns": [{
+                        "table_name": "inbound_5_to_table_w_inbound_cascade_delete",
+                        "schema_name": "reference_schema_2",
+                        "column_name": "id"
+                    }],
+                    "referenced_columns": [{
+                        "table_name": "table_w_inbound_cascade_delete",
+                        "schema_name": "reference_schema_2",
+                        "column_name": "id"
+                    }],
+                    "on_delete": "CASCADE"
+                }
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {"typename": "text"}
+                }
+            ]
+        },
+        "inbound_to_inbound_5_to_table_w_inbound_cascade_delete": {
+            "kind": "table",
+            "schema_name": "reference_schema_2",
+            "table_name": "inbound_to_inbound_5_to_table_w_inbound_cascade_delete",
+            "keys": [
+                {"unique_columns": ["id"]}
+            ],
+            "foreign_keys": [
+                {
+                    "comment": "has on delete cascade",
+                    "names": [["reference_schema_2", "inbound_to_inbound_5_to_table_w_inbound_cascade_delete_fk1"]],
+                    "foreign_key_columns": [{
+                        "table_name": "inbound_to_inbound_5_to_table_w_inbound_cascade_delete",
+                        "schema_name": "reference_schema_2",
+                        "column_name": "id"
+                    }],
+                    "referenced_columns": [{
+                        "table_name": "inbound_5_to_table_w_inbound_cascade_delete",
+                        "schema_name": "reference_schema_2",
+                        "column_name": "id"
+                    }],
+                    "on_delete": "CASCADE"
+                }
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {"typename": "text"}
+                }
+            ]
+        },
+        "inbound_6_to_table_w_inbound_cascade_delete": {
+            "kind": "table",
+            "schema_name": "reference_schema_2",
+            "table_name": "inbound_6_to_table_w_inbound_cascade_delete",
+            "keys": [
+                {"unique_columns": ["id"]}
+            ],
+            "foreign_keys": [
+                {
+                    "comment": "has on delete cascade",
+                    "names": [["reference_schema_2", "inbound_6_to_table_w_inbound_cascade_delete_fk1"]],
+                    "foreign_key_columns": [{
+                        "table_name": "inbound_6_to_table_w_inbound_cascade_delete",
+                        "schema_name": "reference_schema_2",
+                        "column_name": "id"
+                    }],
+                    "referenced_columns": [{
+                        "table_name": "table_w_inbound_cascade_delete",
+                        "schema_name": "reference_schema_2",
+                        "column_name": "id"
+                    }],
+                    "on_delete": "CASCADE"
+                }
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {"typename": "text"}
+                }
+            ]
+        },
+        "inbound_to_inbound_6_to_table_w_inbound_cascade_delete": {
+            "kind": "table",
+            "schema_name": "reference_schema_2",
+            "table_name": "inbound_to_inbound_6_to_table_w_inbound_cascade_delete",
+            "keys": [
+                {"unique_columns": ["id"]}
+            ],
+            "foreign_keys": [
+                {
+                    "comment": "has on delete cascade",
+                    "names": [["reference_schema_2", "inbound_to_inbound_6_to_table_w_inbound_cascade_delete_fk1"]],
+                    "foreign_key_columns": [{
+                        "table_name": "inbound_to_inbound_6_to_table_w_inbound_cascade_delete",
+                        "schema_name": "reference_schema_2",
+                        "column_name": "id"
+                    }],
+                    "referenced_columns": [{
+                        "table_name": "inbound_6_to_table_w_inbound_cascade_delete",
+                        "schema_name": "reference_schema_2",
+                        "column_name": "id"
+                    }],
+                    "on_delete": "CASCADE"
+                }
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {"typename": "text"}
+                }
+            ]
+        },
+        "inbound_7_to_table_w_inbound_cascade_delete": {
+            "kind": "table",
+            "schema_name": "reference_schema_2",
+            "table_name": "inbound_7_to_table_w_inbound_cascade_delete",
+            "keys": [
+                {"unique_columns": ["id"]}
+            ],
+            "foreign_keys": [
+                {
+                    "comment": null,
+                    "names": [["reference_schema_2", "inbound_7_to_table_w_inbound_cascade_delete_fk1"]],
+                    "foreign_key_columns": [{
+                        "table_name": "inbound_7_to_table_w_inbound_cascade_delete",
+                        "schema_name": "reference_schema_2",
+                        "column_name": "id"
+                    }],
+                    "referenced_columns": [{
+                        "table_name": "table_w_inbound_cascade_delete",
+                        "schema_name": "reference_schema_2",
+                        "column_name": "id"
+                    }]
+                }
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {"typename": "text"}
+                }
+            ]
+        },
+        "inbound_8_to_table_w_inbound_cascade_delete": {
+            "kind": "table",
+            "schema_name": "reference_schema_2",
+            "table_name": "inbound_8_to_table_w_inbound_cascade_delete",
+            "keys": [
+                {"unique_columns": ["id"]}
+            ],
+            "foreign_keys": [
+                {
+                    "comment": null,
+                    "names": [["reference_schema_2", "inbound_8_to_table_w_inbound_cascade_delete_fk1"]],
+                    "foreign_key_columns": [{
+                        "table_name": "inbound_8_to_table_w_inbound_cascade_delete",
+                        "schema_name": "reference_schema_2",
+                        "column_name": "id"
+                    }],
+                    "referenced_columns": [{
+                        "table_name": "table_w_inbound_cascade_delete",
+                        "schema_name": "reference_schema_2",
+                        "column_name": "id"
+                    }]
                 }
             ],
             "column_definitions": [

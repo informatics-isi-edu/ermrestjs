@@ -3968,9 +3968,17 @@
                 // inline tables
                 detailedRef.columns.forEach(function (col) {
                     if (col.isInboundForeignKey || (col.isPathColumn && col.hasPath && !col.isUnique && !col.hasAggregate)) {
-                        var fk = col.foreignKey ? col.foreignKey : col.firstForeignKeyNode.nodeObject;
+                        // col.foreignKey is available for non-source syntax, while the other one is used for source syntax
+                        var fk;
+                        if (col.foreignKey) {
+                            fk = col.foreignKey;
+                        } else if (col.firstForeignKeyNode) {
+                            fk = col.firstForeignKeyNode.nodeObject;
+                        }
+                        // this check is not needed and only added for sanity check
+                        if (!fk) return;
                         consideredFKs[fk.name] = 1;
-                        if (fk && fk.onDeleteCascade) {
+                        if (fk.onDeleteCascade) {
                             res.push(col.reference);
                         }
                     }
@@ -3978,9 +3986,17 @@
 
                 // related tables
                 detailedRef.related.forEach(function (ref) {
-                    var fk = ref.pseudoColumn ? ref.pseudoColumn.firstForeignKeyNode.nodeObject : ref.origFKR;
+                    // col.origFKR is available for non-source syntax, while the other one is used for source syntax
+                    var fk;
+                    if (ref.origFKR) {
+                        fk = ref.origFKR;
+                    } else if (ref.pseudoColumn && ref.pseudoColumn.firstForeignKeyNode) {
+                        fk = ref.pseudoColumn.firstForeignKeyNode.nodeObject;
+                    }
+                    // this check is not needed and only added for sanity check
+                    if (!fk) return;
                     consideredFKs[fk.name] = 1;
-                    if (fk && fk.onDeleteCascade) {
+                    if (fk.onDeleteCascade) {
                         res.push(ref);
                     }
                 });
@@ -4053,6 +4069,9 @@
             delete newRef._facetColumns;
             delete newRef.derivedAssociationReference;
             delete newRef._display;
+            // if we call .related on a related reference, then this might already be populated and we should just remove it
+            // TODO this feels very hacky. if we rewrite the logic to use proper classes, then this wouldn't be needed.
+            delete newRef.pseudoColumn;
 
             // delete permissions
             delete newRef._canCreate;
@@ -5310,7 +5329,7 @@
                     for (j = 0; j < fks.length; j++) {
                         fkName = fks[j].name;
                         tempData[fkName] = {};
-                        linkedDataMap[fkName] = fks[j].RID
+                        linkedDataMap[fkName] = fks[j].RID;
 
                         for (k = 0; k < fks[j].colset.columns.length; k++) {
                             col = fks[j].colset.columns[k];
