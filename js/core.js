@@ -2092,9 +2092,17 @@
          */
         get isPureBinaryAssociation () {
             if(this._isPureBinaryAssociation === undefined) {
-                this._isPureBinaryAssociation = this._computePureBinaryAssociation();
+                this._isPureBinaryAssociation = this._computePureBinaryAssociation(0);
             }
             return this._isPureBinaryAssociation;
+        },
+
+        get isAssociation () {
+            if(this._isAssociation === undefined) {
+                // will attach the value of _almostPureBinary
+                this._computePureBinaryAssociation(5);
+            }
+            return this._isAssociation;
         },
 
         /**
@@ -2104,12 +2112,12 @@
         get pureBinaryForeignKeys () {
             if(this._pureBinaryForeignKeys_cached === undefined) {
                 // will attach the value of _pureBinaryForeignKeys_cached
-                this._computePureBinaryAssociation();
+                this._computePureBinaryAssociation(5);
             }
             return this._pureBinaryForeignKeys_cached;
         },
 
-        _computePureBinaryAssociation: function () {
+        _computePureBinaryAssociation: function (numberNonKeyColsAllowed) {
             var isSystemCol = function (col) {
                 return module._systemColumns.indexOf(col.name) !== -1;
             };
@@ -2160,11 +2168,20 @@
             });
 
             // check for purity
-            if (nonKeyCols.length === 0) {
+            if (nonKeyCols.length <= 0) {
                 // attach the value of _pureBinaryForeignKeys
                 this._pureBinaryForeignKeys_cached = nonSystemColumnFks;
 
                 return true;
+            }
+
+            if (nonKeyCols.length <= numberNonKeyColsAllowed) {
+                // attach the value of _pureBinaryForeignKeys
+                this._pureBinaryForeignKeys_cached = nonSystemColumnFks;
+
+                // if there are between 1 and 5 nonKeyCols, treat it "almost" like a pure and binary table
+                this._isAssociation = nonKeyCols.length > 0;
+                return false;
             }
 
             this._pureBinaryForeignKeys_cached = null;
