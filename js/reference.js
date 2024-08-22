@@ -4015,6 +4015,29 @@
         },
 
         /**
+         * If prefill object is defined and has the required attributes, will return
+         * a Prefill object with the necessary objects used for a association modal picker
+         *
+         * @type {ERMrest.Prefill}
+         */
+        get prefill() {
+            if (this._prefill === undefined) {
+                // TODO: error with message "Call computePrefill first"
+            }
+            return this._prefill;
+        },
+
+        computePrefill: function (prefillObject) {
+            if (this._prefill === undefined) {
+                var annotation = null;
+                // var prefillAnno = table.annotations.get(module._annotations.TABLE_DISPLAY).content;
+                if (prefillAnno) annotation = prefillAnno;
+                this._prefill = new Prefill(this, prefillObject, annotation);
+            }
+            return this._prefill;
+        },
+
+        /**
          * Generate a related reference given a foreign key and tuple.
          * TODO SHOULD BE REFACTORED AS A TYPE OF REFERENCE
          *
@@ -6594,4 +6617,109 @@
                 );
             }
         });
+    }
+
+    /**
+     *
+     * @param {ERMrest.Reference} reference reference for the assocation table
+     * @param {Object} prefillObject computed prefill object after extracting the query param and fetching the data from cookie storage
+     * @param {Object} prefillAnnotation
+     */
+    function Prefill (reference, prefillObject, prefillAnnotation) {
+        var self = this;
+        this._reference = reference;
+        this._prefillObject = prefillObject;
+        this._prefillAnnotation = prefillAnnotation;
+
+        // ignore the fks that are simple and their constituent column is system col
+        var nonSystemColumnFks = this._reference.foreignKeys.all().filter((fk) => {
+            return !(fk.simple && isSystemCol(fk.colset.columns[0]));
+        });
+
+        // set of foreignkey columns (they might be overlapping so we're not using array)
+        var fkCols = {};
+        nonSystemColumnFks.forEach((fk) => {
+            fk.colset.columns.forEach((col) => {
+                fkCols[col] = true;
+            });
+        });
+
+         // NOTE: I think this can be done differently. Leaving this alone for now for the initial implementation
+        reference.columns.forEach((column) => {
+            // column should be a foreignkey pseudo column
+            if (!column.isForeignKey) return;
+
+            nonSystemColumnFks.forEach((fk) => {
+                // column and foreign key `.name` property is a hash value
+                if (column.name === fk.name) {
+                    if (prefillObject.fkColumnNames.indexOf(column.name) !== -1) {
+                        self.mainColumn = column;
+                    } else {
+                        // TODO: what if there are multiple "other" fk columns?
+                        if (self.leafColumn) {
+                            // throw error saying "more than 1 foreign key column available"
+                            // OR inspect key data and if there is a key with 2 foreign key columns (and 1 is the main column), those are our columns for the association
+                        }
+
+                        self.leafColumn = column;
+                    }
+                }
+            });
+        });
+
+        this.isAssociation = (this.mainColumn && this.leafColumn);
+
+        this.isUnique = false;
+
+        // to calculate isUnique
+        //   - One of the keys should contain the main and leaf foreign key columns
+        var tempKeys = this.keys.all().filter((key) => {
+            var keyCols = key.colset.columns;
+            return !(keyCols.length == 1 && (module._serialTypes.indexOf(keyCols[0].type.name) != -1 ||  module._systemColumns.indexOf(keyCols[0].name) != -1) && !(keyCols[0] in fkCols));
+        });
+
+        // if we determine there is a key with 2 foreign key columns in it, should we assume that's the main/leaf columns for the association
+        //   even if there are more than 2 foreign key columns?
+        console.log('temp keys: ', tempKeys);
+    }
+
+    Prefill.prototype = {
+        /**
+         * @returns {Object[]} filters array for getting the rows that should be disabled
+         */
+        disabledRowsFilter: () => {
+            var self = this;
+
+            var disabledRowsFilters = [];
+            Object.keys(this.prefillObject.keys).forEach((key) => {
+                disabledRowsFilters.push({
+                    source: [
+                        { 'inbound': self.leafColumn.foreignKey.constraint_names[0] },
+                        { 'outbound': self.mainColumn.foreignKey.constraint_names[0] },
+                        self.mainColumn.foreignKey.mapping._to[0].name
+                    ],
+                    choices: [self.prefillObject.keys[key]]
+                });
+            });
+
+            return disabledRowsFilters;
+        },
+
+        /**
+         * @returns {Object[]} filters array for ensuring rows from the leaf table are only able to be added if their key information is not null
+         */
+        andFilters: () => {
+            var andFilters = [];
+            // loop through all of key columns of the leaf foreign key pseudo column that make up the key information for the leaf table of the association relationship and create non-null filters
+            // NOTE: this is similar to the function `openAddPureBinaryModal` in `related-table-actions` in chaise
+            this.leafColumn.foreignKey.key.colset.columns.forEach((col) => {
+                andFilters.push({
+                    source: col.name,
+                    hidden: true,
+                    not_null: true
+                });
+            });
+
+            return andFilters;
+        }
     }
