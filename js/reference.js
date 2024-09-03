@@ -4022,14 +4022,62 @@
          */
         get prefillForCreateAssociation() {
             if (this._prefillForCreateAssociation === undefined) {
-                verify(false, 'Call "computePrefill" with the prefill object first');
+                verify(false, 'Call "computePrefillForCreateAssociation" with the prefill object first');
             }
             return this._prefillForCreateAssociation;
         },
 
         computePrefillForCreateAssociation: function (prefillObject) {
             if (this._prefillForCreateAssociation === undefined) {
-                this._prefillForCreateAssociation = new PrefillForCreateAssociation(this, prefillObject);
+                if (!prefillObject) {
+                    this._prefillForCreateAssociation = null;
+                } else {
+                    // ignore the fks that are simple and their constituent column is system col
+                    // TODO: composite FKs
+                    var nonSystemColumnFks = this.table.foreignKeys.all().filter(function(fk) {
+                        return !(fk.simple && module._systemColumns.indexOf(fk.colset.columns[0]) !== -1);
+                    });
+
+                    // set of foreignkey columns (they might be overlapping so we're not using array)
+                    var fkCols = {};
+                    nonSystemColumnFks.forEach(function(fk) {
+                        fk.colset.columns.forEach(function(col) {
+                            fkCols[col] = true;
+                        });
+                    });
+
+                    // There have to be 2 foreign key columns
+                    if (nonSystemColumnFks.length !== 2) {
+                        this._prefillForCreateAssociation = null;
+                    } else {
+                        var mainColumn = null;
+                        var leafColumn = null;
+
+                        // leafColumn will be set no matter what since the check above ensures there are 2 FK columns
+                        // This makes sure one of the 2 FK columns is the same as the one that initiated the prefill logic in record app
+                        this.columns.forEach(function(column) {
+                            // column should be a foreignkey pseudo column
+                            if (!column.isForeignKey) return;
+
+                            nonSystemColumnFks.forEach(function(fk) {
+                                // column and foreign key `.name` property is a hash value
+                                if (column.name === fk.name) {
+                                    if (prefillObject.fkColumnNames.indexOf(column.name) !== -1) {
+                                        mainColumn = column;
+                                    } else {
+                                        leafColumn = column;
+                                    }
+                                }
+                            });
+                        });
+
+                        if (!mainColumn || !leafColumn) {
+                            this._prefillForCreateAssociation = null;
+                        } else {
+                            this._prefillForCreateAssociation = new PrefillForCreateAssociation(this, prefillObject, fkCols, mainColumn, leafColumn);
+                        }
+                    }
+                }
             }
             return this._prefillForCreateAssociation;
         },
@@ -6617,6 +6665,9 @@
     }
 
     /**
+     * Constructor to create a PrefillForCreateAssociation object. Returns null if the table for the reference
+     *   can not be determined to be an "association"
+     *
      * NOTE: Potential improvement to the heuristics when there is no annotation defined
      *   if we have:
      *     - >2 FK columns
@@ -6626,55 +6677,15 @@
      *
      * @param {ERMrest.Reference} reference reference for the association table
      * @param {Object} prefillObject generated prefill object from chaise after extracting the query param and fetching the data from cookie storage
+     * @param {Object} fkCols set of foreignkey columns that are not system columns (they might be overlapping so we're not using array)
      */
-    function PrefillForCreateAssociation (reference, prefillObject) {
-        if (!prefillObject) return null;
-
+    function PrefillForCreateAssociation (reference, prefillObject, fkCols, mainColumn, leafColumn) {
         var self = this;
         this._reference = reference;
         this._prefillObject = prefillObject;
+        this._mainColumn = mainColumn;
+        this._leafColumn = leafColumn;
 
-        // ignore the fks that are simple and their constituent column is system col
-        // TODO: composite FKs
-        var nonSystemColumnFks = this._reference.table.foreignKeys.all().filter(function(fk) {
-            return !(fk.simple && module._systemColumns.indexOf(fk.colset.columns[0]) !== -1);
-        });
-
-        // set of foreignkey columns (they might be overlapping so we're not using array)
-        var fkCols = {};
-        nonSystemColumnFks.forEach(function(fk) {
-            fk.colset.columns.forEach(function(col) {
-                fkCols[col] = true;
-            });
-        });
-
-        // There have to be 2 foreign key columns
-        if (nonSystemColumnFks.length !== 2) return null;
-
-        this._mainColumn = null;
-        this._leafColumn = null;
-
-        // leafColumn will be set no matter what since the check above ensures there are 2 FK columns
-        // This makes sure one of the 2 FK columns is the same as the one that initiated the prefill logic in record app
-        reference.columns.forEach(function(column) {
-            // column should be a foreignkey pseudo column
-            if (!column.isForeignKey) return;
-
-            nonSystemColumnFks.forEach(function(fk) {
-                // column and foreign key `.name` property is a hash value
-                if (column.name === fk.name) {
-                    if (prefillObject.fkColumnNames.indexOf(column.name) !== -1) {
-                        self._mainColumn = column;
-                    } else {
-                        self._leafColumn = column;
-                    }
-                }
-            });
-        });
-
-        if (!this._mainColumn || !this._leafColumn) return null;
-
-        this._isAssociation = true;
         this._isUnique = false;
 
         var tempKeys = reference.table.keys.all().filter(function(key) {
@@ -6701,26 +6712,11 @@
     }
 
     PrefillForCreateAssociation.prototype = {
-        // TODO: are the 4 following functions needed in chaise?
-        /**
-         * @returns ERMrest.ForeignKeyPseudoColumn
-         */
-        get mainColumn (){
-            return this._mainColumn;
-        },
-
         /**
          * @returns ERMrest.ForeignKeyPseudoColumn
          */
         get leafColumn () {
             return this._leafColumn;
-        },
-
-        /**
-         * @returns boolean
-         */
-        get isAssociation () {
-            return this._isAssociation;
         },
 
         /**
