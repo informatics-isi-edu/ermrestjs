@@ -4016,25 +4016,22 @@
 
         /**
          * If prefill object is defined and has the required attributes, will return
-         * a Prefill object with the necessary objects used for a association modal picker
+         * a PrefillForCreateAssociation object with the necessary objects used for a association modal picker
          *
-         * @type {ERMrest.Prefill}
+         * @type {ERMrest.PrefillForCreateAssociation}
          */
-        get prefill() {
-            if (this._prefill === undefined) {
-                // TODO: error with message "Call computePrefill first"
+        get prefillForCreateAssociation() {
+            if (this._prefillForCreateAssociation === undefined) {
+                verify(false, 'Call "computePrefill" with the prefill object first');
             }
-            return this._prefill;
+            return this._prefillForCreateAssociation;
         },
 
-        computePrefill: function (prefillObject) {
-            if (this._prefill === undefined) {
-                var annotation = null;
-                // var prefillAnno = table.annotations.get(module._annotations.TABLE_DISPLAY).content;
-                // if (prefillAnno) annotation = prefillAnno;
-                this._prefill = new Prefill(this, prefillObject, annotation);
+        computePrefillForCreateAssociation: function (prefillObject) {
+            if (this._prefillForCreateAssociation === undefined) {
+                this._prefillForCreateAssociation = new PrefillForCreateAssociation(this, prefillObject);
             }
-            return this._prefill;
+            return this._prefillForCreateAssociation;
         },
 
         /**
@@ -6620,20 +6617,25 @@
     }
 
     /**
+     * NOTE: Potential improvement to the heuristics when there is no annotation defined
+     *   if we have:
+     *     - >2 FK columns
+     *     - there is a key with 2 foreign key columns in it
+     *     - that key includes the _mainColumn mentioned in prefillObject
+     *   should we assume that's the main/leaf columns for the association?
      *
      * @param {ERMrest.Reference} reference reference for the association table
-     * @param {Object} prefillObject computed prefill object after extracting the query param and fetching the data from cookie storage
-     * @param {Object} prefillAnnotation
+     * @param {Object} prefillObject generated prefill object from chaise after extracting the query param and fetching the data from cookie storage
      */
-    function Prefill (reference, prefillObject, prefillAnnotation) {
-        verify(prefillObject, "'prefillObject' must be defined");
+    function PrefillForCreateAssociation (reference, prefillObject) {
+        if (!prefillObject) return null;
 
         var self = this;
         this._reference = reference;
         this._prefillObject = prefillObject;
-        this._prefillAnnotation = prefillAnnotation;
 
         // ignore the fks that are simple and their constituent column is system col
+        // TODO: composite FKs
         var nonSystemColumnFks = this._reference.table.foreignKeys.all().filter(function(fk) {
             return !(fk.simple && module._systemColumns.indexOf(fk.colset.columns[0]) !== -1);
         });
@@ -6646,11 +6648,14 @@
             });
         });
 
-        // the following are ERMrest.ForeignKeyPseudoColumn
-        this.mainColumn;
-        this.leafColumn;
+        // There have to be 2 foreign key columns
+        if (nonSystemColumnFks.length !== 2) return null;
 
-         // NOTE: I think this can be done differently. Leaving this alone for now for the initial implementation
+        this._mainColumn = null;
+        this._leafColumn = null;
+
+        // leafColumn will be set no matter what since the check above ensures there are 2 FK columns
+        // This makes sure one of the 2 FK columns is the same as the one that initiated the prefill logic in record app
         reference.columns.forEach(function(column) {
             // column should be a foreignkey pseudo column
             if (!column.isForeignKey) return;
@@ -6659,85 +6664,115 @@
                 // column and foreign key `.name` property is a hash value
                 if (column.name === fk.name) {
                     if (prefillObject.fkColumnNames.indexOf(column.name) !== -1) {
-                        self.mainColumn = column;
+                        self._mainColumn = column;
                     } else {
-                        // TODO: what if there are multiple "other" fk columns?
-                        if (self.leafColumn) {
-                            // throw error saying "more than 1 foreign key column available"
-                            // OR inspect key data and if there is a key with 2 foreign key columns (and 1 is the main column), those are our columns for the association
-                        }
-
-                        self.leafColumn = column;
+                        self._leafColumn = column;
                     }
                 }
             });
         });
 
-        this.isAssociation = (nonSystemColumnFks.length === 2 && this.mainColumn && this.leafColumn);
+        if (!this._mainColumn || !this._leafColumn) return null;
 
-        this.isUnique = false;
+        this._isAssociation = true;
+        this._isUnique = false;
 
-        // to calculate isUnique
-        //   - One of the keys should contain the main and leaf foreign key columns
         var tempKeys = reference.table.keys.all().filter(function(key) {
             var keyCols = key.colset.columns;
             return !(keyCols.length == 1 && (module._serialTypes.indexOf(keyCols[0].type.name) != -1 ||  module._systemColumns.indexOf(keyCols[0].name) != -1) && !(keyCols[0] in fkCols));
         });
 
-        // if we determine there is a key with 2 foreign key columns in it, should we assume that's the main/leaf columns for the association
-        //   even if there are more than 2 foreign key columns?
+        // to calculate isUnique
+        //   - One of the keys should contain the main and leaf foreign key columns
         tempKeys.forEach(function(key) {
             var mainMatch = false,
                 leafMatch = false;
+
             key.colset.columns.forEach(function(col) {
-                if (col.name === self.leafColumn._baseCols[0].name) {
+                if (col.name === self._leafColumn._baseCols[0].name) {
                     leafMatch = true;
-                } else if (col.name === self.mainColumn._baseCols[0].name) {
+                } else if (col.name === self._mainColumn._baseCols[0].name) {
                     mainMatch = true;
                 }
             });
 
-            if (leafMatch && mainMatch) self.isUnique = true;
+            if (leafMatch && mainMatch) self._isUnique = true;
         });
     }
 
-    Prefill.prototype = {
+    PrefillForCreateAssociation.prototype = {
+        // TODO: are the 4 following functions needed in chaise?
+        /**
+         * @returns ERMrest.ForeignKeyPseudoColumn
+         */
+        get mainColumn (){
+            return this._mainColumn;
+        },
+
+        /**
+         * @returns ERMrest.ForeignKeyPseudoColumn
+         */
+        get leafColumn () {
+            return this._leafColumn;
+        },
+
+        /**
+         * @returns boolean
+         */
+        get isAssociation () {
+            return this._isAssociation;
+        },
+
+        /**
+         * @returns boolean
+         */
+        get isUnique () {
+            return this._isUnique;
+        },
+
         /**
          * @returns {Object[]} filters array for getting the rows that should be disabled
          */
         disabledRowsFilter: function() {
-            var self = this;
+            if (this._disabledRowsFilters === undefined) {
+                var self = this;
 
-            var disabledRowsFilters = [];
-            Object.keys(this._prefillObject.keys).forEach(function(key) {
-                disabledRowsFilters.push({
-                    source: [
-                        { 'inbound': self.leafColumn.foreignKey.constraint_names[0] },
-                        { 'outbound': self.mainColumn.foreignKey.constraint_names[0] },
-                        self.mainColumn.foreignKey.mapping._to[0].name
-                    ],
-                    choices: [self._prefillObject.keys[key]]
+                var filters = [];
+                Object.keys(this._prefillObject.keys).forEach(function(key) {
+                    filters.push({
+                        source: [
+                            { 'inbound': self._leafColumn.foreignKey.constraint_names[0] },
+                            { 'outbound': self._mainColumn.foreignKey.constraint_names[0] },
+                            self._mainColumn.foreignKey.mapping._to[0].name
+                        ],
+                        choices: [self._prefillObject.keys[key]]
+                    });
                 });
-            });
 
-            return disabledRowsFilters;
+                this._disabledRowsFilters = filters;
+            }
+
+            return this._disabledRowsFilters;
         },
 
         /**
-         * @returns filters array to use on leafColumn.reference for ensuring rows from the leaf table are only able to be added if their key information is not null
+         * @returns {Object[]} filters array to use on leafColumn.reference for ensuring rows from the leaf table are only able to be added if their key information is not null
          */
         andFiltersForLeaf: function() {
-            var andFilters = [];
-            // loop through all of key columns of the leaf foreign key pseudo column that make up the key information for the leaf table of the association relationship and create non-null filters
-            // NOTE: this is similar to the function `openAddPureBinaryModal` in `related-table-actions` in chaise
-            this.leafColumn.foreignKey.key.colset.columns.forEach(function(col) {
-                andFilters.push({
-                    source: col.name,
-                    hidden: true,
-                    not_null: true
+            if (this._andFilters === undefined) {
+                var filters = [];
+                // loop through all of key columns of the leaf foreign key pseudo column that make up the key information for the leaf table of the association relationship and create non-null filters
+                this._leafColumn.foreignKey.key.colset.columns.forEach(function(col) {
+                    filters.push({
+                        source: col.name,
+                        hidden: true,
+                        not_null: true
+                    });
                 });
-            });
 
-            return andFilters;
+                this._andFilters = filters;
+            }
+
+            return this._andFilters;
         }
     }
