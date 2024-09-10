@@ -4016,21 +4016,21 @@
 
         /**
          * If prefill object is defined and has the required attributes, will return
-         * a PrefillForCreateAssociation object with the necessary objects used for a association modal picker
+         * a BulkCreateForeignKeyObject object with the necessary objects used for a association modal picker
          *
-         * @type {ERMrest.PrefillForCreateAssociation}
+         * @type {ERMrest.BulkCreateForeignKeyObject}
          */
-        get prefillForCreateAssociation() {
-            if (this._prefillForCreateAssociation === undefined) {
-                verify(false, 'Call "computePrefillForCreateAssociation" with the prefill object first');
+        get bulkCreateForeignKeyObject() {
+            if (this._bulkCreateForeignKeyObject === undefined) {
+                verify(false, 'Call "computeBulkCreateForeignKeyObject" with the prefill object first');
             }
-            return this._prefillForCreateAssociation;
+            return this._bulkCreateForeignKeyObject;
         },
 
-        computePrefillForCreateAssociation: function (prefillObject) {
-            if (this._prefillForCreateAssociation === undefined) {
+        computeBulkCreateForeignKeyObject: function (prefillObject) {
+            if (this._bulkCreateForeignKeyObject === undefined) {
                 if (!prefillObject) {
-                    this._prefillForCreateAssociation = null;
+                    this._bulkCreateForeignKeyObject = null;
                 } else {
                     // ignore the fks that are simple and their constituent column is system col
                     // TODO: composite FKs
@@ -4048,7 +4048,7 @@
 
                     // There have to be 2 foreign key columns
                     if (nonSystemColumnFks.length !== 2) {
-                        this._prefillForCreateAssociation = null;
+                        this._bulkCreateForeignKeyObject = null;
                     } else {
                         var mainColumn = null;
                         var leafColumn = null;
@@ -4072,14 +4072,14 @@
                         });
 
                         if (!mainColumn || !leafColumn) {
-                            this._prefillForCreateAssociation = null;
+                            this._bulkCreateForeignKeyObject = null;
                         } else {
-                            this._prefillForCreateAssociation = new PrefillForCreateAssociation(this, prefillObject, fkCols, mainColumn, leafColumn);
+                            this._bulkCreateForeignKeyObject = new BulkCreateForeignKeyObject(this, prefillObject, fkCols, mainColumn, leafColumn);
                         }
                     }
                 }
             }
-            return this._prefillForCreateAssociation;
+            return this._bulkCreateForeignKeyObject;
         },
 
         /**
@@ -6665,7 +6665,7 @@
     }
 
     /**
-     * Constructor to create a PrefillForCreateAssociation object. Returns null if the table for the reference
+     * Constructor to create a BulkCreateForeignKeyObject object. Returns null if the table for the reference
      *   can not be determined to be an "association"
      *
      * NOTE: Potential improvement to the heuristics when there is no annotation defined
@@ -6678,8 +6678,10 @@
      * @param {ERMrest.Reference} reference reference for the association table
      * @param {Object} prefillObject generated prefill object from chaise after extracting the query param and fetching the data from cookie storage
      * @param {Object} fkCols set of foreignkey columns that are not system columns (they might be overlapping so we're not using array)
+     * @param {ForeignKeyPseudoColumn} mainColumn the column from the assocation table that points to the main table in the association
+     * @param {ForeignKeyPseudoColumn} leafColumn the column from the assocation table that points to the leaf table in the association we are selecting rows from to associate to main
      */
-    function PrefillForCreateAssociation (reference, prefillObject, fkCols, mainColumn, leafColumn) {
+    function BulkCreateForeignKeyObject (reference, prefillObject, fkCols, mainColumn, leafColumn) {
         var self = this;
         this._reference = reference;
         this._prefillObject = prefillObject;
@@ -6711,7 +6713,7 @@
         });
     }
 
-    PrefillForCreateAssociation.prototype = {
+    BulkCreateForeignKeyObject.prototype = {
         /**
          * @returns ERMrest.ForeignKeyPseudoColumn
          */
