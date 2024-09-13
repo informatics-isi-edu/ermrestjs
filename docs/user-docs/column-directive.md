@@ -410,6 +410,9 @@ By using this attribute you can customize the presented value to the users. The 
 
 Allows modification of the displayed values for the column directive. You can access the current column directive data with `$self` namespace alongside the defined source definitions. Please refer to the [Column directive display documentation](column-directive-display.md) for more information.
 
+Notes:
+- If a value that is not a string or an empty string is provided for this property, we will ignore that. And act as if this property was completely missing.
+
 ##### wait_for
 
 Used to signal Chaise that this column directive's `markdown_pattern` relies on the values of other column directives. It's an array of `sourcekey`s that are defined in the [`source-definitions` annotation](annotation.md#tag-2019-source-definitions) of the table. You should list all the all-outbound, aggregates, and entity sets that you want to use in your `markdown_pattern`. Entity sets (column directives with `inbound` path and no `aggregate` attribute) are only acceptable in `detailed` context. Please refer to the [column directive display documentation](column-directive-display.md) for more information.

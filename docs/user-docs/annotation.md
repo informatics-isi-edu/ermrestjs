@@ -617,12 +617,6 @@ Supported JSON _sortkey_ patterns:
 - `{ "column":` _columnname_ `}`: If omitted, the `"descending"` field defaults to `false` as per above.
 - _columnname_: A bare _columnname_ is a short-hand for `{ "column":` _columnname_ `}`.
 
-#### Table Display Settings Hierarchy
-
-The table display settings apply only to tables, but MAY be annotated at the schema level to set a schema-wide default, if appropriate in a particular model. Any table-level specification of these settings will override the behavior for that table. These settings on other model elements are meaningless and ignored.
-
-For hierarchically inheritable settings, an explicit setting of `null` will turn *off* inheritance and restore default behavior for that model element and any of its nested elements.
-
 ### Tag: 2016 Visible Foreign Keys
 
 `tag:isrd.isi.edu,2016:visible-foreign-keys`
