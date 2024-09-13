@@ -4027,6 +4027,15 @@
             return this._bulkCreateForeignKeyObject;
         },
 
+        /**
+         * Will compute and return a BulkCreateForeignKeyObject if:
+         *   - the prefillObject is defined
+         *   - there are only 2 foreign key columns for this table that are not system columns
+         *   - using the prefill object, we can determine the main column for prefilling and leaf column for bulk selection
+         *
+         * @param {Object} prefillObject computed prefill object from chaise
+         * @returns {BulkCreateForeignKeyObject}
+         */
         computeBulkCreateForeignKeyObject: function (prefillObject) {
             if (this._bulkCreateForeignKeyObject === undefined) {
                 if (!prefillObject) {
@@ -6665,8 +6674,7 @@
     }
 
     /**
-     * Constructor to create a BulkCreateForeignKeyObject object. Returns null if the table for the reference
-     *   can not be determined to be an "association"
+     * Constructor to create a BulkCreateForeignKeyObject object
      *
      * NOTE: Potential improvement to the heuristics when there is no annotation defined
      *   if we have:
