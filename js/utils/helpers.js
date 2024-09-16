@@ -631,6 +631,8 @@
     };
 
     /**
+     * retun the value that should be used for the display setting. If missing, it will return "-1".
+     *
     * @param {ERMrest.Table|ERMrest.Column|ERMrest.ForeignKeyRef} obj either table object, or an object that has `.table`
     * @param {String} context the context string
     * @param {String} annotKey the annotation key that you want the annotation value for
@@ -892,6 +894,19 @@
     _isValidModelCommentDisplay = function (display) {
         return typeof display === "string" && module._commentDisplayModes[display] !== -1;
     };
+
+    /**
+     * first applicaple rule:
+     * - if it's not an integer or is negative, use the default: "1".
+     * - if it's more than 2, use the maximum that we allow: "2".
+     * - otherwise return what's defined (0, 1, 2)
+     * @private
+     */
+    _validateMaxFacetDepth = function (value) {
+        if (!isInteger(value) || value < 0) return 1;
+        if (value > 2) return 2;
+        return value;
+    }
 
     /**
      * @function
