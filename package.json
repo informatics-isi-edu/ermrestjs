@@ -27,7 +27,7 @@
   },
   "devDependencies": {
     "@isrd-isi-edu/ermrest-data-utils": "0.0.5",
-    "axios": "1.6.0",
+    "axios": "1.7.4",
     "buffer-slice": "0.0.1",
     "file-api": "^0.10.4",
     "handlebars": "4.7.7",

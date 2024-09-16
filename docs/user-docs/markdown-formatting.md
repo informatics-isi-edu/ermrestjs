@@ -159,9 +159,9 @@ Any attribute that starts with a `.` will be treated as class name.
 The following is the list of special class names that you can use:
 
 - `.chaise-btn`: This class is used to represent buttons. You should use it in conjunction with any of the following classes:
-    - `.chaise-btn-primary`
-    - `.chaise-btn-secondary`
-    - `.chaise-btn-tertiary`
+  - `.chaise-btn-primary`
+  - `.chaise-btn-secondary`
+  - `.chaise-btn-tertiary`
 - `.download-alt`: Used to represent a download button. `.download` is the old and alternative class for it.
 - `.asset-permission`: If used on a link element, chaise will validate whether the user can download the asset before a download is attempted.
 - `.external-link`: By adding this to links, chaise shows a notification to the user when they are being navigated away from chaise for external links and assets hosted elsewhere.
@@ -169,6 +169,8 @@ The following is the list of special class names that you can use:
 - `.vocab`: Used to represent a vocabulary.
 - `.chaise-autofill`: Used to set the height and width to fill the parent container based on the user's browser.
 - `.fullscreen-off`: When applied in iframe template, this class hides the full screen button that appears at the top right corner.
+- `.chaise-reduce-header-margin`: Used on a `<h3>` or other header tag to reduce the space after the header to 5px. [Link to implementation](https://github.com/informatics-isi-edu/chaise/blob/master/src/assets/scss/_markdown-container.scss#L107-L109)
+- `.chaise-iframe-after`: Reduces the margin after the element's content when an iframe is the next element. This class will reduce the margin and pull the iframe content closer. [Link to implementation](https://github.com/informatics-isi-edu/chaise/blob/master/src/assets/scss/_markdown-container.scss#L112-L114)
 - `.chaise-image-preview`: When applied to an image, Chaise will properly display a scaled down version of the image to the users. Clicking on the image would allow users to see the fully scaled version of the image. You can find an example [here](#6-image-with-zoom-capabilties). While the behavior looks like a zoom, by clicking on images with this class, we're switching between these two modes:
   - The scaled-down version,
     - The height of the image is limited to 50vh. Therefore small images will be displayed fully, while the bigger images will be scaled down to fit the limited size.
@@ -177,6 +179,15 @@ The following is the list of special class names that you can use:
   - The zoomed-in version,
     - The height and width of the image are not limited; instead, the limits mentioned above are moved to the image's container. That's why we will see scrollbars in larger images, and in smaller images, nothing will change.
     > The max height mentioned above can be changed by defining the `image-preview-max-height` property. Please refer to the example for more information.
+- content classes for positioning:
+  - classes for horizontal alignment:
+    - `.chaise-content-left`: Aligns the inner content to the left side of the container this class is attached to
+    - `.chaise-content-center`: Aligns the inner content to the center of the container this class is attached to
+    - `.chaise-content-right`: Aligns the inner content to the right side of the container this class is attached to
+  - classes for vertical alignment:
+    - `.chaise-content-top`: Aligns the inner content to the top of the container this class is attached to
+    - `.chaise-content-middle`: Aligns the inner content to the middle of the container this class is attached to
+    - `.chaise-content-bottom`: Aligns the inner content to the bottom of the container this class is attached to
 
 
 ## Examples

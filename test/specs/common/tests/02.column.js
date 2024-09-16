@@ -29,6 +29,7 @@ exports.execute = function(options) {
                 expect(column.position).not.toBeDefined();
                 expect(column.table).toBeDefined();
                 expect(column.name).toBe(columnName);
+                expect(column.RID).toBeDefined();
 
                 expect(column.type).toEqual(jasmine.any(Object));
                 expect(column.type.name).toBe("text");

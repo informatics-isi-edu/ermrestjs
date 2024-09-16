@@ -326,7 +326,23 @@ The data structure of the object that you have access to by using the given sour
 
 In this section you can find some examples of how you can use this feature. These examples are based on the ERD and `source-definitions` that are explained in the previous sections.
 
-1. min and max in one column:
+1. Accessing the current rowname and URL: Use the self-link source for accessing the rowname and link to the current row in the `markdown_pattern` of any of the visible-columns.
+
+    ```javascript
+    "tag:isrd.isi.edu,2016:visible-columns": {
+        "compact": [
+            {
+                "markdown_name": "Summary",
+                "display": {
+                    "markdown_pattern": "This row represents [{{{self-link-custom-name.rowName}}}]({{{self-link-custom-name.url.detailed}}}).",
+                    "template_engine": "handlebars",
+                }
+            },
+        ]
+    }
+    ```
+
+3. min and max in one column:
 
     ```javascript
     "tag:isrd.isi.edu,2016:visible-columns": {
@@ -344,7 +360,7 @@ In this section you can find some examples of how you can use this feature. Thes
     }
     ```
 
-2. aggregate column values in a normal column value:
+4. aggregate column values in a normal column value:
 
     ```javascript
     "tag:isrd.isi.edu,2016:visible-columns": {
@@ -363,7 +379,7 @@ In this section you can find some examples of how you can use this feature. Thes
     }
     ```
 
-3. Summary of multiple column directives:
+5. Summary of multiple column directives:
 
     ```javascript
     "tag:isrd.isi.edu,2016:visible-columns": {

@@ -173,8 +173,10 @@ Supported JSON _context_ patterns:
 - Comment related settings:
   - The `"comment"` setting applies *only* to the model element which is annotated.
   - The `"comment_render_markdown": false` should be used if you don't want us to treat the comment as a markdown value. By default we're assuming all comments are markdown.
-  - `"table_comment_display"` is only supported for `compact` context for the title and the tables in `detailed` context when they are part of a foreign key relationship in `visible-columns` or `visible-foreign-keys`.
-  - `"column_comment_display"` is only used in `entry` context.
+  - Using the `"inline"` value for `"table_comment_display"` is currently only supported in the following scenarios:
+    - The recordset page title (`compact` context).
+    - The inline entities and related entities displayed on the record page (`detailed` context is used in both cases).
+  - Using the `"inline"` value for `"column_comment_display"` is currently only supported in the `entry` context (recordedit app).
 - The `"name"` and `"markdown_name"` setting applies *only* to the model element which is annotated. They bypass the `name_style` controls which only apply to actual model names.
   - The `"markdown_name"` setting takes precedence if both are specified.
 - The `"name_style"` setting applies to the annotated model element and is also the default for any nested element.
@@ -622,12 +624,6 @@ Supported JSON _sortkey_ patterns:
 - `{ "column":` _columnname_ `, "descending": false }`: Sort according to the values in the _columnname_ column in ascending order. This is equivalent to the ERMrest sort specifier `@sort(` _columnname_ `)`.
 - `{ "column":` _columnname_ `}`: If omitted, the `"descending"` field defaults to `false` as per above.
 - _columnname_: A bare _columnname_ is a short-hand for `{ "column":` _columnname_ `}`.
-
-#### Table Display Settings Hierarchy
-
-The table display settings apply only to tables, but MAY be annotated at the schema level to set a schema-wide default, if appropriate in a particular model. Any table-level specification of these settings will override the behavior for that table. These settings on other model elements are meaningless and ignored.
-
-For hierarchically inheritable settings, an explicit setting of `null` will turn *off* inheritance and restore default behavior for that model element and any of its nested elements.
 
 ### Tag: 2016 Visible Foreign Keys
 
