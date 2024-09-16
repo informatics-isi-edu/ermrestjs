@@ -485,6 +485,7 @@
          * @returns {Object} an object wit the following properties:
          *   - `path`: Path without modifiers or queries for ermrest
          *   - `pathPrefixAliasMapping`: alias mapping that are used in the url
+         *   - `isUsingRightJoin`: whether we've used right outer join for this path.
          */
         computeERMrestCompactPath: function (usedSourceObjects) {
             var self = this;
@@ -723,7 +724,8 @@
             return {
                 path: uri,
                 // TODO could be replaced with the function
-                pathPrefixAliasMapping: lastPathPartAliasMapping
+                pathPrefixAliasMapping: lastPathPartAliasMapping,
+                isUsingRightJoin: rightJoinIndex !== -1,
             };
         },
 
@@ -732,7 +734,7 @@
                 var res = this.computeERMrestCompactPath();
                 this._ermrestCompactPath = res.path;
                 this._pathPrefixAliasMapping = res.pathPrefixAliasMapping;
-
+                this._isUsingRightJoin = res.isUsingRightJoin;
             }
             return this._ermrestCompactPath;
         },
@@ -755,6 +757,18 @@
                 var dummy = this.ermrestCompactPath;
             }
             return this._pathPrefixAliasMapping;
+        },
+
+        /**
+         * whether we're using right outer join for parsing the location
+         * @type {boolean}
+         */
+        get isUsingRightJoin() {
+            if (this._isUsingRightJoin === undefined) {
+                // this API will populate this
+                var dummy = this.ermrestCompactPath;
+            }
+            return this._isUsingRightJoin;
         },
 
         /**

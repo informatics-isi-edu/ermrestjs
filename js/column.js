@@ -3467,7 +3467,7 @@ FacetColumn.prototype = {
                 }
 
                 // G3
-                var othersHaveNull = self.reference.facetColumns.some(function (fc, index) {
+                var othersHaveNull = self.reference.location.isUsingRightJoin || self.reference.facetColumns.some(function (fc, index) {
                     return index !== self.index && fc.hasNullFilter && fc.hasPath;
                 });
 

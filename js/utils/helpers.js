@@ -896,19 +896,6 @@
     };
 
     /**
-     * first applicaple rule:
-     * - if it's not an integer or is negative, use the default: "1".
-     * - if it's more than 2, use the maximum that we allow: "2".
-     * - otherwise return what's defined (0, 1, 2)
-     * @private
-     */
-    _validateMaxFacetDepth = function (value) {
-        if (!isInteger(value) || value < 0) return 1;
-        if (value > 2) return 2;
-        return value;
-    }
-
-    /**
      * @function
      * @param {ERMrest.Table} table The object that we want the formatted values for.
      * @param {String} context the context that we want the formatted values for.
