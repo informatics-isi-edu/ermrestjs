@@ -20,7 +20,8 @@ exports.execute = function (options) {
             tableName11 = "table_w_table_display_annotation_w_title",
             tableNameWoAnnot = "table_wo_annotation",
             tableNameCatalogAnnot = "table_w_rowname_catalog_snapshot",
-            tableNameCompactOptions = "table_w_compact_options";
+            tableNameCompactOptions = "table_w_compact_options",
+            tableNameWMaxFacetDepth = "table_w_max_facet_depth";
 
         var table1EntityUri = options.url + "/catalog/" + catalog_id + "/entity/" +
             schemaName + ":" + tableName1 + "/@sort(id)";
@@ -68,6 +69,9 @@ exports.execute = function (options) {
         var tableCompactOptionsEntityUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" +
             tableNameCompactOptions;
 
+        var tableWMaxFacetDepthUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" +
+            tableNameWMaxFacetDepth;
+
         var chaiseURL = "https://example.org/chaise";
         var recordURL = chaiseURL + "/record";
         var record2URL = chaiseURL + "/record-two";
@@ -75,7 +79,7 @@ exports.execute = function (options) {
         var searchURL = chaiseURL + "/search";
         var recordsetURL = chaiseURL + "/recordset";
 
-        var appLinkFn = function (tag, location) {
+        const appLinkFn = function (tag, location) {
             var url;
             switch (tag) {
                 case "tag:isrd.isi.edu,2016:chaise:record":
@@ -842,6 +846,57 @@ exports.execute = function (options) {
                 // both are not defined for detailed
                 expect(refWithHideRowCountAnnot.contextualize.detailed.display.hideRowCount).toBeFalsy("missmatch for first reference");
                 expect(refWithoutHideRowCountAnnot.contextualize.detailed.display.hideRowCount).toBeFalsy("missmatch for second reference");
+            });
+        });
+
+        describe('display.showFaceting and display.maxFacetDepth', () => {
+            let refTableWMaxFacetDepth;
+
+            beforeAll((done) => {
+                utils.setCatalogAnnotations(options, {
+                    "max_facet_depth": {
+                        "compact/select/foreign_key": 2
+                    }
+                }).then(() => {
+                    options.ermRest.setClientConfig({
+                        facetPanelDisplay: { maxFacetDepth: 3 }
+                    });
+                    return options.ermRest.resolve(tableWMaxFacetDepthUri, {cid: 'test'});
+                }).then((ref) => {
+                    refTableWMaxFacetDepth = ref;
+                    done();
+                }).catch((err) => done.fail(err));
+            });
+
+            it ('should get it from the display annotation on the table', () => {
+                let ref = refTableWMaxFacetDepth.contextualize.compactSelectAssociationLink;
+                expect(ref.display.showFaceting).toBe(false);
+                expect(ref.display.maxFacetDepth).toBe(0);
+            });
+
+            it ('otherwise should get it from display annotation on schema', () => {
+                let ref = refTableWMaxFacetDepth.contextualize.compactSelectAssociationUnlink;
+                expect(ref.display.showFaceting).toBe(true);
+                expect(ref.display.maxFacetDepth).toBe(1);
+            });
+
+            it ('otherwise should get it from the display annotation on catalog', () => {
+                let ref = refTableWMaxFacetDepth.contextualize.compactSelectForeignKey;
+                expect(ref.display.showFaceting).toBe(true);
+                expect(ref.display.maxFacetDepth).toBe(2);
+            });
+
+            it ('otherwise should get it from the client config.', () => {
+                let ref = refTableWMaxFacetDepth.contextualize.compactSelectSavedQueries;
+                expect(ref.display.showFaceting).toBe(true);
+                expect(ref.display.maxFacetDepth).toBe(2); // max that we allow is 2
+            });
+
+            afterAll((done) => {
+                // removed the catalog annotation
+                utils.setCatalogAnnotations(options, {}).then(() => {
+                    done();
+                }).catch((err) => done.fail(err));
             });
         });
 
