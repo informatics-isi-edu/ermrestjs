@@ -22,7 +22,9 @@ If you just want to see the overall structure of export annotation go [here](#ov
 
 ## Export Templates
 
-Export of data from Chaise is configured through the use of *export templates*. An export template is a JSON object that is used in an ERMrest table/schema/catalog annotation payload.  The annotation is specified using `tag:isrd.isi.edu,2016:export` key.
+Export of data from Chaise is configured through the use of *export templates*. An export template is a JSON object that is used in an ERMrest table/schema/catalog annotation payload.  The annotation is specified using `tag:isrd.isi.edu,2019:export` key.
+
+> ⚠️ The first iteration of export used the [`tag:isrd.isi.edu,2016:export`](annotation-deprecated.md#tag-2016-export) tag (notice the 2016 instead of 2019). But this old tag doesn't support context and all the new features added to the new key. So please make sure you're using the new tag.
 
 The annotation payload is a JSON object containing a single array of `template` objects. One or more templates can be specified for a given table entity.  Templates specify a format name and type, followed by a set of output descriptor objects. A template output descriptor maps one or more source table queries to one or more output file destinations.
 
