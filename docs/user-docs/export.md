@@ -1,6 +1,6 @@
 # Export Annotation
 
-Using the [export annotation](annotation.md#tag-2019-export) you can define export templates that will be used for deriva-py export service integration with the client tools. To make the process of writing export annotation simpler and modular, you can use [export fragment annotation](annotation.md#tag-2021-export-fragment-annotations). In this document, we will explain how you can write these two annotations and how export integration works in ERMrestJS/Chaise.
+Using the [export annotation](annotation.md#tag-2019-export) you can define export templates that will be used for deriva-py export service integration with the client tools. To make the process of writing export annotation simpler and modular, you can use [export fragment annotation](annotation.md#tag-2021-export-fragment-definitions). In this document, we will explain how you can write these two annotations and how export integration works in ERMrestJS/Chaise.
 
 If you just want to see the overall structure of export annotation go [here](#overall-structure) or you can look at some examples in [here](#examples).
 
@@ -269,7 +269,7 @@ The type of `source.api` that is used does not matter, as long as the result dat
 
 ## How it works
 
-For processing export, we have to consult [export annotation](annotation.md#tag-2019-export) and [export fragment annotation](annotation.md#tag-2021-export-fragment-annotations). The following is how ERMrestJS looks at these two annotations:
+For processing export, we have to consult [export annotation](annotation.md#tag-2019-export) and [export fragment annotation](annotation.md#tag-2021-export-fragment-definitions). The following is how ERMrestJS looks at these two annotations:
 
 1. We start by creating a fragment object that can be used while writing export annotation. To do so,
 
