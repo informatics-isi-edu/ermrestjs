@@ -3950,7 +3950,11 @@
                     this._googleDatasetMetadata = null;
                 } else {
                     var metadataAnnotation = module._getRecursiveAnnotationValue(this._context, this._table.annotations.get(module._annotations.GOOGLE_DATASET_METADATA).content);
-                    this._googleDatasetMetadata = new GoogleDatasetMetadata(this, metadataAnnotation);
+                    if (!isObjectAndNotNull(metadataAnnotation) || !isObjectAndNotNull(metadataAnnotation.dataset)) {
+                        this._googleDatasetMetadata = null;
+                    } else {
+                        this._googleDatasetMetadata = new GoogleDatasetMetadata(this, metadataAnnotation);
+                    }
                 }
             }
             return this._googleDatasetMetadata;
