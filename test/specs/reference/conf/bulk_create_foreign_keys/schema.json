@@ -11,12 +11,25 @@
           "unique_columns": [
             "id"
           ]
+        },
+        {
+          "unique_columns": [
+            "id",
+            "id2"
+          ]
         }
       ],
       "foreign_keys": [],
       "column_definitions": [
         {
           "name": "id",
+          "nullok": false,
+          "type": {
+            "typename": "text"
+          }
+        },
+        {
+          "name": "id2",
           "nullok": false,
           "type": {
             "typename": "text"
@@ -366,6 +379,120 @@
         }
       }
     },
+    "association_table_w_composite_fk": {
+      "kind": "table",
+      "schema_name": "bulk_create_foreign_keys",
+      "table_name": "association_table_w_composite_fk",
+      "column_definitions": [
+        {
+          "name": "main_fk_col1",
+          "nullok": false,
+          "type": {
+            "typename": "text"
+          }
+        },
+        {
+          "name": "main_fk_col2",
+          "nullok": false,
+          "type": {
+            "typename": "text"
+          }
+        },
+        {
+          "name": "leaf_fk_col",
+          "nullok": false,
+          "type": {
+            "typename": "text"
+          }
+        }
+      ],
+      "keys": [
+        {
+          "unique_columns": [
+            "RID"
+          ]
+        },
+        {
+          "unique_columns": [
+            "main_fk_col1",
+            "main_fk_col2",
+            "leaf_fk_col"
+          ]
+        }
+      ],
+      "foreign_keys": [
+        {
+          "foreign_key_columns": [
+            {
+              "schema_name": "bulk_create_foreign_keys",
+              "table_name": "association_table_w_composite_fk",
+              "column_name": "leaf_fk_col"
+            }
+          ],
+          "referenced_columns": [
+            {
+              "schema_name": "bulk_create_foreign_keys",
+              "table_name": "leaf_table_for_composite_fk",
+              "column_name": "RID"
+            }
+          ],
+          "names": [
+            [
+              "bulk_create_foreign_keys",
+              "composite_to_leaf_fkey"
+            ]
+          ]
+        },
+        {
+          "foreign_key_columns": [
+            {
+              "schema_name": "bulk_create_foreign_keys",
+              "table_name": "association_table_w_composite_fk",
+              "column_name": "main_fk_col1"
+            },
+            {
+              "schema_name": "bulk_create_foreign_keys",
+              "table_name": "association_table_w_composite_fk",
+              "column_name": "main_fk_col2"
+            }
+          ],
+          "referenced_columns": [
+            {
+              "schema_name": "bulk_create_foreign_keys",
+              "table_name": "main_table",
+              "column_name": "id"
+            },
+            {
+              "schema_name": "bulk_create_foreign_keys",
+              "table_name": "main_table",
+              "column_name": "id2"
+            }
+          ],
+          "names": [
+            [
+              "bulk_create_foreign_keys",
+              "composite_to_main_fkey"
+            ]
+          ]
+        }
+      ],
+      "annotations": {
+        "tag:isrd.isi.edu,2016:visible-columns": {
+          "entry": [
+            [
+              "bulk_create_foreign_keys",
+              "composite_to_main_fkey"
+            ],
+            [
+              "bulk_create_foreign_keys",
+              "composite_to_leaf_fkey"
+            ]
+          ],
+          "compact": "entry",
+          "detailed": "entry"
+        }
+      }
+    },
     "pure_and_binary_association_table": {
       "kind": "table",
       "schema_name": "bulk_create_foreign_keys",
@@ -554,6 +681,29 @@
       ],
       "annotations": {}
     },
+    "leaf_table_for_composite_fk": {
+      "comment": "leaf table for testing an association with 3 fk columns",
+      "kind": "table",
+      "table_name": "leaf_table_for_composite_fk",
+      "schema_name": "bulk_create_foreign_keys",
+      "keys": [
+        {
+          "unique_columns": [
+            "RID"
+          ]
+        }
+      ],
+      "foreign_keys": [],
+      "column_definitions": [
+        {
+          "name": "details",
+          "type": {
+            "typename": "text"
+          }
+        }
+      ],
+      "annotations": {}
+    },
     "pb_leaf_table": {
       "comment": "leaf table for testing a pure and binary association",
       "kind": "table",
@@ -583,10 +733,12 @@
     "association_table_w_static_column",
     "association_table_non_unique_fk",
     "association_table_w_third_fk",
+    "association_table_w_composite_fk",
     "pure_and_binary_association_table",
     "leaf_table_for_static_columns",
     "leaf_table_for_non_unique",
     "leaf_table_for_three_fk",
+    "leaf_table_for_composite_fk",
     "leaf_table2_for_three_fk",
     "pb_leaf_table"
   ]

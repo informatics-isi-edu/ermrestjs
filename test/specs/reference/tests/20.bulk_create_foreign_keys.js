@@ -51,7 +51,7 @@ exports.execute = (options) =>{
         // there are other keys for this object but only these 2 keys are used by ermrestJS
         var prefillObject = {
           fkColumnNames: ['iLtVyK4V4RngvckI34y2yQ'],
-          keys: {main_fkey_col: '1'}
+          keys: {main_fk_col: '1'}
         }
 
         reference._bulkCreateForeignKeyObject = undefined;
@@ -111,7 +111,7 @@ exports.execute = (options) =>{
         // there are other keys for this object but only these 2 keys are used by ermrestJS
         var prefillObject = {
           fkColumnNames: ['UKzE0bKxIrwe4bfW_9v1TA'],
-          keys: {main_fkey_col: '1'}
+          keys: {main_fk_col: '1'}
         }
 
         reference.computeBulkCreateForeignKeyObject(prefillObject);
@@ -170,7 +170,47 @@ exports.execute = (options) =>{
         // there are other keys for this object but only these 2 keys are used by ermrestJS
         var prefillObject = {
           fkColumnNames: ['Ph5gK9Kje1ukxLFYC9sJ3A'],
-          keys: {main_fkey_col: '1'}
+          keys: {main_fk_col: '1'}
+        }
+
+        reference.computeBulkCreateForeignKeyObject(prefillObject);
+
+        expect(reference.bulkCreateForeignKeyObject).toBeNull();
+      });
+    });
+
+    // main_table <- association_table_w_composite_fk -> leaf_table_for_composite_fk
+    describe("for association table with a composite foreign key", () => {
+
+      var table_name = "association_table_w_composite_fk";
+
+      var uri = `${options.url}/catalog/${catalog_id}/entity/${schema_name}:${table_name}`;
+
+      var reference;
+
+      beforeAll((done) => {
+        options.ermRest.resolve(uri, { cid: "test" }).then((response) => {
+          reference = response.contextualize.entryCreate;
+
+          done();
+        }, (err) => {
+          console.dir(err);
+          done.fail();
+        }).catch((err) => {
+          console.dir(err);
+          done.fail();
+        });
+      });
+
+      it("should have the expected columns for entry create context", () => {
+        expect(reference.columns.length).toBe(2);
+      });
+
+      it("should return null even if prefill object is defined since there is a composite foreign key", () => {
+        // there are other keys for this object but only these 2 keys are used by ermrestJS
+        var prefillObject = {
+          fkColumnNames: ['o1jpzMQ3kaAxJpcXXUWbsA'],
+          keys: { main_fk_col1: '1', main_fk_col2: '1' }
         }
 
         reference.computeBulkCreateForeignKeyObject(prefillObject);
@@ -214,7 +254,7 @@ exports.execute = (options) =>{
         // there are other keys for this object but only these 2 keys are used by ermrestJS
         var prefillObject = {
           fkColumnNames: ['bInlkY4Cbz2Ez4usvGekSA'],
-          keys: {main_fkey_col: '1'}
+          keys: {main_fk_col: '1'}
         }
 
         reference.computeBulkCreateForeignKeyObject(prefillObject);

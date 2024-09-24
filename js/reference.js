@@ -4042,7 +4042,6 @@
                     this._bulkCreateForeignKeyObject = null;
                 } else {
                     // ignore the fks that are simple and their constituent column is system col
-                    // TODO: composite FKs
                     var nonSystemColumnFks = this.table.foreignKeys.all().filter(function(fk) {
                         return !(fk.simple && module._systemColumns.indexOf(fk.colset.columns[0]) !== -1);
                     });
@@ -4059,31 +4058,36 @@
                     if (nonSystemColumnFks.length !== 2) {
                         this._bulkCreateForeignKeyObject = null;
                     } else {
-                        var mainColumn = null;
-                        var leafColumn = null;
-
-                        // leafColumn will be set no matter what since the check above ensures there are 2 FK columns
-                        // This makes sure one of the 2 FK columns is the same as the one that initiated the prefill logic in record app
-                        this.columns.forEach(function(column) {
-                            // column should be a foreignkey pseudo column
-                            if (!column.isForeignKey) return;
-
-                            nonSystemColumnFks.forEach(function(fk) {
-                                // column and foreign key `.name` property is a hash value
-                                if (column.name === fk.name) {
-                                    if (prefillObject.fkColumnNames.indexOf(column.name) !== -1) {
-                                        mainColumn = column;
-                                    } else {
-                                        leafColumn = column;
-                                    }
-                                }
-                            });
-                        });
-
-                        if (!mainColumn || !leafColumn) {
+                        // both foreign keys have to be simple
+                        if (!nonSystemColumnFks[0].simple || !nonSystemColumnFks[1].simple) {
                             this._bulkCreateForeignKeyObject = null;
                         } else {
-                            this._bulkCreateForeignKeyObject = new BulkCreateForeignKeyObject(this, prefillObject, fkCols, mainColumn, leafColumn);
+                            var mainColumn = null;
+                            var leafColumn = null;
+
+                            // leafColumn will be set no matter what since the check above ensures there are 2 FK columns
+                            // This makes sure one of the 2 FK columns is the same as the one that initiated the prefill logic in record app
+                            this.columns.forEach(function(column) {
+                                // column should be a foreignkey pseudo column
+                                if (!column.isForeignKey) return;
+
+                                nonSystemColumnFks.forEach(function(fk) {
+                                    // column and foreign key `.name` property is a hash value
+                                    if (column.name === fk.name) {
+                                        if (prefillObject.fkColumnNames.indexOf(column.name) !== -1) {
+                                            mainColumn = column;
+                                        } else {
+                                            leafColumn = column;
+                                        }
+                                    }
+                                });
+                            });
+
+                            if (!mainColumn || !leafColumn) {
+                                this._bulkCreateForeignKeyObject = null;
+                            } else {
+                                this._bulkCreateForeignKeyObject = new BulkCreateForeignKeyObject(this, prefillObject, fkCols, mainColumn, leafColumn);
+                            }
                         }
                     }
                 }
