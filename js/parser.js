@@ -268,14 +268,13 @@
         }
 
         // pathParts: <joins/facet/cfacet/filter/>
-        var aliasJoinRegExp = /\$.*/,
-            joinRegExp = /(?:left|right|full|^)\((.*)\)=\((.*:.*:.*)\)/,
+        var joinRegExp = /(?:left|right|full|^)\((.*)\)=\((.*:.*:.*)\)/,
             facetsRegExp = /\*::facets::(.+)/,
             customFacetsRegExp = /\*::cfacets::(.+)/;
 
-        var schemaTable = parts[0], table = this._rootTableName, schema = this._rootSchemaName;
-        var self = this, pathParts = [], alias, match, prevJoin = false;
-        var facets, cfacets, filter, filtersString, searchTerm, join, joins = [];
+        var table = this._rootTableName, schema = this._rootSchemaName;
+        var self = this, pathParts = [], alias, match, prevJoin = false, startWithT1 = false, aliasNumber;
+        var facets, cfacets, filter, filtersString, join, joins = [];
 
         // go through each of the parts
         parts.forEach(function (part, index) {
@@ -291,9 +290,23 @@
                 // there wasn't any join before, so this is the start of new path,
                 // so we should create an object for the previous one.
                 if (!prevJoin && index !== 1) {
-                    // we're creating this for the previous section, so we should use the previous index
-                    // Alias will be T, T1, T2, ... (notice we don't have T0)
-                    alias = module._parserAliases.JOIN_TABLE_PREFIX + (pathParts.length > 0 ? pathParts.length : "");
+                    /**
+                     * we're creating this alias for the previous section, so we should use the previous index
+                     * Alias will be T, T1, T2, ... (notice we don't have T0)
+                     */
+                    aliasNumber = pathParts.length;
+
+                    /**
+                     * T is always preserved for the initial schema:table. if the first pathPart doesn't have any joins
+                     * and has facet/filters, then it's for the schema:table and so we should start with T.
+                     * but if has join, then it means that the schema:table didn't have any filter/facets. so we have to start from T1,
+                     * and the rest of the parts should just add one more
+                     */
+                    if (pathParts.length === 0 && joins.length > 0) {
+                        startWithT1 = true;
+                    }
+                    if (startWithT1) aliasNumber++;
+                    alias = module._parserAliases.JOIN_TABLE_PREFIX + (aliasNumber > 0 ? aliasNumber : "");
                     pathParts.push(new PathPart(alias, joins, schema, table, facets, cfacets, filter, filtersString));
                     filter = undefined; filtersString = undefined; cfacets = undefined; facets = undefined; join = undefined; joins = [];
                 }
@@ -485,6 +498,7 @@
          * @returns {Object} an object wit the following properties:
          *   - `path`: Path without modifiers or queries for ermrest
          *   - `pathPrefixAliasMapping`: alias mapping that are used in the url
+         *   - `isUsingRightJoin`: whether we've used right outer join for this path.
          */
         computeERMrestCompactPath: function (usedSourceObjects) {
             var self = this;
@@ -671,7 +685,7 @@
                 };
             });
 
-            // no rightJoin: s:t/<parths>
+            // no rightJoin: s:t/<parts>
             if (rightJoinIndex === -1) {
                 uri = self.rootTableAlias + ":=";
                 if (self.rootSchemaName) {
@@ -692,14 +706,14 @@
                     if (self.pathParts[i].joins.length > 0) {
                         // since we're reversing, we have to make sure we're using the
                         // alias of the previous pathpart
-                        alias = i > 0 ? self.pathPart[i-1].alias : self.rootTableAlias;
+                        alias = i > 0 ? self.pathParts[i-1].alias : self.rootTableAlias;
                         uri += "/" + joinsStr(self.pathParts[i], alias, i, true);
                     }
                 }
 
                 // if there was pathParts before facet with null, change back to the facet with null
                 if (self.pathParts[rightJoinIndex].joins.length > 0) {
-                    uri += "/$" + self.pathParts[i].alias;
+                    uri += "/$" + self.pathParts[rightJoinIndex].alias;
                 }
             }
 
@@ -723,7 +737,8 @@
             return {
                 path: uri,
                 // TODO could be replaced with the function
-                pathPrefixAliasMapping: lastPathPartAliasMapping
+                pathPrefixAliasMapping: lastPathPartAliasMapping,
+                isUsingRightJoin: rightJoinIndex !== -1,
             };
         },
 
@@ -732,7 +747,7 @@
                 var res = this.computeERMrestCompactPath();
                 this._ermrestCompactPath = res.path;
                 this._pathPrefixAliasMapping = res.pathPrefixAliasMapping;
-
+                this._isUsingRightJoin = res.isUsingRightJoin;
             }
             return this._ermrestCompactPath;
         },
@@ -755,6 +770,18 @@
                 var dummy = this.ermrestCompactPath;
             }
             return this._pathPrefixAliasMapping;
+        },
+
+        /**
+         * whether we're using right outer join for parsing the location
+         * @type {boolean}
+         */
+        get isUsingRightJoin() {
+            if (this._isUsingRightJoin === undefined) {
+                // this API will populate this
+                var dummy = this.ermrestCompactPath;
+            }
+            return this._isUsingRightJoin;
         },
 
         /**
@@ -1381,8 +1408,31 @@
             var loc = clone ? this._clone() : this;
             // change alias of the previous part
             var lastPart = loc.lastPathPart;
+
+            /**
+             * since we're adding a path part, we have to change the alias of previous part.
+             * this alias is for the projected table. if there are joins, it will be added to the last
+             * join and if there aren't, it will be attached to the schema:table.
+             *
+             * when there aren't any joins, this could be the schema:table, so we have to start with T.
+             * but if there are joins, we can start with T1, as T alias is always the first schema:table.
+             *
+             * this is how we're using the alias property:
+             * - if it doesn't have any joins, it's the alias of the previous path or root (so facet/)
+             * - if it has join, it's the alias that we're using to name the projected table that the join represents.
+             */
             if (lastPart) {
-                var alias = module._parserAliases.JOIN_TABLE_PREFIX + (loc.pathParts.length > 1 ? (loc.pathParts.length-1) : "");
+                var aliasNumber = "";
+                if (lastPart.joins && lastPart.joins.length > 0) {
+                    if (loc.pathParts.length > 0) {
+                        aliasNumber = loc.pathParts.length;
+                    }
+                }
+                else if (loc.pathParts.length > 1) {
+                    aliasNumber = loc.pathParts.length - 1;
+                }
+
+                var alias = module._parserAliases.JOIN_TABLE_PREFIX + aliasNumber;
                 lastPart.alias = alias;
             }
 
@@ -1416,6 +1466,8 @@
      * Container for the path part, It will have the following attributes:
      * - joins: an array of ParsedJoin objects.
      * - alias: The alias that the facets should refer to
+     *   - if there aren't any joins, it's the alias of the previous path or root.
+     *   - otherwise, it's the alias that we're using to name the projected table that the join represents.
      * - schema: The schema that the join ends up with
      * - table: the table that the joins end up with
      * - facets: the facets object
@@ -1684,7 +1736,7 @@
      * @returns {ParsedJoin}
      */
     function _createParsedJoinFromStr (linking, table, schema) {
-        var fromSchemaTable = schema ? [table,schema].join(":") : table;
+        var fromSchemaTable = schema ? [schema,table].join(":") : table;
         var fromCols = linking[1].split(",");
         var toParts = linking[2].match(/([^:]*):([^:]*):([^\)]*)/);
         var toCols = toParts[3].split(",");

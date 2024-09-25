@@ -671,6 +671,37 @@
                 }
             }
         }
+    },
+    "table_w_max_facet_depth": {
+      "table_name": "table_w_max_facet_depth",
+        "schema_name": "schema_table_display",
+        "kind": "table",
+        "keys": [
+            {"unique_columns": ["id"]}
+        ],
+        "foreign_keys": [],
+        "column_definitions": [
+            {
+                "name": "id",
+                "nullok": false,
+                "type": {
+                    "typename": "integer"
+                }
+            },
+            {
+                "name": "text_col",
+                "type": {
+                    "typename": "text"
+                }
+            }
+        ],
+        "annotations": {
+            "tag:misd.isi.edu,2015:display": {
+              "max_facet_depth": {
+                  "compact/select/association/link": 0
+              }
+            }
+        }
     }
   },
   "schema_name": "schema_table_display",
@@ -679,6 +710,9 @@
           "hide_row_count": {
               "compact": true,
               "compact/select": false
+          },
+          "max_facet_depth": {
+            "compact/select/association/unlink": 1
           }
       }
   }

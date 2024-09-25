@@ -100,6 +100,7 @@ Supported JSON payload patterns:
 - `{`... `"show_foreign_key_link":` `{` _context_ `:` _fklink_ `,` ... `}`: Whether default display of foreign keys should include link to the row.
 - `{`... `"hide_row_count":` `{` _context_ `:` _rowcount_ `,` ... `}`: Whether we should display the total row count. Since the request to fetch total row count is expensive, you can use this to signal to client to skip the request (and therefore do not display it to users.)
 - `{`... `"show_saved_query":` _savedquery_ ...`}`: Whether we want to display the saved query UI features or not. By default, this feature is turned off (set to false).
+- `{`... `"max_facet_depth":` _maxfacetdepth_ ...`}`: How many levels of facet popups we should allow.
 
 Supported JSON _ccomment_ patterns:
 
@@ -156,6 +157,13 @@ Supported JSON _savedquery_ patterns:
 
 - `true`: Display the saved query UI features.
 - `false`: Don't display the saved query UI features.
+
+Supported JSON _maxfacetdepth_ patterns:
+
+- `0`: Disable the faceting feature.
+- `1`: Facet panel is only displayed for one level. The facet panel is not displayed as part of the facet popups.
+- `2`: Facet panel is displayed for two levels. Both once the main table is opened and when the facet popup is opened for any of the facets.
+- Any number bigger than 2 will be treated the same as defining `2`.
 
 Supported JSON _context_ patterns:
 - See [Context Names](#context-names) section for the list of supported JSON _context_ patterns.
