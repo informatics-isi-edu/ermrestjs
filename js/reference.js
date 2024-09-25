@@ -4022,7 +4022,7 @@
          */
         get bulkCreateForeignKeyObject() {
             if (this._bulkCreateForeignKeyObject === undefined) {
-                verify(false, 'Call "computeBulkCreateForeignKeyObject" with the prefill object first');
+                this._bulkCreateForeignKeyObject = null;
             }
             return this._bulkCreateForeignKeyObject;
         },
@@ -6727,6 +6727,7 @@
 
     BulkCreateForeignKeyObject.prototype = {
         /**
+         * the column that points to the table that rows are being selected from
          * @returns ERMrest.ForeignKeyPseudoColumn
          */
         get leafColumn () {
@@ -6734,6 +6735,7 @@
         },
 
         /**
+         * if the 2 foreign key columns are part of a unqiue key
          * @returns boolean
          */
         get isUnique () {
@@ -6766,12 +6768,12 @@
         },
 
         /**
-         * @returns {Object[]} filters array to use on leafColumn.reference for ensuring rows from the leaf table are only able to be added if their key information is not null
+         * @returns {Object[]} filters array to use on leafColumn.reference for ensuring rows from the table are only able to be added if their key information is not null
          */
         andFiltersForLeaf: function() {
             if (this._andFilters === undefined) {
                 var filters = [];
-                // loop through all of key columns of the leaf foreign key pseudo column that make up the key information for the leaf table of the association relationship and create non-null filters
+                // loop through all of key columns of the leaf foreign key pseudo column that make up the key information for the tablerows are selected from and create non-null filters
                 this._leafColumn.foreignKey.key.colset.columns.forEach(function(col) {
                     filters.push({
                         source: col.name,
