@@ -4824,6 +4824,14 @@
         },
 
         /**
+         * The _compact/select/foreign_key/bulk_ context of this reference.
+         * @type {ERMrest.Reference}
+         */
+        get compactSelectBulkForeignKey() {
+            return this._contextualize(module._contexts.COMPACT_SELECT_BULK_FOREIGN_KEY);
+        },
+
+        /**
          * The _compact/select/saved_queries_ context of this reference.
          * @type {ERMrest.Reference}
          */

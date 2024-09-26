@@ -90,6 +90,7 @@
         COMPACT_SELECT_ASSOCIATION_LINK: 'compact/select/association/link',
         COMPACT_SELECT_ASSOCIATION_UNLINK: 'compact/select/association/unlink',
         COMPACT_SELECT_FOREIGN_KEY: 'compact/select/foreign_key',
+        COMPACT_SELECT_BULK_FOREIGN_KEY: 'compact/select/foreign_key/bulk',
         COMPACT_SELECT_SAVED_QUERIES: 'compact/select/saved_queries',
         COMPACT_SELECT_SHOW_MORE: 'compact/select/show_more',
         CREATE: 'entry/create',
