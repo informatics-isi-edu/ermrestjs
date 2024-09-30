@@ -663,6 +663,16 @@ exports.execute = function (options) {
                         // mainEntityColumns
                     });
 
+                    it ('should return the unqiue ID for a row of the table the pseudocolumn represents based on provided data', function () {
+                        var data = {
+                            "int_value": 4321,
+                            "id": 1,
+                            "RID": "1YJ"
+                        }
+
+                        expect(mainEntityColumns[5].generateUniqueId(data)).toBe(data.RID);
+                    });
+
                     describe('should return a filtered reference based on provided data.', function () {
                         it('Reference for mainEntityColumns[3], should have proper domain filter.', function() {
                             mainEntityData = {}
