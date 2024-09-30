@@ -1026,6 +1026,26 @@
         };
     };
 
+    module._generateTupleUniqueId = function (tableShortestKey, linkedData) {
+        var keyName, hasNull = false, _uniqueId = "";
+
+        for (var i = 0; i < tableShortestKey.length; i++) {
+            keyName = tableShortestKey[i].name;
+            if (linkedData[keyName] == null) {
+                hasNull = true;
+                break;
+            }
+            if (i !== 0) _uniqueId += "_";
+            _uniqueId += linkedData[keyName];
+        }
+
+        if (hasNull) {
+            _uniqueId = null;
+        }
+
+        return _uniqueId;
+    };
+
     /**
      * @function
      * @param {ERMrest.Table} table The table that we want the row name for.

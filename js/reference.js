@@ -6305,21 +6305,7 @@
          */
         get uniqueId() {
             if (this._uniqueId === undefined) {
-                var key, hasNull = false;
-                this._uniqueId = "";
-                for (var i = 0; i < this._pageRef.table.shortestKey.length; i++) {
-                    keyName = this._pageRef.table.shortestKey[i].name;
-                    if (this.data[keyName] == null) {
-                        hasNull = true;
-                        break;
-                    }
-                    if (i !== 0) this._uniqueId += "_";
-                    this._uniqueId += this.data[keyName];
-                }
-
-                if (hasNull) {
-                    this._uniqueId = null;
-                }
+                this._uniqueId = module._generateTupleUniqueId(this._pageRef.table.shortestKey, this.data);
             }
             return this._uniqueId;
         },
