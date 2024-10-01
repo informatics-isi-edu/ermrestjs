@@ -1159,6 +1159,7 @@ List of _context_ names that are used in ERMrest:
       - `"compact/select/association/link"`: A sub-context of `compact/select/association` used for selecting entities to link to the main record.
       - `"compact/select/association/unlink"`: A sub-context of `compact/select/association` used for selecting entities to unlink from the main record.
     - `"compact/select/foreign_key"`: A sub-context of `compact/select` used for selecting entities for a foreign key value in an `entry` context.
+    - `"compactSelectBulkForeignKey"`: a sub-context of `compact/select` used for selecting multiple entities to fill in foreign key values in multiple forms in `entry/create` context.
     - `"compact/select/saved_queries"`: A sub-context of `compact/select` used for selecting a saved query to apply in `compact` context.
     - `"compact/select/show_more"`: A sub-context of `compact/select` used for selecting entities as a facet value.
 - `"detailed"`: Any detailed read-only, entity-level presentation context.
