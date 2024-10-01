@@ -2466,7 +2466,7 @@
                         }
                         // validate the value
                         if (!isInteger(maxFacetDepth) || maxFacetDepth < 0) {
-                            maxFacetDepth = 1
+                            maxFacetDepth = 1;
                         } else if (maxFacetDepth > 2) {
                             maxFacetDepth = 2;
                         }
@@ -6808,4 +6808,4 @@
 
             return this._andFilters;
         }
-    }
+    };

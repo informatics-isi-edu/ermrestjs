@@ -1670,7 +1670,7 @@ module._extends(ForeignKeyPseudoColumn, ReferenceColumn);
  */
 ForeignKeyPseudoColumn.prototype.generateUniqueId = function (linkedData) {
     return module._generateTupleUniqueId(this.reference.table.shortestKey, linkedData);
-}
+};
 
 // properties to be overriden:
 /**

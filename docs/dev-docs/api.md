@@ -367,6 +367,7 @@ to use for ERMrest JavaScript agents.
         * [.citation](#ERMrest.Reference+citation) : <code>ERMrest.Citation</code>
         * [.googleDatasetMetadata](#ERMrest.Reference+googleDatasetMetadata) : <code>ERMrest.GoogleDatasetMetadata</code>
         * [.cascadingDeletedItems](#ERMrest.Reference+cascadingDeletedItems) : <code>Array.&lt;Object&gt;</code>
+        * [.bulkCreateForeignKeyObject](#ERMrest.Reference+bulkCreateForeignKeyObject) : <code>ERMrest.BulkCreateForeignKeyObject</code>
         * [.generateFacetColumns()](#ERMrest.Reference+generateFacetColumns)
         * [.validateFacetsFilters(facetAndFilters, facetObjectWrappers, searchTerm, skipMappingEntityChoices, changeLocation)](#ERMrest.Reference+validateFacetsFilters)
         * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
@@ -386,6 +387,7 @@ to use for ERMrest JavaScript agents.
         * [.getColumnByName(name)](#ERMrest.Reference+getColumnByName) ⇒ [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)
         * [.generateColumnsList(tuple, columnsList, dontChangeReference, skipLog)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
         * [.generateActiveList([tuple])](#ERMrest.Reference+generateActiveList) ⇒ <code>Object</code>
+        * [.computeBulkCreateForeignKeyObject(prefillObject)](#ERMrest.Reference+computeBulkCreateForeignKeyObject) ⇒ <code>BulkCreateForeignKeyObject</code>
         * [._getReadPath(useEntity, getTRS, getTCRS, getUnlinkTRS)](#ERMrest.Reference+_getReadPath) : <code>Object</code>
             * [~processSortObject()](#ERMrest.Reference+_getReadPath..processSortObject)
     * [.Page](#ERMrest.Page)
@@ -483,6 +485,7 @@ to use for ERMrest JavaScript agents.
         * [.defaultReference](#ERMrest.ForeignKeyPseudoColumn+defaultReference) : <code>ERMrest.Refernece</code>
         * [.RID](#ERMrest.ForeignKeyPseudoColumn+RID) : <code>string</code>
         * [.displayname](#ERMrest.ForeignKeyPseudoColumn+displayname) : <code>Object</code>
+        * [.generateUniqueId(linkedData)](#ERMrest.ForeignKeyPseudoColumn+generateUniqueId)
         * [.filteredRef(column, data)](#ERMrest.ForeignKeyPseudoColumn+filteredRef) ⇒ [<code>Reference</code>](#ERMrest.Reference)
     * [.KeyPseudoColumn](#ERMrest.KeyPseudoColumn)
         * [new KeyPseudoColumn(reference, key)](#new_ERMrest.KeyPseudoColumn_new)
@@ -705,6 +708,7 @@ to use for ERMrest JavaScript agents.
         * [.citation](#ERMrest.Reference+citation) : <code>ERMrest.Citation</code>
         * [.googleDatasetMetadata](#ERMrest.Reference+googleDatasetMetadata) : <code>ERMrest.GoogleDatasetMetadata</code>
         * [.cascadingDeletedItems](#ERMrest.Reference+cascadingDeletedItems) : <code>Array.&lt;Object&gt;</code>
+        * [.bulkCreateForeignKeyObject](#ERMrest.Reference+bulkCreateForeignKeyObject) : <code>ERMrest.BulkCreateForeignKeyObject</code>
         * [.generateFacetColumns()](#ERMrest.Reference+generateFacetColumns)
         * [.validateFacetsFilters(facetAndFilters, facetObjectWrappers, searchTerm, skipMappingEntityChoices, changeLocation)](#ERMrest.Reference+validateFacetsFilters)
         * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
@@ -724,6 +728,7 @@ to use for ERMrest JavaScript agents.
         * [.getColumnByName(name)](#ERMrest.Reference+getColumnByName) ⇒ [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)
         * [.generateColumnsList(tuple, columnsList, dontChangeReference, skipLog)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
         * [.generateActiveList([tuple])](#ERMrest.Reference+generateActiveList) ⇒ <code>Object</code>
+        * [.computeBulkCreateForeignKeyObject(prefillObject)](#ERMrest.Reference+computeBulkCreateForeignKeyObject) ⇒ <code>BulkCreateForeignKeyObject</code>
         * [._getReadPath(useEntity, getTRS, getTCRS, getUnlinkTRS)](#ERMrest.Reference+_getReadPath) : <code>Object</code>
             * [~processSortObject()](#ERMrest.Reference+_getReadPath..processSortObject)
     * [.AttributeGroupReference](#ERMrest.AttributeGroupReference) : <code>object</code>
@@ -3162,6 +3167,7 @@ Constructor for a ParsedFilter.
     * [.citation](#ERMrest.Reference+citation) : <code>ERMrest.Citation</code>
     * [.googleDatasetMetadata](#ERMrest.Reference+googleDatasetMetadata) : <code>ERMrest.GoogleDatasetMetadata</code>
     * [.cascadingDeletedItems](#ERMrest.Reference+cascadingDeletedItems) : <code>Array.&lt;Object&gt;</code>
+    * [.bulkCreateForeignKeyObject](#ERMrest.Reference+bulkCreateForeignKeyObject) : <code>ERMrest.BulkCreateForeignKeyObject</code>
     * [.generateFacetColumns()](#ERMrest.Reference+generateFacetColumns)
     * [.validateFacetsFilters(facetAndFilters, facetObjectWrappers, searchTerm, skipMappingEntityChoices, changeLocation)](#ERMrest.Reference+validateFacetsFilters)
     * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
@@ -3181,6 +3187,7 @@ Constructor for a ParsedFilter.
     * [.getColumnByName(name)](#ERMrest.Reference+getColumnByName) ⇒ [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)
     * [.generateColumnsList(tuple, columnsList, dontChangeReference, skipLog)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
     * [.generateActiveList([tuple])](#ERMrest.Reference+generateActiveList) ⇒ <code>Object</code>
+    * [.computeBulkCreateForeignKeyObject(prefillObject)](#ERMrest.Reference+computeBulkCreateForeignKeyObject) ⇒ <code>BulkCreateForeignKeyObject</code>
     * [._getReadPath(useEntity, getTRS, getTCRS, getUnlinkTRS)](#ERMrest.Reference+_getReadPath) : <code>Object</code>
         * [~processSortObject()](#ERMrest.Reference+_getReadPath..processSortObject)
 
@@ -3405,11 +3412,14 @@ Returns true if
 
 #### reference.display : <code>Object</code>
 An object which contains row display properties for this reference.
-It is determined based on the `table-display` annotation. It has the
+It is determined based on the `table-display`, `display`, and 'chaise-config' annotations. It has the
 following properties:
 
   - `rowOrder`: `[{ column: '`_column object_`', descending:` {`true` | `false` } `}`...`]` or `undefined`,
   - `type`: {`'table'` | `'markdown'` | `'module'`} (default: `'table'`)
+  - `showFaceting`: A boolean indicating whether we should show the faceting feature or not.
+  - `maxFacetDepth`: A number indicating the facet depth.
+  - `facetPanelOpen`: Whether the facet panel should be opened by default or not.
 
 If type is `'markdown'`, the object will also these additional
 properties:
@@ -3551,6 +3561,13 @@ a Metadata object
 
 #### reference.cascadingDeletedItems : <code>Array.&lt;Object&gt;</code>
 The related reference or tables that might be deleted as a result of deleting the current table.
+
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+bulkCreateForeignKeyObject"></a>
+
+#### reference.bulkCreateForeignKeyObject : <code>ERMrest.BulkCreateForeignKeyObject</code>
+If prefill object is defined and has the required attributes, will return
+a BulkCreateForeignKeyObject object with the necessary objects used for a association modal picker
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+generateFacetColumns"></a>
@@ -3983,6 +4000,20 @@ so if the fk definition is based on fkcolum and and not the RID, it would handle
 | Param | Type |
 | --- | --- |
 | [tuple] | [<code>Tuple</code>](#ERMrest.Tuple) | 
+
+<a name="ERMrest.Reference+computeBulkCreateForeignKeyObject"></a>
+
+#### reference.computeBulkCreateForeignKeyObject(prefillObject) ⇒ <code>BulkCreateForeignKeyObject</code>
+Will compute and return a BulkCreateForeignKeyObject if:
+  - the prefillObject is defined
+  - there are only 2 foreign key columns for this table that are not system columns
+  - using the prefill object, we can determine the main column for prefilling and leaf column for bulk selection
+
+**Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| prefillObject | <code>Object</code> | computed prefill object from chaise |
 
 <a name="ERMrest.Reference+_getReadPath"></a>
 
@@ -4951,6 +4982,7 @@ In other cases, the returned data will only include the scalar value.
     * [.defaultReference](#ERMrest.ForeignKeyPseudoColumn+defaultReference) : <code>ERMrest.Refernece</code>
     * [.RID](#ERMrest.ForeignKeyPseudoColumn+RID) : <code>string</code>
     * [.displayname](#ERMrest.ForeignKeyPseudoColumn+displayname) : <code>Object</code>
+    * [.generateUniqueId(linkedData)](#ERMrest.ForeignKeyPseudoColumn+generateUniqueId)
     * [.filteredRef(column, data)](#ERMrest.ForeignKeyPseudoColumn+filteredRef) ⇒ [<code>Reference</code>](#ERMrest.Reference)
 
 <a name="new_ERMrest.ForeignKeyPseudoColumn_new"></a>
@@ -5038,6 +5070,17 @@ returns the ermrest generated RID for the foreign key relationship this pseudo c
       use table's displayname disambiguated with columns' displayname, i.e. `table_1 (col_1, col_2)`.
 
 **Kind**: instance property of [<code>ForeignKeyPseudoColumn</code>](#ERMrest.ForeignKeyPseudoColumn)  
+<a name="ERMrest.ForeignKeyPseudoColumn+generateUniqueId"></a>
+
+#### foreignKeyPseudoColumn.generateUniqueId(linkedData)
+Given the available tuple data, generate the uniqueId for the selected row from the table this pseudo column points to
+
+**Kind**: instance method of [<code>ForeignKeyPseudoColumn</code>](#ERMrest.ForeignKeyPseudoColumn)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| linkedData | <code>Object</code> | key-value pairs of column values of the table this pseudocolumn points to |
+
 <a name="ERMrest.ForeignKeyPseudoColumn+filteredRef"></a>
 
 #### foreignKeyPseudoColumn.filteredRef(column, data) ⇒ [<code>Reference</code>](#ERMrest.Reference)
@@ -7053,6 +7096,7 @@ get PathColumn object by column name
     * [.citation](#ERMrest.Reference+citation) : <code>ERMrest.Citation</code>
     * [.googleDatasetMetadata](#ERMrest.Reference+googleDatasetMetadata) : <code>ERMrest.GoogleDatasetMetadata</code>
     * [.cascadingDeletedItems](#ERMrest.Reference+cascadingDeletedItems) : <code>Array.&lt;Object&gt;</code>
+    * [.bulkCreateForeignKeyObject](#ERMrest.Reference+bulkCreateForeignKeyObject) : <code>ERMrest.BulkCreateForeignKeyObject</code>
     * [.generateFacetColumns()](#ERMrest.Reference+generateFacetColumns)
     * [.validateFacetsFilters(facetAndFilters, facetObjectWrappers, searchTerm, skipMappingEntityChoices, changeLocation)](#ERMrest.Reference+validateFacetsFilters)
     * [.removeAllFacetFilters(sameFilter, sameCustomFacet, sameFacet)](#ERMrest.Reference+removeAllFacetFilters) ⇒ <code>ERMrest.reference</code>
@@ -7072,6 +7116,7 @@ get PathColumn object by column name
     * [.getColumnByName(name)](#ERMrest.Reference+getColumnByName) ⇒ [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)
     * [.generateColumnsList(tuple, columnsList, dontChangeReference, skipLog)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
     * [.generateActiveList([tuple])](#ERMrest.Reference+generateActiveList) ⇒ <code>Object</code>
+    * [.computeBulkCreateForeignKeyObject(prefillObject)](#ERMrest.Reference+computeBulkCreateForeignKeyObject) ⇒ <code>BulkCreateForeignKeyObject</code>
     * [._getReadPath(useEntity, getTRS, getTCRS, getUnlinkTRS)](#ERMrest.Reference+_getReadPath) : <code>Object</code>
         * [~processSortObject()](#ERMrest.Reference+_getReadPath..processSortObject)
 
@@ -7296,11 +7341,14 @@ Returns true if
 
 #### reference.display : <code>Object</code>
 An object which contains row display properties for this reference.
-It is determined based on the `table-display` annotation. It has the
+It is determined based on the `table-display`, `display`, and 'chaise-config' annotations. It has the
 following properties:
 
   - `rowOrder`: `[{ column: '`_column object_`', descending:` {`true` | `false` } `}`...`]` or `undefined`,
   - `type`: {`'table'` | `'markdown'` | `'module'`} (default: `'table'`)
+  - `showFaceting`: A boolean indicating whether we should show the faceting feature or not.
+  - `maxFacetDepth`: A number indicating the facet depth.
+  - `facetPanelOpen`: Whether the facet panel should be opened by default or not.
 
 If type is `'markdown'`, the object will also these additional
 properties:
@@ -7442,6 +7490,13 @@ a Metadata object
 
 #### reference.cascadingDeletedItems : <code>Array.&lt;Object&gt;</code>
 The related reference or tables that might be deleted as a result of deleting the current table.
+
+**Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
+<a name="ERMrest.Reference+bulkCreateForeignKeyObject"></a>
+
+#### reference.bulkCreateForeignKeyObject : <code>ERMrest.BulkCreateForeignKeyObject</code>
+If prefill object is defined and has the required attributes, will return
+a BulkCreateForeignKeyObject object with the necessary objects used for a association modal picker
 
 **Kind**: instance property of [<code>Reference</code>](#ERMrest.Reference)  
 <a name="ERMrest.Reference+generateFacetColumns"></a>
@@ -7874,6 +7929,20 @@ so if the fk definition is based on fkcolum and and not the RID, it would handle
 | Param | Type |
 | --- | --- |
 | [tuple] | [<code>Tuple</code>](#ERMrest.Tuple) | 
+
+<a name="ERMrest.Reference+computeBulkCreateForeignKeyObject"></a>
+
+#### reference.computeBulkCreateForeignKeyObject(prefillObject) ⇒ <code>BulkCreateForeignKeyObject</code>
+Will compute and return a BulkCreateForeignKeyObject if:
+  - the prefillObject is defined
+  - there are only 2 foreign key columns for this table that are not system columns
+  - using the prefill object, we can determine the main column for prefilling and leaf column for bulk selection
+
+**Kind**: instance method of [<code>Reference</code>](#ERMrest.Reference)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| prefillObject | <code>Object</code> | computed prefill object from chaise |
 
 <a name="ERMrest.Reference+_getReadPath"></a>
 
