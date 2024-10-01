@@ -2303,11 +2303,14 @@
 
         /**
          * An object which contains row display properties for this reference.
-         * It is determined based on the `table-display` annotation. It has the
+         * It is determined based on the `table-display`, `display`, and 'chaise-config' annotations. It has the
          * following properties:
          *
          *   - `rowOrder`: `[{ column: '`_column object_`', descending:` {`true` | `false` } `}`...`]` or `undefined`,
          *   - `type`: {`'table'` | `'markdown'` | `'module'`} (default: `'table'`)
+         *   - `showFaceting`: A boolean indicating whether we should show the faceting feature or not.
+         *   - `maxFacetDepth`: A number indicating the facet depth.
+         *   - `facetPanelOpen`: Whether the facet panel should be opened by default or not.
          *
          * If type is `'markdown'`, the object will also these additional
          * properties:
@@ -2445,7 +2448,7 @@
                 }
 
                 // if facetpanel won't be used or the _clientConfig.facetPanelDisplay doesn't include the current context or a parent context, set to null
-                var fpo = null;
+                var fpo = null, maxFacetDepth = null;
                 // NOTE: clientConfig should always be defined if used by a client, some ermrestJS tests don't always set it, so don't calculate this for those tests
                 if (this._context && module._clientConfig) {
                     // _clientConfig.facetPanelDisplay will be defined from configuration or based on chaise defaults
@@ -2454,6 +2457,20 @@
 
                     // facet panel is not available in COMPACT_BRIEF and it's subcontexts, and other non-compact contexts
                     if (context.startsWith(module._contexts.COMPACT) && !context.startsWith(module._contexts.COMPACT_BRIEF)) {
+
+                        // get it from the display annotation
+                        maxFacetDepth = module._getHierarchicalDisplayAnnotationValue(this.table, context, "max_facet_depth", true);
+                        // missing from the annotation, so get it from the chaise-config
+                        if (maxFacetDepth === -1 && typeof ccFacetDisplay.maxFacetDepth === 'number') {
+                            maxFacetDepth = ccFacetDisplay.maxFacetDepth;
+                        }
+                        // validate the value
+                        if (!isInteger(maxFacetDepth) || maxFacetDepth < 0) {
+                            maxFacetDepth = 1
+                        } else if (maxFacetDepth > 2) {
+                            maxFacetDepth = 2;
+                        }
+
                         if (ccFacetDisplay.closed && ccFacetDisplay.closed.includes("*")) fpo = false;
                         if (ccFacetDisplay.open && ccFacetDisplay.open.includes("*")) fpo = true;
                         // check inheritence
@@ -2472,6 +2489,12 @@
                         }
                     }
                 }
+                // for other contexts that don't allow facet
+                maxFacetDepth = maxFacetDepth === null ? 0 : maxFacetDepth;
+
+                this._display.maxFacetDepth = maxFacetDepth;
+                this._display.showFaceting = maxFacetDepth > 0;
+
                 this._display.facetPanelOpen = fpo;
 
                 /**
@@ -3950,7 +3973,11 @@
                     this._googleDatasetMetadata = null;
                 } else {
                     var metadataAnnotation = module._getRecursiveAnnotationValue(this._context, this._table.annotations.get(module._annotations.GOOGLE_DATASET_METADATA).content);
-                    this._googleDatasetMetadata = new GoogleDatasetMetadata(this, metadataAnnotation);
+                    if (!isObjectAndNotNull(metadataAnnotation) || !isObjectAndNotNull(metadataAnnotation.dataset)) {
+                        this._googleDatasetMetadata = null;
+                    } else {
+                        this._googleDatasetMetadata = new GoogleDatasetMetadata(this, metadataAnnotation);
+                    }
                 }
             }
             return this._googleDatasetMetadata;

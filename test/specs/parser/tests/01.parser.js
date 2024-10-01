@@ -691,11 +691,24 @@ exports.execute = function(options) {
                         "ermrestCompactPath missmatch"
                     );
                 });
+
+                it ("parser should handle not having any filter on the first layer.", function () {
+                    uri = baseUri + `/(id)=(s:table2:id)/!(RID=%3A%3Anull%3A%3A&RCB=%3A%3Anull%3A%3A)/(id3)=(s:table3:id)/*::facets::${validBlob2}/(id4)=(s:table4:id)`;
+                    location = options.ermRest.parse(uri);
+                    expect(location).toBeDefined("location is not defined");
+                    expect(location.uri).toEqual(uri, "uri missmatch");
+                    expect(location.ermrestCompactPath).toEqual(
+                        "T:=parse_schema:parse_table/T1:=(id)=(s:table2:id)/!(RID=%3A%3Anull%3A%3A&RCB=%3A%3Anull%3A%3A)/T2:=(id3)=(s:table3:id)/accession=2/$T2/some-other-column::ciregexp::test2/$T2/M:=(id4)=(s:table4:id)",
+                        "ermrestCompactPath missmatch"
+                    );
+                });
             });
 
-            // relies on the previous test
             describe("for changing facets in location, ", function () {
                 it("Location.facets setter should be able to change the facet and update other APIs.", function() {
+                    uri = baseUri + "/*::facets::" + validBlob + "/some_col=v1/(id)=(s:otherTable:id)/(id2)=(s:otherTable2:id)" +
+                          "/*::facets::" + validBlob2 + "/some_col2=v2/(id)=(s:yetAnotherTable:id)" + "/*::facets::" + validBlob3;
+                    location = options.ermRest.parse(uri);
                     location.facets = facetObj;
 
                     uri = baseUri + "/*::facets::" + validBlob + "/some_col=v1/(id)=(s:otherTable:id)/(id2)=(s:otherTable2:id)" +
@@ -1536,6 +1549,7 @@ exports.execute = function(options) {
                     // {"and": [ {"source": "column"} ]}
                     expectError("N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixQBs0BbCEAXwF1Kg");
                 });
+
             });
         });
 

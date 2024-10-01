@@ -631,6 +631,8 @@
     };
 
     /**
+     * retun the value that should be used for the display setting. If missing, it will return "-1".
+     *
     * @param {ERMrest.Table|ERMrest.Column|ERMrest.ForeignKeyRef} obj either table object, or an object that has `.table`
     * @param {String} context the context string
     * @param {String} annotKey the annotation key that you want the annotation value for

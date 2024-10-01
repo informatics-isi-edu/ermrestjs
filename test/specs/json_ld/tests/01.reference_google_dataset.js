@@ -9,8 +9,6 @@ exports.execute = function (options) {
             schemaName = "google_metadata_schema",
             tableName = "google_metadata_w_handlebars";
 
-        var handlebarsGoogleMetadataUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + tableName + "/@sort(id)";
-
         var chaiseURL = "https://example.org/chaise";
         var recordURL = chaiseURL + "/record";
         var record2URL = chaiseURL + "/record-two";
@@ -46,17 +44,39 @@ exports.execute = function (options) {
             return url;
         };
 
+        const getURL = (tName) => {
+            return options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + tName + "/@sort(id)";
+        }
+
+        const resolveReference = async (tName) => {
+            return options.ermRest.resolve(getURL(tName), { cid: "test" });
+        }
+
         beforeAll(function () {
             options.ermRest.appLinkFn(appLinkFn);
+        });
+
+        it('googleDatasetMetadata.compute should handle tables without any google-dataset annotation or invalid ones', async () => {
+            const expectNull = async (tName) => {
+                const ref = await resolveReference(tName);
+                expect(ref.contextualize.detailed.googleDatasetMetadata).toBeNull();
+            };
+
+            expectNull('missing_google_metadata');
+            expectNull('invalid_google_metadata_1');
+            expectNull('invalid_google_metadata_2');
+            expectNull('invalid_google_metadata_3');
+            expectNull('invalid_google_metadata_4');
+            expectNull('invalid_google_metadata_5');
         });
 
         describe("with handlebar templating", function () {
             var tuples, tuple, reference;
 
             beforeAll(function (done) {
-                options.ermRest.resolve(handlebarsGoogleMetadataUri, { cid: "test" }).then(function (response) {
+                resolveReference(tableName).then(function (response) {
                     reference = response.contextualize.detailed;
-                    return response.read(2);
+                    return reference.read(2);
                 }).then(function (response) {
                     tuples = response.tuples;
                     done();

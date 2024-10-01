@@ -98,6 +98,157 @@
                     }
                 }
             }
+        },
+        "missing_google_metadata": {
+            "kind": "table",
+            "table_name": "missing_google_metadata",
+            "schema_name": "google_metadata_schema",
+            "keys": [
+                {
+                    "unique_columns": [
+                        "id"
+                    ]
+                }
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "integer"
+                    }
+                }
+            ]
+        },
+        "invalid_google_metadata_1": {
+            "kind": "table",
+            "table_name": "invalid_google_metadata_1",
+            "schema_name": "google_metadata_schema",
+            "keys": [
+                {
+                    "unique_columns": [
+                        "id"
+                    ]
+                }
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "integer"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2021:google-dataset": null
+            }
+        },
+        "invalid_google_metadata_2": {
+            "kind": "table",
+            "table_name": "invalid_google_metadata_2",
+            "schema_name": "google_metadata_schema",
+            "keys": [
+                {
+                    "unique_columns": [
+                        "id"
+                    ]
+                }
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "integer"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2021:google-dataset": {}
+            }
+        },
+        "invalid_google_metadata_3": {
+            "kind": "table",
+            "table_name": "invalid_google_metadata_3",
+            "schema_name": "google_metadata_schema",
+            "keys": [
+                {
+                    "unique_columns": [
+                        "id"
+                    ]
+                }
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "integer"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2021:google-dataset": {
+                    "detailed": null
+                }
+            }
+        },
+        "invalid_google_metadata_4": {
+            "kind": "table",
+            "table_name": "invalid_google_metadata_4",
+            "schema_name": "google_metadata_schema",
+            "keys": [
+                {
+                    "unique_columns": [
+                        "id"
+                    ]
+                }
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "integer"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2021:google-dataset": {
+                    "detailed": {
+                        "some_invalid_prop": "test"
+                    }
+                }
+            }
+        },
+        "invalid_google_metadata_5": {
+            "kind": "table",
+            "table_name": "invalid_google_metadata_5",
+            "schema_name": "google_metadata_schema",
+            "keys": [
+                {
+                    "unique_columns": [
+                        "id"
+                    ]
+                }
+            ],
+            "column_definitions": [
+                {
+                    "name": "id",
+                    "nullok": false,
+                    "type": {
+                        "typename": "integer"
+                    }
+                }
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2021:google-dataset": {
+                    "detailed": {
+                        "dataset": "test"
+                    }
+                }
+            }
         }
     }
 }

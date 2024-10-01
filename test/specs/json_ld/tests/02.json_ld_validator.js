@@ -3,7 +3,7 @@ exports.execute = function (options) {
     var module = options.includes.ermRest;
     describe("validation of structured data", function () {
         it("should ignore attributes that are not part of the vocabulary", function (done) {
-            var jsonInput = {"@type": "Dataset","@context": "http://schema.org","name": "dummy", 
+            var jsonInput = {"@type": "Dataset","@context": "http://schema.org","name": "dummy",
             "description": "lorem ipsum", "verson": "4"};
             expect(jsonInput.verson).toEqual("4");
 
@@ -16,7 +16,7 @@ exports.execute = function (options) {
         });
 
         it("should return false if missing @context", function (done) {
-            var jsonInput = {"@type": "Dataset","name": "dummy", 
+            var jsonInput = {"@type": "Dataset","name": "dummy",
             "description": "lorem ipsum"};
             expect(jsonInput["@context"]).toEqual(undefined);
 
@@ -29,7 +29,7 @@ exports.execute = function (options) {
         });
 
         it("should return false if incorrect @type", function (done) {
-            var jsonInput = {"@type": "Datass","@context": "http://schema.org","name": "dummy", 
+            var jsonInput = {"@type": "Datass","@context": "http://schema.org","name": "dummy",
             "description": "lorem ipsum"};
             expect(jsonInput["@type"]).toEqual("Datass");
 
@@ -52,11 +52,11 @@ exports.execute = function (options) {
                 }
             };
             expect(jsonInput["creator"]["name"]).toEqual(undefined);
-            expect(jsonInput["creator"]).toBeObject();
+            expect(jsonInput["creator"]).toBeTruthy();
 
             var result = module.validateJSONLD(jsonInput);
             expect(result.isValid).toEqual(true);
-            expect(result.modifiedJsonLd["creator"]).not.toBeObject();
+            expect(result.modifiedJsonLd["creator"]).not.toBeTruthy();
             delete jsonInput["creator"];
             expect(result.modifiedJsonLd).toEqual(jsonInput);
             done();
@@ -72,7 +72,7 @@ exports.execute = function (options) {
         });
 
         it("should ignore attribute if datatype not followed", function (done) {
-            var jsonInput = {"@type": "Dataset","@context": "http://schema.org","name": "dummy", 
+            var jsonInput = {"@type": "Dataset","@context": "http://schema.org","name": "dummy",
             "description": "lorem ipsum", "url": 77};
             expect(jsonInput["url"]).toEqual(77);
 
@@ -87,7 +87,7 @@ exports.execute = function (options) {
         it("The google_metadata with incorrect element(incorrect data type) inside array returned with that element excluded", function (done) {
             var jsonInput = {
                 "@type": "Dataset", "@context": "http://schema.org", "name": "dummy",
-                "description": "lorem ipsum", 
+                "description": "lorem ipsum",
                 "keywords": ["sales",
                     "ice cream",
                     "ice cream brands",
@@ -118,7 +118,7 @@ exports.execute = function (options) {
         it("The google_metadata with incorrect element(null) inside array returned with that element excluded", function (done) {
             var jsonInput = {
                 "@type": "Dataset", "@context": "http://schema.org", "name": "dummy",
-                "description": "lorem ipsum", 
+                "description": "lorem ipsum",
                 "keywords": ["sales",
                     "ice cream",
                     "ice cream brands",
@@ -149,7 +149,7 @@ exports.execute = function (options) {
         it("The google_metadata with all incorrect element(null) inside array returned without array", function (done) {
             var jsonInput = {
                 "@type": "Dataset", "@context": "http://schema.org", "name": "dummy",
-                "description": "lorem ipsum", 
+                "description": "lorem ipsum",
                 "keywords": [
                     null,
                     ""

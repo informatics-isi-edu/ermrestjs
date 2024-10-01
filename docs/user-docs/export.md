@@ -1,6 +1,6 @@
 # Export Annotation
 
-Using the [export annotation](annotation.md#tag-2019-export) you can define export templates that will be used for deriva-py export service integration with the client tools. To make the process of writing export annotation simpler and modular, you can use [export fragment annotation](annotation.md#tag-2021-export-fragment-annotations). In this document, we will explain how you can write these two annotations and how export integration works in ERMrestJS/Chaise.
+Using the [export annotation](annotation.md#tag-2019-export) you can define export templates that will be used for deriva-py export service integration with the client tools. To make the process of writing export annotation simpler and modular, you can use [export fragment annotation](annotation.md#tag-2021-export-fragment-definitions). In this document, we will explain how you can write these two annotations and how export integration works in ERMrestJS/Chaise.
 
 If you just want to see the overall structure of export annotation go [here](#overall-structure) or you can look at some examples in [here](#examples).
 
@@ -22,7 +22,9 @@ If you just want to see the overall structure of export annotation go [here](#ov
 
 ## Export Templates
 
-Export of data from Chaise is configured through the use of *export templates*. An export template is a JSON object that is used in an ERMrest table/schema/catalog annotation payload.  The annotation is specified using `tag:isrd.isi.edu,2016:export` key.
+Export of data from Chaise is configured through the use of *export templates*. An export template is a JSON object that is used in an ERMrest table/schema/catalog annotation payload.  The annotation is specified using `tag:isrd.isi.edu,2019:export` key.
+
+> ⚠️ The first iteration of export used the [`tag:isrd.isi.edu,2016:export`](annotation-deprecated.md#tag-2016-export) tag (notice the 2016 instead of 2019). But this old tag doesn't support context and all the new features added to the new key. So please make sure you're using the new tag.
 
 The annotation payload is a JSON object containing a single array of `template` objects. One or more templates can be specified for a given table entity.  Templates specify a format name and type, followed by a set of output descriptor objects. A template output descriptor maps one or more source table queries to one or more output file destinations.
 
@@ -269,7 +271,7 @@ The type of `source.api` that is used does not matter, as long as the result dat
 
 ## How it works
 
-For processing export, we have to consult [export annotation](annotation.md#tag-2019-export) and [export fragment annotation](annotation.md#tag-2021-export-fragment-annotations). The following is how ERMrestJS looks at these two annotations:
+For processing export, we have to consult [export annotation](annotation.md#tag-2019-export) and [export fragment annotation](annotation.md#tag-2021-export-fragment-definitions). The following is how ERMrestJS looks at these two annotations:
 
 1. We start by creating a fragment object that can be used while writing export annotation. To do so,
 
