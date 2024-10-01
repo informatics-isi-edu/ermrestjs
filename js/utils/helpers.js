@@ -1026,6 +1026,13 @@
         };
     };
 
+    /**
+     * Given the available linked data, generate the uniqueId for the row this data represents given the shortest key of the table
+     *
+     * @param {ERMrest.Key[]} tableShortestKey shortest key from the table the linkedData is for
+     * @param {Object} linkedData data to use to generate the unique id
+     * @returns string | null - unique id for the row the linkedData represents
+     */
     module._generateTupleUniqueId = function (tableShortestKey, linkedData) {
         var keyName, hasNull = false, _uniqueId = "";
 

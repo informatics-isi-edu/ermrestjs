@@ -1666,7 +1666,7 @@ module._extends(ForeignKeyPseudoColumn, ReferenceColumn);
 /**
  * Given the available tuple data, generate the uniqueId for the selected row from the table this pseudo column points to
  *
- * @param {*} linkedData
+ * @param {Object} linkedData key-value pairs of column values of the table this pseudocolumn points to
  */
 ForeignKeyPseudoColumn.prototype.generateUniqueId = function (linkedData) {
     return module._generateTupleUniqueId(this.reference.table.shortestKey, linkedData);
