@@ -2466,7 +2466,7 @@
                         }
                         // validate the value
                         if (!isInteger(maxFacetDepth) || maxFacetDepth < 0) {
-                            maxFacetDepth = 1
+                            maxFacetDepth = 1;
                         } else if (maxFacetDepth > 2) {
                             maxFacetDepth = 2;
                         }
@@ -4042,6 +4042,87 @@
         },
 
         /**
+         * If prefill object is defined and has the required attributes, will return
+         * a BulkCreateForeignKeyObject object with the necessary objects used for a association modal picker
+         *
+         * @type {ERMrest.BulkCreateForeignKeyObject}
+         */
+        get bulkCreateForeignKeyObject() {
+            if (this._bulkCreateForeignKeyObject === undefined) {
+                this._bulkCreateForeignKeyObject = null;
+            }
+            return this._bulkCreateForeignKeyObject;
+        },
+
+        /**
+         * Will compute and return a BulkCreateForeignKeyObject if:
+         *   - the prefillObject is defined
+         *   - there are only 2 foreign key columns for this table that are not system columns
+         *   - using the prefill object, we can determine the main column for prefilling and leaf column for bulk selection
+         *
+         * @param {Object} prefillObject computed prefill object from chaise
+         * @returns {BulkCreateForeignKeyObject}
+         */
+        computeBulkCreateForeignKeyObject: function (prefillObject) {
+            if (this._bulkCreateForeignKeyObject === undefined) {
+                if (!prefillObject) {
+                    this._bulkCreateForeignKeyObject = null;
+                } else {
+                    // ignore the fks that are simple and their constituent column is system col
+                    var nonSystemColumnFks = this.table.foreignKeys.all().filter(function(fk) {
+                        return !(fk.simple && module._systemColumns.indexOf(fk.colset.columns[0]) !== -1);
+                    });
+
+                    // set of foreignkey columns (they might be overlapping so we're not using array)
+                    var fkCols = {};
+                    nonSystemColumnFks.forEach(function(fk) {
+                        fk.colset.columns.forEach(function(col) {
+                            fkCols[col] = true;
+                        });
+                    });
+
+                    // There have to be 2 foreign key columns
+                    if (nonSystemColumnFks.length !== 2) {
+                        this._bulkCreateForeignKeyObject = null;
+                    } else {
+                        // both foreign keys have to be simple
+                        if (!nonSystemColumnFks[0].simple || !nonSystemColumnFks[1].simple) {
+                            this._bulkCreateForeignKeyObject = null;
+                        } else {
+                            var mainColumn = null;
+                            var leafColumn = null;
+
+                            // leafColumn will be set no matter what since the check above ensures there are 2 FK columns
+                            // This makes sure one of the 2 FK columns is the same as the one that initiated the prefill logic in record app
+                            this.columns.forEach(function(column) {
+                                // column should be a foreignkey pseudo column
+                                if (!column.isForeignKey) return;
+
+                                nonSystemColumnFks.forEach(function(fk) {
+                                    // column and foreign key `.name` property is a hash value
+                                    if (column.name === fk.name) {
+                                        if (prefillObject.fkColumnNames.indexOf(column.name) !== -1) {
+                                            mainColumn = column;
+                                        } else {
+                                            leafColumn = column;
+                                        }
+                                    }
+                                });
+                            });
+
+                            if (!mainColumn || !leafColumn) {
+                                this._bulkCreateForeignKeyObject = null;
+                            } else {
+                                this._bulkCreateForeignKeyObject = new BulkCreateForeignKeyObject(this, prefillObject, fkCols, mainColumn, leafColumn);
+                            }
+                        }
+                    }
+                }
+            }
+            return this._bulkCreateForeignKeyObject;
+        },
+
+        /**
          * Generate a related reference given a foreign key and tuple.
          * TODO SHOULD BE REFACTORED AS A TYPE OF REFERENCE
          *
@@ -4767,6 +4848,14 @@
          */
         get compactSelectForeignKey() {
             return this._contextualize(module._contexts.COMPACT_SELECT_FOREIGN_KEY);
+        },
+
+        /**
+         * The _compact/select/foreign_key/bulk_ context of this reference.
+         * @type {ERMrest.Reference}
+         */
+        get compactSelectBulkForeignKey() {
+            return this._contextualize(module._contexts.COMPACT_SELECT_BULK_FOREIGN_KEY);
         },
 
         /**
@@ -6243,21 +6332,7 @@
          */
         get uniqueId() {
             if (this._uniqueId === undefined) {
-                var key, hasNull = false;
-                this._uniqueId = "";
-                for (var i = 0; i < this._pageRef.table.shortestKey.length; i++) {
-                    keyName = this._pageRef.table.shortestKey[i].name;
-                    if (this.data[keyName] == null) {
-                        hasNull = true;
-                        break;
-                    }
-                    if (i !== 0) this._uniqueId += "_";
-                    this._uniqueId += this.data[keyName];
-                }
-
-                if (hasNull) {
-                    this._uniqueId = null;
-                }
+                this._uniqueId = module._generateTupleUniqueId(this._pageRef.table.shortestKey, this.data);
             }
             return this._uniqueId;
         },
@@ -6622,3 +6697,115 @@
             }
         });
     }
+
+    /**
+     * Constructor to create a BulkCreateForeignKeyObject object
+     *
+     * NOTE: Potential improvement to the heuristics when there is no annotation defined
+     *   if we have:
+     *     - >2 FK columns
+     *     - there is a key with 2 foreign key columns in it
+     *     - that key includes the _mainColumn mentioned in prefillObject
+     *   should we assume that's the main/leaf columns for the association?
+     *
+     * @param {ERMrest.Reference} reference reference for the association table
+     * @param {Object} prefillObject generated prefill object from chaise after extracting the query param and fetching the data from cookie storage
+     * @param {Object} fkCols set of foreignkey columns that are not system columns (they might be overlapping so we're not using array)
+     * @param {ForeignKeyPseudoColumn} mainColumn the column from the assocation table that points to the main table in the association
+     * @param {ForeignKeyPseudoColumn} leafColumn the column from the assocation table that points to the leaf table in the association we are selecting rows from to associate to main
+     */
+    function BulkCreateForeignKeyObject (reference, prefillObject, fkCols, mainColumn, leafColumn) {
+        var self = this;
+        this._reference = reference;
+        this._prefillObject = prefillObject;
+        this._mainColumn = mainColumn;
+        this._leafColumn = leafColumn;
+
+        this._isUnique = false;
+
+        var tempKeys = reference.table.keys.all().filter(function(key) {
+            var keyCols = key.colset.columns;
+            return !(keyCols.length == 1 && (module._serialTypes.indexOf(keyCols[0].type.name) != -1 ||  module._systemColumns.indexOf(keyCols[0].name) != -1) && !(keyCols[0] in fkCols));
+        });
+
+        // to calculate isUnique
+        //   - One of the keys should contain the main and leaf foreign key columns
+        tempKeys.forEach(function(key) {
+            var mainMatch = false,
+                leafMatch = false;
+
+            key.colset.columns.forEach(function(col) {
+                if (col.name === self._leafColumn._baseCols[0].name) {
+                    leafMatch = true;
+                } else if (col.name === self._mainColumn._baseCols[0].name) {
+                    mainMatch = true;
+                }
+            });
+
+            if (leafMatch && mainMatch) self._isUnique = true;
+        });
+    }
+
+    BulkCreateForeignKeyObject.prototype = {
+        /**
+         * the column that points to the table that rows are being selected from
+         * @returns ERMrest.ForeignKeyPseudoColumn
+         */
+        get leafColumn () {
+            return this._leafColumn;
+        },
+
+        /**
+         * if the 2 foreign key columns are part of a unqiue key
+         * @returns boolean
+         */
+        get isUnique () {
+            return this._isUnique;
+        },
+
+        /**
+         * @returns {Object[]} filters array for getting the rows that should be disabled
+         */
+        disabledRowsFilter: function() {
+            if (this._disabledRowsFilters === undefined) {
+                var self = this;
+
+                var filters = [];
+                Object.keys(this._prefillObject.keys).forEach(function(key) {
+                    filters.push({
+                        source: [
+                            { 'inbound': self._leafColumn.foreignKey.constraint_names[0] },
+                            { 'outbound': self._mainColumn.foreignKey.constraint_names[0] },
+                            self._mainColumn.foreignKey.mapping._to[0].name
+                        ],
+                        choices: [self._prefillObject.keys[key]]
+                    });
+                });
+
+                this._disabledRowsFilters = filters;
+            }
+
+            return this._disabledRowsFilters;
+        },
+
+        /**
+         * @returns {Object[]} filters array to use on leafColumn.reference for ensuring rows from the table are only able to be added if their key information is not null
+         */
+        andFiltersForLeaf: function() {
+            if (this._andFilters === undefined) {
+                var filters = [];
+                // loop through all of key columns of the leaf foreign key pseudo column that make up the key information for the tablerows are selected from and create non-null filters
+                this._leafColumn.foreignKey.key.colset.columns.forEach(function(col) {
+                    filters.push({
+                        source: col.name,
+                        hidden: true,
+                        not_null: true
+                    });
+                });
+
+                this._andFilters = filters;
+            }
+
+            return this._andFilters;
+        }
+    };

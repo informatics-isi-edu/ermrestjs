@@ -1,0 +1,12 @@
+{
+  "catalog": {},
+  "schema": {
+      "name": "bulk_create_foreign_keys",
+      "createNew": true,
+      "path": "test/specs/reference/conf/bulk_create_foreign_keys/schema.json"
+  },
+  "tables": {
+      "createNew": true
+  },
+  "entities": {}
+}
