@@ -2164,6 +2164,11 @@ Object.defineProperty(ForeignKeyPseudoColumn.prototype, "display", {
                 if (module._foreignKeyInputModes.indexOf(displ.selector_ux_mode) !== -1) {
                     sourceDisplay.inputDisplayMode = displ.selector_ux_mode;
                 }
+
+                // check visible-columns annotation display property and set to override property from fk annotation or display annotation
+                if (displ.bulk_create_foreign_key) {
+                    sourceDisplay.bulkForeignKeyCreateConstraintName = displ.bulk_create_foreign_key;
+                }
             }
 
             if (this.sourceObject && typeof this.sourceObject.hide_column_header === "boolean") {
