@@ -617,6 +617,9 @@ exports.execute = (options) =>{
 
     // main_table_for_annotations <- association_table_w_false_viz_columns -> leaf_table_for_false_viz_columns
     describe("for association table with false set in display property of visible-columns annotation", () => {
+      // table has 2 static columns and 2 foreign keys. This test makes sure the feature is turned off from the visible columns display property on the
+      // foreign key from main to the association table. The heuristics should be used when the leaf is the prefill since the annotation is only on the main/association
+      // foreign key visible columns entry. This table without this annotation should use the default heuristics
       var table_name = "association_table_w_false_viz_columns";
 
       var uri = `${options.url}/catalog/${catalog_id}/entity/${schema_name}:${table_name}`;
