@@ -1105,18 +1105,20 @@
                 }
             }
 
-            // no match was found, turn off the feature
-            if (value === -1) value = false;
             return value;
         };
+
+        var showSavedQueryAnnoVal = _getHierarchicalDisplayAnnotationValue(this, "show_saved_query");
         /**
+         * if showSavedQueryAnnoVal is -1, turn off the feature
          * @type {boolean}
          */
-        this._showSavedQuery = _getHierarchicalDisplayAnnotationValue(this, "show_saved_query");
+        this._showSavedQuery = showSavedQueryAnnoVal === -1 ? false : showSavedQueryAnnoVal;
 
         // if false, turn off the feature
         // if null or not defined, allow the heuristics to be used
-        this._shouldUseBulkCreateForeignKey = _getHierarchicalDisplayAnnotationValue(this, "bulk_create_foreign_key") === false ? false : true;
+        var bulkCreateAnnoVal = _getHierarchicalDisplayAnnotationValue(this, "bulk_create_foreign_key");
+        this._shouldUseBulkCreateForeignKey = bulkCreateAnnoVal === false ? false : true;
 
         /**
          * @desc The path to the table where the favorite terms are stored
@@ -4790,18 +4792,26 @@
                  * bulkForeignKeyCreate column is set based on the following rules:
                  *   1. defined on display property in visible-columns
                  *   2. foreign key annotation
-                 *   3. table-display annotation when defined on the leaf table of the fkey relationship
-                 *   4. default heuristics used when computeBulkCreateForeignKeyObject is called
-                 *
-                 *
+                 *   3. table-display annotation
+                 *   4. display annotation on table, schema, then catalog
+                 *   5. default heuristics used when computeBulkCreateForeignKeyObject is called
                  */
                 // check display annotation on table/schema/catalog
                 // if true, don't set anything and let the heuristics be used
                 // if false, set to false to turn off heuristics
-                if (toCol.table._shouldUseBulkCreateForeignKey === false) bulkCreateConstraintName = false;
+                if (this.table._shouldUseBulkCreateForeignKey === false) bulkCreateConstraintName = false;
+
+                if (this.table.annotations.contains(module._annotations.TABLE_DISPLAY)) {
+                    var tableAnnotation = module._getRecursiveAnnotationValue(context, this.table.annotations.get(module._annotations.TABLE_DISPLAY).content);
+
+                    if (tableAnnotation.bulk_create_foreign_key_candidates !== null) {
+                        bulkCreateConstraintName = tableAnnotation.bulk_create_foreign_key_candidates;
+                    }
+                }
 
                 // check foreign key annotation
-                if (displayAnnot.bulk_create_foreign_key) {
+                // make sure `false` is not ignored since that turns this feature off
+                if (displayAnnot.bulk_create_foreign_key !== undefined && displayAnnot.bulk_create_foreign_key !== null) {
                     bulkCreateConstraintName = displayAnnot.bulk_create_foreign_key;
                 }
 
