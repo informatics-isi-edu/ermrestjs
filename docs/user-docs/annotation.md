@@ -101,6 +101,7 @@ Supported JSON payload patterns:
 - `{`... `"hide_row_count":` `{` _context_ `:` _rowcount_ `,` ... `}`: Whether we should display the total row count. Since the request to fetch total row count is expensive, you can use this to signal to client to skip the request (and therefore do not display it to users.)
 - `{`... `"max_facet_depth":` `{` _context_ `:` _maxfacetdepth_ `,`  ...`}`: How many levels of facet popups we should allow.
 - `{`... `"show_saved_query":` _savedquery_ ...`}`: Whether we want to display the saved query UI features or not. By default, this feature is turned off (set to false).
+- `{`... `"bulk_create_foreign_key"`: _bulkfk_ ... `}`: Use this property to control the bulk selection of foreign key values in `entry/create` context when there is a prefill query parameter. By default, the heuristics will be used to determine if this feature will be used. This can be defined on each of the catalog, schema, and table model elements.
 
 Supported JSON _ccomment_ patterns:
 
@@ -157,6 +158,11 @@ Supported JSON _savedquery_ patterns:
 
 - `true`: Display the saved query UI features.
 - `false`: Don't display the saved query UI features.
+
+Supported JSON _bulkfk_ patterns:
+
+- `false`: Turns off the heuristics that trigger this feature.
+- `null`: Overrides inheritance for this property and use the default heuristics.
 
 Supported JSON _maxfacetdepth_ patterns:
 
@@ -463,6 +469,7 @@ Supported display _option_ syntax:
 - `"show_foreign_key_link": true`: Override the inherited behavior of foreign key display and add a link to the referred row.
 - `"show_foreign_key_link": false`: Override the inherited behavior of foreign key display by not adding any the extra.
 - `"selector_ux_mode"`: The display mode for the recordedit input field when this foreign key relationship is part of the visible columns. Supported values are `"facet-search-popup"` and `"simple-search-dropdown"`, with `"facet-search-popup"` being the default. Currently only supported in `entry` contexts.
+- `"bulk_create_foreign_key"`:  Use this property to control the bulk selection of foreign key values in `entry/create` context when there is a prefill query parameter. Supported values are a foreign key `name` in the format of `['table_name', 'foreign_key_name']` from the schema document, `false`, and `null`. Using a foreign key name will use that foreign key as the one being bulk selected if that foreign key is in the visible columns list.  `false` turns off the heuristics that trigger this feature. `null` will override inheritance for this property and use the default heuristics. This will override the `bulk_create_foreign_key_candidates` property defined in the table-display annotation. Currently only supported in `entry/create` context.
 
 Supported _columnorder_key_ syntax:
 
@@ -615,6 +622,7 @@ Supported JSON _option_ payload patterns:
 	- The _pathsuffix_ MAY join additional tables to the path and MAY project from these tables as well as the table bound to the `S` table alias.
 	- The _pathsuffix_ SHOULD reset the path context to `$S` if it has joined other tables.
 - `"selector_ux_mode"`: The display mode for the recordedit input field when this table is part of a foreignkey relationship as the `outbound` table. Supported values are `"facet-search-popup"` and `"simple-search-dropdown"`, with `"facet-search-popup"` being the default. Currently only supported in `entry` contexts.
+- `"bulk_create_foreign_key_candidates"`: Use this property to control the bulk selection of foreign key values in `entry/create` context when there is a prefill query parameter. Supported value is an array of foreign key `names` in the format of `[['table_name', 'foreign_key_name'], ...]`. This will override the `bulk_create_foreign_key` property defined in the display annotation. Currently only supported in `entry/create` context.
 
 It is not meaningful to use `page_markdown_pattern`, `row_markdown_pattern`, and `module` in for the same _context_. If they co-exist, the application will prefer `module` over `page_markdown_pattern` and `page_markdown_pattern` over `row_markdown_pattern`.
 
@@ -1337,6 +1345,7 @@ The following attributes can be used to manipulate the presentation settings of 
       - `csv` for comma-seperated values.
       - `raw` for space-seperated values.
   - `"selector_ux_mode"`: The display mode for the recordedit input field when this column directive is a foreign key relationship. Supported values are `"facet-search-popup"` and `"simple-search-dropdown"`, with `"facet-search-popup"` being the default. Currently only supported in `entry` contexts.
+  - `"bulk_create_foreign_key"`: Use this property to control the bulk selection of foreign key values in `entry/create` context when there is a prefill query parameter. Supported values are a foreign key `name` in the format of `['table_name', 'foreign_key_name']` from the schema document, `false`, and `null`. Using a foreign key name will use that foreign key as the one being bulk selected if that foreign key is in the visible columns list. `false` turns off the heuristics that trigger this feature. `null` will override inheritance for this property and use the default heuristics. This will override the `bulk_create_foreign_key` property defined in the display property of the foreign-key annotation. Currently only supported in `entry/create` context.
 - `array_display`: This property is _deprecated_. It is the same as `array_ux_mode` that is defined above under `display` property.
 - `array_options`: Applicaple only to read-only non-filter context of `visible-columns` annotation. This property is meant to be an object of properties that control the display of `array` or `array_d` aggregate column. These options will only affect the display (and templating environment) and have no effect on the generated ERMrest query. The available options are:
     - `order`: An alternative sort method to apply when a client wants to semantically sort by key values. It follows the same syntax as `column_order`. In scalar array aggregate, you cannot sort based on other columns values, you can only sort based on the scalar value of the column.

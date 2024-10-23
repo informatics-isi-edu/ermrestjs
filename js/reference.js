@@ -4085,14 +4085,16 @@
 
                     var mainColumn = null;
                     // find main column in the visible columns list
-                    self.columns.forEach(function(column) {
+                    for (var k = 0; k < self.columns.length; k++) {
+                        var column = self.columns[k];
                         // column should be a foreignkey pseudo column
-                        if (!column.isForeignKey) return;
+                        if (!column.isForeignKey) continue;
                         if (prefillObject.fkColumnNames.indexOf(column.name) !== -1) {
                             // mainColumn is the column being prefilled, this should ALWAYS be in the visible columns list
                             mainColumn = column;
+                            break;
                         }
-                    });
+                    }
 
                     /**
                      * Using the given constraintName, determines the leaf column to be used for bulk foreign key create from the annotation value.
@@ -4185,7 +4187,6 @@
                                 this._bulkCreateForeignKeyObject = null;
                             } else {
                                 // leafColumn will be set no matter what since the check above ensures there are 2 FK columns
-                                // This makes sure one of the 2 FK columns is the same as the one that initiated the prefill logic in record app
                                 this._bulkCreateForeignKeyObject = findLeafColumnAndSetBulkCreate();
                             }
                         }
