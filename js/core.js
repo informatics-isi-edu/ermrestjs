@@ -4804,14 +4804,15 @@
                 if (this.table.annotations.contains(module._annotations.TABLE_DISPLAY)) {
                     var tableAnnotation = module._getRecursiveAnnotationValue(context, this.table.annotations.get(module._annotations.TABLE_DISPLAY).content);
 
-                    if (tableAnnotation.bulk_create_foreign_key_candidates !== null) {
+                    // check the value is an array since only `[['schema_name', 'foreignkey_name'], ... ]` is allowed for this property
+                    // each individual array element is validated when reading this annotation value
+                    if (Array.isArray(tableAnnotation.bulk_create_foreign_key_candidates)) {
                         bulkCreateConstraintName = tableAnnotation.bulk_create_foreign_key_candidates;
                     }
                 }
 
                 // check foreign key annotation
-                // make sure `false` is not ignored since that turns this feature off
-                if (displayAnnot.bulk_create_foreign_key !== undefined && displayAnnot.bulk_create_foreign_key !== null) {
+                if (_isValidBulkCreateForeignKey(displayAnnot.bulk_create_foreign_key)) {
                     bulkCreateConstraintName = displayAnnot.bulk_create_foreign_key;
                 }
 

@@ -691,5 +691,66 @@ exports.execute = (options) =>{
         expect(reference.bulkCreateForeignKeyObject.disabledRowsFilter()).toEqual(disabledFilter);
       });
     });
+
+    // main_table_for_annotations <- association_table_w_false_fk_annotation_null_viz_columns -> leaf_table_for_false_fk_annotation_null_viz_columns
+    describe("for association table with false set in foreign key annotation", () => {
+
+      var table_name = "association_table_w_false_fk_annotation_null_viz_columns";
+
+      var uri = `${options.url}/catalog/${catalog_id}/entity/${schema_name}:${table_name}`;
+
+      var reference;
+
+      beforeAll((done) => {
+        options.ermRest.resolve(uri, { cid: "test" }).then((response) => {
+          reference = response.contextualize.entryCreate;
+
+          done();
+        }, (err) => {
+          console.dir(err);
+          done.fail();
+        }).catch((err) => {
+          console.dir(err);
+          done.fail();
+        });
+      });
+
+      it("should have the expected columns for entry create context", () => {
+        expect(reference.columns.length).toBe(4);
+      });
+
+      it("should have proper values for bulk create object when prefill object is defined from leaf", () => {
+        // there are other keys for this object but only these 2 keys are used by ermrestJS
+        var prefillObject = {
+          fkColumnNames: ['qh2Dx9p6jXLs6f3tZUvnaA'],
+          keys: {main_fk_col: '1'}
+        }
+
+        reference._bulkCreateForeignKeyObject = undefined;
+        reference.computeBulkCreateForeignKeyObject(prefillObject);
+
+        expect(reference.bulkCreateForeignKeyObject).not.toBeNull();
+        // main is prefilled with `null` value in viz columns so should use the heuristics and set leaf_col_fk as the leaf column
+        expect(reference.bulkCreateForeignKeyObject.leafColumn.name).toBe('lhr4nudk8SUCGEnefzkkug');
+        expect(reference.bulkCreateForeignKeyObject.isUnique).toBeTruthy();
+
+        var andFilters = [{
+          source: 'RID', // since 'id' is the key for main
+          hidden: true,
+          not_null: true
+        }];
+        expect(reference.bulkCreateForeignKeyObject.andFiltersForLeaf()).toEqual(andFilters)
+
+        var disabledFilter = [{
+          source: [
+              { 'inbound': ['bulk_create_foreign_keys', 'false_fk_annotation_null_viz_columns_to_leaf_fkey' ]},
+              { 'outbound':  ['bulk_create_foreign_keys', 'false_fk_annotation_null_viz_columns_to_main_fkey' ]},
+              'id' // since 'id' is the key for main
+          ],
+          choices: ['1']
+        }]
+        expect(reference.bulkCreateForeignKeyObject.disabledRowsFilter()).toEqual(disabledFilter);
+      });
+    });
   });
 };

@@ -1588,6 +1588,135 @@
         }
       }
     },
+    "association_table_w_false_fk_annotation_null_viz_columns": {
+      "kind": "table",
+      "schema_name": "bulk_create_foreign_keys",
+      "table_name": "association_table_w_false_fk_annotation_null_viz_columns",
+      "column_definitions": [
+        {
+          "name": "static_col1",
+          "type": {
+            "typename": "int4"
+          }
+        },
+        {
+          "name": "static_col2",
+          "type": {
+            "typename": "text"
+          }
+        },
+        {
+          "name": "main_fk_col",
+          "nullok": false,
+          "type": {
+            "typename": "text"
+          }
+        },
+        {
+          "name": "leaf_fk_col",
+          "nullok": false,
+          "type": {
+            "typename": "text"
+          }
+        }
+      ],
+      "keys": [
+        {
+          "unique_columns": [
+            "RID"
+          ]
+        },
+        {
+          "unique_columns": [
+            "main_fk_col",
+            "leaf_fk_col"
+          ]
+        }
+      ],
+      "foreign_keys": [
+        {
+          "foreign_key_columns": [
+            {
+              "schema_name": "bulk_create_foreign_keys",
+              "table_name": "association_table_w_false_fk_annotation_null_viz_columns",
+              "column_name": "leaf_fk_col"
+            }
+          ],
+          "referenced_columns": [
+            {
+              "schema_name": "bulk_create_foreign_keys",
+              "table_name": "leaf_table_for_false_fk_annotation_null_viz_columns",
+              "column_name": "RID"
+            }
+          ],
+          "names": [
+            [
+              "bulk_create_foreign_keys",
+              "false_fk_annotation_null_viz_columns_to_leaf_fkey"
+            ]
+          ]
+        },
+        {
+          "foreign_key_columns": [
+            {
+              "schema_name": "bulk_create_foreign_keys",
+              "table_name": "association_table_w_false_fk_annotation_null_viz_columns",
+              "column_name": "main_fk_col"
+            }
+          ],
+          "referenced_columns": [
+            {
+              "schema_name": "bulk_create_foreign_keys",
+              "table_name": "main_table_for_annotations",
+              "column_name": "id"
+            }
+          ],
+          "names": [
+            [
+              "bulk_create_foreign_keys",
+              "false_fk_annotation_null_viz_columns_to_main_fkey"
+            ]
+          ],
+          "annotations": {
+            "tag:isrd.isi.edu,2016:foreign-key": {
+              "display": {
+                "entry/create": {
+                  "bulk_create_foreign_key": false
+                }
+              }
+            }
+          }
+        }
+      ],
+      "annotations": {
+        "tag:isrd.isi.edu,2016:visible-columns": {
+          "entry": [
+            "static_col1",
+            "static_col2",
+            {
+              "source": [
+                {
+                  "outbound": [
+                    "bulk_create_foreign_keys",
+                    "false_fk_annotation_null_viz_columns_to_main_fkey"
+                  ]
+                },
+                "RID"
+              ],
+              "display": {
+                "bulk_create_foreign_key": null
+              }
+            },
+            [
+              "bulk_create_foreign_keys",
+              "false_fk_annotation_null_viz_columns_to_leaf_fkey"
+            ]
+          ],
+          "compact": "entry",
+          "detailed": "entry"
+        }
+      }
+    },
     "leaf_table_for_viz_columns": {
       "comment": "leaf table for testing an association with visible columns display property",
       "kind": "table",
@@ -1794,6 +1923,29 @@
         }
       ],
       "annotations": {}
+    },
+    "leaf_table_for_false_fk_annotation_null_viz_columns": {
+      "comment": "leaf table for testing an association with null in visible columns source definition that overrides false in display property of foreign key annotation",
+      "kind": "table",
+      "table_name": "leaf_table_for_false_fk_annotation_null_viz_columns",
+      "schema_name": "bulk_create_foreign_keys",
+      "keys": [
+        {
+          "unique_columns": [
+            "RID"
+          ]
+        }
+      ],
+      "foreign_keys": [],
+      "column_definitions": [
+        {
+          "name": "details",
+          "type": {
+            "typename": "text"
+          }
+        }
+      ],
+      "annotations": {}
     }
   },
   "table_names": [
@@ -1817,6 +1969,7 @@
     "association_table_w_display_annotation",
     "association_table_w_false_fk_annotation",
     "association_table_w_false_viz_columns",
+    "association_table_w_false_fk_annotation_null_viz_columns",
     "leaf_table_for_viz_columns",
     "third_table_for_viz_columns",
     "leaf_table_for_fk_annotation",
@@ -1825,6 +1978,7 @@
     "third_table_for_table_display_annotation",
     "leaf_table_for_display_annotation",
     "leaf_table_for_false_fk_annotation",
-    "leaf_table_for_false_viz_columns"
+    "leaf_table_for_false_viz_columns",
+    "leaf_table_for_false_fk_annotation_null_viz_columns"
   ]
 }

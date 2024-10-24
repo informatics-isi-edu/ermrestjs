@@ -4140,14 +4140,16 @@
                         for (i = 0; i < self.columns.length; i++) {
                             var column = self.columns[i];
 
-                            // column should be a foreignkey pseudo column
-                            if (!column.isForeignKey) continue;
+                            // column should be a simple foreignkey pseudo column
+                            // return if it's not a foreign key or the column is a foreign key but it's not simple
+                            if (!column.isForeignKey || !column.foreignKey.simple) continue;
 
                             // if constraintNameProp is string[][], it's from bulk_create_foreign_key_candidates
                             // we need to iterate over the set to find the first matching column
                             if (Array.isArray(constraintNameProp) && Array.isArray(constraintNameProp[0])) {
                                 for (j = 0; j < constraintNameProp.length; j++) {
-                                    leafCol = findLeafColumn(column, constraintNameProp[j].join("_"));
+                                    var name = constraintNameProp[j];
+                                    if (_isValidForeignKeyName(name)) leafCol = findLeafColumn(column, name.join("_"));
 
                                     if (leafCol) break;
                                 }

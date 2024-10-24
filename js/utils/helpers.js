@@ -896,6 +896,28 @@
     };
 
     /**
+     * Given a foreign key name, will return true or false depending if the name value is of a valid type and value
+     *    - if =['', ''] : returns true
+     *    - otherwise returns false
+     *
+     * @private
+     */
+    _isValidForeignKeyName = function (fkName) {
+        return Array.isArray(fkName) && fkName.length === 2 && typeof fkName[0] === 'string' && typeof fkName[1] === 'string';
+    }
+
+    /**
+     * Given input value for bulk_create_foreign_key, will return true or false depending if the value is of a valid type and value for the bulk_create_foreign_key
+     *   - if =false | =null | =['', ''] : returns true
+     *   - otherwise returns false
+     *
+     * @private
+     */
+    _isValidBulkCreateForeignKey = function (bulkCreateProp) {
+        return bulkCreateProp === false || bulkCreateProp === null || _isValidForeignKeyName(bulkCreateProp);
+    }
+
+    /**
      * @function
      * @param {ERMrest.Table} table The object that we want the formatted values for.
      * @param {String} context the context that we want the formatted values for.

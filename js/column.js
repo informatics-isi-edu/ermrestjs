@@ -2166,8 +2166,8 @@ Object.defineProperty(ForeignKeyPseudoColumn.prototype, "display", {
                 }
 
                 // check visible-columns annotation display property and set to override property from fk annotation or display annotation
-                // make sure `false` is not ignored since that turns this feature off
-                if (displ.bulk_create_foreign_key !== null) {
+                // make sure `false` and `null` are not ignored since that turns this feature off
+                if (_isValidBulkCreateForeignKey(displ.bulk_create_foreign_key)) {
                     sourceDisplay.bulkForeignKeyCreateConstraintName = displ.bulk_create_foreign_key;
                 }
             }
