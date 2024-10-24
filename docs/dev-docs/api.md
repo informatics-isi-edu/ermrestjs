@@ -388,6 +388,8 @@ to use for ERMrest JavaScript agents.
         * [.generateColumnsList(tuple, columnsList, dontChangeReference, skipLog)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
         * [.generateActiveList([tuple])](#ERMrest.Reference+generateActiveList) ⇒ <code>Object</code>
         * [.computeBulkCreateForeignKeyObject(prefillObject)](#ERMrest.Reference+computeBulkCreateForeignKeyObject) ⇒ <code>BulkCreateForeignKeyObject</code>
+            * [~findLeafColumnAndSetBulkCreate(constraintNameProp)](#ERMrest.Reference+computeBulkCreateForeignKeyObject..findLeafColumnAndSetBulkCreate) ⇒
+                * [~findLeafColumn(col, constraintName)](#ERMrest.Reference+computeBulkCreateForeignKeyObject..findLeafColumnAndSetBulkCreate..findLeafColumn) ⇒
         * [._getReadPath(useEntity, getTRS, getTCRS, getUnlinkTRS)](#ERMrest.Reference+_getReadPath) : <code>Object</code>
             * [~processSortObject()](#ERMrest.Reference+_getReadPath..processSortObject)
     * [.Page](#ERMrest.Page)
@@ -729,6 +731,8 @@ to use for ERMrest JavaScript agents.
         * [.generateColumnsList(tuple, columnsList, dontChangeReference, skipLog)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
         * [.generateActiveList([tuple])](#ERMrest.Reference+generateActiveList) ⇒ <code>Object</code>
         * [.computeBulkCreateForeignKeyObject(prefillObject)](#ERMrest.Reference+computeBulkCreateForeignKeyObject) ⇒ <code>BulkCreateForeignKeyObject</code>
+            * [~findLeafColumnAndSetBulkCreate(constraintNameProp)](#ERMrest.Reference+computeBulkCreateForeignKeyObject..findLeafColumnAndSetBulkCreate) ⇒
+                * [~findLeafColumn(col, constraintName)](#ERMrest.Reference+computeBulkCreateForeignKeyObject..findLeafColumnAndSetBulkCreate..findLeafColumn) ⇒
         * [._getReadPath(useEntity, getTRS, getTCRS, getUnlinkTRS)](#ERMrest.Reference+_getReadPath) : <code>Object</code>
             * [~processSortObject()](#ERMrest.Reference+_getReadPath..processSortObject)
     * [.AttributeGroupReference](#ERMrest.AttributeGroupReference) : <code>object</code>
@@ -1324,6 +1328,8 @@ Documentation for this table
 <a name="ERMrest.Table+_showSavedQuery"></a>
 
 #### table.\_showSavedQuery : <code>boolean</code>
+if showSavedQueryAnnoVal is -1, turn off the feature
+
 **Kind**: instance property of [<code>Table</code>](#ERMrest.Table)  
 <a name="ERMrest.Table+favoritesPath"></a>
 
@@ -3188,6 +3194,8 @@ Constructor for a ParsedFilter.
     * [.generateColumnsList(tuple, columnsList, dontChangeReference, skipLog)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
     * [.generateActiveList([tuple])](#ERMrest.Reference+generateActiveList) ⇒ <code>Object</code>
     * [.computeBulkCreateForeignKeyObject(prefillObject)](#ERMrest.Reference+computeBulkCreateForeignKeyObject) ⇒ <code>BulkCreateForeignKeyObject</code>
+        * [~findLeafColumnAndSetBulkCreate(constraintNameProp)](#ERMrest.Reference+computeBulkCreateForeignKeyObject..findLeafColumnAndSetBulkCreate) ⇒
+            * [~findLeafColumn(col, constraintName)](#ERMrest.Reference+computeBulkCreateForeignKeyObject..findLeafColumnAndSetBulkCreate..findLeafColumn) ⇒
     * [._getReadPath(useEntity, getTRS, getTCRS, getUnlinkTRS)](#ERMrest.Reference+_getReadPath) : <code>Object</code>
         * [~processSortObject()](#ERMrest.Reference+_getReadPath..processSortObject)
 
@@ -4014,6 +4022,36 @@ Will compute and return a BulkCreateForeignKeyObject if:
 | Param | Type | Description |
 | --- | --- | --- |
 | prefillObject | <code>Object</code> | computed prefill object from chaise |
+
+
+* [.computeBulkCreateForeignKeyObject(prefillObject)](#ERMrest.Reference+computeBulkCreateForeignKeyObject) ⇒ <code>BulkCreateForeignKeyObject</code>
+    * [~findLeafColumnAndSetBulkCreate(constraintNameProp)](#ERMrest.Reference+computeBulkCreateForeignKeyObject..findLeafColumnAndSetBulkCreate) ⇒
+        * [~findLeafColumn(col, constraintName)](#ERMrest.Reference+computeBulkCreateForeignKeyObject..findLeafColumnAndSetBulkCreate..findLeafColumn) ⇒
+
+<a name="ERMrest.Reference+computeBulkCreateForeignKeyObject..findLeafColumnAndSetBulkCreate"></a>
+
+##### computeBulkCreateForeignKeyObject~findLeafColumnAndSetBulkCreate(constraintNameProp) ⇒
+Using the given constraintName, determines the leaf column to be used for bulk foreign key create from the annotation value.
+If no constraintName is provided, uses the other foreign key found on the table as the leaf
+  NOTE: when no constraintName, this is only called if there are 2 foreign keys and we know the main column
+
+**Kind**: inner method of [<code>computeBulkCreateForeignKeyObject</code>](#ERMrest.Reference+computeBulkCreateForeignKeyObject)  
+**Returns**: BulkCreateForeignKeyObject if leaf column can be found, null otherwise  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| constraintNameProp | <code>Array.&lt;Array.&lt;string&gt;&gt;</code> \| <code>Array.&lt;string&gt;</code> | constraint name of the foreingkey from annotation or array of constraint names |
+
+<a name="ERMrest.Reference+computeBulkCreateForeignKeyObject..findLeafColumnAndSetBulkCreate..findLeafColumn"></a>
+
+###### findLeafColumnAndSetBulkCreate~findLeafColumn(col, constraintName) ⇒
+**Kind**: inner method of [<code>findLeafColumnAndSetBulkCreate</code>](#ERMrest.Reference+computeBulkCreateForeignKeyObject..findLeafColumnAndSetBulkCreate)  
+**Returns**: the foreign key column that represents the leaf table  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| col | <code>ERMRest.Column</code> | foreign key column to check if it's in the list of visible columns and matches the constraint name |
+| constraintName | <code>Array.&lt;string&gt;</code> |  |
 
 <a name="ERMrest.Reference+_getReadPath"></a>
 
@@ -7117,6 +7155,8 @@ get PathColumn object by column name
     * [.generateColumnsList(tuple, columnsList, dontChangeReference, skipLog)](#ERMrest.Reference+generateColumnsList) ⇒ [<code>Array.&lt;ReferenceColumn&gt;</code>](#ERMrest.ReferenceColumn)
     * [.generateActiveList([tuple])](#ERMrest.Reference+generateActiveList) ⇒ <code>Object</code>
     * [.computeBulkCreateForeignKeyObject(prefillObject)](#ERMrest.Reference+computeBulkCreateForeignKeyObject) ⇒ <code>BulkCreateForeignKeyObject</code>
+        * [~findLeafColumnAndSetBulkCreate(constraintNameProp)](#ERMrest.Reference+computeBulkCreateForeignKeyObject..findLeafColumnAndSetBulkCreate) ⇒
+            * [~findLeafColumn(col, constraintName)](#ERMrest.Reference+computeBulkCreateForeignKeyObject..findLeafColumnAndSetBulkCreate..findLeafColumn) ⇒
     * [._getReadPath(useEntity, getTRS, getTCRS, getUnlinkTRS)](#ERMrest.Reference+_getReadPath) : <code>Object</code>
         * [~processSortObject()](#ERMrest.Reference+_getReadPath..processSortObject)
 
@@ -7943,6 +7983,36 @@ Will compute and return a BulkCreateForeignKeyObject if:
 | Param | Type | Description |
 | --- | --- | --- |
 | prefillObject | <code>Object</code> | computed prefill object from chaise |
+
+
+* [.computeBulkCreateForeignKeyObject(prefillObject)](#ERMrest.Reference+computeBulkCreateForeignKeyObject) ⇒ <code>BulkCreateForeignKeyObject</code>
+    * [~findLeafColumnAndSetBulkCreate(constraintNameProp)](#ERMrest.Reference+computeBulkCreateForeignKeyObject..findLeafColumnAndSetBulkCreate) ⇒
+        * [~findLeafColumn(col, constraintName)](#ERMrest.Reference+computeBulkCreateForeignKeyObject..findLeafColumnAndSetBulkCreate..findLeafColumn) ⇒
+
+<a name="ERMrest.Reference+computeBulkCreateForeignKeyObject..findLeafColumnAndSetBulkCreate"></a>
+
+##### computeBulkCreateForeignKeyObject~findLeafColumnAndSetBulkCreate(constraintNameProp) ⇒
+Using the given constraintName, determines the leaf column to be used for bulk foreign key create from the annotation value.
+If no constraintName is provided, uses the other foreign key found on the table as the leaf
+  NOTE: when no constraintName, this is only called if there are 2 foreign keys and we know the main column
+
+**Kind**: inner method of [<code>computeBulkCreateForeignKeyObject</code>](#ERMrest.Reference+computeBulkCreateForeignKeyObject)  
+**Returns**: BulkCreateForeignKeyObject if leaf column can be found, null otherwise  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| constraintNameProp | <code>Array.&lt;Array.&lt;string&gt;&gt;</code> \| <code>Array.&lt;string&gt;</code> | constraint name of the foreingkey from annotation or array of constraint names |
+
+<a name="ERMrest.Reference+computeBulkCreateForeignKeyObject..findLeafColumnAndSetBulkCreate..findLeafColumn"></a>
+
+###### findLeafColumnAndSetBulkCreate~findLeafColumn(col, constraintName) ⇒
+**Kind**: inner method of [<code>findLeafColumnAndSetBulkCreate</code>](#ERMrest.Reference+computeBulkCreateForeignKeyObject..findLeafColumnAndSetBulkCreate)  
+**Returns**: the foreign key column that represents the leaf table  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| col | <code>ERMRest.Column</code> | foreign key column to check if it's in the list of visible columns and matches the constraint name |
+| constraintName | <code>Array.&lt;string&gt;</code> |  |
 
 <a name="ERMrest.Reference+_getReadPath"></a>
 

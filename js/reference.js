@@ -4130,10 +4130,10 @@
 
                                     if (foundColumn) break;
                                 }
-                            };
+                            }
 
                             return foundColumn;
-                        }
+                        };
 
                         var leafCol = null;
                         // use for loop so we can break if we find the leaf column
@@ -4162,11 +4162,11 @@
                             }
 
                             if (leafCol) break;
-                        };
+                        }
 
                         if (!leafCol) return null;
                         return new BulkCreateForeignKeyObject(self, prefillObject, fkCols, mainColumn, leafCol);
-                    }
+                    };
 
                     if (!mainColumn) {
                         // if no mainColumn, this API can't be used

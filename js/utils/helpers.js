@@ -904,7 +904,7 @@
      */
     _isValidForeignKeyName = function (fkName) {
         return Array.isArray(fkName) && fkName.length === 2 && typeof fkName[0] === 'string' && typeof fkName[1] === 'string';
-    }
+    };
 
     /**
      * Given input value for bulk_create_foreign_key, will return true or false depending if the value is of a valid type and value for the bulk_create_foreign_key
@@ -915,7 +915,7 @@
      */
     _isValidBulkCreateForeignKey = function (bulkCreateProp) {
         return bulkCreateProp === false || bulkCreateProp === null || _isValidForeignKeyName(bulkCreateProp);
-    }
+    };
 
     /**
      * @function
