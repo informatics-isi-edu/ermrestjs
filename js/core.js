@@ -1105,14 +1105,20 @@
                 }
             }
 
-            // no match was found, turn off the feature
-            if (value === -1) value = false;
             return value;
         };
+
+        var showSavedQueryAnnoVal = _getHierarchicalDisplayAnnotationValue(this, "show_saved_query");
         /**
+         * if showSavedQueryAnnoVal is -1, turn off the feature
          * @type {boolean}
          */
-        this._showSavedQuery = _getHierarchicalDisplayAnnotationValue(this, "show_saved_query");
+        this._showSavedQuery = showSavedQueryAnnoVal === -1 ? false : showSavedQueryAnnoVal;
+
+        // if false, turn off the feature
+        // if null or not defined, allow the heuristics to be used
+        var bulkCreateAnnoVal = _getHierarchicalDisplayAnnotationValue(this, "bulk_create_foreign_key");
+        this._shouldUseBulkCreateForeignKey = bulkCreateAnnoVal === false ? false : true;
 
         /**
          * @desc The path to the table where the favorite terms are stored
@@ -4698,7 +4704,8 @@
         getDisplay: function(context) {
             if (!(context in this._display)) {
                 var self = this, fkAnnot, displayAnnot = -1, columnOrder = [], showFKLink = true,
-                    inputDisplayMode = module._foreignKeyInputModes[0], toTableAnnotation = -1;
+                    inputDisplayMode = module._foreignKeyInputModes[0], toTableAnnotation = -1,
+                    bulkCreateConstraintName = null;
 
                 var fromName, toName,
                     fromComment = null, toComment = null,
@@ -4781,9 +4788,38 @@
                     inputDisplayMode = displayAnnot.selector_ux_mode;
                 }
 
+                /**
+                 * bulkForeignKeyCreate column is set based on the following rules:
+                 *   1. defined on display property in visible-columns
+                 *   2. foreign key annotation
+                 *   3. table-display annotation
+                 *   4. display annotation on table, schema, then catalog
+                 *   5. default heuristics used when computeBulkCreateForeignKeyObject is called
+                 */
+                // check display annotation on table/schema/catalog
+                // if true, don't set anything and let the heuristics be used
+                // if false, set to false to turn off heuristics
+                if (this.table._shouldUseBulkCreateForeignKey === false) bulkCreateConstraintName = false;
+
+                if (this.table.annotations.contains(module._annotations.TABLE_DISPLAY)) {
+                    var tableAnnotation = module._getRecursiveAnnotationValue(context, this.table.annotations.get(module._annotations.TABLE_DISPLAY).content);
+
+                    // check the value is an array since only `[['schema_name', 'foreignkey_name'], ... ]` is allowed for this property
+                    // each individual array element is validated when reading this annotation value
+                    if (Array.isArray(tableAnnotation.bulk_create_foreign_key_candidates)) {
+                        bulkCreateConstraintName = tableAnnotation.bulk_create_foreign_key_candidates;
+                    }
+                }
+
+                // check foreign key annotation
+                if (_isValidBulkCreateForeignKey(displayAnnot.bulk_create_foreign_key)) {
+                    bulkCreateConstraintName = displayAnnot.bulk_create_foreign_key;
+                }
+
                 this._display[context] = {
                     "columnOrder": columnOrder,
                     "inputDisplayMode": inputDisplayMode,
+                    "bulkForeignKeyCreateConstraintName": bulkCreateConstraintName,
                     "showForeignKeyLink": showFKLink,
                     "fromName": fromName,
                     "fromComment": _processModelComment(fromComment, commentRenderMarkdown, fromCommentDisplayMode),
