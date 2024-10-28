@@ -31,6 +31,8 @@ Column directive allows instruction of a data source and modification of its pre
       - [markdown\_pattern](#markdown_pattern)
       - [wait\_for](#wait_for)
       - [show\_foreign\_key\_link](#show_foreign_key_link)
+      - [selector\_ux\_mode](#selector_ux_mode)
+      - [bulk\_create\_foreign\_key](#bulk_create_foreign_key)
       - [show\_key\_link](#show_key_link)
       - [array\_ux\_mode](#array_ux_mode)
     - [array\_options](#array_options)
@@ -424,6 +426,10 @@ While generating a default presentation for all outbound foreign key paths, ERMr
 ##### selector_ux_mode
 
 While generating a default presentation in `entry` mode for single outbound foreign key paths, Chaise will show a modal popup dialog for selecting rows. Using this attribute, you can modify this behavior. If this attribute is missing, we are going to use the inherited behavior from the [foreign key](annotation.md#tag-2016-foreign-key) annotation defined on the foreign key relationship. If that one is missing too, [table display](annotation.md#tag-2016-table-display) annotation will be applied. Supported values are `"facet-search-popup"` and `"simple-search-dropdown"`, with `"facet-search-popup"` being the default.
+
+##### bulk_create_foreign_key
+
+Use this property to control the bulk selection of foreign key values in `entry/create` context when there is a prefill query parameter. Supported values are a foreign key `name` in the format of `['schema_name', 'foreign_key_name']` from the schema document, `false`, or `null`. Using a foreign key name will use that foreign key as the one being bulk selected if that foreign key is in the visible columns list. `false` turns off the heuristics that trigger this feature. `null` will override inheritance for this property and use the default heuristics. This will override the `bulk_create_foreign_key` property defined in the display property of the foreign-key annotation. Currently only supported in `entry/create` context.
 
 ##### show_key_link
 

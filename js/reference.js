@@ -4065,6 +4065,8 @@
          */
         computeBulkCreateForeignKeyObject: function (prefillObject) {
             if (this._bulkCreateForeignKeyObject === undefined) {
+                var self = this;
+
                 if (!prefillObject) {
                     this._bulkCreateForeignKeyObject = null;
                 } else {
@@ -4081,39 +4083,113 @@
                         });
                     });
 
-                    // There have to be 2 foreign key columns
-                    if (nonSystemColumnFks.length !== 2) {
+                    var mainColumn = null;
+                    // find main column in the visible columns list
+                    for (var k = 0; k < self.columns.length; k++) {
+                        var column = self.columns[k];
+                        // column should be a foreignkey pseudo column
+                        if (!column.isForeignKey) continue;
+                        if (prefillObject.fkColumnNames.indexOf(column.name) !== -1) {
+                            // mainColumn is the column being prefilled, this should ALWAYS be in the visible columns list
+                            mainColumn = column;
+                            break;
+                        }
+                    }
+
+                    /**
+                     * Using the given constraintName, determines the leaf column to be used for bulk foreign key create from the annotation value.
+                     * If no constraintName is provided, uses the other foreign key found on the table as the leaf
+                     *   NOTE: when no constraintName, this is only called if there are 2 foreign keys and we know the main column
+                     *
+                     * @param {string[][] | string[]} constraintNameProp constraint name of the foreingkey from annotation or array of constraint names
+                     * @returns BulkCreateForeignKeyObject if leaf column can be found, null otherwise
+                     */
+                    var findLeafColumnAndSetBulkCreate = function(constraintNameProp) {
+                        /**
+                         *
+                         * @param {ERMRest.Column} col foreign key column to check if it's in the list of visible columns and matches the constraint name
+                         * @param {string[]} constraintName
+                         * @returns the foreign key column that represents the leaf table
+                         */
+                        var findLeafColumn = function(col, constraintName) {
+                            var foundColumn = null;
+
+                            for (k = 0; k < nonSystemColumnFks.length; k++) {
+                                var fk = nonSystemColumnFks[k];
+                                // make sure column is in visible columns and is in foreign key list
+                                // column and foreign key `.name` property is a hash value
+                                if (col.name === fk.name) {
+                                    if (constraintName && constraintName === col._constraintName) {
+                                        // use the constraint name to check each column and ensure it's the one we want from annotation
+                                        foundColumn = col;
+                                    } else if (!constraintName && col.name !== mainColumn.name) {
+                                        // make sure the current column is the NOT the main column
+                                        // assume there are only 2 foreign keys and we know mainColumn already
+                                        foundColumn = col;
+                                    }
+
+                                    if (foundColumn) break;
+                                }
+                            }
+
+                            return foundColumn;
+                        };
+
+                        var leafCol = null;
+                        // use for loop so we can break if we find the leaf column
+                        for (i = 0; i < self.columns.length; i++) {
+                            var column = self.columns[i];
+
+                            // column should be a simple foreignkey pseudo column
+                            // return if it's not a foreign key or the column is a foreign key but it's not simple
+                            if (!column.isForeignKey || !column.foreignKey.simple) continue;
+
+                            // if constraintNameProp is string[][], it's from bulk_create_foreign_key_candidates
+                            // we need to iterate over the set to find the first matching column
+                            if (Array.isArray(constraintNameProp) && Array.isArray(constraintNameProp[0])) {
+                                for (j = 0; j < constraintNameProp.length; j++) {
+                                    var name = constraintNameProp[j];
+                                    if (_isValidForeignKeyName(name)) leafCol = findLeafColumn(column, name.join("_"));
+
+                                    if (leafCol) break;
+                                }
+                            } else if (Array.isArray(constraintNameProp)) {
+                                // constraintNameProp should be a string[]
+                                leafCol = findLeafColumn(column, constraintNameProp.join("_"));
+                            } else {
+                                // no constraintName
+                                leafCol = findLeafColumn(column);
+                            }
+
+                            if (leafCol) break;
+                        }
+
+                        if (!leafCol) return null;
+                        return new BulkCreateForeignKeyObject(self, prefillObject, fkCols, mainColumn, leafCol);
+                    };
+
+                    if (!mainColumn) {
+                        // if no mainColumn, this API can't be used
                         this._bulkCreateForeignKeyObject = null;
+                    } else if (mainColumn.display.bulkForeignKeyCreateConstraintName === false) {
+                        // don't use heuristics
+                        this._bulkCreateForeignKeyObject = null;
+                    } else if (mainColumn.display.bulkForeignKeyCreateConstraintName) {
+                        // see if the leaf column to use is determined by an annotation by setting `true`
+                        // if a leaf column is determined, call BulkCreateForeignKeyObject constructor and set the generated value
+                        this._bulkCreateForeignKeyObject = findLeafColumnAndSetBulkCreate(mainColumn.display.bulkForeignKeyCreateConstraintName);
                     } else {
-                        // both foreign keys have to be simple
-                        if (!nonSystemColumnFks[0].simple || !nonSystemColumnFks[1].simple) {
+                        // use heuristics instead
+                        // There have to be 2 foreign key columns
+                        if (nonSystemColumnFks.length !== 2 ) {
                             this._bulkCreateForeignKeyObject = null;
                         } else {
-                            var mainColumn = null;
-                            var leafColumn = null;
-
-                            // leafColumn will be set no matter what since the check above ensures there are 2 FK columns
-                            // This makes sure one of the 2 FK columns is the same as the one that initiated the prefill logic in record app
-                            this.columns.forEach(function(column) {
-                                // column should be a foreignkey pseudo column
-                                if (!column.isForeignKey) return;
-
-                                nonSystemColumnFks.forEach(function(fk) {
-                                    // column and foreign key `.name` property is a hash value
-                                    if (column.name === fk.name) {
-                                        if (prefillObject.fkColumnNames.indexOf(column.name) !== -1) {
-                                            mainColumn = column;
-                                        } else {
-                                            leafColumn = column;
-                                        }
-                                    }
-                                });
-                            });
-
-                            if (!mainColumn || !leafColumn) {
+                            // both foreign keys have to be simple
+                            if (!nonSystemColumnFks[0].simple || !nonSystemColumnFks[1].simple) {
                                 this._bulkCreateForeignKeyObject = null;
                             } else {
-                                this._bulkCreateForeignKeyObject = new BulkCreateForeignKeyObject(this, prefillObject, fkCols, mainColumn, leafColumn);
+                                // leafColumn will be set no matter what since the check above ensures there are 2 FK columns
+                                this._bulkCreateForeignKeyObject = findLeafColumnAndSetBulkCreate();
                             }
                         }
                     }
