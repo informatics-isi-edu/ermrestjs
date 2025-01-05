@@ -1,4 +1,4 @@
-# ERMrestJS [![Build Status](https://github.com/informatics-isi-edu/ermrestjs/workflows/ERMrestJS%20tests/badge.svg?branch=master)](https://github.com/informatics-isi-edu/ermrestjs/actions?query=workflow%3A%22ERmrestJS+tests%22+branch%3Amaster)
+# ERMrestJS [![Build Status](https://github.com/informatics-isi-edu/ermrestjs/actions/workflows/unit-test.yml/badge.svg?branch=master)](https://github.com/informatics-isi-edu/ermrestjs/actions?query=workflow%3A%22ERmrestJS+tests%22+branch%3Amaster)
 
 The ERMrestJS is a javascript client library for interacting with the [ERMrest](http://github.com/informatics-isi-edu/ermrest) service. It provides higher-level, simplified application programming interfaces (APIs) for working with the Entity-Relationship concepts native to ERMrest. 
 
@@ -15,7 +15,7 @@ See [ERMrestJS installation](docs/user-docs/installation.md).
 
 ## Usage
 
-ERMrestJS can be used in the browser, nodeJS, or AngularJS environments. See [ERMrestJS usage](docs/user-docs/usage.md) for more detail.
+See [ERMrestJS usage](docs/user-docs/usage.md).
 
 ## Resources
 
@@ -40,7 +40,7 @@ When developing new code for ERMrestJS, please make sure you're following these 
 8. make your pull request, assign it to yourself, and ask someone to review your code.
   - Try to provide as much information as you can on your PR. Explain the issues that the PR is fixing and the changes that you've made in the PR.
   - Provide examples if applicable.
-  - Resolve the conflicts with the `master` before merging the code (and make sure documentation and tests are good to go).
+  - Resolve the conflicts with the `master` before merging the code (and ensure documentation and tests are good to go).
 
 ## Help and Contact
 
