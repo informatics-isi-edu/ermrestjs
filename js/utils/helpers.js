@@ -2795,6 +2795,62 @@
             }
         });
 
+        md.use(mdContainer, 'geneSequence', {
+            validate: function (params) {
+                return params.trim().match(/geneSequence\s+(.*)$/i);
+            },
+
+            render: function (tokens, idx) {
+                var m = tokens[idx].info.trim().match(/geneSequence(.*)$/i);
+                var html = '';
+                // opening tag
+                if (tokens[idx].nesting === 1 && m.length > 0) {
+                    var attrs = md.parse(m[1]);
+                    if (
+                        !attrs || attrs.length !== 3 || attrs[0].type !== 'paragraph_open' ||
+                        attrs[1].type !== 'inline' || attrs[1].children.length !== 1
+                    ) {
+                        return html;
+                    }
+
+                    var containerAttributes = '', containerClasses = ['chaise-gene-sequence'];
+
+                    // get the attributes of the container
+                    if (Array.isArray(attrs[0].attrs)) {
+                        attrs[0].attrs.forEach(function (attr) {
+                            switch(attr[0]) {
+                                case 'class':
+                                    if (attr[1].length > 0 && containerClasses.indexOf(attr[1]) === -1) {
+                                        containerClasses.push(attr[1]);
+                                    }
+                                    break;
+                                default:
+                                    containerAttributes += ' ' + attr[0] + '="' + attr[1] + '"';
+                                    break;
+                            }
+                        });
+                    }
+
+                    // get the content 
+                    var sequence = attrs[1].children[0].content, inc = 10, sequenceHTML = '';
+                    while (sequence.length >= inc) {
+                        var chunk = sequence.slice(0, inc);
+                        sequenceHTML += '<span class="chaise-gene-sequence-chunk">' + chunk + '</span>';
+                        sequence = sequence.slice(inc);
+                    }
+                    sequenceHTML += '<span class="chaise-gene-sequence-chunk">' + sequence + '</span>';
+                    html += '<div class="' + containerClasses.join(" ") + '" ' + containerAttributes + ' >';
+                    html += '<div class="chaise-gene-sequence-toolbar">';
+                    // html += '<div class="chaise-btn chaise-btn-tertiary chaise-btn-chaise-gene-sequence-copy-btn" data-chaise-tooltip="Copy the sequence to clipboard">Copy sequence</div>';
+                    html += '</div>';
+                    html += sequenceHTML;
+                    html += '</div>';
+                }
+
+                return html;
+            }
+        });
+
         // Note: Following how this was done in markdown-it-sub and markdown-it-span
         md.use(function rid_plugin(md) {
             // same as UNESCAPE_MD_RE plus a space
