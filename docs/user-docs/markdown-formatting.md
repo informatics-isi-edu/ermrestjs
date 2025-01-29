@@ -51,7 +51,7 @@ For common markdown syntax please refer to [this reference sheet](http://commonm
     + [14. Escape markdown content](#14-escape-markdown-content)
     + [15. RID link](#15-rid-link)
     + [16. Table](#15-table)
-
+    + [Gene Sequence](#17-gene-sequence)
 
 
 ## Inline Vs. Block
@@ -188,6 +188,10 @@ The following is the list of special class names that you can use:
     - `.chaise-content-top`: Aligns the inner content to the top of the container this class is attached to
     - `.chaise-content-middle`: Aligns the inner content to the middle of the container this class is attached to
     - `.chaise-content-bottom`: Aligns the inner content to the bottom of the container this class is attached to
+- `.chaise-word-break-all`: This enforces the given content to be broken at any character if it's overflowing. Useful for long an arbitary content. 
+  - For example you can add this to the asset presentation to ensure better UI in `compact` contexts: `[{{{filename}}}]({{{url}}}){download .chaise-word-break-all}`. Make sure to also add a `min-width` to the column header, otherwise the column might become very narrow.
+
+- `.chaise-gene-sequence-compact`: When applied to a [Gene Sequence](#17-gene-sequence) block, it will ensure showing a more compact version. This is recommended for `compact` contexts.
 
 
 ## Examples
@@ -233,6 +237,8 @@ Download button is a link with some predefined attributes. You can use these att
   - `.asset-permission` can be added to validate whether the user can download the asset before a download is attempted.
 
   - `.external-link` can be added to show a notification to the user when they are being navigated away from chaise for external links and assets hosted elsewhere.
+
+  - `.chaise-word-break-all` can be added to download buttons that have a very long filename in `compact` contexts. It will force the content to be broken into multiple lines. Make sure to also add a `min-width` to the column header, otherwise the column might become very narrow.
 
 Example:
 ```html
@@ -1085,3 +1091,34 @@ The table is broken at the first empty line, or beginning of another block eleme
     <a href="example.com">caption</h4>
     ```
     > <table><thead><tr><th>foo</th><th>bar</th></tr></thead><tbody><tr><td>baz</td><td>bim</td></tr></tbody></table><a href="example.com">caption</a>
+
+
+### 17. Gene Sequence
+
+This is not part of commonMark specification and it will result in a [block](#inline-vs-block). You have to follow the syntax completely (notice the newline in the closing tag). The following is the basic syntax structure:
+```mkdn
+::: geneSequence SEQUENCE {<attribute>=<value>} \n:::
+```
+**There must be a space before `\n:::`**.
+
+**Examples**
+
+- Without any attributes:
+    ```
+    ::: geneSequence MPVKGGSKCIKYLLFGFNFIFWLAGIAVLAIGLWLRFDSQTK \n:::
+    ```
+
+- Without any attributes as part of a `markdown_pattern` (assume `sequence` column returns the gene sequence string):
+    ```
+    ::: geneSequence {{{_sequence}}} \n:::
+    ```
+
+- A compact version for `compact` contexts:
+    ```
+    ::: geneSequence MPVKGGSKCIKYLLFGFNFIFWLAGIAVLAIGLWLRFDSQTK {.chaise-gene-sequence-compact} \n:::
+    ```
+
+- A compact version for `compact` contexts as part of a `markdown_pattern` (assume `sequence` column returns the gene sequence string):
+    ```
+    ::: geneSequence {{{_sequence}}} {.chaise-gene-sequence-compact} \n:::
+    ```

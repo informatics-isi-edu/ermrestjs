@@ -27,6 +27,7 @@ This document summarizes the key concepts of Handlebars that are relevant to Der
   - [printf helper](#printf-helper)
   - [formatDate helper](#formatdate-helper)
   - [humanizeBytes helper](#humanizebytes-helper)
+  - [stringLength helper](#stringLength-helper)
   - [Math Helpers](#math-helpers)
     - [add](#add)
     - [subtract](#subtract)
@@ -587,6 +588,27 @@ A boolean value specifying whether you want the output to include a tooltip or n
 ```
 {{humanizeBytes value tooltip=true}}
 ```
+
+### stringLength helper
+
+You can use `stringLength` helper to get the length of a given string.
+
+Syntax:
+```
+{{stringLength value }}
+```
+
+Example:
+```
+{{stringLength "123123" }} ==> 6
+
+{{stringLength value }} ==> assuming value is "sometext" returns 8.
+
+
+[{{{caption}}}](https://example.com){ {{#if (gt (stringLength caption) 100)}}.lengthy-caption{{else}}.short-caption{{/if}} }
+```
+
+
 
 ### Math Helpers
 

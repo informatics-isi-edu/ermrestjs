@@ -215,6 +215,15 @@
                     tooltip = options.hash.tooltip;
                 }
                 return module._formatUtils.humanizeBytes(value, mode, precision, tooltip);
+            },
+
+            /**
+             * {{stringLength value }}
+             * @ignore
+             * @returns the length of the given string
+             */
+            stringLength: function (value) {
+                return value.length;
             }
 
         });
