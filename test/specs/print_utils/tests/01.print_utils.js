@@ -391,6 +391,66 @@ exports.execute = function (options) {
                     })
                 });
             });
+
+            it ("should support :::GeneSequence", () => {
+                const seq1 = [
+                    'MPVKGGSKCIKYLLFGFNFIFWLAGIAVLAIGLWLRFDSQTKSIFEQENNHSSFYTGVYILIGAGALMMLVGFLGCCGAVQESQCMLGLFFGFLLVIF',
+                    'AIEIAAAVWGYTHKDEVIKELQEFYKDTYQKLRSKDEPQRETLKAIHMALDCCGIAGPLEQFISDTCPKKQLLESFQVKPCPEAISEVFNNKFHIIGA',
+                    'VGIGIAVVMIFGMIFSMILCCAIRRSREMV'
+                ].join('');
+
+                const seq2 = 'AIEIAAAVWGYTHKDEVIKELQEFYKDTYQKLRSKDEPQRETLKAIHMALDCCGIAGPLEQFISDTCPKKQLLESFQVKPCPEAISEVF';
+
+                testPrintMarkdown(
+                    `::: GeneSequence ${seq1} \n:::`,
+                    [
+                        '<div class="chaise-gene-sequence"  ><div class="chaise-gene-sequence-toolbar"></div>',
+                        '<span class="chaise-gene-sequence-chunk">MPVKGGSKCI</span><span class="chaise-gene-sequence-chunk">KYLLFGFNFI</span>',
+                        '<span class="chaise-gene-sequence-chunk">FWLAGIAVLA</span><span class="chaise-gene-sequence-chunk">IGLWLRFDSQ</span>',
+                        '<span class="chaise-gene-sequence-chunk">TKSIFEQENN</span><span class="chaise-gene-sequence-chunk">HSSFYTGVYI</span>',
+                        '<span class="chaise-gene-sequence-chunk">LIGAGALMML</span><span class="chaise-gene-sequence-chunk">VGFLGCCGAV</span>',
+                        '<span class="chaise-gene-sequence-chunk">QESQCMLGLF</span><span class="chaise-gene-sequence-chunk">FGFLLVIFAI</span>',
+                        '<span class="chaise-gene-sequence-chunk">EIAAAVWGYT</span><span class="chaise-gene-sequence-chunk">HKDEVIKELQ</span>',
+                        '<span class="chaise-gene-sequence-chunk">EFYKDTYQKL</span><span class="chaise-gene-sequence-chunk">RSKDEPQRET</span>',
+                        '<span class="chaise-gene-sequence-chunk">LKAIHMALDC</span><span class="chaise-gene-sequence-chunk">CGIAGPLEQF</span>',
+                        '<span class="chaise-gene-sequence-chunk">ISDTCPKKQL</span><span class="chaise-gene-sequence-chunk">LESFQVKPCP</span>',
+                        '<span class="chaise-gene-sequence-chunk">EAISEVFNNK</span><span class="chaise-gene-sequence-chunk">FHIIGAVGIG</span>',
+                        '<span class="chaise-gene-sequence-chunk">IAVVMIFGMI</span><span class="chaise-gene-sequence-chunk">FSMILCCAIR</span>',
+                        '<span class="chaise-gene-sequence-chunk">RSREMV</span></div>'
+                    ].join(''),
+                    false,
+                    'test 01'
+                )
+
+                testPrintMarkdown(
+                    `::: GeneSequence ${seq2} {.chaise-gene-sequence-compact data-chaise-tooltip="some-tooltip"} \n:::`,
+                    [
+                        '<div class="chaise-gene-sequence chaise-gene-sequence-compact"  data-chaise-tooltip="some-tooltip" >',
+                        '<div class="chaise-gene-sequence-toolbar"></div>',
+                        '<span class="chaise-gene-sequence-chunk">AIEIAAAVWG</span><span class="chaise-gene-sequence-chunk">YTHKDEVIKE</span>',
+                        '<span class="chaise-gene-sequence-chunk">LQEFYKDTYQ</span><span class="chaise-gene-sequence-chunk">KLRSKDEPQR</span>',
+                        '<span class="chaise-gene-sequence-chunk">ETLKAIHMAL</span><span class="chaise-gene-sequence-chunk">DCCGIAGPLE</span>',
+                        '<span class="chaise-gene-sequence-chunk">QFISDTCPKK</span><span class="chaise-gene-sequence-chunk">QLLESFQVKP</span>',
+                        '<span class="chaise-gene-sequence-chunk">CPEAISEVF</span></div>'
+                    ].join(''),
+                    false,
+                    'test 02'
+                )
+
+                testPrintMarkdown(
+                    `::: GeneSequence ${seq2} {.chaise-gene-sequence-compact .another-class class="third-class" width="300px"} \n:::`,
+                    [
+                        '<div class="chaise-gene-sequence chaise-gene-sequence-compact another-class third-class"  width="300px" >',
+                        '<div class="chaise-gene-sequence-toolbar"></div><span class="chaise-gene-sequence-chunk">AIEIAAAVWG</span>',
+                        '<span class="chaise-gene-sequence-chunk">YTHKDEVIKE</span><span class="chaise-gene-sequence-chunk">LQEFYKDTYQ</span>',
+                        '<span class="chaise-gene-sequence-chunk">KLRSKDEPQR</span><span class="chaise-gene-sequence-chunk">ETLKAIHMAL</span>',
+                        '<span class="chaise-gene-sequence-chunk">DCCGIAGPLE</span><span class="chaise-gene-sequence-chunk">QFISDTCPKK</span>',
+                        '<span class="chaise-gene-sequence-chunk">QLLESFQVKP</span><span class="chaise-gene-sequence-chunk">CPEAISEVF</span></div>'
+                    ].join(''),
+                    false,
+                    'test 03'
+                )
+            });
         });
 
 
@@ -663,6 +723,15 @@ exports.execute = function (options) {
                 expect(module.renderHandlebarsTemplate('{{humanizeBytes 1237940039285380274899124223 mode="binary" }}')).toBe('1.2,379,400,392,853,803e+27');
                 expect(module.renderHandlebarsTemplate('{{humanizeBytes 1237940039285380274899124223 mode="binary" tooltip=true }}')).toBe('1.2,379,400,392,853,803e+27');
 
+            });
+
+            it('stringLength helper', function () {
+                expect(module.renderHandlebarsTemplate('{{stringLength "123" }}', {})).toBe('3', 'test 01');
+                expect(module.renderHandlebarsTemplate('{{stringLength val }}', {'val': "751231asd"})).toBe('9', 'test 02');
+
+                const pattern = '[{{{val}}}](https://example.com){ {{#if (gt (stringLength val) 5)}}.lengthy-str{{else}}.short-str{{/if}} }';
+                expect(module.renderHandlebarsTemplate(pattern, {'val': "751231asd"})).toBe('[751231asd](https://example.com){ .lengthy-str }', 'test 03');
+                expect(module.renderHandlebarsTemplate(pattern, {'val': "abc"})).toBe('[abc](https://example.com){ .short-str }', 'test 04');
             });
 
             it('encodeFacet helper', function () {
