@@ -1,3 +1,5 @@
+const moment = require('moment');
+
 exports.execute = function (options) {
     var module = options.includes.ermRest;
     var printf = module._printf;
@@ -126,13 +128,18 @@ exports.execute = function (options) {
         });
 
         it("should format dates, timestamps, timestamptz values properly.", function () {
+            const testTimeWithTimezone = (value, format,isTimestamp,  message) => {
+                const res = moment(value).format(format);
+                expect(printf({ format }, value, isTimestamp ? 'timestamptz' : 'date')).toBe(res, `${message} is not reformatted properly`);
+            }
+
             // Date
             expect(printf({ format: 'YYYY-MM-DD'}, "2016-11-22", "date")).toBe("2016-11-22", "'2016-11-22' is not reformatted properly");
             expect(printf({ format: 'MM-DD-YYYY'}, "2014-06-22", "date")).toBe("06-22-2014", "'2014-06-22' is not reformatted properly");
             expect(printf({ format: 'MMM Do'}, "2017-03-12", "date")).toBe("Mar 12th", "'2017-03-12' is not reformatted properly");
             expect(printf({ format: 'YY-M-D'}, "2012-01-06", "date")).toBe("12-1-6", "'2012-01-06' is not reformatted properly");
                 // make sure time values can still be output from a "date"
-            expect(printf({ format: 'YYYY-MM-DD HH:mm:ss.SSSZ'}, "2016-11-22", "date")).toBe("2016-11-22 00:00:00.000-08:00", "'2016-11-22' is not reformatted properly");
+            testTimeWithTimezone('2016-11-22', 'YYYY-MM-DD HH:mm:ss.SSSZ', false, 'date with timezone');
 
             // Timestamp
             expect(printf({ format: 'YYYY-MM-DD'}, "2016-11-22 12:26:08", "timestamp")).toBe("2016-11-22", "'2016-11-22 12:26:08' is not reformatted properly");
@@ -143,18 +150,18 @@ exports.execute = function (options) {
             expect(printf({ format: 'hh:mm a'}, "2016-09-27 13:26:06", "timestamp")).toBe("01:26 pm", "'2016-09-27 13:26:06' is not reformatted properly");
             expect(printf({ format: 'hh:mm A'}, "2016-09-27 13:26:06", "timestamp")).toBe("01:26 PM", "'2016-09-27 13:26:06' is not reformatted properly");
             expect(printf({ format: 'HH:mm:ss.SSS'}, "2016-09-27 13:26:06", "timestamp")).toBe("13:26:06.000", "'2016-09-27 13:26:06' is not reformatted properly");
-            expect(printf({ format: 'HH:mm:ss.SSSZ'}, "2016-09-27 13:26:06", "timestamp")).toBe("13:26:06.000-07:00", "'2016-09-27 13:26:06' is not reformatted properly");
+            testTimeWithTimezone('2016-09-27 13:26:06', 'HH:mm:ss.SSSZ', true, 'timestamp 01');
 
             // Timestamptz
-            expect(printf({ format: 'YYYY-MM-DD'}, "2016-11-22 12:26:08-08:00", "timestamptz")).toBe("2016-11-22", "'2016-11-22 12:26:08' is not reformatted properly");
-            expect(printf({ format: 'MM-DD-YYYY'}, "2014-06-22 18:03:56-07:00", "timestamptz")).toBe("06-22-2014", "'2014-06-22 18:03:56' is not reformatted properly");
-            expect(printf({ format: 'MMM Do'}, "2017-03-12 02:03:04-07:00", "timestamptz")).toBe("Mar 12th", "'2017-03-12 02:03:04' is not reformatted properly");
+            testTimeWithTimezone('2016-11-22 12:26:08-08:00', 'YYYY-MM-DD', true, 'timestamptz 01');
+            testTimeWithTimezone('2014-06-22 18:03:56-07:00', 'MM-DD-YYYY', true, 'timestamptz 02');
+            testTimeWithTimezone('2017-03-12 02:03:04-07:00', 'MMM Do', true, 'timestamptz 03');
                 // verify just time values show properly with
-            expect(printf({ format: 'HH:mm'}, "2016-09-27 13:26:06-07:00", "timestamptz")).toBe("13:26", "'2016-09-27 13:26:06' is not reformatted properly");
-            expect(printf({ format: 'hh:mm a'}, "2016-09-27 13:26:06-07:00", "timestamptz")).toBe("01:26 pm", "'2016-09-27 13:26:06' is not reformatted properly");
-            expect(printf({ format: 'hh:mm A'}, "2016-09-27 13:26:06-07:00", "timestamptz")).toBe("01:26 PM", "'2016-09-27 13:26:06' is not reformatted properly");
-            expect(printf({ format: 'HH:mm:ss.SSS'}, "2016-09-27 13:26:06-07:00", "timestamptz")).toBe("13:26:06.000", "'2016-09-27 13:26:06' is not reformatted properly");
-            expect(printf({ format: 'HH:mm:ss.SSSZ'}, "2016-09-27 13:26:06-07:00", "timestamptz")).toBe("13:26:06.000-07:00", "'2016-09-27 13:26:06' is not reformatted properly");
+            testTimeWithTimezone("2016-09-27 13:26:06-07:00", 'HH:mm', true, 'timestamptz 04');
+            testTimeWithTimezone("2016-09-27 13:26:06-07:00", 'hh:mm a', true, 'timestamptz 05');
+            testTimeWithTimezone("2016-09-27 13:26:06-07:00", 'hh:mm A', true, 'timestamptz 06');
+            testTimeWithTimezone("2016-09-27 13:26:06-07:00", 'HH:mm:ss.SSS', true, 'timestamptz 07');
+            testTimeWithTimezone("2016-09-27 13:26:06-07:00", 'HH:mm:ss.SSSZ', true, 'timestamptz 08');
         });
 
     });

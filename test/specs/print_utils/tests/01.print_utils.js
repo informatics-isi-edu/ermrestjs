@@ -1,4 +1,5 @@
 const { templates } = require("handlebars");
+const moment = require('moment');
 
 exports.execute = function (options) {
     var module = options.includes.ermRest;
@@ -59,7 +60,7 @@ exports.execute = function (options) {
             var printTimestamp = formatUtils.printTimestamp;
             var testTime = '2011-05-06T13:25:25-07:00';
             expect(printTimestamp(null)).toBe('');
-            expect(printTimestamp(testTime)).toBe('2011-05-06 13:25:25');
+            expect(printTimestamp(testTime)).toBe(moment(testTime).format('YYYY-MM-DD HH:mm:ss'));
             expect(printTimestamp()).toBe('');
         });
 

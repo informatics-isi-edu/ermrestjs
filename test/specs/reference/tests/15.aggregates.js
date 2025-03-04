@@ -522,8 +522,8 @@ exports.execute = function (options) {
                         submissionMin = formatTimestampSubmission("2010-05-22T17:44:00-07:00");
                         submissionMax = formatTimestampSubmission("2017-04-13T14:10:00-07:00");
 
-                        min = formatTimestampReturn("2010-05-22 17:44:00");
-                        max = formatTimestampReturn("2017-04-13 14:10:00");
+                        min = formatTimestampReturn(submissionMin);
+                        max = formatTimestampReturn(submissionMax);
                         calculatedMax = max;
                         calculatedWidth = 7251412;
                         var secondsDiff = moment.duration(moment(max).diff(moment(min))).asSeconds();
