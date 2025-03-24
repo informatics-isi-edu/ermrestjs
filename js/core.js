@@ -3346,16 +3346,18 @@
         get default () {
             if (this._default === undefined) {
                 var defaultVal = this._jsonColumn.default;
-                try {
-                    // If the column typename is in the list of types to ignore setting the default for, throw an error to the catch clause
-                    if (module._ignoreDefaultsNames.includes(this.name)) {
-                        throw new Error("" + this.type.name + " is in the list of ignored default types");
-                    }
+                
+                // If the column typename is in the list of types to ignore setting the default for, just use null
+                if (module._ignoreDefaultsNames.includes(this.name)) {
+                    this._default = null;
+                    return this._default;return;
+                }
 
+                try {
                     // validate default value based on type name
                     if (this.type.name === 'color_rgb_hex') {
                         if (!isValidColorRGBHex(defaultVal)) {
-                            throw new Error("Val: " + defaultVal + " is not a valid color rgb hex value.");
+                            throw new Error("column `" + this.name + "` default: " + defaultVal + " is not a valid color rgb hex value.");
                         }
                         // the root type of color is text, so the next switch won't do anything
                     }
@@ -3364,7 +3366,7 @@
                     switch (this.type.rootName) {
                         case "boolean":
                             if (typeof(defaultVal) !== "boolean") {
-                                throw new Error("Val: " + defaultVal + " is not of type boolean.");
+                                throw new Error("column `" + this.name + "` default: " + defaultVal + " is not of type boolean.");
                             }
                             break;
                         case "int2":
@@ -3372,7 +3374,7 @@
                         case "int8":
                             var intVal = parseInt(defaultVal, 10);
                             if (isNaN(intVal)) {
-                                throw new Error("Val: " + intVal + " is not of type integer.");
+                                throw new Error("column `" + this.name + "` default: " + intVal + " is not of type integer.");
                             }
                             break;
                         case "float4":
@@ -3380,7 +3382,7 @@
                         case "numeric":
                             var floatVal = parseFloat(defaultVal);
                             if (isNaN(floatVal)) {
-                                throw new Error("Val: " + floatVal + " is not of type float.");
+                                throw new Error("column `" + this.name + "` default: " + floatVal + " is not of type float.");
                             }
                             break;
                         case "date":
@@ -3389,7 +3391,7 @@
                             // convert using moment, if it doesn't error out, set the value.
                             // try/catch catches this if it does error out and sets it to null
                             if (!module._moment(defaultVal).isValid()) {
-                                throw new Error("Val: " + defaultVal + " is not a valid DateTime value.");
+                                throw new Error("column " + this.name + " default: " + defaultVal + " is not a valid DateTime value.");
                             }
                             break;
                         case "json":
@@ -3402,7 +3404,7 @@
                     }
                     this._default = defaultVal;
                 } catch(e) {
-                    module._log.error(e.message);
+                    module._log.info(e.message);
                     this._default = null;
                 }
             }
