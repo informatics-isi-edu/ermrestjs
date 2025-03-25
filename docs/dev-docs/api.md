@@ -446,7 +446,7 @@ to use for ERMrest JavaScript agents.
         * [.default](#ERMrest.ReferenceColumn+default) : <code>string</code>
         * [.aggregate](#ERMrest.ReferenceColumn+aggregate) : [<code>ColumnAggregateFn</code>](#ERMrest.ColumnAggregateFn)
         * [.groupAggregate](#ERMrest.ReferenceColumn+groupAggregate) : [<code>ColumnGroupAggregateFn</code>](#ERMrest.ColumnGroupAggregateFn)
-        * [.comment](#ERMrest.ReferenceColumn+comment) : <code>string</code>
+        * [.comment](#ERMrest.ReferenceColumn+comment) : <code>Object</code> \| <code>null</code>
         * [.hideColumnHeader](#ERMrest.ReferenceColumn+hideColumnHeader) : <code>boolean</code>
         * [.inputDisabled](#ERMrest.ReferenceColumn+inputDisabled) : <code>boolean</code> \| <code>object</code>
         * [.sortable](#ERMrest.ReferenceColumn+sortable) : <code>boolean</code>
@@ -625,8 +625,8 @@ to use for ERMrest JavaScript agents.
         * [.calculate(chunkSize, fn, fn, fn)](#ERMrest.Checksum+calculate) ⇒ <code>Promise</code>
     * [.upload](#ERMrest.upload)
         * [new upload(file, {otherInfo})](#new_ERMrest.upload_new)
-        * [.validateURL(row)](#ERMrest.upload+validateURL) ⇒ <code>boolean</code>
-        * [.calculateChecksum(row)](#ERMrest.upload+calculateChecksum) ⇒ <code>Promise</code>
+        * [.validateURL(row, linkedData)](#ERMrest.upload+validateURL) ⇒ <code>boolean</code>
+        * [.calculateChecksum(row, linkedData)](#ERMrest.upload+calculateChecksum) ⇒ <code>Promise</code>
         * [.fileExists(jobUrl)](#ERMrest.upload+fileExists) ⇒ <code>Promise</code>
         * [.createUploadJob()](#ERMrest.upload+createUploadJob) ⇒ <code>Promise</code>
         * [.start(startChunkIdx)](#ERMrest.upload+start) ⇒ <code>Promise</code>
@@ -4559,7 +4559,7 @@ count aggregate representation
     * [.default](#ERMrest.ReferenceColumn+default) : <code>string</code>
     * [.aggregate](#ERMrest.ReferenceColumn+aggregate) : [<code>ColumnAggregateFn</code>](#ERMrest.ColumnAggregateFn)
     * [.groupAggregate](#ERMrest.ReferenceColumn+groupAggregate) : [<code>ColumnGroupAggregateFn</code>](#ERMrest.ColumnGroupAggregateFn)
-    * [.comment](#ERMrest.ReferenceColumn+comment) : <code>string</code>
+    * [.comment](#ERMrest.ReferenceColumn+comment) : <code>Object</code> \| <code>null</code>
     * [.hideColumnHeader](#ERMrest.ReferenceColumn+hideColumnHeader) : <code>boolean</code>
     * [.inputDisabled](#ERMrest.ReferenceColumn+inputDisabled) : <code>boolean</code> \| <code>object</code>
     * [.sortable](#ERMrest.ReferenceColumn+sortable) : <code>boolean</code>
@@ -4673,7 +4673,7 @@ Returns the aggregate group object
 **Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
 <a name="ERMrest.ReferenceColumn+comment"></a>
 
-#### referenceColumn.comment : <code>string</code>
+#### referenceColumn.comment : <code>Object</code> \| <code>null</code>
 Documentation for this reference-column
 
 **Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
@@ -6587,8 +6587,8 @@ Calculates  MD5 checksum for a file using spark-md5 library
 
 * [.upload](#ERMrest.upload)
     * [new upload(file, {otherInfo})](#new_ERMrest.upload_new)
-    * [.validateURL(row)](#ERMrest.upload+validateURL) ⇒ <code>boolean</code>
-    * [.calculateChecksum(row)](#ERMrest.upload+calculateChecksum) ⇒ <code>Promise</code>
+    * [.validateURL(row, linkedData)](#ERMrest.upload+validateURL) ⇒ <code>boolean</code>
+    * [.calculateChecksum(row, linkedData)](#ERMrest.upload+calculateChecksum) ⇒ <code>Promise</code>
     * [.fileExists(jobUrl)](#ERMrest.upload+fileExists) ⇒ <code>Promise</code>
     * [.createUploadJob()](#ERMrest.upload+createUploadJob) ⇒ <code>Promise</code>
     * [.start(startChunkIdx)](#ERMrest.upload+start) ⇒ <code>Promise</code>
@@ -6603,8 +6603,8 @@ Calculates  MD5 checksum for a file using spark-md5 library
 #### new upload(file, {otherInfo})
 upload Object
 Create a new instance with new upload(file, otherInfo)
-To validate url generation for a file call validateUrl(row) with row of data
-To calculate checksum call calculateChecksum(row) with row of data
+To validate url generation for a file call validateUrl(row, linkedData) with row of data and the fk data
+To calculate checksum call calculateChecksum(row, linkedData) with row of data and the fk data
 To check for existing file call fileExists()
 To create an upload call createUploadJob()
 To start uploading, call start()
@@ -6621,7 +6621,7 @@ Cancel with cancel()
 
 <a name="ERMrest.upload+validateURL"></a>
 
-#### upload.validateURL(row) ⇒ <code>boolean</code>
+#### upload.validateURL(row, linkedData) ⇒ <code>boolean</code>
 Call this function with the ERMrestJS column object and the json object row To determine it is able to generate a url
 If any properties in the template are found null without null handling then return false
 
@@ -6630,10 +6630,11 @@ If any properties in the template are found null without null handling then retu
 | Param | Type | Description |
 | --- | --- | --- |
 | row | <code>object</code> | row object containing keyvalues of entity |
+| linkedData | <code>object</code> | object containing the linked data (outbound fk values) |
 
 <a name="ERMrest.upload+calculateChecksum"></a>
 
-#### upload.calculateChecksum(row) ⇒ <code>Promise</code>
+#### upload.calculateChecksum(row, linkedData) ⇒ <code>Promise</code>
 Call this function to calculate checksum before uploading to server
 
 **Kind**: instance method of [<code>upload</code>](#ERMrest.upload)  
@@ -6644,6 +6645,7 @@ and notified with a progress handler, sending number in bytes done
 | Param | Type | Description |
 | --- | --- | --- |
 | row | <code>object</code> | row object containing keyvalues of entity |
+| linkedData | <code>object</code> | object containing the linked data (outbound fk values) |
 
 <a name="ERMrest.upload+fileExists"></a>
 

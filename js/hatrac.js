@@ -271,8 +271,8 @@ var ERMrest = (function(module) {
     /**
      * @desc upload Object
      * Create a new instance with new upload(file, otherInfo)
-     * To validate url generation for a file call validateUrl(row) with row of data
-     * To calculate checksum call calculateChecksum(row) with row of data
+     * To validate url generation for a file call validateUrl(row, linkedData) with row of data and the fk data
+     * To calculate checksum call calculateChecksum(row, linkedData) with row of data and the fk data
      * To check for existing file call fileExists()
      * To create an upload call createUploadJob()
      * To start uploading, call start()
@@ -333,10 +333,11 @@ var ERMrest = (function(module) {
      * @desc Call this function with the ERMrestJS column object and the json object row To determine it is able to generate a url
      * If any properties in the template are found null without null handling then return false
      * @param {object} row - row object containing keyvalues of entity
+     * @param {object} linkedData - object containing the linked data (outbound fk values)
      *
      * @returns {boolean}
      */
-    upload.prototype.validateURL = function(row) {
+    upload.prototype.validateURL = function(row, linkedData) {
 
         if (this.column.urlPattern) {
 
@@ -364,7 +365,7 @@ var ERMrest = (function(module) {
             ignoredColumns.push(this.column.name + ".filename_ext");
 
             // TODO we can improve this (should not rely on _validateTemplate to format them)
-            return module._validateTemplate(template, row, this.reference.table, this.reference._context, { ignoredColumns: ignoredColumns, templateEngine: this.column.templateEngine });
+            return module._validateTemplate(template, row, linkedData, this.reference.table, this.reference._context, { ignoredColumns: ignoredColumns, templateEngine: this.column.templateEngine });
         }
 
         return true;
@@ -374,19 +375,20 @@ var ERMrest = (function(module) {
     /**
      * @desc Call this function to calculate checksum before uploading to server
      * @param {object} row - row object containing keyvalues of entity
+     * @param {object} linkedData - object containing the linked data (outbound fk values)
      *
      * @returns {Promise} A promise resolved with a url where we will upload the file
      * or rejected with error if unable to calculate checkum
      * and notified with a progress handler, sending number in bytes done
      */
-    upload.prototype.calculateChecksum = function(row) {
+    upload.prototype.calculateChecksum = function(row, linkedData) {
         this.erred = false;
         var deferred = module._q.defer();
 
         // If the hash is calculated then simply generate the url
         // and notify and reoslve the promise
         if (this.hash && (this.hash.md5_base64 || this.hash.sha256)) {
-            this._generateURL(row);
+            this._generateURL(row, linkedData);
             deferred.notify(this.file.size);
             deferred.resolve(this.url);
             return deferred.promise;
@@ -399,7 +401,7 @@ var ERMrest = (function(module) {
         this.hash.calculate(this.PART_SIZE, function(uploaded, fileSize) {
             deferred.notify(uploaded);
         }, function() {
-            self._generateURL(row);
+            self._generateURL(row, linkedData);
             deferred.resolve(self.url);
         }, function(err) {
             deferred.reject(new Error( ((err && err.message) ? err.message : "Unable to calculate checksum for file") + " " + self.file.name ));
@@ -842,10 +844,11 @@ var ERMrest = (function(module) {
      * @private
      * @desc Call this function with the json row object to  generate an upload url
      * @param {object} row - row object containing keyvalues of entity
+     * @param {object} linkedData - object containing the linked data (outbound fk values)
      *
      * @returns {string}
      */
-    upload.prototype._generateURL = function(row) {
+    upload.prototype._generateURL = function(row, linkedData) {
 
         var template = this.column.urlPattern;
 
@@ -873,7 +876,7 @@ var ERMrest = (function(module) {
 
         // TODO should use the tuple.templateVariables
         // the hatrac value in row is an object, which can be improved
-        var keyValues = module._getFormattedKeyValues(this.reference.table, this.reference._context, row);
+        var keyValues = module._getFormattedKeyValues(this.reference.table, this.reference._context, row, linkedData);
 
         var url = module._renderTemplate(template, keyValues, this.reference.table.schema.catalog, { avoidValidation: true, templateEngine: this.column.templateEngine });
 

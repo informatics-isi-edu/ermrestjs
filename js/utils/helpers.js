@@ -3582,7 +3582,7 @@
      * @param  {Array.<string>=} ignoredColumns the columns that should be ignored (optional)
      * @return {boolean} True if the template is valid.
      */
-    module._validateTemplate = function (template, data, table, context, options) {
+    module._validateTemplate = function (template, data, linkedData, table, context, options) {
 
         var ignoredColumns;
         if (typeof options !== undefined && Array.isArray(options.ignoredColumns)) {
@@ -3599,7 +3599,7 @@
                 });
             }
 
-            data = module._getFormattedKeyValues(table, context, data);
+            data = module._getFormattedKeyValues(table, context, data, linkedData);
         }
 
         if (module._getTemplateEngine(options.templateEngine) === module.TEMPLATE_ENGINES.HANDLEBARS) {

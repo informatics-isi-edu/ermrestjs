@@ -298,7 +298,7 @@ ReferenceColumn.prototype = {
 
     /**
      * @desc Documentation for this reference-column
-     * @type {string}
+     * @type {Object | null} {isHTML: boolean, value: string, displayMode: 'tooltip'|'inline'}
      */
     get comment() {
         if (this._comment === undefined) {
