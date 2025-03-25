@@ -446,7 +446,7 @@ to use for ERMrest JavaScript agents.
         * [.default](#ERMrest.ReferenceColumn+default) : <code>string</code>
         * [.aggregate](#ERMrest.ReferenceColumn+aggregate) : [<code>ColumnAggregateFn</code>](#ERMrest.ColumnAggregateFn)
         * [.groupAggregate](#ERMrest.ReferenceColumn+groupAggregate) : [<code>ColumnGroupAggregateFn</code>](#ERMrest.ColumnGroupAggregateFn)
-        * [.comment](#ERMrest.ReferenceColumn+comment) : <code>string</code>
+        * [.comment](#ERMrest.ReferenceColumn+comment) : <code>Object</code> \| <code>null</code>
         * [.hideColumnHeader](#ERMrest.ReferenceColumn+hideColumnHeader) : <code>boolean</code>
         * [.inputDisabled](#ERMrest.ReferenceColumn+inputDisabled) : <code>boolean</code> \| <code>object</code>
         * [.sortable](#ERMrest.ReferenceColumn+sortable) : <code>boolean</code>
@@ -4559,7 +4559,7 @@ count aggregate representation
     * [.default](#ERMrest.ReferenceColumn+default) : <code>string</code>
     * [.aggregate](#ERMrest.ReferenceColumn+aggregate) : [<code>ColumnAggregateFn</code>](#ERMrest.ColumnAggregateFn)
     * [.groupAggregate](#ERMrest.ReferenceColumn+groupAggregate) : [<code>ColumnGroupAggregateFn</code>](#ERMrest.ColumnGroupAggregateFn)
-    * [.comment](#ERMrest.ReferenceColumn+comment) : <code>string</code>
+    * [.comment](#ERMrest.ReferenceColumn+comment) : <code>Object</code> \| <code>null</code>
     * [.hideColumnHeader](#ERMrest.ReferenceColumn+hideColumnHeader) : <code>boolean</code>
     * [.inputDisabled](#ERMrest.ReferenceColumn+inputDisabled) : <code>boolean</code> \| <code>object</code>
     * [.sortable](#ERMrest.ReferenceColumn+sortable) : <code>boolean</code>
@@ -4673,7 +4673,7 @@ Returns the aggregate group object
 **Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  
 <a name="ERMrest.ReferenceColumn+comment"></a>
 
-#### referenceColumn.comment : <code>string</code>
+#### referenceColumn.comment : <code>Object</code> \| <code>null</code>
 Documentation for this reference-column
 
 **Kind**: instance property of [<code>ReferenceColumn</code>](#ERMrest.ReferenceColumn)  

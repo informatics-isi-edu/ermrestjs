@@ -3346,11 +3346,11 @@
         get default () {
             if (this._default === undefined) {
                 var defaultVal = this._jsonColumn.default;
-                
+
                 // If the column typename is in the list of types to ignore setting the default for, just use null
                 if (module._ignoreDefaultsNames.includes(this.name)) {
                     this._default = null;
-                    return this._default;return;
+                    return this._default;
                 }
 
                 try {
