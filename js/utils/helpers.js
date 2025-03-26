@@ -87,6 +87,19 @@
     };
 
     /**
+     * Make sure the text is not rendered as HTML (by replacing speciall characters).
+     * @param {string} text 
+     * @returns HTML-escaped text
+     */
+    module.escapeHTML = function (text) {
+        return String(text).replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#39;");
+    };
+
+    /**
      * Returns true if given parameter is not undefined and not null
      * @param  {*} obj
      * @return {boolean}

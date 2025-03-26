@@ -3,5 +3,12 @@
 {"id":"1003","json_col":{"name":"test"},"jsonb_col":{"name":"test"},"json_col_with_markdownpattern":"Analysed", "col_markdown_blankable": null},
 {"id":"1004","json_col":false,"jsonb_col":false,"json_col_with_markdownpattern":"Shipped", "col_markdown_blankable": {"url":"https://madeby.google.com/abc.jpeg"}},
 {"id":"1005","json_col":2.9,"jsonb_col":2.9,"json_col_with_markdownpattern":"OnHold", "col_markdown_blankable": false},
-{"id":"1006","json_col":"","jsonb_col":"","json_col_with_markdownpattern":"Complete", "col_markdown_blankable": {"url": "myurl"}}
+{"id":"1006","json_col":"","jsonb_col":"","json_col_with_markdownpattern":"Complete", "col_markdown_blankable": {"url": "myurl"}},
+{
+  "id":"1007",
+  "json_col": {"value": "<script>alert('test')</script>", "value2": "<a href='example.com'>click</a>"},
+  "jsonb_col": "<script>alert('test!')</script>",
+  "json_col_with_markdownpattern": null,
+  "col_markdown_blankable": null
+}
 ]

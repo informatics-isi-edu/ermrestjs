@@ -3011,6 +3011,8 @@
                     return { isHTML: false, value: this._getNullValue(context), unformatted: this._getNullValue(context) };
                 }
 
+                // <pre> will render the html tags, so we have to make sure the tags are escaped.
+                formattedValue = module.escapeHTML(formattedValue);
                 return { isHTML: true, value: '<pre>' + formattedValue + '</pre>', unformatted: formattedValue};
             }
 
