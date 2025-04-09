@@ -1,201 +1,204 @@
-var _scriptsLoaded = false, _defers = [];
+// import DeferredPromise from '@isrd-isi-edu/ermrestjs/src/models/deferred-promise';
+import { _injectHandlebarHelpers } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
 
-// Check for whether the environment is Node.js or Browser
-if (typeof module === 'object' && module.exports && typeof require === 'function') {
+// TODO 2025-refactoring is this file needed anymore?
 
-    /*
-     *  Call configure with node.js axios package for Http and
-     *  q library for promise
-     */
-    ERMrest.configure(require('axios'), require('q'));
+// let _scriptsLoaded = false;
+// let _defers = [];
 
-    /*
-     * Expose authCookie function, to reset ermrest cookie
-     * NOTE meant to be used only in node environments
-     */
-    ERMrest.resetUserCookie = function() {
-        ERMrest._http.defaults.headers.common.Cookie = '';
-    };
+// // Check for whether the environment is Node.js or Browser
+// if (typeof module === 'object' && module.exports && typeof require === 'function') {
 
-    /*
-     * Expose authCookie function, to set ermrest cookie
-     * NOTE meant to be used only in node environments
-     */
-    ERMrest.setUserCookie = function(authCookie) {
-        ERMrest._http.defaults.withCredentials = true;
-        ERMrest._http.defaults.headers.common.Cookie = authCookie || '';
-    };
+//     /*
+//      *  Call configure with node.js axios package for Http and
+//      *  q library for promise
+//      */
+//     ERMrest.configure(require('axios'), require('q'));
 
-    /*
-     * Inject _moment module in ERMrest
-     */
-    ERMrest._moment = require('../vendor/moment.min.js');
+//     /*
+//      * Expose authCookie function, to reset ermrest cookie
+//      * NOTE meant to be used only in node environments
+//      */
+//     ERMrest.resetUserCookie = function() {
+//         ERMrest._http.defaults.headers.common.Cookie = '';
+//     };
 
-    /*
-     * Inject _mustache module in ERMrest
-     */
-    ERMrest._mustache = require('../vendor/mustache.min.js');
+//     /*
+//      * Expose authCookie function, to set ermrest cookie
+//      * NOTE meant to be used only in node environments
+//      */
+//     ERMrest.setUserCookie = function(authCookie) {
+//         ERMrest._http.defaults.withCredentials = true;
+//         ERMrest._http.defaults.headers.common.Cookie = authCookie || '';
+//     };
 
-    /*
-     * Inject _handlebars module in ERMrest as well as its helpers
-     */
-    ERMrest._handlebars = require('../vendor/handlebars.min.js');
-    ERMrest._injectHandlebarHelpers();
+//     /*
+//      * Inject _moment module in ERMrest
+//      */
+//     ERMrest._moment = require('../vendor/moment.min.js');
 
-    /*
-     * Inject _markdownIt module in ERMrest
-     * Make markdownit use Sub, Sup and Attrs plugin
-     */
-    ERMrest._markdownIt = require('../vendor/markdown-it.min.js')({ typographer : true, breaks: true })
-                            .use(require('../vendor/markdown-it-sub.min.js')) // add subscript support
-                            .use(require('../vendor/markdown-it-sup.min.js')) // add superscript support;
-                            .use(require('../vendor/markdown-it-span.js')) // add span support
-                            .use(require('../vendor/markdown-it-escape')) // add escape support
-                            .use(require('../vendor/markdown-it-attrs.js')); // add attrs support
+//     /*
+//      * Inject _mustache module in ERMrest
+//      */
+//     ERMrest._mustache = require('../vendor/mustache.min.js');
 
+//     /*
+//      * Inject _handlebars module in ERMrest as well as its helpers
+//      */
+//     ERMrest._handlebars = require('../vendor/handlebars.min.js');
+//     ERMrest._injectHandlebarHelpers();
 
-    // set custom markdown tags using markdown-it-container plugin
-    // (using the local version to ensure consistency between browser and node versions)
-    ERMrest._bindCustomMarkdownTags(ERMrest._markdownIt, require("../vendor/markdown-it-container.min.js"));
+//     /*
+//      * Inject _markdownIt module in ERMrest
+//      * Make markdownit use Sub, Sup and Attrs plugin
+//      */
+//     ERMrest._markdownIt = require('../vendor/markdown-it.min.js')({ typographer : true, breaks: true })
+//                             .use(require('../vendor/markdown-it-sub.min.js')) // add subscript support
+//                             .use(require('../vendor/markdown-it-sup.min.js')) // add superscript support;
+//                             .use(require('../vendor/markdown-it-span.js')) // add span support
+//                             .use(require('../vendor/markdown-it-escape')) // add escape support
+//                             .use(require('../vendor/markdown-it-attrs.js')); // add attrs support
 
-    ERMrest._LZString = require('../vendor/lz-string.min.js');
+//     // set custom markdown tags using markdown-it-container plugin
+//     // (using the local version to ensure consistency between browser and node versions)
+//     ERMrest._bindCustomMarkdownTags(ERMrest._markdownIt, require("../vendor/markdown-it-container.min.js"));
 
-    ERMrest._SparkMD5 = require('../vendor/spark-md5.min.js');
+//     ERMrest._LZString = require('../vendor/lz-string.min.js');
 
-    _scriptsLoaded = true;
+//     ERMrest._SparkMD5 = require('../vendor/spark-md5.min.js');
 
-    /*
-     * Set ERMrest as a module
-     */
-    module.exports = ERMrest;
-} else {
-    /*
-     * Set ERMrest in window scope
-     */
-    window.ERMrest = ERMrest;
+//     _scriptsLoaded = true;
 
-    /*
-     * Utility function to load a script in the page, which invokes the callback once the script has loaded
-     * after a 20ms timeout to allow it to load
-     */
-    var loadScript = function (url, callback) {
-      // already injected
-      scriptTag = document.querySelector('script[src^="' + url + '"]');
-      if (scriptTag) {
-          if (typeof callback !== "undefined") {
-              if (typeof ermrestjsVendorFileLoaded === "undefined") {
-                  // script tag added but the file is not loaded
-                  scriptTag.addEventListener('load', callback);
-              } else {
-                  // the file is completely loaded
-                  callback();
-              }
-          }
-          return;
-      }
+//     /*
+//      * Set ERMrest as a module
+//      */
+//     module.exports = ERMrest;
+// } else {
+//     /*
+//      * Set ERMrest in window scope
+//      */
+//     window.ERMrest = ERMrest;
 
-      // ermrestjsBuildVersion variable is added in the makefile by the pre-generate-files-for-build command
-      url += "?v=" + ermrestjsBuildVariables.buildVersion;
+//     /*
+//      * Utility function to load a script in the page, which invokes the callback once the script has loaded
+//      * after a 20ms timeout to allow it to load
+//      */
+//     var loadScript = function (url, callback) {
+//       // already injected
+//       scriptTag = document.querySelector('script[src^="' + url + '"]');
+//       if (scriptTag) {
+//           if (typeof callback !== "undefined") {
+//               if (typeof ermrestjsVendorFileLoaded === "undefined") {
+//                   // script tag added but the file is not loaded
+//                   scriptTag.addEventListener('load', callback);
+//               } else {
+//                   // the file is completely loaded
+//                   callback();
+//               }
+//           }
+//           return;
+//       }
 
-      /* Load script from url and calls callback once it's loaded */
-      scriptTag = document.createElement('script');
-      scriptTag.setAttribute("type", "text/javascript");
-      scriptTag.setAttribute("src", url);
-      if (typeof callback !== "undefined") {
-          scriptTag.addEventListener('load', callback);
-      }
-      (document.getElementsByTagName("head")[0] || document.documentElement).appendChild(scriptTag);
-    };
+//       // ermrestjsBuildVersion variable is added in the makefile by the pre-generate-files-for-build command
+//       url += "?v=" + ermrestjsBuildVariables.buildVersion;
 
-    /*
-     * Utility function to include multiple scripts in the page, and then invoke the callback
-     */
-    var loadScripts = function(urls, callback) {
-        var count = 0;
-        urls.forEach(function(url) {
-            loadScript(url, function() {
-              if (++count == urls.length) callback();
-            });
-        });
-    };
+//       /* Load script from url and calls callback once it's loaded */
+//       scriptTag = document.createElement('script');
+//       scriptTag.setAttribute("type", "text/javascript");
+//       scriptTag.setAttribute("src", url);
+//       if (typeof callback !== "undefined") {
+//           scriptTag.addEventListener('load', callback);
+//       }
+//       (document.getElementsByTagName("head")[0] || document.documentElement).appendChild(scriptTag);
+//     };
 
-    /*
-     * Call this function to load all dependent scripts in order
-     * NOTE: This function does not always preserve the order of loading scripts
-     */
-    loadScripts([
-        ermrestjsBuildVariables.ermrestjsBasePath + "ermrest.vendor.min.js"
-    ],
-        function() {
-            /*
-             * Inject _moment-timezone module in ERMrest as moment
-             */
-            ERMrest._moment = window.moment;
+//     /*
+//      * Utility function to include multiple scripts in the page, and then invoke the callback
+//      */
+//     var loadScripts = function(urls, callback) {
+//         var count = 0;
+//         urls.forEach(function(url) {
+//             loadScript(url, function() {
+//               if (++count == urls.length) callback();
+//             });
+//         });
+//     };
 
-            /*
-             * Inject _mustache module in Ermrest
-             */
-            ERMrest._mustache = window.Mustache;
+//     /*
+//      * Call this function to load all dependent scripts in order
+//      * NOTE: This function does not always preserve the order of loading scripts
+//      */
+//     loadScripts([
+//         ermrestjsBuildVariables.ermrestjsBasePath + "ermrest.vendor.min.js"
+//     ],
+//         function() {
+//             /*
+//              * Inject _moment-timezone module in ERMrest as moment
+//              */
+//             ERMrest._moment = window.moment;
 
-            /*
-             * Inject _handlebars module in Ermrest as well as its helpers
-             */
-            ERMrest._handlebars = window.Handlebars;
-            ERMrest._injectHandlebarHelpers();
+//             /*
+//              * Inject _mustache module in Ermrest
+//              */
+//             ERMrest._mustache = window.Mustache;
 
-            /*
-             * Inject _markdownIt module in ERMrest
-             * Make markdownit use Sub, Sup and Attrs plugin
-             */
-            ERMrest._markdownIt = window.markdownit({ typographer : true, breaks: true })
-                    .use(window.markdownitSub)
-                    .use(window.markdownitSup)
-                    .use(window.markdownItAttrs)
-                    .use(window.markdownitSpan)
-                    .use(window.markdownitEscape);
+//             /*
+//              * Inject _handlebars module in Ermrest as well as its helpers
+//              */
+//             ERMrest._handlebars = window.Handlebars;
+//             ERMrest._injectHandlebarHelpers();
 
-            // set custom markdown tags using markdown-it-container plugin
-            ERMrest._bindCustomMarkdownTags(ERMrest._markdownIt, markdownitContainer);
+//             /*
+//              * Inject _markdownIt module in ERMrest
+//              * Make markdownit use Sub, Sup and Attrs plugin
+//              */
+//             ERMrest._markdownIt = window.markdownit({ typographer : true, breaks: true })
+//                     .use(window.markdownitSub)
+//                     .use(window.markdownitSup)
+//                     .use(window.markdownItAttrs)
+//                     .use(window.markdownitSpan)
+//                     .use(window.markdownitEscape);
 
-            ERMrest._LZString = window.LZString;
+//             // set custom markdown tags using markdown-it-container plugin
+//             ERMrest._bindCustomMarkdownTags(ERMrest._markdownIt, markdownitContainer);
 
-            ERMrest._SparkMD5 = window.SparkMD5;
+//             ERMrest._LZString = window.LZString;
 
-            _scriptsLoaded = true;
+//             ERMrest._SparkMD5 = window.SparkMD5;
 
-            if (_defers.length) {
-                _defers.forEach(function(defer) {
-                    defer.resolve(ERMrest);
-                });
-            }
+//             _scriptsLoaded = true;
 
-    });
+//             if (_defers.length) {
+//                 _defers.forEach(function(defer) {
+//                     defer.resolve(ERMrest);
+//                 });
+//             }
 
-}
+//     });
+
+// }
+
+_injectHandlebarHelpers();
 
 /**
- * @function
- * @private
- * @returns {Promise} A promise for {@link ERMrest} scripts loaded,
  * This function is used by http. It resolves promises by calling this function
  * to make sure thirdparty scripts are loaded.
  */
-ERMrest.onload = function() {
-    var defer = ERMrest._q.defer();
+export function onload() {
+  return Promise.resolve();
+  // const defer = new DeferredPromise();
 
-    if (_scriptsLoaded) defer.resolve(ERMrest);
-    else _defers.push(defer);
+  // if (_scriptsLoaded) defer.resolve();
+  // else _defers.push(defer);
 
-    return defer.promise;
-};
+  // return defer.promise;
+}
 
-
-var startTime = Date.now();
+const startTime = Date.now();
 /**
- * @function
  * @returns {integer} A value set to determine the elapsed time
  * since the ermrestJS has been available (milliseconds).
  */
-ERMrest.getElapsedTime = function () {
-    return Date.now() - startTime;
-};
+export function getElapsedTime() {
+  return Date.now() - startTime;
+}

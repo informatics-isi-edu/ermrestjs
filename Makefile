@@ -105,8 +105,12 @@ API=$(DOC)/api.md
 LINT=.make-lint
 
 # Build rule
-$(DIST): print_variables $(DIST)/$(PKG) $(DIST)/$(MIN_LIB) $(DIST)/$(VER)
-	@touch $(DIST)
+dist: print_variables
+	@npx tsc && npx vite build
+	@cp $(DIST)/$(PKG) $(DIST)/$(MIN)
+
+# $(DIST): print_variables $(DIST)/$(PKG) $(DIST)/$(MIN_LIB) $(DIST)/$(VER)
+# 	@touch $(DIST)
 
 # Rule to build the version number file
 $(DIST)/$(VER): $(SOURCE) $(BIN)
