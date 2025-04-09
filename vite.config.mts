@@ -19,11 +19,12 @@ export default defineConfig({
           entryFileNames: 'ermrest.js',
           inlineDynamicImports: true,
         },
-        // {
-        //   name: 'ERMrest',
-        //   format: 'cjs',
-        //   entryFileNames: 'ermrest.cjs',
-        // },
+        {
+          name: 'ERMrest',
+          format: 'umd',
+          entryFileNames: 'ermrest.min.js',
+          inlineDynamicImports: true,
+        },
       ],
     },
     commonjsOptions: {

@@ -2,19 +2,31 @@
 /* eslint-disable prettier/prettier */
 import { ArrayBuffer } from 'spark-md5';
 
+// models
+import DeferredPromise from '@isrd-isi-edu/ermrestjs/src/models/deferred-promise';
+import { MalformedURIError } from '@isrd-isi-edu/ermrestjs/src/models/errors';
+
+// services
+import ErrorService from '@isrd-isi-edu/ermrestjs/src/services/error';
+import HTTPService from '@isrd-isi-edu/ermrestjs/src/services/http';
+
+// utils
+import { hexToBase64 } from '@isrd-isi-edu/ermrestjs/src/utils/value-utils';
 import { isObject } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
 import { contextHeaderName, ENV_IS_NODE } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
 
+// legacy
+import { _validateTemplate, _renderTemplate, _getFormattedKeyValues, _parseUrl } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
+
 const FILENAME_REGEXP = /[^a-zA-Z0-9_.-]/gi;
-// TODO 2025-refactoring
-// var blobSlice;
 // // Check for whether the environment is Node.js or Browser
-// if (ENV_IS_NODE) {
-//     blobSlice =  Buffer.prototype.slice;
-// } else {
-//     blobSlice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice;
-// }
-const blobSlice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice;
+var blobSlice;
+if (ENV_IS_NODE) {
+  // eslint-disable-next-line no-undef
+  blobSlice = Buffer.prototype.slice;
+} else {
+  blobSlice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice;
+}
 
 /**
  * @memberof ERMrest
@@ -216,6 +228,7 @@ export function Upload(file, otherInfo) {
   if (!this.file) throw new Error('No file provided while creating hatrac file object');
 
   this.storedFilename = file.name; // the name that will be used for content-disposition and filename column
+  // eslint-disable-next-line @typescript-eslint/no-require-imports, no-undef
   if (ENV_IS_NODE) this.file.buffer = require('fs').readFileSync(file.path);
 
   this.column = otherInfo.column;
@@ -297,7 +310,7 @@ Upload.prototype.validateURL = function (row, linkedData) {
  */
 Upload.prototype.calculateChecksum = function (row, linkedData) {
   this.erred = false;
-  var deferred = _q.defer();
+  var deferred = new DeferredPromise();
 
   // If the hash is calculated then simply generate the url
   // and notify and reoslve the promise
@@ -313,7 +326,7 @@ Upload.prototype.calculateChecksum = function (row, linkedData) {
   var self = this;
   this.hash.calculate(
     this.PART_SIZE,
-    function (Uploaded, fileSize) {
+    function (Uploaded) {
       deferred.notify(Uploaded);
     },
     function () {
@@ -341,7 +354,7 @@ Upload.prototype.calculateChecksum = function (row, linkedData) {
 Upload.prototype.fileExists = function (previousJobUrl, contextHeaderParams) {
   var self = this;
 
-  var deferred = _q.defer();
+  var deferred = new DeferredPromise();
 
   if (!contextHeaderParams || !isObject(contextHeaderParams)) {
     contextHeaderParams = {
@@ -357,7 +370,7 @@ Upload.prototype.fileExists = function (previousJobUrl, contextHeaderParams) {
 
   this.http.head(this._getAbsoluteUrl(this.url), config).then(
     function (response) {
-      var headers = getResponseHeader(response);
+      var headers = HTTPService.getResponseHeader(response);
       var md5 = headers['content-md5'];
       var length = headers['content-length'];
       var contentDisposition = headers['content-disposition'];
@@ -386,7 +399,7 @@ Upload.prototype.fileExists = function (previousJobUrl, contextHeaderParams) {
         config.headers['content-type'] = 'text/plain';
 
         return self.http.put(url, data, config).then(
-          function (response) {
+          function () {
             // mark as completed and job done since this is a metadata update request that doesn't transfer file data
             self.isPaused = false;
             self.completed = true;
@@ -395,7 +408,7 @@ Upload.prototype.fileExists = function (previousJobUrl, contextHeaderParams) {
             deferred.resolve(self.url);
           },
           function (response) {
-            var error = responseToError(response);
+            var error = ErrorService.responseToError(response);
             deferred.reject(error);
           },
         );
@@ -404,7 +417,7 @@ Upload.prototype.fileExists = function (previousJobUrl, contextHeaderParams) {
       self.isPaused = false;
       self.completed = true;
       self.jobDone = true;
-      self.versionedUrl = getResponseHeader(response)['content-location'];
+      self.versionedUrl = HTTPService.getResponseHeader(response)['content-location'];
       deferred.resolve(self.url);
     },
     function (response) {
@@ -420,7 +433,7 @@ Upload.prototype.fileExists = function (previousJobUrl, contextHeaderParams) {
         if (previousJobUrl) self.chunkUrl = previousJobUrl;
         deferred.resolve(self.url);
       } else {
-        deferred.reject(responseToError(response));
+        deferred.reject(ErrorService.responseToError(response));
       }
     },
   );
@@ -438,7 +451,7 @@ Upload.prototype.createUploadJob = function (contextHeaderParams) {
   var self = this;
   this.erred = false;
 
-  var deferred = _q.defer();
+  var deferred = new DeferredPromise();
 
   if (this.completed && this.jobDone) {
     deferred.resolve(this.chunkUrl);
@@ -488,12 +501,12 @@ Upload.prototype.createUploadJob = function (contextHeaderParams) {
     .then(
       function (response) {
         if (response) {
-          self.chunkUrl = getResponseHeader(response).location;
+          self.chunkUrl = HTTPService.getResponseHeader(response).location;
           deferred.resolve(self.chunkUrl);
         }
       },
       function (response) {
-        var error = responseToError(response);
+        var error = ErrorService.responseToError(response);
         deferred.reject(error);
       },
     );
@@ -516,7 +529,7 @@ Upload.prototype.start = function (startChunkIdx) {
 
   this.erred = false;
 
-  var deferred = _q.defer();
+  var deferred = new DeferredPromise();
 
   this.UploadPromise = deferred;
 
@@ -534,7 +547,6 @@ Upload.prototype.start = function (startChunkIdx) {
   // else directly start Uploading the chunks
   if (!this.isPaused || this.chunks.length === 0) {
     var start = 0;
-    var blob;
     var index = 0;
     this.chunks = [];
 
@@ -543,7 +555,7 @@ Upload.prototype.start = function (startChunkIdx) {
       return deferred.promise;
     } else {
       while (start < this.file.size) {
-        end = Math.min(start + this.PART_SIZE, this.file.size);
+        const end = Math.min(start + this.PART_SIZE, this.file.size);
         var chunk = new Chunk(index++, start, end);
         this.chunks.push(chunk);
         start = end;
@@ -559,8 +571,6 @@ Upload.prototype.start = function (startChunkIdx) {
   }
 
   this.isPaused = false;
-  var part = 0;
-
   this.chunkQueue = [];
 
   this.chunks.forEach(function (chunk, idx) {
@@ -569,7 +579,6 @@ Upload.prototype.start = function (startChunkIdx) {
 
     chunk.retryCount = 0;
     self.chunkQueue.push(chunk);
-    part++;
   });
 
   for (var i = 0; i < this.CHUNK_QUEUE_SIZE; i++) {
@@ -589,7 +598,7 @@ Upload.prototype.start = function (startChunkIdx) {
 Upload.prototype.completeUpload = function (contextHeaderParams) {
   var self = this;
 
-  var deferred = _q.defer();
+  var deferred = new DeferredPromise();
 
   if (this.completed && this.jobDone) {
     deferred.resolve(this.versionedUrl ? this.versionedUrl : this.url);
@@ -614,17 +623,17 @@ Upload.prototype.completeUpload = function (contextHeaderParams) {
     function (response) {
       self.jobDone = true;
 
-      var loc = getResponseHeader(response).location;
+      var loc = HTTPService.getResponseHeader(response).location;
       if (loc) {
         var versionedUrl = loc;
         self.versionedUrl = versionedUrl;
         deferred.resolve(versionedUrl);
       } else {
-        deferred.reject(responseToError(response));
+        deferred.reject(ErrorService.responseToError(response));
       }
     },
     function (response) {
-      deferred.reject(responseToError(response));
+      deferred.reject(HTTPService.responseToError(response));
     },
   );
 
@@ -665,7 +674,7 @@ Upload.prototype.resume = function () {
  * @returns {Promise}
  */
 Upload.prototype.cancel = function (deleteJob) {
-  var deferred = _q.defer();
+  var deferred = new DeferredPromise();
 
   // If the Upload has completed and complete job call has been made then
   // We directly resolve the promise setting progress as 0 and xhr as null for each chunk
@@ -686,8 +695,6 @@ Upload.prototype.cancel = function (deleteJob) {
   }
 
   // Set isPaused, completed and jobDone to false
-  var self = this;
-
   this.isPaused = true;
 
   // Iterate over each chunk to abort the HTTP call
@@ -712,7 +719,7 @@ Upload.prototype.cancel = function (deleteJob) {
  * @returns {Promise}
  */
 Upload.prototype.deleteFile = function (contextHeaderParams) {
-  var deferred = _q.defer();
+  var deferred = new DeferredPromise();
 
   if (!contextHeaderParams || !isObject(contextHeaderParams)) {
     contextHeaderParams = {
@@ -727,11 +734,11 @@ Upload.prototype.deleteFile = function (contextHeaderParams) {
   };
 
   this.http.delete(this._getAbsoluteUrl(this.url), config).then(
-    function (response) {
+    function () {
       deferred.resolve();
     },
-    function () {
-      deferred.reject(responseToError(response));
+    function (err) {
+      deferred.reject(ErrorService.responseToError(err));
     },
   );
 
@@ -853,7 +860,7 @@ Upload.prototype._generateURL = function (row, linkedData) {
  * @returns {Promise}
  */
 Upload.prototype._getExistingJobStatus = function () {
-  var deferred = _q.defer();
+  var deferred = new DeferredPromise();
 
   var contextHeaderParams = {
     action: 'Upload/status',
@@ -938,8 +945,8 @@ Upload.prototype._updateProgressBar = function () {
  *
  * @returns {Promise}
  */
-Upload.prototype._cancelUploadJob = function (url) {
-  var deferred = _q.defer();
+Upload.prototype._cancelUploadJob = function () {
+  var deferred = new DeferredPromise();
 
   var contextHeaderParams = {
     action: 'Upload/cancel',
@@ -956,7 +963,7 @@ Upload.prototype._cancelUploadJob = function (url) {
       function () {
         deferred.resolve();
       },
-      function (err) {
+      function () {
         deferred.resolve();
       },
     );
@@ -975,7 +982,7 @@ Upload.prototype._cancelUploadJob = function (url) {
 Upload.prototype._onUploadError = function (response) {
   if (this.erred) return;
   this.erred = true;
-  this.UploadPromise.reject(responseToError(response));
+  this.UploadPromise.reject(ErrorService.responseToError(response));
 };
 
 /**
@@ -1007,7 +1014,7 @@ var Chunk = function (index, start, end) {
  * @param {Upload} {Upload} - An instance of the Upload to which this chunk belongs
  */
 Chunk.prototype.sendToHatrac = function (Upload) {
-  var deferred = _q.defer();
+  var deferred = new DeferredPromise();
 
   if (this.xhr || this.completed) {
     this.progress = this.size;
@@ -1024,12 +1031,12 @@ Chunk.prototype.sendToHatrac = function (Upload) {
   // blob is the sliced version of the file from start and end index
   var blob;
   if (ENV_IS_NODE) {
+    // eslint-disable-next-line no-undef
     blob = Buffer.prototype.slice.call(Upload.file.buffer, this.start, this.end);
   } else {
     blob = Upload.file.slice(this.start, this.end);
   }
 
-  var size = blob.size;
   this.progress = 0;
 
   // set content-type to "application/octet-stream"
@@ -1042,7 +1049,7 @@ Chunk.prototype.sendToHatrac = function (Upload) {
   var headers = _generateContextHeader(contextHeaderParams);
   headers['content-type'] = 'application/octet-stream';
 
-  self.xhr = _q.defer();
+  self.xhr = new DeferredPromise();
 
   var request = {
     // If index is -1 then Upload it to the url or Upload it to chunkUrl
@@ -1086,7 +1093,6 @@ Chunk.prototype.sendToHatrac = function (Upload) {
     },
     function (response) {
       self.progress = 0;
-      var status = response.status;
 
       // If Upload is not paused
       // and the status code is in range of 500 then there is a server error, keep retrying for 5 times
@@ -1107,6 +1113,6 @@ Chunk.prototype.sendToHatrac = function (Upload) {
  * @desc This function will abort a chunk of file to the url and call _updateProgressBar
  * @param {Upload} {Upload} - An instance of the Upload to which this chunk belongs
  */
-Chunk.prototype.abort = function (Upload) {
+Chunk.prototype.abort = function () {
   if (this.xhr && typeof this.xhr.resolve == 'function') this.xhr.resolve();
 };

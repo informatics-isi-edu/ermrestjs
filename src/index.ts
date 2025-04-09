@@ -46,6 +46,7 @@ import { fixedEncodeURIComponent } from '@isrd-isi-edu/ermrestjs/src/utils/value
 import { renderMarkdown } from '@isrd-isi-edu/ermrestjs/src/utils/markdown-utils';
 
 // legacy imports
+import { Checksum, Upload } from '@isrd-isi-edu/ermrestjs/js/hatrac';
 import { onload, getElapsedTime } from '@isrd-isi-edu/ermrestjs/js/setup/node';
 import printf from '@isrd-isi-edu/ermrestjs/js/format';
 import { resolve, _createPage } from '@isrd-isi-edu/ermrestjs/js/reference';
@@ -129,8 +130,8 @@ export {
   AttributeGroupLocation,
 
   // hatrac
-  // Upload,
-  // Checksum,
+  Upload,
+  Checksum,
 
   // error:
   logError,

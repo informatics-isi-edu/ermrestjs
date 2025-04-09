@@ -1,3 +1,5 @@
+import { ENV_IS_NODE } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
+
 /**
  * Given a string representing a hex, turn it into base64
  * @private
@@ -14,7 +16,11 @@ export function hexToBase64(hex: any) {
       .split(' '),
   );
 
-  return Buffer.from(str, 'binary').toString('base64');
+  if (ENV_IS_NODE) {
+    return Buffer.from(str, 'binary').toString('base64');
+  } else {
+    return btoa(str);
+  }
 }
 
 /**

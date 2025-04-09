@@ -107,7 +107,6 @@ LINT=.make-lint
 # Build rule
 dist: print_variables
 	@npx tsc && npx vite build
-	@cp $(DIST)/$(PKG) $(DIST)/$(MIN)
 
 # $(DIST): print_variables $(DIST)/$(PKG) $(DIST)/$(MIN_LIB) $(DIST)/$(VER)
 # 	@touch $(DIST)
