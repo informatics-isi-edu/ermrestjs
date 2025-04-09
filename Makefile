@@ -104,9 +104,13 @@ API=$(DOC)/api.md
 # Hidden target files (for make only)
 LINT=.make-lint
 
+build:
+	@tsc && npx vite build
+
 # Build rule
-dist: print_variables
-	@npx tsc && npx vite build
+$(DIST): deps print_variables build
+
+dist-wo-deps: print_variables build
 
 # $(DIST): print_variables $(DIST)/$(PKG) $(DIST)/$(MIN_LIB) $(DIST)/$(VER)
 # 	@touch $(DIST)

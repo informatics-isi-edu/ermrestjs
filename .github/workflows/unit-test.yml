@@ -84,6 +84,7 @@ jobs:
       - name: Install ermrestjs
         run: |
           cd ermrestjs
+          make deps-test
           sudo make root-install
       - name: Add tests users
         run: |
