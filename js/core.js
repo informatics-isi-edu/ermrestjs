@@ -17,7 +17,7 @@ import $log from '@isrd-isi-edu/ermrestjs/src/services/logger';
 
 // utils
 import { isObjectAndNotNull, isEmptyArray, isStringAndNotEmpty, isValidColorRGBHex } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
-import { fixedEncodeURIComponent } from '@isrd-isi-edu/ermrestjs/src/utils/value-utils';
+import { fixedEncodeURIComponent, escapeHTML } from '@isrd-isi-edu/ermrestjs/src/utils/value-utils';
 import {
   _annotations,
   _commentDisplayModes,
@@ -1540,7 +1540,7 @@ Table.prototype = {
               // TODO log the error
               return;
             }
-            var fkObj = Catalog.getConstraintObject(self.schema.catalog.id, cname[0], cname[1]);
+            var fkObj = CatalogService.getConstraintObject(self.schema.catalog.id, cname[0], cname[1]);
             if (fkObj === null || fkObj.subject !== _constraintTypes.FOREIGN_KEY) {
               return;
             }
@@ -3007,6 +3007,8 @@ export function Column(table, jsonColumn, assetCategoryInfo) {
         return { isHTML: false, value: this._getNullValue(context), unformatted: this._getNullValue(context) };
       }
 
+      // <pre> will render the html tags, so we have to make sure the tags are escaped.
+      formattedValue = escapeHTML(formattedValue);
       return { isHTML: true, value: '<pre>' + formattedValue + '</pre>', unformatted: formattedValue };
     }
 

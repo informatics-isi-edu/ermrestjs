@@ -1554,11 +1554,11 @@ SourceObjectWrapper.prototype = {
    */
   getRawSourcePath: function (reverse, outAlias) {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
-    var path = [],
-      self = this,
-      obj;
-    var len = self.sourceObjectNodes.length;
-    var isLast = function (index) {
+    var self = this;
+    let path = [];
+    let obj;
+    const len = self.sourceObjectNodes.length;
+    const isLast = function (index) {
       return reverse ? index >= 0 : index < len;
     };
 

@@ -1206,13 +1206,13 @@ Location.prototype = {
 
   /**
    *
-   * @returns {String} The string format of the paging modifier in the form of @before(..)@after(...)
+   * @returns {String|undefined} The string format of the paging modifier in the form of @before(..)@after(...)
    */
   get paging() {
     if (this.after || this.before) {
       return (this.after ? this.after : '') + (this.before ? this.before : '');
     }
-    return '';
+    return undefined;
   },
 
   /**

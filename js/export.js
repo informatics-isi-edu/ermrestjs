@@ -455,10 +455,9 @@ Exporter.prototype = {
    * @returns {Promise}
    */
   run: function (contextHeaderParams) {
+    var defer = new DeferredPromise(),
+      self = this;
     try {
-      var defer = new DeferredPromise(),
-        self = this;
-
       var serviceUrl = [self.exportParameters.catalog.host, self.servicePath, self.template.type == 'BAG' ? 'bdbag' : 'file'].join('/');
 
       // log parameters
@@ -480,17 +479,16 @@ Exporter.prototype = {
       self.reference._server.http
         .post(serviceUrl, self.exportParameters, { headers: headers })
         .then(function success(response) {
-          return defer.resolve({ data: response.data.split('\n'), canceled: self.canceled });
+          defer.resolve({ data: response.data.split('\n'), canceled: self.canceled });
         })
         .catch(function (err) {
           var error = ErrorService.responseToError(err);
-          return defer.reject(error);
+          defer.reject(error);
         });
-
-      return defer.promise;
     } catch (e) {
-      return new DeferredPromise().reject(e);
+      defer.reject(e);
     }
+    return defer.promise;
   },
 
   /**

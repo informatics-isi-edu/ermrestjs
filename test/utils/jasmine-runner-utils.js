@@ -43,6 +43,7 @@ const deleteCatalog = function (catalogId) {
         },
         function (err) {
           console.log('Unable to delete catalog');
+          console.log(err);
           reject(err);
         },
       );
@@ -72,7 +73,7 @@ exports.run = function (config) {
 
   jrunner.onComplete(function (passed) {
     console.log('Test suite ' + (passed ? 'passed' : 'failed'));
-    deleteCatalog().done(function () {
+    deleteCatalog().finally(function () {
       if (!passed) process.exit(1);
     });
   });

@@ -1,3 +1,5 @@
+const moment = require('moment-timezone');
+
 exports.execute = function (options) {
   var catalogId = process.env.DEFAULT_CATALOG,
     schemaName = 'parse_schema',
@@ -32,7 +34,6 @@ exports.execute = function (options) {
         expect(location.afterObject).toBe(null);
         expect(location.schemaName).toBe(schemaName);
         expect(location.tableName).toBe(tableName);
-        expect(location.filter instanceof options.ermRest.ParsedFilter).toBe(true);
       });
 
       it('parsedFilter should have methods and values properly defined.', function () {
@@ -72,7 +73,6 @@ exports.execute = function (options) {
         expect(location.afterObject).toBe(null);
         expect(location.schemaName).toBe(schemaName);
         expect(location.tableName).toBe(tableName);
-        expect(location.filter instanceof options.ermRest.ParsedFilter).toBe(true);
       });
 
       it('parsedFilter should have methods and values properly defined.', function () {
@@ -137,7 +137,6 @@ exports.execute = function (options) {
         expect(location.version).toBeNull();
         expect(location.schemaName).toBe(schemaName);
         expect(location.tableName).toBe(tableName);
-        expect(location.filter instanceof options.ermRest.ParsedFilter).toBe(true);
       });
 
       it('parsedFilter should have methods and values properly defined.', function () {
@@ -186,7 +185,6 @@ exports.execute = function (options) {
         expect(location.afterObject).toBe(null);
         expect(location.schemaName).toBe(schemaName);
         expect(location.tableName).toBe(tableName);
-        expect(location.filter instanceof options.ermRest.ParsedFilter).toBe(true);
       });
 
       it('parsedFilter should have methods and values properly defined.', function () {
@@ -233,7 +231,6 @@ exports.execute = function (options) {
         expect(location.afterObject).toBe(null);
         expect(location.schemaName).toBe(schemaName);
         expect(location.tableName).toBe(tableName);
-        expect(location.filter instanceof options.ermRest.ParsedFilter).toBe(true);
       });
 
       it('parsedFilter should have methods and values properly defined.', function () {

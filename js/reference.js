@@ -1251,14 +1251,13 @@ Reference.prototype = {
    * - ERMrestjs corresponding http errors, if ERMrest returns http error.
    */
   create: function (data, contextHeaderParams, skipOnConflict) {
-    var self = this;
+    const self = this;
+    const defer = new DeferredPromise();
     try {
       //  verify: data is not null, data has non empty tuple set
       verify(data, "'data' must be specified");
       verify(data.length > 0, "'data' must have at least one row to create");
       verify(self._context === _contexts.CREATE, "reference must be in 'entry/create' context.");
-
-      var defer = new DeferredPromise();
 
       //  get the defaults list for the referenced relation's table
       var defaults = getDefaults();
@@ -2054,7 +2053,7 @@ Reference.prototype = {
           return defer.reject(ErrorService.responseToError(error, self));
         });
     } catch (e) {
-      return defer.reject(e);
+      defer.reject(e);
     }
 
     return defer.promise;
@@ -3593,7 +3592,10 @@ Reference.prototype = {
       // the rest will always be at the end in this order ('RCB', 'RMB', 'RCT', 'RMT')
       //
       // if compact or detailed, check for system column config option
-      var systemColumnsMode = ConfigService.systemColumnsHeuristicsMode(this._context);
+      let systemColumnsMode;
+      if (ConfigService.systemColumnsHeuristicsMode) {
+        systemColumnsMode = ConfigService.systemColumnsHeuristicsMode(this._context);
+      }
 
       // if (array and RID exists) or true, add RID to the list of columns
       if ((Array.isArray(systemColumnsMode) && systemColumnsMode.indexOf('RID') != -1) || systemColumnsMode == true) {

@@ -244,9 +244,6 @@ export function Upload(file, otherInfo) {
   this.isPaused = false;
   this.otherInfo = otherInfo;
 
-  this.UploadedSize = 0;
-  this.UploadingSize = 0;
-
   this.chunks = [];
   // array of true values for tracking which chunks are Uploaded so far
   // used to determine what chunk to resume Upload from if needed
@@ -303,12 +300,13 @@ Upload.prototype.validateURL = function (row, linkedData) {
  * @desc Call this function to calculate checksum before Uploading to server
  * @param {object} row - row object containing keyvalues of entity
  * @param {object} linkedData - object containing the linked data (outbound fk values)
+ * @param {(uploaded: number) => void | undefined} onProgress - a callback function to be called for progress
  *
  * @returns {Promise} A promise resolved with a url where we will Upload the file
  * or rejected with error if unable to calculate checkum
  * and notified with a progress handler, sending number in bytes done
  */
-Upload.prototype.calculateChecksum = function (row, linkedData) {
+Upload.prototype.calculateChecksum = function (row, linkedData, onProgress) {
   this.erred = false;
   var deferred = new DeferredPromise();
 
@@ -316,7 +314,7 @@ Upload.prototype.calculateChecksum = function (row, linkedData) {
   // and notify and reoslve the promise
   if (this.hash && (this.hash.md5_base64 || this.hash.sha256)) {
     this._generateURL(row, linkedData);
-    deferred.notify(this.file.size);
+    if (onProgress) onProgress(this.file.size);
     deferred.resolve(this.url);
     return deferred.promise;
   } else {
@@ -327,7 +325,7 @@ Upload.prototype.calculateChecksum = function (row, linkedData) {
   this.hash.calculate(
     this.PART_SIZE,
     function (Uploaded) {
-      deferred.notify(Uploaded);
+      if (onProgress) onProgress(Uploaded);
     },
     function () {
       self._generateURL(row, linkedData);
@@ -520,11 +518,12 @@ Upload.prototype.createUploadJob = function (contextHeaderParams) {
  * else it will start Uploading the chunks. If the job was paused then resume by Uploading just those chunks which were not completed.
  *
  * @param {number} startChunkIdx - the index of the chunk to start Uploading from in case of resuming a found incomplete Upload job
+ * @param {(size: number) => void | undefined} onProgress - a callback function to be called for progress
  * @returns {Promise} A promise resolved with a url where we Uploaded the file
  * or rejected with error if unable to Upload any chunk
  * and notified with a progress handler, sending number in bytes Uploaded uptil now
  */
-Upload.prototype.start = function (startChunkIdx) {
+Upload.prototype.start = function (startChunkIdx, onProgress) {
   var self = this;
 
   this.erred = false;
@@ -532,9 +531,10 @@ Upload.prototype.start = function (startChunkIdx) {
   var deferred = new DeferredPromise();
 
   this.UploadPromise = deferred;
+  this.UploadProgressCallback = onProgress;
 
   if (this.completed) {
-    deferred.notify(this.file.size);
+    if (onProgress) onProgress(this.file.size);
 
     setTimeout(function () {
       deferred.resolve(self.url);
@@ -928,7 +928,7 @@ Upload.prototype._updateProgressBar = function () {
     if (this.chunks[i].completed) chunksComplete++;
   }
 
-  if (this.UploadPromise) this.UploadPromise.notify(this.completed ? this.file.size : progressDone, this.file.size);
+  if (this.UploadProgressCallback) this.UploadProgressCallback(this.completed ? this.file.size : progressDone, this.file.size);
 
   if (chunksComplete === length && !this.completed) {
     this.completed = true;

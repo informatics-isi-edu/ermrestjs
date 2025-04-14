@@ -1,15 +1,20 @@
 import markdownit from 'markdown-it';
+
+// services
 import $log from '@isrd-isi-edu/ermrestjs/src/services/logger';
 
-import { default as markdownItSub } from '@isrd-isi-edu/ermrestjs/vendor/markdown-it-sub.min';
+// utils
+import { _classNames } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
+
+// vendor
+import markdownItSub from '@isrd-isi-edu/ermrestjs/vendor/markdown-it-sub.min';
 import markdownItSup from '@isrd-isi-edu/ermrestjs/vendor/markdown-it-sup.min';
 import markdownItSpan from '@isrd-isi-edu/ermrestjs/vendor/markdown-it-span';
 import markdownItEscape from '@isrd-isi-edu/ermrestjs/vendor/markdown-it-escape';
 import markdownItAttrs from '@isrd-isi-edu/ermrestjs/vendor/markdown-it-attrs';
 import MarkdownItContainer from '@isrd-isi-edu/ermrestjs/vendor/markdown-it-container.min';
-import { _classNames } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
-// import ConfigService from '@isrd-isi-edu/ermrestjs/src/services/config';
 
+let _markdownItDefaultImageRenderer: any = null;
 export const MarkdownIt = markdownit({ typographer: true, breaks: true })
   .use(markdownItSub)
   .use(markdownItSup)
@@ -810,82 +815,26 @@ function _bindCustomMarkdownTags(md: typeof MarkdownIt) {
    * this is done on the image tag instead of link_open to prevent polluting other html tags
    * make sure we're calling this just once
    */
-  // TODO 2025-refactoring
-  // if (typeof module._markdownItDefaultImageRenderer === 'undefined') {
-  //   module._markdownItDefaultImageRenderer =
-  //     md.renderer.rules.image ||
-  //     function (tokens, idx, options, env, self) {
-  //       return self.renderToken(tokens, idx, options);
-  //     };
-  // }
+  if (_markdownItDefaultImageRenderer === null) {
+    _markdownItDefaultImageRenderer =
+      md.renderer.rules.image ||
+      function (tokens: any, idx: any, options: any, env: any, self: any) {
+        return self.renderToken(tokens, idx, options);
+      };
+  }
 
-  // // the class that we should add
-  // const className = module._classNames.postLoad;
-  // md.renderer.rules.image = function (tokens, idx, options, env, self) {
-  //   const token = tokens[idx];
+  // the class that we should add
+  const className = _classNames.postLoad;
+  md.renderer.rules.image = function (tokens, idx, options, env, self) {
+    const token = tokens[idx];
 
-  //   const cIndex = token.attrIndex('class');
-  //   if (cIndex < 0) {
-  //     token.attrPush(['class', className]);
-  //   } else {
-  //     token.attrs[cIndex][1] += ' ' + className;
-  //   }
+    const cIndex = token.attrIndex('class');
+    if (cIndex < 0) {
+      token.attrPush(['class', className]);
+    } else {
+      token.attrs![cIndex][1] += ' ' + className;
+    }
 
-  //   return module._markdownItDefaultImageRenderer(tokens, idx, options, env, self);
-  // };
+    return _markdownItDefaultImageRenderer(tokens, idx, options, env, self);
+  };
 }
-
-/**
- * @private
- * @desc
- * Change the link_open function to add classes to links, based on clientConfig
- * It will add
- *  - external-link-icon
- *  - exteranl-link if clientConfig.disableExternalLinkModal is not true
- *
- * NOTE we should call this function only ONCE when the setClientConfig is done
- */
-// TODO 2025-refactoring
-// module._markdownItLinkOpenAddExternalLink = function () {
-//   ConfigService.verifyClientConfig();
-
-//   // if we haven't changed the function yet, and there's no internalHosts then don't do anything
-//   if (typeof module._markdownItDefaultLinkOpenRenderer === 'undefined' && module._clientConfig.internalHosts.length === 0) {
-//     return;
-//   }
-
-//   // make sure we're calling this just once
-//   if (typeof module._markdownItDefaultLinkOpenRenderer === 'undefined') {
-//     module._markdownItDefaultLinkOpenRenderer =
-//       module._markdownIt.renderer.rules.link_open ||
-//       function (tokens, idx, options, env, self) {
-//         return self.renderToken(tokens, idx, options);
-//       };
-//   }
-
-//   // the classes that we should add
-//   let className = module._classNames.externalLinkIcon;
-//   if (ConfigService.clientConfig.disableExternalLinkModal !== true) {
-//     className += ' ' + module._classNames.externalLink;
-//   }
-//   module._markdownIt.renderer.rules.link_open = function (tokens, idx, options, env, self) {
-//     const token = tokens[idx];
-
-//     // find the link value
-//     const hrefIndex = token.attrIndex('href');
-//     if (hrefIndex < 0) return;
-//     const href = token.attrs[hrefIndex][1];
-
-//     // only add the class if it's not the same origin
-//     if (module._isSameHost(href) === false) {
-//       const cIndex = token.attrIndex('class');
-//       if (cIndex < 0) {
-//         token.attrPush(['class', className]);
-//       } else {
-//         token.attrs[cIndex][1] += ' ' + className;
-//       }
-//     }
-
-//     return module._markdownItDefaultLinkOpenRenderer(tokens, idx, options, env, self);
-//   };
-// };

@@ -6,8 +6,9 @@
   "private": true,
   "main": "build/ermrest.min.js",
   "scripts": {
-    "build": "make dist",
-    "pretest": "make dist && make deploy",
+    "build": "tsc && vite build",
+    "pretest": "make deps-test && make dist-w-deps",
+    "deploy": "make deploy",
     "test": "make test",
     "lint": "eslint src js --quiet",
     "lint-w-warn": "eslint src js",
@@ -25,15 +26,24 @@
     "library"
   ],
   "lint-staged": {
-    "**/*.{ts}": [
-      "eslint src --fix --quiet"
+    "src/*.ts": [
+      "eslint --fix --quiet"
     ],
-    "**/*": "prettier --write --ignore-unknown src"
+    "src/*": "prettier --write --ignore-unknown"
   },
   "dependencies": {
+    "axios": "1.8.3",
     "jsdoc-to-markdown": "8.0.0",
     "jshint": "2.13.4",
+    "handlebars": "4.7.7",
+    "husky": "^9.1.7",
     "lz-string": "^1.5.0",
+    "markdown-it": "14.1.0",
+    "moment": "2.30.1",
+    "moment-timezone": "0.5.48",
+    "mustache": "x",
+    "terser": "^5.39.0",
+    "spark-md5": "^3.0.0",
     "typescript": "~5.7.2",
     "vite": "^6.2.0"
   },
@@ -43,29 +53,21 @@
     "@eslint/js": "^9.23.0",
     "@isrd-isi-edu/ermrest-data-utils": "0.0.5",
     "@types/node": "^22.13.14",
-    "axios": "1.8.3",
     "buffer-slice": "0.0.1",
     "eslint": "^9.23.0",
     "eslint-config-prettier": "^10.1.1",
     "eslint-plugin-prettier": "^5.2.5",
     "file-api": "^0.10.4",
     "globals": "^16.0.0",
-    "handlebars": "4.7.7",
-    "husky": "^9.1.7",
     "jasmine": "2.5.3",
     "jasmine-expect": "3.7.1",
     "jasmine-spec-reporter": "2.5.0",
     "lint-staged": "^15.5.0",
-    "markdown-it": "12.3.2",
     "mime": "1.4.1",
-    "moment": "2.30.1",
-    "moment-timezone": "0.5.48",
-    "mustache": "x",
     "nock": "13.5.4",
     "prettier": "^3.5.3",
     "require-reload": "^0.2.2",
     "set-cookie-parser": "x",
-    "spark-md5": "^3.0.0",
     "typescript-eslint": "^8.28.0"
   }
 }

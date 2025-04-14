@@ -1,10 +1,5 @@
 import { isDefinedAndNotNull } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
 
-/**
- * TODO 2025-refactoring why do we need this?
- */
-export const ENV_IS_BROWSER: boolean = typeof window !== 'undefined' && typeof window.document !== 'undefined';
-
 export enum _ERMrestFeatures {
   TABLE_RIGHTS_SUMMARY = 'trs',
   TABLE_COL_RIGHTS_SUMMARY = 'tcrs',
@@ -522,3 +517,5 @@ export const FILTER_TYPES = Object.freeze({
 });
 
 export const ENV_IS_NODE = typeof process !== 'undefined' && isDefinedAndNotNull(process.versions) && isDefinedAndNotNull(process.versions.node);
+
+export const ENV_IS_DEV_MODE = process.env.NODE_ENV === 'development';

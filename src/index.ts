@@ -59,12 +59,21 @@ import {
   encodeFacetString,
   _formatUtils,
   processMarkdownPattern,
-  renderHandlebarsTemplate,
   renderMustacheTemplate,
   _validateMustacheTemplate,
   versionDecodeBase32,
 } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
-import { AttributeGroupColumn, AttributeGroupReference, AttributeGroupLocation } from '@isrd-isi-edu/ermrestjs/js/ag_reference';
+import {
+  AttributeGroupColumn,
+  AttributeGroupReference,
+  AttributeGroupLocation,
+  BucketAttributeGroupReference,
+} from '@isrd-isi-edu/ermrestjs/js/ag_reference';
+import { BinaryPredicate } from '@isrd-isi-edu/ermrestjs/js/filters';
+import { DataPath } from '@isrd-isi-edu/ermrestjs/js/datapath';
+import HandlebarsService from '@isrd-isi-edu/ermrestjs/src/services/handlebars';
+import { Exporter } from '@isrd-isi-edu/ermrestjs/js/export';
+import validateJSONLD from '@isrd-isi-edu/ermrestjs/js/json_ld_validator.js';
 
 const logError = ErrorService.logError;
 const responseToError = ErrorService.responseToError;
@@ -81,6 +90,8 @@ const _certifyContextHeader = HTTPService.certifyContextHeader;
 const setHTTP401Handler = HTTPService.setHTTP401Handler;
 const onHTTPSuccess = HTTPService.setOnHTTPSuccess;
 
+const renderHandlebarsTemplate = HandlebarsService.render;
+
 const _clearConstraintNames = CatalogService.clearConstraintNames;
 
 const _fixedEncodeURIComponent = fixedEncodeURIComponent;
@@ -90,6 +101,7 @@ export {
   // ConfigService,
   // ErrorService,
   // HTTPService,
+  Exporter,
 
   // constants
   contextHeaderName,
@@ -128,6 +140,7 @@ export {
   AttributeGroupColumn,
   AttributeGroupReference,
   AttributeGroupLocation,
+  BucketAttributeGroupReference,
 
   // hatrac
   Upload,
@@ -174,4 +187,7 @@ export {
   encodeFacetString,
   _validateMustacheTemplate,
   _currDate,
+  BinaryPredicate,
+  DataPath,
+  validateJSONLD,
 };

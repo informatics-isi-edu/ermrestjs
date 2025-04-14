@@ -1,12 +1,7 @@
 /* eslint-disable @typescript-eslint/no-duplicate-enum-values */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-/**
- * Avoid using console directly and use this logger.
- *
- * later we can expand this to have more logic, and also have more methods
- * so we can suppress some of them in production mode.
- */
+import { ENV_IS_DEV_MODE } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
 
 export enum LoggerLevels {
   TRACE = 0,
@@ -70,6 +65,6 @@ class Logger {
 
 const $log = new Logger();
 
-$log.setLevel(LoggerLevels.INFO);
+$log.setLevel(ENV_IS_DEV_MODE ? LoggerLevels.TRACE : LoggerLevels.INFO);
 
 export default $log;

@@ -1,10 +1,16 @@
 import axios from 'axios';
 
+import { InvalidInputError } from '@isrd-isi-edu/ermrestjs/src/models/errors';
+
 import $log from '@isrd-isi-edu/ermrestjs/src/services/logger';
 
-import { InvalidInputError } from '@isrd-isi-edu/ermrestjs/src/models/errors';
 import { isObjectAndNotNull } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
 import { simpleDeepCopy } from '@isrd-isi-edu/ermrestjs/src/utils/value-utils';
+import { MarkdownIt } from '@isrd-isi-edu/ermrestjs/src/utils/markdown-utils';
+import { _classNames } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
+
+import { _isSameHost } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
+import { onload } from '@isrd-isi-edu/ermrestjs/js/setup/node';
 
 export type AppLinkFnType = (tag: string, location: any, context: string) => string;
 
@@ -14,7 +20,9 @@ export default class ConfigService {
   private static _clientConfig: any;
   private static _session: any;
   private static _appLinkFn: AppLinkFnType;
-  private static _systemColumnsHeuristicsMode: (context: string) => any;
+  private static _systemColumnsHeuristicsMode: (context: string) => any | undefined;
+
+  private static _markdownItDefaultLinkOpenRenderer: any;
 
   /**
    * This function is used to configure the module
@@ -66,20 +74,16 @@ export default class ConfigService {
       ConfigService._clientConfig = res;
 
       // now that the client-config is done, call the functions that are using it:
-      // TODO 2025-refactoring
-      // module
-      //   .onload()
-      //   .then(function () {
-      //     module._markdownItLinkOpenAddExternalLink();
-      //     return defer.resolve(), defer.promise;
-      //   })
-      //   .catch(function (err) {
-      //     // fail silently
-      //     module._log.error("couldn't apply the client-config changes");
-      //     return defer.resolve(), defer.promise;
-      //   });
-
-      resolve();
+      onload()
+        .then(() => {
+          ConfigService._markdownItLinkOpenAddExternalLink();
+          resolve();
+        })
+        .catch(() => {
+          // fail silently
+          $log.error("couldn't apply the client-config changes");
+          resolve();
+        });
     });
   }
 
@@ -126,6 +130,60 @@ export default class ConfigService {
 
   static get systemColumnsHeuristicsMode() {
     return ConfigService._systemColumnsHeuristicsMode;
+  }
+
+  /**
+   * @private
+   * @desc
+   * Change the link_open function to add classes to links, based on clientConfig
+   * It will add
+   *  - external-link-icon
+   *  - exteranl-link if clientConfig.disableExternalLinkModal is not true
+   *
+   * NOTE we should call this function only ONCE when the setClientConfig is done
+   */
+  static _markdownItLinkOpenAddExternalLink() {
+    ConfigService.verifyClientConfig();
+
+    // if we haven't changed the function yet, and there's no internalHosts then don't do anything
+    if (typeof ConfigService._markdownItDefaultLinkOpenRenderer === 'undefined' && ConfigService.clientConfig.internalHosts.length === 0) {
+      return;
+    }
+
+    // make sure we're calling this just once
+    if (typeof ConfigService._markdownItDefaultLinkOpenRenderer === 'undefined') {
+      ConfigService._markdownItDefaultLinkOpenRenderer =
+        MarkdownIt.renderer.rules.link_open ||
+        function (tokens: any, idx: any, options: any, env: any, self: any) {
+          return self.renderToken(tokens, idx, options);
+        };
+    }
+
+    // the classes that we should add
+    let className = _classNames.externalLinkIcon;
+    if (ConfigService.clientConfig.disableExternalLinkModal !== true) {
+      className += ' ' + _classNames.externalLink;
+    }
+    MarkdownIt.renderer.rules.link_open = function (tokens, idx, options, env, self) {
+      const token = tokens[idx];
+
+      // find the link value
+      const hrefIndex = token.attrIndex('href');
+      if (hrefIndex < 0 || !token || !token.attrs) return;
+      const href = token.attrs[hrefIndex][1];
+
+      // only add the class if it's not the same origin
+      if (_isSameHost(href) === false) {
+        const cIndex = token.attrIndex('class');
+        if (cIndex < 0) {
+          token.attrPush(['class', className]);
+        } else {
+          token.attrs[cIndex][1] += ' ' + className;
+        }
+      }
+
+      return ConfigService._markdownItDefaultLinkOpenRenderer(tokens, idx, options, env, self);
+    };
   }
 
   /**

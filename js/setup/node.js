@@ -1,5 +1,4 @@
 // import DeferredPromise from '@isrd-isi-edu/ermrestjs/src/models/deferred-promise';
-import { _injectHandlebarHelpers } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
 
 // TODO 2025-refactoring is this file needed anymore?
 
@@ -177,8 +176,6 @@ import { _injectHandlebarHelpers } from '@isrd-isi-edu/ermrestjs/js/utils/helper
 //     });
 
 // }
-
-_injectHandlebarHelpers();
 
 /**
  * This function is used by http. It resolves promises by calling this function

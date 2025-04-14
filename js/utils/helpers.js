@@ -2,7 +2,6 @@
 import { compressToEncodedURIComponent, decompressFromEncodedURIComponent } from 'lz-string';
 import moment from 'moment-timezone';
 import { default as mustache } from 'mustache';
-import Handlebars from 'handlebars';
 
 import $log from '@isrd-isi-edu/ermrestjs/src/services/logger';
 import ConfigService from '@isrd-isi-edu/ermrestjs/src/services/config';
@@ -26,7 +25,6 @@ import {
   _systemColumnNames,
   _specialPresentation,
   _classNames,
-  _handlebarsHelpersList,
   TEMPLATE_ENGINES,
   _entryContexts,
   _compactContexts,
@@ -35,7 +33,7 @@ import {
 import { parse } from '@isrd-isi-edu/ermrestjs/js/parser';
 import { Reference } from '@isrd-isi-edu/ermrestjs/js/reference';
 import { Column } from '@isrd-isi-edu/ermrestjs/js/core';
-import _injectCustomHandlebarHelpers from '@isrd-isi-edu/ermrestjs/js/utils/handlebar_helpers';
+import HandlebarsService from '@isrd-isi-edu/ermrestjs/src/services/handlebars';
 
 /**
  * Given a string represting a JSON document returns the compressed version of it.
@@ -204,7 +202,7 @@ export function _extends(child, parent) {
  * @param  {String} path the string path (`a.b.c`)
  * @return {Object}      value
  */
-function _getPath(obj, path) {
+export function _getPath(obj, path) {
   var pathNodes;
 
   if (typeof path === 'string') {
@@ -301,6 +299,10 @@ export function _encodeRegexp(str) {
   var escapedRegexString = str.replace(stringReplaceExp, '\\$&');
 
   return escapedRegexString;
+}
+
+export function _nextChar(c) {
+  return String.fromCharCode(c.charCodeAt(0) + 1);
 }
 
 /**
@@ -1883,20 +1885,6 @@ export function _escapeForMustacheTemplate() {
   };
 }
 
-// TODO 2025-refactoring what's the point of this?
-const _handlebarsHelpersHash = {};
-export function _injectHandlebarHelpers() {
-  // inject the custom handlebars
-  _injectCustomHandlebarHelpers(Handlebars);
-
-  // loop through handlebars defined list of helpers and check against the enum in ermrestJs
-  // if not in enum, set helper to false
-  // should help defend against new helpers being exposed without us being aware of it
-  Object.keys(Handlebars.helpers).forEach(function (key) {
-    _handlebarsHelpersHash[key] = _handlebarsHelpersList.includes(key);
-  });
-}
-
 /**
  * @function
  * @desc
@@ -2145,164 +2133,6 @@ export function _validateMustacheTemplate(template, keyValues, catalog, ignoredC
   return true;
 }
 
-/*
- * @function
- * @public
- * @param {String} template The template string to transform
- * @param {Object} keyValues The key-value pair of object to be used for template tags replacement.
- * @param {Object} catalog The catalog object created by ermrestJS representing the current catalog from the url
- * @param {Object} [options] Configuration options.
- * @return {string} A string produced after templating
- * @desc Calls the private function to return a string produced as a result of templating using `Handlebars`.
- */
-export function _renderHandlebarsTemplate(template, keyValues, catalog, options) {
-  return renderHandlebarsTemplate(template, keyValues, catalog, options);
-}
-
-/**
- * @param {String} template The template string to transform
- * @param {Object} keyValues The key-value pair of object to be used for template tags replacement.
- * @param {Object} catalog The catalog object created by ermrestJS representing the current catalog from the url
- * @param {Object} [options] Configuration options.
- * @return {string} A string produced after templating
- * @desc Returns a string produced as a result of templating using `Handlebars`.
- * @memberof ERMrest
- * @function renderHandlebarsTemplate
- */
-export function renderHandlebarsTemplate(template, keyValues, catalog, options) {
-  options = options || {};
-
-  var obj = _addTemplateVars(keyValues, catalog, options),
-    content,
-    _compiledTemplate;
-
-  // If we should validate, validate the template and if returns false, return null.
-  if (!options.avoidValidation && !_validateHandlebarsTemplate(template, obj, catalog)) {
-    return null;
-  }
-
-  try {
-    // Read template from cache
-    _compiledTemplate = _handlebarsCompiledTemplates[template];
-
-    // If template not found then add it to cache
-    if (!_compiledTemplate) {
-      var compileOptions = {
-        knownHelpersOnly: true,
-        knownHelpers: _handlebarsHelpersHash,
-      };
-
-      _handlebarsCompiledTemplates[template] = _compiledTemplate = Handlebars.compile(template, compileOptions);
-    }
-
-    // Generate content from the template
-    content = _compiledTemplate(obj);
-  } catch (e) {
-    $log.error(e);
-    content = null;
-  }
-
-  return content;
-}
-
-// Cache to store all the handlebar templates to reduce compute time
-const _handlebarsCompiledTemplates = {};
-
-/**
- * Returns true if all the used keys have values.
- *
- * NOTE:
- * This implementation is very limited and if conditional Handlebar statements
- * of the form {{#if }}{{/if}} or {{^if VARNAME}}{{/if}} or {{#unless VARNAME}}{{/unless}} or {{^unless }}{{/unless}} found then it won't check
- * for null values and will return true.s
- *
- * @param  {string}   template       mustache template
- * @param  {object}   keyValues      key-value pairs
- * @param  {Array.<string>=} ignoredColumns the columns that should be ignored (optional)
- * @return {boolean} true if all the used keys have values
- */
-export function _validateHandlebarsTemplate(template, keyValues, catalog, ignoredColumns) {
-  var conditionalRegex = /\{\{(((#|\^)([^\{\}]+))|(if|unless|else))([^\{\}]+)\}\}/,
-    i,
-    key,
-    value;
-
-  // Inject ermrest internal utility objects such as date
-  // needs to be done in the case _validateTemplate is called without first calling _renderTemplate
-  _addErmrestVarsToTemplate(keyValues, catalog);
-
-  // If no conditional handlebars statements of the form {{#if VARNAME}}{{/if}} or {{^if VARNAME}}{{/if}} or {{#unless VARNAME}}{{/unless}} or {{^unless VARNAME}}{{/unless}} not found then do direct null check
-  if (!conditionalRegex.exec(template)) {
-    // Grab all placeholders ({{PROP_NAME}}) in the template
-    var placeholders = template.match(/\{\{([^\{\}\(\)\s]+)\}\}/gi);
-
-    // These will match the placeholders that are encapsulated in square brackets {{[string with space]}} or {{{[string with space]}}}
-    var specialPlaceholders = template.match(/\{\{((\[[^\{\}]+\])|(\{\[[^\{\}]+\]\}))\}\}/gi);
-
-    // If there are any placeholders
-    if (placeholders && placeholders.length) {
-      // Get unique placeholders
-      placeholders = placeholders.filter(function (item, i, ar) {
-        return ar.indexOf(item) === i && item !== 'else';
-      });
-
-      /*
-       * Iterate over all placeholders to set pattern as null if any of the
-       * values turn out to be null or undefined
-       */
-      for (i = 0; i < placeholders.length; i++) {
-        // Grab actual key from the placeholder {{name}} = name, remove "{{" and "}}" from the string for key
-        key = placeholders[i].substring(2, placeholders[i].length - 2);
-
-        if (key[0] == '{') key = key.substring(1, key.length - 1);
-
-        // find the value.
-        value = _getPath(keyValues, key.trim());
-
-        // TODO since we're not going inside the object this logic of ignoredColumns is not needed anymore,
-        // it was a hack that was added for asset columns.
-        // If key is not in ingored columns value for the key is null or undefined then return null
-        if ((!Array.isArray(ignoredColumns) || ignoredColumns.indexOf(key) == -1) && (value === null || value === undefined)) {
-          return false;
-        }
-      }
-    }
-
-    // If there are any placeholders
-    if (specialPlaceholders && specialPlaceholders.length) {
-      // Get unique placeholders
-      specialPlaceholders = specialPlaceholders.filter(function (item, i, ar) {
-        return ar.indexOf(item) === i && item !== 'else';
-      });
-
-      /*
-       * Iterate over all specialPlaceholders to set pattern as null if any of the
-       * values turn out to be null or undefined
-       */
-      for (i = 0; i < specialPlaceholders.length; i++) {
-        // Grab actual key from the placeholder {{name}} = name, remove "{{" and "}}" from the string for key
-        key = specialPlaceholders[i].substring(2, specialPlaceholders[i].length - 2);
-
-        if (key[0] == '{') key = key.substring(1, key.length - 1);
-
-        // Remove [] from the key {{[name]}} = name, remove "[" and "]" from the string for key
-        key = key.substring(1, key.length - 1);
-
-        // find the value.
-        value = _getPath(keyValues, key.trim());
-
-        // TODO since we're not going inside the object this logic of ignoredColumns is not needed anymore,
-        // it was a hack that was added for asset columns.
-        // If key is not in ingored columns value for the key is null or undefined then return null
-        if ((!Array.isArray(ignoredColumns) || ignoredColumns.indexOf(key) == -1) && (value === null || value === undefined)) {
-          return false;
-        }
-      }
-    }
-  }
-  return true;
-}
-
 /**
  * given a string, if it's a valid template_engine use it,
  * otherwise get it from the client config.
@@ -2344,7 +2174,7 @@ export function _renderTemplate(template, keyValues, catalog, options) {
   var res, objRes;
   if (_getTemplateEngine(options.templateEngine) === TEMPLATE_ENGINES.HANDLEBARS) {
     // render the template using Handlebars
-    res = renderHandlebarsTemplate(template, keyValues, catalog, options);
+    res = HandlebarsService.render(template, keyValues, catalog, options);
   } else {
     // render the template using Mustache
     res = renderMustacheTemplate(template, keyValues, catalog, options);
@@ -2400,7 +2230,7 @@ export function _validateTemplate(template, data, linkedData, table, context, op
 
   if (_getTemplateEngine(options.templateEngine) === TEMPLATE_ENGINES.HANDLEBARS) {
     // call the actual Handlebar validator
-    return _validateHandlebarsTemplate(template, data, table.schema.catalog, ignoredColumns);
+    return HandlebarsService.validate(template, data, table.schema.catalog, ignoredColumns);
   }
 
   // call the actual mustache validator

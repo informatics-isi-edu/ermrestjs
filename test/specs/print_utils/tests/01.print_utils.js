@@ -1415,9 +1415,9 @@ exports.execute = function (options) {
       });
     });
 
-    describe('module._renderHandlebarsTemplate() should behave the same as module.renderHandlebarsTemplate() for', function () {
+    describe('module.renderHandlebarsTemplate() should behave the same as module.renderHandlebarsTemplate() for', function () {
       it('injecting $catalog obj', function () {
-        expect(module._renderHandlebarsTemplate('catalog snapshot: {{$catalog.snapshot}}, catalog id: {{$catalog.id}}', {}, options.catalog)).toBe(
+        expect(module.renderHandlebarsTemplate('catalog snapshot: {{$catalog.snapshot}}, catalog id: {{$catalog.id}}', {}, options.catalog)).toBe(
           'catalog snapshot: ' + process.env.DEFAULT_CATALOG + ', catalog id: ' + process.env.DEFAULT_CATALOG,
         );
       });

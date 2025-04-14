@@ -355,8 +355,8 @@ AttributeGroupReference.prototype = {
    * @return {ERMRest.AttributeGroupPage}
    */
   read: function (limit, contextHeaderParams, dontCorrectPage) {
+    const defer = new DeferredPromise();
     try {
-      var defer = new DeferredPromise();
       var hasPaging = typeof limit === 'number' && limit > 0;
 
       var uri = this.uri;
@@ -441,11 +441,11 @@ AttributeGroupReference.prototype = {
           var error = ErrorService.responseToError(response);
           defer.reject(error);
         });
-
-      return defer.promise;
     } catch (e) {
-      return new DeferredPromise().reject(e);
+      defer.reject(e);
     }
+
+    return defer.promise;
   },
 
   getAggregates: function (aggregateList, contextHeaderParams) {
