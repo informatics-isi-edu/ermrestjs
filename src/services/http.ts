@@ -1,8 +1,15 @@
+// models
 import DeferredPromise from '@isrd-isi-edu/ermrestjs/src/models/deferred-promise';
 
-import { _shorterVersion, CONTEXT_HEADER_LENGTH_LIMIT, contextHeaderName } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
-import { fixedEncodeURIComponent, simpleDeepCopy } from '@isrd-isi-edu/ermrestjs/src/utils/value-utils';
+// services
 import CatalogService from '@isrd-isi-edu/ermrestjs/src/services/catalog';
+
+// utils
+import { _shorterVersion, CONTEXT_HEADER_LENGTH_LIMIT, contextHeaderName, ENV_IS_NODE } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
+import { fixedEncodeURIComponent, simpleDeepCopy } from '@isrd-isi-edu/ermrestjs/src/utils/value-utils';
+import { isObjectAndNotNull } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
+
+// legacy
 import { getElapsedTime, onload } from '@isrd-isi-edu/ermrestjs/js/setup/node';
 
 /**
@@ -70,7 +77,7 @@ export default class HTTPService {
    * All the calls that were paused because of 401 error are added to this array
    * Once the _encountered401Error is false, all of them will be resolved/restarted
    */
-  private static _authorizationDefers: Array<DeferredPromise<void>>;
+  private static _authorizationDefers: Array<DeferredPromise<void>> = [];
 
   private static _onHttpAuthFlowFn(skipHTTP401Handling: boolean) {
     const defer = new DeferredPromise<void>();
@@ -117,6 +124,10 @@ export default class HTTPService {
   }
 
   static wrapHTTP(http: any) {
+    if (ENV_IS_NODE && isObjectAndNotNull(http.defaults)) {
+      http.defaults.adapter = 'http';
+    }
+
     // wrapping function
     function wrap(method: keyof typeof _method_to_config_idx, fn: any, scope: any) {
       scope = scope || window;

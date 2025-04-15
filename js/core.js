@@ -2509,6 +2509,7 @@ Entity.prototype = {
    *
    */
   count: function (filter) {
+    const defer = new DeferredPromise();
     var uri = this._getBaseURI('aggregate');
 
     if (filter !== undefined && filter !== null) {
@@ -2519,15 +2520,17 @@ Entity.prototype = {
 
     uri = uri + '/row_count:=cnt(*)';
 
-    return this._server.http.get(uri).then(
+    this._server.http.get(uri).then(
       function (response) {
-        return response.data[0].row_count;
+        defer.resolve(response.data[0].row_count);
       },
       function (response) {
         const error = ErrorService.responseToError(response);
-        return new DeferredPromise().reject(error);
+        defer.reject(error);
       },
     );
+
+    return defer.promise;
   },
 
   /**
@@ -2545,18 +2548,21 @@ Entity.prototype = {
    * output columns and sortby needs to have columns of a key
    */
   get: function (filter, limit, columns, sortby) {
+    const defer = new DeferredPromise();
     var uri = this._toURI(filter, columns, sortby, null, null, limit);
 
     var self = this;
-    return this._server.http.get(uri).then(
+    this._server.http.get(uri).then(
       function (response) {
-        return new Rows(self._table, response.data, filter, limit, columns, sortby);
+        defer.resolve(new Rows(self._table, response.data, filter, limit, columns, sortby));
       },
       function (response) {
         const error = ErrorService.responseToError(response);
-        return new DeferredPromise().reject(error);
+        defer.reject(error);
       },
     );
+
+    return defer.promise;
   },
 
   /**
@@ -2576,18 +2582,21 @@ Entity.prototype = {
    *
    */
   getBefore: function (filter, limit, columns, sortby, row) {
+    const defer = new DeferredPromise();
     var uri = this._toURI(filter, columns, sortby, 'before', row, limit);
 
     var self = this;
-    return this._server.http.get(uri).then(
+    this._server.http.get(uri).then(
       function (response) {
-        return new Rows(self._table, response.data, filter, limit, columns, sortby);
+        defer.resolve(new Rows(self._table, response.data, filter, limit, columns, sortby));
       },
       function (response) {
         const error = ErrorService.responseToError(response);
-        return new DeferredPromise().reject(error);
+        defer.reject(error);
       },
     );
+
+    return defer.promise;
   },
 
   /**
@@ -2605,18 +2614,21 @@ Entity.prototype = {
    *
    */
   getAfter: function (filter, limit, columns, sortby, row) {
+    const defer = new DeferredPromise();
     var uri = this._toURI(filter, columns, sortby, 'after', row, limit);
 
     var self = this;
-    return this._server.http.get(uri).then(
+    this._server.http.get(uri).then(
       function (response) {
-        return new Rows(self._table, response.data, filter, limit, columns, sortby);
+        defer.resolve(Rows(self._table, response.data, filter, limit, columns, sortby));
       },
       function (response) {
         const error = ErrorService.responseToError(response);
-        return new DeferredPromise().reject(error);
+        defer.reject(error);
       },
     );
+
+    return defer.promise;
   },
 
   /**
@@ -2629,17 +2641,20 @@ Entity.prototype = {
    * Delete rows from table based on the filter
    */
   delete: function (filter) {
+    const defer = new DeferredPromise();
     var uri = this._toURI(filter);
 
-    return this._server.http.delete(uri).then(
+    this._server.http.delete(uri).then(
       function (response) {
-        return response.data;
+        defer.resolve(response.data);
       },
       function (response) {
         const error = ErrorService.responseToError(response);
-        return new DeferredPromise().reject(error);
+        defer.reject(error);
       },
     );
+
+    return defer.promise;
   },
 
   /**
@@ -2651,17 +2666,20 @@ Entity.prototype = {
    * Update rows in the table
    */
   put: function (rows) {
+    const defer = new DeferredPromise();
     var uri = this._toURI();
 
-    return this._server.http.put(uri, rows).then(
+    this._server.http.put(uri, rows).then(
       function (response) {
-        return response.data;
+        defer.resolve(response.data);
       },
       function (response) {
         const error = ErrorService.responseToError(response);
-        return new DeferredPromise().reject(error);
+        defer.reject(error);
       },
     );
+
+    return defer.promise;
   },
 
   /**
@@ -2675,6 +2693,8 @@ Entity.prototype = {
    * Create new entities
    */
   post: function (rows, defaults) {
+    const defer = new DeferredPromise();
+
     // create new entities
     var uri =
       this._table.schema.catalog._uri +
@@ -2693,15 +2713,17 @@ Entity.prototype = {
       }
     }
 
-    return this._server.http.post(uri, rows).then(
+    this._server.http.post(uri, rows).then(
       function (response) {
-        return response.data;
+        defer.resolve(response.data);
       },
       function (response) {
         const error = ErrorService.responseToError(response);
-        return new DeferredPromise().reject(error);
+        defer.reject(error);
       },
     );
+
+    return defer.promise;
   },
 };
 

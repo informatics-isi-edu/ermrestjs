@@ -26,16 +26,15 @@ export default class ConfigService {
 
   /**
    * This function is used to configure the module
+   * Notes:
+   * - if this configure function is not called, we're going to use axios by default.
+   * - The second parameter is not used and only added for backwards compatibility.
    * @param http any http service (like Angular $http or axios)
    * @param q Any promise library (like Angular $q or Q library)
-   * @deprecated
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   static configure(http: any, q: any) {
-    // TODO this function is added for backwards compatibility with the old code and should eventually be removed.
-    // ConfigService._http = axios;
-    // ConfigService._q = q;
-    $log.warn('ConfigService.configure is deprecated and will eventually be removed. You do not need to call it anymore.');
+    ConfigService._http = http;
   }
 
   static get http() {
@@ -200,6 +199,7 @@ export default class ConfigService {
    * NOTE meant to be used only in node environments
    */
   static setUserCookie(authCookie: string) {
+    ConfigService._http.defaults.adapter = 'http';
     ConfigService._http.defaults.withCredentials = true;
     ConfigService._http.defaults.headers.common.Cookie = authCookie || '';
   }

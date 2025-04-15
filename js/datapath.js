@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable prettier/prettier */
 import { NotFoundError } from '@isrd-isi-edu/ermrestjs/src/models/errors';
+import DeferredPromise from '@isrd-isi-edu/ermrestjs/src/models/deferred-promise';
 
 import ErrorService from '@isrd-isi-edu/ermrestjs/src/services/error';
 
@@ -120,6 +121,7 @@ DataPath.prototype = {
      *     {@link ERMrest.Errors.ConflictError}, {@link ERMrest.Errors.ForbiddenError} or {@link ERMrest.Errors.UnauthorizedError} if rejected
      */
     get: function (contextHeaderParams) {
+      const defer = new DeferredPromise();
       var baseUri = this.scope.server.uri;
       var catId = this.scope.catalog.id;
       var uri =
@@ -134,15 +136,17 @@ DataPath.prototype = {
       }
       var headers = {};
       headers[contextHeaderName] = contextHeaderParams;
-      return this.scope.server.http.get(uri, { headers: headers }).then(
+      this.scope.server.http.get(uri, { headers: headers }).then(
         function (response) {
-          return response.data; // TODO rowset?
+          defer.resolve(response.data); // TODO rowset?
         },
         function (response) {
           var error = ErrorService.responseToError(response);
-          return new Promise().reject(error);
+          defer.reject(error);
         },
       );
+
+      return defer.promise;
     },
 
     /**
@@ -154,21 +158,24 @@ DataPath.prototype = {
      *     {@link ERMrest.Errors.ConflictError}, {@link ERMrest.Errors.ForbiddenError} or {@link ERMrest.Errors.UnauthorizedError} if rejected
      */
     delete: function (filter) {
+      const defer = new DeferredPromise();
       var baseUri = this.scope.server.uri;
       var catId = this.scope.catalog.id;
       var uri = baseUri + '/catalog/' + catId + '/entity/' + this.scope._getUri();
 
       uri = uri + '/' + filter.toUri();
 
-      return this.scope.server.http.delete(uri).then(
+      this.scope.server.http.delete(uri).then(
         function (response) {
-          return response.data;
+          defer.resolve(response.data);
         },
         function (response) {
           var error = ErrorService.responseToError(response);
-          return new Promise().reject(error);
+          defer.reject(error);
         },
       );
+
+      return defer.promise;
     },
   },
 };
