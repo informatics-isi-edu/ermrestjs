@@ -28,6 +28,7 @@ export default class ConfigService {
    * This function is used to configure the module
    * @param http any http service (like Angular $http or axios)
    * @param q Any promise library (like Angular $q or Q library)
+   * @deprecated
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   static configure(http: any, q: any) {

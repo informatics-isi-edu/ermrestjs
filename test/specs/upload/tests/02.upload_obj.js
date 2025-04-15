@@ -157,7 +157,7 @@ exports.execute = function (options) {
         })
         .catch(function (err) {
           console.dir(err);
-          done.fail();
+          done.fail(err);
         });
     });
 
@@ -170,7 +170,7 @@ exports.execute = function (options) {
         },
         function (err) {
           console.dir(err);
-          done.fail();
+          done.fail(err);
         },
       );
     });

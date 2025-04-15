@@ -42,7 +42,7 @@ export function Checksum(file, options) {
 /**
  * This callback will be called for progress during checksum calculation
  * @callback checksumOnProgres
- * @param {number} Uploaded the amount that has been Uploaded
+ * @param {number} uploaded the amount that has been uploaded
  * @param {number} fileSize the total size of the file.
  */
 
@@ -197,14 +197,14 @@ const _getFilenameExtension = function (filename, allowedExtensions, regexArr) {
 };
 
 /**
- * @desc Upload Object
- * Create a new instance with new Upload(file, otherInfo)
+ * @desc upload Object
+ * Create a new instance with new upload(file, otherInfo)
  * To validate url generation for a file call validateUrl(row, linkedData) with row of data and the fk data
  * To calculate checksum call calculateChecksum(row, linkedData) with row of data and the fk data
  * To check for existing file call fileExists()
- * To create an Upload call createUploadJob()
- * To start Uploading, call start()
- * To complete Upload job call completeUploadJob()
+ * To create an upload call createUploadJob()
+ * To start uploading, call start()
+ * To complete upload job call completeUpload()
  * You can pause with pause()
  * Resume with resume()
  * Cancel with cancel()
@@ -217,7 +217,7 @@ const _getFilenameExtension = function (filename, allowedExtensions, regexArr) {
  * 2. column - {@link ERMrest.Column} object is mandatory
  * 3. reference - {@link ERMrest.Reference} object  is mandatory
  *
- * @returns {Upload}
+ * @returns {upload}
  */
 export function Upload(file, otherInfo) {
   this.PART_SIZE = otherInfo.chunkSize || 5 * 1024 * 1024; //minimum part size defined by hatrac 5MB
@@ -245,8 +245,8 @@ export function Upload(file, otherInfo) {
   this.otherInfo = otherInfo;
 
   this.chunks = [];
-  // array of true values for tracking which chunks are Uploaded so far
-  // used to determine what chunk to resume Upload from if needed
+  // array of true values for tracking which chunks are uploaded so far
+  // used to determine what chunk to resume upload from if needed
   this.chunkTracker = [];
   this.startChunkIdx = 0;
 
@@ -297,12 +297,12 @@ Upload.prototype.validateURL = function (row, linkedData) {
 };
 
 /**
- * @desc Call this function to calculate checksum before Uploading to server
+ * @desc Call this function to calculate checksum before uploading to server
  * @param {object} row - row object containing keyvalues of entity
  * @param {object} linkedData - object containing the linked data (outbound fk values)
  * @param {(uploaded: number) => void | undefined} onProgress - a callback function to be called for progress
  *
- * @returns {Promise} A promise resolved with a url where we will Upload the file
+ * @returns {Promise} A promise resolved with a url where we will upload the file
  * or rejected with error if unable to calculate checkum
  * and notified with a progress handler, sending number in bytes done
  */
@@ -324,8 +324,8 @@ Upload.prototype.calculateChecksum = function (row, linkedData, onProgress) {
   var self = this;
   this.hash.calculate(
     this.PART_SIZE,
-    function (Uploaded) {
-      if (onProgress) onProgress(Uploaded);
+    function (uploaded) {
+      if (onProgress) onProgress(uploaded);
     },
     function () {
       self._generateURL(row, linkedData);
@@ -343,10 +343,10 @@ Upload.prototype.calculateChecksum = function (row, linkedData, onProgress) {
  * @desc Call this function to determine file exists on the server
  * If it doesn't then resolve the promise with url.
  * If it does then set isPaused, completed and jobDone to true
- * @param {string} jobUrl - if an existing job is being tracked locally and the checksum for current `Upload`
+ * @param {string} jobUrl - if an existing job is being tracked locally and the checksum for current `upload`
  *     matches that matched job, return the stored previousJobUrl to be used if a 409 is returned
  *       - a 409 could mean the namespace already exists and we have an existing job for that namespace we know is partially uplaoded
- *       - if all the above is true, set the `Upload.chunkUrl` to the jobUrl we were tracking locally
+ *       - if all the above is true, set the `upload.chunkUrl` to the jobUrl we were tracking locally
  * @returns {Promise}
  */
 Upload.prototype.fileExists = function (previousJobUrl, contextHeaderParams) {
@@ -356,7 +356,7 @@ Upload.prototype.fileExists = function (previousJobUrl, contextHeaderParams) {
 
   if (!contextHeaderParams || !isObject(contextHeaderParams)) {
     contextHeaderParams = {
-      action: 'Upload/file-exists',
+      action: 'upload/file-exists',
       referrer: this.reference.defaultLogInfo,
     };
     contextHeaderParams.referrer.column = this.column.name;
@@ -383,13 +383,13 @@ Upload.prototype.fileExists = function (previousJobUrl, contextHeaderParams) {
       var contentDispositionPrefix = "filename*=UTF-8''";
       var filenameIndex = contentDisposition.indexOf(contentDispositionPrefix) + contentDispositionPrefix.length;
 
-      // check if filename in content disposition is different from filename being Uploaded
+      // check if filename in content disposition is different from filename being uploaded
       // if it is, create an update metadata request for updating the content-disposition
       if (contentDisposition.substring(filenameIndex, contentDisposition.length) != self.storedFilename.replace(FILENAME_REGEXP, '_')) {
         // Prepend the url with server uri if it is relative
         var url = self._getAbsoluteUrl(self.url + ';metadata/content-disposition');
         var data = "filename*=UTF-8''" + self.storedFilename.replace(FILENAME_REGEXP, '_');
-        contextHeaderParams.action = 'Upload/metadata/update';
+        contextHeaderParams.action = 'upload/metadata/update';
 
         var config = {
           headers: _generateContextHeader(contextHeaderParams),
@@ -425,9 +425,9 @@ Upload.prototype.fileExists = function (previousJobUrl, contextHeaderParams) {
       if (response.status == 403 || response.status == 404) {
         deferred.resolve(self.url);
       } else if (response.status == 409) {
-        // the namespace might exist with no content, maybe there is a partial Upload
-        // set the chunkUrl to the previousJobUrl that we stored in chaise with a partial Upload
-        // previousJobUrl = self.url + ';Upload/' + job.hash
+        // the namespace might exist with no content, maybe there is a partial upload
+        // set the chunkUrl to the previousJobUrl that we stored in chaise with a partial upload
+        // previousJobUrl = self.url + ';upload/' + job.hash
         if (previousJobUrl) self.chunkUrl = previousJobUrl;
         deferred.resolve(self.url);
       } else {
@@ -440,9 +440,9 @@ Upload.prototype.fileExists = function (previousJobUrl, contextHeaderParams) {
 };
 
 /**
- * @desc Call this function to create an Upload job for chunked Uploading
+ * @desc Call this function to create an upload job for chunked uploading
  *
- * @returns {Promise} A promise resolved with a url where we will Upload the file
+ * @returns {Promise} A promise resolved with a url where we will upload the file
  * or rejected with error if unable to calculate checkum
  */
 Upload.prototype.createUploadJob = function (contextHeaderParams) {
@@ -456,10 +456,10 @@ Upload.prototype.createUploadJob = function (contextHeaderParams) {
     return deferred.promise;
   }
 
-  // Check whether an existing Upload job is available for current file
+  // Check whether an existing upload job is available for current file
   this._getExistingJobStatus()
     .then(function (response) {
-      // if Upload job exists then use current chunk url
+      // if upload job exists then use current chunk url
       // else create a new chunk url
       // if the md5 of the url is same as the once that we calculated then
       // resolve the promise with the true
@@ -470,7 +470,7 @@ Upload.prototype.createUploadJob = function (contextHeaderParams) {
         self.chunkUrl = null;
 
         // Prepend the url with server uri if it is relative
-        var url = self._getAbsoluteUrl(self.url + ';Upload?parents=true');
+        var url = self._getAbsoluteUrl(self.url + ';upload?parents=true');
 
         var data = {
           'chunk-length': self.PART_SIZE,
@@ -482,7 +482,7 @@ Upload.prototype.createUploadJob = function (contextHeaderParams) {
 
         if (!contextHeaderParams || !isObject(contextHeaderParams)) {
           contextHeaderParams = {
-            action: 'Upload/create',
+            action: 'upload/create',
             referrer: self.reference.defaultLogInfo,
           };
           contextHeaderParams.referrer.column = self.column.name;
@@ -513,15 +513,15 @@ Upload.prototype.createUploadJob = function (contextHeaderParams) {
 };
 
 /**
- * @desc Call this function to start chunked Upload to server. It reads the file and divides in into chunks
- * If the completed flag is true, then this means that all chunks were already Uploaded, thus it will resolve the promize with url
- * else it will start Uploading the chunks. If the job was paused then resume by Uploading just those chunks which were not completed.
+ * @desc Call this function to start chunked upload to server. It reads the file and divides in into chunks
+ * If the completed flag is true, then this means that all chunks were already uploaded, thus it will resolve the promize with url
+ * else it will start uploading the chunks. If the job was paused then resume by uploading just those chunks which were not completed.
  *
- * @param {number} startChunkIdx - the index of the chunk to start Uploading from in case of resuming a found incomplete Upload job
+ * @param {number} startChunkIdx - the index of the chunk to start uploading from in case of resuming a found incomplete upload job
  * @param {(size: number) => void | undefined} onProgress - a callback function to be called for progress
- * @returns {Promise} A promise resolved with a url where we Uploaded the file
- * or rejected with error if unable to Upload any chunk
- * and notified with a progress handler, sending number in bytes Uploaded uptil now
+ * @returns {Promise} A promise resolved with a url where we uploaded the file
+ * or rejected with error if unable to upload any chunk
+ * and notified with a progress handler, sending number in bytes uploaded uptil now
  */
 Upload.prototype.start = function (startChunkIdx, onProgress) {
   var self = this;
@@ -530,8 +530,8 @@ Upload.prototype.start = function (startChunkIdx, onProgress) {
 
   var deferred = new DeferredPromise();
 
-  this.UploadPromise = deferred;
-  this.UploadProgressCallback = onProgress;
+  this.uploadPromise = deferred;
+  this.uploadProgressCallback = onProgress;
 
   if (this.completed) {
     if (onProgress) onProgress(this.file.size);
@@ -543,8 +543,8 @@ Upload.prototype.start = function (startChunkIdx, onProgress) {
     return deferred.promise;
   }
 
-  // If isPaused is not true, or chunks length is 0 then create chunks and start Uploading
-  // else directly start Uploading the chunks
+  // If isPaused is not true, or chunks length is 0 then create chunks and start uploading
+  // else directly start uploading the chunks
   if (!this.isPaused || this.chunks.length === 0) {
     var start = 0;
     var index = 0;
@@ -565,7 +565,7 @@ Upload.prototype.start = function (startChunkIdx, onProgress) {
       // intialize array to the same length as the number of chunks we have
       // this initializes every index to `Empty`
       this.chunkTracker = Array(this.chunks.length);
-      // set index in array to true for each chunk we know is already Uploaded
+      // set index in array to true for each chunk we know is already uploaded
       for (var j = 0; j < startChunkIdx; j++) this.chunkTracker[j] = true;
     }
   }
@@ -574,7 +574,7 @@ Upload.prototype.start = function (startChunkIdx, onProgress) {
   this.chunkQueue = [];
 
   this.chunks.forEach(function (chunk, idx) {
-    // check the startChunkIdx before Uploading the chunk in the case we are resuming an Upload job
+    // check the startChunkIdx before uploading the chunk in the case we are resuming an upload job
     if (idx < startChunkIdx) return;
 
     chunk.retryCount = 0;
@@ -583,16 +583,16 @@ Upload.prototype.start = function (startChunkIdx, onProgress) {
 
   for (var i = 0; i < this.CHUNK_QUEUE_SIZE; i++) {
     var nextChunk = self.chunkQueue.shift();
-    if (nextChunk) self._UploadPart(nextChunk);
+    if (nextChunk) self._uploadPart(nextChunk);
   }
 
   return deferred.promise;
 };
 
 /**
- *  @desc This function is used to complete the chunk Upload by notifying hatrac about it returning a promise with final url
+ *  @desc This function is used to complete the chunk upload by notifying hatrac about it returning a promise with final url
  *
- *  @returns {Promise} A promise resolved with a url where we Uploaded the file
+ *  @returns {Promise} A promise resolved with a url where we uploaded the file
  *  or rejected with error if unable to complete the job
  */
 Upload.prototype.completeUpload = function (contextHeaderParams) {
@@ -607,7 +607,7 @@ Upload.prototype.completeUpload = function (contextHeaderParams) {
 
   if (!contextHeaderParams || !isObject(contextHeaderParams)) {
     contextHeaderParams = {
-      action: 'Upload/complete',
+      action: 'upload/complete',
       referrer: this.reference.defaultLogInfo,
     };
     contextHeaderParams.referrer.column = this.column.name;
@@ -641,9 +641,9 @@ Upload.prototype.completeUpload = function (contextHeaderParams) {
 };
 
 /**
- * @desc Pause the Upload
+ * @desc Pause the upload
  * Remember, the current progressing part will fail,
- * that part will start from beginning (< 5MB of Upload is wasted)
+ * that part will start from beginning (< 5MB of upload is wasted)
  */
 Upload.prototype.pause = function () {
   if (this.completed || this.isPaused) return;
@@ -657,7 +657,7 @@ Upload.prototype.pause = function () {
 };
 
 /**
- * @desc Resumes the Upload
+ * @desc Resumes the upload
  *
  */
 Upload.prototype.resume = function () {
@@ -665,18 +665,18 @@ Upload.prototype.resume = function () {
 
   this.erred = false;
 
-  // code to handle reUpload
+  // code to handle reupload
   this.start();
 };
 
 /**
- * @desc Aborts/cancels the Upload
+ * @desc Aborts/cancels the upload
  * @returns {Promise}
  */
 Upload.prototype.cancel = function (deleteJob) {
   var deferred = new DeferredPromise();
 
-  // If the Upload has completed and complete job call has been made then
+  // If the upload has completed and complete job call has been made then
   // We directly resolve the promise setting progress as 0 and xhr as null for each chunk
   if (this.completed && this.jobDone) {
     // Iterate over each chunk to abort the HTTP call
@@ -723,7 +723,7 @@ Upload.prototype.deleteFile = function (contextHeaderParams) {
 
   if (!contextHeaderParams || !isObject(contextHeaderParams)) {
     contextHeaderParams = {
-      action: 'Upload/delete',
+      action: 'upload/delete',
       referrer: this.reference.defaultLogInfo,
     };
     contextHeaderParams.referrer.column = this.column.name;
@@ -745,7 +745,7 @@ Upload.prototype.deleteFile = function (contextHeaderParams) {
   return deferred.promise;
 };
 
-// Private function for Upload Object
+// Private function for upload Object
 
 /**
  * @private
@@ -770,7 +770,7 @@ Upload.prototype._getAbsoluteUrl = function (uri) {
 
 /**
  * @private
- * @desc Call this function with the json row object to  generate an Upload url
+ * @desc Call this function with the json row object to  generate an upload url
  * @param {object} row - row object containing keyvalues of entity
  * @param {object} linkedData - object containing the linked data (outbound fk values)
  *
@@ -830,21 +830,21 @@ Upload.prototype._generateURL = function (row, linkedData) {
 
   // check for having hatrac
   if (_parseUrl(url).pathname.indexOf('/hatrac/') !== 0) {
-    throw new MalformedURIError('The path for Uploading a url should begin with /hatrac/ .');
+    throw new MalformedURIError('The path for uploading a url should begin with /hatrac/ .');
   }
 
   // If new url has changed then there set all other flags to false to recompute them
   if (this.url !== url) {
-    // To regenerate Upload job url
+    // To regenerate upload job url
     this.chunkUrl = false;
 
     // To make the filesExists call again
     this.fileExistsFlag = false;
 
-    // To restart Upload of all chunks
+    // To restart upload of all chunks
     this.completed = false;
 
-    // To recall complete Upload method
+    // To recall complete upload method
     this.jobDone = false;
   }
 
@@ -856,14 +856,14 @@ Upload.prototype._generateURL = function (row, linkedData) {
 
 /**
  * @private
- * @desc This function fetches the Upload job status if chunkurl is not null
+ * @desc This function fetches the upload job status if chunkurl is not null
  * @returns {Promise}
  */
 Upload.prototype._getExistingJobStatus = function () {
   var deferred = new DeferredPromise();
 
   var contextHeaderParams = {
-    action: 'Upload/status',
+    action: 'upload/status',
     referrer: this.reference.defaultLogInfo,
   };
   contextHeaderParams.referrer.column = this.column.name;
@@ -871,7 +871,7 @@ Upload.prototype._getExistingJobStatus = function () {
   var config = {
     headers: _generateContextHeader(contextHeaderParams),
   };
-  // If chunkUrl is not null then fetch the status of the UploadJob
+  // If chunkUrl is not null then fetch the status of the uploadJob
   // and resolve promise with it.
   // else resolve it without any response
   if (this.chunkUrl) {
@@ -892,11 +892,11 @@ Upload.prototype._getExistingJobStatus = function () {
 
 /**
  * @private
- * @desc This function is called by start methid to start Uploading the chunk to server.
+ * @desc This function is called by start methid to start uploading the chunk to server.
  * If the chunk is not completed and has an xhr then set its progress to 0 and xhr to null
  * @param {Chunk} chunk - chunk object
  */
-Upload.prototype._UploadPart = function (chunk) {
+Upload.prototype._uploadPart = function (chunk) {
   var self = this;
   if (chunk.xhr && !chunk.completed) {
     chunk.xhr.resolve();
@@ -907,20 +907,20 @@ Upload.prototype._UploadPart = function (chunk) {
   chunk.sendToHatrac(this).then(function () {
     var nextChunk = self.chunkQueue.shift();
 
-    if (nextChunk) self._UploadPart(nextChunk);
+    if (nextChunk) self._uploadPart(nextChunk);
   });
 };
 
 /**
  * @private
- * @desc This function should be called to update the progress of Upload
+ * @desc This function should be called to update the progress of upload
  * It calls the onProgressChanged callback that the user subscribes
- * In addition if the Upload has been completed then it will call onUploadCompleted for regular Upload
- * and completeUpload to complete the chunk Upload
+ * In addition if the upload has been completed then it will call onuploadCompleted for regular upload
+ * and completeupload to complete the chunk upload
  */
 Upload.prototype._updateProgressBar = function () {
   var length = this.chunks.length;
-  // progressDone and chunksComplete should be intiialized if we had an existing Upload job
+  // progressDone and chunksComplete should be intiialized if we had an existing upload job
   var progressDone = this.startChunkIdx * this.PART_SIZE;
   var chunksComplete = this.startChunkIdx;
   for (var i = 0; i < length; i++) {
@@ -928,20 +928,20 @@ Upload.prototype._updateProgressBar = function () {
     if (this.chunks[i].completed) chunksComplete++;
   }
 
-  if (this.UploadProgressCallback) this.UploadProgressCallback(this.completed ? this.file.size : progressDone, this.file.size);
+  if (this.uploadProgressCallback) this.uploadProgressCallback(this.completed ? this.file.size : progressDone, this.file.size);
 
   if (chunksComplete === length && !this.completed) {
     this.completed = true;
-    if (this.UploadPromise) this.UploadPromise.resolve(this.url);
+    if (this.uploadPromise) this.uploadPromise.resolve(this.url);
   }
 };
 
 /**
  * @private
- * @desc Code to cancel Upload job
+ * @desc Code to cancel upload job
  * We resolve the promise successfully even though the delete fails
- * because it won't affect the Upload
- * Setting chunkUrl null marks that when we reUpload this file, we should create a new job
+ * because it won't affect the upload
+ * Setting chunkUrl null marks that when we reupload this file, we should create a new job
  *
  * @returns {Promise}
  */
@@ -949,7 +949,7 @@ Upload.prototype._cancelUploadJob = function () {
   var deferred = new DeferredPromise();
 
   var contextHeaderParams = {
-    action: 'Upload/cancel',
+    action: 'upload/cancel',
     referrer: this.reference.defaultLogInfo,
   };
   contextHeaderParams.referrer.column = this.column.name;
@@ -976,20 +976,20 @@ Upload.prototype._cancelUploadJob = function () {
 
 /**
  * @private
- * @desc This function will be called by chunk Upload hanlder with the actual response
+ * @desc This function will be called by chunk upload hanlder with the actual response
  * @param {object} response - network error response
  */
 Upload.prototype._onUploadError = function (response) {
   if (this.erred) return;
   this.erred = true;
-  this.UploadPromise.reject(ErrorService.responseToError(response));
+  this.uploadPromise.reject(ErrorService.responseToError(response));
 };
 
 /**
  * @desc chunk Object
  * Create a new instance with new Chunk(index, start, end)
- * This class contains one of the chunks of the {Ermrest.Upload} instance.
- * It will Upload the chunk and call _updateProgressBar
+ * This class contains one of the chunks of the {Ermrest.upload} instance.
+ * It will upload the chunk and call _updateProgressBar
  *
  * @class
  * @param {number} index - Index of the chunk
@@ -1010,10 +1010,10 @@ var Chunk = function (index, start, end) {
 };
 
 /**
- * @desc This function will Upload a chunk of file to the url and call _updateProgressBar
- * @param {Upload} {Upload} - An instance of the Upload to which this chunk belongs
+ * @desc This function will upload a chunk of file to the url and call _updateProgressBar
+ * @param {upload} {upload} - An instance of the upload to which this chunk belongs
  */
-Chunk.prototype.sendToHatrac = function (Upload) {
+Chunk.prototype.sendToHatrac = function (upload) {
   var deferred = new DeferredPromise();
 
   if (this.xhr || this.completed) {
@@ -1021,7 +1021,7 @@ Chunk.prototype.sendToHatrac = function (Upload) {
 
     deferred.resolve();
 
-    Upload._updateProgressBar();
+    upload._updateProgressBar();
 
     return deferred.promise;
   }
@@ -1032,19 +1032,19 @@ Chunk.prototype.sendToHatrac = function (Upload) {
   var blob;
   if (ENV_IS_NODE) {
     // eslint-disable-next-line no-undef
-    blob = Buffer.prototype.slice.call(Upload.file.buffer, this.start, this.end);
+    blob = Buffer.prototype.slice.call(upload.file.buffer, this.start, this.end);
   } else {
-    blob = Upload.file.slice(this.start, this.end);
+    blob = upload.file.slice(this.start, this.end);
   }
 
   this.progress = 0;
 
   // set content-type to "application/octet-stream"
   var contextHeaderParams = {
-    action: 'Upload/chunk',
-    referrer: Upload.reference.defaultLogInfo,
+    action: 'upload/chunk',
+    referrer: upload.reference.defaultLogInfo,
   };
-  contextHeaderParams.referrer.column = Upload.column.name;
+  contextHeaderParams.referrer.column = upload.column.name;
 
   var headers = _generateContextHeader(contextHeaderParams);
   headers['content-type'] = 'application/octet-stream';
@@ -1052,17 +1052,17 @@ Chunk.prototype.sendToHatrac = function (Upload) {
   self.xhr = new DeferredPromise();
 
   var request = {
-    // If index is -1 then Upload it to the url or Upload it to chunkUrl
-    url: Upload._getAbsoluteUrl(Upload.chunkUrl) + '/' + this.index,
+    // If index is -1 then upload it to the url or upload it to chunkUrl
+    url: upload._getAbsoluteUrl(upload.chunkUrl) + '/' + this.index,
     method: 'PUT',
     config: {
       headers: headers,
-      UploadEventHandlers: {
+      uploadEventHandlers: {
         progress: function (e) {
-          // To track progress on Upload
+          // To track progress on upload
           if (e.lengthComputable) {
             self.progress = e.loaded;
-            Upload._updateProgressBar();
+            upload._updateProgressBar();
           }
         },
       },
@@ -1075,10 +1075,10 @@ Chunk.prototype.sendToHatrac = function (Upload) {
   };
 
   // Send the request
-  // If Upload is aborted using .abort() for pause or cancel scenario
+  // If upload is aborted using .abort() for pause or cancel scenario
   // then error callback will be called for which the status code would be 0
   // else it would be in range of 400 and 500
-  Upload.http.put(request.url, request.data, request.config).then(
+  upload.http.put(request.url, request.data, request.config).then(
     function () {
       // Set progress to blob size, and set chunk completed
       self.progress = self.size;
@@ -1087,21 +1087,21 @@ Chunk.prototype.sendToHatrac = function (Upload) {
 
       deferred.resolve();
 
-      // this chunk was successfully Uploaded, update the chunkTracker
-      Upload.chunkTracker[self.index] = true;
-      Upload._updateProgressBar();
+      // this chunk was successfully uploaded, update the chunkTracker
+      upload.chunkTracker[self.index] = true;
+      upload._updateProgressBar();
     },
     function (response) {
       self.progress = 0;
 
-      // If Upload is not paused
+      // If upload is not paused
       // and the status code is in range of 500 then there is a server error, keep retrying for 5 times
       // else the error is in 400 series which is some client error
-      if (!Upload.isPaused) {
-        Upload._updateProgressBar();
-        Upload._onUploadError(response);
+      if (!upload.isPaused) {
+        upload._updateProgressBar();
+        upload._onUploadError(response);
       } else {
-        Upload._updateProgressBar();
+        upload._updateProgressBar();
       }
     },
   );
@@ -1111,7 +1111,7 @@ Chunk.prototype.sendToHatrac = function (Upload) {
 
 /**
  * @desc This function will abort a chunk of file to the url and call _updateProgressBar
- * @param {Upload} {Upload} - An instance of the Upload to which this chunk belongs
+ * @param {upload} {upload} - An instance of the upload to which this chunk belongs
  */
 Chunk.prototype.abort = function () {
   if (this.xhr && typeof this.xhr.resolve == 'function') this.xhr.resolve();
