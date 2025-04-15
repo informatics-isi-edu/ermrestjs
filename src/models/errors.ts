@@ -106,7 +106,7 @@ export class PreconditionFailedError extends ERMrestError {
 export class InternalServerError extends ERMrestError {
   constructor(status: string, message: string) {
     const usedStatus = isStringAndNotEmpty(status) ? status : _errorStatus.INTERNAL_SERVER_ERROR;
-    super(_HTTPErrorCodes.INTERNAL_SERVER_ERROR, usedStatus, message);
+    super(_HTTPErrorCodes.INTERNAL_SERVER_ERROR, usedStatus, _errorMessage.INTERNAL_SERVER_ERROR, message);
   }
 }
 
