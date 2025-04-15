@@ -38,7 +38,7 @@
     "handlebars": "4.7.7",
     "husky": "^9.1.7",
     "lz-string": "^1.5.0",
-    "markdown-it": "14.1.0",
+    "markdown-it": "12.3.2",
     "moment": "2.30.1",
     "moment-timezone": "0.5.48",
     "mustache": "x",
