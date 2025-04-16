@@ -26,12 +26,14 @@ export default defineConfig({
     },
     rollupOptions: {
       output: [
+        // some static sites use this version:
         {
           name: 'ERMrest',
           format: 'umd',
           entryFileNames: 'ermrest.js',
           inlineDynamicImports: true,
         },
+        // the following is the main build that chaise uses:
         {
           name: 'ERMrest',
           format: 'umd',

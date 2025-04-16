@@ -1,7 +1,8 @@
 /**
  * This file contains the functions and classes that we want to expose for standalone javascript ermrest bundle
- * webpack will attach these to 'ERMrest' namespace which will allow accessing them using `window.ERMrest`
+ * vite will attach these to 'ERMrest' namespace which will allow accessing them using `window.ERMrest`
  */
+import moment from 'moment-timezone';
 
 // model
 import {
@@ -41,7 +42,7 @@ import ErrorService from '@isrd-isi-edu/ermrestjs/src/services/error';
 import HTTPService from '@isrd-isi-edu/ermrestjs/src/services/http';
 
 // utils
-import { contextHeaderName } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
+import { contextHeaderName, ENV_IS_NODE } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
 import { fixedEncodeURIComponent } from '@isrd-isi-edu/ermrestjs/src/utils/value-utils';
 import { renderMarkdown } from '@isrd-isi-edu/ermrestjs/src/utils/markdown-utils';
 
@@ -95,6 +96,11 @@ const renderHandlebarsTemplate = HandlebarsService.render;
 const _clearConstraintNames = CatalogService.clearConstraintNames;
 
 const _fixedEncodeURIComponent = fixedEncodeURIComponent;
+
+// chaise relies on moment
+if (!ENV_IS_NODE) {
+  window.moment = moment;
+}
 
 export {
   // services
