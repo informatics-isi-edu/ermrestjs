@@ -1095,7 +1095,8 @@ export const _facetColumnHelpers = {
     });
 
     if (filterValues.length === 0) {
-      return defer.resolve(res), defer.promise;
+      defer.resolve(res);
+      return defer.promise;
     }
 
     if (!contextHeaderParams || !isObject(contextHeaderParams)) {
@@ -1161,7 +1162,8 @@ export const _facetColumnHelpers = {
           res.andFilterObject.sourceObject.choices = newChoices;
         }
 
-        return defer.resolve(res), defer.promise;
+        defer.resolve(res);
+        return defer.promise;
       }
 
       var uri = [table.schema.catalog.server.uri, 'catalog', table.schema.catalog.id, 'entity', basePath, req.path].join('/');

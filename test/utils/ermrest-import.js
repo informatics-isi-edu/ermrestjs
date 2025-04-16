@@ -19,7 +19,8 @@ exports.importSchemas = function (configFilePaths, catalogId) {
   var config, schema, schemaName;
 
   if (!configFilePaths || configFilePaths.length === 0) {
-    return defer.resolve({ catalogId: catalogId, entities: {} }), defer.promise;
+    defer.resolve({ catalogId: catalogId, entities: {} });
+    return defer.promise;
   }
 
   // for the structure of settings, please refer to ErmrestDataUtils

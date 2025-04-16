@@ -161,7 +161,8 @@ export const resolve = function (uri, contextHeaderParams) {
         try {
           location = parse(uri);
         } catch (error) {
-          return defer.reject(error);
+          defer.reject(error);
+          return defer.promise;
         }
 
         var server = ermrestFactory.getServer(location.service, contextHeaderParams);
@@ -709,7 +710,8 @@ Reference.prototype = {
       if (skipMappingEntityChoices) {
         return res;
       } else {
-        return defer.resolve(res), defer.promise;
+        defer.resolve(res);
+        return defer.promise;
       }
     }
 
@@ -1317,14 +1319,16 @@ Reference.prototype = {
           var page = new Page(ref, etag, response.data, false, false);
 
           //  resolve the promise, passing back the page
-          return defer.resolve({
+          defer.resolve({
             successful: page,
             failed: null,
             disabled: null,
           });
+          return defer.promise;
         })
         .catch(function (error) {
-          return defer.reject(ErrorService.responseToError(error, self));
+          defer.reject(ErrorService.responseToError(error, self));
+          return defer.promise;
         });
 
       return defer.promise;
@@ -1986,7 +1990,8 @@ Reference.prototype = {
           // but added here for completeness
           if (!keyValueRes.successful) {
             var err = new InvalidInputError(keyValueRes.message);
-            return defer.reject(err), defer.promise;
+            defer.reject(err);
+            return defer.promise;
           }
           uri +=
             '/' +
@@ -2050,7 +2055,8 @@ Reference.prototype = {
           });
         })
         .catch(function (error) {
-          return defer.reject(ErrorService.responseToError(error, self));
+          defer.reject(ErrorService.responseToError(error, self));
+          return defer.promise;
         });
     } catch (e) {
       defer.reject(e);
@@ -2166,7 +2172,8 @@ Reference.prototype = {
         );
         if (!keyValueRes.successful) {
           var err = new InvalidInputError(keyValueRes.message);
-          return defer.reject(err), defer.promise;
+          defer.reject(err);
+          return defer.promise;
         }
 
         var recursiveDelete = function (index) {
@@ -2278,7 +2285,8 @@ Reference.prototype = {
       );
       if (!keyValueRes.successful) {
         var err = new InvalidInputError(keyValueRes.message);
-        return defer.reject(err), defer.promise;
+        defer.reject(err);
+        return defer.promise;
       }
 
       // send the requests one at a time
@@ -3050,11 +3058,13 @@ Reference.prototype = {
         },
         function error(response) {
           var error = ErrorService.responseToError(response);
-          return defer.reject(error);
+          defer.reject(error);
+          return defer.promise;
         },
       )
       .catch(function (error) {
-        return defer.reject(error);
+        defer.reject(error);
+        return defer.promise;
       });
 
     return defer.promise;

@@ -169,7 +169,8 @@ function Server(uri, contextHeaderParams) {
     if (!contextHeaderParams || (contextHeaderParams === Object(contextHeaderParams) && Array.isArray(contextHeaderParams))) {
       var error = new InvalidInputError('Context header params were not passed');
       // Errors for client action logging should not force a terminal error
-      return defer.reject(error), defer.promise;
+      defer.reject(error);
+      return defer.promise;
     }
 
     var headers = {};
@@ -339,7 +340,8 @@ Catalog.prototype = {
     const headers = {};
 
     if (ignoreCache !== true && isObjectAndNotNull(self._jsonCatalog)) {
-      return defer.resolve(self._jsonCatalog), defer.promise;
+      defer.resolve(self._jsonCatalog);
+      return defer.promise;
     }
 
     if (contextHeaderParams) {
@@ -404,7 +406,8 @@ Catalog.prototype = {
       self = this;
 
     if (self._schemaFetched) {
-      return defer.resolve(), defer.promise;
+      defer.resolve();
+      return defer.promise;
     }
 
     var headers = {};
