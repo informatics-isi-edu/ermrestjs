@@ -14,7 +14,7 @@ exports.init = function (options) {
 	/**
 	 * we have to configure http otherwise nock won't work.
 	 */
-	ermRest.configure(require('axios'));
+	ermRest.configure(require('axios'), require('q'));
 
 	return {
 		ermrestUtils: require('@isrd-isi-edu/ermrest-data-utils'),

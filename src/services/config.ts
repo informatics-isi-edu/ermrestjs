@@ -35,8 +35,8 @@ export default class ConfigService {
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   static configure(http: any, q: any) {
-    ConfigService._http = http;
-    ConfigService._http = q;
+    if (http) ConfigService._http = http;
+    if (q) ConfigService._q = q;
   }
 
   static get http() {
