@@ -1,4 +1,5 @@
 import axios from 'axios';
+import Q from 'q';
 
 import { InvalidInputError } from '@isrd-isi-edu/ermrestjs/src/models/errors';
 
@@ -16,7 +17,7 @@ export type AppLinkFnType = (tag: string, location: any, context: string) => str
 
 export default class ConfigService {
   private static _http = axios;
-  // private static _q: any;
+  private static _q = Q;
   private static _clientConfig: any;
   private static _session: any;
   private static _appLinkFn: AppLinkFnType;
@@ -35,10 +36,15 @@ export default class ConfigService {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   static configure(http: any, q: any) {
     ConfigService._http = http;
+    ConfigService._http = q;
   }
 
   static get http() {
     return ConfigService._http;
+  }
+
+  static get q() {
+    return ConfigService._q;
   }
 
   /**

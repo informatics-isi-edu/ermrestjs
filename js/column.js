@@ -4,11 +4,12 @@
 import moment from 'moment-timezone';
 
 // models
-import DeferredPromise from '@isrd-isi-edu/ermrestjs/src/models/deferred-promise';
+// import DeferredPromise from '@isrd-isi-edu/ermrestjs/src/models/deferred-promise';
 
 // services
 import $log from '@isrd-isi-edu/ermrestjs/src/services/logger';
 import ErrorService from '@isrd-isi-edu/ermrestjs/src/services/error';
+import ConfigService from '@isrd-isi-edu/ermrestjs/src/services/config';
 
 // utils
 import { renderMarkdown } from '@isrd-isi-edu/ermrestjs/src/utils/markdown-utils';
@@ -1060,7 +1061,7 @@ PseudoColumn.prototype.formatPresentation = function (data, context, templateVar
  * @return {Promise}
  */
 PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams) {
-  var defer = new DeferredPromise(),
+  var defer = ConfigService.q.defer(),
     self = this,
     promises = [],
     values = [],
@@ -3696,7 +3697,7 @@ FacetColumn.prototype = {
    * @return {Promise} A promise resolved with list of objects that have `uniqueId`, and `displayname`.
    */
   getChoiceDisplaynames: function (contextHeaderParams) {
-    var defer = new DeferredPromise(),
+    var defer = ConfigService.q.defer(),
       filters = [],
       self = this;
     var table = this._column.table,

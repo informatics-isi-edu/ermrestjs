@@ -3,12 +3,13 @@
 import { ArrayBuffer } from 'spark-md5';
 
 // models
-import DeferredPromise from '@isrd-isi-edu/ermrestjs/src/models/deferred-promise';
+// import DeferredPromise from '@isrd-isi-edu/ermrestjs/src/models/deferred-promise';
 import { MalformedURIError } from '@isrd-isi-edu/ermrestjs/src/models/errors';
 
 // services
 import ErrorService from '@isrd-isi-edu/ermrestjs/src/services/error';
 import HTTPService from '@isrd-isi-edu/ermrestjs/src/services/http';
+import ConfigService from '@isrd-isi-edu/ermrestjs/src/services/config';
 
 // utils
 import { hexToBase64 } from '@isrd-isi-edu/ermrestjs/src/utils/value-utils';
@@ -308,7 +309,7 @@ Upload.prototype.validateURL = function (row, linkedData) {
  */
 Upload.prototype.calculateChecksum = function (row, linkedData, onProgress) {
   this.erred = false;
-  var deferred = new DeferredPromise();
+  var deferred = ConfigService.q.defer();
 
   // If the hash is calculated then simply generate the url
   // and notify and reoslve the promise
@@ -352,7 +353,7 @@ Upload.prototype.calculateChecksum = function (row, linkedData, onProgress) {
 Upload.prototype.fileExists = function (previousJobUrl, contextHeaderParams) {
   var self = this;
 
-  var deferred = new DeferredPromise();
+  var deferred = ConfigService.q.defer();
 
   if (!contextHeaderParams || !isObject(contextHeaderParams)) {
     contextHeaderParams = {
@@ -449,7 +450,7 @@ Upload.prototype.createUploadJob = function (contextHeaderParams) {
   var self = this;
   this.erred = false;
 
-  var deferred = new DeferredPromise();
+  var deferred = ConfigService.q.defer();
 
   if (this.completed && this.jobDone) {
     deferred.resolve(this.chunkUrl);
@@ -528,7 +529,7 @@ Upload.prototype.start = function (startChunkIdx, onProgress) {
 
   this.erred = false;
 
-  var deferred = new DeferredPromise();
+  var deferred = ConfigService.q.defer();
 
   this.uploadPromise = deferred;
   this.uploadProgressCallback = onProgress;
@@ -598,7 +599,7 @@ Upload.prototype.start = function (startChunkIdx, onProgress) {
 Upload.prototype.completeUpload = function (contextHeaderParams) {
   var self = this;
 
-  var deferred = new DeferredPromise();
+  var deferred = ConfigService.q.defer();
 
   if (this.completed && this.jobDone) {
     deferred.resolve(this.versionedUrl ? this.versionedUrl : this.url);
@@ -674,7 +675,7 @@ Upload.prototype.resume = function () {
  * @returns {Promise}
  */
 Upload.prototype.cancel = function (deleteJob) {
-  var deferred = new DeferredPromise();
+  var deferred = ConfigService.q.defer();
 
   // If the upload has completed and complete job call has been made then
   // We directly resolve the promise setting progress as 0 and xhr as null for each chunk
@@ -719,7 +720,7 @@ Upload.prototype.cancel = function (deleteJob) {
  * @returns {Promise}
  */
 Upload.prototype.deleteFile = function (contextHeaderParams) {
-  var deferred = new DeferredPromise();
+  var deferred = ConfigService.q.defer();
 
   if (!contextHeaderParams || !isObject(contextHeaderParams)) {
     contextHeaderParams = {
@@ -860,7 +861,7 @@ Upload.prototype._generateURL = function (row, linkedData) {
  * @returns {Promise}
  */
 Upload.prototype._getExistingJobStatus = function () {
-  var deferred = new DeferredPromise();
+  var deferred = ConfigService.q.defer();
 
   var contextHeaderParams = {
     action: 'upload/status',
@@ -946,7 +947,7 @@ Upload.prototype._updateProgressBar = function () {
  * @returns {Promise}
  */
 Upload.prototype._cancelUploadJob = function () {
-  var deferred = new DeferredPromise();
+  var deferred = ConfigService.q.defer();
 
   var contextHeaderParams = {
     action: 'upload/cancel',
@@ -1014,7 +1015,7 @@ var Chunk = function (index, start, end) {
  * @param {upload} {upload} - An instance of the upload to which this chunk belongs
  */
 Chunk.prototype.sendToHatrac = function (upload) {
-  var deferred = new DeferredPromise();
+  var deferred = ConfigService.q.defer();
 
   if (this.xhr || this.completed) {
     this.progress = this.size;
@@ -1049,7 +1050,7 @@ Chunk.prototype.sendToHatrac = function (upload) {
   var headers = _generateContextHeader(contextHeaderParams);
   headers['content-type'] = 'application/octet-stream';
 
-  self.xhr = new DeferredPromise();
+  self.xhr = ConfigService.q.defer();
 
   var request = {
     // If index is -1 then upload it to the url or upload it to chunkUrl

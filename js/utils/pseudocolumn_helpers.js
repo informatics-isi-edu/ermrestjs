@@ -2,11 +2,12 @@
 import { hash as sparkMD5Hash } from 'spark-md5';
 
 // models
-import DeferredPromise from '@isrd-isi-edu/ermrestjs/src/models/deferred-promise';
+// import DeferredPromise from '@isrd-isi-edu/ermrestjs/src/models/deferred-promise';
 
 // services
 import CatalogService from '@isrd-isi-edu/ermrestjs/src/services/catalog';
 import $log from '@isrd-isi-edu/ermrestjs/src/services/logger';
+import ConfigService from '@isrd-isi-edu/ermrestjs/src/services/config';
 
 // utils
 import { isObjectAndNotNull, isObject, isDefinedAndNotNull, isStringAndNotEmpty } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
@@ -1058,7 +1059,7 @@ export const _facetColumnHelpers = {
    * @param {Object} contextHeaderParams  - the object that should be logged with read request
    */
   getEntityChoiceRows: function (andFilterObject, contextHeaderParams) {
-    var defer = new DeferredPromise(),
+    var defer = ConfigService.q.defer(),
       sourceObject = andFilterObject.sourceObject;
 
     var res = {

@@ -6,7 +6,7 @@ import { contextHeaderName, _ERMrestFeatures } from '@isrd-isi-edu/ermrestjs/src
 
 // models
 import { InvalidInputError, MalformedURIError, NotFoundError } from '@isrd-isi-edu/ermrestjs/src/models/errors';
-import DeferredPromise from '@isrd-isi-edu/ermrestjs/src/models/deferred-promise';
+// import DeferredPromise from '@isrd-isi-edu/ermrestjs/src/models/deferred-promise';
 
 // services
 import CatalogService from '@isrd-isi-edu/ermrestjs/src/services/catalog';
@@ -163,7 +163,7 @@ function Server(uri, contextHeaderParams) {
    * @param {Object} headers - the headers to be logged, should include action
    **/
   this.logClientAction = function (contextHeaderParams) {
-    const defer = new DeferredPromise();
+    const defer = ConfigService.q.defer();
 
     // make sure contextHeaderParams is an object and NOT an array
     if (!contextHeaderParams || (contextHeaderParams === Object(contextHeaderParams) && Array.isArray(contextHeaderParams))) {
@@ -238,7 +238,7 @@ Catalogs.prototype = {
     // do introspection here and return a promise
 
     let self = this,
-      defer = new DeferredPromise(),
+      defer = ConfigService.q.defer(),
       catalog;
 
     // create a new catalog object if the object has not been created before
@@ -336,7 +336,7 @@ Catalog.prototype = {
    */
   _get: function (contextHeaderParams, ignoreCache) {
     const self = this;
-    const defer = new DeferredPromise();
+    const defer = ConfigService.q.defer();
     const headers = {};
 
     if (ignoreCache !== true && isObjectAndNotNull(self._jsonCatalog)) {
@@ -376,7 +376,7 @@ Catalog.prototype = {
    *      {@link ERMrest.ERMrestError} if rejected
    */
   currentSnaptime: function (contextHeaderParams) {
-    const defer = new DeferredPromise();
+    const defer = ConfigService.q.defer();
     const self = this;
     if (!isObjectAndNotNull(contextHeaderParams)) {
       contextHeaderParams = {
@@ -402,7 +402,7 @@ Catalog.prototype = {
    * @private
    */
   _fetchSchema: function () {
-    const defer = new DeferredPromise(),
+    const defer = ConfigService.q.defer(),
       self = this;
 
     if (self._schemaFetched) {
@@ -471,7 +471,7 @@ Catalog.prototype = {
    * @private
    */
   _introspect: function (dontFetchSchema) {
-    const defer = new DeferredPromise(),
+    const defer = ConfigService.q.defer(),
       self = this;
 
     // load the catalog (or use the one that is cached)
@@ -2512,7 +2512,7 @@ Entity.prototype = {
    *
    */
   count: function (filter) {
-    const defer = new DeferredPromise();
+    const defer = ConfigService.q.defer();
     var uri = this._getBaseURI('aggregate');
 
     if (filter !== undefined && filter !== null) {
@@ -2551,7 +2551,7 @@ Entity.prototype = {
    * output columns and sortby needs to have columns of a key
    */
   get: function (filter, limit, columns, sortby) {
-    const defer = new DeferredPromise();
+    const defer = ConfigService.q.defer();
     var uri = this._toURI(filter, columns, sortby, null, null, limit);
 
     var self = this;
@@ -2585,7 +2585,7 @@ Entity.prototype = {
    *
    */
   getBefore: function (filter, limit, columns, sortby, row) {
-    const defer = new DeferredPromise();
+    const defer = ConfigService.q.defer();
     var uri = this._toURI(filter, columns, sortby, 'before', row, limit);
 
     var self = this;
@@ -2617,7 +2617,7 @@ Entity.prototype = {
    *
    */
   getAfter: function (filter, limit, columns, sortby, row) {
-    const defer = new DeferredPromise();
+    const defer = ConfigService.q.defer();
     var uri = this._toURI(filter, columns, sortby, 'after', row, limit);
 
     var self = this;
@@ -2644,7 +2644,7 @@ Entity.prototype = {
    * Delete rows from table based on the filter
    */
   delete: function (filter) {
-    const defer = new DeferredPromise();
+    const defer = ConfigService.q.defer();
     var uri = this._toURI(filter);
 
     this._server.http.delete(uri).then(
@@ -2669,7 +2669,7 @@ Entity.prototype = {
    * Update rows in the table
    */
   put: function (rows) {
-    const defer = new DeferredPromise();
+    const defer = ConfigService.q.defer();
     var uri = this._toURI();
 
     this._server.http.put(uri, rows).then(
@@ -2696,7 +2696,7 @@ Entity.prototype = {
    * Create new entities
    */
   post: function (rows, defaults) {
-    const defer = new DeferredPromise();
+    const defer = ConfigService.q.defer();
 
     // create new entities
     var uri =

@@ -48,3 +48,10 @@ echo "npx --no -- commitlint --edit \${1}" > .husky/commit-msg
 --
 
 11. for commit: npx git-cz --disable-emoji
+
+12. for fixing lint or prettier issues:
+
+```
+eslint --fix --quiet
+prettier --write --ignore-unknown
+```

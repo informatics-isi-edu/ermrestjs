@@ -7,7 +7,7 @@
  */
 export function onload() {
   return Promise.resolve();
-  // const defer = new DeferredPromise();
+  // const defer = ConfigService.q.defer();
 
   // if (_scriptsLoaded) defer.resolve();
   // else _defers.push(defer);

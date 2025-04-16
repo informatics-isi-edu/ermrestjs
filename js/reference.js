@@ -4,7 +4,7 @@
 import moment from 'moment-timezone';
 
 // models
-import DeferredPromise from '@isrd-isi-edu/ermrestjs/src/models/deferred-promise';
+// import DeferredPromise from '@isrd-isi-edu/ermrestjs/src/models/deferred-promise';
 import {
   ForbiddenError,
   NotFoundError,
@@ -149,7 +149,7 @@ import {
  * {@link ERMrest.InvalidSortCriteria},
  */
 export const resolve = function (uri, contextHeaderParams) {
-  var defer = new DeferredPromise();
+  var defer = ConfigService.q.defer();
   try {
     verify(uri, "'uri' must be specified");
     var location;
@@ -456,7 +456,7 @@ Reference.prototype = {
    */
   _generateFacetColumns: function (skipMappingEntityChoices) {
     var self = this;
-    var defer = new DeferredPromise();
+    var defer = ConfigService.q.defer();
 
     var andOperator = _FacetsLogicalOperators.AND;
     var searchTerm = self.location.searchTerm;
@@ -648,7 +648,7 @@ Reference.prototype = {
    * @param {Boolean?} changeLocation - (optional) whether we should change reference.location or not
    */
   validateFacetsFilters: function (facetAndFilters, facetObjectWrappers, searchTerm, skipMappingEntityChoices, changeLocation) {
-    var defer = new DeferredPromise(),
+    var defer = ConfigService.q.defer(),
       self = this,
       helpers = _facetColumnHelpers,
       promises = [],
@@ -1254,7 +1254,7 @@ Reference.prototype = {
    */
   create: function (data, contextHeaderParams, skipOnConflict) {
     const self = this;
-    const defer = new DeferredPromise();
+    const defer = ConfigService.q.defer();
     try {
       //  verify: data is not null, data has non empty tuple set
       verify(data, "'data' must be specified");
@@ -1441,7 +1441,7 @@ Reference.prototype = {
    * - ERMrestjs corresponding http errors, if ERMrest returns http error.
    */
   read: function (limit, contextHeaderParams, useEntity, dontCorrectPage, getTRS, getTCRS, getUnlinkTRS) {
-    var defer = new DeferredPromise(),
+    var defer = ConfigService.q.defer(),
       self = this;
 
     try {
@@ -1616,7 +1616,7 @@ Reference.prototype = {
    * - ERMrestjs corresponding http errors, if ERMrest returns http error.
    */
   update: function (tuples, contextHeaderParams) {
-    const defer = new DeferredPromise();
+    const defer = ConfigService.q.defer();
 
     try {
       verify(Array.isArray(tuples), "'tuples' must be specified");
@@ -2076,7 +2076,7 @@ Reference.prototype = {
    * - ERMrestjs corresponding http errors, if ERMrest returns http error.
    */
   delete: function (tuples, contextHeaderParams) {
-    var defer = new DeferredPromise(),
+    var defer = ConfigService.q.defer(),
       self = this,
       delFlag = _operationsFlag.DELETE;
 
@@ -2236,7 +2236,7 @@ Reference.prototype = {
    **/
   deleteBatchAssociationTuples: function (parentTuple, tuples, contextHeaderParams) {
     var self = this,
-      defer = new DeferredPromise();
+      defer = ConfigService.q.defer();
     try {
       verify(parentTuple, "'parentTuple' must be specified");
       verify(tuples, "'tuples' must be specified");
@@ -2981,7 +2981,7 @@ Reference.prototype = {
    * @return {Promise} - Promise contains an array of the aggregate values in the same order as the supplied aggregate list
    */
   getAggregates: function (aggregateList, contextHeaderParams) {
-    var defer = new DeferredPromise();
+    var defer = ConfigService.q.defer();
     var url;
 
     // create the context header params for log

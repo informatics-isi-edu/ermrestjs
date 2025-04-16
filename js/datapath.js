@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable prettier/prettier */
 import { NotFoundError } from '@isrd-isi-edu/ermrestjs/src/models/errors';
-import DeferredPromise from '@isrd-isi-edu/ermrestjs/src/models/deferred-promise';
+// import DeferredPromise from '@isrd-isi-edu/ermrestjs/src/models/deferred-promise';
 
 import ErrorService from '@isrd-isi-edu/ermrestjs/src/services/error';
+import ConfigService from '@isrd-isi-edu/ermrestjs/src/services/config';
 
 import { contextHeaderName } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
 import { isObject } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
@@ -121,7 +122,7 @@ DataPath.prototype = {
      *     {@link ERMrest.Errors.ConflictError}, {@link ERMrest.Errors.ForbiddenError} or {@link ERMrest.Errors.UnauthorizedError} if rejected
      */
     get: function (contextHeaderParams) {
-      const defer = new DeferredPromise();
+      const defer = ConfigService.q.defer();
       var baseUri = this.scope.server.uri;
       var catId = this.scope.catalog.id;
       var uri =
@@ -158,7 +159,7 @@ DataPath.prototype = {
      *     {@link ERMrest.Errors.ConflictError}, {@link ERMrest.Errors.ForbiddenError} or {@link ERMrest.Errors.UnauthorizedError} if rejected
      */
     delete: function (filter) {
-      const defer = new DeferredPromise();
+      const defer = ConfigService.q.defer();
       var baseUri = this.scope.server.uri;
       var catId = this.scope.catalog.id;
       var uri = baseUri + '/catalog/' + catId + '/entity/' + this.scope._getUri();

@@ -2,11 +2,12 @@
 
 // models
 import { InvalidInputError } from '@isrd-isi-edu/ermrestjs/src/models/errors';
-import DeferredPromise from '@isrd-isi-edu/ermrestjs/src/models/deferred-promise';
+// import DeferredPromise from '@isrd-isi-edu/ermrestjs/src/models/deferred-promise';
 
 // services
 import $log from '@isrd-isi-edu/ermrestjs/src/services/logger';
 import ErrorService from '@isrd-isi-edu/ermrestjs/src/services/error';
+import ConfigService from '@isrd-isi-edu/ermrestjs/src/services/config';
 
 // utils
 import { isObjectAndNotNull, isStringAndNotEmpty, ObjectHasAllKeys } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
@@ -455,7 +456,7 @@ Exporter.prototype = {
    * @returns {Promise}
    */
   run: function (contextHeaderParams) {
-    var defer = new DeferredPromise(),
+    var defer = ConfigService.q.defer(),
       self = this;
     try {
       var serviceUrl = [self.exportParameters.catalog.host, self.servicePath, self.template.type == 'BAG' ? 'bdbag' : 'file'].join('/');

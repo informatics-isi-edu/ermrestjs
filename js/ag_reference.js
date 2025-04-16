@@ -4,9 +4,10 @@ import moment from 'moment-timezone';
 
 // models
 import { MalformedURIError, NotFoundError } from '@isrd-isi-edu/ermrestjs/src/models/errors';
-import DeferredPromise from '@isrd-isi-edu/ermrestjs/src/models/deferred-promise';
+// import DeferredPromise from '@isrd-isi-edu/ermrestjs/src/models/deferred-promise';
 
 // services
+import ConfigService from '@isrd-isi-edu/ermrestjs/src/services/config';
 import ErrorService from '@isrd-isi-edu/ermrestjs/src/services/error';
 
 // utils
@@ -355,7 +356,7 @@ AttributeGroupReference.prototype = {
    * @return {ERMRest.AttributeGroupPage}
    */
   read: function (limit, contextHeaderParams, dontCorrectPage) {
-    const defer = new DeferredPromise();
+    const defer = ConfigService.q.defer();
     try {
       var hasPaging = typeof limit === 'number' && limit > 0;
 
@@ -449,7 +450,7 @@ AttributeGroupReference.prototype = {
   },
 
   getAggregates: function (aggregateList, contextHeaderParams) {
-    var defer = new DeferredPromise();
+    var defer = ConfigService.q.defer();
     var url;
     var urlSet = [];
     var loc = this.location;
@@ -1401,7 +1402,7 @@ BucketAttributeGroupReference.prototype.read = function (contextHeaderParams) {
   }
 
   try {
-    var defer = new DeferredPromise();
+    var defer = ConfigService.q.defer();
 
     var uri = this.uri;
 

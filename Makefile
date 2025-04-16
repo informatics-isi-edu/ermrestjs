@@ -113,7 +113,7 @@ all: lint dist
 .PHONY: deploy
 deploy: dont_deploy_in_root
 	$(info - deploying the package)
-	@rsync -avz --exclude=$(MAKEFILE_VAR) $(DIST)/ $(ERMRESTJSDIR)
+	@rsync -avz $(DIST)/ $(ERMRESTJSDIR)
 
 # run dist and deploy with proper uesrs (GNU). only works with root user
 .PHONY: root-install
