@@ -8,9 +8,6 @@ if (!mode || nodeDevs.indexOf(mode) === -1) {
   mode = nodeDevs[0];
 }
 
-const BUILD_VERSION = process.env.BUILD_VERSION;
-console.log(`Building ermrestjs version: ${BUILD_VERSION}`);
-
 // https://vitejs.dev/guide/build.html#library-mode
 export default defineConfig({
   define: {
