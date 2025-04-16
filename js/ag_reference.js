@@ -525,12 +525,10 @@ AttributeGroupReference.prototype = {
         function error(response) {
           var error = ErrorService.responseToError(response);
           defer.reject(error);
-          return defer.promise;
         },
       )
       .catch(function (error) {
         defer.reject(error);
-        return defer.promise;
       });
 
     return defer.promise;

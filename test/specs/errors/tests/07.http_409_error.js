@@ -204,8 +204,7 @@ exports.execute = function (options) {
                 expect(err.duplicateReference.location.compactPath).toBe(referencePath, "path for duplicate reference is incorrect");
                 done();
             }).catch(function(err) {
-                console.log(err);
-                done.fail();
+                done.fail(err);
             });
         });
 
