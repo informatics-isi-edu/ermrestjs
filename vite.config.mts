@@ -7,6 +7,7 @@ let mode = process.env.NODE_ENV;
 if (!mode || nodeDevs.indexOf(mode) === -1) {
   mode = nodeDevs[0];
 }
+const isDev = mode === 'development';
 
 // https://vitejs.dev/guide/build.html#library-mode
 export default defineConfig({
@@ -15,15 +16,15 @@ export default defineConfig({
   },
   build: {
     minify: 'terser',
-    reportCompressedSize: true,
-    sourcemap: true,
+    reportCompressedSize: isDev,
+    sourcemap: isDev,
     lib: {
       entry: resolve(__dirname, 'src/index.ts'),
       fileName: 'ermrest',
     },
     rollupOptions: {
       output: [
-        // some static sites use this version:
+        // nodejs (test cases) and some static sites use this:
         {
           name: 'ERMrest',
           format: 'umd',

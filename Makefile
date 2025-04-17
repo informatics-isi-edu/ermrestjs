@@ -21,13 +21,10 @@ ERMRESTJSDIR:=$(WEB_INSTALL_ROOT)$(ERMRESTJS_REL_PATH)
 #chaise and ermrsetjs paths
 ERMRESTJS_BASE_PATH:=$(WEB_URL_ROOT)$(ERMRESTJS_REL_PATH)
 
-# Project name
-PROJ=ermrest
-
 # Node module dependencies
 MODULES=node_modules
 
-VER=$(PROJ).ver.txt
+VER=ermrest.ver.txt
 
 # Build folder
 DIST=dist

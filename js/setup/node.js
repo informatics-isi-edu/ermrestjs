@@ -1,4 +1,6 @@
 // import DeferredPromise from '@isrd-isi-edu/ermrestjs/src/models/deferred-promise';
+import ConfigService from '@isrd-isi-edu/ermrestjs/src/services/config';
+
 /**
  * This function is used by http. It resolves promises by calling this function
  * to make sure thirdparty scripts are loaded.
@@ -6,13 +8,13 @@
  * @deprecated
  */
 export function onload() {
-  return Promise.resolve();
-  // const defer = ConfigService.q.defer();
+  const defer = ConfigService.q.defer();
 
   // if (_scriptsLoaded) defer.resolve();
   // else _defers.push(defer);
 
-  // return defer.promise;
+  defer.resolve();
+  return defer.promise;
 }
 
 const startTime = Date.now();
