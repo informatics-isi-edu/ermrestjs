@@ -1,13 +1,15 @@
+import { Deferred } from 'q';
+
 // models
-import DeferredPromise from '@isrd-isi-edu/ermrestjs/src/models/deferred-promise';
+// import DeferredPromise from '@isrd-isi-edu/ermrestjs/src/models/deferred-promise';
 
 // services
 import CatalogService from '@isrd-isi-edu/ermrestjs/src/services/catalog';
+import ConfigService from '@isrd-isi-edu/ermrestjs/src/services/config';
 
 // utils
-import { _shorterVersion, CONTEXT_HEADER_LENGTH_LIMIT, contextHeaderName, ENV_IS_NODE } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
+import { _shorterVersion, CONTEXT_HEADER_LENGTH_LIMIT, contextHeaderName } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
 import { fixedEncodeURIComponent, simpleDeepCopy } from '@isrd-isi-edu/ermrestjs/src/utils/value-utils';
-import { isObjectAndNotNull } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
 
 // legacy
 import { getElapsedTime, onload } from '@isrd-isi-edu/ermrestjs/js/setup/node';
@@ -77,10 +79,10 @@ export default class HTTPService {
    * All the calls that were paused because of 401 error are added to this array
    * Once the _encountered401Error is false, all of them will be resolved/restarted
    */
-  private static _authorizationDefers: Array<DeferredPromise<void>> = [];
+  private static _authorizationDefers: Array<Deferred<any>> = [];
 
   private static _onHttpAuthFlowFn(skipHTTP401Handling: boolean) {
-    const defer = new DeferredPromise<void>();
+    const defer = ConfigService.q.defer();
     // If _encountered401Error is true then push the defer to _authorizationDefers
     // else just resolve it directly
     if (!skipHTTP401Handling && HTTPService._encountered401Error) {
@@ -124,10 +126,6 @@ export default class HTTPService {
   }
 
   static wrapHTTP(http: any) {
-    if (ENV_IS_NODE && isObjectAndNotNull(http.defaults)) {
-      http.defaults.adapter = 'http';
-    }
-
     // wrapping function
     function wrap(method: keyof typeof _method_to_config_idx, fn: any, scope: any) {
       scope = scope || window;
@@ -170,7 +168,7 @@ export default class HTTPService {
         }
 
         // now call the fn, with retry logic
-        const deferred = new DeferredPromise<any>();
+        const deferred = ConfigService.q.defer();
         const max_retries = this.max_retries !== undefined && this.max_retries !== null ? this.max_retries : _default_max_retries;
         let delay = this.initial_delay !== undefined && this.initial_delay !== null ? this.initial_delay : _default_initial_delay;
         let count = 0;
