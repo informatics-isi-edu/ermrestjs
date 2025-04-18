@@ -108,11 +108,6 @@ export const _createPseudoColumn = function (reference, sourceObjectWrapper, mai
         return new PseudoColumn(reference, sourceObjectWrapper.column, sourceObjectWrapper, name, mainTuple);
     };
 
-    var getFK = function (constraint) {
-        return ConfigService.getConstraintObject(reference.table.schema.catalog.id, constraint[0], constraint[1]).object;
-    };
-
-
 
     // has aggregate
     if (sourceObjectWrapper.hasAggregate) {

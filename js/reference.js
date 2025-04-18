@@ -21,7 +21,7 @@ import {
 // services
 import CatalogSerivce from '@isrd-isi-edu/ermrestjs/src/services/catalog';
 import ConfigService from '@isrd-isi-edu/ermrestjs/src/services/config';
-import HTTPService from '@isrd-isi-edu/ermrestjs/src/services/http';
+// import HTTPService from '@isrd-isi-edu/ermrestjs/src/services/http';
 import ErrorService from '@isrd-isi-edu/ermrestjs/src/services/error';
 import $log from '@isrd-isi-edu/ermrestjs/src/services/logger';
 
@@ -103,6 +103,7 @@ import {
   SourceObjectWrapper,
   _processWaitForList,
 } from '@isrd-isi-edu/ermrestjs/js/utils/pseudocolumn_helpers';
+import { getResponseHeader } from '@isrd-isi-edu/ermrestjs/js/http';
 
     /**
      * This function resolves a URI reference to a {@link ERMrest.Reference}
@@ -1278,7 +1279,7 @@ import {
 
                 //  do the 'post' call
                 this._server.http.post(uri, data, config).then(function(response) {
-                    var etag = HTTPService.getResponseHeader(response).etag;
+                    var etag = getResponseHeader(response).etag;
                     //  new page will have a new reference (uri that filters on a disjunction of ids of these tuples)
                     var uri = self._location.compactUri + '/',
                         keyName;
@@ -1474,7 +1475,7 @@ import {
                         throw new InvalidServerResponse(uri, response.data, action);
                     }
 
-                    var etag = HTTPService.getResponseHeader(response).etag;
+                    var etag = getResponseHeader(response).etag;
 
                     var hasPrevious, hasNext = false;
                     if (!ownReference._location.paging) { // first page
@@ -1885,7 +1886,7 @@ import {
                         }
                     }
 
-                    var etag = HTTPService.getResponseHeader(response).etag;
+                    var etag = getResponseHeader(response).etag;
                     var pageData = [];
 
                     // loop through each returned Row and get the key value

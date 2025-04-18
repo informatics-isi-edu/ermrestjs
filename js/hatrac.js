@@ -8,7 +8,7 @@ import { MalformedURIError } from '@isrd-isi-edu/ermrestjs/src/models/errors';
 
 // services
 import ErrorService from '@isrd-isi-edu/ermrestjs/src/services/error';
-import HTTPService from '@isrd-isi-edu/ermrestjs/src/services/http';
+// import HTTPService from '@isrd-isi-edu/ermrestjs/src/services/http';
 import ConfigService from '@isrd-isi-edu/ermrestjs/src/services/config';
 
 // utils
@@ -18,6 +18,7 @@ import { contextHeaderName, ENV_IS_NODE } from '@isrd-isi-edu/ermrestjs/src/util
 
 // legacy
 import { _validateTemplate, _renderTemplate, _getFormattedKeyValues, _parseUrl } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
+import { getResponseHeader } from '@isrd-isi-edu/ermrestjs/js/http';
 
 const FILENAME_REGEXP = /[^a-zA-Z0-9_.-]/gi;
 // // Check for whether the environment is Node.js or Browser
@@ -369,7 +370,7 @@ Upload.prototype.fileExists = function (previousJobUrl, contextHeaderParams) {
 
   this.http.head(this._getAbsoluteUrl(this.url), config).then(
     function (response) {
-      var headers = HTTPService.getResponseHeader(response);
+      var headers = getResponseHeader(response);
       var md5 = headers['content-md5'];
       var length = headers['content-length'];
       var contentDisposition = headers['content-disposition'];
@@ -416,7 +417,7 @@ Upload.prototype.fileExists = function (previousJobUrl, contextHeaderParams) {
       self.isPaused = false;
       self.completed = true;
       self.jobDone = true;
-      self.versionedUrl = HTTPService.getResponseHeader(response)['content-location'];
+      self.versionedUrl = getResponseHeader(response)['content-location'];
       deferred.resolve(self.url);
     },
     function (response) {
@@ -500,7 +501,7 @@ Upload.prototype.createUploadJob = function (contextHeaderParams) {
     .then(
       function (response) {
         if (response) {
-          self.chunkUrl = HTTPService.getResponseHeader(response).location;
+          self.chunkUrl = getResponseHeader(response).location;
           deferred.resolve(self.chunkUrl);
         }
       },
@@ -624,7 +625,7 @@ Upload.prototype.completeUpload = function (contextHeaderParams) {
     function (response) {
       self.jobDone = true;
 
-      var loc = HTTPService.getResponseHeader(response).location;
+      var loc = getResponseHeader(response).location;
       if (loc) {
         var versionedUrl = loc;
         self.versionedUrl = versionedUrl;
@@ -634,7 +635,7 @@ Upload.prototype.completeUpload = function (contextHeaderParams) {
       }
     },
     function (response) {
-      deferred.reject(HTTPService.responseToError(response));
+      deferred.reject(ErrorService.responseToError(response));
     },
   );
 

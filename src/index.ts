@@ -39,7 +39,7 @@ import {
 import CatalogService from '@isrd-isi-edu/ermrestjs/src/services/catalog';
 import ConfigService from '@isrd-isi-edu/ermrestjs/src/services/config';
 import ErrorService from '@isrd-isi-edu/ermrestjs/src/services/error';
-import HTTPService from '@isrd-isi-edu/ermrestjs/src/services/http';
+// import HTTPService from '@isrd-isi-edu/ermrestjs/src/services/http';
 
 // utils
 import { contextHeaderName, ENV_IS_NODE } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
@@ -75,6 +75,7 @@ import { DataPath } from '@isrd-isi-edu/ermrestjs/js/datapath';
 import HandlebarsService from '@isrd-isi-edu/ermrestjs/src/services/handlebars';
 import { Exporter } from '@isrd-isi-edu/ermrestjs/js/export';
 import validateJSONLD from '@isrd-isi-edu/ermrestjs/js/json_ld_validator.js';
+import { onHTTPSuccess, _certifyContextHeader, setHTTP401Handler } from '@isrd-isi-edu/ermrestjs/js/http';
 
 const logError = ErrorService.logError;
 const responseToError = ErrorService.responseToError;
@@ -87,9 +88,9 @@ const systemColumnsHeuristicsMode = ConfigService.setSystemColumnsHeuristicsMode
 const resetUserCookie = ConfigService.resetUserCookie;
 const setUserCookie = ConfigService.setUserCookie;
 
-const _certifyContextHeader = HTTPService.certifyContextHeader;
-const setHTTP401Handler = HTTPService.setHTTP401Handler;
-const onHTTPSuccess = HTTPService.setOnHTTPSuccess;
+// const _certifyContextHeader = HTTPService.certifyContextHeader;
+// const setHTTP401Handler = HTTPService.setHTTP401Handler;
+// const onHTTPSuccess = HTTPService.setOnHTTPSuccess;
 
 const renderHandlebarsTemplate = HandlebarsService.render;
 
