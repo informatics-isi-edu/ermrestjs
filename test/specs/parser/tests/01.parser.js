@@ -1451,7 +1451,7 @@ exports.execute = function (options) {
           expectLocation(
             'N4IghgdgJiBcDaoDOB7ArgJwMYFM4ixABoQkcxsALOeARgF0BfJoA',
             { and: [{ source: 'c', search: [1] }] },
-            'c::ciregexp::' + options.ermRest._fixedEncodeURIComponent(intRegexPrefix + '1' + intRegexSuffix) + '/$M',
+            'c::ciregexp::' + options.ermRest.fixedEncodeURIComponent(intRegexPrefix + '1' + intRegexSuffix) + '/$M',
             true,
           );
 

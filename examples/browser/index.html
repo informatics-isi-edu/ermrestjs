@@ -1,28 +1,21 @@
 <!DOCTYPE html>
-<html lang="en" ng-app="sample">
+<html lang="en">
 
 <head>
   <meta charset="UTF-8">
   <title>A Simple First App with the ERMrest JavaScript Client API</title>
-  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
-  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular-sanitize.min.js"></script>
-
-  <!-- TODO change this accordingly  -->
-  <script src='/ermrestjs/ermrest.js'></script>
-
-  <script src='sample.app.js'></script>
 </head>
 
 <body>
-  <div ng-if="hasError">
+  <div id="error-container" style="display: none;">
     There was some errors, take a look at the console.
   </div>
-  <div ng-if="!hasLoaded">
+  <div id="loading-container" style="display: block;">
     Retrieving data...
   </div>
-  <div ng-if="hasLoaded && !hasError">
+  <div id="result-container" style="display: none;">
     <h2>Parser Output</h2>
-    <div>
+    <div id="parser-output">
       <p><b>Service URL:</b> {{reference.location.service}}</p>
       <p><b>Catalog ID:</b> {{reference.location.catalog}}</p>
       <p><b>Schema name:</b> {{reference.location.schemaName}}</p>
@@ -30,7 +23,7 @@
     </div>
     <h2>values</h2>
     <div>
-      <table ng-if="hasData" border="1" style="text-align:center;">
+      <table border="1" style="text-align:center;" id="result-table">
         <thead>
           <tr>
             <th>#</th>
@@ -57,6 +50,11 @@
       </table>
     </div>
   </div>
+
+  <!-- TODO change this accordingly  -->
+  <script src='/ermrestjs/ermrest.js'></script>
+
+  <script src='sample.app.js'></script>
 </body>
 
 </html>

@@ -21,7 +21,7 @@ exports.execute = function(options) {
             + schemaName + ":" + tableName + "/id=" + entityId;
 
         var currDate = new Date();
-        var currentDateString = options.ermRest._fixedEncodeURIComponent(currDate.getFullYear() + "-" + (currDate.getMonth()+1) + "-" + currDate.getDate());
+        var currentDateString = options.ermRest.fixedEncodeURIComponent(currDate.getFullYear() + "-" + (currDate.getMonth()+1) + "-" + currDate.getDate());
 
         var chaiseURL = "https://example.org/chaise";
         var recordURL = chaiseURL + "/record";

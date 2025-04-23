@@ -24,10 +24,10 @@ The following are the available scripts:
 
 - [**read data**](nodejs/read-data.js): This script will read the data of a given table and print its values. You need to specify the server, catalog, and table information to be able to run this script.
 
-## AngularJS
+## Browser
 
-In [this example](angularjs/sample.app.js), we implemented a simplified version of Chaise where it will use the defined hash fragment to find the table of interest. And then will display some data related to the given table.
+In [this example](example/sample.app.js), we implemented a simplified version of Chaise where it will use the defined hash fragment to find the table of interest. And then will display some data related to the given table.
 
-To be able to use this app properly, ERMrestJS must be installed on the same server, and its location must be specified in the `head` tag (there's a `TODO` for it in the code).
+To be able to use this app properly, ERMrestJS must be installed on the same server, and its location must be properly specified (there's a `TODO` for it in the code).
 
 

@@ -96,8 +96,6 @@ const renderHandlebarsTemplate = HandlebarsService.render;
 
 const _clearConstraintNames = CatalogService.clearConstraintNames;
 
-const _fixedEncodeURIComponent = fixedEncodeURIComponent;
-
 // chaise relies on moment
 if (!ENV_IS_NODE) {
   window.moment = moment;
@@ -119,7 +117,7 @@ export {
   appLinkFn,
   _certifyContextHeader,
   ermrestFactory,
-  _fixedEncodeURIComponent,
+  fixedEncodeURIComponent,
   decodeFacet,
   encodeFacet,
   versionDecodeBase32,

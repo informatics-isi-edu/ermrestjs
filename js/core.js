@@ -1906,7 +1906,7 @@ import { _wrap_http } from '@isrd-isi-edu/ermrestjs/js/http';
                         altTable = this.schema.catalog.schemas.get(schema).tables.get(table);
                     } catch (error) {
                         // schema or table not found
-                        $log.error(error.message);
+                        $log.info(error.message);
                         continue;
                     }
 
